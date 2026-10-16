@@ -18,6 +18,7 @@ import processforge as core
 import processforge_core.prepared.input as prepared_input
 from process_execution_smoke_support import fixture
 from processforge_core.prepared.input import private_file
+from processforge_core.prepared.collection import CapturedAttemptReader
 from processforge_core.process_execution import ProcessExecutionService
 from smoke_garage_mode_not_promoted_by_session import call_mcp
 from smoke_prepared_execution_context import (
@@ -166,6 +167,96 @@ def terminal_worker_admission() -> None:
     assert not failures, '\n'.join(failures)
 
 
+def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
+    task = core.load_task(project, task_id)
+    paths = core.worker_run_paths(project, run_id, task_id)
+    state = core.json_read(paths['status'])
+    reader = CapturedAttemptReader(project)
+    captured = reader.read(task, state, run_id=run_id)
+    require(captured is not None and captured.attempt == state['attempt'], 'real capture not recognized')
+    attempt = (project / state['prepared_input']['path']).parent
+    receipt = attempt / 'collection-receipt.json'
+    complete = attempt / 'collection-complete.json'
+    prepared_path = project / state['prepared_input']['path']
+    capsule = core.assignment_capsule_path(project, task_id)
+    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id), capsule, receipt, complete, prepared_path]
+    before = [p.read_bytes() for p in protected]
+    events_before = event_rows(project)
+
+    def tick_without_collect():
+        with patch.object(core, 'command_worker_run_collect', side_effect=AssertionError('historical observation collected again')):
+            code, output = core.run_command_capture(core.command_supervisor_tick,
+                argparse.Namespace(project_root=str(project), run=run_id, profile=None, start_allowed=False))
+        require(code == 0 and 'collected=0' in output and 'observed=1' in output, output)
+        report = (core.supervisor_root(project) / 'last-tick-report.md').read_text(encoding='utf-8')
+        require(f'- historical_observed: `{task_id}`' in report and '- collected: `none`' in report, report)
+        require(core.supervisor_pending_drain_task_ids(project, [run_id]) == [], 'historical capture still pending drain')
+        require(before == [p.read_bytes() for p in protected], 'historical observation changed capture/lifecycle')
+        events = event_rows(project)
+        require(sum(e['event_type'] == 'worker.run.collected' for e in events) ==
+                sum(e['event_type'] == 'worker.run.collected' for e in events_before), 'historical capture event duplicated')
+        tick = next(e for e in reversed(events) if e['event_type'] == 'supervisor.tick.completed')
+        require(tick['data']['historical_observed'] == [task_id] and tick['data']['collected'] == [], tick)
+
+    tick_without_collect()
+    state_raw = paths['status'].read_bytes()
+    try:
+        paths['status'].write_text(json.dumps(dict(state, status='running')), encoding='utf-8')
+        def completed_now(*args):
+            paths['status'].write_bytes(state_raw)
+            return state
+        with patch.object(core, 'observe_worker_run', side_effect=completed_now):
+            tick_without_collect()
+    finally:
+        paths['status'].write_bytes(state_raw)
+    report_path = project / '.pf/artifacts/governed-worker.md'
+    report_raw = report_path.read_bytes()
+    source_path = project / '.pf/artifacts/capture-input.txt'
+    source_raw = source_path.read_bytes()
+    for path, raw, reason in [(report_path, report_raw, 'collected_output_changed'), (source_path, source_raw, 'required_source_changed')]:
+        try:
+            path.write_bytes(raw + b'changed\n')
+            require(reader.read(task, state, run_id=run_id) == captured, 'historical metadata asserted current material')
+            tick_without_collect()
+            code, output = call(project, task_id, 'collect')
+            require(code != 0 and reason in output, output)
+        finally:
+            path.write_bytes(raw)
+    code, output = call(project, task_id, 'collect')
+    require(code == 0, output)
+
+    for path in [complete, receipt, prepared_path, capsule]:
+        raw = path.read_bytes()
+        try:
+            path.write_bytes(b'{invalid\n')
+            require(reader.read(task, state, run_id=run_id) is None, f'tampered metadata accepted: {path.name}')
+        finally:
+            path.write_bytes(raw)
+    raw = complete.read_bytes()
+    try:
+        complete.unlink()
+        require(reader.read(task, state, run_id=run_id) is None, 'partial receipt mistaken for completed capture')
+        require(core.supervisor_pending_drain_task_ids(project, [run_id]) == [task_id], 'partial capture omitted from drain')
+        collect = Mock(return_value=0)
+        with patch.object(core, 'command_worker_run_collect', collect):
+            code, _ = core.run_command_capture(core.command_supervisor_tick,
+                argparse.Namespace(project_root=str(project), run=run_id, profile=None, start_allowed=False))
+        require(code == 0 and collect.call_count == 1, 'partial receipt did not enter full recovery')
+    finally:
+        complete.write_bytes(raw)
+    for key, value in [('attempt', 2), ('attempt', True), ('task_id', 'other'), ('run_id', 'other'), ('status', 'running')]:
+        changed = dict(state, **{key: value})
+        require(reader.read(task, changed, run_id=run_id) is None, f'wrong state {key} accepted')
+    require(reader.read(task, state, run_id='other') is None, 'foreign supervisor run accepted')
+    changed_task = copy.deepcopy(task)
+    changed_task['process_execution']['assignment_capsule_checksum'] = 'sha256:' + '0' * 64
+    require(reader.read(changed_task, state, run_id=run_id) is None, 'wrong task capsule pin accepted')
+    with patch('processforge_core.prepared.collection.bounded_read', side_effect=PermissionError('denied metadata')):
+        require(reader.read(task, state, run_id=run_id) is None, 'metadata read denial accepted')
+    require(reader.read(task, state, run_id=run_id) == captured, 'metadata restoration invisible')
+    print('PASS: historical capture, explicit current guards, proof tamper/identity/read denial and drain recovery', flush=True)
+
+
 def governed_continuation() -> None:
     with fixture() as (workplace, project, started):
         code, output = call(project, started["assignment_id"], "prepare", driver="manual")
@@ -179,10 +270,15 @@ def governed_continuation() -> None:
                 assignment.update(
                     allowed_files=[report], expected_report={"artifact": report},
                     required_outputs=[{"id": "worker-report", "path": report, "required": True}],
+                    allowed_read_files=['.pf/artifacts/capture-input.txt'],
+                    required_sources=['.pf/artifacts/capture-input.txt'],
                 )
                 return super()._write_capsule(run, assignment, pin)
 
         objective = "Governed prepared executor recovery fixture"
+        source = project / '.pf/artifacts/capture-input.txt'
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes(b'capture input\n')
         service = ScopedFixtureService(project, workplace, core)
         work = service.start(objective=objective, process_id="declarative-smoke")
         require(work["action"] == "created_new", work)
@@ -203,6 +299,7 @@ def governed_continuation() -> None:
         require(sum(row["event_type"] == "worker.run.collected" for row in events) == 1, events)
         require(not any(row["event_type"] in {"task.completed", "assignment.completed"}
                         for row in events), "worker completed primary Work")
+        historical_capture_checks(project, task, work['run_id'])
 
         # Each helper call starts and closes a new source stdio MCP process.
         # This proves durable reconnect in a fixture, not a connected host update.

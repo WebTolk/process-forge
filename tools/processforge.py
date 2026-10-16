@@ -18063,6 +18063,20 @@ def write_supervisor_state(project_root: Path, state: dict[str, Any]) -> None:
     json_write(supervisor_state_path(project_root), state)
 
 
+def historical_worker_capture(project_root: Path, run_id: str, task_id: str) -> bool:
+    from processforge_core.prepared.collection import CapturedAttemptReader
+
+    try:
+        with worker_run_lifecycle_lock(project_root, run_id, task_id):
+            task = load_task(project_root, task_id)
+            state = load_agent_run_state(project_root, run_id, task_id)
+            return CapturedAttemptReader(project_root).read(task, state, run_id=run_id) is not None
+    except (OSError, ValueError, RuntimeError, SystemExit):
+        # This optional observation cannot turn a failed/missing proof into a
+        # collected result. The ordinary collect path retains its own failures.
+        return False
+
+
 def supervisor_pending_drain_task_ids(project_root: Path, run_ids: list[str]) -> list[str]:
     pending: list[str] = []
     for run_id in run_ids:
@@ -18074,7 +18088,8 @@ def supervisor_pending_drain_task_ids(project_root: Path, run_ids: list[str]) ->
             state = load_agent_run_state(project_root, run_id, task_id)
             status = str(state.get("status") or "")
             task_status = str(item.get("status") or "")
-            if status == "running" or (status == "completed" and task_status not in {"done", "completed"}):
+            if status == "running" or (status == "completed" and task_status not in {"done", "completed"}
+                                       and not historical_worker_capture(project_root, run_id, task_id)):
                 pending.append(task_id)
     return sorted(set(pending))
 
@@ -18108,6 +18123,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
     failed: list[str] = []
     running: list[str] = []
     observed: list[str] = []
+    historical_observed: list[str] = []
     blocked_overlap: list[str] = []
     scheduling = profile.get("scheduling") if isinstance(profile.get("scheduling"), dict) else {}
     defaults = profile.get("defaults") if isinstance(profile.get("defaults"), dict) else {}
@@ -18143,20 +18159,27 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                     running.append(task_id)
                     running_scopes[task_id] = assignment_write_scope(task)
                 elif observed_state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
+                    if historical_worker_capture(project_root, run_id, task_id):
+                        historical_observed.append(task_id)
+                    else:
+                        status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
+                        if status == 0:
+                            collected.append(task_id)
+                        else:
+                            failed.append(task_id)
+                elif observed_state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
+                    sync_failed_worker_lifecycle(project_root, task, observed_state)
+                    failed.append(task_id)
+            elif state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
+                if historical_worker_capture(project_root, run_id, task_id):
+                    observed.append(task_id)
+                    historical_observed.append(task_id)
+                else:
                     status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
                     if status == 0:
                         collected.append(task_id)
                     else:
                         failed.append(task_id)
-                elif observed_state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
-                    sync_failed_worker_lifecycle(project_root, task, observed_state)
-                    failed.append(task_id)
-            elif state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
-                status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
-                if status == 0:
-                    collected.append(task_id)
-                else:
-                    failed.append(task_id)
             elif state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
                 sync_failed_worker_lifecycle(project_root, task, state)
                 failed.append(task_id)
@@ -18212,6 +18235,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 f"- started: `{', '.join(started) if started else 'none'}`",
                 f"- running: `{', '.join(running) if running else 'none'}`",
                 f"- observed: `{', '.join(observed) if observed else 'none'}`",
+                f"- historical_observed: `{', '.join(historical_observed) if historical_observed else 'none'}`",
                 f"- collected: `{', '.join(collected) if collected else 'none'}`",
                 f"- skipped: `{', '.join(skipped) if skipped else 'none'}`",
                 f"- blocked_overlap: `{', '.join(blocked_overlap) if blocked_overlap else 'none'}`",
@@ -18221,7 +18245,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
         + "\n",
         encoding="utf-8",
     )
-    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
+    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
     print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
     print(f"WROTE: {rel(report, project_root)}")
     return 1 if failed else 0
