@@ -201,38 +201,129 @@ def encode(record: Any) -> bytes:
     return (json.dumps(record, ensure_ascii=False, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
 
 
+def _lock_remaining(deadline: float) -> float:
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError("diagnostic lock timed out")
+    return remaining
+
+
+@lru_cache(maxsize=1)
+def _windows_mutex_api():
+    # Cache only immutable API bindings, never handles or filesystem observations.
+    import ctypes
+    from ctypes import wintypes
+
+    api = ctypes.WinDLL("kernel32", use_last_error=True)
+    api.CreateMutexW.argtypes = [wintypes.LPVOID, wintypes.BOOL, wintypes.LPCWSTR]
+    api.CreateMutexW.restype = wintypes.HANDLE
+    api.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    api.WaitForSingleObject.restype = wintypes.DWORD
+    api.ReleaseMutex.argtypes = [wintypes.HANDLE]
+    api.ReleaseMutex.restype = wintypes.BOOL
+    api.CloseHandle.argtypes = [wintypes.HANDLE]
+    api.CloseHandle.restype = wintypes.BOOL
+    return api
+
+
+def _windows_admission_name(root: Path) -> str:
+    # This is only an admission hint. Lexical absolute normalization avoids
+    # opening directory handles on every record; the current byte lock remains
+    # authoritative across filesystem aliases that do not share this name.
+    canonical = os.path.normcase(os.path.abspath(root))
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return "Local\\ProcessForge.Diagnostics." + digest
+
+
+@contextlib.contextmanager
+def _windows_admission(root: Path, deadline: float) -> Iterator[None]:
+    """Session-local admission hint; the file byte remains the exclusion authority.
+
+    Absolute lexical/case aliases share admission, but other sessions, users denied by
+    the creator's default ACL, and unrecognised aliases need not participate.
+    Native mutex scheduling is not FIFO. Name spoofing/access denial fails the
+    optional sink visibly; it never bypasses the file lock.
+    """
+    import ctypes
+
+    name = _windows_admission_name(root)
+    api = _windows_mutex_api()
+    _lock_remaining(deadline)
+    handle = api.CreateMutexW(None, False, name)
+    if not handle:
+        raise ctypes.WinError(ctypes.get_last_error())
+    owned = False
+    try:
+        # Round down: the requested native wait must not exceed the remainder.
+        result = api.WaitForSingleObject(handle, int(_lock_remaining(deadline) * 1000))
+        if result in (0, 0x80):  # WAIT_OBJECT_0 / WAIT_ABANDONED grant ownership.
+            owned = True
+        elif result == 0x102:
+            raise TimeoutError("diagnostic admission timed out")
+        elif result == 0xFFFFFFFF:
+            raise ctypes.WinError(ctypes.get_last_error())
+        else:
+            raise OSError("unexpected diagnostic admission wait result")
+        _lock_remaining(deadline)
+        # Abandonment still goes through the byte lock and all current sink
+        # state/rotation/retention/quota checks; no cached admission success.
+        yield
+    finally:
+        try:
+            if owned and not api.ReleaseMutex(handle):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            if not api.CloseHandle(handle):
+                raise ctypes.WinError(ctypes.get_last_error())
+
+
 @contextlib.contextmanager
 def _file_lock(root: Path) -> Iterator[None]:
+    deadline = time.monotonic() + 0.05
     path = root / ".diagnostics.lock"
     if path.is_symlink():
         raise OSError("diagnostic lock symlink")
-    with _IO_LOCK, path.open("a+b") as handle:
-        if handle.tell() == 0:
-            handle.write(b"0")
-            handle.flush()
-        deadline = time.monotonic() + 0.05
-        while True:
-            try:
-                handle.seek(0)
-                if os.name == "nt":
-                    import msvcrt
-                    msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-                else:
-                    import fcntl
-                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except OSError:
-                if time.monotonic() >= deadline:
-                    raise
-                time.sleep(0.005)
-        try:
-            yield
-        finally:
-            if os.name == "nt":
-                handle.seek(0)
-                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    if not _IO_LOCK.acquire(timeout=_lock_remaining(deadline)):
+        raise TimeoutError("diagnostic thread gate timed out")
+    try:
+        _lock_remaining(deadline)
+        admission = _windows_admission(root, deadline) if os.name == "nt" else contextlib.nullcontext()
+        with admission:
+            _lock_remaining(deadline)
+            if path.is_symlink():
+                raise OSError("diagnostic lock symlink")
+            with path.open("a+b") as handle:
+                _lock_remaining(deadline)
+                if handle.tell() == 0:
+                    handle.write(b"0")
+                    handle.flush()
+                while True:
+                    _lock_remaining(deadline)
+                    try:
+                        handle.seek(0)
+                        if os.name == "nt":
+                            import msvcrt
+                            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                        else:
+                            import fcntl
+                            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise
+                        time.sleep(min(0.005, remaining))
+                try:
+                    _lock_remaining(deadline)
+                    yield
+                finally:
+                    if os.name == "nt":
+                        handle.seek(0)
+                        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        _IO_LOCK.release()
 
 
 def log_files(root: Path) -> list[Path]:
