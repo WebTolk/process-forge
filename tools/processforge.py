@@ -17897,6 +17897,12 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         if prepared_input.digest(report_raw) != report_record["checksum"]:
             raise ValueError("collected_output_changed")
     except (OSError, ValueError, RuntimeError) as exc:
+        from processforge_core.prepared.collection import CollectionRecoveryStore
+
+        # Only a proved semantic refusal may suspend automatic retries. This
+        # optional historical record never replaces the full checks above.
+        if CollectionRecoveryStore(project_root).record(task, state, run_id=run_id, error=exc):
+            print(f"RECOVERY-REQUIRED: {task_id}; explicit collect or a new prepared attempt is required")
         print("FAIL: collection blocked: " + str(exc))
         return 1
     completion_path = receipt_path.with_name("collection-complete.json")
@@ -18077,6 +18083,21 @@ def historical_worker_capture(project_root: Path, run_id: str, task_id: str) -> 
         return False
 
 
+def worker_collection_recovery_required(project_root: Path, run_id: str, task_id: str) -> dict[str, str] | None:
+    from processforge_core.prepared.collection import CollectionRecoveryStore
+
+    try:
+        with worker_run_lifecycle_lock(project_root, run_id, task_id):
+            task = load_task(project_root, task_id)
+            state = load_agent_run_state(project_root, run_id, task_id)
+            observation = CollectionRecoveryStore(project_root).read(task, state, run_id=run_id)
+            return ({"task_id": task_id, "attempt": str(observation.attempt), "reason": observation.reason}
+                    if observation is not None else None)
+    except (OSError, ValueError, RuntimeError, SystemExit):
+        # Unavailable proof retains the ordinary collect path and its errors.
+        return None
+
+
 def supervisor_pending_drain_task_ids(project_root: Path, run_ids: list[str]) -> list[str]:
     pending: list[str] = []
     for run_id in run_ids:
@@ -18124,6 +18145,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
     running: list[str] = []
     observed: list[str] = []
     historical_observed: list[str] = []
+    recovery_required: list[dict[str, str]] = []
     blocked_overlap: list[str] = []
     scheduling = profile.get("scheduling") if isinstance(profile.get("scheduling"), dict) else {}
     defaults = profile.get("defaults") if isinstance(profile.get("defaults"), dict) else {}
@@ -18161,12 +18183,17 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 elif observed_state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
                     if historical_worker_capture(project_root, run_id, task_id):
                         historical_observed.append(task_id)
+                    elif recovery := worker_collection_recovery_required(project_root, run_id, task_id):
+                        recovery_required.append(recovery)
+                        failed.append(task_id)
                     else:
                         status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
                         if status == 0:
                             collected.append(task_id)
                         else:
                             failed.append(task_id)
+                            if recovery := worker_collection_recovery_required(project_root, run_id, task_id):
+                                recovery_required.append(recovery)
                 elif observed_state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
                     sync_failed_worker_lifecycle(project_root, task, observed_state)
                     failed.append(task_id)
@@ -18174,12 +18201,18 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 if historical_worker_capture(project_root, run_id, task_id):
                     observed.append(task_id)
                     historical_observed.append(task_id)
+                elif recovery := worker_collection_recovery_required(project_root, run_id, task_id):
+                    observed.append(task_id)
+                    recovery_required.append(recovery)
+                    failed.append(task_id)
                 else:
                     status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
                     if status == 0:
                         collected.append(task_id)
                     else:
                         failed.append(task_id)
+                        if recovery := worker_collection_recovery_required(project_root, run_id, task_id):
+                            recovery_required.append(recovery)
             elif state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
                 sync_failed_worker_lifecycle(project_root, task, state)
                 failed.append(task_id)
@@ -18236,6 +18269,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 f"- running: `{', '.join(running) if running else 'none'}`",
                 f"- observed: `{', '.join(observed) if observed else 'none'}`",
                 f"- historical_observed: `{', '.join(historical_observed) if historical_observed else 'none'}`",
+                f"- recovery_required: `{', '.join(item['task_id'] + ':attempt:' + item['attempt'] + ':' + item['reason'] for item in recovery_required) if recovery_required else 'none'}`",
                 f"- collected: `{', '.join(collected) if collected else 'none'}`",
                 f"- skipped: `{', '.join(skipped) if skipped else 'none'}`",
                 f"- blocked_overlap: `{', '.join(blocked_overlap) if blocked_overlap else 'none'}`",
@@ -18245,7 +18279,9 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
         + "\n",
         encoding="utf-8",
     )
-    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
+    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "recovery_required": recovery_required, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
+    for item in recovery_required:
+        print(f"RECOVERY-REQUIRED: {item['task_id']} attempt={item['attempt']} reason={item['reason']}; explicit collect or a new prepared attempt is required")
     print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
     print(f"WROTE: {rel(report, project_root)}")
     return 1 if failed else 0

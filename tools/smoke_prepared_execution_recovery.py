@@ -14,11 +14,13 @@ import sys
 import tempfile
 from unittest.mock import Mock, patch
 
+import yaml
+
 import processforge as core
 import processforge_core.prepared.input as prepared_input
 from process_execution_smoke_support import fixture
 from processforge_core.prepared.input import private_file
-from processforge_core.prepared.collection import CapturedAttemptReader
+from processforge_core.prepared.collection import CapturedAttemptReader, CollectionRecoveryStore
 from processforge_core.process_execution import ProcessExecutionService
 from smoke_garage_mode_not_promoted_by_session import call_mcp
 from smoke_prepared_execution_context import (
@@ -244,7 +246,7 @@ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
         require(code == 0 and collect.call_count == 1, 'partial receipt did not enter full recovery')
     finally:
         complete.write_bytes(raw)
-    for key, value in [('attempt', 2), ('attempt', True), ('task_id', 'other'), ('run_id', 'other'), ('status', 'running')]:
+    for key, value in [('attempt', state['attempt'] + 1), ('attempt', True), ('task_id', 'other'), ('run_id', 'other'), ('status', 'running')]:
         changed = dict(state, **{key: value})
         require(reader.read(task, changed, run_id=run_id) is None, f'wrong state {key} accepted')
     require(reader.read(task, state, run_id='other') is None, 'foreign supervisor run accepted')
@@ -255,6 +257,242 @@ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
         require(reader.read(task, state, run_id=run_id) is None, 'metadata read denial accepted')
     require(reader.read(task, state, run_id=run_id) == captured, 'metadata restoration invisible')
     print('PASS: historical capture, explicit current guards, proof tamper/identity/read denial and drain recovery', flush=True)
+
+
+def prepared_attempt_type_checks(project: Path, task: dict, state: dict, run_id: str, marker: Path | None = None) -> None:
+    """Re-sign inconsistent negative fixtures, so checks reach attempt typing."""
+    prepared_path = project / state['prepared_input']['path']
+    attempt = prepared_path.parent
+    receipt, complete = attempt / 'collection-receipt.json', attempt / 'collection-complete.json'
+    files = [prepared_path] + ([receipt, complete] if complete.exists() else []) + ([marker] if marker else [])
+    original = {p: p.read_bytes() for p in files}
+    try:
+        for wrong in [True, float(state['attempt'])]:
+            prepared = json.loads(original[prepared_path])
+            prepared['identity']['attempt'] = wrong
+            raw = prepared_input.encoded(prepared)
+            prepared_path.write_bytes(raw)
+            changed = copy.deepcopy(state)
+            changed['prepared_input']['checksum'] = prepared_input.digest(raw)
+            if complete in original:
+                document = json.loads(original[receipt])
+                document.update(identity=prepared['identity'], prepared_input=changed['prepared_input'])
+                document['receipt_id'] = prepared_input.fingerprint({k: v for k, v in document.items() if k != 'receipt_id'})
+                receipt.write_bytes(prepared_input.encoded(document))
+                complete.write_bytes(prepared_input.encoded({'schema_version': 1, 'receipt_id': document['receipt_id']}))
+                require(CapturedAttemptReader(project).read(task, changed, run_id=run_id) is None,
+                        f'invalid prepared attempt accepted as capture: {wrong!r}')
+            if marker:
+                document = json.loads(original[marker])
+                document.update(identity=prepared['identity'], prepared_input=changed['prepared_input'])
+                document['fingerprint'] = prepared_input.fingerprint({k: v for k, v in document.items() if k != 'fingerprint'})
+                marker.write_bytes(prepared_input.encoded(document))
+                require(CollectionRecoveryStore(project).read(task, changed, run_id=run_id) is None,
+                        f'invalid prepared attempt accepted as refusal: {wrong!r}')
+        # Change each dependent document independently; numeric dict equality
+        # must not substitute for type or self-consistency checks.
+        prepared_path.write_bytes(original[prepared_path])
+        for wrong in [True, 1.0]:
+            prepared = json.loads(original[prepared_path])
+            prepared['schema_version'] = wrong
+            raw = prepared_input.encoded(prepared)
+            prepared_path.write_bytes(raw)
+            changed = copy.deepcopy(state)
+            changed['prepared_input']['checksum'] = prepared_input.digest(raw)
+            if complete in original:
+                document = json.loads(original[receipt])
+                document['prepared_input'] = changed['prepared_input']
+                document['receipt_id'] = prepared_input.fingerprint({k: v for k, v in document.items() if k != 'receipt_id'})
+                receipt.write_bytes(prepared_input.encoded(document))
+                complete.write_bytes(prepared_input.encoded({'schema_version': 1, 'receipt_id': document['receipt_id']}))
+                require(CapturedAttemptReader(project).read(task, changed, run_id=run_id) is None,
+                        f'invalid prepared schema accepted as capture: {wrong!r}')
+            if marker:
+                document = json.loads(original[marker])
+                document['prepared_input'] = changed['prepared_input']
+                document['fingerprint'] = prepared_input.fingerprint({k: v for k, v in document.items() if k != 'fingerprint'})
+                marker.write_bytes(prepared_input.encoded(document))
+                require(CollectionRecoveryStore(project).read(task, changed, run_id=run_id) is None,
+                        f'invalid prepared schema accepted as refusal: {wrong!r}')
+        prepared_path.write_bytes(original[prepared_path])
+        for field in ['identity', 'schema_version']:
+            for wrong in [True, float(state['attempt'] if field == 'identity' else 1)]:
+                if marker:
+                    document = json.loads(original[marker])
+                    if field == 'identity':
+                        document['identity']['attempt'] = wrong
+                    else:
+                        document['schema_version'] = wrong
+                    for resign in [False, True]:
+                        if resign:
+                            document['fingerprint'] = prepared_input.fingerprint({k: v for k, v in document.items() if k != 'fingerprint'})
+                        marker.write_bytes(prepared_input.encoded(document))
+                        require(CollectionRecoveryStore(project).read(task, state, run_id=run_id) is None,
+                                f'invalid independent marker accepted: {field}/{wrong!r}/{resign}')
+                if complete in original:
+                    document = json.loads(original[receipt])
+                    if field == 'identity':
+                        document['identity']['attempt'] = wrong
+                    else:
+                        document['schema_version'] = wrong
+                    document['receipt_id'] = prepared_input.fingerprint({k: v for k, v in document.items() if k != 'receipt_id'})
+                    receipt.write_bytes(prepared_input.encoded(document))
+                    complete.write_bytes(prepared_input.encoded({'schema_version': 1, 'receipt_id': document['receipt_id']}))
+                    require(CapturedAttemptReader(project).read(task, state, run_id=run_id) is None,
+                            f'invalid independent receipt accepted: {field}/{wrong!r}')
+        if complete in original:
+            receipt.write_bytes(original[receipt])
+            for wrong in [True, 1.0]:
+                document = json.loads(original[complete])
+                document['schema_version'] = wrong
+                complete.write_bytes(prepared_input.encoded(document))
+                require(CapturedAttemptReader(project).read(task, state, run_id=run_id) is None,
+                        f'invalid independent completion accepted: {wrong!r}')
+    finally:
+        for path, raw in original.items():
+            path.write_bytes(raw)
+
+
+def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: Path) -> None:
+    task = core.load_task(project, task_id)
+    paths = core.worker_run_paths(project, run_id, task_id)
+    state_raw = paths['status'].read_bytes()
+    state = core.json_read(paths['status'])
+    source = project / '.pf/artifacts/capture-input.txt'
+    original_source = source.read_bytes()
+    attempt = (project / state['prepared_input']['path']).parent
+    marker = None
+    store = CollectionRecoveryStore(project)
+    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id),
+                 core.assignment_capsule_path(project, task_id), project / state['prepared_input']['path']]
+    before = [p.read_bytes() for p in protected]
+
+    def tick():
+        return core.run_command_capture(core.command_supervisor_tick,
+            argparse.Namespace(project_root=str(project), run=run_id, profile=None, start_allowed=False))
+
+    def observed_refusal():
+        with patch.object(core, 'command_worker_run_collect', side_effect=AssertionError('latched attempt collected automatically')):
+            code, output = tick()
+        require(code == 1 and 'RECOVERY-REQUIRED:' in output and 'observed=1' in output and 'collected=0' in output, output)
+        row = event_rows(project)[-1]['data']
+        require(row['failed'] == [task_id] and row['collected'] == [] and row['historical_observed'] == [], row)
+        require(row['recovery_required'] == [{'task_id': task_id, 'attempt': str(state['attempt']), 'reason': 'required_source_changed'}], row)
+        require(before == [p.read_bytes() for p in protected], 'refusal observation changed protected inputs')
+
+    try:
+        source.write_bytes(original_source + b'changed\n')
+        real_collect = core.command_worker_run_collect
+        with patch.object(core, 'command_worker_run_collect', wraps=real_collect) as collect:
+            code, output = tick()
+        require(code == 1 and collect.call_count == 1 and 'required_source_changed' in output, output)
+        refusal = store.read(task, state, run_id=run_id)
+        require(refusal is not None and refusal.reason == 'required_source_changed', 'stable refusal not recorded')
+        marker = next(attempt.glob('collect-block-*.json'))
+        marker_raw = marker.read_bytes()
+        prepared_attempt_type_checks(project, task, state, run_id, marker)
+        observed_refusal()
+        # Cover the running -> completed supervisor branch with the real durable
+        # completed state restored before the observation lock is acquired.
+        paths['status'].write_text(json.dumps(dict(state, status='running')), encoding='utf8')
+        def completed_now(*_args):
+            paths['status'].write_bytes(state_raw)
+            return state
+        with patch.object(core, 'observe_worker_run', side_effect=completed_now):
+            observed_refusal()
+        paths['status'].write_bytes(state_raw)
+        with patch.object(prepared_input, 'semantic_input', wraps=prepared_input.semantic_input) as validate:
+            code, output = call(project, task_id, 'collect')
+        require(code != 0 and validate.call_count == 1 and 'required_source_changed' in output, 'manual collect skipped full checks')
+
+        for changes in [dict(attempt=2), dict(attempt=True), dict(task_id='foreign'), dict(run_id='foreign')]:
+            require(store.read(task, dict(state, **changes), run_id=run_id) is None, changes)
+        require(store.read(task, state, run_id='foreign') is None, 'foreign run accepted refusal')
+        wrong_task = copy.deepcopy(task)
+        wrong_task['process_execution']['assignment_capsule_checksum'] = 'sha256:' + '0' * 64
+        require(store.read(wrong_task, state, run_id=run_id) is None, 'changed task pin accepted')
+        corrupt = json.loads(marker_raw)
+        corrupt['reason'] = 'unknown_refusal'
+        for bad in [b'{invalid\n', json.dumps(corrupt).encode('utf8')]:
+            marker.write_bytes(bad)
+            with patch.object(core, 'command_worker_run_collect', return_value=1) as collect:
+                code, _ = tick()
+            require(code == 1 and collect.call_count == 1, 'invalid proof suppressed full retry')
+        marker.write_bytes(marker_raw)
+        with patch('processforge_core.prepared.collection.bounded_read', side_effect=PermissionError('metadata denied')):
+            with patch.object(core, 'command_worker_run_collect', return_value=1) as collect:
+                code, _ = tick()
+            require(code == 1 and collect.call_count == 1, 'read denial suppressed full retry')
+
+        # Temporary errors and arbitrary matching messages cannot establish a
+        # recovery latch. These errors originate outside the semantic checks.
+        marker.unlink()
+        for error in [PermissionError('temporary read denial'), RuntimeError('registry is locked by another writer'),
+                      ValueError('required_source_changed'), RuntimeError('prepared_input_changed'),
+                      json.JSONDecodeError('prepared_input_changed', '', 0)]:
+            with patch.object(prepared_input, 'semantic_input', side_effect=error):
+                with patch.object(core, 'command_worker_run_collect', wraps=real_collect) as collect:
+                    outcomes = [tick()[0], tick()[0]]
+            require(outcomes == [1, 1] and collect.call_count == 2 and not marker.exists(), type(error).__name__)
+        with patch('processforge_core.prepared.collection.write_once', side_effect=MemoryError('optional observation allocation')):
+            code, output = tick()
+        require(code == 1 and 'required_source_changed' in output and not marker.exists(), 'optional marker failure changed mandatory refusal')
+
+        # A real current-context mismatch is different from a fabricated error
+        # message. Tamper only this negative fixture, then restore exact bytes.
+        capsule = protected[2]
+        capsule_raw = capsule.read_bytes()
+        try:
+            changed = core.load_yaml_document(capsule)
+            changed['execution_contract']['identity']['context_id'] += '-changed'
+            capsule.write_text(yaml.safe_dump(changed, allow_unicode=True, sort_keys=False), encoding='utf8')
+            code, output = tick()
+            require(code == 1 and 'prepared_input_context_mismatch' in output, output)
+            refusal = store.read(task, state, run_id=run_id)
+            require(refusal is not None and refusal.reason == 'prepared_input_context_mismatch', 'context refusal not observed')
+        finally:
+            capsule.write_bytes(capsule_raw)
+        marker.unlink()
+        code, output = tick()
+        require(code == 1 and 'required_source_changed' in output, output)
+        # The final drain must remain visibly failed/pending, without repeating
+        # the full collect or falsely completing this governed parent Work.
+        with patch.object(core, 'command_worker_run_collect', side_effect=AssertionError('drain retried latched collect')):
+            code, output = core.run_command_capture(core.command_supervisor_run,
+                argparse.Namespace(project_root=str(project), run=run_id, profile=None, driver=None,
+                    interval=0, max_ticks=1, final_drain_timeout=0.1))
+        require(code == 1 and 'RECOVERY-REQUIRED:' in output and 'FINAL-DRAIN: pending=' in output, output)
+        require(core.load_task(project, task_id)['status'] == task['status'], 'refusal completed parent Work')
+
+        source.write_bytes(original_source)
+        with patch('pf_runtime.host.ingest_event', return_value={'accepted': False, 'chat_message_ids': []}):
+            code, output = call(project, task_id, 'collect')
+        require(code == 1 and (attempt / 'collection-receipt.json').is_file()
+                and not (attempt / 'collection-complete.json').exists(), 'partial capture fixture did not persist receipt')
+        require(store.read(task, state, run_id=run_id) is None, 'old refusal blocked new capture progress')
+        source.write_bytes(original_source + b'changed again\n')
+        code, output = tick()
+        require(code == 1 and store.read(task, state, run_id=run_id) is not None, 'new semantic refusal after partial capture was not recorded')
+        require(len(list(attempt.glob('collect-block-*.json'))) == 2, 'new progress did not receive its own refusal observation')
+        source.write_bytes(original_source)
+        code, output = call(project, task_id, 'collect')
+        require(code == 0, output)
+        require(store.read(task, state, run_id=run_id) is None, 'new capture progress retained the old refusal')
+        prepared_attempt_type_checks(project, task, state, run_id)
+        # Successful capture has priority over the old immutable refusal.
+        with patch.object(core, 'command_worker_run_collect', side_effect=AssertionError('recovered capture recollected')):
+            code, output = tick()
+        require(code == 0 and 'observed=1' in output, output)
+        code, output = call(project, task_id, 'prepare', driver=str(driver))
+        require(code == 0, output)
+        new_state = core.json_read(paths['status'])
+        require(new_state['attempt'] > state['attempt'] and store.read(task, new_state, run_id=run_id) is None, 'new attempt inherited refusal')
+        code, output = call(project, task_id, 'start', driver=str(driver))
+        require(code == 0, output)
+        require(before == [p.read_bytes() for p in protected], 'recovery changed immutable inputs')
+    finally:
+        source.write_bytes(original_source)
+    print('PASS: semantic refusal, both supervisor branches, explicit recovery/new attempt, transient errors, proof and final drain', flush=True)
 
 
 def governed_continuation() -> None:
@@ -286,6 +524,7 @@ def governed_continuation() -> None:
         driver = make_shell_driver(project)
         code, output = call(project, task, "start", driver=str(driver))
         require(code == 0, output)
+        collection_refusal_checks(project, task, work['run_id'], driver)
         paths = [core.assignment_yaml_path(project, task),
                  core.run_yaml_path(project, work["run_id"]),
                  core.assignment_capsule_path(project, task)]
@@ -296,7 +535,7 @@ def governed_continuation() -> None:
         require(before == [path.read_bytes() for path in paths],
                 "governed collection changed assignment/run/capsule")
         events = event_rows(project)
-        require(sum(row["event_type"] == "worker.run.collected" for row in events) == 1, events)
+        require(sum(row["event_type"] == "worker.run.collected" for row in events) == 2, events)
         require(not any(row["event_type"] in {"task.completed", "assignment.completed"}
                         for row in events), "worker completed primary Work")
         historical_capture_checks(project, task, work['run_id'])

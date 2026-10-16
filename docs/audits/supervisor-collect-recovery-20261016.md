@@ -1,0 +1,21 @@
+# Explicit recovery after collection refusal
+
+The approved policy stops automatic repetition of an established semantic collection refusal. The first full collect and every explicit collect retain the existing current checks. A new attempt retains independent preparation and identity.
+
+`CollectionRecoveryStore` belongs to the concrete prepared-execution Core. It publishes a bounded private per-attempt observation using the existing no-clobber writer. It rereads exact prepared bytes, identity, fingerprints, task capsule pin and receipt/completion progress on observation. It asserts an outstanding historical refusal, without accepting current sources, outputs or access. Only four precise semantic codes from their originating Core functions qualify; unrelated matching messages and temporary errors do not.
+
+Both completed supervisor branches check successful historical capture first, then recovery observation, then the ordinary full collection. Recovery is visible in the report/event, remains failed for Runtime health, and cannot complete the parent Work. Changes in capture progress invalidate the refusal, preserving interruption recovery. Old refusal metadata is retained rather than rewritten; successful capture and new attempt identity supersede it.
+
+The existing recovery suite covers actual governed attempts, source change and context mismatch, both supervisor branches, explicit full checks, successful recovery and new preparation, transient/unknown errors, proof corruption and access denial, final drain, exactly-once capture, real process death and directory redirects. A detected interaction between an old refusal and later capture recovery was corrected through capture-progress comparison. A test that assumed attempt number one was updated to select an actually different attempt.
+
+Observation files are routed by receipt/completion progress and fully validated after lookup. A stable refusal after interrupted receipt publication can therefore establish a new observation without overwriting the old one. The existing recovery suite passed after this case was added.
+
+Five alternating source-level pairs with four actual completed workers and an advanced stage gave median repeated tick 3.646 s before versus 1.012 s with observation; CPU 3.547 s versus 0.750 s. Separately counted full collects and semantic-input calls fell from 4/4 to 0/0, with 28 protected documents unchanged. An earlier changed-source case refused early and showed no total improvement (0.843 s versus 0.857 s); that negative result is retained. The installed Runtime and concurrent maintenance were present, so these are not quiet installed measurements.
+
+No installed speed improvement is claimed here. Source review, source/package checks, cumulative private development delivery and actual Runtime profiling remain separate gates. The journal repair has disjoint ownership. Public 1.2.0 requires the detailed report and explicit approval.
+
+The first independent review found that prepared attempt identity accepted boolean and floating-point values through Python numeric equality. The shared metadata helper now requires the exact integer type. Re-signed negative fixtures check both historical refusal and successful-capture readers. The failing review is retained and a second independent review is required.
+
+The second review confirmed the prepared fix and found independent marker/receipt numeric coercion. Marker self-consistency and exact attempt/schema types are now checked; negative fixtures vary prepared, marker, receipt and completion independently. Both failing reviews remain recorded, with final independent review required.
+
+Final independent review confirmed F01-F03 with67 in-memory reader checks and six additional origin/bounded-reader checks, with no blocking Core finding. The Russian audit condition was fulfilled by restoring UTF-8 text. On the final strict-document source, five alternating four-worker pairs gave wall median4.437830s versus0.852286s and CPU3.984375s versus0.703125s; separate full/semantic counts4/4 versus0/0 and28 protected documents unchanged. These supersede the earlier source timing for this final version; they remain non-quiet source measurements. The final original governed recovery run passed59.610307s.
