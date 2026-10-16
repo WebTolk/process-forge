@@ -90,3 +90,7 @@ Use focused development checks while confirmed stable-release blockers remain.
 Reserve the full public/archive cycle for a candidate capable of passing the
 release conditions. Class counts, completed tasks and the historical fraction
 of passing tests do not provide a meaningful readiness percentage.
+
+## Journal and diagnostics candidate, 2026-10-16
+
+Bounded diagnostics admission and current-byte journal source are independently accepted. See the [next private development delivery](releases/dev-journal-lock-20261016.md) and its separate archive/install/profile status. Rejected journal variants are excluded; final real-history batch median9.515165 to7.753035s uses conservative full parsing because of one malformed row. These source results do not replace the installed61 baseline or qualify Runtime CPU, the actual connected host or stable1.2.0.
