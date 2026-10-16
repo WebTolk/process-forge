@@ -133,12 +133,16 @@ def current_byte_index_controls(project: Path) -> None:
     def no_index(*_args, **_kwargs):
         raise MemoryError("fixture optional index")
 
-    for target, value in [("set", no_index), ("hashlib", SimpleNamespace(sha256=no_index))]:
+    for target, value in [("hashlib", SimpleNamespace(sha256=no_index))]:
         journal.write_bytes(seed)
         service = core.ProcessEventJournal()
         with patch.object(core, "_process_event_journal", service), patch.object(module, target, value, create=True):
             core.append_process_event(project, {"event_id": "evt_allocation"}, dispatch=False)
         assert journal.read_bytes() == seed + b'{"event_id": "evt_allocation"}\n'
+    journal.write_bytes(seed)
+    with patch.object(core, "_process_event_journal", core.ProcessEventJournal()), patch.object(core.ProcessEventJournal, "_allocate_metadata", side_effect=no_index):
+        core.append_process_event(project, {"event_id": "evt_allocation"}, dispatch=False)
+    assert journal.read_bytes() == seed + b'{"event_id": "evt_allocation"}\n'
 
     # A supported interpreter policy change must invalidate old parse facts,
     # even when the journal bytes, size and mtime are unchanged.
@@ -210,13 +214,13 @@ def current_byte_index_controls(project: Path) -> None:
                 raise AssertionError("mutable error constructor was bypassed")
             assert journal.read_bytes() == before
 
-    # Even a descriptor can return the canonical class-visible initializer
-    # while changing actual construction. Suppressed malformed rows never
-    # publish an index, so both requests retain the current constructor error.
+    # A descriptor can change actual construction while keeping its visible
+    # initializer. Both requests must still see the current error exactly once.
     original_error = json.JSONDecodeError
     original_init = original_error.__init__
     for target in ("evt_descriptor_warm", "evt_descriptor_next"):
         reject_error = [False]
+        constructor_calls = []
 
         class ConfiguredInitializer:
             def __get__(self, instance, owner):
@@ -225,6 +229,7 @@ def current_byte_index_controls(project: Path) -> None:
                 bound = original_init.__get__(instance, owner)
 
                 def initialize(*args, **kwargs):
+                    constructor_calls.append(True)
                     if reject_error[0]:
                         raise ValueError("fixture mutable descriptor constructor")
                     return bound(*args, **kwargs)
@@ -234,8 +239,8 @@ def current_byte_index_controls(project: Path) -> None:
         service = core.ProcessEventJournal()
         with patch.object(core, "_process_event_journal", service), patch.object(original_error, "__init__", ConfiguredInitializer()):
             core.append_process_event(project, {"event_id": "evt_descriptor_warm"}, dispatch=False)
-            assert service._index is None, "malformed history was indexed"
             before = journal.read_bytes()
+            constructor_calls.clear()
             reject_error[0] = True
             try:
                 core.append_process_event(project, {"event_id": target}, dispatch=False)
@@ -244,6 +249,7 @@ def current_byte_index_controls(project: Path) -> None:
             else:
                 raise AssertionError("descriptor constructor was bypassed")
             assert journal.read_bytes() == before
+            assert len(constructor_calls) == 1, "current error constructor must run exactly once"
 
     # Optional definitions must not inspect error metadata at module import.
     class MetadataInitializer:
@@ -265,7 +271,7 @@ def current_byte_index_controls(project: Path) -> None:
             journal.write_bytes(b'{broken}\n')
             service = imported.ProcessEventJournal()
             service.append(journal, {"event_id": "evt_preimport"}, writer_guard=core.registry_file_lock, event_id_value=core.event_id_value)
-            assert service._index is None and b"evt_preimport" in journal.read_bytes()
+            assert b"evt_preimport" in journal.read_bytes()
         finally:
             sys.modules.pop(name, None)
 
@@ -300,6 +306,233 @@ def current_byte_index_controls(project: Path) -> None:
         before = journal.read_bytes()
         core.append_process_event(project, {"event_id": "evt_uncertain"}, dispatch=False)
         assert journal.read_bytes() == before, "uncertain durable append was duplicated"
+
+
+def ordered_error_rows_controls(project: Path) -> None:
+    """Observable first-match, error replay and read-only behavior."""
+    from pf_runtime import host
+
+    project.mkdir(parents=True)
+    journal, _ = core.event_runtime_paths(project)
+    journal.parent.mkdir(parents=True)
+    original_error = json.JSONDecodeError
+    prefix = b'{"event_id":"evt_early"}\n{broken}\n{"event_id":"evt_late"}\n{"event_id":"evt_early"}\n{also-broken}\n'
+    for operation in ("append", "contains"):
+        for target in ("evt_early", "evt_late", "evt_absent"):
+            reject, calls = [False], []
+
+            class CurrentError(original_error):
+                def __init__(self, *args, **kwargs):
+                    calls.append(True)
+                    if reject[0]:
+                        raise ValueError("current ordered row error")
+                    super().__init__(*args, **kwargs)
+
+            journal.write_bytes(prefix)
+            service = core.ProcessEventJournal()
+            with patch.object(json.decoder, "JSONDecodeError", CurrentError), patch.object(core, "_process_event_journal", service):
+                assert not host.event_exists(project, "evt_warm_absent", core)
+                reject[0] = True
+                calls.clear()
+                before = journal.read_bytes()
+                try:
+                    result = (core.append_process_event(project, {"event_id": target}, dispatch=False)
+                              if operation == "append" else host.event_exists(project, target, core))
+                except ValueError as exc:
+                    assert target != "evt_early" and str(exc) == "current ordered row error"
+                    assert len(calls) == 1
+                else:
+                    assert target == "evt_early" and result and not calls, "later error was observed before first duplicate"
+                assert journal.read_bytes() == before
+
+    # Host has always skipped blank lines before json.loads; append has not.
+    calls = []
+
+    class BlankError(original_error):
+        def __init__(self, *args, **kwargs):
+            calls.append(True)
+            raise ValueError("blank append error")
+
+    journal.write_bytes(b' \t\n{"event_id":"evt_blank_seed"}\n')
+    service = core.ProcessEventJournal()
+    with patch.object(json.decoder, "JSONDecodeError", BlankError), patch.object(core, "_process_event_journal", service):
+        assert not host.event_exists(project, "evt_absent", core)
+        assert host.event_exists(project, "evt_blank_seed", core) and not calls
+        fake = SimpleNamespace(event_runtime_paths=lambda _root: (journal, None), event_id_value=core.event_id_value)
+        assert host.event_exists(project, "evt_blank_seed", fake) and not calls
+        before = journal.read_bytes()
+        try:
+            core.append_process_event(project, {"event_id": "evt_new"}, dispatch=False)
+        except ValueError as exc:
+            assert str(exc) == "blank append error" and len(calls) == 1
+        else:
+            raise AssertionError("append skipped its mandatory blank-row parse")
+        assert journal.read_bytes() == before
+
+    if hasattr(sys, "set_int_max_str_digits"):
+        original_limit = sys.get_int_max_str_digits()
+        try:
+            for operation in ("append", "contains"):
+                for suffix_big in (False, True):
+                    sys.set_int_max_str_digits(4300)
+                    enabled, calls = [False], []
+
+                    class PolicyError(original_error):
+                        def __init__(self, *args, **kwargs):
+                            calls.append(True)
+                            if enabled[0]:
+                                sys.set_int_max_str_digits(640)
+                            super().__init__(*args, **kwargs)
+
+                    big = b"1" * 1000
+                    tail = big if suffix_big else b"1"
+                    journal.write_bytes(b'{"event_id":"evt_prefix_big","value":' + big
+                                        + b'}\n{broken}\n{"event_id":"evt_tail","value":' + tail + b'}\n')
+                    service = core.ProcessEventJournal()
+                    with patch.object(json.decoder, "JSONDecodeError", PolicyError), patch.object(core, "_process_event_journal", service):
+                        assert not host.event_exists(project, "evt_warm_absent", core)
+                        enabled[0] = True
+                        calls.clear()
+                        before = journal.read_bytes()
+                        try:
+                            result = (core.append_process_event(project, {"event_id": "evt_tail"}, dispatch=False)
+                                      if operation == "append" else host.event_exists(project, "evt_tail", core))
+                        except ValueError as exc:
+                            assert suffix_big and "640" in str(exc)
+                        else:
+                            assert not suffix_big and result, "already-consumed prefix was reparsed under changed policy"
+                        assert len(calls) == 1 and journal.read_bytes() == before
+        finally:
+            sys.set_int_max_str_digits(original_limit)
+
+    # Read-only lookup cannot gain a writer lock or mutate filesystem state.
+    journal.write_bytes(prefix)
+    before = journal.read_bytes()
+    service = core.ProcessEventJournal()
+    real_open = Path.open
+
+    def read_only_open(path, mode="r", *args, **kwargs):
+        assert not any(flag in mode for flag in "wax+"), mode
+        return real_open(path, mode, *args, **kwargs)
+
+    with patch.object(Path, "open", read_only_open), patch.object(Path, "mkdir", side_effect=AssertionError("read mkdir")), patch.object(core.os, "fsync", side_effect=AssertionError("read fsync")), patch.object(core, "registry_file_lock", side_effect=AssertionError("read lock")):
+        assert not service.contains(journal, "evt_absent", event_id_value=core.event_id_value)
+        assert service.contains(journal, "evt_late", event_id_value=core.event_id_value)
+    assert journal.read_bytes() == before
+
+    # A deeper caller has less parser recursion headroom. Re-read valid IDs
+    # there rather than reusing facts established on a shallower stack.
+    journal.write_bytes(b'{"event_id":"evt_depth"}\n')
+    calls = []
+
+    def observe_depth(event):
+        calls.append(True)
+        return core.event_id_value(event)
+
+    service = core.ProcessEventJournal()
+    assert not service.contains(journal, "evt_absent", event_id_value=observe_depth)
+    calls.clear()
+
+    def deeper():
+        return service.contains(journal, "evt_absent", event_id_value=observe_depth)
+
+    assert not deeper() and calls, "deeper caller skipped its current parse"
+    with patch.object(core.ProcessEventJournal, "_parsing_depth", side_effect=MemoryError("optional frame metadata")):
+        assert service.contains(journal, "evt_depth", event_id_value=core.event_id_value)
+
+
+def optional_policy_and_serialization_controls(project: Path) -> None:
+    """Optional metadata cannot change mandatory errors or durable bytes."""
+    from pf_runtime import host
+
+    project.mkdir(parents=True)
+    journal, _ = core.event_runtime_paths(project)
+    journal.parent.mkdir(parents=True)
+    module = sys.modules[core.ProcessEventJournal.__module__]
+    original_error = json.JSONDecodeError
+    seed = b'{bad-history}\n{"event_id":"evt_seed"}\n'
+    for warm in (False, True):
+        for operation in ("append", "contains"):
+            journal.write_bytes(seed)
+            service = core.ProcessEventJournal()
+            calls, comparisons = [], [0]
+
+            class CurrentError(original_error):
+                def __init__(self, *args, **kwargs):
+                    calls.append(args[1])
+                    super().__init__(*args, **kwargs)
+
+            def failing_policy_zip(*args, **kwargs):
+                if sys._getframe(1).f_code.co_name == "_same_policy":
+                    comparisons[0] += 1
+                    if comparisons[0] == (2 if warm else 1):
+                        raise MemoryError("optional policy comparison allocation")
+                return zip(*args, **kwargs)
+
+            with patch.object(core, "_process_event_journal", service), patch.object(json.decoder, "JSONDecodeError", CurrentError):
+                if warm:
+                    assert not host.event_exists(project, "evt_warm_missing", core)
+                    assert service._index is not None
+                    calls.clear()
+                with patch.object(module, "zip", failing_policy_zip, create=True):
+                    if operation == "contains":
+                        assert not host.event_exists(project, "evt_missing", core)
+                        assert journal.read_bytes() == seed
+                    else:
+                        core.append_process_event(project, {"event_id": "evt_new"}, dispatch=False)
+                        assert journal.read_bytes() == seed + b'{"event_id": "evt_new"}\n'
+                assert calls == ["{bad-history}"], "a consumed bad row was repeated or omitted"
+                assert comparisons[0] >= (2 if warm else 1)
+
+    limit = sys.get_int_max_str_digits()
+    try:
+        for replace_encoder in (False, True):
+            sys.set_int_max_str_digits(4300)
+            journal.write_bytes(seed)
+            service = core.ProcessEventJournal()
+            calls = []
+
+            class CurrentError(original_error):
+                def __init__(self, *args, **kwargs):
+                    calls.append(args[1])
+                    if args[1] == "{bad-record}":
+                        sys.set_int_max_str_digits(640)
+                    super().__init__(*args, **kwargs)
+
+            producer = patch.object(json.JSONEncoder, "encode", return_value="{bad-record}") if replace_encoder else patch.object(json, "dumps", return_value="{bad-record}")
+            with patch.object(core, "_process_event_journal", service), patch.object(json.decoder, "JSONDecodeError", CurrentError), producer:
+                core.append_process_event(project, {"event_id": "evt_new"}, dispatch=False)
+            assert journal.read_bytes() == seed + b'{bad-record}\n'
+            assert calls == ["{bad-history}"] and sys.get_int_max_str_digits() == 4300
+            assert service._index is None
+    finally:
+        sys.set_int_max_str_digits(limit)
+
+    # Public encoder separators may be str subclasses. Optional recognition
+    # must not invoke their comparison callbacks before mandatory serialization.
+    try:
+        for attribute, separator in (("item_separator", ", "), ("key_separator", ": ")):
+            for bad_history in (False, True):
+                sys.set_int_max_str_digits(4300)
+                seed = b'{bad-history}\n' if bad_history else b''
+                journal.write_bytes(seed)
+                service = core.ProcessEventJournal()
+                event = {"event_id": "evt_separator", "number": 10 ** 999}
+                expected = (json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n").encode()
+                compared = []
+
+                class CurrentSeparator(str):
+                    def __ne__(self, other):
+                        compared.append(True)
+                        sys.set_int_max_str_digits(640)
+                        return str.__ne__(self, other)
+
+                with patch.object(core, "_process_event_journal", service), patch.object(json.JSONEncoder, attribute, CurrentSeparator(separator)):
+                    core.append_process_event(project, event, dispatch=False)
+                assert journal.read_bytes() == seed + expected
+                assert not compared and sys.get_int_max_str_digits() == 4300
+    finally:
+        sys.set_int_max_str_digits(limit)
 
 
 def main() -> None:
@@ -381,6 +614,8 @@ def main() -> None:
                 raise AssertionError("lock failure was silently acknowledged")
         assert journal.read_bytes() == before and dispatched == ["evt_boundary"]
         current_byte_index_controls(project / "cache-controls")
+        ordered_error_rows_controls(project / "ordered-error-controls")
+        optional_policy_and_serialization_controls(project / "optional-boundary-controls")
     print("PASS: concurrent journal writers, byte-proved bounded index, current mutations, fallback/errors, durability and hooks")
 
 

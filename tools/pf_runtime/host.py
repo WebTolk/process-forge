@@ -354,6 +354,12 @@ def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
 
 def event_exists(project_root: Path, event_id: str, core: Any) -> bool:
     events_path, _outbox = core.event_runtime_paths(project_root)
+    try:
+        lookup = getattr(vars(core).get("_process_event_journal"), "contains", None)
+    except Exception:
+        lookup = None
+    if callable(lookup):
+        return lookup(events_path, event_id, event_id_value=core.event_id_value)
     if not events_path.is_file():
         return False
     for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
