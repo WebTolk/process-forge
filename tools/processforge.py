@@ -25230,11 +25230,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     work_commands.register_start(sub.add_parser)
 
-    import processforge_core.egress.service as egress_service
     egress_core = sys.modules[__name__]
 
+    def execute_egress(args: argparse.Namespace) -> int:
+        import processforge_core.egress.service as egress_service
+
+        return egress_service.command(args, egress_core)
+
     egress_commands = EgressCommandParser(
-        execute=lambda args: egress_service.command(args, egress_core),
+        execute=execute_egress,
     )
     egress_commands.register(sub.add_parser)
 
