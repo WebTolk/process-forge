@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+## 1.2.0 - 2026-10-16
+
+### Changed
+
+- Fixed an intermediate checkpoint of the ongoing Core refactoring: concrete
+  readers, context/resource policies, lifecycle rules and journal owners serve
+  migrated consumers; default bootstrap/composition still includes legacy paths.
+- Optimized verified exact Work selection and bounded current-byte journal
+  reuse across projects. Full OOP-01 through OOP-05 acceptance remains future work.
+- Supervisor observes completed captures as history and stops automatic repeated
+  stable semantic collect refusal with a visible recovery reason. Explicit/first
+  collection, new attempts and transient-error retry retain their checks.
+- Preserved separate release/process/schema/startup-contract versions and
+  historical Work pins. See `docs/releases/1.2.0-migration.md`.
+
+### Known qualification limits
+
+- Large retained histories can increase scheduler/admission cost. Qualification
+  of source, archive, installed Core and connected host remains distinct;
+  publication requires explicit maintainer approval.
+
+### Fixed
+
+- Deferred egress initialization to its CLI callback, preserving parser and
+  egress contracts while avoiding unrelated command startup work.
+- Corrected diagnostic smoke accounting for bounded best-effort refusal and
+  started the thread fixture deadline inside the requesting thread. The
+  diagnostics implementation, 50 ms admission budget and exclusion/storage
+  checks remain unchanged.
+
+
 ### Changed
 
 - `START_AGENT_HERE.md` is no longer needed. New project onboarding and

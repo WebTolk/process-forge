@@ -246,14 +246,19 @@ raise SystemExit(h.main())
 def storage_export_performance(root):
     limits = config(record_bytes=2048, file_bytes=8192, quota_bytes=16384, files=2)
     logger = d.Logger(limits, root=root / ".pf/runtime/diagnostics")
-    start = time.perf_counter()
-    for i in range(10000):
-        logger.info("load", {"index": i, "safe": "x" * 200})
-    elapsed = time.perf_counter() - start
+    with _observe_jsonl() as events:
+        start = time.perf_counter()
+        for i in range(10000):
+            logger.info("load", {"index": i, "safe": "x" * 200})
+        elapsed = time.perf_counter() - start
     files = [p for p in d.log_files(root / ".pf/runtime/diagnostics") if p.exists()]
     assert len(files) <= 2 and sum(p.stat().st_size for p in files) <= 16384
-    assert logger.health["sink_failures"] == 0, logger.health
-    assert elapsed <= 20, ("jsonl budget", elapsed)
+    accounting = _sink_accounting({"health": logger.health, "events": events}, 10000, filtered=0)
+    (root / "load-receipts.json").write_text(json.dumps({"accounting": accounting,
+        "refusals": [event for event in events if "error" in event]}, indent=2), encoding="utf-8")
+    assert accounting["appended"] > 0, accounting
+    append_budget_seconds = elapsed * 10000 / accounting["appended"]
+    assert append_budget_seconds <= 20, ("jsonl budget", elapsed, append_budget_seconds, accounting)
     for path in files:
         for line in path.read_text(encoding="utf-8").splitlines():
             assert json.loads(line)["severity"] == "info" and len(line.encode()) < 2048
@@ -290,9 +295,10 @@ def storage_export_performance(root):
         if path.exists(): os.utime(path, (1, 1))
     logger.info("after-retention")
     assert sum(p.stat().st_size for p in d.log_files(root / ".pf/runtime/diagnostics") if p.exists()) < 2048
+    previous_failures = logger.health["sink_failures"]
     with patch.object(d, "_file_lock", side_effect=OSError("lock unavailable")), contextlib.redirect_stderr(io.StringIO()):
         logger.error("lock-failure")
-    assert logger.health["sink_failures"] == 1
+    assert logger.health["sink_failures"] == previous_failures + 1
     no_op = d.NullLogger()
     calls = []
     def expensive(): calls.append(1); return {}
@@ -309,27 +315,34 @@ def storage_export_performance(root):
     memory_seconds = time.perf_counter() - start
     assert memory_seconds <= 5, memory_seconds
     return {"disabled_100000_seconds_median": disabled, "memory_10000_seconds": memory_seconds, "jsonl_10000_seconds": elapsed,
+            "jsonl_accounting": accounting, "jsonl_10000_appends_extrapolated_seconds": append_budget_seconds,
             "max_storage_bytes": 16384, "rotated_files": len(files), "bundle_records": result["records"]}
 
 
 def multiprocess_storage(root):
+    # Nonblocking file-lock contention can use this OSError subtype on POSIX.
+    # Exercise it on every host without selecting a different product backend.
+    contention = d.Logger(config(), root=root / "contention-control")
+    with patch.object(d, "_file_lock", side_effect=BlockingIOError(errno.EAGAIN, "byte lock busy")), \
+            _observe_jsonl() as events:
+        contention.info("contention control")
+    assert _sink_accounting({"health": contention.health, "events": events}, 1, filtered=0) == {
+        "attempts": 1, "appended": 0, "refused": 1}
     target = root / "concurrent-storage"
-    script = f'''import sys,json;sys.path.insert(0,{str(ROOT / "src")!r})
-from pathlib import Path
-from processforge_core import diagnostics as d
-logger=d.Logger(d.resolve_config(("test",dict(record_bytes=2048,file_bytes=8192,quota_bytes=16384,files=2))),root=Path(sys.argv[1]))
-with d.operation(logger,"mcp","writer",request_id=sys.argv[2],session_id=sys.argv[2]):
-    for i in range(100): logger.info("parallel",{{"index":i}})
-print(json.dumps(logger.health))
-'''
+    script = f"import sys;sys.path[:0]=[{str(ROOT / 'tools')!r},{str(ROOT / 'src')!r}];import smoke_diagnostics as s;s._storage_worker()"
     workers = [subprocess.Popen([sys.executable, "-B", "-c", script, str(target), name], cwd=root,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) for name in ("A", "B")]
+    receipts = []
     for worker in workers:
         stdout, stderr = worker.communicate(timeout=30)
         assert worker.returncode == 0 and not stderr, (stdout, stderr)
-        assert json.loads(stdout)["sink_failures"] == 0
+        receipts.append(json.loads(stdout))
+    (root / "concurrent-storage-receipts.json").write_text(json.dumps(receipts, indent=2), encoding="utf-8")
+    for receipt in receipts:
+        _sink_accounting(receipt, 101, filtered=1)
+    _admission_intervals(receipts)
     files = [p for p in d.log_files(target) if p.exists()]
-    assert len(files) <= 2 and sum(p.stat().st_size for p in files) <= 16384
+    assert files and len(files) <= 2 and sum(p.stat().st_size for p in files) <= 16384
     for path in files:
         for line in path.read_text(encoding="utf-8").splitlines():
             record = json.loads(line)
@@ -469,6 +482,36 @@ def lock_admission_controls(root):
         receipts.append({"case": case, "error": caught, "body_entered": bool(entered),
                          "api_counts": {key: getattr(api, key).call_count for key in vars(api)}})
 
+    # A native access-denied or unwind failure before body grant must not be
+    # reclassified as ordinary optional-sink contention by receipt accounting.
+    for case in ("accounting-create-denied", "accounting-release-before-body"):
+        clock = [0.0]
+        api = SimpleNamespace(CreateMutexW=Mock(return_value=0 if case == "accounting-create-denied" else 123),
+            WaitForSingleObject=Mock(return_value=0), ReleaseMutex=Mock(return_value=True),
+            CloseHandle=Mock(return_value=True))
+        if case == "accounting-release-before-body":
+            def late_wait(*args):
+                clock[0] = 0.051
+                return 0
+            api.WaitForSingleObject.side_effect = late_wait
+            api.ReleaseMutex.side_effect = PermissionError(errno.EACCES, "native release denied")
+        logger = d.Logger(config(), root=root / case)
+        with patch.object(d, "time", SimpleNamespace(monotonic=lambda: clock[0])), \
+                patch.object(d, "_windows_mutex_api", return_value=api), \
+                patch.object(ctypes, "get_last_error", return_value=5), _observe_jsonl() as events:
+            logger.info("native accounting failure")
+        assert logger.health["sink_failures"] == logger.health["dropped"] == 1
+        assert len(events) == 1 and "grant" not in events[0] and "written_bytes" not in events[0], events
+        assert events[0]["api_errors"], events
+        try:
+            _sink_accounting({"health": logger.health, "events": events}, 1, filtered=0)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError(("native API failure accepted as contention", case, events))
+        receipts.append({"case": case, "accounting_rejected": True, "api_errors": events[0]["api_errors"],
+                         "health": logger.health, "events": events})
+
     # Refuse links before the thread gate or any new native side effect.
     with patch.object(Path, "is_symlink", return_value=True), \
             patch.object(d, "_windows_mutex_api") as api_factory, patch.object(d, "_IO_LOCK") as gate:
@@ -545,13 +588,18 @@ def lock_admission_controls(root):
     limits = config(record_bytes=2048, file_bytes=8192, quota_bytes=16384, files=2)
     def writer(identity):
         logger = d.Logger(limits, root=target)
+        thread = threading.get_ident()
         barrier.wait(5)
         with d.operation(logger, "test", "threads", request_id=identity, session_id=identity):
             for i in range(20): logger.info("thread", {"index": i})
-        return logger.health
-    with patch.object(d, "_file_lock", observed_lock), ThreadPoolExecutor(2) as pool:
-        health = list(pool.map(writer, ["A", "B"]))
-    assert not overlaps and len(waits) == 42 and all(h["sink_failures"] == h["dropped"] == 0 for h in health), health
+        return {"health": logger.health, "events": [event for event in events if event["thread"] == thread]}
+    with _observe_jsonl(observed_lock) as events, ThreadPoolExecutor(2) as pool:
+        outcomes = list(pool.map(writer, ["A", "B"]))
+    accounting = [_sink_accounting(receipt, 21, filtered=1) for receipt in outcomes]
+    assert not overlaps and len(waits) == sum(item["appended"] for item in accounting), outcomes
+    _admission_intervals(outcomes)
+    health = [item["health"] for item in outcomes]
+    (root / "thread-receipts.json").write_text(json.dumps(outcomes, indent=2), encoding="utf-8")
     files = [path for path in d.log_files(target) if path.exists()]
     assert len(files) <= 2 and sum(path.stat().st_size for path in files) <= 16384
     for path in files:
@@ -563,11 +611,11 @@ def lock_admission_controls(root):
             "same_root_threads": health, "body_overlaps": len(overlaps), "max_wait_ms": max(waits)}
 
 
-def _admission_worker():
-    """Isolated peer: real new lock or the original legacy byte-lock algorithm."""
-    target, identity, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
-    counts = dict(create=0, wait=0, release=0, close=0, timeout=0, abandoned=0, failed=0)
-    events, active = [], []
+@contextlib.contextmanager
+def _observe_jsonl(selected_lock=None, identity=None):
+    """Observe actual writes and admission without changing clocks or locks."""
+    selected_lock = selected_lock or d._file_lock
+    events, active = [], threading.local()
     original_open = Path.open
 
     @contextlib.contextmanager
@@ -582,11 +630,79 @@ def _admission_worker():
                 size = handle.write(data)
                 assert size == len(data)
                 row = json.loads(data)
-                assert row["identity"]["request_id"] == row["identity"]["session_id"] == identity
-                assert "written_bytes" not in active[0]
-                active[0]["written_bytes"] = size
+                if identity is not None:
+                    assert row["identity"]["request_id"] == row["identity"]["session_id"] == identity
+                assert "written_bytes" not in active.event
+                active.event["written_bytes"] = size
                 return size
             yield SimpleNamespace(write=write)
+    @contextlib.contextmanager
+    def observed_lock(root):
+        event = {"entry": time.perf_counter_ns(), "thread": threading.get_ident(), "api_errors": []}
+        active.event = event
+        try:
+            with selected_lock(root):
+                event["grant"] = time.perf_counter_ns()
+                try:
+                    yield
+                    event["body_completed"] = time.perf_counter_ns()
+                finally:
+                    event["release_start"] = time.perf_counter_ns()
+        except BaseException as error:
+            event["error"] = type(error).__name__
+            event["errno"] = getattr(error, "errno", None)
+            raise
+        finally:
+            event["done"] = time.perf_counter_ns()
+            events.append(event)
+            del active.event
+
+    api_factory = d._windows_mutex_api
+
+    def observed_api():
+        # The platform adapter calls this only when appropriate. POSIX paths
+        # never resolve the native API; the observer does not select a backend.
+        try:
+            api = api_factory()
+        except BaseException:
+            active.event["api_errors"].append("factory")
+            raise
+
+        def observe(name):
+            fn = getattr(api, name)
+            def call(*args):
+                try:
+                    result = fn(*args)
+                except BaseException:
+                    active.event["api_errors"].append(name)
+                    raise
+                failed = result not in (0, 0x80, 0x102) if name == "WaitForSingleObject" else not result
+                if failed:
+                    active.event["api_errors"].append(name)
+                return result
+            return call
+
+        return SimpleNamespace(**{name: observe(name) for name in
+            ("CreateMutexW", "WaitForSingleObject", "ReleaseMutex", "CloseHandle")})
+
+    with patch.object(d, "_file_lock", observed_lock), patch.object(Path, "open", observed_open), \
+            patch.object(d, "_windows_mutex_api", observed_api):
+        yield events
+
+
+def _storage_worker():
+    target, identity = Path(sys.argv[1]), sys.argv[2]
+    logger = d.Logger(config(record_bytes=2048, file_bytes=8192, quota_bytes=16384, files=2), root=target)
+    with _observe_jsonl(identity=identity) as events:
+        with d.operation(logger, "mcp", "writer", request_id=identity, session_id=identity):
+            for i in range(100): logger.info("parallel", {"index": i})
+    print(json.dumps({"health": logger.health, "events": events}), flush=True)
+
+
+def _admission_worker():
+    """Isolated peer: real new lock or the original legacy byte-lock algorithm."""
+    target, identity, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+    counts = dict(create=0, wait=0, release=0, close=0, timeout=0, abandoned=0, failed=0)
     if mode == "legacy":
         @contextlib.contextmanager
         def legacy_lock(root):
@@ -634,66 +750,52 @@ def _admission_worker():
             ReleaseMutex=call("release", api.ReleaseMutex), CloseHandle=call("close", api.CloseHandle))
         d._windows_mutex_api = lambda: observed_api
 
-    @contextlib.contextmanager
-    def observed_lock(root):
-        event = {"entry": time.perf_counter_ns()}
-        active.append(event)
-        try:
-            with selected_lock(root):
-                event["grant"] = time.perf_counter_ns()
-                try:
-                    yield
-                    event["body_completed"] = time.perf_counter_ns()
-                finally:
-                    event["release_start"] = time.perf_counter_ns()
-        except BaseException as error:
-            event["error"] = type(error).__name__
-            event["errno"] = getattr(error, "errno", None)
-            raise
-        finally:
-            event["done"] = time.perf_counter_ns()
-            events.append(event)
-            active.pop()
-
-    d._file_lock = observed_lock
     logger = d.Logger(config(record_bytes=2048, file_bytes=8192, quota_bytes=16384, files=2), root=target)
     print("ready", flush=True)
     assert sys.stdin.readline().strip() == "go"
-    with patch.object(Path, "open", observed_open):
+    with _observe_jsonl(selected_lock, identity) as events:
         with d.operation(logger, "mcp", "writer", request_id=identity, session_id=identity):
             for i in range(100): logger.info("parallel", {"index": i})
     print(json.dumps({"health": logger.health, "api": counts, "events": events}), flush=True)
 
 
-def _admission_accounting(receipt, mode, attempts=101):
+def _sink_accounting(receipt, attempts, filtered):
     """Every attempt is a verified append or an explicit pre-body refusal."""
-    health, events, api = receipt["health"], receipt["events"], receipt["api"]
+    health, events = receipt["health"], receipt["events"]
     assert health["emitted"] == len(events) == attempts
-    assert health["serialization_failures"] == api["failed"] == 0
-    assert health["filtered"] == 1  # operation-start debug record, at info threshold
+    assert health["serialization_failures"] == 0
+    assert health["filtered"] == filtered
     refused = 0
     for event in events:
+        assert not event.get("api_errors"), event
         assert event["entry"] <= event["done"]
         if "error" in event:
             # Body/append/unwind failures are not reclassified as admission loss.
             assert "grant" not in event and "written_bytes" not in event, event
             assert event["error"] == "TimeoutError" or (
-                event["error"] in {"OSError", "PermissionError"} and
+                event["error"] in {"OSError", "PermissionError", "BlockingIOError"} and
                 event["errno"] in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}), event
             refused += 1
         else:
             assert event["entry"] <= event["grant"] <= event["body_completed"] <= event["release_start"] <= event["done"]
             assert 0 < event["written_bytes"] <= 2048, event
     assert health["sink_failures"] == health["dropped"] == refused, receipt
+    return {"attempts": attempts, "appended": attempts - refused, "refused": refused}
+
+
+def _admission_accounting(receipt, mode, attempts=101):
+    result = _sink_accounting(receipt, attempts, filtered=1)
+    api = receipt["api"]
+    assert api["failed"] == 0, api
     if mode == "new":
         # A deadline can expire before create/wait, or after native ownership
         # but before the serialized body. Do not equate native grant with body.
         assert 0 <= api["wait"] <= api["create"] <= attempts, api
         assert api["close"] == api["create"], api
         assert api["release"] + api["timeout"] == api["wait"], api
-        assert attempts - refused <= api["release"], api
+        assert result["appended"] <= api["release"], api
         assert api["abandoned"] == 0, api
-    return {"attempts": attempts, "appended": attempts - refused, "refused": refused}
+    return result
 
 
 def _admission_intervals(receipts):

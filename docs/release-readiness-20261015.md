@@ -1,4 +1,20 @@
-# ProcessForge 1.2.0 readiness, 2026-10-16
+# Historical private-dev readiness checkpoint, 2026-10-16
+
+This page preserves the earlier private-dev checkpoint below, including its
+failed diagnostics gate and unaccepted measurements. It is not the final
+1.2.0 acceptance decision. The [release notes](releases/1.2.0.md) describe the
+subsequent bounded stabilization; final qualification is tied to the exact
+release source and archive before publication approval.
+
+Version1.2.0, changelog and migration notes are prepared in this candidate.
+Their final qualification and acceptance remain pending as part of the
+release gates below.
+
+**Release scope:**1.2.0 is an intermediate checkpoint of accepted refactoring.
+Completing all five OOP epics, removing every legacy path or adding a new
+Kernel/DI/plugin engine is outside this release boundary. Concrete quality
+failures and compatibility checks remain separate release decisions. See the
+[candidate notes](releases/1.2.0.md) and [migration notes](releases/1.2.0-migration.md).
 
 **Not ready for public release.** Public tag, assets and update channel remain
 unpublished pending the detailed report and explicit user approval.

@@ -39,3 +39,42 @@ These are source and targeted correctness results. Installed and shared Runtime
 behavior require the cumulative delivery checks; actual connected-host proof
 and full public-release qualification remain separate. Stable 1.2.0 requires
 the detailed readiness report and separate user approval.
+
+## Release-gate clarification, 2026-10-16
+
+The native parallel smoke is a best-effort accounting and exclusion gate, not
+a universal zero-loss or FIFO-fairness guarantee. Subsequent preserved probes
+observed read-open and append-open stalls exceeding the unchanged 50 ms
+admission deadline. Such a pre-body refusal is valid optional-sink behavior;
+it must be visible in both `sink_failures` and `dropped`.
+
+All five new/new and both mixed-version trials remain. Each worker must account
+for 101 attempts as either a complete observed append or an explicit pre-body
+timeout/contention refusal. Successful receipts require the real write's full
+byte count, completed body and ordered release; native ownership and handle
+counts are checked separately from body admission. Body failures, API failures,
+missing accounting, malformed retained JSONL and overlapping bodies still fail.
+Rotation, quota, identity/privacy and retained-file checks remain in force.
+
+Deterministic clock/API controls independently retain shared-budget, timeout,
+late-grant and unwind checks. Same-root thread serialization and native owner
+recovery remain separate controls. Native scheduling does not promise FIFO;
+peer-grant and latency tails are preserved as measurements, not silently
+converted into a loss-free logging contract. This clarification changes the
+smoke gate only; the sink, lock backend and deadline are unchanged. Execution
+results and remaining qualification blockers belong to the scoped report.
+
+The same append-or-refusal accounting applies to the real same-root threads,
+multiprocess storage and 10,000-attempt storage load. The observation helper
+records each thread separately; it keeps the real clock, lock and I/O. The
+storage budget remains 20 seconds and is additionally normalized by confirmed
+appends so fast refusals cannot improve the measured append throughput. A
+deliberately injected sink failure must add exactly one failure to the current
+counter. Short export/privacy fixtures retain their existing content checks.
+
+The observation also records failures or exceptions from the existing native
+admission API factory and handle calls. A pre-body access-denied or cleanup
+failure cannot count as ordinary contention merely because it has the same
+exception type. Two deterministic negative controls cover create-denied and
+late-grant release failure. The observer follows the selected platform adapter;
+it does not select or add an operating-system backend.

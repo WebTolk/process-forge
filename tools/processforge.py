@@ -176,11 +176,11 @@ from processforge_core.documents.answers import SECRET_VALUE_PATTERNS
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
-PROCESSFORGE_VERSION = "1.1.0"
+PROCESSFORGE_VERSION = "1.2.0"
 PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
-RELEASE_ARCHIVE_VERSION = "1.1.0"
+RELEASE_ARCHIVE_VERSION = "1.2.0"
 PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
 META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
 DEFAULT_SCAN_POLICY = {
