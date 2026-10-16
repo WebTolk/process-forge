@@ -101,3 +101,7 @@ The [new private development delivery](releases/dev-journal-lock-20261016.md) re
 ## Ordered journal replay candidate, 2026-10-16
 
 Accepted ordered error-row replay and bounded service-state publication are included in the [next private development delivery](releases/dev-journal-replay-20261016.md). Source batch results preserve bytes/errors but do not qualify actual installed Runtime CPU. A new clean archive, one manifest-owned update and quiet profile are required; full public release and connected-host gates remain open.
+
+## Installed ordered replay checkpoint
+
+The [current installed private dev](releases/dev-journal-replay-20261016.md) passes targeted archive/install/diagnostics and both original public budgets. Actual Runtime still uses95.066percent of one core and is degraded; current stacks point mainly at repeated prepared collection/semantic_input. Earlier approximately19s creation measurement predates this installation; current useful admission is measured separately. Full source/archive/version/changelog/host and approval gates remain open.

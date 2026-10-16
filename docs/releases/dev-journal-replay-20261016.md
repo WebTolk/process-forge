@@ -1,27 +1,39 @@
-# Private development delivery: journal replay, 2026-10-16
+# Journal replay development delivery, 2026-10-16
 
-Status: accepted sources; exact cumulative archive/install/profile pending.
-Internal development iteration of version 1.1.0; public 1.2.0 is not published.
+Status: private development archive installed; targeted qualification complete.
+Public 1.2.0 remains unapproved. Executable source `44e 181213a 63f 4e 131be 8b 3d 7769d 736efd 40350`, clean tree
+`9fdfe 9c 2517634b 993645b 775746b 42b 716ff 69a`. Exact archive SHA256 `fb 789c 703f 83220d 982be 92b 4fdf 6aa 7703da 93e 44bdf 2f 87c 1302b 3bf 5de 136`;
+2447511 bytes, 1273 members, 1272 owned files.
+1271 owned files match; one unchanged existing local configuration is preserved.
+Ten backup preimages, three static configurations and 724pre-existing protected
+project records passed verification. The native update was applied once without
+force; previously owned Runtime restored on its first native start.
 
-The candidate includes accepted journal source `cd 6b 893574695f 73bf 37ea 3a 1471bddcfaa 00af 6` and service
-publication source `83faf 5aebccd 55fd 3f 451889b 7dba 3e 656f 4c 36e`, with the previously installed
-canonical Work selection, scope, prepared-YAML and diagnostics corrections.
+Accepted journal source and bounded service-state publication are included.
 See [journal audit](../audits/journal-error-row-replay-20261016.md) and
-[service publication audit](../audits/runtime-service-publication-20261016.md).
-Only new portable notes, readiness and a clean-candidate checksum are added here.
+[service audit](../audits/runtime-service-publication-20261016.md).
+Rejected source revisions remain historical. CLI/MCP contracts and the partial
+OOP migration boundary remain; no new public API or persisted journal index.
 
-The new journal source preserves current whole-byte verification, first-match
-and error ordering, the original guard/fsync/hooks and bounded private facts.
-Five source batch pairs preserve exact bytes/results: four append median
-5.197518 to 2.511963s, four read-only lookups 5.470902 to 1.866624s. Initial source
-review failures and their correction proof remain explicit. Older installed Runtime was active; the last narrow native review admission
-and preparation overlapped some source samples. These timings do not establish actual installed/Runtime improvement.
+Clean schema/public/checksum, exact native archive quick, six original extracted
+checks, installed doctors/focused checks, original full diagnostics and both
+unchanged 180/240s public budgets passed. No allocator/assertion/timeout relaxation.
+Five ordinary installedCLI Work-state reads: median 0.925230s; five independent
+warm persistentstdio reads: 0.037910s. Different startup conditions; these are
+reads, not useful Work creation or actual connected-host acceptance.
 
-The last installed development baseline passed targeted diagnostics and two
-original public time budgets, but its actual Runtime remained degraded and
-used 94.824percent of one core in a separate 45s window. A new manifest-owned
-single update, protected config/history and backup verification, quiet original
-checks, normalCLI/fresh independentstdio and actual Runtime profile follow.
-Actual connected-host proof and full 1.2version/changelog/migration/source/archive
-suites remain separate. Stable publication requires a detailed report and
-explicit approval. Broad smoke audit/cleanup is a later independent task.
+Actual restored Runtime remains degraded:45.00155s window, CPU42.781250s,
+95.066percent of one core. Separate 20s GIL-only nonblocking
+sampling collected 540stacks; supervisor/collection 293,
+semantic_input 279. These inclusive counts overlap and cannot
+be added or called CPU percentages. Current hot path repeatedly validates prepared
+collection for still-active governed parent Work after capture. Existing code
+already skips done/completed assignments; changing that same filter is insufficient.
+Current scheduler/capture semantics and existing request-scope reuse need measured
+investigation, not a status/mtime/TTL shortcut or unsafe empty projection cache.
+
+Source operation batches improved, but this does not close the total Runtime CPU
+blocker. OS evidence is read-only; no hardware/OS settings changed. Full 1.2source
+and archive suites, version/changelog/migration and actual connected-host proof
+remain ahead. Stop before stable publication for detailed report and explicit
+approval. Broad smoke cleanup and device model policy remain separate tasks.
