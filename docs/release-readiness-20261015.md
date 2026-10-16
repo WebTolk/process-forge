@@ -109,3 +109,7 @@ The [current installed private dev](releases/dev-journal-replay-20261016.md) pas
 ## Historical capture observation candidate, 2026-10-16
 
 The accepted supervisor correction is included in the [next private development delivery](releases/dev-historical-observation-20261016.md). Source timings improve; actual installed Runtime profiling follows. Full public release and connected-host gates remain open.
+
+## Installed historical observation checkpoint
+
+The [installed private dev](releases/dev-historical-observation-20261016.md) passes targeted archive/install/original diagnostics and both original public budgets. Actual Runtime uses 98.539% of one core; health `degraded`. Current profiling is retained separately from source fixture gains. Overall performance, full source/archive/version/changelog/migration/host and approval gates remain open.

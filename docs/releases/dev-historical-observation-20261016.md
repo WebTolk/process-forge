@@ -1,22 +1,42 @@
-# Private development delivery: historical observation, 2026-10-16
+# Historical observation development delivery, 2026-10-16
 
-Accepted source: `63f1b9df4f715f3c719a3bda38f565ccd05bfdc1`. Archive, installed and actual Runtime
-qualification follow in this private version 1.1.0 iteration. Public 1.2.0
-remains unpublished and requires a detailed readiness report and explicit approval.
+Private development archive installed; targeted qualification complete.
+Executable source `2d7138e00a7187dcb8db62020afa562408aafbb0`, tree `c08503e3062ecdd1a173aa7c0f3e0a262e1638b0`.
+Archive SHA-256 `2f68c9622379063e3aa113a9dcda4776e9cb409441da8f3e829fe0d5e6ad8351`, 2459399 bytes,
+1278 members, 1277 owned files.
+1276 owned files match; the existing local configuration
+exception remains unchanged. 9 backup preimages,
+three static configurations and 729
+protected project records were verified. One native update, no force; the owned
+Runtime was restored once. Public 1.2.0 remains unpublished.
 
-The supervisor observes a consistent completed capture as historical metadata;
-it no longer repeats fresh collection of its source/output bodies each tick.
-Explicit collect, first capture and recovery keep full current verification.
-See the [source audit](../audits/supervisor-historical-observation-20261016.md)
-and [prepared input contract](../concepts/prepared-input.md).
+The accepted [historical capture correction](../audits/supervisor-historical-observation-20261016.md)
+keeps explicit collect, first capture and recovery current. Automatic supervisor
+reports verified historical metadata separately from fresh collection and
+acceptance. Source fixture five-pair wall median 3.874953 to 0.521741 seconds,
+CPU 3.578125 to 0.421875, is distinct from installed Runtime measurements.
 
-Five alternating source fixture pairs, four real completed governed attempts:
-supervisor wall median 3.874953 to 0.521741 seconds, CPU 3.578125 to 0.421875.
-This does not establish installed Runtime performance. The preceding installed
-baseline used 95.066% of one core over 45 seconds and remained degraded.
-New clean archive checks, one native manifest-owned update, protected
-configuration/history verification, quiet original checks and budgets, ordinary
-CLI/independent stdio and actual Runtime/OS profiling are separate evidence.
-Full 1.2 version/changelog/migration/source/archive and actual connected-host
-qualification remain open. Broad smoke cleanup and launcher model policy are
-separate future tasks.
+Clean schema/public/checksum, native archive quick, three original extracted
+prepared-context/recovery/supervisor scripts, installed doctors/focused checks,
+the original diagnostics suite and both original 180/240-second public budgets
+passed. The review's sandbox and relocated-fixture limits remain recorded;
+the complete original recovery/current-output controls passed from the archive
+and installation. Assertions and time budgets were not relaxed.
+
+Five ordinary installed CLI Work-state reads: median 0.888530 seconds.
+Five independent persistent stdio reads: 0.037786 seconds. These have different
+startup conditions and do not qualify useful Work creation or the connected host.
+Actual restored Runtime: 45.001088-second window,
+44.343750 CPU seconds, 98.539% of one core;
+health `degraded`. Separate 20-second nonblocking GIL sampling:
+589 stacks, historical metadata 6,
+full collect 81, current semantic input
+80, stage obligations 92.
+These inclusive counts overlap and are not CPU percentages. The prior installed
+baseline was 95.066% of one core under a different time/backlog; no controlled
+idle improvement ratio is claimed. OS observations were read-only.
+
+This bounded dev delivery is complete; overall performance and full 1.2.0
+version/changelog/migration/source/archive/connected-host qualification continue.
+Stop before stable publication for a detailed report and explicit approval.
+Broad smoke cleanup and launcher model policy remain separate tasks.
