@@ -73,8 +73,10 @@ from processforge_core.project.context_sources import ProjectContextSourcesReade
 from processforge_core.resources.versioning import ResourceVersionPolicy
 from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
+from processforge_core.process_event_journal import ProcessEventJournal
 
 _file_digests = FileDigestReader()
+_process_event_journal = ProcessEventJournal()
 _context_contract_inputs = ContextContractInputs()
 _resource_version_policy = ResourceVersionPolicy()
 _project_snapshot_resolved_comparison = ProjectSnapshotResolvedComparison(versions=_resource_version_policy)
@@ -10281,31 +10283,22 @@ def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool =
 
 def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True) -> Path:
     events_path, _outbox = event_runtime_paths(project_root)
-    events_path.parent.mkdir(parents=True, exist_ok=True)
-    event_id = event_id_value(event)
-    record = (json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
-    try:
-        # Deduplication and the whole-record append share one cross-process
-        # writer boundary. A dead owner is recoverable through the OS guard.
-        with registry_file_lock(events_path, stale_after_seconds=0):
-            exists = False
-            if events_path.is_file():
-                for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
-                    try:
-                        existing = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-                    if isinstance(existing, dict) and event_id_value(existing) == event_id:
-                        exists = True
-                        break
-            with events_path.open("ab") as handle:
-                if not exists:
-                    handle.write(record)
-                handle.flush()
-                os.fsync(handle.fileno())
-    except SystemExit as exc:
-        # Registry CLI errors must not terminate a Runtime request thread.
-        raise RuntimeError(f"Project event journal writer unavailable: {exc}") from exc
+
+    @contextlib.contextmanager
+    def journal_writer_guard(path: Path):
+        try:
+            with registry_file_lock(path, stale_after_seconds=0):
+                yield
+        except SystemExit as exc:
+            # Registry CLI errors must not terminate a Runtime request thread.
+            raise RuntimeError(f"Project event journal writer unavailable: {exc}") from exc
+
+    _process_event_journal.append(
+        events_path,
+        event,
+        writer_guard=journal_writer_guard,
+        event_id_value=event_id_value,
+    )
     if dispatch:
         dispatch_hooks(project_root, event, dry_run=False, outbox=True)
     return events_path
