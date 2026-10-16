@@ -100,10 +100,9 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
+    from processforge_core.runtime_service_state import RuntimeServiceStateWriter
+
+    RuntimeServiceStateWriter().write(path, payload)
 
 
 def append_operator_log(workplace_root: Path, core: Any, event: str, **payload: Any) -> None:
