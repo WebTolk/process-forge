@@ -1,35 +1,69 @@
 # Journal and diagnostics development delivery, 2026-10-16
 
-Status: source independently accepted; cumulative qualification in progress. This document does not claim a completed
-archive, device update or Runtime improvement. Public 1.2.0 publication is
-not approved. The previously qualified installed executable remains
-`61a7b74cfa7b1812641d7cef85760449dccb06be` until a new native update is verified.
+This private development iteration is installed and qualified for targeted
+checks. Public 1.2.0 remains unapproved. Executable source: `75a7af3c741822352eb61d5629bf726be41f732b`;
+clean tree `aa056af4352d544eae883aeae1e7649775c76b09`. Exact development archive SHA256:
+`b07f199430b7c66cadc80e3c713f52be034fc67607fdbf12ce74cc13be6f57e2`, 2,426,412 bytes,
+1,266 ZIP members and 1,265 owned files.
+A later documentation commit records these results and does not replace
+the installed executable identity.
 
-The cumulative candidate adds the independently accepted
+The cumulative payload includes the accepted
 [diagnostics admission correction](../audits/diagnostics-admission-fairness-20261016.md)
-and, only after its independent acceptance, the
-[current-byte journal correction](../audits/process-event-journal-latency-20261016.md).
-The latter uses a concrete Core owner and bounded memory-only derived IDs;
-malformed history always retains the original complete parse. Earlier failed
-source reviews remain evidence and do not qualify a candidate.
+and [journal correction](../audits/process-event-journal-latency-20261016.md),
+alongside the earlier scope/prepared-YAML/root-binding/canonical-pair repairs.
+The journal's real-history four-event median is 9.515165 to 7.753035 s;
+one malformed row intentionally disables the index. Rejected v4 timings are
+excluded. The concrete Core owner preserves errors, current byte proof,
+the same guard, fsync and post-lock hooks. The overall OOP migration remains open.
 
-Qualification requires exact clean committed source and checksum, archive/core/
-sidecar hashes, original extracted related checks, blocker-free native update
-plan, preserved local configuration/history and backup preimages, one guarded
-apply, ordinary installed CLI/stdio and original diagnostics/journal/budget
-checks. Restored Runtime CPU and stacks are measured in separate quiet windows.
-Fresh independent stdio does not establish actual connected-host acceptance.
+The native update was applied once without force. 1264 owned
+files match; the unchanged pre-existing local configuration exception is
+preserved. 7 backup preimages,
+3 static configurations and
+714 protected project records were
+verified. No unrelated service, connected MCP host or OS configuration was
+restarted or changed.
 
-The earlier installed baseline consumed 44.953125 CPU seconds during a
-45.000778 s window and remained degraded. Its sampled hot path was HTTP event
-ingestion and stage-obligation rebuilding. A worker's empty-obligation prototype
-has unresolved freshness dependencies and is excluded from this candidate.
-Any Runtime improvement must be measured after installation, not inferred
-from isolated append timings.
+Clean schema/public/checksum, exact archive quick and four original extracted
+checks pass. Installed native doctors and related original checks pass; the
+full original diagnostics smoke passes with the shared Runtime stopped.
+The native task-batch180s and long-lived-Runtime240s checks pass unchanged
+budgets. No allocator, assertion or timeout relaxation qualifies this delivery.
 
-Full accumulated release suites, 1.2.0 version/changelog/migration notes and
-actual connected-host proof remain required before a detailed readiness report
-and separate approval. Broad smoke inventory cleanup and device model catalog
-are separate future tasks; different models may operate concurrently on a device.
+Five ordinary installed CLI Work-state reads have a 0.915384 s median;
+five fresh independent persistent MCPstdio reads have a 0.038495 s median.
+Process-start conditions differ; these are not interchangeable latencies,
+Work-creation measurements or actual connected-host acceptance.
 
-Accepted journal source: `82f6bb43a310ffdd2b49ab4e1be1de244e2feacd`; diagnostics: `17206a1b335ea5d1c10ce374896cd2b3c729ffed`. Both have identical full-SHA dev readbacks.
+The first native restore failed when Windows refused replacement of service.json;
+the created process exited. Native stale/no-live-owner readback preceded one
+controlled recovery, which restored a fresh owned Runtime. Both start receipts
+are retained; no Core update was repeated or permissions changed. Atomic service
+publication reliability remains a separate open correction. The separate quiet
+45.001034 s window consumed 42.671875 CPU seconds,
+94.824% of one core; health: `degraded`.
+A subsequent 20 s nonblocking GIL-only parent profile retained
+652 successful stacks. These are current workload
+observations, not a controlled idle before/after ratio; overlapping inclusive
+stack counts are not event rates or independent CPU shares. Scheduler children
+and the actual connected host require separate evidence.
+
+Current inclusive sample counts: event ingress 423,
+stage-obligation rebuild 181, event lookup
+115. The machine reports 4
+logical processors and 8358518784 physical RAM bytes;
+eight OS samples report 1091 to
+2078 available MiB and PagesInputPersec
+0 to 1063.
+These observations do not establish hardware as the sole cause. Runtime remains
+degraded and near one busy core; this development iteration does not close that
+release blocker.
+
+Remaining preparation follows measured defects, objective-catalog admission,
+full accumulated suites, 1.2.0 version/changelog/migration and actual connected
+host qualification. The empty stage-obligation prototype remains excluded
+until dependency freshness is proved. Before public publication, present the
+detailed ready-candidate report and obtain separate user approval. Smoke audit
+and cleanup and the device model catalog remain separate future tasks;
+different models may run concurrently on one device.

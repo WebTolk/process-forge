@@ -34,10 +34,10 @@ qualification for every subsequent change.
   retain exact responses and prevent the two observed foreign same-ID writes.
   See the [bounded report](audits/mcp-diagnostic-root-20261016.md). Installed and
   actual connected-host qualification remain separate.
-- The general diagnostics smoke currently fails its multiprocess-storage
-  assertion. The unchanged preceding check also fails; native child observations
-  locate Windows lock-acquisition failures within the existing 50 ms budget.
-  This remains open; no timeout or assertion was relaxed.
+- The bounded Windows diagnostics correction is installed; the full original
+  smoke now passes with the shared Runtime stopped, under unchanged assertions
+  and budgets. Earlier failures remain historical evidence. See the
+  [current dev report](releases/dev-journal-lock-20261016.md).
 - Source, clean candidate/archive, installed Core, Runtime and the application's
   actual connected MCP require separate proof. A connected process can disagree
   with current source context or retain older loaded tools after a disk update.
@@ -54,7 +54,7 @@ qualification for every subsequent change.
 
 ## Stable Release Conditions
 
-The cumulative reviewed corrections are now installed from executable source
+The earlier development checkpoint installed cumulative corrections from source
 `61a7b74cfa7b1812641d7cef85760449dccb06be`. Exact archive and native update,
 installed original checks and measurements are recorded in the
 [development delivery report](releases/dev-fast-work-20261016.md). Ordinary CLI
@@ -63,8 +63,7 @@ Work state has a 1.355501s median; fresh independent persistent stdio has a
 52.82s/180s and long-lived Runtime 54.54s/240s pass unchanged budgets. Source,
 archive and installed targeted proof are complete for that development slice.
 
-Stable blockers remain: original diagnostics fails even with the shared Runtime
-stopped, restored shared Runtime consumes almost one CPU core and stays degraded,
+Stable blockers remain: restored shared Runtime consumes almost one CPU core and stays degraded,
 full Work admission still takes about 19s, accumulated full suites/version/changelog
 and actual connected-host proof remain outstanding. The new live profile centers
 on HTTP event ingestion and stage-obligation rebuilding. No timeout/assertion was
@@ -91,6 +90,10 @@ Reserve the full public/archive cycle for a candidate capable of passing the
 release conditions. Class counts, completed tasks and the historical fraction
 of passing tests do not provide a meaningful readiness percentage.
 
-## Journal and diagnostics candidate, 2026-10-16
+## Source preparation before the device update, 2026-10-16
 
 Bounded diagnostics admission and current-byte journal source are independently accepted. See the [next private development delivery](releases/dev-journal-lock-20261016.md) and its separate archive/install/profile status. Rejected journal variants are excluded; final real-history batch median9.515165 to7.753035s uses conservative full parsing because of one malformed row. These source results do not replace the installed61 baseline or qualify Runtime CPU, the actual connected host or stable1.2.0.
+
+## Installed journal/diagnostics dev checkpoint
+
+The [new private development delivery](releases/dev-journal-lock-20261016.md) records exact new executable/archive/update and current Runtime evidence. Its installed original diagnostics check now passes; the earlier failure is historical and retained. Full stable qualification and explicit publication approval remain outstanding.
