@@ -489,11 +489,13 @@ def lock_admission_controls(root):
     other.mkdir(exist_ok=True)
     assert name != d._windows_admission_name(other)
     @contextlib.contextmanager
-    def held_by_peer(lock):
+    def held_by_peer(lock_factory):
         ready, release, errors = threading.Event(), threading.Event(), []
         def hold():
             try:
-                with lock:
+                # The admission budget starts in the requesting thread, not
+                # before the OS has scheduled that thread's startup.
+                with lock_factory():
                     ready.set()
                     assert release.wait(5)
             except BaseException as error:
@@ -509,10 +511,10 @@ def lock_admission_controls(root):
         assert not holder.is_alive() and not errors, errors
 
     # Another thread's held root gate must not block this root's admission.
-    with held_by_peer(d._windows_admission(other, time.monotonic() + 0.05)):
+    with held_by_peer(lambda: d._windows_admission(other, time.monotonic() + 0.05)):
         with d._file_lock(root):
             pass
-    with held_by_peer(d._IO_LOCK), patch.object(d, "_windows_mutex_api") as api_factory:
+    with held_by_peer(lambda: d._IO_LOCK), patch.object(d, "_windows_mutex_api") as api_factory:
         rejected(lambda: d._file_lock(root).__enter__())
         api_factory.assert_not_called()
 
@@ -565,7 +567,26 @@ def _admission_worker():
     """Isolated peer: real new lock or the original legacy byte-lock algorithm."""
     target, identity, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
     counts = dict(create=0, wait=0, release=0, close=0, timeout=0, abandoned=0, failed=0)
-    events = []
+    events, active = [], []
+    original_open = Path.open
+
+    @contextlib.contextmanager
+    def observed_open(path, mode="r", *args, **kwargs):
+        with original_open(path, mode, *args, **kwargs) as handle:
+            if mode != "ab" or path.name != "diagnostics.jsonl":
+                yield handle
+                return
+            # Observe the real append, including its byte count, before rotation
+            # can retire the record. A returned sink call alone is not proof.
+            def write(data):
+                size = handle.write(data)
+                assert size == len(data)
+                row = json.loads(data)
+                assert row["identity"]["request_id"] == row["identity"]["session_id"] == identity
+                assert "written_bytes" not in active[0]
+                active[0]["written_bytes"] = size
+                return size
+            yield SimpleNamespace(write=write)
     if mode == "legacy":
         @contextlib.contextmanager
         def legacy_lock(root):
@@ -616,27 +637,77 @@ def _admission_worker():
     @contextlib.contextmanager
     def observed_lock(root):
         event = {"entry": time.perf_counter_ns()}
+        active.append(event)
         try:
             with selected_lock(root):
                 event["grant"] = time.perf_counter_ns()
                 try:
                     yield
+                    event["body_completed"] = time.perf_counter_ns()
                 finally:
                     event["release_start"] = time.perf_counter_ns()
         except BaseException as error:
             event["error"] = type(error).__name__
+            event["errno"] = getattr(error, "errno", None)
             raise
         finally:
             event["done"] = time.perf_counter_ns()
             events.append(event)
+            active.pop()
 
     d._file_lock = observed_lock
     logger = d.Logger(config(record_bytes=2048, file_bytes=8192, quota_bytes=16384, files=2), root=target)
     print("ready", flush=True)
     assert sys.stdin.readline().strip() == "go"
-    with d.operation(logger, "mcp", "writer", request_id=identity, session_id=identity):
-        for i in range(100): logger.info("parallel", {"index": i})
+    with patch.object(Path, "open", observed_open):
+        with d.operation(logger, "mcp", "writer", request_id=identity, session_id=identity):
+            for i in range(100): logger.info("parallel", {"index": i})
     print(json.dumps({"health": logger.health, "api": counts, "events": events}), flush=True)
+
+
+def _admission_accounting(receipt, mode, attempts=101):
+    """Every attempt is a verified append or an explicit pre-body refusal."""
+    health, events, api = receipt["health"], receipt["events"], receipt["api"]
+    assert health["emitted"] == len(events) == attempts
+    assert health["serialization_failures"] == api["failed"] == 0
+    assert health["filtered"] == 1  # operation-start debug record, at info threshold
+    refused = 0
+    for event in events:
+        assert event["entry"] <= event["done"]
+        if "error" in event:
+            # Body/append/unwind failures are not reclassified as admission loss.
+            assert "grant" not in event and "written_bytes" not in event, event
+            assert event["error"] == "TimeoutError" or (
+                event["error"] in {"OSError", "PermissionError"} and
+                event["errno"] in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}), event
+            refused += 1
+        else:
+            assert event["entry"] <= event["grant"] <= event["body_completed"] <= event["release_start"] <= event["done"]
+            assert 0 < event["written_bytes"] <= 2048, event
+    assert health["sink_failures"] == health["dropped"] == refused, receipt
+    if mode == "new":
+        # A deadline can expire before create/wait, or after native ownership
+        # but before the serialized body. Do not equate native grant with body.
+        assert 0 <= api["wait"] <= api["create"] <= attempts, api
+        assert api["close"] == api["create"], api
+        assert api["release"] + api["timeout"] == api["wait"], api
+        assert attempts - refused <= api["release"], api
+        assert api["abandoned"] == 0, api
+    return {"attempts": attempts, "appended": attempts - refused, "refused": refused}
+
+
+def _admission_intervals(receipts):
+    overlaps, peer_grants, wait_ms = [], [], []
+    for a, b in ((receipts[0], receipts[1]), (receipts[1], receipts[0])):
+        for event in a["events"]:
+            end = event.get("grant", event["done"])
+            peer_grants.append(sum(event["entry"] <= peer.get("grant", -1) < end for peer in b["events"]))
+            wait_ms.append((end - event["entry"]) / 1e6)
+            if "grant" in event:
+                overlaps.extend(peer for peer in b["events"] if "grant" in peer and
+                                max(event["grant"], peer["grant"]) < min(event["release_start"], peer["release_start"]))
+    assert not overlaps, overlaps
+    return peer_grants, wait_ms
 
 
 def windows_parallel_admission(root):
@@ -644,7 +715,7 @@ def windows_parallel_admission(root):
         return {"status": "not_applicable"}
     root.mkdir(parents=True, exist_ok=True)
     script = f"import sys;sys.path[:0]=[{str(ROOT / 'tools')!r},{str(ROOT / 'src')!r}];import smoke_diagnostics as s;s._admission_worker()"
-    summaries, failures = [], []
+    summaries = []
     for index, modes in enumerate([("new", "new")] * 5 + [("new", "legacy"), ("legacy", "new")]):
         trial = root / f"trial-{index:02}"
         trial.mkdir()
@@ -671,16 +742,7 @@ def windows_parallel_admission(root):
                         worker.communicate(timeout=5)
         # Persist before assertions so real OS tails/losses remain inspectable.
         (trial / "receipts.json").write_text(json.dumps({"modes": modes, "workers": receipts}, indent=2), encoding="utf-8")
-        overlaps, peer_grants, wait_ms = [], [], []
-        for a, b in ((receipts[0], receipts[1]), (receipts[1], receipts[0])):
-            for event in a["events"]:
-                end = event.get("grant", event["done"])
-                peer_grants.append(sum(event["entry"] <= peer.get("grant", -1) < end for peer in b["events"]))
-                wait_ms.append((end - event["entry"]) / 1e6)
-                if "grant" in event:
-                    overlaps.extend(peer for peer in b["events"] if "grant" in peer and
-                                    max(event["grant"], peer["grant"]) < min(event["release_start"], peer["release_start"]))
-        assert not overlaps, (index, overlaps)
+        peer_grants, wait_ms = _admission_intervals(receipts)
         files = [path for path in d.log_files(target) if path.exists()]
         assert files and len(files) <= 2 and sum(path.stat().st_size for path in files) <= 16384
         for path in files:
@@ -689,21 +751,13 @@ def windows_parallel_admission(root):
                 row = json.loads(line)
                 assert len(line.encode()) < 2048 and row["severity"] == "info"
                 assert row["identity"]["request_id"] == row["identity"]["session_id"]
-        for mode, receipt in zip(modes, receipts):
-            assert receipt["health"]["emitted"] == len(receipt["events"]) == 101
-            assert receipt["health"]["serialization_failures"] == receipt["api"]["failed"] == 0
-            if mode == "new":
-                api = receipt["api"]
-                assert api["create"] == api["wait"] == api["close"] == 101, api
-                assert api["release"] + api["timeout"] == api["wait"], api
+        accounting = [_admission_accounting(receipt, mode) for mode, receipt in zip(modes, receipts)]
         lost = sum(receipt["health"]["sink_failures"] for receipt in receipts)
-        if modes == ("new", "new") and lost:
-            failures.append({"trial": index, "sink_failures": lost})
         summaries.append({"trial": index, "modes": modes, "sink_failures": lost,
-                          "body_overlaps": len(overlaps), "max_peer_grants_while_pending": max(peer_grants),
+                          "accounting": accounting,
+                          "body_overlaps": 0, "max_peer_grants_while_pending": max(peer_grants),
                           "max_wait_ms": max(wait_ms), "api": [receipt["api"] for receipt in receipts]})
     (root / "summary.json").write_text(json.dumps(summaries, indent=2), encoding="utf-8")
-    assert not failures, failures
     return summaries
 
 
