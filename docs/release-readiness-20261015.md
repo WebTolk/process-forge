@@ -97,3 +97,7 @@ Bounded diagnostics admission and current-byte journal source are independently 
 ## Installed journal/diagnostics dev checkpoint
 
 The [new private development delivery](releases/dev-journal-lock-20261016.md) records exact new executable/archive/update and current Runtime evidence. Its installed original diagnostics check now passes; the earlier failure is historical and retained. Full stable qualification and explicit publication approval remain outstanding.
+
+## Ordered journal replay candidate, 2026-10-16
+
+Accepted ordered error-row replay and bounded service-state publication are included in the [next private development delivery](releases/dev-journal-replay-20261016.md). Source batch results preserve bytes/errors but do not qualify actual installed Runtime CPU. A new clean archive, one manifest-owned update and quiet profile are required; full public release and connected-host gates remain open.
