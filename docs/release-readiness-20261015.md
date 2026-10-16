@@ -113,3 +113,7 @@ The accepted supervisor correction is included in the [next private development 
 ## Installed historical observation checkpoint
 
 The [installed private dev](releases/dev-historical-observation-20261016.md) passes targeted archive/install/original diagnostics and both original public budgets. Actual Runtime uses 98.539% of one core; health `degraded`. Current profiling is retained separately from source fixture gains. Overall performance, full source/archive/version/changelog/migration/host and approval gates remain open.
+
+## Collect and multi-project journals candidate, 2026-10-16
+
+Independently accepted source is included in the [private development delivery](releases/dev-collect-journal-20261016.md). Source measurements and actual installed qualification remain separate; no public1.2.0 approval is implied.
