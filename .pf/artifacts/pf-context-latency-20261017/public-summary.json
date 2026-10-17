@@ -1,0 +1,22 @@
+{
+  "diagnosis": "two full Work history scans plus YAML LRU thrashing and retention accounting",
+  "phase_wall_seconds": 17.337337800010573,
+  "work_summary_seconds": 9.402627700008452,
+  "automatic_work_state_seconds": 6.631607600022107,
+  "two_scans_percent": 92.48383739757773,
+  "warm_cache_delta": {
+    "hits": 4,
+    "parses": 2689,
+    "evictions": 2689,
+    "bypasses": 0
+  },
+  "limits": {
+    "shared_bytes": 67108864,
+    "shared_entries": 4096,
+    "request_bytes": 8388608,
+    "request_entries": 1024
+  },
+  "product_changes": false,
+  "service_changes": false,
+  "runtime_started": false
+}

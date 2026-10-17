@@ -1,0 +1,411 @@
+{
+  "profiled_call": {
+    "wall_seconds": 43.53827590000583,
+    "process_cpu_seconds": 42.21875,
+    "result": {
+      "kind": "pf.context",
+      "context": {
+        "snapshot_id": "ctx-20261016-091113-310bed",
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue"
+      },
+      "mode": "forge",
+      "current_action": "work_incomplete",
+      "current_validation": "valid"
+    }
+  },
+  "totals": {
+    "total_calls": 68096840,
+    "primitive_calls": 64606394,
+    "self_seconds": 43.36005700000001
+  },
+  "top_cumulative": [
+    {
+      "file": "profile-context.py",
+      "line": 19,
+      "function": "call",
+      "calls": 1,
+      "self_seconds": 1.67e-05,
+      "cumulative_seconds": 43.5370465
+    },
+    {
+      "file": "tools/pf_runtime/mcp_server.py",
+      "line": 81,
+      "function": "tool_result",
+      "calls": 1,
+      "self_seconds": 0.0193928,
+      "cumulative_seconds": 43.5370293
+    },
+    {
+      "file": "src/processforge_core/common/request_scope.py",
+      "line": 53,
+      "function": "scoped",
+      "calls": 3,
+      "self_seconds": 0.0005870000000000001,
+      "cumulative_seconds": 43.5172602
+    },
+    {
+      "file": "tools/pf_runtime/mcp_server.py",
+      "line": 87,
+      "function": "_tool_result",
+      "calls": 1,
+      "self_seconds": 0.00010480000000000001,
+      "cumulative_seconds": 43.517009900000005
+    },
+    {
+      "file": "src/processforge_core/documents/reader.py",
+      "line": 16,
+      "function": "load",
+      "calls": 4276,
+      "self_seconds": 0.0078568,
+      "cumulative_seconds": 40.923735300000004
+    },
+    {
+      "file": "src/processforge_core/documents/reader.py",
+      "line": 22,
+      "function": "_load",
+      "calls": 4276,
+      "self_seconds": 0.030166400000000003,
+      "cumulative_seconds": 40.915878500000005
+    },
+    {
+      "file": "src/processforge_core/common/request_scope.py",
+      "line": 74,
+      "function": "safe_load",
+      "calls": 4273,
+      "self_seconds": 0.0120637,
+      "cumulative_seconds": 39.6642292
+    },
+    {
+      "file": "src/processforge_core/common/request_scope.py",
+      "line": 82,
+      "function": "_load",
+      "calls": 4273,
+      "self_seconds": 0.10709250000000001,
+      "cumulative_seconds": 39.6521655
+    },
+    {
+      "file": "src/processforge_core/documents/parse_cache.py",
+      "line": 131,
+      "function": "load",
+      "calls": 2693,
+      "self_seconds": 0.1658747,
+      "cumulative_seconds": 37.383276200000005
+    },
+    {
+      "file": "src/processforge_core/project/context.py",
+      "line": 61,
+      "function": "context",
+      "calls": 1,
+      "self_seconds": 6.560000000000001e-05,
+      "cumulative_seconds": 26.940407
+    },
+    {
+      "file": "src/processforge_core/work/records.py",
+      "line": 29,
+      "function": "runs",
+      "calls": 1162,
+      "self_seconds": 0.0025754000000000003,
+      "cumulative_seconds": 25.0312857
+    },
+    {
+      "file": "src/processforge_core/work/inventory.py",
+      "line": 15,
+      "function": "runs",
+      "calls": 1162,
+      "self_seconds": 0.004175,
+      "cumulative_seconds": 25.0286772
+    },
+    {
+      "file": "src/processforge_core/composition.py",
+      "line": 383,
+      "function": "<lambda>",
+      "calls": 1,
+      "self_seconds": 6.87e-05,
+      "cumulative_seconds": 23.664368300000003
+    },
+    {
+      "file": "src/processforge_core/work/records.py",
+      "line": 47,
+      "function": "summary",
+      "calls": 1,
+      "self_seconds": 1.9e-05,
+      "cumulative_seconds": 23.664291900000002
+    },
+    {
+      "file": "src/processforge_core/work/records.py",
+      "line": 57,
+      "function": "active_items",
+      "calls": 1,
+      "self_seconds": 0.0007512,
+      "cumulative_seconds": 23.6639829
+    },
+    {
+      "file": "src/processforge_core/work/records.py",
+      "line": 74,
+      "function": "items",
+      "calls": 1,
+      "self_seconds": 0.047603400000000004,
+      "cumulative_seconds": 23.6632317
+    },
+    {
+      "file": "__init__.py",
+      "line": 74,
+      "function": "load",
+      "calls": 2692,
+      "self_seconds": 0.4085076,
+      "cumulative_seconds": 20.8906145
+    },
+    {
+      "file": "constructor.py",
+      "line": 47,
+      "function": "get_single_data",
+      "calls": 2692,
+      "self_seconds": 6.6959723,
+      "cumulative_seconds": 20.442044300000003
+    },
+    {
+      "file": "src/processforge_core/process_execution.py",
+      "line": 384,
+      "function": "state",
+      "calls": 1,
+      "self_seconds": 2.5200000000000003e-05,
+      "cumulative_seconds": 16.5648869
+    },
+    {
+      "file": "src/processforge_core/process_execution.py",
+      "line": 407,
+      "function": "_state",
+      "calls": 1,
+      "self_seconds": 0.0001376,
+      "cumulative_seconds": 16.5643357
+    },
+    {
+      "file": "src/processforge_core/process_execution.py",
+      "line": 762,
+      "function": "_select_work",
+      "calls": 1,
+      "self_seconds": 0.0004151,
+      "cumulative_seconds": 16.4369623
+    },
+    {
+      "file": "src/processforge_core/work/selection.py",
+      "line": 21,
+      "function": "select",
+      "calls": 1,
+      "self_seconds": 0.00017,
+      "cumulative_seconds": 16.436513400000003
+    },
+    {
+      "file": "src/processforge_core/process_execution.py",
+      "line": 779,
+      "function": "_work_records",
+      "calls": 1,
+      "self_seconds": 2.36e-05,
+      "cumulative_seconds": 16.433217000000003
+    },
+    {
+      "file": "src/processforge_core/work/record_catalog.py",
+      "line": 36,
+      "function": "records",
+      "calls": 1,
+      "self_seconds": 0.0725239,
+      "cumulative_seconds": 16.4331666
+    },
+    {
+      "file": "src/processforge_core/documents/parse_cache.py",
+      "line": 97,
+      "function": "_remember",
+      "calls": 2689,
+      "self_seconds": 0.19193970000000002,
+      "cumulative_seconds": 16.013781400000003
+    },
+    {
+      "file": "src/processforge_core/work/records.py",
+      "line": 37,
+      "function": "load_assignment",
+      "calls": 1876,
+      "self_seconds": 0.0114379,
+      "cumulative_seconds": 14.550684400000002
+    },
+    {
+      "file": "src/processforge_core/work/inventory.py",
+      "line": 23,
+      "function": "assignment",
+      "calls": 1876,
+      "self_seconds": 0.0086228,
+      "cumulative_seconds": 14.512798900000002
+    },
+    {
+      "file": "src/processforge_core/documents/parse_cache.py",
+      "line": 72,
+      "function": "_weight",
+      "calls": 8067,
+      "self_seconds": 8.0826109,
+      "cumulative_seconds": 13.3807735
+    },
+    {
+      "file": "constructor.py",
+      "line": 54,
+      "function": "construct_document",
+      "calls": 2692,
+      "self_seconds": 0.1388131,
+      "cumulative_seconds": 9.6966154
+    },
+    {
+      "file": "constructor.py",
+      "line": 410,
+      "function": "construct_yaml_map",
+      "calls": 279542,
+      "self_seconds": 0.1418439,
+      "cumulative_seconds": 8.0413137
+    }
+  ],
+  "top_self": [
+    {
+      "file": "src/processforge_core/documents/parse_cache.py",
+      "line": 72,
+      "function": "_weight",
+      "calls": 8067,
+      "self_seconds": 8.0826109,
+      "cumulative_seconds": 13.3807735
+    },
+    {
+      "file": "constructor.py",
+      "line": 47,
+      "function": "get_single_data",
+      "calls": 2692,
+      "self_seconds": 6.6959723,
+      "cumulative_seconds": 20.442044300000003
+    },
+    {
+      "file": "constructor.py",
+      "line": 67,
+      "function": "construct_object",
+      "calls": 2080692,
+      "self_seconds": 2.5369731,
+      "cumulative_seconds": 6.391337
+    },
+    {
+      "file": "resolver.py",
+      "line": 143,
+      "function": "resolve",
+      "calls": 2080664,
+      "self_seconds": 2.1714921,
+      "cumulative_seconds": 3.0792183000000004
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.id>",
+      "calls": 10814469,
+      "self_seconds": 1.7357265000000002,
+      "cumulative_seconds": 1.7357265000000002
+    },
+    {
+      "file": "constructor.py",
+      "line": 173,
+      "function": "construct_scalar",
+      "calls": 1792266,
+      "self_seconds": 1.4843159000000001,
+      "cumulative_seconds": 2.5652791
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.isinstance>",
+      "calls": 7619199,
+      "self_seconds": 1.454709,
+      "cumulative_seconds": 1.9396645000000001
+    },
+    {
+      "file": "copy.py",
+      "line": 110,
+      "function": "deepcopy",
+      "calls": 3058210,
+      "self_seconds": 1.4487677,
+      "cumulative_seconds": 3.8530535
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method sys.getsizeof>",
+      "calls": 4557211,
+      "self_seconds": 1.3266128000000001,
+      "cumulative_seconds": 1.3266128000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'add' of 'set' objects>",
+      "calls": 4560918,
+      "self_seconds": 1.0795316000000001,
+      "cumulative_seconds": 1.0795888
+    },
+    {
+      "file": "copy.py",
+      "line": 198,
+      "function": "_deepcopy_dict",
+      "calls": 209729,
+      "self_seconds": 1.0776212,
+      "cumulative_seconds": 3.8262237000000003
+    },
+    {
+      "file": "constructor.py",
+      "line": 132,
+      "function": "construct_mapping",
+      "calls": 139771,
+      "self_seconds": 0.924178,
+      "cumulative_seconds": 7.099050600000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'pop' of 'list' objects>",
+      "calls": 4977233,
+      "self_seconds": 0.9091560000000001,
+      "cumulative_seconds": 0.9091560000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'get' of 'dict' objects>",
+      "calls": 4287680,
+      "self_seconds": 0.8145783000000001,
+      "cumulative_seconds": 0.8145783000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method _io.open>",
+      "calls": 4471,
+      "self_seconds": 0.6830035000000001,
+      "cumulative_seconds": 0.6976426
+    },
+    {
+      "file": "constructor.py",
+      "line": 402,
+      "function": "construct_yaml_str",
+      "calls": 1702244,
+      "self_seconds": 0.599937,
+      "cumulative_seconds": 3.0376475000000003
+    },
+    {
+      "file": "constructor.py",
+      "line": 117,
+      "function": "construct_scalar",
+      "calls": 1792266,
+      "self_seconds": 0.5620105000000001,
+      "cumulative_seconds": 0.7876087
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method nt._path_isfile>",
+      "calls": 8429,
+      "self_seconds": 0.47715430000000003,
+      "cumulative_seconds": 0.6332624
+    }
+  ]
+}
