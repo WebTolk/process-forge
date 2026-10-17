@@ -1467,6 +1467,7 @@ def tick_payload(
         core.update_stale_agent_presence(workplace_root)
         results: list[dict[str, Any]] = []
         status = 0
+        scheduler_status = 0
         for project_root in project_roots:
             handle = route_project(str(project_root), workplace_root, core)
             remember_project(state, handle)
@@ -1476,18 +1477,21 @@ def tick_payload(
                     rc = call_quiet(core.command_agent_director_tick, argparse.Namespace(workplace=str(workplace_root), project_root=str(project_root), project_id=handle["project_id"], wait_ttl=wait_ttl, lease_ttl=lease_ttl))
                     item["director"] = "tick"
                     status = status or rc
+                    scheduler_status = scheduler_status or rc
                 else:
                     item["director"] = "skipped_simple"
             if inspector:
-                rc = call_quiet(core.command_supervisor_tick, argparse.Namespace(project_root=str(project_root), run=run, profile=profile, driver=driver, start_allowed=False))
+                with contextlib.redirect_stdout(io.StringIO()):
+                    observation = core.supervisor_tick_result(argparse.Namespace(project_root=str(project_root), run=run, profile=profile, driver=driver, start_allowed=False))
                 item["inspector"] = "tick"
-                status = status or rc
+                item["inspector_result"] = observation
+                status = status or (1 if observation["failed"] else 0)
             core.flush_pending_event_dispatches(project_root)
             stage_projection = refresh_stage_obligations(project_root, core)
             item["projection"] = core.rel(stage_projection, project_root)
             results.append(item)
         save_state(workplace_root, state, core)
-        payload = {"status": "ok" if status == 0 else "failed", "projects": results}
+        payload = {"status": "ok" if status == 0 else "failed", "scheduler_status": "ok" if scheduler_status == 0 else "failed", "projects": results}
         return payload, status
 
 

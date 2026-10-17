@@ -18163,6 +18163,12 @@ def supervisor_final_drain_timeout(project_root: Path, run_ids: list[str], expli
 
 
 def command_supervisor_tick(args: argparse.Namespace) -> int:
+    result = supervisor_tick_result(args)
+    return 1 if result["failed"] else 0
+
+
+def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
+    """Observe one pass, retaining task outcomes separately from execution errors."""
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
@@ -18308,12 +18314,13 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
         + "\n",
         encoding="utf-8",
     )
-    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "recovery_required": recovery_required, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
+    result = {"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "recovery_required": recovery_required, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)}
+    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload=result)
     for item in recovery_required:
         print(f"RECOVERY-REQUIRED: {item['task_id']} attempt={item['attempt']} reason={item['reason']}; explicit collect or a new prepared attempt is required")
     print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
     print(f"WROTE: {rel(report, project_root)}")
-    return 1 if failed else 0
+    return result
 
 
 def command_supervisor_run(args: argparse.Namespace) -> int:

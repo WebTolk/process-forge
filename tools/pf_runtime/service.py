@@ -456,7 +456,7 @@ class RuntimeProcess:
             self.state["metrics"] = snapshot
             self.state["scheduler"]["jobs"]["metrics"] = {
                 "period_seconds": self.metrics_interval, "last_run": snapshot["observed_at"],
-                "last_result": "ok" if all(g["coverage"] == "complete" for g in snapshot["groups"].values()) else "failed"}
+                "last_result": "ok"}
 
     def metrics_loop(self) -> None:
         # Observation must not wait for project routing, event replay or tick.
@@ -575,9 +575,13 @@ class RuntimeProcess:
                     try:
                         item_payload, item_status = host.tick_payload(self.workplace_root, [project_root], self.core, director=True, inspector=True)
                         projects.extend(item_payload.get("projects", []))
-                        status = status or item_status
-                        if item_status:
-                            project_errors[str(project_root)] = f"project scheduler pass failed with status {item_status}"
+                        # A successful Inspector pass can report failed workers or
+                        # collection recovery. Unclassified nonzero results still fail.
+                        operational = item_payload.get("scheduler_status")
+                        operational_status = 0 if operational == "ok" else (item_status or (1 if operational == "failed" else 0))
+                        status = status or operational_status
+                        if operational_status:
+                            project_errors[str(project_root)] = f"project scheduler pass failed with status {operational_status}"
                     except SystemExit as exc:
                         project_errors[str(project_root)] = str(exc) or "project scheduler pass rejected the project"
                         status = 1

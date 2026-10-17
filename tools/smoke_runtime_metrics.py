@@ -81,6 +81,8 @@ def main():
         runtime.state.update(status="ready", health="ready", endpoint="http://127.0.0.1:12345")
         runtime._registrations = metrics.registrations(cache)
         runtime.publish_metrics([project])
+        assert any(group["coverage"] == "partial" for group in runtime.state["metrics"]["groups"].values())
+        assert runtime.state["scheduler"]["jobs"]["metrics"]["last_result"] == "ok"
         runtime.save()
         put(service.lock_path(wp), {"pid": os.getpid(), "instance_id": runtime.instance_id})
         (wp / "runtime/pf-runtime-host/state.json").write_bytes(b"x" * 1048577)

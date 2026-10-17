@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Separate Runtime operational health from Inspector task outcomes. Failed
+  worker attempts and collection recovery remain visible without degrading a
+  successful scheduler pass; explicit tick exit codes retain their task meaning.
+  Partial metrics coverage remains explicit after successful publication.
 - Make automatic Garage hooks opt-in with inherited `runtime.garage_hooks`
   configuration, while Forge retains its required gatekeeper. Native session
   hooks register/check out automatically through Runtime or CLI; first allowed

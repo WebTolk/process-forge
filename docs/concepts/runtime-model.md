@@ -80,10 +80,18 @@ transport. It is not a second PF Core. Agent Ledger owns agent/session
 presence and the canonical session-to-project binding; Runtime's project and
 session maps are rebuildable caches only.
 
-Runtime status reports scheduler liveness as `scheduler_alive`. A failed project
-or malformed routing cache degrades health while other valid projects continue;
+Runtime status reports scheduler liveness as `scheduler_alive`. A failed scheduler
+operation or malformed routing cache degrades health while other valid projects continue;
 a successful later pass restores health. A stopped scheduler is never reported
 as healthy merely because the IPC lifecycle status is still `ready`.
+Worker failures and collection recovery requirements remain task results, visible
+in each project's `inspector_result` under `last_scheduler_result`; they do not
+degrade a successfully operating service. `supervisor tick` and Runtime-host
+tick retain their nonzero exit/task status for failed outcomes. Runtime-host
+tick additionally reports `scheduler_status` for operational health, without
+repeating inspection or accepting a blocked collection. A successfully published
+metrics sample is a successful job even with partial coverage; its unknown counts,
+lower bounds and coverage issues remain explicit.
 Singleton acquisition preserves live or unverifiable owners even when their
 lock is missing or inconsistent. Dead ownership records can be recovered; a
 live PID alone is insufficient evidence that an incomplete record is stale.

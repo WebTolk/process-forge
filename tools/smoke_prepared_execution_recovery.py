@@ -374,8 +374,12 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
     def observed_refusal():
         with patch.object(core, 'command_worker_run_collect', side_effect=AssertionError('latched attempt collected automatically')):
             code, output = tick()
+            with redirect_stdout(io.StringIO()):
+                result = core.supervisor_tick_result(argparse.Namespace(
+                    project_root=str(project), run=run_id, profile=None, start_allowed=False))
         require(code == 1 and 'RECOVERY-REQUIRED:' in output and 'observed=1' in output and 'collected=0' in output, output)
         row = event_rows(project)[-1]['data']
+        require(result == row, 'structured observation disagrees with durable task diagnostics')
         require(row['failed'] == [task_id] and row['collected'] == [] and row['historical_observed'] == [], row)
         require(row['recovery_required'] == [{'task_id': task_id, 'attempt': str(state['attempt']), 'reason': 'required_source_changed'}], row)
         require(before == [p.read_bytes() for p in protected], 'refusal observation changed protected inputs')
