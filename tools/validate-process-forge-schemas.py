@@ -972,6 +972,8 @@ def validate_yaml_schema_files(root: Path) -> None:
     for path in [root / "configuration.yaml", root / "templates" / "workplace-configuration.yaml"]:
         if path.is_file():
             mappings.append((path, "workplace-configuration.schema.json"))
+    if (root / ".pf" / "configuration.yaml").is_file():
+        mappings.append((root / ".pf" / "configuration.yaml", "project-configuration.schema.json"))
     if (root / ".pf" / "hooks.yaml").is_file():
         mappings.append((root / ".pf" / "hooks.yaml", "hooks.schema.json"))
     if (root / ".pf" / "process-routes.yaml").is_file():
@@ -992,8 +994,16 @@ def validate_yaml_schema_files(root: Path) -> None:
 
 
 def validate_ndjson_events(root: Path) -> None:
+    journal = root / ".pf" / "runtime" / "events" / "events.sqlite3"
+    if journal.is_file():
+        sys.path.insert(0, str(root / "src"))
+        from processforge_core.process_event_journal import ProcessEventJournal
+        schema = load_schema(root, "event-envelope.schema.json")
+        for sequence, event, error in ProcessEventJournal().records(journal):
+            if error:
+                raise SystemExit(f"FAIL: event record {sequence}: {error}")
+            validate_against_schema(event, schema, f"{journal.relative_to(root).as_posix()}:{sequence}")
     checks = [
-        (".pf/runtime/events/events.ndjson", "event-envelope.schema.json"),
         (".pf/runtime/telemetry", "session-telemetry-event.schema.json"),
         (".pf/runtime/chat/transcripts", "chat-message.schema.json"),
     ]

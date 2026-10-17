@@ -11,6 +11,9 @@ schema_version: 1
 runtime:
   metrics:
     interval_seconds: 10
+logging:
+  raw_hooks: true
+  events: true
 ```
 
 The interval accepts finite numbers from 1 to 60 seconds. Use 1–2 for small
@@ -23,7 +26,7 @@ The file is limited to 64 KiB. The template is
 
 ## Core API
 
-`PFConfig`, `RuntimeConfig` and `MetricsConfig` are immutable value classes.
+`PFConfig`, `LoggingConfig`, `RuntimeConfig` and `MetricsConfig` are immutable value classes.
 `ConfigService` implements CRUD through an injected `ConfigStore` protocol.
 Neither layer discovers directories, reads environment variables, imports CLI
 code or depends on YAML. CLI, HTTP, MCP or another caller can share this API.
@@ -85,6 +88,55 @@ coordinate cooperating local clients, not arbitrary editors or network storage.
 CRUD rewrites canonical YAML and does not preserve comments or formatting.
 
 ## Runtime and monitor
+
+### Project history and raw hooks
+
+`logging.raw_hooks` retains a separate copy of incoming native hook payloads.
+`logging.events` retains normalized project event envelopes. Both default to
+`true` and accept only booleans at device scope. They apply to new admissions;
+changing a flag neither deletes existing rows nor reconstructs missing history.
+
+Each project may override either flag in `.pf/configuration.yaml`:
+
+```yaml
+schema_version: 1
+logging:
+  raw_hooks: false
+  events: null
+```
+
+Missing fields, `null`, or a missing project file mean inherit the device value.
+Only these logging fields may be overridden here; metrics remain device-wide.
+The workplace configuration is the device default for its linked projects.
+
+```sh
+pf config create --workplace <workplace-root> --project-root <project-root>
+pf config update --workplace <workplace-root> --project-root <project-root> --key logging.raw_hooks --value false
+pf config read --workplace <workplace-root> --project-root <project-root> --key logging.events --json
+pf config delete --workplace <workplace-root> --project-root <project-root> --key logging.raw_hooks
+```
+
+Project reads show the nullable `override` and effective `value`. Deleting a
+project key restores inheritance. Deleting the project file restores inheritance
+for both flags. Existing-file and revision rules are the same as device CRUD.
+
+Core and Runtime resolve an immutable effective `PFConfig` through the shared
+configuration resolver. Each process checks file identity/size/timestamps on
+access and reloads changed files; there is no YAML parse on an unchanged hook.
+Changes apply at the next ingress without a Runtime restart. A later invalid
+reload retains the last valid snapshot and returns error codes in the resolved
+configuration; invalid first loads fail. File removal restores defaults or
+inheritance. This is a shared API, not a mutable cross-process Python singleton.
+
+History is optional; execution and message delivery are not. IDs/hashes for
+deduplication, pending delivery/native input and the latest verification facts
+remain operational state. Completed pending raw input is removed when raw
+history is off. Work YAML, active chat transport/transcripts, Agent Ledger and
+diagnostic logging retain their own owners; the flags do not disable them.
+Project events already reference transcript content by hash rather than copying
+message bodies. See [project journals and migration](../concepts/hook-journal-sqlite.md).
+
+### Statistics observation
 
 Runtime validates configuration before creating its token. Its independent
 statistics observer reloads the file at the beginning of each cycle. Changes

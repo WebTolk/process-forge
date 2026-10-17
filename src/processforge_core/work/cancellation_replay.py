@@ -6,7 +6,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Protocol
+from typing import Any, Callable, Protocol
 
 
 class CancellationWorkWriter(Protocol):
@@ -27,7 +27,7 @@ class CancellationBindingReader(Protocol):
 
 
 class CancellationEventReader(Protocol):
-    def __call__(self, path: Path) -> Iterable[tuple[int, object, object]]: ...
+    def __call__(self, path: Path, event_id: str) -> bool: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,7 +41,6 @@ class CancellationReplayService:
     project_root: Callable[[], Path] = field(repr=False, compare=False)
     event_paths: Callable[[], Callable[[Path], tuple[Path, ...]]] = field(repr=False, compare=False)
     event_reader: Callable[[], CancellationEventReader] = field(repr=False, compare=False)
-    event_id: Callable[[], Callable[[dict], str | None]] = field(repr=False, compare=False)
 
     def replay(self, path: Path, intent: dict) -> dict:
         if intent.get("checksum") != self.fingerprint()({k: v for k, v in intent.items() if k != "checksum"}):
@@ -70,8 +69,7 @@ class CancellationReplayService:
         events = ["task.cancelled"] + (["run.cancelled"] if run["status"] == "cancelled" else [])
         for event in events:
             event_id = "evt_" + hashlib.sha256((intent["checksum"] + event).encode()).hexdigest()[:32]
-            present = any(not error and isinstance(value, dict) and self.event_id()(value) == event_id
-                          for _line, value, error in self.event_reader()(self.event_paths()(self.project_root())[0]))
+            present = self.event_reader()(self.event_paths()(self.project_root())[0], event_id)
             if not present:
                 self.work()._emit(event, run, assignment, assignment["stage"], outcome="cancelled", event_id=event_id)
         state = self.work().state(run_id=run["id"], assignment_id=assignment["id"])

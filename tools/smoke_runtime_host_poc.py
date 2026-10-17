@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
+from smoke_hook_sqlite_support import events
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,8 +80,8 @@ def main() -> int:
         if duplicate["duplicate"] is not True:
             raise AssertionError("duplicate runtime event was not recognized")
 
-        events_a = [json.loads(line) for line in (project_a / ".pf" / "runtime" / "events" / "events.ndjson").read_text(encoding="utf-8").splitlines() if line.strip()]
-        events_b = [json.loads(line) for line in (project_b / ".pf" / "runtime" / "events" / "events.ndjson").read_text(encoding="utf-8").splitlines() if line.strip()]
+        events_a = events(project_a)
+        events_b = events(project_b)
         sessions_a = {((item.get("session") or {}).get("id") if isinstance(item, dict) else "") for item in events_a}
         sessions_b = {((item.get("session") or {}).get("id") if isinstance(item, dict) else "") for item in events_b}
         if "sess-a" not in sessions_a or "sess-b" in sessions_a:

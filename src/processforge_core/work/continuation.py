@@ -221,7 +221,7 @@ class ContinuationService:
             writer_check=lambda: self._writer_check, binding_reader=lambda: self._work,
             work=lambda: self.work, record_loader=lambda: self._load,
             project_root=lambda: self.project, event_paths=lambda: self.core.event_runtime_paths,
-            event_reader=lambda: self.core.iter_ndjson, event_id=lambda: self.core.event_id_value,
+            event_reader=lambda: self.core.process_event_exists,
         )
 
     def _replay_cancel(self, path: Path, intent: dict) -> dict:

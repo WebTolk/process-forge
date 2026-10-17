@@ -207,7 +207,7 @@ def main() -> int:
             "Audit Process",
             "--apply",
         )
-        project_events = project / ".pf" / "runtime" / "events" / "events.ndjson"
+        project_events = project / ".pf" / "runtime" / "events" / "events.sqlite3"
         events_before = bytes_if_exists(project_events)
         require_success(
             "process-doctor",

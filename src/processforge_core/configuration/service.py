@@ -4,19 +4,20 @@ from __future__ import annotations
 from typing import Any
 
 from .errors import ConfigurationConflict
-from .models import PFConfig
+from .models import PFConfig, ProjectPFConfig
 from .storage import ConfigSnapshot, ConfigStore
 
 
 class ConfigService:
-    def __init__(self, store: ConfigStore):
+    def __init__(self, store: ConfigStore, *, defaults: PFConfig | ProjectPFConfig | None = None):
         self._store = store
+        self._defaults = defaults if defaults is not None else PFConfig()
 
     def read(self) -> ConfigSnapshot:
         return self._store.read()
 
-    def create(self, config: PFConfig | None = None) -> ConfigSnapshot:
-        return self._store.write(config if config is not None else PFConfig(), expected_revision=None)
+    def create(self, config: PFConfig | ProjectPFConfig | None = None) -> ConfigSnapshot:
+        return self._store.write(config if config is not None else self._defaults, expected_revision=None)
 
     def _existing(self, expected_revision: str | None) -> ConfigSnapshot:
         current = self.read()
@@ -31,7 +32,7 @@ class ConfigService:
         return self._store.write(current.config.with_changes(changes), expected_revision=current.revision)
 
     def reset(self, key: str, *, expected_revision: str | None = None) -> ConfigSnapshot:
-        return self.update({key: PFConfig().get(key)}, expected_revision=expected_revision)
+        return self.update({key: self._defaults.get(key)}, expected_revision=expected_revision)
 
     def delete(self, *, expected_revision: str | None = None) -> ConfigSnapshot:
         current = self._existing(expected_revision)

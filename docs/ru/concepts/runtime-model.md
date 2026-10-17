@@ -15,17 +15,24 @@ File layout является runtime contract:
 - `.pf/runs/` хранит run records.
 - `.pf/assignments/` хранит task и iteration records.
 - `.pf/artifacts/`, `.pf/reviews/` и `.pf/handoffs/` хранят evidence и delivery material.
-- `.pf/runtime/events/events.ndjson` хранит event envelopes.
+- `.pf/runtime/events/events.sqlite3` хранит необязательную историю и необходимые ID и факты проверки.
+- `.pf/runtime/agent-events/hooks.sqlite3` хранит квитанции хуков, незавершённую обработку и необязательные сырые данные.
 - `.pf/runtime/agent-runs/` хранит optional worker process state.
 - `.pf/runtime/supervisor/` хранит optional supervisor loop state.
 
-## Workplace raw ingress
+## Приём хуков проекта
 
-Agent-native payloads сначала пишутся в приватный workplace Raw Event Journal
-`<workplace>/runtime/agent-events/`, а не напрямую в project event file. Там
-хранятся raw shards, dedupe/index state, quarantine и replay checkpoints. Agent
-Ledger и Runtime service state/logs также являются workplace-scoped. Project
-records остаются локальными для `.pf/runtime/`.
+После проверки проекта исходные данные хука фиксируются в его приватном
+журнале `.pf/runtime/agent-events/hooks.sqlite3`. История нормализованных событий
+хранится отдельно в `events.sqlite3`. Agent Ledger и служебное состояние Runtime
+остаются общими для рабочей среды.
+
+Обработчик хука больше не пересобирает историю команд и представления стадий.
+История пересобирается явной командой; представление стадий обновляется при
+изменении входных файлов или последних фактов проверки. При неизменных данных
+очередной такт не разбирает YAML задач и не вычисляет заново хеши результатов.
+Проверки Work продолжают проверять актуальные исходные данные. Порядок переноса
+описан в [SQLite и миграции журналов](../../concepts/hook-journal-sqlite.md).
 
 Release archive включает `src/processforge_core`, `tools/processforge.py` и
 `tools/pf_runtime/*`, но не включает workplace raw journals, chat transcripts,

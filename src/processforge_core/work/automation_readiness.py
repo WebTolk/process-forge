@@ -1,7 +1,6 @@
 """Existing AutomationReadinessService responsibilities with explicit operation dependencies."""
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -53,14 +52,6 @@ class AutomationReadinessService:
         if not event_types or not self.has_event_paths():
             return None
         events_path, _outbox = self.event_paths(self.project_root)
-        if not events_path.is_file():
-            return None
-        for line in reversed(events_path.read_text(encoding='utf-8', errors='replace').splitlines()):
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            assignment = event.get('assignment') if isinstance(event.get('assignment'), dict) else {}
-            if str(event.get('event_type') or '') in event_types and (str(assignment.get('id') or '') == assignment_id or str(event.get('subject') or '') == assignment_id):
-                return event
-        return None
+        from ..process_event_journal import ProcessEventJournal
+
+        return ProcessEventJournal().latest_assignment_event(events_path, assignment_id, event_types)

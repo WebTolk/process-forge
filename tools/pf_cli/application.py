@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from processforge_core import diagnostics
+from processforge_core.sqlite_storage import JournalError
 
 
 class CliApplication:
@@ -66,7 +67,10 @@ class CliApplication:
         logger = diagnostics.for_project(project, run_id=run_id, session_id=session_id, invocation=options)
         with diagnostics.operation(logger, "cli", str(args.command), project_id=self._project_id_resolver(project) if project and (project / ".pf").is_dir() else None,
                                    run_id=run_id, session_id=session_id or None, build=diagnostics.identity_for(logger, self._entry_file)):
-            result = args.func(args)
+            try:
+                result = args.func(args)
+            except JournalError as exc:
+                raise SystemExit("FAIL: " + str(exc)) from None
             if result:
                 diagnostics.emit("error", "cli.nonzero_exit", {"exit_code": result}, component="cli")
             return result

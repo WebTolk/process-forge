@@ -22,8 +22,12 @@ class ConfigurationCommand:
         self,
         *,
         service_factory: Callable[[Path], ConfigService],
+        project_service_factory=None,
+        flow_root=None,
     ) -> None:
         self._service_factory = service_factory
+        self._project_service_factory = project_service_factory
+        self._flow_root = flow_root
 
     def execute(self, args: argparse.Namespace) -> int:
         try:
@@ -31,6 +35,13 @@ class ConfigurationCommand:
             if root.name == "workplace.yaml":
                 root = root.parent
             service = self._service_factory(root / "configuration.yaml")
+            device = None
+            if getattr(args, "project_root", None):
+                if self._project_service_factory is None or self._flow_root is None:
+                    raise ConfigurationError("configuration_project_scope_unavailable")
+                device = service.read()
+                project = Path(args.project_root).expanduser().resolve()
+                service = self._project_service_factory(self._flow_root(project) / "configuration.yaml")
             if args.config_command == "create":
                 snapshot = service.create()
             elif args.config_command == "update":
@@ -46,8 +57,14 @@ class ConfigurationCommand:
                 snapshot = service.read()
             payload = {"kind": "pf.configuration", "exists": snapshot.exists, "revision": snapshot.revision,
                        "configuration": snapshot.config.to_dict()}
+            effective = snapshot.config
+            if device is not None:
+                effective = device.config.for_project(snapshot.config)
+                payload.update(scope="project", effective_configuration=effective.to_dict())
             if args.config_command == "read" and args.key:
-                payload["value"] = snapshot.config.get(args.key)
+                payload["value"] = effective.get(args.key)
+                if device is not None:
+                    payload["override"] = snapshot.config.get(args.key)
             print(json.dumps(payload, ensure_ascii=True, indent=None if args.json else 2, sort_keys=True))
             return 0
         except ConfigurationError as exc:

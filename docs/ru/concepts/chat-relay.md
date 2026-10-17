@@ -4,4 +4,4 @@ Transcript диалога хранится приватно в `.pf/runtime/chat
 
 Текущий адаптер Codex автоматически фиксирует только `UserPromptSubmit` при известных project/session. PF-owned summaries входа worker и ожидаемые отчёты worker также требуют проверяемую provenance. Универсальный захват ответов assistant и сообщений subagent пока отсутствует.
 
-Raw provider payload хранится отдельно в private Raw Event Journal workplace; в project event и outbox его полное тело не копируется.
+Сырые данные провайдера хранятся отдельно в приватной SQLite проекта; в событие проекта и outbox полное тело не копируется.

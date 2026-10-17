@@ -76,8 +76,9 @@ artifacts.
   events; он не реконструирует полный generic conversation transcript.
 - Raw ingress отклоняет canonical payloads больше 1,048,576 bytes. Oversized
   payload blob spill или receipt пока нет.
-- Raw indexes являются file-per-event, а recovery может сканировать raw shards;
-  scaling improvements требуют измерений и отдельного storage decision.
+- Журналы проекта используют локальную SQLite с последовательной записью;
+  проверки локальной конкуренции не гарантируют работу нескольких машин или
+  неограниченную пропускную способность.
 - Future watcher/runner work должно оставаться bounded: streaming reads, offsets
   или checkpoints, bounded queues, subprocess timeouts и отсутствие full-project
   in-memory cache по умолчанию.

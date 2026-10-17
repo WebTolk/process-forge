@@ -6,6 +6,8 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'))
 from processforge_core import process_execution as module
+from processforge_core.process_event_journal import ProcessEventJournal
+from processforge_core.sqlite_storage import JournalError
 def retained(path):
     ns=dict(vars(module));ns['__name__']='processforge_core._automation_baseline'
     old=types.ModuleType(ns['__name__']);old.__dict__.update(ns);sys.modules[old.__name__]=old
@@ -14,7 +16,7 @@ def retained(path):
     exec('from __future__ import annotations\n'+ast.unparse(cls),old.__dict__)
     return old.ProcessExecutionService
 def suite(cls,root):
-    (root/'events.ndjson').unlink(missing_ok=True)
+    (root/'events.sqlite3').unlink(missing_ok=True)
     assignment={'id':'task'}
     rows=[]
     class LazyCore:
@@ -51,18 +53,19 @@ def suite(cls,root):
     r=project({'automation_bindings':[{'projector':'verification-state'}]});assert r[0]['status']=='ready';rows.append(r)
     svc=cls(root,None,SimpleNamespace())
     assert svc._latest_assignment_event('task',{'passed'}) is None
-    events=root/'events.ndjson'
+    events=root/'events.sqlite3'
     svc=cls(root,None,SimpleNamespace(event_runtime_paths=lambda *a:(events,None)))
     assert svc._latest_assignment_event('task',{'passed'}) is None
-    for data,expected in [('not json\n'+json.dumps({'event_type':'passed','assignment':{'id':'task'}})+'\n', 'passed'),
-                          (json.dumps({'event_type':'failed','subject':'task'})+'\n'+json.dumps({'event_type':'passed','subject':'other'})+'\n', 'failed'),
-                          (json.dumps({'event_type':'passed','subject':'task'})+'\ninvalid\n', 'passed')]:
-        events.write_text(data,encoding='utf-8')
+    for index,(data,expected) in enumerate([
+            ([{'event_type':'passed','assignment':{'id':'task'}}], 'passed'),
+            ([{'event_type':'failed','subject':'task'}, {'event_type':'passed','subject':'other'}], 'failed'),
+            ([{'event_type':'passed','subject':'task','data':{'verification_fingerprint':'fp'}}], 'passed')]):
+        for number,event in enumerate(data):
+            ProcessEventJournal().append(events, dict(event,event_id=f'evt_{index}_{number}'), record=index != 2)
         r=svc._latest_assignment_event('task',{'passed','failed'});assert r['event_type']==expected;rows.append(r)
-    events.write_text('[]\n',encoding='utf-8')
-    try:svc._latest_assignment_event('task',{'passed'})
-    except AttributeError:rows.append('AttributeError')
-    else:raise AssertionError('Preserve existing malformed event error')
+    try:ProcessEventJournal().append(events,{})
+    except JournalError:rows.append('invalid identity rejected before commit')
+    else:raise AssertionError('malformed event accepted')
     error=RuntimeError('required output failure')
     def fail(*args):raise error
     svc=cls(root,None,SimpleNamespace(required_output_checks=fail))

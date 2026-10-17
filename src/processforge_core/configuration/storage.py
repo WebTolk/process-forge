@@ -4,12 +4,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from .models import PFConfig
+from .models import PFConfig, ProjectPFConfig
 
 
 @dataclass(frozen=True)
 class ConfigSnapshot:
-    config: PFConfig
+    config: PFConfig | ProjectPFConfig
     revision: str | None
 
     @property
@@ -20,6 +20,6 @@ class ConfigSnapshot:
 class ConfigStore(Protocol):
     def read(self) -> ConfigSnapshot: ...
 
-    def write(self, config: PFConfig, *, expected_revision: str | None) -> ConfigSnapshot: ...
+    def write(self, config: PFConfig | ProjectPFConfig, *, expected_revision: str | None) -> ConfigSnapshot: ...
 
     def delete(self, *, expected_revision: str) -> ConfigSnapshot: ...

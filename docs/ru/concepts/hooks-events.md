@@ -6,26 +6,28 @@ project-visible chat records.
 ```text
 native agent hook/event
   -> provider adapter
-  -> workplace private raw ingress
+  -> project private raw ingress
   -> normalization and project-scope validation
   -> project event, conversation record, Ledger effect, or no derived effect
 ```
 
 ## Terms and storage boundary
 
-- **Raw native event** — provider payload. Raw Event Journal является private
-  workplace-scoped storage в `<workplace>/runtime/agent-events/`.
+- **Сырое событие** — исходные данные провайдера. Его квитанция и необязательная
+  копия данных хранятся в `.pf/runtime/agent-events/hooks.sqlite3` проекта.
 - **Normalized PF event** — provider-neutral derived fact.
-- **Project event** — private project record в `.pf/runtime/events/events.ndjson`;
+- **Project event** — private project record в `.pf/runtime/events/events.sqlite3`;
   это не полный hook journal.
 - **Chat message** — private transcript record. Сопутствующий
   `chat.message.recorded` event по умолчанию содержит только metadata.
 - **Delivery attempt** — outbox work. **Operator log** — отдельный process
   artifact, а не замена event.
 
-Raw storage использует hourly shards, deduplication indexes, quarantine records
-и replay checkpoints. Он может содержать sensitive provider payloads и исключен
-из release archive.
+SQLite хранит уникальные квитанции, данные незавершённой обработки, карантин и
+необязательную историю. Контрольные точки повторной обработки также относятся
+к проекту. Эти данные приватны и исключены из архива поставки. Параметры
+`logging.raw_hooks` и `logging.events` наследуются от глобального PFConfig с
+проектными переопределениями. См. [описание миграции](../../concepts/hook-journal-sqlite.md).
 
 ## Codex adapter and registration
 

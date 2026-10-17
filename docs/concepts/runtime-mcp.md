@@ -116,7 +116,7 @@ and checks through an application's actual connected MCP are separate evidence.
 The state is derived from canonical Run and Assignment files plus the pinned
 Process definition; technical projector facts remain declaration-driven.
 
-MCP is not a raw-ingress API and does not expose workplace raw payloads. The
+MCP is not a raw-ingress API and does not expose raw hook payloads. The
 session-chat view exposes only the trusted, redacted private transcript for the
 same Ledger session. See [Codex Session Read Layer](codex-session-read.md) and
 [Hooks And Events](hooks-events.md) for registration and replay boundaries.

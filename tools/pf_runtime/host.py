@@ -29,7 +29,14 @@ from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministi
 # durable authority still belongs to the existing PF Core files.
 STATE_LOCK = threading.RLock()
 PROCESS_DEFINITION_CACHE: dict[tuple[str, str], tuple[Path, int, dict[str, Any]]] = {}
+STAGE_PROJECTION_CACHE: dict[str, tuple[tuple[Any, ...], set[Path]]] = {}
 PENDING_CONVERSATION_CAPTURES: dict[tuple[str, str], dict[str, tuple[dict[str, Any], Any]]] = {}
+
+
+def event_journal():
+    from processforge_core.process_event_journal import ProcessEventJournal
+
+    return ProcessEventJournal()
 
 
 def state_lock() -> threading.RLock:
@@ -72,17 +79,7 @@ def output_fact(project_root: Path, output: dict[str, Any], core: Any) -> dict[s
 
 def journal_events(project_root: Path, core: Any) -> list[dict[str, Any]]:
     path, _outbox = core.event_runtime_paths(project_root)
-    if not path.is_file():
-        return []
-    rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        try:
-            item = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(item, dict):
-            rows.append(item)
-    return rows
+    return [event for _sequence, event, _error in event_journal().records(path)]
 
 
 def execution_stage(task: dict[str, Any], run_state: dict[str, Any], process: dict[str, Any]) -> str:
@@ -144,7 +141,7 @@ def resolved_process(project_root: Path, process_id: str, core: Any) -> dict[str
     return process
 
 
-def declared_stage_obligations(project_root: Path, core: Any) -> list[dict[str, Any]]:
+def declared_stage_obligations(project_root: Path, core: Any, *, dependencies: set[Path] | None = None) -> list[dict[str, Any]]:
     """Read technical obligations from process definitions, never from Runtime policy."""
     flow_root = core.locate_flow_root(project_root)
     results: list[dict[str, Any]] = []
@@ -152,6 +149,8 @@ def declared_stage_obligations(project_root: Path, core: Any) -> list[dict[str, 
     for assignment_path in sorted((flow_root / "assignments").glob("*.yaml")):
         task = core.load_yaml_document(assignment_path)
         if not isinstance(task, dict) or not task.get("id"):
+            continue
+        if str(task.get("status") or "") in {"done", "completed", "cancelled", "failed"}:
             continue
         process_id = core.task_process_id(task)
         if not process_id:
@@ -162,6 +161,18 @@ def declared_stage_obligations(project_root: Path, core: Any) -> list[dict[str, 
         if not process:
             continue
         run_id = str(task.get("run_id") or "")
+        if dependencies is not None:
+            if run_id:
+                dependencies.add(core.worker_run_paths(project_root, run_id, str(task["id"]))["status"])
+            for output in core.normalize_required_outputs(task.get("required_outputs")):
+                path = core.task_output_path(project_root, output)
+                if path is not None:
+                    dependencies.add(path)
+            expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+            if expected.get("artifact"):
+                path = core.task_output_path(project_root, {"path": expected["artifact"]})
+                if path is not None:
+                    dependencies.add(path)
         run_state = core.load_agent_run_state(project_root, run_id, str(task.get("id"))) if run_id else {}
         stage_id = execution_stage(task, run_state, process)
         stages = process.get("stages") if isinstance(process.get("stages"), list) else []
@@ -214,12 +225,8 @@ def build_required_output_readiness(item: dict[str, Any], project_root: Path, co
 def declared_verification_event(project_root: Path, task_id: str, verification: dict[str, Any], core: Any) -> dict[str, Any] | None:
     passed_event = str(verification.get("passed_event") or "")
     failed_event = str(verification.get("failed_event") or "")
-    for event in reversed(journal_events(project_root, core)):
-        event_type = str(event.get("event_type") or "")
-        assignment = event.get("assignment") if isinstance(event.get("assignment"), dict) else {}
-        if event_type in {passed_event, failed_event} and (str(assignment.get("id") or "") == task_id or str(event.get("subject") or "") == task_id):
-            return event
-    return None
+    return event_journal().latest_assignment_event(core.event_runtime_paths(project_root)[0],
+                                                         task_id, {passed_event, failed_event})
 
 
 def build_verification_state(item: dict[str, Any], project_root: Path, core: Any) -> dict[str, Any]:
@@ -246,9 +253,9 @@ def build_verification_state(item: dict[str, Any], project_root: Path, core: Any
 PROJECTOR_BUILDERS = {"required-output-readiness": build_required_output_readiness, "verification-state": build_verification_state}
 
 
-def stage_obligation_rows(project_root: Path, core: Any) -> list[dict[str, Any]]:
+def stage_obligation_rows(project_root: Path, core: Any, *, dependencies: set[Path] | None = None) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for item in declared_stage_obligations(project_root, core):
+    for item in declared_stage_obligations(project_root, core, dependencies=dependencies):
         builder = PROJECTOR_BUILDERS.get(str(item["obligation"].get("projector") or ""))
         if builder is not None:
             rows.append(builder(item, project_root, core))
@@ -256,6 +263,8 @@ def stage_obligation_rows(project_root: Path, core: Any) -> list[dict[str, Any]]
 
 
 def rebuild_stage_obligations(project_root: Path, core: Any) -> Path:
+    key = str(project_root.resolve())
+    STAGE_PROJECTION_CACHE.pop(key, None)
     rows = stage_obligation_rows(project_root, core)
     payload = {
         "schema_version": 1,
@@ -267,6 +276,52 @@ def rebuild_stage_obligations(project_root: Path, core: Any) -> Path:
     }
     out = stage_obligations_path(project_root, core)
     write_json(out, payload)
+    return out
+
+
+def _stage_input_signature(project_root: Path, core: Any, dependencies: set[Path]) -> tuple[Any, ...]:
+    flow_root = core.locate_flow_root(project_root)
+    paths = dependencies | set((flow_root / "assignments").glob("*.yaml"))
+    facts = []
+    for path in sorted(paths):
+        try:
+            stat = path.stat()
+            facts.append((str(path), stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns))
+        except FileNotFoundError:
+            facts.append((str(path), None))
+    return (tuple(facts), event_journal().verification_revision(core.event_runtime_paths(project_root)[0]))
+
+
+def refresh_stage_obligations(project_root: Path, core: Any) -> Path:
+    """Refresh the UI cache only after its file inputs or verification state change.
+
+    Work gates still inspect current inputs independently of this projection.
+    No journal scan, YAML reload or output hashing occurs on an unchanged tick.
+    """
+    key = str(project_root.resolve())
+    cached = STAGE_PROJECTION_CACHE.get(key)
+    out = stage_obligations_path(project_root, core)
+    if cached is not None and out.is_file() and _stage_input_signature(project_root, core, cached[1]) == cached[0]:
+        return out
+    dependencies = {core.locate_flow_root(project_root) / "process-forge.yaml",
+                    core.locate_flow_root(project_root) / "process-forge.local.yaml"}
+    # Capture task inputs before building; a concurrent change leaves the next
+    # tick dirty instead of treating an old projection as current.
+    before = _stage_input_signature(project_root, core, dependencies)
+    rows = stage_obligation_rows(project_root, core, dependencies=dependencies)
+    dependencies.update(value[0] for cache_key, value in PROCESS_DEFINITION_CACHE.items() if cache_key[0] == key)
+    payload = {"schema_version": 1, "kind": "stage-obligations", "generated_at": core.now_utc(),
+               "project_id": core.project_id(project_root), "source": {
+                   "event_journal": core.rel(core.event_runtime_paths(project_root)[0], project_root),
+                   "authority": "process-definitions+durable-assignments+inspector-state"}, "obligations": rows}
+    write_json(out, payload)
+    after = _stage_input_signature(project_root, core, dependencies)
+    initial_paths = {fact[0] for fact in before[0]}
+    stable = before[1] == after[1] and before[0] == tuple(fact for fact in after[0] if fact[0] in initial_paths)
+    if len(STAGE_PROJECTION_CACHE) >= 128:
+        STAGE_PROJECTION_CACHE.clear()
+    if stable:
+        STAGE_PROJECTION_CACHE[key] = (after, dependencies)
     return out
 
 
@@ -353,25 +408,7 @@ def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
 
 
 def event_exists(project_root: Path, event_id: str, core: Any) -> bool:
-    events_path, _outbox = core.event_runtime_paths(project_root)
-    try:
-        lookup = getattr(vars(core).get("_process_event_journal"), "contains", None)
-    except Exception:
-        lookup = None
-    if callable(lookup):
-        return lookup(events_path, event_id, event_id_value=core.event_id_value)
-    if not events_path.is_file():
-        return False
-    for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        if not line.strip():
-            continue
-        try:
-            item = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(item, dict) and core.event_id_value(item) == event_id:
-            return True
-    return False
+    return event_journal().contains(core.event_runtime_paths(project_root)[0], event_id)
 
 
 def stable_event_id(payload: dict[str, Any]) -> str:
@@ -519,17 +556,8 @@ def ledger_from_event(raw: dict[str, Any], project_root: Path, workplace_root: P
 def rebuild_projection(project_root: Path, core: Any) -> Path:
     with state_lock():
         events_path, _outbox = core.event_runtime_paths(project_root)
-        rows: list[dict[str, Any]] = []
-        if events_path.is_file():
-            for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
-                if not line.strip():
-                    continue
-                try:
-                    item = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(item, dict) and str(item.get("event_type") or "").startswith("agent."):
-                    rows.append(item)
+        rows = [item for _sequence, item, _error in event_journal().records(events_path)
+                if str(item.get("event_type") or "").startswith("agent.")]
         out = projection_path(project_root, core)
         lines = [
             "# Runtime Command History",
@@ -609,11 +637,11 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         duplicate = event_exists(project_root, core.event_id_value(event), core)
         if not duplicate:
             ledger_from_event(raw, project_root, workplace_root, handle, core)
-            core.append_process_event(project_root, event)
+        duplicate = not core.admit_process_event(project_root, event, workplace_root=workplace_root)
         remember_session(state, session_id, handle, str(source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""), core)
         save_state(workplace_root, state, core)
-        projection = rebuild_projection(project_root, core)
-        stage_projection = rebuild_stage_obligations(project_root, core)
+        projection = projection_path(project_root, core)
+        stage_projection = stage_obligations_path(project_root, core)
         payload = {"event_id": core.event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(core.event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
         return payload
 
@@ -818,6 +846,9 @@ def _flush_deferred_conversation(
             else:
                 durable.pop(session_key, None)
             save_state(workplace_root, state, core)
+        kernel = RawIngressKernel(workplace_root, flow_root=core.locate_flow_root(project_root))
+        for raw_id in succeeded:
+            kernel.finish(raw_id, {"routing_status": "conversation_flushed"})
     diagnostics: dict[str, Any] = {"deferred_conversation": {"flushed": len(queued), "chat_message_ids": identifiers}}
     if failures:
         diagnostics["deferred_conversation"]["failures"] = failures
@@ -1052,13 +1083,35 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         source_session_id=str(envelope.get("source_session_id") or "") or None,
         source_project_ref=source_project_ref,
     )
-    receipt = RawIngressKernel(workplace_root).ingest(native)
+    configuration = core.project_configuration(project_root, workplace_root)
+    settings = configuration.config.logging
+    # Refuse a half-migrated project before admitting new raw work.
+    event_journal().count(core.event_runtime_paths(project_root)[0])
+    kernel = RawIngressKernel(workplace_root, flow_root=core.locate_flow_root(project_root), record_raw=settings.raw_hooks)
+    receipt = kernel.ingest(native)
     response = _raw_receipt_payload(receipt)
+    response["diagnostics"]["logging"] = {"raw_hooks": settings.raw_hooks, "events": settings.events}
+    if configuration.errors:
+        response["diagnostics"]["configuration_errors"] = list(configuration.errors)
     if not receipt.accepted:
         return response
     reason = _adapter_admission(envelope, project_root, core, registry) if identity_valid and not malformed else "provenance_rejected"
     if reason:
-        return {**response, "routing_status": "denied", "diagnostics": {**response["diagnostics"], "adapter": {"status": "denied", "reason": reason}, "conversation": {"status": "denied", "reason": reason}}}
+        response = {**response, "routing_status": "denied", "diagnostics": {**response["diagnostics"], "adapter": {"status": "denied", "reason": reason}, "conversation": {"status": "denied", "reason": reason}}}
+        kernel.finish(str(receipt.raw_event_id), response)
+        return response
+
+    if receipt.deduplicated:
+        previous = kernel.result(str(receipt.raw_event_id))
+        required_ids = list(previous.get("normalized_event_ids", [])) if previous else []
+        if previous:
+            required_ids.extend("evt_" + hashlib.sha256(("chat.message.recorded:" + message_id).encode("utf-8")).hexdigest()[:32]
+                                for message_id in previous.get("chat_message_ids", []))
+        if (previous and previous.get("routing_status") == "routed"
+                and not _conversation_reason(previous.get("diagnostics", {}))
+                and all(event_exists(project_root, identifier, core) for identifier in required_ids)):
+            return {**previous, "deduplicated": True, "duplicate": True,
+                    "diagnostics": {**previous.get("diagnostics", {}), **response["diagnostics"]}}
 
     derived = envelope.get("derived_event")
     derived_event_type = _derived_event_type(derived) if isinstance(derived, dict) else ""
@@ -1099,6 +1152,7 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         ended_session_presence=ended_session_presence,
         registry=registry,
     )
+    deferred = False
     if (
         _conversation_reason(conversation_diagnostics) == "session_not_authorized"
         and not _is_worker_conversation(envelope, registry)
@@ -1107,12 +1161,15 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         and not ledger_session(str(envelope.get("source_session_id") or ""), workplace_root, core)
     ):
         _defer_conversation_capture(envelope, receipt, project_root, workplace_root, core)
+        deferred = True
         chat_message_ids, conversation_diagnostics = _conversation_deferred(
             "session_not_authorized",
             session_id=str(envelope.get("source_session_id") or ""),
         )
     response["chat_message_ids"] = [*response["chat_message_ids"], *chat_message_ids]
     response["diagnostics"] = {**response["diagnostics"], **conversation_diagnostics}
+    if not deferred:
+        kernel.finish(str(receipt.raw_event_id), response)
     return response
 
 
@@ -1279,7 +1336,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
         "current_session": core.read_current_project_session(project_root),
         "agent_presence": [item for item in AgentPresenceReader(workplace_root).records() if str(item.get("project_id") or "") == handle["project_id"]],
         "events_path": core.rel(events_path, project_root),
-        "event_count": len(events_path.read_text(encoding="utf-8", errors="replace").splitlines()) if events_path.is_file() else 0,
+        "event_count": event_journal().count(events_path),
         "supervisor": supervisor,
         "projections": {"stage_obligations": projection},
         "current_work_state": current_work_state,
@@ -1363,7 +1420,8 @@ def tick_payload(
                 rc = call_quiet(core.command_supervisor_tick, argparse.Namespace(project_root=str(project_root), run=run, profile=profile, driver=driver, start_allowed=False))
                 item["inspector"] = "tick"
                 status = status or rc
-            stage_projection = rebuild_stage_obligations(project_root, core)
+            core.flush_pending_event_dispatches(project_root)
+            stage_projection = refresh_stage_obligations(project_root, core)
             item["projection"] = core.rel(stage_projection, project_root)
             results.append(item)
         save_state(workplace_root, state, core)

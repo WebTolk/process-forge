@@ -74,9 +74,12 @@ from processforge_core.resources.versioning import ResourceVersionPolicy
 from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 from processforge_core.process_event_journal import ProcessEventJournal
+from processforge_core.sqlite_storage import JournalError
+from processforge_core.configuration.resolution import ConfigurationResolver
 
 _file_digests = FileDigestReader()
 _process_event_journal = ProcessEventJournal()
+_configuration_resolver = ConfigurationResolver()
 _context_contract_inputs = ContextContractInputs()
 _resource_version_policy = ResourceVersionPolicy()
 _project_snapshot_resolved_comparison = ProjectSnapshotResolvedComparison(versions=_resource_version_policy)
@@ -9959,7 +9962,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
                 "extended .pf/AGENTS.md and relevant artifacts/logs/reviews/handoffs on demand",
             ],
             "telemetry_root": rel(flow_root / "runtime" / "telemetry", project_root),
-            "events_log": rel(flow_root / "runtime" / "events" / "events.ndjson", project_root),
+            "events_log": rel(flow_root / "runtime" / "events" / "events.sqlite3", project_root),
         },
     }
 
@@ -10050,7 +10053,23 @@ def append_telemetry_event(telemetry_path: Path, event: str, **payload: Any) -> 
 
 def event_runtime_paths(project_root: Path) -> tuple[Path, Path]:
     runtime = locate_flow_root(project_root) / "runtime" / "events"
-    return runtime / "events.ndjson", locate_flow_root(project_root) / "runtime" / "hooks" / "outbox"
+    return runtime / "events.sqlite3", locate_flow_root(project_root) / "runtime" / "hooks" / "outbox"
+
+
+def project_configuration(project_root: Path, workplace_root: Path | None = None):
+    if workplace_root is None:
+        manifest = project_workplace_manifest(project_root)
+        workplace_root = manifest.parent.resolve() if manifest else None
+    device_path = workplace_root / "configuration.yaml" if workplace_root is not None else None
+    return _configuration_resolver.resolve(device_path, locate_flow_root(project_root) / "configuration.yaml")
+
+
+def iter_process_events(path: Path):
+    return _process_event_journal.records(path)
+
+
+def process_event_exists(path: Path, event_id: str) -> bool:
+    return _process_event_journal.contains(path, event_id)
 
 
 def hook_config_path(project_root: Path) -> Path:
@@ -10230,7 +10249,7 @@ def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool =
     for hook in hooks:
         hook_id = safe_id(str(hook.get("id", "hook")), "hook")
         hook_type = str(hook.get("type", "outbox"))
-        delivery_id = f"del_{uuid.uuid4().hex}"
+        delivery_id = "del_" + hashlib.sha256((event_id_value(event) + ":" + hook_id).encode("utf-8")).hexdigest()[:32]
         action: dict[str, Any] = {"hook": hook_id, "target_id": hook_id, "type": hook_type, "delivery_id": delivery_id}
         if dry_run:
             action["status"] = "dry_run"
@@ -10281,27 +10300,35 @@ def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool =
     return actions
 
 
-def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True) -> Path:
+def admit_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True, workplace_root: Path | None = None) -> bool:
+    if not (event.get("event_id") or event.get("id")):
+        raise JournalError("journal_event_id_required")
     events_path, _outbox = event_runtime_paths(project_root)
-
-    @contextlib.contextmanager
-    def journal_writer_guard(path: Path):
-        try:
-            with registry_file_lock(path, stale_after_seconds=0):
-                yield
-        except SystemExit as exc:
-            # Registry CLI errors must not terminate a Runtime request thread.
-            raise RuntimeError(f"Project event journal writer unavailable: {exc}") from exc
-
-    _process_event_journal.append(
+    inserted = _process_event_journal.append(
         events_path,
         event,
-        writer_guard=journal_writer_guard,
         event_id_value=event_id_value,
+        record=project_configuration(project_root, workplace_root).config.logging.events,
+        queue_dispatch=dispatch and bool(selected_hooks(project_root, event)),
     )
     if dispatch:
-        dispatch_hooks(project_root, event, dry_run=False, outbox=True)
+        for pending in _process_event_journal.pending_dispatch(events_path, event_id=event_id_value(event)):
+            dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
+            _process_event_journal.complete_dispatch(events_path, event_id_value(pending))
+    return inserted
+
+
+def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True, workplace_root: Path | None = None) -> Path:
+    events_path, _outbox = event_runtime_paths(project_root)
+    admit_process_event(project_root, event, dispatch=dispatch, workplace_root=workplace_root)
     return events_path
+
+
+def flush_pending_event_dispatches(project_root: Path, *, limit: int = 100) -> None:
+    path = event_runtime_paths(project_root)[0]
+    for pending in _process_event_journal.pending_dispatch(path, limit=limit):
+        dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
+        _process_event_journal.complete_dispatch(path, event_id_value(pending))
 
 
 def emit_process_event(project_root: Path, event_type: str, **kwargs: Any) -> dict[str, Any]:
@@ -12601,8 +12628,8 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
         checks.append(check("PASS" if handoff.is_file() else "FAIL", f"{rel(handoff, project_root)} exists"))
     if include_runtime_events:
         events_path, _outbox = event_runtime_paths(project_root)
-        event_text = events_path.read_text(encoding="utf-8", errors="replace") if events_path.is_file() else ""
-        checks.append(check("PASS" if str(run.get("id", run_id)) in event_text else "WARN", "runtime run events exist"))
+        events = _process_event_journal.page(events_path, run_id=str(run.get("id", run_id)), limit=1)
+        checks.append(check("PASS" if events else "WARN", "runtime run events exist"))
     return checks
 
 
@@ -13631,7 +13658,7 @@ def process_authoring_event_effect(
 ) -> AuthoringEffect:
     return AuthoringEffect(
         label=f"event:{event_type}",
-        destination=rel(locate_flow_root(project_root) / "runtime" / "events" / "events.ndjson", project_root),
+        destination=rel(event_runtime_paths(project_root)[0], project_root),
         role="audit",
         operation="append",
         condition="after_commit",
@@ -17973,9 +18000,11 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
 
 def emit_worker_completion_event(project_root: Path, event_type: str, receipt_id: str, **kwargs: Any) -> dict[str, Any]:
     event_id = "evt_" + hashlib.sha256((receipt_id + ":" + event_type).encode("utf-8")).hexdigest()
-    for _line, event, error in iter_ndjson(event_runtime_paths(project_root)[0]):
-        if not error and isinstance(event, dict) and event_id_value(event) == event_id:
-            return event
+    path = event_runtime_paths(project_root)[0]
+    if _process_event_journal.contains(path, event_id):
+        event = _process_event_journal.get(path, event_id) or processforge_event(project_root, event_type, event_id=event_id, **kwargs)
+        admit_process_event(project_root, event)
+        return event
     return emit_process_event(project_root, event_type, event_id=event_id, **kwargs)
 
 
@@ -19817,11 +19846,11 @@ def command_events_validate(args: argparse.Namespace) -> int:
     require_flow_root(project_root)
     flow_root = locate_flow_root(project_root)
     failures: list[str] = []
-    events_path = flow_root / "runtime" / "events" / "events.ndjson"
-    for line_number, data, error in iter_ndjson(events_path):
+    events_path = event_runtime_paths(project_root)[0]
+    for line_number, data, error in iter_process_events(events_path):
         label = f"{rel(events_path, project_root)}:{line_number}"
         if error:
-            failures.append(f"{label}: invalid NDJSON: {error}")
+            failures.append(f"{label}: invalid event record: {error}")
         else:
             failures.extend(validate_event_object(data, label))
 
@@ -22510,6 +22539,13 @@ def configuration_service(configuration_path: Path) -> ConfigService:
     return ConfigService(YamlConfigStore(configuration_path))
 
 
+def project_configuration_service(configuration_path: Path) -> ConfigService:
+    from processforge_core.configuration import ConfigService, ProjectPFConfig
+    from processforge_core.configuration.yaml_store import YamlConfigStore
+
+    return ConfigService(YamlConfigStore(configuration_path, model=ProjectPFConfig), defaults=ProjectPFConfig())
+
+
 def resource_search_index(
     project_root: Path, snapshot: dict[str, Any], workplace_root: Path
 ) -> ResourceSearchIndex:
@@ -25107,7 +25143,9 @@ def build_parser() -> argparse.ArgumentParser:
     from pf_runtime.monitor import interval_value
 
     configuration_commands = ConfigurationCommandParser(
-        execute=ConfigurationCommand(service_factory=configuration_service).execute,
+        execute=ConfigurationCommand(service_factory=configuration_service,
+                                     project_service_factory=project_configuration_service,
+                                     flow_root=locate_flow_root).execute,
     )
     configuration_commands.register(sub.add_parser)
 

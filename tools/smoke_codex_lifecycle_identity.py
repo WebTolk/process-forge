@@ -84,11 +84,7 @@ def main() -> int:
         assert results[2]["deduplicated"]
 
         events_path, _ = runtime.core.event_runtime_paths(project)
-        events = [
-            json.loads(line)
-            for line in events_path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
+        events = [event for _sequence, event, _error in runtime.core.iter_process_events(events_path)]
         lifecycle = [
             event
             for event in events

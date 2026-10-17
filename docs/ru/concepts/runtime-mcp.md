@@ -122,7 +122,7 @@ authorized root результата.
 выводится из канонических Run и Assignment и закреплённого Process definition;
 technical projectors остаются declaration-driven.
 
-MCP не является raw-ingress API и не раскрывает workplace raw payloads.
+MCP не является API приёма хуков и не раскрывает их сырые данные.
 `pf.session_chat` показывает только trusted redacted private transcript для той
 же Ledger session. См. [Codex Session Read Layer](../../concepts/codex-session-read.md) и
 [Hooks и события](hooks-events.md).

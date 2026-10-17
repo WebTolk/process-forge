@@ -39,14 +39,15 @@ def replay_session_raw_records(
     if limit is not None and limit <= 0:
         raise ValueError("limit must be positive")
 
-    root = RawIngressKernel(workplace_root).root
     project_root = resolve_project(project_ref, core)
+    kernel = RawIngressKernel(workplace_root, flow_root=core.locate_flow_root(project_root))
+    root = kernel.root
     counts = _empty_counts()
     records: list[dict[str, Any]] = []
     errors: list[dict[str, Any]] = []
     processed = 0
 
-    for item in _iter_raw_records(root):
+    for item in _iter_raw_records(root, session_id=session_id, provider=provider, adapter=adapter):
         if item.get("malformed"):
             counts["failed"] += 1
             errors.append({"status": "failed", "code": "malformed_json", "raw_location": item["raw_location"]})
@@ -72,6 +73,8 @@ def replay_session_raw_records(
             errors.append(status)
             return _result("failed", counts, records, errors)
 
+        kernel.finish(raw_event_id, status)
+
         records.append(status)
         _write_checkpoint(
             root,
@@ -91,28 +94,15 @@ def replay_session_raw_records(
     return _result("ok", counts, records, errors)
 
 
-def checkpoint_path(workplace_root: Path, session_id: str) -> Path:
-    root = RawIngressKernel(workplace_root).root
+def checkpoint_path(workplace_root: Path, session_id: str, *, flow_root: Path | None = None) -> Path:
+    root = RawIngressKernel(workplace_root, flow_root=flow_root).root
     return contained_path(root, "checkpoints", "session-replay", f"{_safe_session_id(session_id)}.json")
 
 
-def _iter_raw_records(root: Path) -> Iterable[dict[str, Any]]:
-    raw_root = contained_path(root, "raw", "v1")
-    if not raw_root.is_dir():
-        return
-    for shard in sorted(raw_root.rglob("*.ndjson")):
-        offset = 0
-        with shard.open("rb") as handle:
-            for line in handle:
-                raw_location = f"{shard.relative_to(root).as_posix()}:{offset}"
-                try:
-                    record = json.loads(line.decode("utf-8"))
-                except (UnicodeDecodeError, json.JSONDecodeError):
-                    yield {"malformed": True, "raw_location": raw_location}
-                    return
-                if isinstance(record, dict):
-                    yield {"record": record, "raw_location": raw_location}
-                offset += len(line)
+def _iter_raw_records(root: Path, **filters) -> Iterable[dict[str, Any]]:
+    from processforge_core.raw_hook_journal import RawHookJournal
+
+    yield from RawHookJournal().records(contained_path(root, "hooks.sqlite3"), **filters)
 
 
 def _candidate(record: Mapping[str, Any], *, session_id: str, provider: str, adapter: str) -> bool:

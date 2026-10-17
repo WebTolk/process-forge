@@ -73,7 +73,7 @@ Use `pf.work.state` and `pf.work.transition` until `run_completed`; handle
 `process_choice_required` from returned choices. START is optional guidance.
 Manual session creation is an operator interface, not a prerequisite for work.
 Explicit session telemetry lives in `.pf/runtime/telemetry/`, events in
-`.pf/runtime/events/events.ndjson`.
+`.pf/runtime/events/events.sqlite3`.
 
 ## Current Risks
 

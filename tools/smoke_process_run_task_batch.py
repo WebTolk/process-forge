@@ -68,13 +68,8 @@ def make_project(root: Path, name: str) -> Path:
 
 
 def event_types(project: Path) -> list[str]:
-    events = project / ".pf" / "runtime" / "events" / "events.ndjson"
-    values: list[str] = []
-    for line in events.read_text(encoding="utf-8", errors="replace").splitlines():
-        if not line.strip():
-            continue
-        values.append(str(json.loads(line).get("event_type", "")))
-    return values
+    from smoke_hook_sqlite_support import events
+    return [str(row.get("event_type", "")) for row in events(project)]
 
 
 def positive_workflow(root: Path) -> None:

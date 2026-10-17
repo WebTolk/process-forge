@@ -6,6 +6,13 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {"type": "integer", "const": 1},
+    "logging": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "raw_hooks": {"type": "boolean", "default": true},
+        "events": {"type": "boolean", "default": true}
+      }
+    },
     "runtime": {
       "type": "object", "additionalProperties": false,
       "properties": {

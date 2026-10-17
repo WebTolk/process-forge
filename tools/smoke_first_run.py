@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import json
+
 import sys
 import tempfile
 import os
@@ -105,7 +107,7 @@ def main() -> int:
             ".pf/artifacts/project-onboarding-report.md",
             ".pf/reviews/project-onboarding-review.md",
             ".pf/handoffs/project-ready-handoff.md",
-            ".pf/runtime/events/events.ndjson",
+            ".pf/runtime/events/events.sqlite3",
         ]:
             assert_file(project / rel_path)
         assert_no_public_absolute_paths(project)
@@ -140,7 +142,8 @@ def main() -> int:
         run_command("doctor-project", "--project-root", str(project))
         run_command("hooks-dispatch", "--project-root", str(project), "--event-type", "project.onboarding.completed", "--outbox")
 
-        events = (project / ".pf" / "runtime" / "events" / "events.ndjson").read_text(encoding="utf-8")
+        from smoke_hook_sqlite_support import events as sqlite_events
+        events = json.dumps(sqlite_events(project), ensure_ascii=False)
         for marker in [
             "project.onboarding.started",
             "project.flow_root.created",

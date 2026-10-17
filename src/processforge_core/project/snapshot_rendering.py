@@ -207,7 +207,7 @@ class ProjectContextSnapshotRenderer:
                 *[f"{index}. {item}" for index, item in enumerate(snapshot.get("session", {}).get("startup_read_order", []), 1)],
                 "",
                 f"Telemetry root: `{snapshot.get('session', {}).get('telemetry_root', 'runtime/telemetry')}`",
-                f"Events log: `{snapshot.get('session', {}).get('events_log', 'runtime/events/events.ndjson')}`",
+                f"Events log: `{snapshot.get('session', {}).get('events_log', 'runtime/events/events.sqlite3')}`",
                 "",
                 "## Current Risks",
                 "",

@@ -18,6 +18,7 @@ from codex_exec_worker import capture_worker_input, prompt_payload
 from processforge_subprocess import diagnostic_text, run_command
 from pf_runtime.codex_hooks import native_envelope
 from pf_runtime.host import worker_input_summary
+from smoke_hook_sqlite_support import events as sqlite_events, remove_event as sqlite_remove_event
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,13 +58,11 @@ def transcript(project: Path, session: str) -> list[dict[str, object]]:
 
 
 def events(project: Path) -> list[dict[str, object]]:
-    path = project / ".pf" / "runtime" / "events" / "events.ndjson"
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line] if path.is_file() else []
+    return sqlite_events(project)
 
 
 def events_text(project: Path) -> str:
-    path = project / ".pf" / "runtime" / "events" / "events.ndjson"
-    return path.read_text(encoding="utf-8") if path.is_file() else ""
+    return json.dumps(events(project), ensure_ascii=False)
 
 
 def chat_event_id(message_id: str) -> str:
@@ -75,23 +74,7 @@ def event_count(project: Path, event_id: str) -> int:
 
 
 def remove_event(project: Path, event_id: str) -> None:
-    path = project / ".pf" / "runtime" / "events" / "events.ndjson"
-    lines = path.read_text(encoding="utf-8").splitlines()
-    kept: list[str] = []
-    removed = 0
-    for line in lines:
-        try:
-            item = json.loads(line)
-        except json.JSONDecodeError:
-            kept.append(line)
-            continue
-        if item.get("event_id") == event_id:
-            removed += 1
-        else:
-            kept.append(line)
-    if removed != 1:
-        raise AssertionError(f"expected to remove one event {event_id}, removed {removed}")
-    path.write_text("\n".join(kept) + ("\n" if kept else ""), encoding="utf-8")
+    sqlite_remove_event(project, event_id)
 
 
 @contextlib.contextmanager

@@ -2,3 +2,6 @@ schema_version: 1
 runtime:
   metrics:
     interval_seconds: 10
+logging:
+  raw_hooks: true
+  events: true

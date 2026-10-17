@@ -15,17 +15,26 @@ The file layout is the runtime contract:
 - `.pf/assignments/` stores task and iteration records.
 - `.pf/artifacts/`, `.pf/reviews/`, and `.pf/handoffs/` store evidence and
   delivery material.
-- `.pf/runtime/events/events.ndjson` stores event envelopes.
+- `.pf/runtime/events/events.sqlite3` stores optional event envelopes and required admission/verification state.
+- `.pf/runtime/agent-events/hooks.sqlite3` stores project hook receipts, pending input and optional raw history.
 - `.pf/runtime/agent-runs/` stores optional worker process state.
 - `.pf/runtime/supervisor/` stores optional supervisor loop state.
 
-## Workplace raw ingress
+## Project raw ingress
 
-Agent-native payloads are first written to the private workplace Raw Event
-Journal under `<workplace>/runtime/agent-events/`, not directly to a project
-event file. It stores raw shards, dedupe/index state, quarantine and replay
-checkpoints. Agent Ledger and Runtime service state/logs are also
-workplace-scoped. Project records remain local to `.pf/runtime/`.
+After validating the project route, agent-native payloads are first committed
+to its private Raw Hook Journal under `.pf/runtime/agent-events/`. SQLite
+stores receipts, optional payloads, quarantine and pending recovery input;
+replay checkpoints remain under this project directory. Agent Ledger and
+Runtime service state/logs remain workplace-scoped.
+
+Ingress performs indexed admission and current effects. It does not rebuild
+command history or stage projections. History export/rebuild is explicit;
+periodic stage projections refresh after file inputs or latest verification
+facts change. Unchanged ticks inspect metadata without reparsing assignments
+or hashing outputs. Work gates still verify current authoritative inputs.
+See [SQLite journals and migration](hook-journal-sqlite.md) and
+[logging configuration](../authoring/workplace-configuration.md#project-history-and-raw-hooks).
 
 The release archive includes `src/processforge_core`, `tools/processforge.py`
 and `tools/pf_runtime/*` source, but never workplace raw journals, chat

@@ -105,7 +105,7 @@ def event_rows(project: Path) -> list[dict[str, Any]]:
     path = core.event_runtime_paths(project)[0]
     if not path.is_file():
         return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [row for _sequence, row, _error in core.iter_process_events(path)]
 
 
 def mutate_resource_indexing(workplace: Path, package: str, resource_id: str, mode: str) -> Path:

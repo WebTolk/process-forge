@@ -207,258 +207,53 @@ def recover_stale_lock(path: Path, *, stale_seconds: float, force: bool = False)
 
 
 class RawIngressKernel:
-    """Append raw events, maintain identity indexes, and return durable receipts."""
+    """Durably admit native events into an explicitly selected SQL journal."""
 
-    def __init__(self, workplace_root: Path | str, *, max_payload_bytes: int = 1_048_576) -> None:
+    def __init__(
+        self, workplace_root: Path | str, *, max_payload_bytes: int = 1_048_576,
+        flow_root: Path | None = None, record_raw: bool = True,
+    ) -> None:
+        from processforge_core.raw_hook_journal import RawHookJournal
+
         self.workplace_root = Path(workplace_root).resolve(strict=False)
-        self.root = contained_path(self.workplace_root, "runtime", "agent-events")
+        self.root = (contained_path(flow_root, "runtime", "agent-events") if flow_root is not None
+                     else contained_path(self.workplace_root, "runtime", "agent-events"))
+        self.database = contained_path(self.root, "hooks.sqlite3")
         if max_payload_bytes <= 0:
             raise RawIngressError("max_payload_bytes must be positive")
+        if type(record_raw) is not bool:
+            raise RawIngressError("record_raw must be boolean")
         self.max_payload_bytes = max_payload_bytes
+        self.record_raw = record_raw
+        self.storage = RawHookJournal()
 
     def ingest(self, event: NativeAgentEvent, received_at: datetime | None = None) -> RawReceipt:
+        from processforge_core.sqlite_storage import JournalMigrationRequired
+
         _validate(event, self.max_payload_bytes)
+        if not self.database.is_file():
+            legacy_roots = {self.root / "raw/v1", self.workplace_root / "runtime/agent-events/raw/v1"}
+            if any(any(root.rglob("*.ndjson")) for root in legacy_roots):
+                raise JournalMigrationRequired("raw_journal_migration_required: run tools/migrate-hook-journals.py")
         moment = (received_at or datetime.now(timezone.utc)).astimezone(timezone.utc)
-        payload_hash = raw_payload_hash(event.raw_payload)
         event_id = raw_event_id(event)
-        native_key = stable_native_identity_key(event)
-        raw_index = self._index_path("raw_event_id", event_id)
-        native_index = self._index_path("native_identity", native_key) if native_key else None
-        with _ExclusiveFileLock(contained_path(self.root, "indexes", ".ingress.lock")):
-            # An unreadable derived index can be rebuilt from the journal;
-            # journal remains the source of truth and corruption there still
-            # fails closed in _recover_indexes().
-            force_recovery = False
-            try:
-                native_existing = self._read_index(native_index)
-            except RawIngressError:
-                native_existing = None
-                force_recovery = True
-            try:
-                existing = self._read_index(raw_index)
-            except RawIngressError:
-                existing = None
-                force_recovery = True
-            # Even a full index rebuild must not bypass evidence that a
-            # checkpointed raw shard was lost or truncated.
-            recovery_needed = self._recovery_needed()
-            if force_recovery or recovery_needed:
-                recovered_raw, recovered_native = self._recover_indexes(
-                    event_id, native_key, full_scan=force_recovery
-                )
-                native_existing = native_existing or recovered_native
-                existing = existing or recovered_raw
-            if native_existing and native_existing.get("raw_payload_hash") != payload_hash:
-                return self._quarantine("native_id_payload_conflict", event, event_id, payload_hash, native_existing)
-            if existing:
-                if existing.get("raw_payload_hash") == payload_hash:
-                    return RawReceipt(event_id, True, True, existing.get("raw_location"), "duplicate_raw")
-                return self._quarantine("raw_event_id_hash_collision", event, event_id, payload_hash, existing)
+        record = self._raw_record(event, event_id, raw_payload_hash(event.raw_payload),
+                                  stable_native_identity_key(event), moment)
+        result = self.storage.accept(self.database, record, retain_raw=self.record_raw)
+        return RawReceipt(event_id, result["accepted"], result["deduplicated"], result["raw_location"],
+                          result["routing_status"], diagnostics=result["diagnostics"])
 
-            shard = self._shard(moment)
-            line = canonical_json(self._raw_record(event, event_id, payload_hash, native_key, moment)) + b"\n"
-            offset = self._append_line(shard, line)
-            location = f"{shard.relative_to(self.root).as_posix()}:{offset}"
-            index = {
-                "schema_version": 1,
-                "raw_event_id": event_id,
-                "raw_payload_hash": payload_hash,
-                "native_identity_key": native_key,
-                "raw_location": location,
-                "routing_status": "raw_accepted",
-            }
-            atomic_write_json(raw_index, index, self.root)
-            if native_index is not None:
-                atomic_write_json(native_index, index, self.root)
-            self._write_recovery_checkpoint()
-            return RawReceipt(event_id, True, False, location, "raw_accepted")
+    def finish(self, event_id: str, response: dict[str, Any]) -> None:
+        self.storage.finish(self.database, event_id, response)
 
-    def _shard(self, moment: datetime) -> Path:
-        return contained_path(
-            self.root, "raw", "v1", f"{moment.year:04d}", f"{moment.month:02d}", f"{moment.day:02d}", f"{moment.hour:02d}.ndjson"
-        )
+    def result(self, event_id: str) -> dict[str, Any] | None:
+        return self.storage.result(self.database, event_id)
 
-    def _index_path(self, kind: str, key: str | None) -> Path:
-        if not key or any(char in key for char in ("/", "\\", "\x00")):
-            raise RawIngressError("unsafe index key")
-        return contained_path(self.root, "indexes", kind, f"{key}.json")
+    def records(self, **filters):
+        return self.storage.records(self.database, **filters)
 
-    def _append_line(self, shard: Path, line: bytes) -> int:
-        shard.parent.mkdir(parents=True, exist_ok=True)
-        with _ExclusiveFileLock(shard.with_suffix(shard.suffix + ".lock")):
-            descriptor = os.open(str(shard), os.O_CREAT | os.O_APPEND | os.O_WRONLY | getattr(os, "O_BINARY", 0))
-            try:
-                offset = os.lseek(descriptor, 0, os.SEEK_END)
-                if os.write(descriptor, line) != len(line):
-                    raise OSError("short raw journal write")
-                os.fsync(descriptor)
-                return offset
-            finally:
-                os.close(descriptor)
-
-    def _read_index(self, path: Path | None) -> Mapping[str, Any] | None:
-        if path is None or not path.is_file():
-            return None
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise RawIngressError(f"index is unreadable: {path.name}") from exc
-        if not isinstance(data, Mapping):
-            raise RawIngressError(f"index is not an object: {path.name}")
-        return data
-
-    def _recovery_checkpoint_path(self) -> Path:
-        return contained_path(self.root, "indexes", "recovery-checkpoint.json")
-
-    def _read_recovery_checkpoint(self) -> Mapping[str, Any] | None:
-        path = self._recovery_checkpoint_path()
-        if not path.is_file():
-            return None
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise RawIngressError("recovery checkpoint is unreadable") from exc
-        if not isinstance(data, Mapping) or data.get("schema_version") != 1:
-            raise RawIngressError("recovery checkpoint has an unsupported schema")
-        shards = data.get("shards")
-        if not isinstance(shards, Mapping):
-            raise RawIngressError("recovery checkpoint shards are invalid")
-        for relative, offset in shards.items():
-            if not isinstance(relative, str) or not isinstance(offset, int) or isinstance(offset, bool) or offset < 0:
-                raise RawIngressError("recovery checkpoint offset is invalid")
-            contained_path(self.root, relative)
-        return data
-
-    def _raw_shards(self) -> list[Path]:
-        raw_root = contained_path(self.root, "raw", "v1")
-        if not raw_root.is_dir():
-            return []
-        return sorted(path for path in raw_root.rglob("*.ndjson") if path.is_file())
-
-    def _recovery_needed(self) -> bool:
-        """Return whether raw bytes exist beyond the last indexed checkpoint.
-
-        A missing checkpoint is the legacy/migration state.  Once a
-        checkpoint exists, only a shard that grew (or appeared) is evidence
-        of an unindexed durable append; a normal lookup miss does not scan
-        historical records.
-        """
-
-        shards = self._raw_shards()
-        checkpoint = self._read_recovery_checkpoint()
-        if checkpoint is None:
-            return bool(shards)
-        checkpoint_shards = checkpoint["shards"]
-        current_names: set[str] = set()
-        recovery_needed = False
-        for shard in shards:
-            relative = shard.relative_to(self.root).as_posix()
-            current_names.add(relative)
-            recorded = checkpoint_shards.get(relative)
-            if recorded is None:
-                recovery_needed = True
-                continue
-            size = shard.stat().st_size
-            if size < recorded:
-                raise RawIngressError(f"raw journal shard was truncated: {shard.name}")
-            if size > recorded:
-                recovery_needed = True
-        for relative, recorded in checkpoint_shards.items():
-            if relative not in current_names:
-                raise RawIngressError(f"raw journal shard is missing: {relative}")
-        return recovery_needed
-
-    def _write_recovery_checkpoint(self) -> None:
-        """Commit bounded per-shard journal offsets after index writes."""
-
-        shards = {
-            shard.relative_to(self.root).as_posix(): shard.stat().st_size
-            for shard in self._raw_shards()
-        }
-        atomic_write_json(
-            self._recovery_checkpoint_path(),
-            {"schema_version": 1, "kind": "raw-ingress-recovery-checkpoint", "shards": shards},
-            self.root,
-        )
-
-    def _decode_raw_record(self, line: bytes, shard: Path) -> Mapping[str, Any]:
-        try:
-            record = json.loads(line.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise RawIngressError(f"corrupt raw journal shard: {shard.name}") from exc
-        if not isinstance(record, Mapping):
-            raise RawIngressError(f"raw journal record is not an object: {shard.name}")
-        if record.get("schema_version") != 1 or any(
-            not isinstance(record.get(key), str) or not record[key]
-            for key in ("raw_event_id", "raw_payload_hash")
-        ):
-            raise RawIngressError(f"raw journal record has invalid identity: {shard.name}")
-        return record
-
-    def _recover_indexes(
-        self, event_id: str, native_key: str | None, *, full_scan: bool = False
-    ) -> tuple[Mapping[str, Any] | None, Mapping[str, Any] | None]:
-        """Rebuild indexes from a legacy journal or an unindexed raw tail.
-
-        Commit the checkpoint only after all recovered indexes are durable.
-        An append/index crash therefore leaves a measurable tail for the
-        next ingest to repair, including when that next event is a duplicate.
-        """
-
-        raw_found: Mapping[str, Any] | None = None
-        native_found: Mapping[str, Any] | None = None
-        shards = self._raw_shards()
-        if not shards:
-            return None, None
-        checkpoint = None if full_scan else self._read_recovery_checkpoint()
-        if checkpoint is not None:
-            checkpoint_shards = checkpoint["shards"]
-        else:
-            checkpoint_shards = {}
-        for shard in shards:
-            relative = shard.relative_to(self.root).as_posix()
-            start = 0 if full_scan or checkpoint is None else checkpoint_shards.get(relative, 0)
-            size = shard.stat().st_size
-            if start > size:
-                raise RawIngressError(f"raw journal shard was truncated: {shard.name}")
-            offset = start
-            with shard.open("rb") as handle:
-                handle.seek(start)
-                for line in handle:
-                    if not line.endswith(b"\n"):
-                        raise RawIngressError(f"truncated raw journal record: {shard.name}")
-                    record = self._decode_raw_record(line, shard)
-                    location = f"{shard.relative_to(self.root).as_posix()}:{offset}"
-                    candidate = {
-                        "schema_version": 1,
-                        "raw_event_id": record.get("raw_event_id"),
-                        "raw_payload_hash": record.get("raw_payload_hash"),
-                        "native_identity_key": record.get("native_identity_key"),
-                        "raw_location": location,
-                        "routing_status": "raw_recovered",
-                    }
-                    if candidate["raw_event_id"] == event_id:
-                        raw_found = candidate
-                    if native_key and candidate["native_identity_key"] == native_key:
-                        native_found = candidate
-                    if candidate["raw_event_id"]:
-                        raw_candidate_path = self._index_path("raw_event_id", str(candidate["raw_event_id"]))
-                        if not raw_candidate_path.is_file():
-                            atomic_write_json(raw_candidate_path, candidate, self.root)
-                    candidate_native = candidate["native_identity_key"]
-                    if candidate_native:
-                        native_candidate_path = self._index_path("native_identity", str(candidate_native))
-                        if not native_candidate_path.is_file():
-                            atomic_write_json(native_candidate_path, candidate, self.root)
-                    offset += len(line)
-        if raw_found:
-            atomic_write_json(self._index_path("raw_event_id", event_id), raw_found, self.root)
-        if native_key and native_found:
-            atomic_write_json(self._index_path("native_identity", native_key), native_found, self.root)
-        self._write_recovery_checkpoint()
-        return raw_found, native_found
-
-    def _raw_record(self, event: NativeAgentEvent, event_id: str, payload_hash: str, native_key: str | None, moment: datetime) -> dict[str, Any]:
+    def _raw_record(self, event: NativeAgentEvent, event_id: str, payload_hash: str,
+                    native_key: str | None, moment: datetime) -> dict[str, Any]:
         return {
             "schema_version": 1,
             "raw_event_id": event_id,
@@ -466,6 +261,8 @@ class RawIngressKernel:
             "adapter": event.adapter,
             "native_event_type": event.native_event_type,
             "native_event_id": event.native_event_id,
+            "native_id_scope": event.native_id_scope,
+            "native_event_id_stable": event.native_event_id_stable,
             "source_session_id": event.source_session_id,
             "source_project_ref": event.source_project_ref,
             "payload_version": event.payload_version,
@@ -475,19 +272,6 @@ class RawIngressKernel:
             "native_identity_key": native_key,
             "privacy": "private",
         }
-
-    def _quarantine(self, code: str, event: NativeAgentEvent, event_id: str, payload_hash: str, existing: Mapping[str, Any]) -> RawReceipt:
-        bucket = "poisoned" if code == "native_id_payload_conflict" else "collisions"
-        error = contained_path(self.root, "errors", bucket, f"{event_id}.json")
-        atomic_write_json(error, {"code": code, "raw_event_id": event_id, "raw_payload_hash": payload_hash, "existing_raw_event_id": existing.get("raw_event_id"), "raw_payload": event.raw_payload, "privacy": "private"}, self.root)
-        return RawReceipt(
-            raw_event_id=event_id,
-            accepted=False,
-            deduplicated=False,
-            raw_location=None,
-            routing_status="quarantined",
-            diagnostics={"code": code},
-        )
 
 
 def _identity_document(event: NativeAgentEvent, include_payload_hash: bool) -> dict[str, Any]:

@@ -105,7 +105,7 @@ path, and event correlation id.
 Core commands emit events to:
 
 ```text
-.pf/runtime/events/events.ndjson
+.pf/runtime/events/events.sqlite3
 ```
 
 Hook matching can be tested without sending or writing payloads:

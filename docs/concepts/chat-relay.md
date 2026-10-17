@@ -57,7 +57,7 @@ Default export mode is `metadata_only`. Full redacted content requires
 Chat relay redacts secret-like values, stores runtime transcripts under ignored
 `.pf/runtime/`, and keeps network delivery disabled in the MVP.
 
-Raw provider payloads are stored separately in the private workplace Raw Event
+Raw provider payloads are stored separately in the private project Raw Hook
 Journal. A project event/outbox payload must not contain a full raw body.
 
 Recommended assignment-level options:

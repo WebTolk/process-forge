@@ -1,4 +1,4 @@
-﻿# Runs, Tasks, And Iterations
+# Runs, Tasks, And Iterations
 
 ![Run lifecycle](../assets/processforge-run-lifecycle.svg)
 
@@ -50,4 +50,4 @@ Supported iteration statuses are `planned`, `in_progress`, `completed`, `passed`
 
 ## Events And Hooks
 
-Run, task, and iteration commands emit events to `.pf/runtime/events/events.ndjson`. Existing hook dispatch remains observational and writes outbox payloads when hooks match the event type. This file-first flow does not require a daemon, scheduler, watcher, lease, or live interception. The optional workplace PF Runtime service is a separate lifecycle host and does not turn these commands into background-scheduled work.
+Run, task, and iteration commands emit events to `.pf/runtime/events/events.sqlite3`. Existing hook dispatch remains observational and writes outbox payloads when hooks match the event type. This file-first flow does not require a daemon, scheduler, watcher, lease, or live interception. The optional workplace PF Runtime service is a separate lifecycle host and does not turn these commands into background-scheduled work.

@@ -105,4 +105,4 @@ session:
     - "Required sources, resolved resources and relevant handoffs for that Work"
     - "Extended .pf/AGENTS.md instructions on demand"
   telemetry_root: ".pf/runtime/telemetry"
-  events_log: ".pf/runtime/events/events.ndjson"
+  events_log: ".pf/runtime/events/events.sqlite3"

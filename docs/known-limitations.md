@@ -69,8 +69,8 @@ artifacts.
   does not reconstruct a complete generic conversation transcript.
 - Raw ingress rejects canonical payloads larger than 1,048,576 bytes. There is
   no oversized-payload blob spill or receipt yet.
-- Raw indexes are file-per-event and recovery may scan raw shards; scaling
-  improvements require measurement and a separate storage decision.
+- Project raw/event journals use local SQLite with serialized writers; measured
+  local concurrency is not a multi-machine or unbounded-throughput guarantee.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
 - Platform-specific shell scripts are not required for release validation and are not part of the release surface.
 

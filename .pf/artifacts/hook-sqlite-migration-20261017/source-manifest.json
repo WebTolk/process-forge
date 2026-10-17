@@ -1,0 +1,282 @@
+[
+  {
+    "path": "docs/authoring/workplace-configuration.md",
+    "sha256": "e105968ecffc13d812f1190cdc3f03cc3b6b049f555db6bc20d063ae4d688dc1"
+  },
+  {
+    "path": "docs/concepts/chat-relay.md",
+    "sha256": "f7ba47ac37c5c72091253628b227cadf7d71a93def1a969ae0303fbf3f68bb1e"
+  },
+  {
+    "path": "docs/concepts/hook-journal-sqlite.md",
+    "sha256": "46ba40212c5b7b61bed091e9eef402f11172e7afda66f8c036e2bf20f5c54ad4"
+  },
+  {
+    "path": "docs/concepts/hooks-events.md",
+    "sha256": "99e03a0aad9da29baffe084be171fe2891239372c71b3c7173bcd63fde326e11"
+  },
+  {
+    "path": "docs/concepts/process-events.md",
+    "sha256": "bd05e80ff64fb1dd0b7fd9f79e47dbb2eba154fb788be44393bea80b8f24ab4b"
+  },
+  {
+    "path": "docs/concepts/processforge-events.md",
+    "sha256": "4a4ffb1cdf16114e5615a365386ddceec9d3396dc5e4657fc43da7ecafa44b18"
+  },
+  {
+    "path": "docs/concepts/resource-events.md",
+    "sha256": "085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec"
+  },
+  {
+    "path": "docs/concepts/runs-tasks-iterations.md",
+    "sha256": "235a2895ff5bc71456a88cfb8ad16e66ff6ef3fdd5302080866ee7364e49ec5f"
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "sha256": "1c236b01a7e89d471e40cfd8340c03b29c252830bea239ce654433ef2e783cac"
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "sha256": "79d49eb59d708f5e6cb8d7531656d029fd69d01b7330e0806306a254e4cf5ef2"
+  },
+  {
+    "path": "docs/concepts/session-telemetry.md",
+    "sha256": "3ca1fdaa3e225abf339f9c7ba5b9042e61703ede30ff8909276b7ebee9e5c711"
+  },
+  {
+    "path": "docs/getting-started.md",
+    "sha256": "b8f4cb1a0592e6214bdbdd72a4359230fdc1681ac58d0495986f3dce25f81977"
+  },
+  {
+    "path": "docs/known-limitations.md",
+    "sha256": "0da0c5133c3e9faa4c7c618364f9d1aa047d4d7ef0c05ae6c5848aeaa353ebfc"
+  },
+  {
+    "path": "docs/ru/concepts/chat-relay.md",
+    "sha256": "ea3eabbf10bc991fc8e8cd44161e3d1972d178f0a9bf848648b21e4e1237b28b"
+  },
+  {
+    "path": "docs/ru/concepts/hooks-events.md",
+    "sha256": "02e10f215c620dac1651b13eb29e198de4b0e44815a06a9930229efd8583c246"
+  },
+  {
+    "path": "docs/ru/concepts/process-events.md",
+    "sha256": "93346daebfaf947e3eaf4e3c16333f3cf89b17ce34c280a1d9b77f515fdd292f"
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "sha256": "eba6c18ff9065dff944076de875a60412e8438fe361ea42171b921cbe816a6e1"
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "sha256": "f6e903380490eb55a6eebaaf68f4be857ea31878d14f26692b413448eeddb6b2"
+  },
+  {
+    "path": "docs/ru/known-limitations.md",
+    "sha256": "0af791acee34e2ea794a7de6fd8233e8be1f17c8b532fbcbd989f3d766503fd8"
+  },
+  {
+    "path": "schemas/project-configuration.schema.json",
+    "sha256": "282a452f70c87b4d35a6bdf520f60b7b0ed0bd805da1bedb1cc6043890ec70a2"
+  },
+  {
+    "path": "schemas/workplace-configuration.schema.json",
+    "sha256": "08bec3128b9c55ef03bc2b2318f131efc40b83a71c4d7b00d219988d4cc217d4"
+  },
+  {
+    "path": "src/processforge_core/composition.py",
+    "sha256": "3e4ac30e79b26c9f8622d59acfe568bc275b3ecbd02e860ff54f6ceb469d02af"
+  },
+  {
+    "path": "src/processforge_core/configuration/__init__.py",
+    "sha256": "0d9e088175738627558e4b58816edf382c5bb0bdc205c14e31c08f269c57d6fb"
+  },
+  {
+    "path": "src/processforge_core/configuration/models.py",
+    "sha256": "f418811df9b844e0557d2cbc3c87c18334f1978d92c5ca9484cc073e4ba2a191"
+  },
+  {
+    "path": "src/processforge_core/configuration/resolution.py",
+    "sha256": "cf571344eae346a7698870723eef3b7f6089045ec79da1ca861ea6d82fa1c49e"
+  },
+  {
+    "path": "src/processforge_core/configuration/service.py",
+    "sha256": "c54e686f978a737f933cf952fc22f0f0fce5f9f8df28c883ee8120aa975134d8"
+  },
+  {
+    "path": "src/processforge_core/configuration/storage.py",
+    "sha256": "94210abf00ab99b982ba9394d5c29c14ade6cb0bca95dcfc5a055835dfc05fe3"
+  },
+  {
+    "path": "src/processforge_core/configuration/yaml_store.py",
+    "sha256": "fb6f27bdd50913d0b94fe82766655d58071a35916cddfaee5651ccac3fd560fb"
+  },
+  {
+    "path": "src/processforge_core/process_event_journal.py",
+    "sha256": "441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1"
+  },
+  {
+    "path": "src/processforge_core/project/snapshot_rendering.py",
+    "sha256": "244872ac115cf8bb035e3644544c61956fb93bed9052a7b13fca3e10972ac484"
+  },
+  {
+    "path": "src/processforge_core/raw_hook_journal.py",
+    "sha256": "3b0261da4d2801079f6db6a00dfa8bb681be315cd08af036c3851c1148e4e827"
+  },
+  {
+    "path": "src/processforge_core/sqlite_storage.py",
+    "sha256": "74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572"
+  },
+  {
+    "path": "src/processforge_core/work/automation_readiness.py",
+    "sha256": "b3294767013dcea8befb2fd2b9d98d4603dea9ccbeaa2d7c372318525954806c"
+  },
+  {
+    "path": "src/processforge_core/work/cancellation_replay.py",
+    "sha256": "788f590f38fa42a1863abb36fe32f84c882d42e521a28e4053c1207b8c788c66"
+  },
+  {
+    "path": "src/processforge_core/work/continuation.py",
+    "sha256": "2026996a1398f1c471d42d504ec9c491b0c1c83d8dac36e245fad65e5bbb1a03"
+  },
+  {
+    "path": "templates/project-context.snapshot.md",
+    "sha256": "8cca7d129c589e05ce92d2db56f36d03eab5383e272ab7470813467ea52defc6"
+  },
+  {
+    "path": "templates/project-context.snapshot.yaml",
+    "sha256": "7c764df9b22d3c57ce8620e63475de480db9bf71f1f853a6f4056e1f3fb1d297"
+  },
+  {
+    "path": "templates/workplace-configuration.yaml",
+    "sha256": "d065d6c9304e5cf4fbdee954c3a4e37975816f434c84d599b69ed42e2eff4ac1"
+  },
+  {
+    "path": "tools/migrate-hook-journals.py",
+    "sha256": "cef5158055e7b89d909c55f71e49ceea2ed103fdb465c5358f827c5656f53f72"
+  },
+  {
+    "path": "tools/pf_cli/application.py",
+    "sha256": "232d2e8570767bc82993cb28d19d04426f7bdeceb60f9ef01d1549ba628c079e"
+  },
+  {
+    "path": "tools/pf_cli/commands/configuration.py",
+    "sha256": "fc99a5daf825c7c2b6b5a751f3ffefbb9bac113e1265af7b033a9f2d598df88f"
+  },
+  {
+    "path": "tools/pf_cli/parsers/configuration.py",
+    "sha256": "9ff0efc8c8a3cf09d4aa57e60186a8ab6af4af778ccc11c100374ad96c899ace"
+  },
+  {
+    "path": "tools/pf_runtime/host.py",
+    "sha256": "6952f250eaf1d1f569214e6dda650a740a1b3553ed59cfc596944b7056fbce8d"
+  },
+  {
+    "path": "tools/pf_runtime/raw_ingress_kernel.py",
+    "sha256": "34f81196111750141c654c9a74aaf5a7caadb58117996c19db3fa61e426d9720"
+  },
+  {
+    "path": "tools/pf_runtime/service.py",
+    "sha256": "591824baff2a57fac3b1376d4dd819afe70651ba9e2de17cce54b18fea6c3f9b"
+  },
+  {
+    "path": "tools/pf_runtime/session_replay.py",
+    "sha256": "ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54"
+  },
+  {
+    "path": "tools/process_execution_smoke_support.py",
+    "sha256": "6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107"
+  },
+  {
+    "path": "tools/processforge.py",
+    "sha256": "cb1e4638a465174e98dc16a92349b9965f7b02ebb55d2786090535a08b397ac0"
+  },
+  {
+    "path": "tools/smoke_automation_readiness.py",
+    "sha256": "50e3880e9606d62eecc2a4af98d3c7fd7514fcb46918d2a41b13dac3fff28c46"
+  },
+  {
+    "path": "tools/smoke_central_event_ingress.py",
+    "sha256": "3cf4d9885f5a4c9559e3804b179a67a767c8f50d8c986bb9414eab4c0ff7d274"
+  },
+  {
+    "path": "tools/smoke_central_event_ingress_kernel.py",
+    "sha256": "42fc915f8aaeaae90d8b2ce2507fa8fc27edba3961659991f0dbf28c8d513c9e"
+  },
+  {
+    "path": "tools/smoke_central_event_replay.py",
+    "sha256": "9597e57b456b48993d288cd69138003bb5ae1daaadbf5a5c65fb6b7ab3a219c0"
+  },
+  {
+    "path": "tools/smoke_codex_lifecycle_identity.py",
+    "sha256": "cf05da3dbf5f6a2c8bd4e7266db5517a285ab0a4fd673fbb348a872876b1684a"
+  },
+  {
+    "path": "tools/smoke_conversation_completeness.py",
+    "sha256": "a2e0d51e8fe616476afcbc5c7bdc1a8e4b507ffd9fb591a14dcd3c6c84ee127f"
+  },
+  {
+    "path": "tools/smoke_diagnostics.py",
+    "sha256": "1db8b145d07026920240a257681408cc90227f495e15659e3c80581f9ddd5780"
+  },
+  {
+    "path": "tools/smoke_first_run.py",
+    "sha256": "fc4fc04e94e89a79051e2d8e2334e3baa788d441e7834524407bde329969e09c"
+  },
+  {
+    "path": "tools/smoke_hook_sqlite_configuration.py",
+    "sha256": "757e46a1fac2261dd1b795f1965e3251a351fee063b5880fbcf7591d286ab8ad"
+  },
+  {
+    "path": "tools/smoke_hook_sqlite_migration.py",
+    "sha256": "77b82a725f851afce81125150beab629b16d462643efe11943b6f336682c857a"
+  },
+  {
+    "path": "tools/smoke_hook_sqlite_runtime.py",
+    "sha256": "ece2f30d38e317b90794cceb569b3f2810dbdac65924aa74725bf425a1b63ece"
+  },
+  {
+    "path": "tools/smoke_hook_sqlite_support.py",
+    "sha256": "55a50f9a3ace492ff409fda39beb31f1d8ff0657e45cf0b6751cb1a18f5fe611"
+  },
+  {
+    "path": "tools/smoke_prepared_execution_context.py",
+    "sha256": "a1cab56847508262aec8f073b311ba70f40b3063aa67c07b1c78d31b11699769"
+  },
+  {
+    "path": "tools/smoke_process_event_concurrency.py",
+    "sha256": "027553ef7d7384112ec35151d60a5fe556b739a9bc6ed351adcdd5efab9ee990"
+  },
+  {
+    "path": "tools/smoke_process_run_task_batch.py",
+    "sha256": "fa4ead5492e206b76209b2928c4d015510c36a5e2f478afc3cb872b4182a523b"
+  },
+  {
+    "path": "tools/smoke_raw_ingress_incremental_recovery.py",
+    "sha256": "d8a389a2c6d83cc62295d0f518060daac8dd6ac61927722d02d4682f4622373c"
+  },
+  {
+    "path": "tools/smoke_remediation_doctor_contracts.py",
+    "sha256": "2b15c5bdd9e98cc55e341efe41f363ed1e7ffb43b589d8ff9235ea2fa0c568ec"
+  },
+  {
+    "path": "tools/smoke_runtime_host_poc.py",
+    "sha256": "69623ab38a1e364f3a06abe74d7478ea880827ad7204e417dde2c6081abbd6cb"
+  },
+  {
+    "path": "tools/smoke_runtime_status_timeout.py",
+    "sha256": "83d7d23321ad8dca33523b8a8b50277d55f4c8db8fdc93ff49cf059c1edbfe12"
+  },
+  {
+    "path": "tools/smoke_work_completion_recovery.py",
+    "sha256": "a7a81eee27857a9eeb5021990218a7d1eb62bb2e3f764408da8985bc5c1e7894"
+  },
+  {
+    "path": "tools/validate-process-forge-schemas.py",
+    "sha256": "d7f7ab09d5175c8fac15bfce6c5276af84d7424a09cf66ad859ace02dd0b504f"
+  },
+  {
+    "path": "checksums/processforge.sha256",
+    "sha256": "51350c1a38c858467ef85229c90b61fb0e7ccaa6b7fb877a3f71ec0ce73987ab"
+  }
+]

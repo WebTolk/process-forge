@@ -11,7 +11,7 @@ import tempfile
 import yaml
 
 from .errors import ConfigurationConflict, ConfigurationStorageError, InvalidConfiguration
-from .models import PFConfig
+from .models import PFConfig, ProjectPFConfig
 from .storage import ConfigSnapshot
 
 MAX_BYTES = 65536
@@ -31,8 +31,11 @@ class _Loader(yaml.SafeLoader):
 class YamlConfigStore:
     """No workplace discovery or directory creation; caller supplies the target."""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, *, model: type[PFConfig] | type[ProjectPFConfig] = PFConfig):
         self.path = Path(path)
+        if model not in (PFConfig, ProjectPFConfig):
+            raise InvalidConfiguration("configuration_model_required")
+        self.model = model
         if not self.path.is_absolute():
             raise ConfigurationStorageError("configuration_absolute_path_required")
 
@@ -64,20 +67,24 @@ class YamlConfigStore:
 
     @staticmethod
     def _decode(raw: bytes | None) -> PFConfig:
+        return YamlConfigStore._decode_model(raw, PFConfig)
+
+    @staticmethod
+    def _decode_model(raw: bytes | None, model):
         if raw is None:
-            return PFConfig()
+            return model()
         try:
             text = raw.decode("utf-8-sig")
             if any(isinstance(token, (yaml.tokens.AliasToken, yaml.tokens.AnchorToken)) for token in yaml.scan(text)):
                 raise InvalidConfiguration("configuration_alias_forbidden")
-            return PFConfig.from_dict(yaml.load(text, Loader=_Loader))
+            return model.from_dict(yaml.load(text, Loader=_Loader))
         except (UnicodeError, yaml.YAMLError, RecursionError) as exc:
             raise InvalidConfiguration("configuration_yaml_invalid") from exc
 
     def read(self) -> ConfigSnapshot:
         try:
             raw = self._raw()
-            return ConfigSnapshot(self._decode(raw), self._revision(raw))
+            return ConfigSnapshot(self._decode_model(raw, self.model), self._revision(raw))
         except OSError as exc:
             raise ConfigurationStorageError("configuration_read_failed") from exc
 
@@ -121,8 +128,8 @@ class YamlConfigStore:
             finally:
                 os.close(fd)
 
-    def write(self, config: PFConfig, *, expected_revision: str | None) -> ConfigSnapshot:
-        if type(config) is not PFConfig:
+    def write(self, config: PFConfig | ProjectPFConfig, *, expected_revision: str | None) -> ConfigSnapshot:
+        if type(config) is not self.model:
             raise InvalidConfiguration("configuration_model_required")
         raw = yaml.safe_dump(config.to_dict(), sort_keys=False, allow_unicode=True).encode("utf-8")
         staged = None
@@ -164,6 +171,6 @@ class YamlConfigStore:
                 self._compare(expected_revision)
                 self.path.unlink()
                 self._sync_directory()
-                return ConfigSnapshot(PFConfig(), None)
+                return ConfigSnapshot(self.model(), None)
         except OSError as exc:
             raise ConfigurationStorageError("configuration_delete_failed") from exc

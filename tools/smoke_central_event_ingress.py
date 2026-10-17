@@ -13,6 +13,7 @@ from pathlib import Path
 
 from processforge_subprocess import diagnostic_text, run_command
 from pf_runtime.codex_hooks import normalized_event
+from smoke_hook_sqlite_support import raw_records as project_raw_records, remove_event
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,10 +67,8 @@ def existing_runtime_event_id(event_id: str) -> str:
 
 
 def raw_records(workplace: Path) -> list[dict[str, object]]:
-    rows: list[dict[str, object]] = []
-    for shard in (workplace / "runtime" / "agent-events" / "raw" / "v1").rglob("*.ndjson"):
-        rows.extend(json.loads(line) for line in shard.read_text(encoding="utf-8").splitlines() if line)
-    return rows
+    return [row for project in workplace.parent.iterdir() if (project / ".pf").is_dir()
+            for row in project_raw_records(project)]
 
 
 def main() -> int:
@@ -117,12 +116,7 @@ def main() -> int:
         # Simulate a crash after the raw append: the raw journal stays
         # authoritative and a duplicate delivery repairs only the missing
         # project effect, without appending a second raw record.
-        events_path = first / str(fallback["events"])
-        remaining = [
-            line for line in events_path.read_text(encoding="utf-8").splitlines()
-            if json.loads(line).get("event_id") != fallback["event_id"]
-        ]
-        events_path.write_text("\n".join(remaining) + "\n", encoding="utf-8")
+        remove_event(first, fallback["event_id"])
         repaired = json.loads(pf("runtime-host", "event", "--workplace", str(workplace), "--input", str(tool_path), "--json"))
         assert repaired["deduplicated"] and not repaired["duplicate"]
         assert len(raw_records(workplace)) == 2

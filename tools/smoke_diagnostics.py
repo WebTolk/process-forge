@@ -147,7 +147,7 @@ def failure_correlation_journal(root):
                 pass
         detail_counts.append(len(records))
     path, _ = core.event_runtime_paths(root)
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    rows = [row for _sequence, row, _error in core.iter_process_events(path)]
     for row in rows:
         events.append({key: row[key] for key in ("event_type", "data", "process", "assignment")})
     assert len(events) == 5 and all(item == events[0] for item in events)

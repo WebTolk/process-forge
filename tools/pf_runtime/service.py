@@ -403,6 +403,7 @@ class RuntimeProcess:
             self.state["configuration"] = {
                 "status": "invalid" if error else "valid", "error": error,
                 "metrics_interval_seconds": self.metrics_interval,
+                "logging": self.configuration.config.to_dict()["logging"],
             }
 
     def save(self) -> None:
@@ -538,7 +539,7 @@ class RuntimeProcess:
                 events_path, _outbox = self.core.event_runtime_paths(project_root)
                 if not events_path.is_file():
                     continue
-                item = last_json_object(events_path)
+                item = host.event_journal().latest(events_path)
                 if item is not None:
                     latest = {"project_id": self.core.project_id(project_root), "event_id": item.get("event_id"), "event_type": item.get("event_type"), "time": item.get("time")}
             except Exception as exc:  # noqa: BLE001 - status must survive one project.

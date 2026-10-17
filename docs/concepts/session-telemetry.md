@@ -12,7 +12,7 @@ Default paths for new projects:
 ```text
 .pf/runtime/sessions/<session-id>.yaml
 .pf/runtime/telemetry/<session-id>.ndjson
-.pf/runtime/events/events.ndjson
+.pf/runtime/events/events.sqlite3
 .pf/runtime/hooks/
 .pf/runtime/chat/
 ```
