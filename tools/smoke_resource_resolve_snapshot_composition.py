@@ -174,7 +174,8 @@ class ResolveSnapshotTests(unittest.TestCase):
             self.assertIsNone(request_scope._CURRENT.get())
             with request_scope.request_scope() as scope:
                 self.assertEqual(service.resolve(resource_id=RESOURCE_ID)['resource']['reference'], 'bb')
-                self.assertEqual((scope.loads, scope.parses, scope.hits), (1, 1, 0))
+                # A new request reloads bytes and reuses the shared parse.
+                self.assertEqual((scope.loads, scope.parses, scope.hits), (1, 0, 1))
             path.write_text('marker: [\n', encoding='utf-8')
             with request_scope.request_scope():
                 self.assertEqual(service.resolve(resource_id=RESOURCE_ID)['resource']['status'], 'denied')

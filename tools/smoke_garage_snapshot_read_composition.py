@@ -186,7 +186,8 @@ class GarageSnapshotTests(unittest.TestCase):
             self.assertIsNone(request_scope._CURRENT.get())
             with request_scope.request_scope() as second:
                 self.assertEqual(service.snapshot(), {'value': 'bb'})
-                self.assertEqual((second.loads, second.parses, second.hits), (1, 1, 0))
+                # A new request reloads bytes and reuses the shared parse.
+                self.assertEqual((second.loads, second.parses, second.hits), (1, 0, 1))
             path.write_text('value: [\n', encoding='utf-8')
             with request_scope.request_scope():
                 self.assertIn('__yaml_error__', service.snapshot())
