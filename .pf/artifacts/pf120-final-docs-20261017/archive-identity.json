@@ -1,0 +1,23 @@
+{
+  "source_commit": "25cf43b413f19cef1c0f4aa53ed66a5f535bd069",
+  "source_tree": "43b1c1fddc61852b2651580c994da38e775f7c1a",
+  "clean_candidate": true,
+  "archive_relative": ".pf/tmp/pf120-final-docs-20261017/processforge-1.2.0-final-20261017.zip",
+  "archive_sha256": "827ef4329c8fa0f38c4d34f51cfe313592c7b1850edbc1d244cedc99e2782bf7",
+  "archive_size": 2532946,
+  "zip_entries": 1308,
+  "sidecar_relative": ".pf/tmp/pf120-final-docs-20261017/processforge-1.2.0-final-20261017.manifest.json",
+  "sidecar_sha256": "fa5861c3c7af1703020beddc9335173d0a87d227304e21fbf22f9efbfed6a1f1",
+  "member_changes_from_qualified_dev": [
+    "CHANGELOG.md",
+    "checksums/processforge.sha256",
+    "docs/releases/1.2.0-migration.md",
+    "docs/releases/1.2.0.md",
+    "docs/ru/releases/1.2.0-migration.md",
+    "docs/ru/releases/1.2.0.md",
+    "processforge-core.manifest.json"
+  ],
+  "executable_payload_identical_to_qualified_dev": true,
+  "qualification_reuses_source_checks": 274,
+  "timeout_scale": 1
+}

@@ -1,0 +1,16 @@
+{
+  "selectors": {
+    "project_root": "D:\\dev\\process-forge",
+    "run_id": "garage-pf120-final-notes-and-candidate-packaging-20261017-implement-the",
+    "assignment_id": "pf120-final-notes-and-candidate-packaging-20261017-implement-the-reviewe",
+    "context_id": "pf120-final-notes-and-candidate-packaging-20261017-implement-the-reviewe-capsule"
+  },
+  "capsule_checksum": "sha256:d843b12ed8d472850d361c84a6843136c388c533ce7a21ef36084c8b08eb3852",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "action": "run_completed",
+  "context_validation": "valid",
+  "task_doctor_exit": 0,
+  "run_doctor_exit": 0,
+  "legacy_task_run_doctors": "PASS"
+}

@@ -1,0 +1,136 @@
+{
+  "checksum_changed_entries": [
+    "CHANGELOG.md",
+    "docs/releases/1.2.0-migration.md",
+    "docs/releases/1.2.0.md",
+    "docs/ru/releases/1.2.0-migration.md",
+    "docs/ru/releases/1.2.0.md"
+  ],
+  "project_configuration_hash_unchanged": true,
+  "relative_links": [
+    {
+      "source": "CHANGELOG.md",
+      "target": "docs/concepts/hook-journal-sqlite.md",
+      "exists": true
+    },
+    {
+      "source": "CHANGELOG.md",
+      "target": "docs/concepts/runtime-configuration.md",
+      "exists": true
+    },
+    {
+      "source": "CHANGELOG.md",
+      "target": "docs/concepts/document-reads.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0.md",
+      "target": "1.2.0-migration.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0.md",
+      "target": "../concepts/hook-journal-sqlite.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0.md",
+      "target": "../concepts/document-reads.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0.md",
+      "target": "../concepts/runtime-configuration.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0.md",
+      "target": "../concepts/runtime-model.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0-migration.md",
+      "target": "../concepts/core-update-manifest.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0-migration.md",
+      "target": "../concepts/hook-journal-sqlite.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0-migration.md",
+      "target": "../concepts/runtime-configuration.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0-migration.md",
+      "target": "../concepts/document-reads.md",
+      "exists": true
+    },
+    {
+      "source": "docs/releases/1.2.0-migration.md",
+      "target": "1.2.0.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0.md",
+      "target": "1.2.0-migration.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0.md",
+      "target": "../../concepts/hook-journal-sqlite.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0.md",
+      "target": "../concepts/document-reads.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0.md",
+      "target": "../concepts/runtime-configuration.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0.md",
+      "target": "../concepts/runtime-model.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0-migration.md",
+      "target": "../concepts/core-update-manifest.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0-migration.md",
+      "target": "../../concepts/hook-journal-sqlite.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0-migration.md",
+      "target": "../concepts/runtime-configuration.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0-migration.md",
+      "target": "../concepts/document-reads.md",
+      "exists": true
+    },
+    {
+      "source": "docs/ru/releases/1.2.0-migration.md",
+      "target": "1.2.0.md",
+      "exists": true
+    }
+  ],
+  "executable_tree_equals_qualified_d5947ea": true,
+  "new_product_files": [
+    "CHANGELOG.md",
+    "docs/releases/1.2.0.md",
+    "docs/releases/1.2.0-migration.md",
+    "docs/ru/releases/1.2.0.md",
+    "docs/ru/releases/1.2.0-migration.md",
+    "checksums/processforge.sha256"
+  ]
+}
