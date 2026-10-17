@@ -92,6 +92,14 @@ tick additionally reports `scheduler_status` for operational health, without
 repeating inspection or accepting a blocked collection. A successfully published
 metrics sample is a successful job even with partial coverage; its unknown counts,
 lower bounds and coverage issues remain explicit.
+
+Runtime state and Host history publication use unique atomic staging files.
+Failed write/replacement removes only that invocation's staging and preserves
+the original error and destination. Windows sharing-conflict retry stays bounded
+to the existing50ms admission window. Hook installation retains its configuration
+backup while cleaning failed staging. No orphan scan runs on incoming hooks.
+Forced process termination and filesystem cleanup denial can still leave files;
+stale-file maintenance requires exact paths and verified inactive owners.
 Singleton acquisition preserves live or unverifiable owners even when their
 lock is missing or inconsistent. Dead ownership records can be recovered; a
 live PID alone is insufficient evidence that an incomplete record is stale.

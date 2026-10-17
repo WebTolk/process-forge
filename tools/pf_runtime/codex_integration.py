@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -101,9 +103,16 @@ def write_atomic(path: Path, payload: dict[str, Any]) -> Path:
     backup = path.with_name(path.name + ".pf-backup-" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f"))
     if path.exists():
         shutil.copy2(path, backup)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(path)
+    except BaseException:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            pass  # Retain the original write/replace error and its backup.
+        raise
     return backup if backup.exists() else Path()
 
 

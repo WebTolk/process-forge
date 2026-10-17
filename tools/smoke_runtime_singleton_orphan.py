@@ -145,8 +145,7 @@ def publication_checks(root: Path) -> list[dict]:
                 patch.object(state_core.time, "sleep") as sleeper:
             expect_error(path, error, lambda: writer.write(path, payload))
         assert replace.call_count == 1 and sleeper.call_count == 0
-        temporaries = list(path.parent.glob(".*.tmp"))
-        assert len(temporaries) == 1 and temporaries[0].read_bytes() == expected
+        assert not list(path.parent.glob(".*.tmp"))
         results.append({"case": name, "status": "pass", "attempts": 1})
 
     for name, ticks, limit in (
@@ -169,8 +168,7 @@ def publication_checks(root: Path) -> list[dict]:
         assert sum(sleeps) <= 0.05 and all(0 < delay <= 0.01 for delay in sleeps)
         if name == "remaining-sleep":
             assert len(sleeps) == 1 and sleeps[0] < 0.0011
-        temporaries = list(path.parent.glob(".*.tmp"))
-        assert len(temporaries) == 1 and temporaries[0].read_bytes() == expected
+        assert not list(path.parent.glob(".*.tmp"))
         results.append({"case": name, "status": "pass", "attempts": limit, "requested_sleep_seconds": sum(sleeps)})
 
     path = target_for("unknown-after-conflict")
@@ -218,6 +216,49 @@ def publication_checks(root: Path) -> list[dict]:
         assert not list(path.parent.glob(".*.tmp"))
         results.append({"case": "preparation_" + operation, "status": "pass"})
 
+    # A partial disk write must not accumulate staging, and must not remove
+    # another invocation's file in the same directory.
+    path = target_for("partial-write")
+    other = path.parent / ".service.json.other-writer.tmp"
+    other.write_bytes(b"other writer")
+    failure = OSError("controlled partial write")
+    real_write = Path.write_text
+
+    def partial_write(temporary, text, *args, **kwargs):
+        real_write(temporary, text[:5], *args, **kwargs)
+        raise failure
+
+    with patch.object(Path, "write_text", autospec=True, side_effect=partial_write):
+        expect_error(path, failure, lambda: writer.write(path, payload))
+    assert list(path.parent.glob(".*.tmp")) == [other] and other.read_bytes() == b"other writer"
+    results.append({"case": "partial_write_cleans_only_own_staging", "status": "pass"})
+
+    path = target_for("cleanup-denied")
+    failure = RuntimeError("original publication failure")
+    with patch.object(writer, "_replace", side_effect=failure), \
+            patch.object(Path, "unlink", side_effect=PermissionError("cleanup denied")):
+        expect_error(path, failure, lambda: writer.write(path, payload))
+    assert len(list(path.parent.glob(".*.tmp"))) == 1
+    results.append({"case": "cleanup_denial_preserves_original_error", "status": "pass"})
+
+    # Host JSON and text use this owner; the standalone integration installer
+    # retains its backup and cleans only its unique failed staging file.
+    from pf_runtime import host, codex_integration
+    for name, publish in (
+        ("host-json", lambda p: host.write_json(p, payload)),
+        ("runtime-text", lambda p: writer.write_text(p, "projection\n")),
+        ("integration", lambda p: codex_integration.write_atomic(p, payload)),
+    ):
+        path = target_for(name)
+        failure = OSError("controlled adapter failure")
+        with patch.object(state_core.os, "replace", side_effect=failure):
+            expect_error(path, failure, lambda: publish(path))
+        assert not list(path.parent.glob(".*.tmp"))
+        if name == "integration":
+            backups = list(path.parent.glob("*.pf-backup-*"))
+            assert len(backups) == 1 and backups[0].read_bytes() == old
+        results.append({"case": name + "_failure_cleanup", "status": "pass"})
+
     # Existing serve failure/finally path, using only disposable state. No
     # endpoint or scheduler is started because the first save always fails.
     path = target_for("serve-failure")
@@ -242,7 +283,7 @@ def publication_checks(root: Path) -> list[dict]:
     assert replace.call_count == 12 and server.call_count == 0
     assert not service.lock_path(runtime.workplace_root).exists()
     assert runtime.state["status"] == runtime.state["health"] == "failed"
-    assert len(list(service.runtime_root(runtime.workplace_root).glob(".*.tmp"))) == 2
+    assert not list(service.runtime_root(runtime.workplace_root).glob(".*.tmp"))
     results.append({"case": "serve_failure_releases_own_singleton", "status": "pass", "live_runtime_started": False})
 
     if sys.platform == "win32":
@@ -317,8 +358,8 @@ def publication_checks(root: Path) -> list[dict]:
                 raise AssertionError("permanently held destination was replaced")
             elapsed = time.monotonic() - started
         assert 1 < len(attempts) <= 6 and len(set(attempts)) == 1
-        assert path.read_bytes() == old and attempts[0].read_bytes() == expected
-        real_replace(attempts[0], path)
+        assert path.read_bytes() == old and not attempts[0].exists()
+        writer.write(path, payload)  # Explicit retry after releasing the reader.
         assert path.read_bytes() == expected
         results.append({"case": "native_reader_still_held", "status": "pass", "attempts": len(attempts),
                         "elapsed_seconds": elapsed, "original_error_preserved": True})
@@ -340,7 +381,7 @@ def publication_checks(root: Path) -> list[dict]:
             elapsed = time.monotonic() - started
         assert 1 < len(attempts) <= 6 and len(set(attempts)) == 1
         assert path.is_dir() and not list(path.iterdir())
-        assert attempts[0].read_bytes() == expected
+        assert not attempts[0].exists()
         results.append({"case": "native_permanent_denial", "status": "pass", "attempts": len(attempts),
                         "elapsed_seconds": elapsed, "original_error_preserved": True})
 

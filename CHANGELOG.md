@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Remove each Runtime publisher's failed staging file while preserving the
+  destination and original error. Host JSON/history share the bounded Windows
+  publication writer; the standalone hook installer retains its backup and
+  cleans its own unique staging file. No directory scan is added to hooks.
 - Separate Runtime operational health from Inspector task outcomes. Failed
   worker attempts and collection recovery remain visible without degrading a
   successful scheduler pass; explicit tick exit codes retain their task meaning.
