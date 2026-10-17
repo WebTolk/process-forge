@@ -1,6 +1,8 @@
 # ProcessForge 1.2.0: dev-релиз, установка и предрелизная проверка
 
-Дата: 2026-10-17. Dev-кандидат установлен, PF app-server перезапущен и принят. Полный финальный consumer suite, 13 проверок установленного CLI, HTTP, SQLite и независимого установленного MCP прошли. **Последний открытый гейт — новый код в фактически подключённом MCP хоста:** его прежний процесс продолжает работать. Work сохранена на release-delivery для точного продолжения; готовность публичного stable-релиза не заявляется.
+Дата: 2026-10-18 (местное время). **Предрелизная приёмка установленного dev-кандидата 1.2.0 / 8ea152b завершена по всем согласованным слоям.** Полный финальный consumer suite, 13 проверок установленного CLI, HTTP, SQLite и независимого установленного MCP прошли ранее; фактически подключённый MCP принят после переподключения. Проверены новый процесс после apply, установленный код, fresh context, точная Work, разрешённый ресурс и поиск. Stable tag, update feed и публичные release assets требуют отдельной поставки.
+
+Итог фактического подключения: [actual-host-acceptance-20261018.json](actual-host-acceptance-20261018.json). Исторические checkpoint и receipts от 17 октября сохранены; их прежняя отметка pending относится к состоянию до переподключения.
 
 ## Точная поставка
 
@@ -25,7 +27,7 @@
 | Реальные SQLite hooks/events/search | Три read-only PRAGMA quick_check: ok |
 | HTTP работающего сервера | readyz200/ready; status без токена и с неверным токеном401, с правильным200; проверен тот же instance |
 | Новый независимый installed MCP | PASS: 31 tools, fresh/Forge, exact Work valid/ready, docs.python resolve available, поиск ready/5 matches |
-| Фактически подключённый MCP | Context fresh/Forge, exact Work/resource PASS, текущая переписка читается; **новый код не загружен**, процесс прежний |
+| Фактически подключённый MCP | **PASS после переподключения:** новая пара процессов принадлежит Codex и запущена после apply; installed manifest/metadata совпадают с checkpoint; fresh context, exact Work valid/ready, docs.python:root и поиск ready |
 
 Подробная матрица всех source checks: source-full-results.json. Единственный source failure закрыт узкой test-only поправкой и полным финальным consumer suite. Единый полный повтор последнего source tree не заявляется. Consumer запущен без custom --only/--skip, native timeout_scale=2: внешний лимит 2400 с выбран после наблюдавшихся 1605 с source suite. Полные логи и исходные native traces сохранены локально; безопасные receipts содержат exit code/hash, а не машинные команды.
 
@@ -49,16 +51,18 @@
 | Installed CLI: resource, 5 новых процессов | 1.966 с | 1.908–2.218 |
 | Installed CLI: context-check, 5 новых процессов | 1.654 с | 1.602–1.906 |
 | Существующий MCP хоста: pf.context, один вызов | 14.254 с | прежний процесс |
+| Фактически подключённый MCP после переподключения: pf.context, 5 после warm-up | **2.021 с** | **1.950–2.403** |
 
-Серии CLI/MCP выполнены последовательно после функциональных проверок, с обычными фоновыми scheduler/hooks. Ответы нового MCP во всех шести вызовах context совпали. Новый независимый stdio и фактический host — разные слои доказательства; эта таблица не выдаётся за контролируемый A/B. Контролируемая source серия из предыдущей Work дала 16.441 -> 1.625 с на неизменном корпусе и 20 одинаковых полных ответах.
+Серии CLI/MCP выполнены последовательно, с обычными фоновыми scheduler/hooks. Ответы независимого MCP во всех шести вызовах context совпали. После переподключения выполнена отдельная последовательная серия на фактическом соединении: warm-up 4.779 с и пять замеров 1.950/2.014/2.292/2.403/2.021 с; все шесть полных ответов совпали. Здесь измерено время вызова инструмента целиком. Новый независимый stdio и фактический host — разные слои доказательства; эта таблица не выдаётся за контролируемый A/B. Контролируемая source серия из предыдущей Work дала 16.441 -> 1.625 с на неизменном корпусе и 20 одинаковых полных ответах.
 
 Сервер: три пригодных 30-секундных окна, всего90.029 с, CPU15.828 с = **4.395% всей мощности четырёх логических CPU** (17.581% одного ядра). Working Set171.961–171.988 MiB, peak176.715 MiB; тот же процесс, до/после ready/scheduler_alive/workers0/jobs0. Исходное третье окно зацепило контрольную PF-команду; оно исключено до чтения результата и заменено отдельным чистым окном. Все исходные и замещающие данные сохранены. Замеры относятся этому устройству и текущей нагрузке.
 
-## Открытая приёмка и ограничения
+## Приёмка фактического подключения и ограничения
 
-1. **Переподключить существующий PF MCP в хосте.** Оба процесса существующего соединения имеют прежние PID и запуск до apply; после замеров отдельный новый stdio корректно завершён. На диске установлен8ea152b, но существующий host ещё исполняет предыдущую реализацию. Доступные native PF команды управляют регистрацией MCP; операции переподключения текущего host transport в доступной поверхности нет.
-2. После переподключения проверить новый process/start/root относительно применённого manifest, actual fresh pf.context, exact Work valid/ready и один authorized resource resolve; затем один warm-up и пять коротких замеров actual pf.context. **Apply и перезапуск app-server повторять не нужно.** Exact native continuation и checkpoint описаны в governed handoff.
-3. Bounded shutdown observer на большой истории способен отказать в guarded stop; текущий операторский override выполнен после полной положительной проверки. Это эксплуатационное ограничение сохранено, product defaults не менялись.
-4. Metrics sessions/work/workers по бюджету остаются partial; unknown не заменены нулём. Исторические invalid/unreadable presence records не исправлялись. Реальные Linux/macOS и матрица Python, optional directory-symlink/original-state fixture, новый реальный Codex worker после этой установки не квалифицировались. Полные изолированные worker/driver scenarios и актуальная driver validation прошли.
+Новая единственная пара PF MCP запущена после завершённого apply, launcher принадлежит Codex; путь установленного MCP и workplace совпадают с сохранённой поставкой. Manifest и work/metadata.py имеют прежние SHA256. Все 1307 payload files совпали с финальным ZIP; единственная локальная project configuration и все пять защищённых файлов сохранены. Исторические pins отчёта/handoff проверены до их обновления. Вызовы выполнялись через фактически подключённый инструмент; дополнительный stdio для этой приёмки не запускался.
 
-Primary review — source-review.md, без независимого агента: subagent policy запрещает его. Native Work остаётся release-delivery до фактической приёмки нового MCP. Публикация source подтверждена source-publication-final.json; доставка отчёта/checkpoint фиксируется отдельным scoped commit и полным readback двух dev-веток. Старую terminal Work проекции/фикстуры не возобновлять.
+Context fresh, snapshot прежний; exact native continuation resumed, Work valid/ready на release-delivery, docs.python:root available, поиск ready. Runtime ready/scheduler_alive, тот же владелец/instance после установки, workers0/jobs0. raw_hooks=false/events=true и configuration revision прежние. Apply, server restart и refresh контекста не повторялись.
+
+Сохранены эксплуатационные ограничения: bounded shutdown observer на большой истории может отказать в guarded stop; прежний операторский override выполнен после полной положительной проверки. Metrics sessions/work/workers по бюджету остаются partial; unknown не заменены нулём. Исторические invalid/unreadable presence records не исправлялись. Реальные Linux/macOS и матрица Python, optional directory-symlink/original-state fixture, новый реальный Codex worker после этой установки не квалифицировались. Полные изолированные worker/driver scenarios и актуальная driver validation прошли.
+
+Primary review — source-review.md и acceptance-review-20261018.md, без независимого агента: subagent policy запрещает его. Native release/evolve closeout, doctors и доставка evidence отражаются в closeout-20261018.json и delivery-publication-20261018.json. Публикация source подтверждена source-publication-final.json. Исторический resume-checkpoint.json сохранён; после terminal closeout эта continuation не предназначена для повторного запуска. Готовность dev-кандидата на этом устройстве не публикует stable-релиз автоматически.

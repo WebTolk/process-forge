@@ -1,0 +1,11 @@
+{
+  "delivery_commit": "246803873c78fe9c3fd77c3dec3b20aa63d3cc9b",
+  "origin_dev": "246803873c78fe9c3fd77c3dec3b20aa63d3cc9b",
+  "gitverse_dev": "246803873c78fe9c3fd77c3dec3b20aa63d3cc9b",
+  "full_sha_readback": "passed via git ls-remote for both remotes",
+  "qualified_product_source": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "native_work_status": "in_progress at release-delivery; actual connected MCP new-code acceptance pending",
+  "continuation": "pf120-dev-mcp-reconnect-20261017",
+  "product_changes_in_evidence_commit": false,
+  "network_note": "Both pushes succeeded. One origin DNS readback failure was retried; final origin full-SHA readback succeeded."
+}

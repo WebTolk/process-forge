@@ -1,7 +1,7 @@
 {
   "observed_at": "2026-10-17T19:38:17.534958+00:00",
   "version": "1.2.0",
-  "status": "dev_installed; actual connected MCP new-code acceptance pending",
+  "status": "dev_candidate_accepted; native run_completed",
   "qualified_source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
   "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
   "full_final_archive_consumer_suite": "passed",
@@ -28,7 +28,13 @@
     171.9609375,
     171.98828125
   ],
-  "actual_connected_mcp_loaded_new_candidate": false,
-  "remaining_gate": "Reconnect actual PF MCP host; verify new process provenance, fresh context, exact Work/resource and bounded warm timing. Do not repeat apply/server restart.",
-  "operational_limitation": "Default bounded shutdown observer cannot cover the large worker history; native complete read-only proof preceded the explicit graceful operator override."
+  "actual_connected_mcp_loaded_new_candidate": true,
+  "remaining_gate": "No functional dev-acceptance gate remains. Stable publication is a separate delivery.",
+  "operational_limitation": "Default bounded shutdown observer cannot cover the large worker history; native complete read-only proof preceded the explicit graceful operator override.",
+  "actual_host_acceptance_receipt": "actual-host-acceptance-20261018.json",
+  "actual_host_context_median_seconds": 2.021,
+  "actual_host_accepted_at": "2026-10-17T20:39:07.0415233Z",
+  "native_action": "run_completed",
+  "native_closeout_receipt": "closeout-20261018.json",
+  "delivery_readback_receipt": "delivery-publication-20261018.json"
 }

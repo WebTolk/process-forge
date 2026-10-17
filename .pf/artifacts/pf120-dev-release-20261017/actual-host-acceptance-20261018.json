@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-17T20:36:53.731861+00:00",
+  "status": "passed",
+  "qualified_source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
+  "installed_core_manifest_sha256": "0dd4a0b29032d6dcb4328dd34162fae8c0c620f2dff637a950af2981c95ad18a",
+  "installed_metadata_sha256": "38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e",
+  "manifest_and_metadata_equal_saved_checkpoint": true,
+  "manifest_equals_final_archive": true,
+  "exact_payload_files": 1307,
+  "managed_files": 1308,
+  "protected_files_preserved": 5,
+  "historical_report_handoff_pins_verified_before_update": true,
+  "actual_host": {
+    "process_count": 2,
+    "new_process_pair": true,
+    "all_started_after_apply_checkpoint": true,
+    "started_at_utc": [
+      "2026-10-17T20:32:21.8087670Z",
+      "2026-10-17T20:32:22.1492950Z"
+    ],
+    "installed_script_root_and_workplace_match": true,
+    "launcher_parent_is_codex": true,
+    "only_matching_mcp_process_pair_observed": true,
+    "loaded_new_candidate_verified": true
+  },
+  "context": {
+    "status": "fresh",
+    "snapshot_id": "ctx-20261016-091113-310bed",
+    "transport": "actual connected host MCP",
+    "measure": "end-to-end tool call wall clock",
+    "warmup_seconds": 4.779,
+    "samples_seconds": [
+      1.95,
+      2.014,
+      2.292,
+      2.403,
+      2.021
+    ],
+    "median_seconds": 2.021,
+    "min_seconds": 1.95,
+    "max_seconds": 2.403,
+    "all_six_responses_identical": true
+  },
+  "work": {
+    "run_id": "garage-pf120-dev-release-20261017-package-committed-work-metadata-projec",
+    "assignment_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu",
+    "context_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule",
+    "capsule_checksum": "sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df",
+    "validation": "valid",
+    "execution_readiness": "ready",
+    "observed_stage": "release-delivery"
+  },
+  "authorized_resource": {
+    "id": "docs.python:root",
+    "status": "available"
+  },
+  "work_search": {
+    "status": "ready",
+    "returned": 3
+  },
+  "runtime": {
+    "status": "ready",
+    "scheduler_alive": true,
+    "same_owner_as_post_update": true,
+    "active_workers": 0,
+    "pending_runtime_jobs": 0
+  },
+  "configuration_revision_preserved": true,
+  "logging": {
+    "events": true,
+    "raw_hooks": false
+  },
+  "no_repeated_apply_server_restart_or_context_refresh": true,
+  "private_evidence_sha256": {
+    "actual-host-processes-20261018.json": "04213063189f5ab852b36eec1adf2e18cf2940c6b104e2c1652f0acd8fca361b",
+    "actual-host-functional-20261018.json": "92f9451072401160644e3dba4f519fa9e7fedb380da009f75aac760d283375a3",
+    "actual-host-native-20261018.json": "1ebaaefcd10097eb11083d88e90cd02146f4721ccb35b31d16fe382c89fd7155"
+  },
+  "boundary": "Actual connected-host dev candidate accepted on this device; stable public publication not performed."
+}

@@ -73,3 +73,42 @@ Status: installed CLI medians version0.774/exact0.832/resource1.966/context-chec
 Risks: external host MCP reconnect is the only remaining acceptance action; bounded shutdown history/partial metrics and platform/optional cases remain documented. No stable publication or native completion claimed.
 Next steps: scoped evidence commit, parallel push/readback both dev branches; operator reconnects actual PF MCP host. On resume use exact native continuation, verify new source/process/context/resource, then finish native release/evolve/doctors and final delivery.
 Handoff: .pf/handoffs/pf120-dev-release-20261017.md and pinned resume-checkpoint.json. Report/handoff pins recorded before continuation creation; preserve this checkpoint as restart evidence.
+
+## 2026-10-17 20:35 UTC - primary / release-engineer
+
+Task: продолжить предрелизную приёмку 1.2.0 по запросу пользователя после переподключения хоста.
+Files analyzed: live pf.context, exact Work/assignment/immutable capsule, native continuation, report/handoff/checkpoint, installed owner evidence and Git history.
+Artifacts changed: this append-only progress log; reconnect evidence will use new filenames and preserve the earlier checkpoint.
+Templates used: project-local PF process and handoff conventions; no global development-flow skill.
+Tools used: PF MCP, Serena first for repository navigation, PowerShell read-only process observation, Git; GitVerse authenticated with GITVERSE_TOKEN through the existing helper without exposing credentials.
+Decisions: resumed native continuation pf120-dev-mcp-reconnect-20261017 with exact selectors. Context fresh; Work valid/ready at release-delivery, same immutable capsule. No duplicate Work, apply, app-server restart or context refresh. Subagents forbidden by capsule and not used.
+Status: current actual MCP process pair starts after the completed apply; old process pair is gone. Both remote dev branches read back 246803873c78fe9c3fd77c3dec3b20aa63d3cc9b. Product files and Git index have no pending changes; unrelated checkout state remains preserved.
+Risks: new process identity alone does not complete functional/resource acceptance; installed manifest, metadata and protected-file hashes need readback. Stable public release remains outside this dev-delivery scope.
+Next steps: verify actual owner/root/start and checkpoint hashes, record actual MCP context/Work/resource/search and warm context measurements, native release/evolve transitions and doctors, primary review, scoped evidence commit and parallel dual push/readback.
+Handoff: existing exact Work only; preserve resume-checkpoint.json as historical evidence.
+
+## 2026-10-17 20:39 UTC - primary / release-engineer
+
+Task: закрыть последний gate приёмки фактически подключённого MCP.
+Files analyzed: actual host process owner/root/start, saved manifest/metadata/checkpoint hashes, every installed payload file, current native Core/Runtime/config state and actual MCP responses.
+Artifacts changed: actual-host-acceptance-20261018.json, report.md, acceptance-review-20261018.md, stages/release-delivery.md and current handoff; private reproducible proof retained in own scratch.
+Templates used: pinned release-delivery evidence identifiers and project handoff convention.
+Tools used: six serialized actual pf.context calls, exact Work, authorized docs.python resolve/search, read-only native status/config, process observation and SHA256 comparisons.
+Decisions: new actual connected pair belongs to Codex and started after completed apply; no independent stdio substituted. All six full context responses identical/fresh; five warm calls median2.021s/range1.950-2.403s. Protected files5/5 and payload1307/1307 preserved. Runtime ready/scheduler_alive, same post-update owner, workers0/jobs0; raw_hooks=false/events=true. Historical report/handoff pins verified before updating current documents.
+Status: agreed dev delivery accepted; primary review PASS. Previous full consumer/installed evidence remains valid for unchanged payload. No repeated apply/restart/refresh.
+Risks: stable public delivery outside current scope; known shutdown-budget/partial metrics and platform gaps remain explicit. Independent review unavailable by capsule policy.
+Next steps: native release/evolve completion, doctors, safe evidence scan, scoped commit and parallel dual remote push/full readback.
+Handoff: current .pf/handoffs/pf120-dev-release-20261017.md; historical checkpoint stays immutable.
+
+## 2026-10-17 20:41 UTC - primary / release-engineer
+
+Task: native closeout после принятого actual connected MCP.
+Files analyzed: exact post-transition Work state, terminal continuation status, native task/run/runtime-events and project continuation diagnostics.
+Artifacts changed: native release-delivery/evolve evidence, closeout-20261018.json, accepted-task/run/continuation doctor receipts, current public-summary and handoff.
+Templates used: pinned process artifact/gate identifiers, project append-only log/handoff.
+Tools used: exact native pf.work.transition/readback, installed CLI doctors; private raw transitions and checks retained in own scratch.
+Decisions: both stages completed through the pinned process. Exact Work action run_completed, run completed, assignment done, valid/ready, blockers[]. Continuation now returns work_is_terminal as expected; never resume it again. Task15/run22/continuation111 diagnostic checks PASS, including runtime run events; these are doctor assertions, not a new public release-suite count.
+Status: dev acceptance and native lifecycle complete. Product/config/infrastructure unchanged; initial checksum/capsule and historical checkpoint preserved.
+Risks: public stable delivery still separate; evidence commit/dual readback not yet claimed.
+Next steps: scoped privacy/format review, own evidence commit, parallel push both remotes using token for GitVerse, full SHA readback and publication receipt.
+Handoff: .pf/handoffs/pf120-dev-release-20261017.md; final native result in closeout-20261018.json.

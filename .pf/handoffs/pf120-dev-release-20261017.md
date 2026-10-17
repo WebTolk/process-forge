@@ -1,17 +1,17 @@
-# Handoff: dev-release -> actual MCP reconnect acceptance
+# Handoff: завершённая dev-приёмка 1.2.0 -> дальнейшая поставка
 
-Objective: закончить предрелизную приёмку установленного dev8ea152b после переподключения фактического PF MCP хоста.
-Current status: Core установлен один раз; app-server перезапущен и ready; полный финальный consumer suite, 13 installed checks, HTTP/SQLite/новый независимый MCP PASS. Actual connected MCP остаётся прежним процессом; новый код в нём не принят. Work остаётся release-delivery, не terminal.
-Input artifacts: .pf/artifacts/pf120-dev-release-20261017/report.md, public-summary.json, resume-checkpoint.json, archive-identity-final.json, installed-integrity.json, checkpoint-after.json, installed-mcp.json, connected-mcp-provenance.json, quiet-runtime.json.
+Objective: завершить точную dev-поставку 1.2.0 / 8ea152b после фактического MCP reconnect.
+Current status: все согласованные слои dev-приёмки PASS; actual connected MCP принят, context fresh, exact Work valid/ready, docs.python:root и search ready. Runtime ready, прежний post-update instance. Native release/evolve завершены: run_completed/completed, assignment done, blockers[]; task/run/continuation doctors PASS. Commit и полный readback двух dev-веток фиксируются в delivery-publication-20261018.json.
+Input artifacts: .pf/artifacts/pf120-dev-release-20261017/report.md, actual-host-acceptance-20261018.json, acceptance-review-20261018.md, closeout-20261018.json, stages/release-delivery.md, stages/evolve.md; прежние source/archive/installed receipts сохранены.
 Exact run: garage-pf120-dev-release-20261017-package-committed-work-metadata-projec
 Exact assignment: pf120-dev-release-20261017-package-committed-work-metadata-projection-qu
 Exact context: pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule
 Capsule checksum: sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df
-Native continuation: pf120-dev-mcp-reconnect-20261017 (create/readback receipt retained separately).
+Native continuation: pf120-dev-mcp-reconnect-20261017 была resumed с точными selectors; теперь штатно возвращает work_is_terminal, для новой работы её не использовать.
 Qualified source: 8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41
 Applied ZIP SHA256: e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc
-Files changed: own release evidence/handoff; supporting existing-test/checksum change delivered separately as8ea152b. Product projection delivered as280e00d. Private device data and immutable capsules preserved.
-Files not to touch: prior capsules/approved inputs, unrelated dirty state, global raw_hooks=false/events=true, historical records, installed Core or server for repeated update/restart. Old ZIP999667c5 is superseded and never installed.
-Known issues: actual MCP owner process predates apply; independent stdio proves the new code but not host reconnection. Default shutdown guard reaches a history budget; complete native idle proof preceded the explicit graceful override. Metrics partial values remain unknown.
-Required checks: after actual host reconnect, call fresh pf.context, native continuation status/resume by this exact id, then exact Work state and authorized docs.python:root resolve. Verify actual process/root/start is new relative to the completed apply, source manifest/metadata hash matches checkpoint, and record actual warm pf.context (one warm-up +five). Do not refresh an already-fresh context merely because raw checkout CRLF disagrees with installed resources.
-Next recommended action: finish only the remaining actual MCP gate, update own report/evidence, run native release/evolve transitions through run_completed, doctors, scoped commit and parallel push/full readback of both dev remotes. If actual MCP is still old, retain this Work and exact continuation; do not create a duplicate or claim loaded-code acceptance.
+Files changed: только собственные evidence/report/handoff и штатные lifecycle записи PF. Product payload не менялся.
+Files not to touch: immutable capsules и stage inputs, unrelated dirty/staged files, private configuration/history; не повторять Core apply, app-server restart или refresh свежего контекста.
+Known issues: bounded shutdown history/partial metrics и платформенные ограничения перечислены в report.md. Stable release не опубликован. resume-checkpoint.json хранит прежнее состояние и pins до обновления отчёта/handoff; они были проверены перед обновлением. Историческая версия документов доступна в commit2468038.
+Required checks: native task/run/continuation doctors после closeout PASS; перед commit — скан собственного публичного evidence на private paths/credentials, после commit — parallel push и полный readback обоих dev SHA. GitVerse использовать через GITVERSE_TOKEN без вывода секрета.
+Next recommended action: следующую stable-поставку или продуктовую задачу вести отдельной Work с точными границами. Существующие эксплуатационные ограничения остаются в report/evolve; текущая задача завершена.
