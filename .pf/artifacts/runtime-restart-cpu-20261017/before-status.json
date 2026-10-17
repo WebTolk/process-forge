@@ -1,0 +1,185 @@
+{
+  "active_agent_sessions": 471,
+  "active_workers": 0,
+  "capabilities": {
+    "guarded_shutdown": 1
+  },
+  "configuration": {
+    "error": null,
+    "metrics_interval_seconds": 10.0,
+    "status": "valid"
+  },
+  "endpoint": "http://127.0.0.1:62088",
+  "health": "degraded",
+  "instance_id": "84c60b0dd3df4740aaf1f18d3e9cce2c",
+  "known_projects": [
+    {
+      "director_enabled": true,
+      "effective_mode": "organized",
+      "flow_root": ".pf",
+      "project_id": "process-forge",
+      "project_root": "D:\\Dev\\process-forge"
+    },
+    {
+      "director_enabled": false,
+      "effective_mode": "simple",
+      "flow_root": ".pf",
+      "project_id": "wt-image-resize-and-convert-joomla-plugin",
+      "project_root": "D:\\Dev\\wt-image-resize-and-convert-joomla-plugin"
+    }
+  ],
+  "last_event": {
+    "event_id": "evt_23422dba3140479294f0246e195fbbbb",
+    "event_type": "supervisor.tick.completed",
+    "project_id": "wt-image-resize-and-convert-joomla-plugin",
+    "time": "2026-10-17T05:52:52Z"
+  },
+  "last_scheduler_error": "D:\\Dev\\process-forge: project scheduler pass failed with status 1",
+  "last_scheduler_result": {
+    "projects": [
+      {
+        "director": "tick",
+        "effective_mode": "organized",
+        "inspector": "tick",
+        "project_id": "process-forge",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      },
+      {
+        "director": "skipped_simple",
+        "effective_mode": "simple",
+        "inspector": "tick",
+        "project_id": "wt-image-resize-and-convert-joomla-plugin",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      }
+    ],
+    "status": "failed"
+  },
+  "metrics": {
+    "groups": {
+      "leases": {
+        "counts": {
+          "expired": 0,
+          "held": 0,
+          "inactive": 85
+        },
+        "coverage": "complete",
+        "issues": [],
+        "observed": {
+          "expired": 0,
+          "held": 0,
+          "inactive": 85
+        },
+        "source": "lease_records"
+      },
+      "registrations": {
+        "counts": {
+          "projects": null,
+          "sessions": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "coverage"
+        ],
+        "observed": {
+          "projects": 0,
+          "sessions": 0
+        },
+        "source": "host_registration_cache"
+      },
+      "sessions": {
+        "counts": {
+          "offline": null,
+          "online": null,
+          "stale": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "budget",
+          "invalid",
+          "unreadable"
+        ],
+        "observed": {
+          "offline": 0,
+          "online": 0,
+          "stale": 0
+        },
+        "source": "agent_presence_ttl"
+      },
+      "work": {
+        "counts": {
+          "blocked": null,
+          "in_progress": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "coverage"
+        ],
+        "observed": {
+          "blocked": 0,
+          "in_progress": 0
+        },
+        "source": "run_records"
+      },
+      "workers": {
+        "counts": {
+          "running": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "coverage"
+        ],
+        "observed": {
+          "running": 0
+        },
+        "source": "worker_status_records"
+      }
+    },
+    "instance_id": "84c60b0dd3df4740aaf1f18d3e9cce2c",
+    "interval_seconds": 10.0,
+    "observed_at": "2026-10-17T06:06:44.961154+00:00",
+    "schema_version": 1
+  },
+  "pending_runtime_jobs": 0,
+  "pid": 13540,
+  "processforge_core_version": "1.2.0",
+  "protocol_version": "pf-runtime-poc-1",
+  "runtime_version": "1.0.0-poc",
+  "scheduler": {
+    "jobs": {
+      "director": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T05:52:55Z",
+        "period_seconds": 10
+      },
+      "inspector": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T05:52:55Z",
+        "period_seconds": 5
+      },
+      "ledger": {
+        "last_result": "ok",
+        "last_run": "2026-10-17T05:52:55Z",
+        "period_seconds": 5
+      },
+      "metrics": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T06:06:44.961154+00:00",
+        "period_seconds": 10.0
+      },
+      "projection": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T05:52:55Z",
+        "period_seconds": 30
+      }
+    }
+  },
+  "scheduler_alive": true,
+  "schema_version": 1,
+  "started_at": "2026-10-17T03:50:46Z",
+  "status": "ready",
+  "token_hash": "sha256:d1a48da56e161c1a1b37f1318dcdef6d3ccb8d85392425dd78d9c0dae801a7dc",
+  "token_ref": "D:\\.agents\\processforge-workplace\\runtime\\pf-runtime\\token.json",
+  "updated_at": "2026-10-17T06:06:46Z",
+  "workplace_id": "processforge-workplace",
+  "workplace_root": "D:\\.agents\\processforge-workplace"
+}

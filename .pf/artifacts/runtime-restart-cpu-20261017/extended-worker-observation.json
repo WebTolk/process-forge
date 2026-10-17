@@ -1,0 +1,35 @@
+{
+  "diagnostic_only": true,
+  "guard_unchanged": true,
+  "budget_seconds": 5,
+  "project_roots": [],
+  "registration": {
+    "source": "host_registration_cache",
+    "coverage": "partial",
+    "counts": {
+      "projects": null,
+      "sessions": null
+    },
+    "observed": {
+      "projects": 0,
+      "sessions": 0
+    },
+    "issues": [
+      "coverage"
+    ]
+  },
+  "worker_observation": {
+    "source": "worker_status_records",
+    "coverage": "partial",
+    "counts": {
+      "running": null
+    },
+    "observed": {
+      "running": 0
+    },
+    "issues": [
+      "budget",
+      "coverage"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "lock": {
+    "created_at": "2026-10-17T06:18:26Z",
+    "instance_id": "7e99504388824711a0e0c38b5fa400cf",
+    "pid": 16976
+  },
+  "service": {
+    "pid": 16976,
+    "instance_id": "7e99504388824711a0e0c38b5fa400cf",
+    "status": "ready",
+    "health": "degraded",
+    "endpoint": "http://127.0.0.1:51841",
+    "started_at": "2026-10-17T06:18:26Z",
+    "processforge_core_version": "1.2.0"
+  },
+  "readyz": {
+    "ready": true,
+    "status": "ready"
+  }
+}

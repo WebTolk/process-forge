@@ -1,0 +1,14 @@
+{
+  "source": "worker_status_records",
+  "coverage": "partial",
+  "counts": {
+    "running": null
+  },
+  "observed": {
+    "running": 0
+  },
+  "issues": [
+    "budget",
+    "coverage"
+  ]
+}

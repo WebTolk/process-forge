@@ -1,0 +1,3 @@
+# investigation
+
+Actual runtime.lock owner PID 13540, launcher PID 9308, separate connected MCP PID 5284. Service ready with guarded_shutdown=1 and degraded health; cached coverage is partial. Installed VERSION 1.2.0 but journal/service hashes differ from current SQLite source. 30-second baseline (4 logical CPUs): owner 21.8876% average, 24.4085% median, 30.2675% maximum; launcher 0%, MCP 4.0754% average during control requests. Baseline is an observed background window, not a synthetic controlled workload. Existing server restart uses authenticated expected-instance/idle guard; read current activity and use that exact operator command. No product writes or migration.

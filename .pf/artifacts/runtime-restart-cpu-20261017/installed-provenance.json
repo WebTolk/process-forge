@@ -1,0 +1,41 @@
+{
+  "observed_at": "2026-10-17T06:21:19.735643+00:00",
+  "files": [
+    {
+      "root": "D:/.agents/processforge",
+      "file": "VERSION",
+      "sha256": "1e5b51cde515396a9fa762909cf8ca6584ccc564b325d2eebeea76175fe95c4d",
+      "version": "1.2.0"
+    },
+    {
+      "root": "D:/dev/process-forge",
+      "file": "VERSION",
+      "sha256": "1e5b51cde515396a9fa762909cf8ca6584ccc564b325d2eebeea76175fe95c4d",
+      "version": "1.2.0"
+    },
+    {
+      "root": "D:/.agents/processforge",
+      "file": "src/processforge_core/process_event_journal.py",
+      "sha256": "cc1febbe34c4c5161c6d37e04823aca6fc275f978456e7b1394e9a44315ac62d",
+      "version": null
+    },
+    {
+      "root": "D:/dev/process-forge",
+      "file": "src/processforge_core/process_event_journal.py",
+      "sha256": "441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1",
+      "version": null
+    },
+    {
+      "root": "D:/.agents/processforge",
+      "file": "tools/pf_runtime/service.py",
+      "sha256": "4ccabd549f82a7117d95cff4a941f7809c30bb3b84093000dfa847263c74b51d",
+      "version": null
+    },
+    {
+      "root": "D:/dev/process-forge",
+      "file": "tools/pf_runtime/service.py",
+      "sha256": "591824baff2a57fac3b1376d4dd819afe70651ba9e2de17cce54b18fea6c3f9b",
+      "version": null
+    }
+  ]
+}
