@@ -1,0 +1,24 @@
+{
+  "source_commit": "07da5951d4f395462c15aa688aae6fdce4b40487",
+  "archive_sha256": "c8b12114393594da619a160d4e333244b6167f00d670b533bda1431db95bebaf",
+  "archive_entries": 1308,
+  "checks": {
+    "source_smokes": 15,
+    "archive_smokes": 7,
+    "installed_smokes": 3,
+    "archive_profile": "quick",
+    "validators": "PASS",
+    "supervisor_extraction_parity": "PASS",
+    "runtime_doctor": "PASS",
+    "sustained_operational_health": "PASS"
+  },
+  "preserved": {
+    "explicit_tick_exit_semantics": true,
+    "task_failures_and_recovery_diagnostics": true,
+    "historical_worker_bytes": true,
+    "private_configuration": true,
+    "autostart_configuration": true,
+    "collection_safety_gates": true
+  },
+  "qualification_scope": "bounded dev correction; full1.2.0 and connected-MCP acceptance are separate"
+}
