@@ -1,0 +1,15 @@
+{
+  "run_id": "garage-pf120-dev-fixture-correction-20261017-update-the-existing-interna",
+  "assignment_id": "pf120-dev-fixture-correction-20261017-update-the-existing-internal-proce",
+  "context_id": "pf120-dev-fixture-correction-20261017-update-the-existing-internal-proce-capsule",
+  "capsule_checksum": "sha256:a0309565011cc94c3854743c0c2936ed2b4d266336acbb6662f99cfc97c754f1",
+  "native_action": "run_completed",
+  "blockers": [],
+  "existing_tests_passed": 7,
+  "smoke_exit_code": 0,
+  "task_doctor_exit_code": 0,
+  "run_doctor_exit_code": 0,
+  "review": "primary, after implementation; exact scope and retained positional/default/callback assertions verified",
+  "product_logic_changed": false,
+  "parent_final_release_qualification": "required separately"
+}

@@ -1,0 +1,9 @@
+{
+  "base_commit": "280e00d9520e8aff7ac49f8173a940cf130b9ff4",
+  "changed_inventory_entries": 1,
+  "path": "tools/smoke_work_transition_commit_service.py",
+  "sha256": "da1e9da4a04f0e9249d6ab08e45506ad9b24e96f368e6d65d456cb1aef9cd2d3",
+  "old_entry": "e25ba8989aa3697d7a20745d2021be5b2072f24eed6cdcca99d72a1e3ba7654c  tools/smoke_work_transition_commit_service.py",
+  "python_syntax": "passed",
+  "product_logic_changed": false
+}

@@ -155,8 +155,11 @@ class WorkTransitionCommitTests(unittest.TestCase):
 
     def test_facade_constructor_and_late_callback_override(self):
         self.assertEqual(ProcessExecutionService.__match_args__, ("project_root", "workplace_root", "core"))
-        self.assertEqual(list(inspect.signature(ProcessExecutionService).parameters),
-                         ["project_root", "workplace_root", "core", "observer", "records", "context", "definitions", "snapshots"])
+        parameters = inspect.signature(ProcessExecutionService).parameters
+        self.assertEqual(list(parameters),
+                         ["project_root", "workplace_root", "core", "observer", "records", "context", "definitions", "snapshots", "work_metadata"])
+        self.assertEqual(parameters["work_metadata"].kind, inspect.Parameter.KEYWORD_ONLY)
+        self.assertIsNone(parameters["work_metadata"].default)
         ops = RecordingOperations()
         dependencies = ops.dependencies()
         core = SimpleNamespace(now_utc=dependencies["now_utc"])
