@@ -1,0 +1,27 @@
+{
+  "returncode": 0,
+  "elapsed_ms": 382.198,
+  "response": {
+    "accepted": true,
+    "chat_message_ids": [],
+    "deduplicated": true,
+    "diagnostics": {
+      "logging": {
+        "events": true,
+        "raw_hooks": true
+      }
+    },
+    "duplicate": true,
+    "event_id": "evt_cb88a4c9f739139edcdb0d833a9bb2d9",
+    "events": ".pf/runtime/events/events.sqlite3",
+    "normalized_event_ids": [
+      "evt_cb88a4c9f739139edcdb0d833a9bb2d9"
+    ],
+    "project_id": "process-forge",
+    "projection": ".pf/artifacts/projections/command-history.md",
+    "raw_event_id": "raw_11da9a6dacdda1dbd347acae2c02bb236553adec9ceb60256c93ceef4cd360ee",
+    "raw_location": "hooks.sqlite3:32098",
+    "routing_status": "routed",
+    "stage_projection": ".pf/artifacts/projections/stage-obligations.json"
+  }
+}

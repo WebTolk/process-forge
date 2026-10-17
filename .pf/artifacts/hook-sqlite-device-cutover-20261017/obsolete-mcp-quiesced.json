@@ -1,0 +1,6 @@
+﻿{
+    "ProcessId":  5284,
+    "ParentProcessId":  11976,
+    "CreationDate":  "\/Date(1792209349151)\/",
+    "CommandLine":  "\"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\"  D:\\.agents\\processforge\\tools\\pf_runtime\\mcp_server.py --workplace D:\\.agents\\processforge-workplace"
+}

@@ -1,0 +1,184 @@
+[
+  {
+    "project": "D:\\dev\\process-forge",
+    "lines": 86023,
+    "invalid": [],
+    "identical_duplicates": 6,
+    "conflicts": 4,
+    "changed_keys": {
+      "time": 4
+    },
+    "examples": [
+      {
+        "id": "evt_20b64f8442ad97ad78209bb87c79d0c1",
+        "first_line": 31171,
+        "line": 31172,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.command.completed",
+          "agent.command.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_b0bbb66809911f5c2f88856149328d99",
+        "first_line": 34482,
+        "line": 34483,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.tool.completed",
+          "agent.tool.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_c3d24ad194788ec64b94a11a0eccc661",
+        "first_line": 35171,
+        "line": 35172,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.tool.completed",
+          "agent.tool.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_044fc468320ad4627a24c3454484611a",
+        "first_line": 35314,
+        "line": 35315,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.tool.completed",
+          "agent.tool.completed"
+        ],
+        "payload_changed_keys": null
+      }
+    ],
+    "unique_ids": 86013
+  },
+  {
+    "project": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin",
+    "lines": 50906,
+    "invalid": [],
+    "identical_duplicates": 18,
+    "conflicts": 8,
+    "changed_keys": {
+      "time": 8
+    },
+    "examples": [
+      {
+        "id": "evt_a9077cb682917c916c1aa59508115b43",
+        "first_line": 4715,
+        "line": 4720,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.command.completed",
+          "agent.command.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_76c94e3ec49bd50164dc857ff221e1c3",
+        "first_line": 5341,
+        "line": 5342,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.session.compaction.started",
+          "agent.session.compaction.started"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_5a064ad87cd556348a2d8b2db9aaebc2",
+        "first_line": 5427,
+        "line": 5428,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.command.completed",
+          "agent.command.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_e796fad36849d40050f3c0051b94e241",
+        "first_line": 5432,
+        "line": 5433,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.tool.completed",
+          "agent.tool.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_3282aa47b078ba35175027c314020d3d",
+        "first_line": 5521,
+        "line": 5522,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.tool.completed",
+          "agent.tool.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_b19e26786d11d6d3fc6bcf59b626f83c",
+        "first_line": 5765,
+        "line": 5766,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.session.ended",
+          "agent.session.ended"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_43c3204e9d3c0978421ca43a3f234ca8",
+        "first_line": 6060,
+        "line": 6061,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.tool.completed",
+          "agent.tool.completed"
+        ],
+        "payload_changed_keys": null
+      },
+      {
+        "id": "evt_2dc08ab99525b419ada66be3f5ac6a6b",
+        "first_line": 6170,
+        "line": 6171,
+        "changed_keys": [
+          "time"
+        ],
+        "types": [
+          "agent.command.completed",
+          "agent.command.completed"
+        ],
+        "payload_changed_keys": null
+      }
+    ],
+    "unique_ids": 50880
+  }
+]

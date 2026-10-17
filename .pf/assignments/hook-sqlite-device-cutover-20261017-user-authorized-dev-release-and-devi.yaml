@@ -1,0 +1,439 @@
+schema_version: 1
+id: hook-sqlite-device-cutover-20261017-user-authorized-dev-release-and-devi
+title: 'hook-sqlite-device-cutover-20261017: User-authorized dev release and device cuto'
+run_id: garage-hook-sqlite-device-cutover-20261017-user-authorized-dev-release-a
+process: software-feature-development
+status: done
+created_at: '2026-10-17T06:37:04Z'
+updated_at: '2026-10-17T06:57:14Z'
+objective: 'hook-sqlite-device-cutover-20261017: User-authorized dev release and device cutover of the qualified SQLite hook/event implementation. Build and qualify an immutable dev archive from commit 69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab; quiesce legacy writers through lifecycle controls; update installed Core once with native core-update; back up and migrate registered project journals with the PF migrator; start the updated pf-app-server and measure CPU. Include necessary actual MCP and hook-writer quiescence and reconnection. Preserve original journals and unrelated work. No general PF 1.2.0 acceptance, stable publication, or terminal Work reuse.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Close this operator Work. Keep installed dev/archive/backups and original journals; do not repeat apply/migration or resume this terminal Work. Continue current CPU diagnosis under a new bounded capsule and publish own records only.
+  artifacts:
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/architecture.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/domain.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/investigation.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/orchestration.md
+    - .pf/artifacts/hook-sqlite-device-cutover-20261017/scope.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: false
+  operator_authorization: User explicitly requested dev release, installed PF update, SQLite migration, then app-server restart and CPU measurement. Includes native updater, migration with backups, and managed lifecycle controls for Runtime and other PF writers. No unrelated service repair or stable publication.
+  subagents_allowed: false
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-17T06:57:11Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md
+      status: ready
+      recorded_at: '2026-10-17T06:57:14Z'
+      sha256: 'sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md
+      status: passed
+      summary: User-requested dev update/migration/new Runtime sequence complete with exact evidence; CPU18.587% and actual host reconnect retained as separate outstanding work, no source edits or broad acceptance claimed.
+      recorded_at: '2026-10-17T06:57:14Z'
+      sha256: 'sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084'
+  notes: Close this operator Work. Keep installed dev/archive/backups and original journals; do not repeat apply/migration or resume this terminal Work. Continue current CPU diagnosis under a new bounded capsule and publish own records only.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-17T06:37:04Z'
+    completed_at: '2026-10-17T06:38:04Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T06:38:04Z'
+        sha256: 'sha256:350824cb493ec023a537f378bd11fc948b07ccbbdfd431208f223f9a6b527720'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T06:38:04Z'
+        sha256: 'sha256:350824cb493ec023a537f378bd11fc948b07ccbbdfd431208f223f9a6b527720'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T06:38:04Z'
+        sha256: 'sha256:350824cb493ec023a537f378bd11fc948b07ccbbdfd431208f223f9a6b527720'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/orchestration.md
+        status: passed
+        summary: Fresh live context, exact immutable capsule valid/ready, explicit operator update/migration/lifecycle authorization, one writer and no product edits.
+        recorded_at: '2026-10-17T06:38:04Z'
+        sha256: 'sha256:350824cb493ec023a537f378bd11fc948b07ccbbdfd431208f223f9a6b527720'
+    notes: Operator plan established for exact committed dev artifact and safe journal cutover. Continue with bounded scope and live investigation.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-17T06:38:04Z'
+    completed_at: '2026-10-17T06:38:30Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T06:38:30Z'
+        sha256: 'sha256:f3ce46e16180f95f19f348dda8b336ce348b2fdf15f14cc373a1f1ce931bf3ca'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T06:38:30Z'
+        sha256: 'sha256:f3ce46e16180f95f19f348dda8b336ce348b2fdf15f14cc373a1f1ce931bf3ca'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T06:38:30Z'
+        sha256: 'sha256:f3ce46e16180f95f19f348dda8b336ce348b2fdf15f14cc373a1f1ce931bf3ca'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/scope.md
+        status: passed
+        summary: User requested complete dev archive, installed update, actual journal migration and updated Runtime CPU verification; originals/backups preserved and broad stable acceptance excluded.
+        recorded_at: '2026-10-17T06:38:30Z'
+        sha256: 'sha256:f3ce46e16180f95f19f348dda8b336ce348b2fdf15f14cc373a1f1ce931bf3ca'
+    notes: Proceed to live inventory and existing managed pack/update/migration controls. Product implementation remains committed and unchanged.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-17T06:38:30Z'
+    completed_at: '2026-10-17T06:41:36Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T06:41:36Z'
+        sha256: 'sha256:6c0acf24e4dd157427bc5ef7a2ea2b4b9b88205039144814af031a8a3f1ac48e'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T06:41:36Z'
+        sha256: 'sha256:6c0acf24e4dd157427bc5ef7a2ea2b4b9b88205039144814af031a8a3f1ac48e'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/investigation.md
+        status: passed
+        summary: Two registered projects, exact old writer identities and 331 raw shards identified; native conflict refusal explained by legacy time-only duplicate deliveries. Original-preserving canonical input and native migration planned.
+        recorded_at: '2026-10-17T06:41:36Z'
+        sha256: 'sha256:6c0acf24e4dd157427bc5ef7a2ea2b4b9b88205039144814af031a8a3f1ac48e'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/investigation.md
+        status: passed
+        summary: Two registered projects, exact old writer identities and 331 raw shards identified; native conflict refusal explained by legacy time-only duplicate deliveries. Original-preserving canonical input and native migration planned.
+        recorded_at: '2026-10-17T06:41:36Z'
+        sha256: 'sha256:6c0acf24e4dd157427bc5ef7a2ea2b4b9b88205039144814af031a8a3f1ac48e'
+    notes: Investigation complete. No migration applied or product changed. Original-preserving operator preparation handles only proven equivalent delivery repeats; substantive conflicts remain fatal.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-17T06:41:36Z'
+    completed_at: '2026-10-17T06:41:50Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/domain.md
+        status: ready
+        recorded_at: '2026-10-17T06:41:50Z'
+        sha256: 'sha256:fc341b1d21e8a80550738d7cc8b03cdf9c2be60aa45d683b0b42a5c1539eac01'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/domain.md
+        status: ready
+        recorded_at: '2026-10-17T06:41:50Z'
+        sha256: 'sha256:fc341b1d21e8a80550738d7cc8b03cdf9c2be60aa45d683b0b42a5c1539eac01'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/domain.md
+        status: ready
+        recorded_at: '2026-10-17T06:41:50Z'
+        sha256: 'sha256:fc341b1d21e8a80550738d7cc8b03cdf9c2be60aa45d683b0b42a5c1539eac01'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/domain.md
+        status: passed
+        summary: Unique logical event IDs, preserved legacy deliveries, per-project ownership, native migration barriers and separate distribution/Runtime/connected-host evidence fixed.
+        recorded_at: '2026-10-17T06:41:50Z'
+        sha256: 'sha256:fc341b1d21e8a80550738d7cc8b03cdf9c2be60aa45d683b0b42a5c1539eac01'
+    notes: Ownership and duplicate equivalence are fixed; proceed to concrete pack/update/migration plan.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-17T06:41:50Z'
+    completed_at: '2026-10-17T06:42:01Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T06:42:01Z'
+        sha256: 'sha256:f95f34fde00e56228decc71c859fd940814f829976d2cb351266bab11be673ad'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T06:42:01Z'
+        sha256: 'sha256:f95f34fde00e56228decc71c859fd940814f829976d2cb351266bab11be673ad'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T06:42:01Z'
+        sha256: 'sha256:f95f34fde00e56228decc71c859fd940814f829976d2cb351266bab11be673ad'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/architecture.md
+        status: passed
+        summary: Exact immutable dev artifact and native update, writer quiescence, source-preserving canonicalization, two-project native migration and post-cutover CPU verification planned.
+        recorded_at: '2026-10-17T06:42:01Z'
+        sha256: 'sha256:f95f34fde00e56228decc71c859fd940814f829976d2cb351266bab11be673ad'
+    notes: Concrete device sequence approved by existing explicit user instruction. Proceed with dev pack and read-only update/preflight preparation before stopping writers.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-17T06:42:01Z'
+    completed_at: '2026-10-17T06:52:23Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T06:52:23Z'
+        sha256: 'sha256:c8d224e8ebd818c0f8e8219f0b15af2d026ea9a1393cf2ccf9f64477636f07a9'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T06:52:23Z'
+        sha256: 'sha256:c8d224e8ebd818c0f8e8219f0b15af2d026ea9a1393cf2ccf9f64477636f07a9'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md
+        status: passed
+        summary: Qualified clean dev archive installed by one native update with backups; two projects migrated, originals retained, four SQLite databases ready/integral; actual updated Runtime ready and hook retry/project isolation verified. Product source unchanged.
+        recorded_at: '2026-10-17T06:52:23Z'
+        sha256: 'sha256:c8d224e8ebd818c0f8e8219f0b15af2d026ea9a1393cf2ccf9f64477636f07a9'
+    notes: Operator cutover complete. Use updated installed CLI because actual old connected stdio MCP is quiesced and host transport is closed. Proceed to settled CPU and legacy hash verification; broad 1.2.0 acceptance remains deferred.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-17T06:52:23Z'
+    completed_at: '2026-10-17T06:56:29Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:56:29Z'
+        sha256: 'sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:56:29Z'
+        sha256: 'sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:56:29Z'
+        sha256: 'sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:56:29Z'
+        sha256: 'sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md
+        status: passed
+        summary: Requested dev artifact/update/migration/launch qualification passed with byte/integrity/identity/hook retry evidence and CPU measured; remaining 18.587% CPU and unavailable actual connected-MCP acceptance are explicitly retained, not claimed fixed.
+        recorded_at: '2026-10-17T06:56:29Z'
+        sha256: 'sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600'
+    notes: All requested device cutover checks complete. Residual resource defect needs a separate current stack profile on new PID9716. No product source change or broad stable acceptance. Proceed to private delivery evidence and closeout.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-17T06:56:29Z'
+    completed_at: '2026-10-17T06:57:11Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md
+        status: ready
+        recorded_at: '2026-10-17T06:57:10Z'
+        sha256: 'sha256:ec9add80e436f24ee8e3d201c219a57e35ae0e0ce5eeeb3baf01a1c07c4036c2'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md
+        status: passed
+        summary: Actual dev artifact installed/migrated and updated Runtime qualified; focused dev delivery profile complete, broad/stable acceptance deferred, remaining CPU and actual MCP reconnect boundary stated. Preserve exact native apply and backup evidence.
+        recorded_at: '2026-10-17T06:57:10Z'
+        sha256: 'sha256:ec9add80e436f24ee8e3d201c219a57e35ae0e0ce5eeeb3baf01a1c07c4036c2'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md
+        status: passed
+        summary: Actual dev artifact installed/migrated and updated Runtime qualified; focused dev delivery profile complete, broad/stable acceptance deferred, remaining CPU and actual MCP reconnect boundary stated. Preserve exact native apply and backup evidence.
+        recorded_at: '2026-10-17T06:57:10Z'
+        sha256: 'sha256:ec9add80e436f24ee8e3d201c219a57e35ae0e0ce5eeeb3baf01a1c07c4036c2'
+    notes: Requested device cutover delivered, no stable publication. Capture terminal records and publish to both dev remotes. New current-CPU diagnostic scope follows without repeating this update.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-17T06:57:11Z'
+    completed_at: '2026-10-17T06:57:14Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md
+        status: ready
+        recorded_at: '2026-10-17T06:57:14Z'
+        sha256: 'sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md
+        status: passed
+        summary: User-requested dev update/migration/new Runtime sequence complete with exact evidence; CPU18.587% and actual host reconnect retained as separate outstanding work, no source edits or broad acceptance claimed.
+        recorded_at: '2026-10-17T06:57:14Z'
+        sha256: 'sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084'
+    notes: Close this operator Work. Keep installed dev/archive/backups and original journals; do not repeat apply/migration or resume this terminal Work. Continue current CPU diagnosis under a new bounded capsule and publish own records only.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.0
+  process_fingerprint: 'sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e'
+  snapshot_id: ctx-20261016-091113-310bed
+  snapshot_checksum: 'sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be'
+  assignment_capsule: .pf/contexts/assignment-capsules/hook-sqlite-device-cutover-20261017-user-authorized-dev-release-and-devi.capsule.yaml
+  assignment_capsule_checksum: 'sha256:3374b1095c803bca8335e3dc96337211c716022965719d545541aaa3d9b96309'
+allowed_actions:
+  - read
+  - write_artifact
+allowed_files:
+  - .pf/artifacts/hook-sqlite-device-cutover-20261017/**
+  - .pf/tmp/hook-sqlite-device-cutover-20261017/**
+  - .pf/logs/hook-sqlite-device-cutover-20261017.md
+  - .pf/handoffs/hook-sqlite-device-cutover-20261017.md
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/runtime/**
+  - .pf/artifacts/hook-sqlite-migration-20261017/**
+  - .pf/artifacts/runtime-restart-cpu-20261017/**
+  - .pf/artifacts/pf120-device-acceptance-20261016/**
+  - .pf/artifacts/hook-sqlite-device-cutover-20261017/**
+  - .pf/handoffs/**
+  - .pf/tmp/hook-sqlite-device-cutover-20261017/**
+  - bin/**
+  - tools/**
+  - src/**
+  - docs/**
+  - templates/**
+  - schemas/**
+  - updates/**
+  - checksums/**
+  - VERSION
+  - CHANGELOG.md
+  - README.md
+  - pyproject.toml
+  - .gitattributes
+  - .gitignore
+expected_report:
+  artifact: .pf/artifacts/hook-sqlite-device-cutover-20261017/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: device-cutover-report
+    path: .pf/artifacts/hook-sqlite-device-cutover-20261017/report.md
+    type: report
+    required: true

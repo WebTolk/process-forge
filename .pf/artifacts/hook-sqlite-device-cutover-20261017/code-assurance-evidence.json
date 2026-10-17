@@ -1,0 +1,33 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "review-findings",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-plan",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-cases",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-report",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "assurance-complete",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+    "status": "passed",
+    "summary": "Requested dev artifact/update/migration/launch qualification passed with byte/integrity/identity/hook retry evidence and CPU measured; remaining 18.587% CPU and unavailable actual connected-MCP acceptance are explicitly retained, not claimed fixed."
+  }
+]

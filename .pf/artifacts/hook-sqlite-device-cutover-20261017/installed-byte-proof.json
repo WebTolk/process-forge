@@ -1,0 +1,40 @@
+{
+  "source": {
+    "commit": "69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab",
+    "dirty": false,
+    "tree": "634ff4238553440ee643fa576c861cfe3725a9cd",
+    "vcs": "git"
+  },
+  "version": "1.2.0",
+  "verified_files": 1298,
+  "preserved_local_files": [
+    {
+      "path": ".pf/process-forge.yaml",
+      "expected": "57b456d34fa1e08c2e6142a4aa9870f01f8896e893e62891e2b9680472664b86",
+      "actual": "0c37a442f1824b7dbe94e807067467ab06fb40e127e3381b9df64d6a04f7c3dc"
+    }
+  ],
+  "failures": [],
+  "configuration_preimages": [
+    {
+      "path": ".pf\\process-forge.yaml",
+      "unchanged": true
+    },
+    {
+      "path": "D:\\.agents\\processforge\\.pf\\process-forge.yaml",
+      "unchanged": true
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\configuration.yaml",
+      "unchanged": true
+    },
+    {
+      "path": ".pf\\configuration.yaml",
+      "unchanged": true
+    },
+    {
+      "path": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin\\.pf\\configuration.yaml",
+      "unchanged": true
+    }
+  ]
+}

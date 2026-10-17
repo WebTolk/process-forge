@@ -1,0 +1,6 @@
+{
+  "stage": "evolve",
+  "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md",
+  "summary": "User-requested dev update/migration/new Runtime sequence complete with exact evidence; CPU18.587% and actual host reconnect retained as separate outstanding work, no source edits or broad acceptance claimed.",
+  "notes": "Close this operator Work. Keep installed dev/archive/backups and original journals; do not repeat apply/migration or resume this terminal Work. Continue current CPU diagnosis under a new bounded capsule and publish own records only."
+}

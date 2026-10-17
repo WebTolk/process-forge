@@ -1,0 +1,59 @@
+{
+  "databases": [
+    {
+      "project": "D:\\dev\\process-forge",
+      "kind": "events",
+      "path": "D:\\dev\\process-forge\\.pf\\runtime\\events\\events.sqlite3",
+      "bytes": 214953984,
+      "migration_state": "ready",
+      "integrity": "ok",
+      "expected_imported_rows": 86044,
+      "current_history_rows": 86046,
+      "journal_mode": "wal",
+      "admissions": 86046,
+      "pending_dispatch": 0
+    },
+    {
+      "project": "D:\\dev\\process-forge",
+      "kind": "raw",
+      "path": "D:\\dev\\process-forge\\.pf\\runtime\\agent-events\\hooks.sqlite3",
+      "bytes": 299569152,
+      "migration_state": "ready",
+      "integrity": "ok",
+      "expected_imported_rows": 32089,
+      "current_history_rows": 32091,
+      "journal_mode": "wal",
+      "receipts": 32091,
+      "legacy_locations": 32089
+    },
+    {
+      "project": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin",
+      "kind": "events",
+      "path": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin\\.pf\\runtime\\events\\events.sqlite3",
+      "bytes": 88674304,
+      "migration_state": "ready",
+      "integrity": "ok",
+      "expected_imported_rows": 50902,
+      "current_history_rows": 50902,
+      "journal_mode": "wal",
+      "admissions": 50902,
+      "pending_dispatch": 0
+    },
+    {
+      "project": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin",
+      "kind": "raw",
+      "path": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin\\.pf\\runtime\\agent-events\\hooks.sqlite3",
+      "bytes": 16199680,
+      "migration_state": "ready",
+      "integrity": "ok",
+      "expected_imported_rows": 1779,
+      "current_history_rows": 1779,
+      "journal_mode": "wal",
+      "receipts": 1779,
+      "legacy_locations": 1779
+    }
+  ],
+  "backup_zip_integrity": "ok",
+  "backup_files": 333,
+  "legacy_time_only_retries_first_envelope_verified": true
+}

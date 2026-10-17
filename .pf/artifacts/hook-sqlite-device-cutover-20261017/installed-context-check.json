@@ -1,0 +1,44 @@
+{
+  "broken": false,
+  "broken_refs": [],
+  "check_update_candidates": "if_due",
+  "execution_readiness": {
+    "blockers": [],
+    "missing_capabilities": [],
+    "status": "ready"
+  },
+  "fresh": true,
+  "health": {
+    "status": "warn"
+  },
+  "policy": {
+    "action": "continue"
+  },
+  "policy_action": "continue",
+  "readiness": {
+    "context": {
+      "status": "fresh"
+    },
+    "execution": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "resources": {
+      "blockers": [],
+      "status": "fresh"
+    }
+  },
+  "recommended_action": "continue",
+  "resource_readiness": {
+    "blockers": [],
+    "status": "fresh"
+  },
+  "session_start": true,
+  "snapshot_id": "ctx-20261016-091113-310bed",
+  "snapshot_sha256": "sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be",
+  "stale": false,
+  "stale_resources": [],
+  "status": "fresh",
+  "updates_available": []
+}

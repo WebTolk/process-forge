@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md",
+    "status": "passed",
+    "summary": "Actual dev artifact installed/migrated and updated Runtime qualified; focused dev delivery profile complete, broad/stable acceptance deferred, remaining CPU and actual MCP reconnect boundary stated. Preserve exact native apply and backup evidence."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md",
+    "status": "passed",
+    "summary": "Actual dev artifact installed/migrated and updated Runtime qualified; focused dev delivery profile complete, broad/stable acceptance deferred, remaining CPU and actual MCP reconnect boundary stated. Preserve exact native apply and backup evidence."
+  }
+]

@@ -1,0 +1,228 @@
+{
+  "action": "work_incomplete",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "evolve",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "delivery-report",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "hook-sqlite-device-cutover-20261017-user-authorized-dev-release-and-devi",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "delivery-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "release-readiness-decided"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "delivery-profile-run-or-skipped-with-reason"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "release-delivery"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:3374b1095c803bca8335e3dc96337211c716022965719d545541aaa3d9b96309",
+    "id": "hook-sqlite-device-cutover-20261017-user-authorized-dev-release-and-devi-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:d647643e97fc504f2cc7fa91ac7e4e32588d40841f4856e611e94498ccb03e16",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "release-delivery",
+        "parameters": {},
+        "produced_artifacts": [
+          "release-notes",
+          "migration-notes",
+          "patch",
+          "delivery-plan",
+          "delivery-report"
+        ],
+        "required_capabilities": [
+          "test_running"
+        ],
+        "required_inputs": [
+          "test-report"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/hook-sqlite-device-cutover-20261017/**",
+      ".pf/handoffs/hook-sqlite-device-cutover-20261017.md",
+      ".pf/logs/hook-sqlite-device-cutover-20261017.md",
+      ".pf/tmp/hook-sqlite-device-cutover-20261017/**"
+    ],
+    "allowed_read_files": [
+      ".gitattributes",
+      ".gitignore",
+      ".pf/AGENTS.md",
+      ".pf/artifacts/hook-sqlite-device-cutover-20261017/**",
+      ".pf/artifacts/hook-sqlite-migration-20261017/**",
+      ".pf/artifacts/pf120-device-acceptance-20261016/**",
+      ".pf/artifacts/runtime-restart-cpu-20261017/**",
+      ".pf/assignments/**",
+      ".pf/contexts/**",
+      ".pf/handoffs/**",
+      ".pf/process-forge.yaml",
+      ".pf/runs/**",
+      ".pf/runtime/**",
+      ".pf/tmp/hook-sqlite-device-cutover-20261017/**",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "README.md",
+      "VERSION",
+      "bin/**",
+      "checksums/**",
+      "docs/**",
+      "pyproject.toml",
+      "schemas/**",
+      "src/**",
+      "templates/**",
+      "tools/**",
+      "updates/**"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "assurance-complete",
+          "kind": "gate",
+          "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+          "recorded_at": "2026-10-17T06:56:29Z",
+          "sha256": "sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600",
+          "status": "passed",
+          "summary": "Requested dev artifact/update/migration/launch qualification passed with byte/integrity/identity/hook retry evidence and CPU measured; remaining 18.587% CPU and unavailable actual connected-MCP acceptance are explicitly retained, not claimed fixed."
+        },
+        "id": "assurance-complete",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "release-readiness-decided",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      },
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "delivery-profile-run-or-skipped-with-reason",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "delivery-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "release-readiness-decided"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "delivery-profile-run-or-skipped-with-reason"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "release-delivery"
+    }
+  ],
+  "kind": "pf.work.state",
+  "obligations": [],
+  "process": {
+    "fingerprint": "sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "test-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+        "recorded_at": "2026-10-17T06:56:29Z",
+        "sha256": "sha256:fc000be5fc1b987a0ec7f02401f7461b9599268e68d641d8e16562176d8de600",
+        "status": "ready"
+      },
+      "id": "test-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-hook-sqlite-device-cutover-20261017-user-authorized-dev-release-a",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "release-delivery",
+    "status": "in_progress",
+    "title": "Release Delivery"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "stage": "code-assurance",
+  "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/assurance.md",
+  "summary": "Requested dev artifact/update/migration/launch qualification passed with byte/integrity/identity/hook retry evidence and CPU measured; remaining 18.587% CPU and unavailable actual connected-MCP acceptance are explicitly retained, not claimed fixed.",
+  "notes": "All requested device cutover checks complete. Residual resource defect needs a separate current stack profile on new PID9716. No product source change or broad stable acceptance. Proceed to private delivery evidence and closeout."
+}

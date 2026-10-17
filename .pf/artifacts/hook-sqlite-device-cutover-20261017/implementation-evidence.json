@@ -1,0 +1,21 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "changed-files",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "change-summary",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "implementation-scope-respected",
+    "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md",
+    "status": "passed",
+    "summary": "Qualified clean dev archive installed by one native update with backups; two projects migrated, originals retained, four SQLite databases ready/integral; actual updated Runtime ready and hook retry/project isolation verified. Product source unchanged."
+  }
+]

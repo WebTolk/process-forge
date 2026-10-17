@@ -1,0 +1,2336 @@
+{
+  "backup_zip": "D:\\Dev\\process-forge\\.pf\\tmp\\hook-sqlite-device-cutover-20261017\\backups\\all-legacy-inputs.zip",
+  "files": [
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\20\\12.ndjson",
+      "member": "0000/12.ndjson",
+      "size": 61141,
+      "mtime_ns": 1787230616445677500,
+      "sha256": "6b6649462faf7c79463783e446ffc62ada4e0f4b9496d3a0b98ed84714dc7cde"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\20\\13.ndjson",
+      "member": "0001/13.ndjson",
+      "size": 22522,
+      "mtime_ns": 1787231234242067700,
+      "sha256": "9e70921c451e6f782c715959adf8761395bb6dd35b440976db72eb393f727f72"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\12.ndjson",
+      "member": "0002/12.ndjson",
+      "size": 62868,
+      "mtime_ns": 1787317003192041300,
+      "sha256": "a30f8268454a683c851fe71815d87add15b3892d4ecd1dac5f65cb247d899727"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\13.ndjson",
+      "member": "0003/13.ndjson",
+      "size": 200289,
+      "mtime_ns": 1787320179946234900,
+      "sha256": "f08740452355b16e98c3b852cc93448b75928881f81e4affb3d5868a0ac5d1ba"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\14.ndjson",
+      "member": "0004/14.ndjson",
+      "size": 114586,
+      "mtime_ns": 1787324184284175700,
+      "sha256": "23756522c2c78eac4ff10000ca14586cedf4753bbe2faeb9edb3bffcd798a1fc"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\15.ndjson",
+      "member": "0005/15.ndjson",
+      "size": 141541,
+      "mtime_ns": 1787327818419131200,
+      "sha256": "b346b4ba689492341a97911aa813f2082aecdea7fae1dd815581f929db87fc9a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\16.ndjson",
+      "member": "0006/16.ndjson",
+      "size": 64667,
+      "mtime_ns": 1787330353296077000,
+      "sha256": "c4d7ea5e418fb4d88efe7bf01009e9bd2609a50973973f0c24edb5d909f85e8d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\17.ndjson",
+      "member": "0007/17.ndjson",
+      "size": 102110,
+      "mtime_ns": 1787335143222150500,
+      "sha256": "99e472b30e44074b46e7b9e3e7893f2c567996e662cb28560983f7a5d05ce4b5"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\21\\18.ndjson",
+      "member": "0008/18.ndjson",
+      "size": 5191,
+      "mtime_ns": 1787335301046531500,
+      "sha256": "81217135d88ae85afbd2bed9b987fb385029ba297b863a79071346042fda109d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\03.ndjson",
+      "member": "0009/03.ndjson",
+      "size": 47803,
+      "mtime_ns": 1787369373220133400,
+      "sha256": "0501ca01accdd708da88599510b6022715e9d8dbf7000999d5f5a28dae459d68"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\04.ndjson",
+      "member": "0010/04.ndjson",
+      "size": 15820,
+      "mtime_ns": 1787372050905085400,
+      "sha256": "14bbc68af47fae65c27946b591b6d8a1fdd287099123c8948f79dcac81bf7839"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\05.ndjson",
+      "member": "0011/05.ndjson",
+      "size": 23687,
+      "mtime_ns": 1787376038564572900,
+      "sha256": "a097b9ab60fecd5f941158df826099fd2ee160eca040c4bf051f1204657b7857"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\08.ndjson",
+      "member": "0012/08.ndjson",
+      "size": 361043,
+      "mtime_ns": 1787389149260528300,
+      "sha256": "b80979ea0cc696cb39a1ff7ed78f38d51826b049fbd937505f42417a31b06afc"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\09.ndjson",
+      "member": "0013/09.ndjson",
+      "size": 267775,
+      "mtime_ns": 1787391224409936900,
+      "sha256": "fb659db8a69f3e50577feae7a8dcab03bfd95b8b36a8176343fadf0723d7e21f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\10.ndjson",
+      "member": "0014/10.ndjson",
+      "size": 4786,
+      "mtime_ns": 1787396307086942000,
+      "sha256": "7082dd26916d6ae6fbe4e60408b44a89740737b522052f655755ce94b5b928ac"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\11.ndjson",
+      "member": "0015/11.ndjson",
+      "size": 1595761,
+      "mtime_ns": 1787399901093946600,
+      "sha256": "9c35d629442df564b22134e87f54b8f44b84f868705ba54f3610145a51fb2fab"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\12.ndjson",
+      "member": "0016/12.ndjson",
+      "size": 1631166,
+      "mtime_ns": 1787402666317582200,
+      "sha256": "57348235cea6a994e479be3aa3206bf228bc10c10042852a51baede28ea9ef9e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\13.ndjson",
+      "member": "0017/13.ndjson",
+      "size": 505587,
+      "mtime_ns": 1787405080717663300,
+      "sha256": "b89d4f6997875dde0789cbb272cabf03e907de5fa619c1126d8af3ab653e67c6"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\17.ndjson",
+      "member": "0018/17.ndjson",
+      "size": 734066,
+      "mtime_ns": 1787421594415129400,
+      "sha256": "21b5f11b256a6d4e175679f2a0943bf7fdfba92cc2ac9757fdc98e9b8a14ef08"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\22\\18.ndjson",
+      "member": "0019/18.ndjson",
+      "size": 390576,
+      "mtime_ns": 1787423908057765800,
+      "sha256": "c9c1b4834fb0469208c7d69a232492e566c828a9edd728c8d99676e2decb0aba"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\03.ndjson",
+      "member": "0020/03.ndjson",
+      "size": 189022,
+      "mtime_ns": 1787457571279343800,
+      "sha256": "46401e4b8f3e394bcca93af9dd847ef1f79edee92092bff9d8903a362bee9995"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\04.ndjson",
+      "member": "0021/04.ndjson",
+      "size": 76188,
+      "mtime_ns": 1787458545226554900,
+      "sha256": "525006f45916fec550952e9856bb2d261fb7da58ba704c57ae1fd4f64e32af3d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\07.ndjson",
+      "member": "0022/07.ndjson",
+      "size": 21295,
+      "mtime_ns": 1787470643496266000,
+      "sha256": "5e091afdbba16a2c731280a92abeeae5b6e4b56311e66962c776896126bd8990"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\09.ndjson",
+      "member": "0023/09.ndjson",
+      "size": 213634,
+      "mtime_ns": 1787479190290148400,
+      "sha256": "bdd9283af956d79d81ea19fb45ea9811b6bcb86b11cec7e46bfbe18b32e9dea1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\10.ndjson",
+      "member": "0024/10.ndjson",
+      "size": 238077,
+      "mtime_ns": 1787479852587837700,
+      "sha256": "f6f7e3a98b30876c1ddc4b4f60732d15aabc3bc8dba28f7db2ee8ec370e34c2f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\12.ndjson",
+      "member": "0025/12.ndjson",
+      "size": 1030672,
+      "mtime_ns": 1787489982645594400,
+      "sha256": "8bb3d9db93a9716cb7078afc95eed987baabd249f364fb982897b13af138c344"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\13.ndjson",
+      "member": "0026/13.ndjson",
+      "size": 386863,
+      "mtime_ns": 1787493470554485000,
+      "sha256": "853245665fcfa0ab7eed57b8cdf8325ffae8ef3b4b55e020d45a9d5c4f48950d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\14.ndjson",
+      "member": "0027/14.ndjson",
+      "size": 64743,
+      "mtime_ns": 1787494796513732500,
+      "sha256": "9707e49358f188e542c60c409c6b85c4e592bebc8eed122f0e0ccbc71124e010"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\15.ndjson",
+      "member": "0028/15.ndjson",
+      "size": 27600,
+      "mtime_ns": 1787500728085892800,
+      "sha256": "93539439798d4a424fc9e60ed82c35fd70aa5ba422c20ba2896b35319ee2e3d2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\17.ndjson",
+      "member": "0029/17.ndjson",
+      "size": 1408052,
+      "mtime_ns": 1787507818032202700,
+      "sha256": "228b7c24c1c2726c86c1a64db124ee35c9de8d6afbcfbbb02888ac527c78fb06"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\23\\18.ndjson",
+      "member": "0030/18.ndjson",
+      "size": 254822,
+      "mtime_ns": 1787510866336011200,
+      "sha256": "881d13056e247c0ef1e0a710a260bfcb6882bb478ac9cf2dbf265a9b018617de"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\24\\05.ndjson",
+      "member": "0031/05.ndjson",
+      "size": 494122,
+      "mtime_ns": 1787548348747940700,
+      "sha256": "cff76715a8c4105d2601552071655eead06fd6ad52e322ef2d6726ce26212c90"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\07.ndjson",
+      "member": "0032/07.ndjson",
+      "size": 34012,
+      "mtime_ns": 1787986974627238000,
+      "sha256": "d2c237798d85121301432fa968d968dd58db14c8fc871804153dcee3dd51cb42"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\08.ndjson",
+      "member": "0033/08.ndjson",
+      "size": 125892,
+      "mtime_ns": 1787993919681691600,
+      "sha256": "076c15c6e02b1f36e2b146006f946ba9e5ea7a5cc0e835413d6f38fd556044eb"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\09.ndjson",
+      "member": "0034/09.ndjson",
+      "size": 124574,
+      "mtime_ns": 1787996795605334400,
+      "sha256": "70382c2091b410766ca33b36b194a8ed6e33318a75baec3a42818e30a2d698f9"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\10.ndjson",
+      "member": "0035/10.ndjson",
+      "size": 123928,
+      "mtime_ns": 1788000919693756300,
+      "sha256": "3257447b0a66efac194719fecd4c9d66b9e29d598309d811263c54bed9bbc8e4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\11.ndjson",
+      "member": "0036/11.ndjson",
+      "size": 842100,
+      "mtime_ns": 1788004546914706000,
+      "sha256": "de017b5d32cc92c12b299fc4fb4e44a7efa95b7de2af5e19b182d9d718ec14f3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\12.ndjson",
+      "member": "0037/12.ndjson",
+      "size": 359569,
+      "mtime_ns": 1788005724133247100,
+      "sha256": "fca5b44b7a7e51529da55a47a29f648a0394a156632d71c5c77a5ea1ff52e2f8"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\29\\13.ndjson",
+      "member": "0038/13.ndjson",
+      "size": 158124,
+      "mtime_ns": 1788008725962210200,
+      "sha256": "ff95b92a7de304f10406e439fce2a0188d62511c39a0c40beffc90923f961156"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\02.ndjson",
+      "member": "0039/02.ndjson",
+      "size": 193990,
+      "mtime_ns": 1788144287657772200,
+      "sha256": "9040636751b2f32bc2e0b952797cbb7d12104539ef63dfb01466e774ae66aa9c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\03.ndjson",
+      "member": "0040/03.ndjson",
+      "size": 337352,
+      "mtime_ns": 1788148798533146600,
+      "sha256": "3e09523b1d9d9ebc49fe9dad8aa40081a2259ba82a4a68cbb1f46592d4236bba"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\04.ndjson",
+      "member": "0041/04.ndjson",
+      "size": 484734,
+      "mtime_ns": 1788151961830952200,
+      "sha256": "89529dbf024eab1ac98ab09c5090ea8560eb4e1f9437694b41776e865f9bdd62"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\05.ndjson",
+      "member": "0042/05.ndjson",
+      "size": 332447,
+      "mtime_ns": 1788155996955884900,
+      "sha256": "210d2d2809b3a61b04b1d69a9e583c9025356955c8da3cd0b7c50162f0f15ecf"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\06.ndjson",
+      "member": "0043/06.ndjson",
+      "size": 787278,
+      "mtime_ns": 1788159375296927400,
+      "sha256": "0c9cd883c165fb96881085009330b57482a25ca2fa9effd3296aaaa3889d4954"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\07.ndjson",
+      "member": "0044/07.ndjson",
+      "size": 2448,
+      "mtime_ns": 1788159964944819700,
+      "sha256": "38477eb0b5954d08559379dd262c1797371209c881357603d60890f94c1cf963"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\11.ndjson",
+      "member": "0045/11.ndjson",
+      "size": 168078,
+      "mtime_ns": 1788177593547149100,
+      "sha256": "4512b22e8ee771a3fabc266d071e0b6219b1c13c3c854c357aec930d84c48538"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\08\\31\\12.ndjson",
+      "member": "0046/12.ndjson",
+      "size": 3065,
+      "mtime_ns": 1788177701261451200,
+      "sha256": "1add81f73e7ff130c775a715ae7036486f438c386b11ed3eeaacf5fd342c1d7e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\01\\12.ndjson",
+      "member": "0047/12.ndjson",
+      "size": 281088,
+      "mtime_ns": 1788267590869861100,
+      "sha256": "738cdedbf60a052c49d5152da0878fc0712131d4524eee021e3cbbc6c4a8d1de"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\01\\13.ndjson",
+      "member": "0048/13.ndjson",
+      "size": 1102528,
+      "mtime_ns": 1788271199420404200,
+      "sha256": "aed41642a5edad2645e6441cb13ced4f2db70622bef8cd6d916f929742a11d32"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\01\\14.ndjson",
+      "member": "0049/14.ndjson",
+      "size": 873833,
+      "mtime_ns": 1788274792913527500,
+      "sha256": "5bb639b080d1522ba8cea5483b099186cd25442a06af177c84cff2dcaafb2c4b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\01\\15.ndjson",
+      "member": "0050/15.ndjson",
+      "size": 236888,
+      "mtime_ns": 1788275309314981600,
+      "sha256": "95ba8806ec7d30226384065a882e97ca27d6ec3b69ab9b0ec91803f7ddacb2e4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\04.ndjson",
+      "member": "0051/04.ndjson",
+      "size": 313073,
+      "mtime_ns": 1788324613769393500,
+      "sha256": "51286a5f1c8e6c2164496e187f7260d980e83b084ce6e707ca38b31fb2c7e072"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\06.ndjson",
+      "member": "0052/06.ndjson",
+      "size": 452649,
+      "mtime_ns": 1788332402629646400,
+      "sha256": "040fe1a23e5ae074fb26494520b22586240b2878891eb2d63e5b6c2b3e3266cc"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\07.ndjson",
+      "member": "0053/07.ndjson",
+      "size": 1742407,
+      "mtime_ns": 1788336022422702000,
+      "sha256": "916254c54b491956622eb3cc36e66d7e11b2906a967186a1ea6f8380b6da3937"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\08.ndjson",
+      "member": "0054/08.ndjson",
+      "size": 650016,
+      "mtime_ns": 1788338750294947500,
+      "sha256": "23970d2bf934f7b87f2e3bae3e6b1b121393caac6778bc15b15f7df9513be500"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\09.ndjson",
+      "member": "0055/09.ndjson",
+      "size": 66387,
+      "mtime_ns": 1788340393357471500,
+      "sha256": "079da2ec9aef93b937b1e67558519bac5bb36bd53ec14f707625d513cf32dae6"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\10.ndjson",
+      "member": "0056/10.ndjson",
+      "size": 678052,
+      "mtime_ns": 1788346508597604200,
+      "sha256": "e77086b6813c36841ae847e8ddd68dd1e09fd9c8362531af511fe13640d55903"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\12.ndjson",
+      "member": "0057/12.ndjson",
+      "size": 717057,
+      "mtime_ns": 1788353909024315000,
+      "sha256": "5c1d4fa93daa5d73e696fd4cc9b440aecbab7d3d726efa59170900041a2e02a6"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\13.ndjson",
+      "member": "0058/13.ndjson",
+      "size": 888915,
+      "mtime_ns": 1788356867888568000,
+      "sha256": "d6230dedc8badd80f1df39f2198b1c280125ea7cdd3b264ab772491cd751de6c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\14.ndjson",
+      "member": "0059/14.ndjson",
+      "size": 359224,
+      "mtime_ns": 1788361104462698100,
+      "sha256": "09e1e7a784785e4af24c01b49778ec81fc9a40b2e7451c47c84cdf922e0120a5"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\15.ndjson",
+      "member": "0060/15.ndjson",
+      "size": 444182,
+      "mtime_ns": 1788364339088553500,
+      "sha256": "0d25366cf3bd76f4f1cfa29ddbf7897355863fb0407299d7e2143e58258240f2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\16.ndjson",
+      "member": "0061/16.ndjson",
+      "size": 707283,
+      "mtime_ns": 1788368150601987400,
+      "sha256": "d082ae5b7c757c1b06e6091f7d9a7de313359a036013e2e5514a94e3597c28ed"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\02\\17.ndjson",
+      "member": "0062/17.ndjson",
+      "size": 42974,
+      "mtime_ns": 1788371539234083100,
+      "sha256": "f314929c36a6e487f585f8faae0cb807ca4ef9525876e2d6447ecc1c2dd61854"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\05.ndjson",
+      "member": "0063/05.ndjson",
+      "size": 716673,
+      "mtime_ns": 1788415106540607300,
+      "sha256": "e7ee91f23b4b737b9550b63d2991e691f50473643f93f427eb1728403be8fca5"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\06.ndjson",
+      "member": "0064/06.ndjson",
+      "size": 1352553,
+      "mtime_ns": 1788418791010664900,
+      "sha256": "6c8ae6a0824d690797ffb1933790d2b4afd041a73f264b9af103fbef18db3ed1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\07.ndjson",
+      "member": "0065/07.ndjson",
+      "size": 556543,
+      "mtime_ns": 1788421473625834900,
+      "sha256": "95c3a06e6ba64e36c9b057ed027d02a28bbdbb61d24de7150ec45cdf3db817b8"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\08.ndjson",
+      "member": "0066/08.ndjson",
+      "size": 799190,
+      "mtime_ns": 1788425655009162200,
+      "sha256": "6c1ef93818f3e589354fb23615b94af749db3c14a008c090581d55b5c8b377c6"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\09.ndjson",
+      "member": "0067/09.ndjson",
+      "size": 459559,
+      "mtime_ns": 1788429578970507800,
+      "sha256": "5bb92b609ef62438a396f256294c205ae7517556a702818a27e7941b9c783fcf"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\10.ndjson",
+      "member": "0068/10.ndjson",
+      "size": 564861,
+      "mtime_ns": 1788433192576961000,
+      "sha256": "21a167eea462ee51ac595b0345464ec0a3f692cbfdbdb3c28441f6e9f96d1837"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\11.ndjson",
+      "member": "0069/11.ndjson",
+      "size": 870057,
+      "mtime_ns": 1788436789583019200,
+      "sha256": "da17ce5f5fdfeaa7e444d523a44a0f86fe08893f5d0290ff481322875eeb443d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\12.ndjson",
+      "member": "0070/12.ndjson",
+      "size": 1600640,
+      "mtime_ns": 1788439769500766900,
+      "sha256": "46cd1465700c3b03a0a41efa71bf3f207d95cfe2fed3c14764831e627a6f70ac"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\13.ndjson",
+      "member": "0071/13.ndjson",
+      "size": 95179,
+      "mtime_ns": 1788443228620691300,
+      "sha256": "d12092059465537d82ffb66d009030d6abda5b4acc0edbb322e5e65b8e2b9bdf"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\14.ndjson",
+      "member": "0072/14.ndjson",
+      "size": 124257,
+      "mtime_ns": 1788447346281913500,
+      "sha256": "9f36e2e2e97c84134f868c28ab8e48a7245aa372d5a820643fe398a68d83b396"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\15.ndjson",
+      "member": "0073/15.ndjson",
+      "size": 311357,
+      "mtime_ns": 1788450199323872400,
+      "sha256": "dce1ef4417a6c4abd2f98e534d43cddf170fb36a78228db8ee8b398883a45924"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\17.ndjson",
+      "member": "0074/17.ndjson",
+      "size": 753376,
+      "mtime_ns": 1788457341943647000,
+      "sha256": "2d44e36abe34cd3ef5d9e8a538cefbaeb61a20955e4fe1239f18386fb6e0cb19"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\03\\18.ndjson",
+      "member": "0075/18.ndjson",
+      "size": 23157,
+      "mtime_ns": 1788458835043566200,
+      "sha256": "9f1d7029dafada1ff7c117e61bd65191705cceb24d9562971133bc65e26c634c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\04.ndjson",
+      "member": "0076/04.ndjson",
+      "size": 90932,
+      "mtime_ns": 1788496515799430300,
+      "sha256": "780464c83074268d6ebe8a16f34789f96ef021f670b9c2ba6c2fb316cf72bdf7"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\05.ndjson",
+      "member": "0077/05.ndjson",
+      "size": 251480,
+      "mtime_ns": 1788501571248337400,
+      "sha256": "2ab16bce4424e6f3bea289fcf7b9606283074b58cb1dda43ecffe60635e154e7"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\06.ndjson",
+      "member": "0078/06.ndjson",
+      "size": 429454,
+      "mtime_ns": 1788503570856926700,
+      "sha256": "0e298e4d02d4d10309530432c0625adaf6c53c063091efa3c1a4ab06c1ebf290"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\07.ndjson",
+      "member": "0079/07.ndjson",
+      "size": 866629,
+      "mtime_ns": 1788507704426467300,
+      "sha256": "43a18d5d2ec6d6acba474d85f12d04c8896bd4875983858927e4759d301e905f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\08.ndjson",
+      "member": "0080/08.ndjson",
+      "size": 103329,
+      "mtime_ns": 1788511232220347100,
+      "sha256": "66245f8ab28040db81f8b5d67ada3349f3f55092486c9558d7136d10a9bcaeb8"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\09.ndjson",
+      "member": "0081/09.ndjson",
+      "size": 875,
+      "mtime_ns": 1788512465059897500,
+      "sha256": "3ae0a9ea59160896e32370e9f44925cff0a4051fd0ed27ee6a9e955bd8ae355d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\13.ndjson",
+      "member": "0082/13.ndjson",
+      "size": 345267,
+      "mtime_ns": 1788530353274882500,
+      "sha256": "74fe909639ace48d69319d9f377248e82c707861ea32fc52f692be425abdf5bb"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\14.ndjson",
+      "member": "0083/14.ndjson",
+      "size": 484786,
+      "mtime_ns": 1788533477913310800,
+      "sha256": "0d177ba90393a8419f286921abb9f701fd4edc17086312b4bf7389b71244e4b4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\15.ndjson",
+      "member": "0084/15.ndjson",
+      "size": 2684319,
+      "mtime_ns": 1788537587751459600,
+      "sha256": "ebf214b40293375bd760eec8f22ee3187cc303f6b78a7a3ab5086883b0c6bb2c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\16.ndjson",
+      "member": "0085/16.ndjson",
+      "size": 1411466,
+      "mtime_ns": 1788541176992218300,
+      "sha256": "35d23dd9ca313df9c8bbfd0f00fb489b8b0f4b70549f711b2e1eb462ca4cbd82"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\04\\17.ndjson",
+      "member": "0086/17.ndjson",
+      "size": 66662,
+      "mtime_ns": 1788541570221232900,
+      "sha256": "c26581f571efa219874879976b54eb6b680ad0ffea20263f0f17789455a5a6fb"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\07\\08.ndjson",
+      "member": "0087/08.ndjson",
+      "size": 580392,
+      "mtime_ns": 1788771297844279000,
+      "sha256": "8d0354feb95b0806dcb67e780ef0bfb91cb5c2ac250de35f352fc90c6460b771"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\07\\09.ndjson",
+      "member": "0088/09.ndjson",
+      "size": 1673750,
+      "mtime_ns": 1788775181436311100,
+      "sha256": "770e8df464718652dc9867de304f1381d9deb2ea285a194f53b3618c362d163c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\07\\10.ndjson",
+      "member": "0089/10.ndjson",
+      "size": 168299,
+      "mtime_ns": 1788776660890511500,
+      "sha256": "6e2c6fbe6bccd6301a084921a725a03bf31517a3da024c615ed7c49a99937b1d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\07\\12.ndjson",
+      "member": "0090/12.ndjson",
+      "size": 847410,
+      "mtime_ns": 1788785993986200400,
+      "sha256": "634476bec5a462429d21949f89084adc830fd727cd3f26db5bc52e04e1a82479"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\07\\13.ndjson",
+      "member": "0091/13.ndjson",
+      "size": 1724922,
+      "mtime_ns": 1788789575913158100,
+      "sha256": "6dbc9f39e7f288dba82a93cb550367d749bdf28272829061940b793eb73fa171"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\07\\14.ndjson",
+      "member": "0092/14.ndjson",
+      "size": 112954,
+      "mtime_ns": 1788790779065133900,
+      "sha256": "6b2edcabb86fe758fdc785bcdcb9fe029126e8aaeb1cd40a71d2cb227d6fd301"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\08\\07.ndjson",
+      "member": "0093/07.ndjson",
+      "size": 459015,
+      "mtime_ns": 1788854393327195900,
+      "sha256": "72665a033b10abc657c10e629764c6ace161565756a1377bd6cc234206f50608"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\08\\08.ndjson",
+      "member": "0094/08.ndjson",
+      "size": 49675,
+      "mtime_ns": 1788854967826860300,
+      "sha256": "c0d887e65f681a7ae2ee12aa295129a08b9f4c191e347a23c17df9e4432c86ce"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\04.ndjson",
+      "member": "0095/04.ndjson",
+      "size": 1171232,
+      "mtime_ns": 1789016406410107700,
+      "sha256": "6544370803a8321277cfedaaafcaaea76f48af2308ef2a54b7d3531912211db1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\05.ndjson",
+      "member": "0096/05.ndjson",
+      "size": 1448745,
+      "mtime_ns": 1789019019894509100,
+      "sha256": "2a63544ee406cd414bd1195187dca64e2af2ec282c70c9949b23b4c67f5a17a1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\06.ndjson",
+      "member": "0097/06.ndjson",
+      "size": 515268,
+      "mtime_ns": 1789023583308247400,
+      "sha256": "f1afbecd6dd5a2e4759e43761c3ac1648e9a76c73992b51a90d88b9fd38c6d81"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\07.ndjson",
+      "member": "0098/07.ndjson",
+      "size": 1371190,
+      "mtime_ns": 1789027201762920900,
+      "sha256": "2ba2dc4f02d3a683bf8cb22cecaabdd915412fc9f702c49a76bb8767431e0919"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\08.ndjson",
+      "member": "0099/08.ndjson",
+      "size": 16325,
+      "mtime_ns": 1789027358708376300,
+      "sha256": "f7fb1e400e20f8ec4bba60800806d9d39bcc5e1880f4f468e50416778ddb2594"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\09.ndjson",
+      "member": "0100/09.ndjson",
+      "size": 49418,
+      "mtime_ns": 1789032746974383200,
+      "sha256": "09b43279a9594e36b3e667847cb88a66c72bfbf15bf6123b604c17b3b17ab126"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\10.ndjson",
+      "member": "0101/10.ndjson",
+      "size": 1141633,
+      "mtime_ns": 1789037925249812200,
+      "sha256": "19dea4218bb92181a8fe16601c04b77a094680f2ec86b2de853baa487a6bb6bc"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\11.ndjson",
+      "member": "0102/11.ndjson",
+      "size": 721205,
+      "mtime_ns": 1789041552783309500,
+      "sha256": "a8e6f66f70b58b6f448ce87fdd325a0a44ce9347540e319bd20d0a575bf5820d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\12.ndjson",
+      "member": "0103/12.ndjson",
+      "size": 1018054,
+      "mtime_ns": 1789044114935876400,
+      "sha256": "94161bb5f7b558dbbe34ffc7cf14cd75f2b0a385442fec36f012db022432645f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\16.ndjson",
+      "member": "0104/16.ndjson",
+      "size": 61719,
+      "mtime_ns": 1789059587579221600,
+      "sha256": "13d9bdbb87e969d33a5699bb2f5e39ceae8bd3f8a58f41de3cb7801080cf0025"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\17.ndjson",
+      "member": "0105/17.ndjson",
+      "size": 1440210,
+      "mtime_ns": 1789061828258886500,
+      "sha256": "59fd420f511a6799e6fa22217ddff05d0f5b0f8cf46f6f5b7267fee069ee43cd"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\18.ndjson",
+      "member": "0106/18.ndjson",
+      "size": 420255,
+      "mtime_ns": 1789064852218014300,
+      "sha256": "6129f769faa0a44ca5e78c9979c41e98ab142f3604775e74c2f055500e0720de"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\02.ndjson",
+      "member": "0107/02.ndjson",
+      "size": 123143,
+      "mtime_ns": 1789094491917040300,
+      "sha256": "c75fac760222022c6dc42477e969c30a96366ce891aaa7a9ba725c516e8c7136"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\03.ndjson",
+      "member": "0108/03.ndjson",
+      "size": 2059755,
+      "mtime_ns": 1789098199404758200,
+      "sha256": "7e69ccc1a567d75d5facd19d87ac3898d1be342b0ca614e668f71bea74dfcdc3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\06.ndjson",
+      "member": "0109/06.ndjson",
+      "size": 1383084,
+      "mtime_ns": 1789109663690940700,
+      "sha256": "13e98469f4f0effffe9f25d29a923c2e76697317ed5da4c9ed63eb6edb968090"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\07.ndjson",
+      "member": "0110/07.ndjson",
+      "size": 145407,
+      "mtime_ns": 1789113411608766100,
+      "sha256": "7b50af8c7635381e81d4e6f44f6ec1ef58500e5d7bb7f98375944eeab74bc9f0"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\08.ndjson",
+      "member": "0111/08.ndjson",
+      "size": 1961810,
+      "mtime_ns": 1789117190186681900,
+      "sha256": "8b4ae35b4189c3a4919a9a5e9ed8d6e3f6dc06da323337a77aa2be670a0b9db5"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\09.ndjson",
+      "member": "0112/09.ndjson",
+      "size": 326394,
+      "mtime_ns": 1789120784640566300,
+      "sha256": "4987ae98ed53060c3bd91760cedf2e9ee9dd933fa089f391ee3b713263db8981"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\10.ndjson",
+      "member": "0113/10.ndjson",
+      "size": 169440,
+      "mtime_ns": 1789124381330224400,
+      "sha256": "a6d7fa621af6425b0abcc1808c2f5482346209a1681a4c554b0953f664865530"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\11.ndjson",
+      "member": "0114/11.ndjson",
+      "size": 732631,
+      "mtime_ns": 1789127858930121700,
+      "sha256": "41a2b30037d6f6ce779f382012fccb3c12671a5a6aa45332a4a9060368facdfe"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\12.ndjson",
+      "member": "0115/12.ndjson",
+      "size": 286615,
+      "mtime_ns": 1789131570034142300,
+      "sha256": "64046edf0e0c97517b00c5583d1883c5b6151d147a35bd342fb424704ca10a23"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\13.ndjson",
+      "member": "0116/13.ndjson",
+      "size": 101668,
+      "mtime_ns": 1789132076381830500,
+      "sha256": "7834e19a197fd31dff75cb0f8506c9c2ad74b6efa90e54fef6e2707edd6f4bdd"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\15.ndjson",
+      "member": "0117/15.ndjson",
+      "size": 13492,
+      "mtime_ns": 1789141843883631900,
+      "sha256": "aba030864a40480f39ee5f6d4177a3e8c5b250c4eeaf5239d5cdf82de9b9d7ab"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\16.ndjson",
+      "member": "0118/16.ndjson",
+      "size": 119023,
+      "mtime_ns": 1789145946011134400,
+      "sha256": "e2d1193daa8c9283ab4eb9d13d6d8ee8bfe802ed90d327b068affe2ff4690038"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\11\\17.ndjson",
+      "member": "0119/17.ndjson",
+      "size": 17627,
+      "mtime_ns": 1789148586168698300,
+      "sha256": "c9cdabea5b910e877b05899745aaf2d43f2453dde2386f3693ff1f5e0c2ce501"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\23\\12.ndjson",
+      "member": "0120/12.ndjson",
+      "size": 818,
+      "mtime_ns": 1790168150712965200,
+      "sha256": "630f74b5c32221fc732ee6bd4d3bf5f8baa79a2385f993ff03dfcaa3ec569c1c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\23\\13.ndjson",
+      "member": "0121/13.ndjson",
+      "size": 426539,
+      "mtime_ns": 1790169272065678900,
+      "sha256": "c90fe4d0b374a44689fd8427068bf9a5fb5dd5c30c67676b04462b03c6f72062"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\23\\16.ndjson",
+      "member": "0122/16.ndjson",
+      "size": 36066,
+      "mtime_ns": 1790180213815403200,
+      "sha256": "fa1cc65cf181712ea7f96612ea1244b1d991004f8a7d905785bea74cc0663d98"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\12.ndjson",
+      "member": "0123/12.ndjson",
+      "size": 206021,
+      "mtime_ns": 1790338976614837400,
+      "sha256": "85a72cbd5f42a63dd60437c661131b214306707148696db2eddf7c7a2a88ceb3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\13.ndjson",
+      "member": "0124/13.ndjson",
+      "size": 818441,
+      "mtime_ns": 1790344779498289000,
+      "sha256": "9edfb53b79b5e1d7463aaa3229c5a7e085d7cbf5b622aa79678f559e0ada9a94"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\14.ndjson",
+      "member": "0125/14.ndjson",
+      "size": 492712,
+      "mtime_ns": 1790347094476393800,
+      "sha256": "41908314f5da851ba6336c025705a9a3eb08760a81bd325ac00d81cd326fd3d0"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\17.ndjson",
+      "member": "0126/17.ndjson",
+      "size": 238649,
+      "mtime_ns": 1790359195398908800,
+      "sha256": "98ea8505fceaa754d17be66b45b6af9ddb568a9039ad17e726ae5f787f970ee3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\18.ndjson",
+      "member": "0127/18.ndjson",
+      "size": 1406587,
+      "mtime_ns": 1790362704686855100,
+      "sha256": "88bfc8d3353632386f4a7ebf0759f16b3351fdf4a55a67bc0c491bfa0bd4f834"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\19.ndjson",
+      "member": "0128/19.ndjson",
+      "size": 1369416,
+      "mtime_ns": 1790366324632054100,
+      "sha256": "f5b8e8f26217302ee6c952ac9b901abc07789be0d78bb0ddccd19070d0a8d9ae"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\20.ndjson",
+      "member": "0129/20.ndjson",
+      "size": 1665819,
+      "mtime_ns": 1790369998040786400,
+      "sha256": "98ef0c7bb94c166b71de2eabbd36077da75644ec26bca5691e4595336f9c16d2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\25\\21.ndjson",
+      "member": "0130/21.ndjson",
+      "size": 606310,
+      "mtime_ns": 1790370903573834800,
+      "sha256": "422f5b79cf9bd07a48e5abcd4eee6ef3f8b24189c88c939a4bdbbcb742c45060"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\03.ndjson",
+      "member": "0131/03.ndjson",
+      "size": 1212288,
+      "mtime_ns": 1790395193448043300,
+      "sha256": "8f71bdf7a7148f7df973ad0ef009daf36cab7d26d7f31eae4d79c4050bec2c86"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\04.ndjson",
+      "member": "0132/04.ndjson",
+      "size": 1540131,
+      "mtime_ns": 1790398800272373200,
+      "sha256": "ec2d0b2079e84e98b31db3e535451a6f936165534197f0f15006fcbff8a140f2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\05.ndjson",
+      "member": "0133/05.ndjson",
+      "size": 1685013,
+      "mtime_ns": 1790402398182647200,
+      "sha256": "0fca4240cea1ad744410164802f5f0f6906600198729c0e4131a9cb6e5d51727"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\06.ndjson",
+      "member": "0134/06.ndjson",
+      "size": 881358,
+      "mtime_ns": 1790405611560213800,
+      "sha256": "8393d9df15b9f3290b9e70dcc0a3b345498c5a952244dd562dee95cdf3f29a9f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\07.ndjson",
+      "member": "0135/07.ndjson",
+      "size": 104042,
+      "mtime_ns": 1790409562921930000,
+      "sha256": "065905c866e10b90067f6a959e55cf7e26585e1bbbfd71bc2a22784eef9cb75f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\08.ndjson",
+      "member": "0136/08.ndjson",
+      "size": 1054601,
+      "mtime_ns": 1790412918589648100,
+      "sha256": "e2b484b42b3875b6940dc1243e3d792429ef81e981e64cd6ec2477298c48de1f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\11.ndjson",
+      "member": "0137/11.ndjson",
+      "size": 218063,
+      "mtime_ns": 1790423925574376600,
+      "sha256": "569fd72f5fc00f35328fd83b355478b8b27d09bc9d04c83fae45707ec8313166"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\12.ndjson",
+      "member": "0138/12.ndjson",
+      "size": 812275,
+      "mtime_ns": 1790425958759330500,
+      "sha256": "b4b3ab7f58868493189cd5a4450240152b55e0cee17eaa638e41ae1691be2ffa"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\13.ndjson",
+      "member": "0139/13.ndjson",
+      "size": 366563,
+      "mtime_ns": 1790431166646265900,
+      "sha256": "aacdaeb07af51e1547589f26a1766c11bcc7103d9cffee9774b648d1c1c287ba"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\14.ndjson",
+      "member": "0140/14.ndjson",
+      "size": 120671,
+      "mtime_ns": 1790434183046824500,
+      "sha256": "3cc929354bda4bc1bc56577ff6e586d7b0142634affb623b3bf879b3bfc1c235"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\16.ndjson",
+      "member": "0141/16.ndjson",
+      "size": 470052,
+      "mtime_ns": 1790440682899075800,
+      "sha256": "a41ec4b8dc07d3e0b4a0499fb7547a2ab430c67776baa5db0548d45393c3bca9"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\17.ndjson",
+      "member": "0142/17.ndjson",
+      "size": 322267,
+      "mtime_ns": 1790445498120397200,
+      "sha256": "dd7fa60b23491d86711faffbaef038abe73838e832faf4df0aea9acc67fb9f73"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\18.ndjson",
+      "member": "0143/18.ndjson",
+      "size": 632575,
+      "mtime_ns": 1790449182903596900,
+      "sha256": "2e234a966921d1664aeafb5a2f2bfa771f7db909303ce9404f0a120064491336"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\19.ndjson",
+      "member": "0144/19.ndjson",
+      "size": 706694,
+      "mtime_ns": 1790452763195139900,
+      "sha256": "0c51738746efb131f9c9cc5cb0f86a74ab0777e4213cf618f353ed7d1e5f046a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\26\\20.ndjson",
+      "member": "0145/20.ndjson",
+      "size": 305868,
+      "mtime_ns": 1790455895434431500,
+      "sha256": "5459d2437ab15dd0e92265320857e6a5b354b3a2e1f51ef63a2cb41d1b89dbaa"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\27\\03.ndjson",
+      "member": "0146/03.ndjson",
+      "size": 160874,
+      "mtime_ns": 1790480909002178400,
+      "sha256": "d880af0b95189ebf2d740b6d03f6e7e1e77a4c6bb470a1dffad245a1773a5bd4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\27\\07.ndjson",
+      "member": "0147/07.ndjson",
+      "size": 128625,
+      "mtime_ns": 1790496000023607100,
+      "sha256": "300cd3df546a8a9b086510e8e311521b4734d87d643edb3ea712915bc5e6e939"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\27\\08.ndjson",
+      "member": "0148/08.ndjson",
+      "size": 202765,
+      "mtime_ns": 1790497243935242000,
+      "sha256": "b1553f1f13b736772412532d614678c5b02cbee5fc4cef6c93cdecbbdf84321d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\27\\09.ndjson",
+      "member": "0149/09.ndjson",
+      "size": 142751,
+      "mtime_ns": 1790501050404715600,
+      "sha256": "7a977c5f3bafd5808563d0766e34c600e99d8227791b3b66e7b162c7d06533f7"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\04.ndjson",
+      "member": "0150/04.ndjson",
+      "size": 53929,
+      "mtime_ns": 1790571590802210300,
+      "sha256": "cbc7de3c90b72dd837d92147867538b34105a78308a4bda7d0adb19fdb09d3d9"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\05.ndjson",
+      "member": "0151/05.ndjson",
+      "size": 560263,
+      "mtime_ns": 1790573243345288900,
+      "sha256": "dba25260b6e5d1f23b5fa2c4384739c0414ead22896234a4a1957981a0c2c951"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\07.ndjson",
+      "member": "0152/07.ndjson",
+      "size": 481564,
+      "mtime_ns": 1790582325465831600,
+      "sha256": "ef822a1562b8b5d8f97766139530b2dc28a375111b1164c07b26ef3ef7ea4060"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\08.ndjson",
+      "member": "0153/08.ndjson",
+      "size": 451917,
+      "mtime_ns": 1790585927352420500,
+      "sha256": "bda6c0b870408b00f951cd8cd355d84d4872ddd917587cc4cbf18170f476a662"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\09.ndjson",
+      "member": "0154/09.ndjson",
+      "size": 731675,
+      "mtime_ns": 1790589587082985600,
+      "sha256": "e671fcc5f18e05ee3fb5b070cbaa3fd5cc7480d21071610cff7c6192f8074621"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\10.ndjson",
+      "member": "0155/10.ndjson",
+      "size": 415824,
+      "mtime_ns": 1790593164787568700,
+      "sha256": "e134f4bdf509729f61e356b5bd4c8bf847ce1fc08a99fa4b0031502c65b92e16"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\11.ndjson",
+      "member": "0156/11.ndjson",
+      "size": 319210,
+      "mtime_ns": 1790595366373543400,
+      "sha256": "604e686804c7fa6168497b8a796af7f00ac48c5817f1182df7201b4223648139"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\12.ndjson",
+      "member": "0157/12.ndjson",
+      "size": 524073,
+      "mtime_ns": 1790600370424313200,
+      "sha256": "e9772b8de5ba762ef84a6a10e3f3cc950d029dc141129978309750d4caaa8aaa"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\13.ndjson",
+      "member": "0158/13.ndjson",
+      "size": 962745,
+      "mtime_ns": 1790603993392225500,
+      "sha256": "0b7278b50e56fd2aab5eb4fc8b1a97b8871f168b602cd464d5cb99b349d0520a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\14.ndjson",
+      "member": "0159/14.ndjson",
+      "size": 320682,
+      "mtime_ns": 1790605636981854700,
+      "sha256": "9fa5b82049b67607ceb9652d3f5a325edecf692d0ee30f5ae79cf3b9aa26e76f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\16.ndjson",
+      "member": "0160/16.ndjson",
+      "size": 614555,
+      "mtime_ns": 1790614376828774300,
+      "sha256": "a1613e6e7f5ed88c3bb6ab03711744a9eacab3954d1ad4d61ee00e1f15c6cb1f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\28\\17.ndjson",
+      "member": "0161/17.ndjson",
+      "size": 818,
+      "mtime_ns": 1790615646343904400,
+      "sha256": "f803cc546b74b4a83fb34fe9477ca6f0baf02ea7c0c29c2129a68a1d80c99c64"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\04.ndjson",
+      "member": "0162/04.ndjson",
+      "size": 522530,
+      "mtime_ns": 1790657934325077500,
+      "sha256": "b79644cd170790f51d606aeb661e949a0af4906a9d761bdfcb6521b07e1deb74"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\05.ndjson",
+      "member": "0163/05.ndjson",
+      "size": 756642,
+      "mtime_ns": 1790661590752984500,
+      "sha256": "c50a4a0b77c3183693bf5540de2ff249f2637784a14bca2f127b498580145816"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\06.ndjson",
+      "member": "0164/06.ndjson",
+      "size": 615436,
+      "mtime_ns": 1790665013593924500,
+      "sha256": "9c4b13f1a00632f32baf757bf16591eaa2587c6c3be1e02fbfcf329e76abc213"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\07.ndjson",
+      "member": "0165/07.ndjson",
+      "size": 837685,
+      "mtime_ns": 1790668781848510900,
+      "sha256": "9de00f3e7bf4a9063353754ea72664e50506f25b46dade69773106cf3f60cb91"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\08.ndjson",
+      "member": "0166/08.ndjson",
+      "size": 512457,
+      "mtime_ns": 1790672401081290700,
+      "sha256": "b14a7332bd9e193e066aefac0bad6575ae659b4df988b5513f1b1da40e35e426"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\09.ndjson",
+      "member": "0167/09.ndjson",
+      "size": 643492,
+      "mtime_ns": 1790675999345414800,
+      "sha256": "cc9a38c22c6e732f649874f5ec0dd1791b2a7f9ccaa3fedcff9d4f7536afda31"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\10.ndjson",
+      "member": "0168/10.ndjson",
+      "size": 449448,
+      "mtime_ns": 1790679558973204200,
+      "sha256": "c07be672c7eaca92e0683056db3d93d3cc35a9db69c84b55cfe9394266445482"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\11.ndjson",
+      "member": "0169/11.ndjson",
+      "size": 202107,
+      "mtime_ns": 1790683175629067700,
+      "sha256": "91ff0ed96ae45e6dcd0a9de3ad31524dce7d6531741236c29192537c48b62021"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\12.ndjson",
+      "member": "0170/12.ndjson",
+      "size": 145134,
+      "mtime_ns": 1790686797337224800,
+      "sha256": "d49d5cce40ecc941110f6871badc60c6b50c6e509c0f8b01318bd3b3c8ded74b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\13.ndjson",
+      "member": "0171/13.ndjson",
+      "size": 72403,
+      "mtime_ns": 1790687931568391200,
+      "sha256": "d8aad08fe9ac0482251a29cdcec30c99f0c68ad691f3f172e72c504b55288744"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\15.ndjson",
+      "member": "0172/15.ndjson",
+      "size": 668957,
+      "mtime_ns": 1790697446048729700,
+      "sha256": "0a3292ee95de598df5856b6b178d5d62f90fafdec506a44aa47f5326fe60596a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\29\\16.ndjson",
+      "member": "0173/16.ndjson",
+      "size": 818,
+      "mtime_ns": 1790700977880314000,
+      "sha256": "c72970a1a63d02665b978f229e64cbc2a715a688f211639061be7eec4a702bfe"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\08.ndjson",
+      "member": "0174/08.ndjson",
+      "size": 300979,
+      "mtime_ns": 1790758778347661300,
+      "sha256": "f8f451ac8fb2c4c285755d2ef23cba666cd02af413cae812699894abedb7e1a9"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\09.ndjson",
+      "member": "0175/09.ndjson",
+      "size": 706457,
+      "mtime_ns": 1790761772150954200,
+      "sha256": "b9f68e0ddb750637d7e2cb1d93479382f0c9249dc303d2e130b99f42fff991c4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\10.ndjson",
+      "member": "0176/10.ndjson",
+      "size": 24977,
+      "mtime_ns": 1790765973163999200,
+      "sha256": "cc348782d8c8c6e4c6ae5e78ce183d70083432b115ab39851aa68b27732274b4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\11.ndjson",
+      "member": "0177/11.ndjson",
+      "size": 939790,
+      "mtime_ns": 1790769573660733400,
+      "sha256": "7aeb06614ada390649b3e73964774059273855078354cda317d4c1826cead13f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\12.ndjson",
+      "member": "0178/12.ndjson",
+      "size": 635934,
+      "mtime_ns": 1790773174173000500,
+      "sha256": "d8fd91ca36c065b384f211026ea62aa06cccf1e7c6ed1ae330a52df50d2d21d0"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\13.ndjson",
+      "member": "0179/13.ndjson",
+      "size": 720920,
+      "mtime_ns": 1790776787832219300,
+      "sha256": "03a362456d320b38e4192cc52d39e4e48f866be62b05666cef6dd3b7f261075d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\14.ndjson",
+      "member": "0180/14.ndjson",
+      "size": 1564274,
+      "mtime_ns": 1790780386976136400,
+      "sha256": "8c551f40b03b26d168ef2adafd549e9e39ce238e2043faacb971689a4f846bba"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\30\\15.ndjson",
+      "member": "0181/15.ndjson",
+      "size": 177294,
+      "mtime_ns": 1790781473950259500,
+      "sha256": "7cc684266e6fe962e1229bc53652b8c6c91a300140d52a6a3a78ddbbfa9a70a4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\04.ndjson",
+      "member": "0182/04.ndjson",
+      "size": 672387,
+      "mtime_ns": 1790917150064369500,
+      "sha256": "d3b7ef399ccf1daab4d136f05b00682201690822af83e8cddc2a2237ed0f24cb"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\05.ndjson",
+      "member": "0183/05.ndjson",
+      "size": 1316609,
+      "mtime_ns": 1790920793797333400,
+      "sha256": "5b4cf81aaa3edf2ef98af86b64be1e0f78a131adb554f66fe8f7bf6a9e6ac22e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\06.ndjson",
+      "member": "0184/06.ndjson",
+      "size": 474683,
+      "mtime_ns": 1790923430006199800,
+      "sha256": "2bcbf86d72acf407fdbd50d57337fefcbeb36cbf09acb71f1afd4c55b5571bf6"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\08.ndjson",
+      "member": "0185/08.ndjson",
+      "size": 129052,
+      "mtime_ns": 1790931506276477600,
+      "sha256": "d2d1547a7f3874acdbd2c908d8321dfa32085ac5f4010da45e88b78f6d6c7454"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\09.ndjson",
+      "member": "0186/09.ndjson",
+      "size": 432879,
+      "mtime_ns": 1790935142167092900,
+      "sha256": "0ff73304c769560fabc81dcc49a49e12ab6b42f6a8e2a60b94b23428f4eb0c73"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\10.ndjson",
+      "member": "0187/10.ndjson",
+      "size": 559813,
+      "mtime_ns": 1790938293076063100,
+      "sha256": "95de1849e2dd0f85a9e951ec08740d0658c303f6b7802d9d8a2baf1b226c6c53"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\11.ndjson",
+      "member": "0188/11.ndjson",
+      "size": 471287,
+      "mtime_ns": 1790942397325208700,
+      "sha256": "df23dc8e5cd0042357053a285be9c984209d2a42a551c4bdb998df7e20210093"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\12.ndjson",
+      "member": "0189/12.ndjson",
+      "size": 784258,
+      "mtime_ns": 1790945998821639400,
+      "sha256": "f403e07422a8f388c6da8a5510a5a9ab6133dcfe5f880c7c9f2878c601636c37"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\13.ndjson",
+      "member": "0190/13.ndjson",
+      "size": 501327,
+      "mtime_ns": 1790949158034857200,
+      "sha256": "30f9fca000057d08cc02044e5b86fa95873d287715edcf6841676917baa4bee1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\14.ndjson",
+      "member": "0191/14.ndjson",
+      "size": 650661,
+      "mtime_ns": 1790952193950429300,
+      "sha256": "8bf4ebb1830500b2d04789473a3dfdeec8ffcee71cb5b43b341661b47f414285"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\15.ndjson",
+      "member": "0192/15.ndjson",
+      "size": 332933,
+      "mtime_ns": 1790956331902014400,
+      "sha256": "9a65a969cd5992257ac5f803e09c3177f40339c6bb855a0717f1282d6bdd0eac"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\16.ndjson",
+      "member": "0193/16.ndjson",
+      "size": 720092,
+      "mtime_ns": 1790960385790305700,
+      "sha256": "9165acbf1c74c2751b0a278287de3e0491e449f808520c81169b1f3ee125d6a3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\02\\17.ndjson",
+      "member": "0194/17.ndjson",
+      "size": 305812,
+      "mtime_ns": 1790963913860825100,
+      "sha256": "187f80c3c503843dda62331f427d8406c8ba458afc553c8ae70a22c06ac18d4f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\06.ndjson",
+      "member": "0195/06.ndjson",
+      "size": 915028,
+      "mtime_ns": 1791183586470950900,
+      "sha256": "68ec0a4b5c016ef716b49d53a6705bafe63cb37d4d25414a6c29d84bcbc21433"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\07.ndjson",
+      "member": "0196/07.ndjson",
+      "size": 566169,
+      "mtime_ns": 1791187187460159100,
+      "sha256": "b5bf4f2e98c173e657bcf2742773d87ac57d0aed6a780d9fd3b62f0d7aba40e4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\08.ndjson",
+      "member": "0197/08.ndjson",
+      "size": 624952,
+      "mtime_ns": 1791190638929615700,
+      "sha256": "961a1f7db360e32e57f717ad5f1ee58025c9debd9fbb5ea27d0516622c5c0635"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\09.ndjson",
+      "member": "0198/09.ndjson",
+      "size": 751878,
+      "mtime_ns": 1791194389041199900,
+      "sha256": "7e4db9cfa37dfaad0d08a800513b6cfcf65a2bfb572c0c7a7b74c55601b70fa3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\10.ndjson",
+      "member": "0199/10.ndjson",
+      "size": 769903,
+      "mtime_ns": 1791197598136635500,
+      "sha256": "f28833ed8887aecfb40d809b9b8c6c66244bdc9d95c57b69f1e9974bd0d89b62"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\12.ndjson",
+      "member": "0200/12.ndjson",
+      "size": 374511,
+      "mtime_ns": 1791205201455826800,
+      "sha256": "e47d9fa57ba97ceeb4980206aedf0bfa01bc1fbce32fffc319443ade25c7137c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\13.ndjson",
+      "member": "0201/13.ndjson",
+      "size": 596483,
+      "mtime_ns": 1791208797385597800,
+      "sha256": "26a1e1ba561ba51a3b907d34150863ff1bf8610aa7974b8db40907d5c17c9d52"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\14.ndjson",
+      "member": "0202/14.ndjson",
+      "size": 898307,
+      "mtime_ns": 1791212378007151700,
+      "sha256": "d4d7366e5558d4133b1f3af07210d2d1d5ba8705f64451aec85d446d2b0ced3a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\15.ndjson",
+      "member": "0203/15.ndjson",
+      "size": 590949,
+      "mtime_ns": 1791214710759226900,
+      "sha256": "83618fce705e5a4712b1eccdc317e9f5409eee498cf36a27374dd3eea312ab59"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\16.ndjson",
+      "member": "0204/16.ndjson",
+      "size": 652463,
+      "mtime_ns": 1791219585844777200,
+      "sha256": "4cccbbf42a3cc7024f024d83ec9d940d83dce6ce218c006f2103242ff01c6493"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\05\\17.ndjson",
+      "member": "0205/17.ndjson",
+      "size": 392385,
+      "mtime_ns": 1791222142572447600,
+      "sha256": "10a58b0b379e5c54bcc883a3603b5d5ba6ac342c3b91cfe77c6ae219191e37d3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\05.ndjson",
+      "member": "0206/05.ndjson",
+      "size": 509538,
+      "mtime_ns": 1791266382014510300,
+      "sha256": "2c92f988f9953409e3538b2d8d88ffdae4707f4f98f0f9c3daedd5e750b3ee96"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\06.ndjson",
+      "member": "0207/06.ndjson",
+      "size": 672077,
+      "mtime_ns": 1791269984065898700,
+      "sha256": "2ebd7caec2859af43728ac9a9ce5cf12b601e303a58e14c6accf6d3d6392514c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\07.ndjson",
+      "member": "0208/07.ndjson",
+      "size": 279112,
+      "mtime_ns": 1791273591825874400,
+      "sha256": "0c591bc5d7420ebd9f163ccd4f21dffb13e0024a4f31b92028afeca3c496d44c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\08.ndjson",
+      "member": "0209/08.ndjson",
+      "size": 449860,
+      "mtime_ns": 1791277206919284200,
+      "sha256": "2507ce90f7bcabad517cacd5add913bb26ab1803e04475f9db8e3cf350205e7d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\09.ndjson",
+      "member": "0210/09.ndjson",
+      "size": 423514,
+      "mtime_ns": 1791279410747193400,
+      "sha256": "c80fada025526e3369cb1f1ffc75dc398a2daa71feaa027a18f71392d3a122b7"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\10.ndjson",
+      "member": "0211/10.ndjson",
+      "size": 565512,
+      "mtime_ns": 1791284391635453800,
+      "sha256": "e8910c69ca01f81a1b48eb736b8523b43a6a2ca9bfa351b8aa3805c21184654f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\11.ndjson",
+      "member": "0212/11.ndjson",
+      "size": 743254,
+      "mtime_ns": 1791287951385487200,
+      "sha256": "941e22278e0120eca04ea8655773293de8cc3a06c69c19ae7b45f713695bbf63"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\12.ndjson",
+      "member": "0213/12.ndjson",
+      "size": 387856,
+      "mtime_ns": 1791291523289352500,
+      "sha256": "68e9fc31384129d0f2f1b992d7333812ce32e8615ccc7f1b891eb9bf067eaa91"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\13.ndjson",
+      "member": "0214/13.ndjson",
+      "size": 508264,
+      "mtime_ns": 1791295104223042500,
+      "sha256": "0dc39d77edfaca4c1662009df051c27ed68a1675ce521c22214e1b83f341ee8f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\14.ndjson",
+      "member": "0215/14.ndjson",
+      "size": 497828,
+      "mtime_ns": 1791298645827350200,
+      "sha256": "48d0022f35e7c2693566cb4316ae72a0d8dbb9c43f656911bdf3945baa644d27"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\15.ndjson",
+      "member": "0216/15.ndjson",
+      "size": 146773,
+      "mtime_ns": 1791302396949023800,
+      "sha256": "48c750023d530ebafe676deaa3b0ce91ef31d243dc1e1e45f0b0d3556f9c040e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\16.ndjson",
+      "member": "0217/16.ndjson",
+      "size": 61110,
+      "mtime_ns": 1791302658971282600,
+      "sha256": "a8ab6966a787f3cf6283ff52ea45c067c80e8a3ddf046253a6c8a5f91f644e4c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\06\\17.ndjson",
+      "member": "0218/17.ndjson",
+      "size": 205739,
+      "mtime_ns": 1791307064000436800,
+      "sha256": "32c5d17e35df4520ce4242a9e982989e9967d61feeee3eedb9500eb1d02bfc83"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\09.ndjson",
+      "member": "0219/09.ndjson",
+      "size": 2494217,
+      "mtime_ns": 1791712781994385700,
+      "sha256": "902903368cf9c8d97502a0a72f246b98c59e1ab1f00c73f67ab0068716f1cb3e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\10.ndjson",
+      "member": "0220/10.ndjson",
+      "size": 2042621,
+      "mtime_ns": 1791716357719854400,
+      "sha256": "ac8782ab3668fba9fda05d7cea0082c6d96bedffce7adb5ab95c4a3d89111fbb"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\11.ndjson",
+      "member": "0221/11.ndjson",
+      "size": 1856516,
+      "mtime_ns": 1791719984650857200,
+      "sha256": "cb31c76bbf062c23ad84b62a36118a821fba9f8f240c31f34a10a73f91062268"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\12.ndjson",
+      "member": "0222/12.ndjson",
+      "size": 2012557,
+      "mtime_ns": 1791723519465443200,
+      "sha256": "d44f4663b96871cad0a72db72785e9b0a1d8789360d299b08df7a78298bcfb39"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\13.ndjson",
+      "member": "0223/13.ndjson",
+      "size": 1016666,
+      "mtime_ns": 1791727163145644400,
+      "sha256": "12b264dcea6567923f630cd7a43609136518185fd259f60108d63d1c2ec6bebd"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\14.ndjson",
+      "member": "0224/14.ndjson",
+      "size": 1868459,
+      "mtime_ns": 1791730799506438900,
+      "sha256": "d05c4a551e524ca42694f184f77b993450850ac3afb9c5c4cb5025eadd767445"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\15.ndjson",
+      "member": "0225/15.ndjson",
+      "size": 1382485,
+      "mtime_ns": 1791734394501795300,
+      "sha256": "b9a3d0a3c531d192b7f92fdaa621aff4932c8b3cb44fb49711c1629ac42c3394"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\16.ndjson",
+      "member": "0226/16.ndjson",
+      "size": 136839,
+      "mtime_ns": 1791737784676124300,
+      "sha256": "dcccbe1a81ea31924e0b0f44cb8dec0394eb170461f321f848f6dfd4b555a8c8"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\17.ndjson",
+      "member": "0227/17.ndjson",
+      "size": 1409794,
+      "mtime_ns": 1791741450382011500,
+      "sha256": "823f178a7936ecbc35f93f79408b5e7e3752b642613ccf2a05816b7659b746c3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\18.ndjson",
+      "member": "0228/18.ndjson",
+      "size": 3339944,
+      "mtime_ns": 1791745199855050200,
+      "sha256": "a3e9c60b47daf7af4cdd16dd432bccb8eda322c543aa0d1d25484a5b33687dd8"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\19.ndjson",
+      "member": "0229/19.ndjson",
+      "size": 1355560,
+      "mtime_ns": 1791748512841719700,
+      "sha256": "ab06990387af0a90d21269291e10f38d6dfcceda2768187478f8880dbeade39a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\20.ndjson",
+      "member": "0230/20.ndjson",
+      "size": 319331,
+      "mtime_ns": 1791752357546824100,
+      "sha256": "91fc37b3a7686f596d144fb3f5cb1ccf49647f92c78a28671a52f04bbcd5735d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\21.ndjson",
+      "member": "0231/21.ndjson",
+      "size": 1123666,
+      "mtime_ns": 1791755997419752400,
+      "sha256": "ae7baba137c2cd407fc4e89a8b2872aee24be0c0395c7fa1cce88fffdf164741"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\22.ndjson",
+      "member": "0232/22.ndjson",
+      "size": 602510,
+      "mtime_ns": 1791759236440684700,
+      "sha256": "aaeb20a6ac495785d0544d72665f5d8c421ce85ccecc81c60b25ba5bfa2c95d6"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\11\\23.ndjson",
+      "member": "0233/23.ndjson",
+      "size": 1798255,
+      "mtime_ns": 1791763087955143600,
+      "sha256": "158cb87a2440535091b30a47ce1471511a0e5879fea7827405210bdd24d066a3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\00.ndjson",
+      "member": "0234/00.ndjson",
+      "size": 1772844,
+      "mtime_ns": 1791766667425796100,
+      "sha256": "4d799cbd7808b703f820bc36863a84e3286db479e4050d867c44a1b4fb3227d3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\03.ndjson",
+      "member": "0235/03.ndjson",
+      "size": 397019,
+      "mtime_ns": 1791777572695769500,
+      "sha256": "7c1d4b88110b115644150bf8759effbfe54f4e6d7d83462ae474b6ef9e23803c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\04.ndjson",
+      "member": "0236/04.ndjson",
+      "size": 1090718,
+      "mtime_ns": 1791781123455819800,
+      "sha256": "0aeae723566c27d8d036e61cc6c03687b8f462637e6d09a2896a8456f0a3eb3b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\05.ndjson",
+      "member": "0237/05.ndjson",
+      "size": 2754670,
+      "mtime_ns": 1791784793664388400,
+      "sha256": "8447da516f5d8a9c249245ef894ce75a715c9770a9a1c03414f60ed62a191467"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\06.ndjson",
+      "member": "0238/06.ndjson",
+      "size": 1053756,
+      "mtime_ns": 1791788301570274200,
+      "sha256": "88cc877f1fc12631473b722233d4b64fd1a42626b9d2dea75cb154d845d616b1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\07.ndjson",
+      "member": "0239/07.ndjson",
+      "size": 1728433,
+      "mtime_ns": 1791791302397420400,
+      "sha256": "d6ffe8012b2ca9c52cb72561c9e1f64e2be5766d14ecd9e411328923e5f7ff59"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\08.ndjson",
+      "member": "0240/08.ndjson",
+      "size": 2238286,
+      "mtime_ns": 1791795572401517600,
+      "sha256": "b7ccddea1c447bc7b718fa81bbbd80947b95ee4125fae240ce6a9418ab460786"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\09.ndjson",
+      "member": "0241/09.ndjson",
+      "size": 4382066,
+      "mtime_ns": 1791799027803717400,
+      "sha256": "1d65d371a188a931f7d8686b4396950a3305a6de58933f1d36c2a1cbde54cef2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\10.ndjson",
+      "member": "0242/10.ndjson",
+      "size": 886957,
+      "mtime_ns": 1791802758199147300,
+      "sha256": "19197e7c02f763f3a0d813e52fdd3f194f0b662e545e3f86cb9d5d94845fffc9"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\11.ndjson",
+      "member": "0243/11.ndjson",
+      "size": 1195223,
+      "mtime_ns": 1791805969925825100,
+      "sha256": "9ef4449f59d48e60eba99653eb82e670252ecb999dd084eadb313927dd8302c4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\12.ndjson",
+      "member": "0244/12.ndjson",
+      "size": 270400,
+      "mtime_ns": 1791809982347631000,
+      "sha256": "5a05fbbce9ffe70f6aca0b6a0acca6d91ef0aee3c5efa35dd91a030c3e953f9c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\13.ndjson",
+      "member": "0245/13.ndjson",
+      "size": 1741032,
+      "mtime_ns": 1791813544194239600,
+      "sha256": "414d3a02cabdd8c5af509b39a6c5e2c8f847cc71d0fe336458df856e1f141d5e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\14.ndjson",
+      "member": "0246/14.ndjson",
+      "size": 2011452,
+      "mtime_ns": 1791817191261253500,
+      "sha256": "4c9226ef001d7021134db131e2c7e72a3d6ef6ba110be916aff6d6a7377d9824"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\15.ndjson",
+      "member": "0247/15.ndjson",
+      "size": 4482807,
+      "mtime_ns": 1791820783758268200,
+      "sha256": "59bb33947dbda73de62b5dbae29fbb0d07b5c5859eaea007fc9886368bbb6041"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\16.ndjson",
+      "member": "0248/16.ndjson",
+      "size": 2777250,
+      "mtime_ns": 1791824387057260600,
+      "sha256": "96f6beda488ff8b5226b7ac5dc15a917ef2fed3c88954b29a443c319ad26a9bc"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\17.ndjson",
+      "member": "0249/17.ndjson",
+      "size": 2835846,
+      "mtime_ns": 1791827959707649500,
+      "sha256": "7b20596e31f2475a40938e98de5bb22cd21af7946f34a5c5de565556d3b87cdf"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\18.ndjson",
+      "member": "0250/18.ndjson",
+      "size": 1092739,
+      "mtime_ns": 1791831579974464100,
+      "sha256": "51a5b81a2c1b527d57894467bcf9ee7335aef249d0e0748ae5c6c6d528fbc957"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\19.ndjson",
+      "member": "0251/19.ndjson",
+      "size": 1279854,
+      "mtime_ns": 1791835127191725800,
+      "sha256": "407c1b6fa7b12b27fd844df5b33d4f79115dd8eeca4f3fbfb9650047795ec9fd"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\12\\20.ndjson",
+      "member": "0252/20.ndjson",
+      "size": 1774034,
+      "mtime_ns": 1791838234745389200,
+      "sha256": "c354f67974706ef9765aa53a10fbbe1d4fb2b260f7bb79dda87a61cd8c586ca0"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\05.ndjson",
+      "member": "0253/05.ndjson",
+      "size": 818,
+      "mtime_ns": 1791870884562464800,
+      "sha256": "088643c52e64022330fcea14b95761ca99bdaab0e9bd92dbd34d15d4e5c81b91"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\06.ndjson",
+      "member": "0254/06.ndjson",
+      "size": 1657430,
+      "mtime_ns": 1791874753473851800,
+      "sha256": "0c9993ff1bd5284ba167b8b3d2156884e23056dde48728d1e3cb30f01b139bd4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\07.ndjson",
+      "member": "0255/07.ndjson",
+      "size": 1722127,
+      "mtime_ns": 1791878382987205000,
+      "sha256": "6521f6b4a529cc8afe5109620f698a02bbef9429b8475ee60f3c91696cfcae17"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\08.ndjson",
+      "member": "0256/08.ndjson",
+      "size": 357543,
+      "mtime_ns": 1791881957910616300,
+      "sha256": "153c2f8bf9e20c1e992624dca8459e8d651c65862fcb39461c66c4e562f8a7a1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\09.ndjson",
+      "member": "0257/09.ndjson",
+      "size": 143067,
+      "mtime_ns": 1791885579165159600,
+      "sha256": "aee59e71ee76121b2de221972c773fdb64ebbcdfdd08235479cdcb783c6f4caf"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\10.ndjson",
+      "member": "0258/10.ndjson",
+      "size": 1188963,
+      "mtime_ns": 1791889132343389600,
+      "sha256": "39b8892d2632426764badd6df4af379b61a884cfabc18c672711c8c4ed2ee014"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\11.ndjson",
+      "member": "0259/11.ndjson",
+      "size": 1383837,
+      "mtime_ns": 1791892796323676500,
+      "sha256": "33a04a7f1d36c31ac4773f9a284e167f64ba7a564ef2c3749ccf037170752996"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\12.ndjson",
+      "member": "0260/12.ndjson",
+      "size": 707730,
+      "mtime_ns": 1791895351060135100,
+      "sha256": "06fd857edd10fec1e4fd9228e3ce3eb880bf3047347784717b4d51a005d58605"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\16.ndjson",
+      "member": "0261/16.ndjson",
+      "size": 1331761,
+      "mtime_ns": 1791910802827648700,
+      "sha256": "822050ca285e30599e98e28160cf051e2ab695e50a2321142e8f4f5527090572"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\17.ndjson",
+      "member": "0262/17.ndjson",
+      "size": 1687466,
+      "mtime_ns": 1791914350180497400,
+      "sha256": "63e0516658c8e483216fb9427e0b2e513c2fb79f9ddf29f035035cef7499d911"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\13\\18.ndjson",
+      "member": "0263/18.ndjson",
+      "size": 1178536,
+      "mtime_ns": 1791917111809325500,
+      "sha256": "157c2cfec531b12dfad862c44c6948ff9b3b47ce9a9e75a7b27770b5530da641"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\02.ndjson",
+      "member": "0264/02.ndjson",
+      "size": 332817,
+      "mtime_ns": 1791946681750284900,
+      "sha256": "a5ef4875cced3d7d27967e4d0e23a92d871497fd3c15765b3a01d28182ad2e9b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\03.ndjson",
+      "member": "0265/03.ndjson",
+      "size": 1387932,
+      "mtime_ns": 1791950400279215000,
+      "sha256": "9d34a8e45fecc1824e92e63060ef1a07cd1ca6014fd9f3581c2719cd9926ff87"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\04.ndjson",
+      "member": "0266/04.ndjson",
+      "size": 1663370,
+      "mtime_ns": 1791953993629541800,
+      "sha256": "2a1c2befe1de7fa52c008192ec314386c22bdfd571e1f82a5a1a85b8215a66c5"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\05.ndjson",
+      "member": "0267/05.ndjson",
+      "size": 831679,
+      "mtime_ns": 1791957579847956700,
+      "sha256": "bd8482dc34d467073c907f5deea2727c335df5d08b996367d5ad668b6bfb740c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\06.ndjson",
+      "member": "0268/06.ndjson",
+      "size": 372565,
+      "mtime_ns": 1791961182544718300,
+      "sha256": "82a0f13e86723908debc91ea97a88817d74a2cece7c620301e6742befd4e7295"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\07.ndjson",
+      "member": "0269/07.ndjson",
+      "size": 417265,
+      "mtime_ns": 1791964644767519300,
+      "sha256": "86e50d4b9ffb8038834b2a4a43cd661725e4356126e214adecc59162b9da207e"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\08.ndjson",
+      "member": "0270/08.ndjson",
+      "size": 235068,
+      "mtime_ns": 1791967337180898700,
+      "sha256": "e4c97fa099570cdd8e24a6d277be47d3d8c86160f01af7ca6c7550fd58e0897d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\09.ndjson",
+      "member": "0271/09.ndjson",
+      "size": 1688378,
+      "mtime_ns": 1791971993233717100,
+      "sha256": "0155b5c242c115f6e44a69bc7871fed3dfbde5294de888cda1ca06af6c06bd59"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\10.ndjson",
+      "member": "0272/10.ndjson",
+      "size": 909017,
+      "mtime_ns": 1791975412921279500,
+      "sha256": "edc59222c134a41f92128630bc989a945c997a6d79312b1381ad242b2cfa3352"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\11.ndjson",
+      "member": "0273/11.ndjson",
+      "size": 1673375,
+      "mtime_ns": 1791979189458807200,
+      "sha256": "e4b46156e41e1ab299d1b144bc6598ef7cc58270c8ebb4eed365b0b5cf994396"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\12.ndjson",
+      "member": "0274/12.ndjson",
+      "size": 420657,
+      "mtime_ns": 1791982739787046900,
+      "sha256": "f28f4e1d3a7d4470c4258b2a0b194af57b0f3512aec57768bfbd8c0636b0ce13"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\13.ndjson",
+      "member": "0275/13.ndjson",
+      "size": 617700,
+      "mtime_ns": 1791986384262660800,
+      "sha256": "cc3d70577a6c77c9abe35d553f0cca0833032ebf963d9da085c74f867cd5918c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\14.ndjson",
+      "member": "0276/14.ndjson",
+      "size": 1253654,
+      "mtime_ns": 1791989974772297000,
+      "sha256": "44180e622e049b0c8b7fea0ea2fd2462631a60497a7c47952e504406e6ff97db"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\15.ndjson",
+      "member": "0277/15.ndjson",
+      "size": 1743883,
+      "mtime_ns": 1791993547365440200,
+      "sha256": "dc07179c995c596bb5ed6e7f9e7cbd49aba41c054670eca38479f9623d97f73b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\16.ndjson",
+      "member": "0278/16.ndjson",
+      "size": 156906,
+      "mtime_ns": 1791997129060663600,
+      "sha256": "34fe897ec085c9ccb7c889214006c891394b04bc8191304f9dc2a3e298017497"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\17.ndjson",
+      "member": "0279/17.ndjson",
+      "size": 994240,
+      "mtime_ns": 1792000766975948500,
+      "sha256": "00168e0c8d7763bdf5b208186e73b20fe47fe238ed7d194102254d99c89682df"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\18.ndjson",
+      "member": "0280/18.ndjson",
+      "size": 2013636,
+      "mtime_ns": 1792004359529843800,
+      "sha256": "28b5b31b06563fc829878c5751f5e5892bedc86f4a3217f2fe3564d744f36026"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\19.ndjson",
+      "member": "0281/19.ndjson",
+      "size": 531294,
+      "mtime_ns": 1792007994609777800,
+      "sha256": "cd6cdc2c6bee1698e1f427c56a1910073adcb548dce7836eddc78bd6cd938ccd"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\20.ndjson",
+      "member": "0282/20.ndjson",
+      "size": 1968009,
+      "mtime_ns": 1792011587220600700,
+      "sha256": "a38c003098c9825e5acaf73f8d86fda4003f7be6ffca4b8ea111c9e156b45f1c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\21.ndjson",
+      "member": "0283/21.ndjson",
+      "size": 1050442,
+      "mtime_ns": 1792015187870939800,
+      "sha256": "b4f345af0d9ec602d5f2caf29ca8e2e694b5dd060612c946edb55be3e5973a1f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\22.ndjson",
+      "member": "0284/22.ndjson",
+      "size": 1286416,
+      "mtime_ns": 1792018795034566100,
+      "sha256": "5a47dde692f874b8a380cc55ec419fc3bf9874b2ca9937b9a130f4fea3d154bc"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\14\\23.ndjson",
+      "member": "0285/23.ndjson",
+      "size": 2116724,
+      "mtime_ns": 1792022400713850800,
+      "sha256": "9e168851cf66e8fc083384c75a2dd38a0c4eed8e3ad383613d3698cae61456cb"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\00.ndjson",
+      "member": "0286/00.ndjson",
+      "size": 1388132,
+      "mtime_ns": 1792025972693725200,
+      "sha256": "637df9a342508fb96c9eda844f98f386793bab725811a368ce3e7d7ff915137c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\01.ndjson",
+      "member": "0287/01.ndjson",
+      "size": 2176012,
+      "mtime_ns": 1792029555952757600,
+      "sha256": "aabb78d70a2826ae190d99e4ffd2e93d62a47be63b8260a2fad0ecffb3f1b78b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\02.ndjson",
+      "member": "0288/02.ndjson",
+      "size": 1102103,
+      "mtime_ns": 1792033144790021500,
+      "sha256": "b876ef87542c82caf9e674c3084ec2a6f8429c5aed2b31042e23cabeb0abe316"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\03.ndjson",
+      "member": "0289/03.ndjson",
+      "size": 1405366,
+      "mtime_ns": 1792036224802378400,
+      "sha256": "d54121cc8d5050759b8126a07bb855836deb2535367bd0ed12d08400bc83ebd0"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\04.ndjson",
+      "member": "0290/04.ndjson",
+      "size": 747032,
+      "mtime_ns": 1792040388108957700,
+      "sha256": "4b74ede7254c3d8ba9bf69b475ee3c791a729826fc7c1a2b2a7edb9e99f2973d"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\05.ndjson",
+      "member": "0291/05.ndjson",
+      "size": 1582254,
+      "mtime_ns": 1792043759518593600,
+      "sha256": "b51d55f2ec9731bbdef4b91641358563998ecbbe3eedcdecf2b95de84a77aa32"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\06.ndjson",
+      "member": "0292/06.ndjson",
+      "size": 403978,
+      "mtime_ns": 1792047558925310400,
+      "sha256": "45bbe7bfdb56a564a8bf8378a0178bdc60573319d568e6ec972d81a5ba7657ae"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\07.ndjson",
+      "member": "0293/07.ndjson",
+      "size": 1157512,
+      "mtime_ns": 1792051196271678400,
+      "sha256": "bf2cf96ec561132e7a5a195d107ec179fbc2689c98259655372cf50b7c1e5cb4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\08.ndjson",
+      "member": "0294/08.ndjson",
+      "size": 1083030,
+      "mtime_ns": 1792054787271227100,
+      "sha256": "b2f0d2cd85c56fae39e2abee5d6c836cf986d7a090955ec0bfa689b3a412cf49"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\09.ndjson",
+      "member": "0295/09.ndjson",
+      "size": 1416213,
+      "mtime_ns": 1792058359051685000,
+      "sha256": "f9261aa308bb77a60d9dcdde389d056e8a706f76b52dad798753e770df8b5cb3"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\10.ndjson",
+      "member": "0296/10.ndjson",
+      "size": 1883089,
+      "mtime_ns": 1792061934768979400,
+      "sha256": "9c6d0a7db4cd20f7385ab6e3f19d08ecc30cc67bf5f62acb26735a46b8741864"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\11.ndjson",
+      "member": "0297/11.ndjson",
+      "size": 7733,
+      "mtime_ns": 1792062173796860100,
+      "sha256": "32ebd512142b01d5e0c3c40fb1f0e60027d090bc7d3590d1baccad82c35b2072"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\12.ndjson",
+      "member": "0298/12.ndjson",
+      "size": 712053,
+      "mtime_ns": 1792069183281668000,
+      "sha256": "9cf8fa7c1da01a0a781a22ef166d61fcb70c2725ed53fbc54be2736ebbbe0fa2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\13.ndjson",
+      "member": "0299/13.ndjson",
+      "size": 1023635,
+      "mtime_ns": 1792072800237676100,
+      "sha256": "d8ef57af61a4d52fea26d74440544ad7e6e73a676a85cfebbd052e181853ec23"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\14.ndjson",
+      "member": "0300/14.ndjson",
+      "size": 696249,
+      "mtime_ns": 1792076370382762100,
+      "sha256": "2965b1eba8f0e7ac5a421979f5374a2c04bd5070abbd312ca74d47ed65a2bb18"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\15.ndjson",
+      "member": "0301/15.ndjson",
+      "size": 1132011,
+      "mtime_ns": 1792078968036224300,
+      "sha256": "dda6edc36d142563225eed3473e9c0e4a26eed65bf0542f28b2d567359a5a6e4"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\16.ndjson",
+      "member": "0302/16.ndjson",
+      "size": 189955,
+      "mtime_ns": 1792083532901563500,
+      "sha256": "b823f8f24ade8b77f92c0396762dd0939641b513dd7c65212e111817db158517"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\17.ndjson",
+      "member": "0303/17.ndjson",
+      "size": 2462634,
+      "mtime_ns": 1792087178938121100,
+      "sha256": "dcfac69faaa6697356f9450d00ad04e5d9bbd3e4abcbd4b12cf981400cf11cf0"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\18.ndjson",
+      "member": "0304/18.ndjson",
+      "size": 643714,
+      "mtime_ns": 1792090800195823100,
+      "sha256": "c8592a2a790d9fcbcb05894eda8760b264e7e7400569ed8c90472d5f717bba8a"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\19.ndjson",
+      "member": "0305/19.ndjson",
+      "size": 1676831,
+      "mtime_ns": 1792094329177994200,
+      "sha256": "e64c4ac5836f396409011a71b4d0ea2bc42544f6d0234a2fa178f8659a30b5c1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\20.ndjson",
+      "member": "0306/20.ndjson",
+      "size": 2406270,
+      "mtime_ns": 1792097955461679600,
+      "sha256": "a4cf2bcec98a23fe954dfb22003c9f52c03dd78aa54ad3a990d7cb7bc62ee8d2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\21.ndjson",
+      "member": "0307/21.ndjson",
+      "size": 273294,
+      "mtime_ns": 1792101523883827900,
+      "sha256": "f6969f942e2752bd886561b2a9c8055f888d739d8aebd2c1796a304ed3841df1"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\22.ndjson",
+      "member": "0308/22.ndjson",
+      "size": 3684172,
+      "mtime_ns": 1792105179114990700,
+      "sha256": "4cb53388346f1d4236229a6b99dffa5b1c817057e157f9e8238abdc68fcf6842"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\15\\23.ndjson",
+      "member": "0309/23.ndjson",
+      "size": 945957,
+      "mtime_ns": 1792108794511664000,
+      "sha256": "a9175465a499d1cda6b13a8ae69cba4d581facf4355d417887a9b008d323dd93"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\00.ndjson",
+      "member": "0310/00.ndjson",
+      "size": 1319113,
+      "mtime_ns": 1792112380293601900,
+      "sha256": "fafcd6fd8a8a43c7754632c912b52511ee4505890b6f3519a21771248d557820"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\01.ndjson",
+      "member": "0311/01.ndjson",
+      "size": 2173114,
+      "mtime_ns": 1792115947116664600,
+      "sha256": "c8cd1e29c39d4ad2466382753f15e492002bf6b303b24dafaf0ab644cc6d09ad"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\02.ndjson",
+      "member": "0312/02.ndjson",
+      "size": 471612,
+      "mtime_ns": 1792119461322384800,
+      "sha256": "ce628903309579eee7ef919b8e5d93035fb602458ef1fae948732eb8fb239397"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\03.ndjson",
+      "member": "0313/03.ndjson",
+      "size": 2462107,
+      "mtime_ns": 1792123197776058500,
+      "sha256": "0fee2bbdeac1b14dce4ef1505e45ce1b7a63017704d8c275e89563060d1bcc1c"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\04.ndjson",
+      "member": "0314/04.ndjson",
+      "size": 2219784,
+      "mtime_ns": 1792126784855504600,
+      "sha256": "86be693a141189ffc310ae245c5b073cabad638812728ef21bc30e15fd45dd50"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\05.ndjson",
+      "member": "0315/05.ndjson",
+      "size": 1089716,
+      "mtime_ns": 1792130388157092700,
+      "sha256": "b1ce275a58fb9221baedb41eb80792f0de296ebaa9c44662c3b70e51eefb6568"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\06.ndjson",
+      "member": "0316/06.ndjson",
+      "size": 1459849,
+      "mtime_ns": 1792133954390536000,
+      "sha256": "879ae2cb152d3af24188b2e1be93c7630d0b4b74b1c423dac1fdb7b741dc9938"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\07.ndjson",
+      "member": "0317/07.ndjson",
+      "size": 729010,
+      "mtime_ns": 1792137578006586100,
+      "sha256": "f8615630d77c7209b8404f72901292516cb6647ed770e76d77ea15a9506216ac"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\08.ndjson",
+      "member": "0318/08.ndjson",
+      "size": 1320013,
+      "mtime_ns": 1792141147666089800,
+      "sha256": "976fb84f6815d5a9bdf2e7fdef4499e3fd388336bc2c6d84a4fd9027aa82413f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\09.ndjson",
+      "member": "0319/09.ndjson",
+      "size": 629394,
+      "mtime_ns": 1792144107826826700,
+      "sha256": "1175bc180f3061434dbf063f89cd73844f7b64ff5611a9460c904704095ad553"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\10.ndjson",
+      "member": "0320/10.ndjson",
+      "size": 1283075,
+      "mtime_ns": 1792148361379958700,
+      "sha256": "2b103340306c6d2fe76c01cd5524c35f4fece2c491e3e01e1e333d7ec34d6854"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\11.ndjson",
+      "member": "0321/11.ndjson",
+      "size": 55445,
+      "mtime_ns": 1792149489035073300,
+      "sha256": "83d763ab38ef4e76880902523367b10bd9f11e337222f0eb52e56099ef74b395"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\12.ndjson",
+      "member": "0322/12.ndjson",
+      "size": 1133029,
+      "mtime_ns": 1792155590520020600,
+      "sha256": "2e53675d6bb96a609a757bfee3e73630e02954764f552d8f171004cbc2b240be"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\13.ndjson",
+      "member": "0323/13.ndjson",
+      "size": 1409000,
+      "mtime_ns": 1792159200675113300,
+      "sha256": "4b9085636b8d8612f1424cee1cedc79e69fd7dbcc6808e0494edc53620c0ec29"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\14.ndjson",
+      "member": "0324/14.ndjson",
+      "size": 566838,
+      "mtime_ns": 1792162654966917200,
+      "sha256": "3d8d2c6aa892af93b9b0473ede36990ea1541f261e24a6a7885c3ae434f17a12"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\15.ndjson",
+      "member": "0325/15.ndjson",
+      "size": 557198,
+      "mtime_ns": 1792166372420150100,
+      "sha256": "ef4fdc4448ac62a2732b42a2dd21974f2c8949e7674036a05060b338fb894c5b"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\16\\16.ndjson",
+      "member": "0326/16.ndjson",
+      "size": 66293,
+      "mtime_ns": 1792167004093944700,
+      "sha256": "3fe27c7d079f957e551f39bf70cc78f5c00feaa0e9640742559c8e74a063f4b2"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\17\\03.ndjson",
+      "member": "0327/03.ndjson",
+      "size": 158613,
+      "mtime_ns": 1792209599568388700,
+      "sha256": "4b3b95a1c8cf689ed3fae8323bcada1269951146b2f9cd095286c301c2788690"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\17\\04.ndjson",
+      "member": "0328/04.ndjson",
+      "size": 1628777,
+      "mtime_ns": 1792213198857291900,
+      "sha256": "dc184cd9b7f0dc429fdef11d608eb9ad9801c5ba7cd0e86cee3d7f78f2336c0f"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\17\\05.ndjson",
+      "member": "0329/05.ndjson",
+      "size": 1754404,
+      "mtime_ns": 1792216792533535700,
+      "sha256": "887a38d61ad6e15cff72ade1d2b14c1a272269dd4f60dc7ee8f32884ddf49ded"
+    },
+    {
+      "path": "D:\\.agents\\processforge-workplace\\runtime\\agent-events\\raw\\v1\\2026\\10\\17\\06.ndjson",
+      "member": "0330/06.ndjson",
+      "size": 227036,
+      "mtime_ns": 1792217893412570700,
+      "sha256": "ec7b2102f7673f9a52240260d720ea4e9c8e8ebcb58c1542c6f253e70b766b25"
+    },
+    {
+      "path": "D:\\Dev\\process-forge\\.pf\\runtime\\events\\events.ndjson",
+      "member": "0331/events.ndjson",
+      "size": 126092101,
+      "mtime_ns": 1792219546247576600,
+      "sha256": "df50ba5f0a9cb5c4a0f29b65284305a35d72218d91a6d82a38f3764f1d75af4c"
+    },
+    {
+      "path": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin\\.pf\\runtime\\events\\events.ndjson",
+      "member": "0332/events.ndjson",
+      "size": 51124671,
+      "mtime_ns": 1792219549953598000,
+      "sha256": "9399e3589cb2a3719aa135dde635ed09dd459a2694caf542d0a62cb4ef13428d"
+    }
+  ]
+}

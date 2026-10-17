@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "event_id": "evt_cb88a4c9f739139edcdb0d833a9bb2d9",
+  "raw_event_id": "raw_11da9a6dacdda1dbd347acae2c02bb236553adec9ceb60256c93ceef4cd360ee",
+  "retry_elapsed_ms": 382.198,
+  "response": {
+    "accepted": true,
+    "chat_message_ids": [],
+    "deduplicated": true,
+    "diagnostics": {
+      "logging": {
+        "events": true,
+        "raw_hooks": true
+      }
+    },
+    "duplicate": true,
+    "event_id": "evt_cb88a4c9f739139edcdb0d833a9bb2d9",
+    "events": ".pf/runtime/events/events.sqlite3",
+    "normalized_event_ids": [
+      "evt_cb88a4c9f739139edcdb0d833a9bb2d9"
+    ],
+    "project_id": "process-forge",
+    "projection": ".pf/artifacts/projections/command-history.md",
+    "raw_event_id": "raw_11da9a6dacdda1dbd347acae2c02bb236553adec9ceb60256c93ceef4cd360ee",
+    "raw_location": "hooks.sqlite3:32098",
+    "routing_status": "routed",
+    "stage_projection": ".pf/artifacts/projections/stage-obligations.json"
+  },
+  "checks": [
+    {
+      "project": "D:\\dev\\process-forge",
+      "event_admissions": 1,
+      "event_history": 1,
+      "raw_receipts": 1,
+      "raw_history": 1,
+      "pending_dispatch": 0,
+      "pending_raw_cleared": true
+    },
+    {
+      "project": "D:\\dev\\wt-image-resize-and-convert-joomla-plugin",
+      "event_admissions": 0,
+      "event_history": 0,
+      "raw_receipts": 0,
+      "raw_history": 0,
+      "pending_dispatch": 0,
+      "pending_raw_cleared": true
+    }
+  ],
+  "verification_note": "Initial verification used provider-derived ID rather than the returned normalized PF ID. That assertion was corrected; the actual admission and retry succeeded, one row per owner and zero rows in the other project."
+}

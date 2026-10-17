@@ -1,0 +1,3 @@
+# Run Plan: hook-sqlite-device-cutover-20261017: User-authorized dev release and device cuto
+
+Objective: hook-sqlite-device-cutover-20261017: User-authorized dev release and device cutover of the qualified SQLite hook/event implementation. Build and qualify an immutable dev archive from commit 69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab; quiesce legacy writers through lifecycle controls; update installed Core once with native core-update; back up and migrate registered project journals with the PF migrator; start the updated pf-app-server and measure CPU. Include necessary actual MCP and hook-writer quiescence and reconnection. Preserve original journals and unrelated work. No general PF 1.2.0 acceptance, stable publication, or terminal Work reuse.

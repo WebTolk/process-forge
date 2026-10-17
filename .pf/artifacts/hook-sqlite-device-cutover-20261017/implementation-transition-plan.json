@@ -1,0 +1,6 @@
+{
+  "stage": "implementation",
+  "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/implementation.md",
+  "summary": "Qualified clean dev archive installed by one native update with backups; two projects migrated, originals retained, four SQLite databases ready/integral; actual updated Runtime ready and hook retry/project isolation verified. Product source unchanged.",
+  "notes": "Operator cutover complete. Use updated installed CLI because actual old connected stdio MCP is quiesced and host transport is closed. Proceed to settled CPU and legacy hash verification; broad 1.2.0 acceptance remains deferred."
+}

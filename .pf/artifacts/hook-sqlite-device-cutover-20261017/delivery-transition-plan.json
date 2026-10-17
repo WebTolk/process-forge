@@ -1,0 +1,6 @@
+{
+  "stage": "release-delivery",
+  "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md",
+  "summary": "Actual dev artifact installed/migrated and updated Runtime qualified; focused dev delivery profile complete, broad/stable acceptance deferred, remaining CPU and actual MCP reconnect boundary stated. Preserve exact native apply and backup evidence.",
+  "notes": "Requested device cutover delivered, no stable publication. Capture terminal records and publish to both dev remotes. New current-CPU diagnostic scope follows without repeating this update."
+}

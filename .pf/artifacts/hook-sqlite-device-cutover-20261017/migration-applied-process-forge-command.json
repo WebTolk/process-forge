@@ -1,0 +1,19 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\hook-sqlite-device-cutover-20261017\\migrate_device.py",
+    "--project-root",
+    "D:\\Dev\\process-forge",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--backup",
+    "--apply",
+    "--report",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\hook-sqlite-device-cutover-20261017\\migration-applied-process-forge.json"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 99.121,
+  "stdout": "{\"events_rows\": 86044, \"raw_rows\": 32089, \"other_project_raw\": 1930, \"invalid\": 0, \"blocked\": false, \"diagnostics\": [], \"unique_events\": 86044, \"unique_raw\": 32089, \"applied\": true, \"status\": \"ready\", \"stored_counts\": {\"events\": 86044, \"raw\": 32089}}\n",
+  "stderr": ""
+}
