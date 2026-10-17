@@ -1,0 +1,13 @@
+{
+    "observed_at":  "2026-10-17T19:20:39.7975730Z",
+    "existing_mcp_processes":  2,
+    "same_process_ids_as_before_install":  true,
+    "started_at":  [
+                       "2026-10-17T14:05:42.0019480Z",
+                       "2026-10-17T14:05:42.4819290Z"
+                   ],
+    "processes_started_after_apply_completed":  0,
+    "loaded_new_candidate_verified":  false,
+    "independent_installed_stdio":  "passed separately; its process terminated after testing",
+    "required_action":  "Reconnect the existing PF MCP host connection, then verify fresh context, exact Work/resource and new process provenance. Do not repeat Core apply or app-server restart."
+}

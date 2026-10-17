@@ -1,0 +1,9 @@
+{
+  "label": "installed-resource",
+  "started_at": "2026-10-17T19:17:06.831212+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.0836237000185065,
+  "raw_sha256": "e89f20c9243dc7ae5afca7bf7b61c27853b77f3d87a00372feb4686cebf72007",
+  "raw_bytes": 8053,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-resource.log"
+}

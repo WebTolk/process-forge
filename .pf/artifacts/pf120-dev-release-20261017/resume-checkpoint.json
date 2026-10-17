@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-17T19:34:40.003470+00:00",
+  "continuation_id": "pf120-dev-mcp-reconnect-20261017",
+  "work": {
+    "run_id": "garage-pf120-dev-release-20261017-package-committed-work-metadata-projec",
+    "assignment_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu",
+    "context_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule"
+  },
+  "capsule_checksum": "sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df",
+  "stage": "release-delivery",
+  "native_terminal": false,
+  "source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
+  "core_manifest_sha256": "0dd4a0b29032d6dcb4328dd34162fae8c0c620f2dff637a950af2981c95ad18a",
+  "metadata_sha256": "38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e",
+  "native_apply_count": 1,
+  "update_id": "core-update-20261017T191529Z",
+  "applied_at": "2026-10-17T19:15:29Z",
+  "server_restart_complete": true,
+  "server_ready": true,
+  "configuration_revision": "sha256:8eb64975e50035d2e3e5a3e636e03eaaeb067ff8fabf91822443d7f1c4d786ad",
+  "protected_file_sha256": {
+    "device_configuration": "8eb64975e50035d2e3e5a3e636e03eaaeb067ff8fabf91822443d7f1c4d786ad",
+    "workplace_manifest": "77bf5e402a982f8ec34ca4ac5b9b1dd8c8b9c24fd7cd9c1a8aac397e223f10c7",
+    "installed_project_configuration": "0c37a442f1824b7dbe94e807067467ab06fb40e127e3381b9df64d6a04f7c3dc",
+    "source_project_configuration": "8af0246dfd42d5312baf6de63a1511f87ea852d90ae27f167b62e39b274a8f2f",
+    "project_context_snapshot": "0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be"
+  },
+  "handoff_report_pins": {
+    ".pf/artifacts/pf120-dev-release-20261017/report.md": "286c502fa716b08508b5fdacddcabad6dfd63c57690df8d60c4884a49d886187",
+    ".pf/handoffs/pf120-dev-release-20261017.md": "02077e5e4b25fe4c4715620b9bfdfa6d5216c67d475fe8eaf2f8dc047db70743"
+  },
+  "do_not_repeat": [
+    "core-update apply",
+    "PF app-server restart",
+    "context refresh while fresh",
+    "terminal predecessor Work resume"
+  ],
+  "remaining": [
+    "Reconnect actual PF MCP host transport",
+    "Verify new owner/root/start after completed apply and unchanged installed manifest",
+    "Actual fresh pf.context, exact Work valid/ready, authorized resource resolve",
+    "Actual pf.context one warm-up and five measurements",
+    "Complete release/evolve native transitions, doctors, scoped commit/dual push/full readback"
+  ]
+}

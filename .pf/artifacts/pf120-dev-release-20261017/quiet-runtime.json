@@ -1,0 +1,51 @@
+{
+  "condition": "Three valid 30-second windows without foreground PF commands; normal scheduler/hooks continue. Original third window excluded and replaced.",
+  "logical_processors": 4,
+  "windows": [
+    {
+      "window": 1,
+      "elapsed_seconds": 30.0189202,
+      "cpu_seconds": 4.96875,
+      "device_percent": 4.138015264119993,
+      "one_core_percent": 16.55206105647997,
+      "working_set_bytes": 180314112,
+      "peak_working_set_bytes": 185298944
+    },
+    {
+      "window": 2,
+      "elapsed_seconds": 30.005066199999998,
+      "cpu_seconds": 5.421875,
+      "device_percent": 4.517466287076547,
+      "one_core_percent": 18.06986514830619,
+      "working_set_bytes": 180314112,
+      "peak_working_set_bytes": 185298944
+    },
+    {
+      "window": 3,
+      "elapsed_seconds": 30.005280799999998,
+      "cpu_seconds": 5.4375,
+      "device_percent": 4.530452519544493,
+      "one_core_percent": 18.121810078177973,
+      "working_set_bytes": 180342784,
+      "peak_working_set_bytes": 185298944,
+      "replacement": true
+    }
+  ],
+  "total_wall_seconds": 90.02926719999999,
+  "total_cpu_seconds": 15.828125,
+  "device_percent": 4.395272085475778,
+  "one_core_percent": 17.58108834190311,
+  "working_set_mib": [
+    171.9609375,
+    171.9609375,
+    171.98828125
+  ],
+  "peak_working_set_mib": 176.71484375,
+  "same_runtime_owner_throughout": true,
+  "before_after_ready_and_idle": true,
+  "excluded_original_windows": [
+    3
+  ],
+  "original_receipt": "quiet-runtime-original.json",
+  "replacement_receipt": "quiet-runtime-replacement.json"
+}

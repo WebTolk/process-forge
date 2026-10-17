@@ -1,0 +1,9 @@
+{
+  "label": "archive-public-full-final",
+  "started_at": "2026-10-17T18:46:22.622793+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1481.6876522999955,
+  "raw_sha256": "310e73ad55c401c60536f2a943b00e68f08c4cdbcce68a0ea35e06579c5473f4",
+  "raw_bytes": 2952,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/archive-public-full-final.log"
+}

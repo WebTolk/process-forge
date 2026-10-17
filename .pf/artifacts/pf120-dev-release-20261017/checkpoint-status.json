@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "checkpoint_ready_waiting_for_actual_mcp_reconnect",
+  "native_terminal": false,
+  "native_stage": "release-delivery",
+  "run_id": "garage-pf120-dev-release-20261017-package-committed-work-metadata-projec",
+  "assignment_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu",
+  "context_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule",
+  "capsule_checksum": "sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df",
+  "continuation_id": "pf120-dev-mcp-reconnect-20261017",
+  "continuation_status": "ready",
+  "waiting": {
+    "handoff_ready": true,
+    "missing_expected_artifacts": [],
+    "status": "ready"
+  },
+  "work_readiness": "ready",
+  "doctors": {
+    "task": {
+      "exit_code": 0
+    },
+    "run": {
+      "exit_code": 0
+    },
+    "continuation_project": {
+      "exit_code": 0
+    }
+  },
+  "completed": {
+    "new_archive_full_consumer": true,
+    "single_install": true,
+    "server_restart": true,
+    "installed_checks": 13,
+    "sqlite_quick_checks": 3,
+    "http_ready_auth": true,
+    "independent_installed_mcp": true,
+    "serialized_cli_mcp_timings": true,
+    "valid_quiet_windows": 3
+  },
+  "pending": [
+    "actual connected host MCP new process/code acceptance",
+    "native release/evolve completion after that acceptance"
+  ],
+  "do_not_repeat": [
+    "core-update apply",
+    "PF app-server restart"
+  ]
+}

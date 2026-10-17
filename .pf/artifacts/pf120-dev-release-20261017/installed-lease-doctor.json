@@ -1,0 +1,9 @@
+{
+  "label": "installed-lease-doctor",
+  "started_at": "2026-10-17T19:17:11.584686+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.0123289999901317,
+  "raw_sha256": "3cd3d6c2c9baf8e60c08ea0ba4d03729632cf5af6529be2d509ae999a86d7fea",
+  "raw_bytes": 16481,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-lease-doctor.log"
+}

@@ -1,0 +1,7 @@
+{
+  "source_commit": "280e00d9520e8aff7ac49f8173a940cf130b9ff4",
+  "origin_dev": "280e00d9520e8aff7ac49f8173a940cf130b9ff4",
+  "gitverse_dev": "280e00d9520e8aff7ac49f8173a940cf130b9ff4",
+  "full_sha_readback": "passed",
+  "initial_dns_failure": "Recovered; retried the same source commit, both pushes and both remote reads passed."
+}

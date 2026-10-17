@@ -1,0 +1,9 @@
+{
+  "label": "final-continuation-doctor",
+  "started_at": "2026-10-17T19:35:32.378264+00:00",
+  "exit_code": 2,
+  "elapsed_seconds": 0.9633690000046045,
+  "raw_sha256": "d11e4cdc93ce88d84b163c14fbe20ab4244c0aed0a5b980b6f949805057d9892",
+  "raw_bytes": 3908,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/final-continuation-doctor.log"
+}

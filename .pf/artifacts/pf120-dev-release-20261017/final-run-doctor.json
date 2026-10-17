@@ -1,0 +1,9 @@
+{
+  "label": "final-run-doctor",
+  "started_at": "2026-10-17T19:35:31.093183+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.0803899000165984,
+  "raw_sha256": "5fa16f7e7cfa560bb809dccf3a4c4c30ed040981fd75491629a0f99c74b5a2a3",
+  "raw_bytes": 1272,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/final-run-doctor.log"
+}

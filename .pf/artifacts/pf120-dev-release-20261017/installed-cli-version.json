@@ -1,0 +1,9 @@
+{
+  "label": "installed-cli-version",
+  "started_at": "2026-10-17T19:16:56.109290+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.2240140999783762,
+  "raw_sha256": "91946ac13c6cd48c8d3f16d356469c4c65ed38db8e1a6ca1df0110c703c7d777",
+  "raw_bytes": 51,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-cli-version.log"
+}

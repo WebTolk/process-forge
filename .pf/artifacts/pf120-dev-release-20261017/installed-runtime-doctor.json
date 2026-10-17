@@ -1,0 +1,9 @@
+{
+  "label": "installed-runtime-doctor",
+  "started_at": "2026-10-17T19:17:00.615391+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.8411353999981657,
+  "raw_sha256": "aee4ef83f9163e07e6c39ad92d81656562b6b455f75e1fb8ac6a1fadd14fe938",
+  "raw_bytes": 291,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-runtime-doctor.log"
+}

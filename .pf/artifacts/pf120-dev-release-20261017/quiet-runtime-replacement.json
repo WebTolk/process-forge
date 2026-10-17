@@ -1,0 +1,19 @@
+{
+  "condition": "One replacement 30-second window, no foreground PF commands; normal scheduler and hooks continue.",
+  "logical_processors": 4,
+  "windows": [
+    {
+      "window": 1,
+      "elapsed_seconds": 30.005280799999998,
+      "cpu_seconds": 5.4375,
+      "device_percent": 4.530452519544493,
+      "one_core_percent": 18.121810078177973,
+      "working_set_bytes": 180342784,
+      "peak_working_set_bytes": 185298944
+    }
+  ],
+  "total_wall_seconds": 30.005280799999998,
+  "total_cpu_seconds": 5.4375,
+  "mean_device_percent": 4.530452519544493,
+  "same_runtime_owner_throughout": true
+}

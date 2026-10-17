@@ -1,0 +1,9 @@
+{
+  "label": "installed-ledger-doctor",
+  "started_at": "2026-10-17T19:17:09.976516+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.4571789999608882,
+  "raw_sha256": "2a8d5bfbe71e59e310e33859a4614c7b454a845bdbd3f9aa3905993c9f6a76e1",
+  "raw_bytes": 1203816,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-ledger-doctor.log"
+}

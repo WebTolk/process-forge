@@ -1,0 +1,11 @@
+# Primary review после реализации и полного source прогона
+
+2026-10-17, primary/release-engineer. Исходная проекция реализована и проверена отдельно; здесь повторно проверены границы реализации, выбранные пути чтения и релизные результаты. Subagent policy запрещает независимого агента; независимое ревью этой итерации не заявляется.
+
+Полный native public source suite 280e00d: 274 checks, 273 PASS и 1 FAIL в точном constructor expectation существующего test. Ни новых runtime failures, ни иных failing public gates нет. Целевой test исправлен в отдельной narrow Work, семь его сценариев PASS; checksum и exact diff проверены. Source 8ea152b отличается от исходного исключительно test/его inventory entry и сопутствующим evidence. Новый архив побайтно сохраняет весь production payload; старый архив с исходной ошибкой исключён из установки. Полный single-run final source PASS не заявляется. Обязательная финальная проверка — весь native full consumer suite нового ZIP.
+
+Проверен дополнительный риск lifetime общего прохода: pf.context собирает summary и automatic state с одним read pass; state/_state только выбирает, полностью читает и валидирует выбранную Work и проектирует результат. Completion recovery пишет через transition path. Default provider вне explicit pf.context создаёт новый pass при отдельной операции; обработчик не превращён в общий request-wide snapshot. Обязательные текущие чтения, private journal owner path и полные validation inputs сохранены. Native recovery, evidence freshness и transition/process integrity прошли полный source прогон.
+
+Остальные результаты source: scopes/capsules/Work, CLI/MCP framing/Unicode/contracts, resources/search, runtime/monitor/config, hooks/chat/SQLite/replay, Ledger/sessions/workers, native updater, packs/authoring/public packaging прошли. Подробная безопасная по путям матрица — source-full-results.json. Windows и optional symlink/original-state fixture ограничения исходного source slice сохраняются; успешный wrapper не объявляет непроверенные платформенные варианты.
+
+Native plan финального candidate: added 1, changed 19, removed 0, no blockers. Единственный локально изменённый installed .pf/process-forge.yaml среди unchanged; сохраняется без force. Install, actual Runtime restart and connected-host acceptance требуют собственных последующих receipts и не выводятся из source/archive проверки.

@@ -1,0 +1,9 @@
+{
+  "label": "core-update-plan",
+  "started_at": "2026-10-17T18:22:45.940731+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 3.5030843999702483,
+  "raw_sha256": "6846ecaf7d05b8a1788652d342569226bb6bcb0f1f3c41ebbb3f9d5105a3eb5b",
+  "raw_bytes": 67572,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/core-update-plan.log"
+}

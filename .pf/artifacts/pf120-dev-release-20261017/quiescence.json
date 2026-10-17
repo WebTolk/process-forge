@@ -1,0 +1,42 @@
+{
+  "native_worker_observer": true,
+  "read_only": true,
+  "registered_project_coverage": true,
+  "registered_projects": 2,
+  "workers": {
+    "source": "worker_status_records",
+    "coverage": "complete",
+    "counts": {
+      "running": 0
+    },
+    "observed": {
+      "running": 0
+    },
+    "issues": []
+  },
+  "elapsed_seconds": 0.32359009998617694,
+  "consumed": {
+    "entries": 2280,
+    "files": 169,
+    "bytes": 370956
+  },
+  "default_shutdown_guard_workers": {
+    "source": "worker_status_records",
+    "coverage": "partial",
+    "counts": {
+      "running": null
+    },
+    "observed": {
+      "running": 0
+    },
+    "issues": [
+      "budget"
+    ]
+  },
+  "budget": {
+    "entries": 100000,
+    "files": 10000,
+    "bytes": 268435456,
+    "seconds": 30.0
+  }
+}

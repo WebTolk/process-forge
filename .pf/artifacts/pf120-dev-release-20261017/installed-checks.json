@@ -1,0 +1,57 @@
+{
+  "checks": [
+    {
+      "check": "installed-cli-version",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-cli-help",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-workplace-doctor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-runtime-doctor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-monitor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-context-check",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-exact-work",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-resource",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-capsule-doctor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-ledger-doctor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-lease-doctor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-search-doctor",
+      "exit_code": 0
+    },
+    {
+      "check": "installed-driver-validation",
+      "exit_code": 0
+    }
+  ],
+  "failed": []
+}

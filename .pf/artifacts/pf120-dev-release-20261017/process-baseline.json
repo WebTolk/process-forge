@@ -1,0 +1,20 @@
+{
+    "observed_at":  "2026-10-17T18:59:12.6910468Z",
+    "installed_source_on_disk":  {
+                                     "commit":  "d5947ea6ab4a186dc4d9958aa19010a6dfc5c711",
+                                     "dirty":  false,
+                                     "tree":  "21d293db28124fc0f82459678d1c28b9add0e1b1",
+                                     "vcs":  "git"
+                                 },
+    "installed_version":  "1.2.0",
+    "existing_mcp_processes":  2,
+    "mcp_started_at":  [
+                           "2026-10-17T14:05:42.0019480Z",
+                           "2026-10-17T14:05:42.4819290Z"
+                       ],
+    "mcp_loaded_new_candidate_verified":  false,
+    "runtime_started_at":  "2026-10-17T13:45:12Z",
+    "runtime_interval_seconds":  10,
+    "runtime_port_argument":  0,
+    "private_owner_proof":  "Retained in own scratch; exact process IDs and command lines excluded from this public receipt."
+}

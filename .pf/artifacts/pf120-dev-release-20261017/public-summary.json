@@ -1,0 +1,34 @@
+{
+  "observed_at": "2026-10-17T19:38:17.534958+00:00",
+  "version": "1.2.0",
+  "status": "dev_installed; actual connected MCP new-code acceptance pending",
+  "qualified_source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
+  "full_final_archive_consumer_suite": "passed",
+  "initial_source_checks": {
+    "passed": 273,
+    "failed": 1,
+    "failure_closed_by": "seven corrected existing tests and the full final archive suite"
+  },
+  "installed_native_checks_passed": 13,
+  "installed_managed_files": 1308,
+  "installed_exact_payload_files": 1307,
+  "private_configuration_preserved": true,
+  "sqlite_quick_checks_passed": 3,
+  "runtime_ready_after_restart": true,
+  "configuration": {
+    "raw_hooks": false,
+    "events": true
+  },
+  "independent_installed_mcp": "passed",
+  "independent_mcp_context_median_seconds": 1.849440100020729,
+  "runtime_device_cpu_percent": 4.395272085475778,
+  "runtime_working_set_mib": [
+    171.9609375,
+    171.9609375,
+    171.98828125
+  ],
+  "actual_connected_mcp_loaded_new_candidate": false,
+  "remaining_gate": "Reconnect actual PF MCP host; verify new process provenance, fresh context, exact Work/resource and bounded warm timing. Do not repeat apply/server restart.",
+  "operational_limitation": "Default bounded shutdown observer cannot cover the large worker history; native complete read-only proof preceded the explicit graceful operator override."
+}

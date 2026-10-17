@@ -1,0 +1,9 @@
+{
+  "label": "installed-workplace-doctor",
+  "started_at": "2026-10-17T19:16:58.933594+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.5700624999590218,
+  "raw_sha256": "7a11840479f8b3ce7f7deea6d394c0e374cc1aa0eaf1c7693156f8349c1321b9",
+  "raw_bytes": 15523,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-workplace-doctor.log"
+}

@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "source": {
+    "commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+    "dirty": false,
+    "tree": "16f63bae232fd161a5f721428bb1cc1096bf6d7d",
+    "vcs": "git"
+  },
+  "version": "1.2.0",
+  "manifest_equals_archive": true,
+  "managed_files": 1308,
+  "exact_payload_files": 1307,
+  "preexisting_local_configuration_preserved": [
+    ".pf/process-forge.yaml"
+  ],
+  "sqlite_read_only_quick_checks": [
+    {
+      "database": "hooks",
+      "quick_check": "ok",
+      "tables": 6
+    },
+    {
+      "database": "events",
+      "quick_check": "ok",
+      "tables": 6
+    },
+    {
+      "database": "search",
+      "quick_check": "ok",
+      "tables": 10
+    }
+  ]
+}
