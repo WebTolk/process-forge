@@ -1,0 +1,85 @@
+{
+  "status": "passed_source_slice",
+  "checks": [
+    {
+      "name": "smoke_work_record_read_composition",
+      "passed": 30,
+      "exit_code": 0,
+      "original_comparisons": 128,
+      "partial_document_comparisons": 72,
+      "native_private_intent_path_case": true
+    },
+    {
+      "name": "smoke_core_read_composition",
+      "passed": 20,
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_work_selection_service",
+      "cases": 14,
+      "canonical_cases": 53,
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_core_work_state",
+      "passed": 23,
+      "skipped": 1,
+      "skip_reason": "Optional original-state differential fixture not supplied; selected state body is unchanged.",
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_yaml_parse_cache",
+      "passed": 12,
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_request_scope",
+      "passed": 8,
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_garage_snapshot_read_composition",
+      "passed": 8,
+      "exit_code": 0,
+      "supporting_commit": "880b8e5af50c9f1fdb1e45aa4d37c8c7d9fa7514"
+    },
+    {
+      "name": "smoke_work_completion_recovery",
+      "status": "all native interruption/replay, malformed journal and terminal recovery scenarios passed",
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_mcp_codex_contract",
+      "status": "bounded payload, canonical string/object mode parity and malformed no-publication passed",
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_governed_work_duplicate_prevention",
+      "status": "duplicate active work reused",
+      "exit_code": 0
+    },
+    {
+      "name": "smoke_work_start_scope",
+      "scope_pairs": 484,
+      "status": "exact reasons/order, lazy inventory/live reads, CLI schema, immutable reuse/predecessor/native transition passed",
+      "skipped": "Directory symlink qualification unavailable",
+      "exit_code": 0
+    },
+    {
+      "name": "native checksum inventory",
+      "status": "complete clean public source plus owned overlays; no private checkout config",
+      "exit_code": 0
+    },
+    {
+      "name": "owned Python syntax",
+      "status": "compiled from exact measured candidate bytes without filesystem bytecode output",
+      "exit_code": 0
+    }
+  ],
+  "limitations": [
+    "Independent review agent not used; primary source review recorded.",
+    "pyflakes is unavailable and was not installed.",
+    "Archive/installed/Runtime/actual connected-MCP qualification was not run.",
+    "Optional baseline-state fixture and directory symlink qualification were not executed."
+  ]
+}

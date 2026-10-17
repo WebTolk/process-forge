@@ -12,9 +12,12 @@ class WorkInventory:
     flow_root: Path
     load_document: Callable[[Path], dict[str, Any]]
 
-    def runs(self) -> Iterator[tuple[Path, dict[str, Any]]]:
+    def run_paths(self) -> Iterator[Path]:
         root = self.flow_root / "runs"
-        for path in sorted(root.glob("*/run.yaml")) if root.is_dir() else []:
+        yield from sorted(root.glob("*/run.yaml")) if root.is_dir() else []
+
+    def runs(self) -> Iterator[tuple[Path, dict[str, Any]]]:
+        for path in self.run_paths():
             yield path, self.load_document(path)
 
     def assignment_path(self, assignment_id: str) -> Path:

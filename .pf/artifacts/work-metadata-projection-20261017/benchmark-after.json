@@ -1,0 +1,405 @@
+{
+  "label": "after",
+  "scope": "standalone source tool_result with project-declared immutable distribution resources; no server started; cold means empty process parse cache, not cold disk",
+  "corpus_before": {
+    "files": 1529,
+    "sha256": "58a9e8ffbf1297fdef207eb3497d6c858f817586d2e18a144b9ccb1c63b15450"
+  },
+  "corpus_after": {
+    "files": 1529,
+    "sha256": "58a9e8ffbf1297fdef207eb3497d6c858f817586d2e18a144b9ccb1c63b15450"
+  },
+  "corpus_unchanged": true,
+  "samples": [
+    {
+      "pair": 1,
+      "kind": "cold",
+      "wall_seconds": 6.1505336000118405,
+      "cpu_seconds": 6.046875,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 1686,
+        "hits": 1075,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 81608704,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 70533120
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 1,
+      "kind": "warm",
+      "wall_seconds": 1.69870379997883,
+      "cpu_seconds": 1.6875,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 0,
+        "hits": 2761,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 1690,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 1688,
+        "parses": 0,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85618688,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 74149888
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 2,
+      "kind": "cold",
+      "wall_seconds": 6.41294069995638,
+      "cpu_seconds": 6.328125,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 1686,
+        "hits": 1075,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85577728,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 74149888
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 2,
+      "kind": "warm",
+      "wall_seconds": 1.5805486000026576,
+      "cpu_seconds": 1.578125,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 0,
+        "hits": 2761,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 1690,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 1688,
+        "parses": 0,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85094400,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 3,
+      "kind": "cold",
+      "wall_seconds": 5.952172700024676,
+      "cpu_seconds": 5.921875,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 1686,
+        "hits": 1075,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85241856,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 3,
+      "kind": "warm",
+      "wall_seconds": 1.7403895999887027,
+      "cpu_seconds": 1.75,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 0,
+        "hits": 2761,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 1690,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 1688,
+        "parses": 0,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85372928,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 4,
+      "kind": "cold",
+      "wall_seconds": 6.1397285999846645,
+      "cpu_seconds": 6.078125,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 1686,
+        "hits": 1075,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85213184,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 4,
+      "kind": "warm",
+      "wall_seconds": 1.6247193000162952,
+      "cpu_seconds": 1.59375,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 0,
+        "hits": 2761,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 1690,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 1688,
+        "parses": 0,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 84996096,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 5,
+      "kind": "cold",
+      "wall_seconds": 6.3428041999577545,
+      "cpu_seconds": 6.25,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 1686,
+        "hits": 1075,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 2,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85389312,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 5,
+      "kind": "warm",
+      "wall_seconds": 1.5736794999684207,
+      "cpu_seconds": 1.5625,
+      "calls": {
+        "YamlDocumentReader.load": 1123,
+        "WorkInventory.run_paths": 1,
+        "YamlDocumentReader.load_fields": 1524
+      },
+      "request": {
+        "loads": 2761,
+        "parses": 0,
+        "hits": 2761,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 1686,
+        "bytes": 41522551,
+        "hits": 1690,
+        "parses": 1686,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 1688,
+        "parses": 0,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 85118976,
+        "peak_working_set_bytes": 129806336,
+        "private_bytes": 75202560
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    }
+  ]
+}

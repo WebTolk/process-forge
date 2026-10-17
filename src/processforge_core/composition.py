@@ -11,6 +11,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import CurrentWorkService, YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.metadata import WorkMetadataReadPass
     from .documents.reader import YamlDocumentReader
     from .completion.request import CompletionIntentReader, CompletionReadinessReader, CompletionStateReader, CompletionTransition, CompletionWorkSelector, WorkCompletionRequestService
     from typing import Collection, Pattern
@@ -281,10 +282,21 @@ def build_governed_work_bootstrap_service(project_root: Path, workplace_root: Pa
 
 def build_current_work_service(
     project_root: Path, *, documents: YamlDocumentReader | None = None,
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = None,
 ) -> CurrentWorkService:
+    if work_metadata is None:
+        if documents is None:
+            return CurrentWorkService(project_root)
+        return CurrentWorkService(project_root, documents)
     if documents is None:
-        return CurrentWorkService(project_root)
-    return CurrentWorkService(project_root, documents)
+        return CurrentWorkService(project_root, work_metadata=work_metadata)
+    return CurrentWorkService(project_root, documents, work_metadata=work_metadata)
+
+
+def build_work_metadata_read_pass(project_root: Path) -> WorkMetadataReadPass:
+    from .work.metadata import WorkMetadataReadPass
+
+    return WorkMetadataReadPass(project_root)
 
 
 def build_work_context_read_service(project_root: Path) -> WorkContextReadService:
@@ -349,6 +361,7 @@ def build_fresh_session_boundary_read_service(
 def build_project_context_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
     metadata: ProjectMetadataReader | None = None,
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = None,
 ) -> ProjectContextService:
     from . import garage
     from .project.context import ProjectContextReaders, ProjectContextService
@@ -380,7 +393,7 @@ def build_project_context_service(
         context_check=lambda: core.project_context_check_result(project_root, explicit_workplace=str(workplace_root)),
         runtime_snapshot_resolver=runtime_snapshot_resolver,
         resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core)).readiness(snapshot=snapshot, check=check),
-        work_summary=lambda: build_current_work_service(project_root).summary(),
+        work_summary=lambda: build_current_work_service(project_root, work_metadata=work_metadata).summary(),
         resource_selection=lambda snapshot: garage.resource_selection_summary(snapshot),
         diagnostics=lambda check, search, mode: garage.diagnostics_from_check(check, search, mode),
         context_readers=context_readers,
@@ -516,12 +529,15 @@ def build_process_execution_service(
     context: WorkContextReadPort | None = None,
     definitions: ProcessDefinitionReadPort | None = None,
     snapshots: ProjectSnapshotReadPort | None = None,
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = None,
 ) -> ProcessExecutionService:
     from .process_execution import ProcessExecutionService
 
     if records is None:
         records = YamlWorkRecordReader(project_root)
-    return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots)
+        if work_metadata is None:
+            work_metadata = lambda: build_work_metadata_read_pass(project_root)
+    return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots, work_metadata=work_metadata)
 
 
 def build_evidence_validation_service(
@@ -804,6 +820,8 @@ def build_work_record_catalog_service(
     document_loader: Callable[[], Callable[[Path], dict[str, Any]]], identifier_pattern: Callable[[], Pattern[str]],
     intent_reader: Callable[[], CompletionIntentLookup],
     active_assignment_statuses: Callable[[], Collection[str]], active_run_statuses: Callable[[], Collection[str]],
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = None,
+    intent_path: Callable[[str], Path] | None = None,
 ) -> WorkRecordCatalogService:
     from .work.record_catalog import WorkRecordCatalogService
 
@@ -811,6 +829,8 @@ def build_work_record_catalog_service(
         record_reader=record_reader, inventory_factory=inventory_factory, flow_root=flow_root,
         document_loader=document_loader, identifier_pattern=identifier_pattern, intent_reader=intent_reader,
         active_assignment_statuses=active_assignment_statuses, active_run_statuses=active_run_statuses,
+        work_metadata=work_metadata,
+        intent_path=intent_path,
     )
 
 

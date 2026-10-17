@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Collection, Iterator, Pattern, 
 
 if TYPE_CHECKING:
     from ..ports import WorkRecordReadPort
+    from .metadata import WorkMetadataReadPass
 
 
 class WorkCatalogInventory(Protocol):
@@ -32,6 +33,8 @@ class WorkRecordCatalogService:
     intent_reader: Callable[[], CompletionIntentLookup] = field(repr=False, compare=False)
     active_assignment_statuses: Callable[[], Collection[str]] = field(repr=False, compare=False)
     active_run_statuses: Callable[[], Collection[str]] = field(repr=False, compare=False)
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, repr=False, compare=False)
+    intent_path: Callable[[str], Path] | None = field(default=None, repr=False, compare=False)
 
     def records(self, *, include_historical: bool) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
@@ -40,6 +43,10 @@ class WorkRecordCatalogService:
             run_documents, load_assignment = inventory.runs(), inventory.assignment
         else:
             run_documents, load_assignment = self.record_reader().runs(), self.record_reader().load_assignment
+        metadata = self.work_metadata() if self.work_metadata is not None else None
+        full_assignment = load_assignment
+        if metadata is not None:
+            run_documents, load_assignment = metadata.runs(), metadata.assignment
         for path, run in run_documents:
             run_id = str(run.get("id") or path.parent.name)
             if not self.identifier_pattern().fullmatch(run_id):
@@ -57,7 +64,14 @@ class WorkRecordCatalogService:
                 if not self.identifier_pattern().fullmatch(task_id) or str(task.get("run_id") or run_id) != run_id:
                     continue
                 status = str(task.get("status") or entry.get("status") or "")
-                pending_completion, _intent_error = self.intent_reader()(run, task)
+                intent_run, intent_task = run, task
+                if metadata is not None:
+                    intent_run, intent_task = metadata.completion_inputs(
+                        path, run, task, entry_id, valid_id=lambda value: bool(self.identifier_pattern().fullmatch(value)),
+                        load_assignment=full_assignment,
+                        intent_path=self.intent_path if self.intent_path is not None else lambda identifier: self.flow_root()() / "runs" / identifier / "completion-intent.yaml",
+                    )
+                pending_completion, _intent_error = self.intent_reader()(intent_run, intent_task)
                 has_pending_completion = pending_completion is not None
                 active = has_pending_completion or (status in self.active_assignment_statuses() and str(run.get("status") or "") in self.active_run_statuses())
                 if not active and not include_historical:

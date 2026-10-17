@@ -1,0 +1,21 @@
+{
+  "all_records_equal": true,
+  "summary_rows": 942,
+  "catalog_rows": 940,
+  "rows_compared": 1882,
+  "owned_source_matches_measured_candidate": true,
+  "owned_file_hashes": {
+    "docs/concepts/document-reads.md": "f94932aefc8e1a60a2e24987458a7bbed84c11f85d1cf48575bab525b8bc0f7e",
+    "docs/concepts/python-core-structure.md": "dedf65a91b17afa6b623074c18fba5fb6f0017bdc77b2a85e012ce5e1131a239",
+    "docs/ru/concepts/document-reads.md": "bf7da30d2ea79ba17fb9f3ac3632c7955ee81d3f0df107a9c51f8ac05178f315",
+    "docs/ru/concepts/python-core-structure.md": "d14e4cd9e812e716bd5b0645e46410d4772a4ee36e88941aa3f018754264afea",
+    "src/processforge_core/composition.py": "28ad30ff60291dae3433883149ef9c2427e53c785b5d377fd311c1fe0b5a522f",
+    "src/processforge_core/process_execution.py": "c9443ab193bc0ece0ebce3df963ecaa0f827691fe29ef099cb967211aa73e5b1",
+    "src/processforge_core/work/inventory.py": "e8edbeae980116feb4b882e4fc48b748f2a58b578afbcda2d0dd1858822b6b45",
+    "src/processforge_core/work/metadata.py": "38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e",
+    "src/processforge_core/work/record_catalog.py": "6604b7fca0fb0c9012f55340abe361fd50a6cc519075726daa851fc0e9405a8b",
+    "src/processforge_core/work/records.py": "9be3a9d137a46c123f8c27c149540a904bfd77b84447831bff62b52902940400",
+    "tools/pf_runtime/mcp_server.py": "f0f02724055041356148512f9a892ac389d4ae74a5ccefd908070a251cfa46bc",
+    "tools/smoke_work_record_read_composition.py": "1b8577c6b5862920bcc0f59ec3c8db8bc1f348b6bb51cff90c49564759673c3e"
+  }
+}

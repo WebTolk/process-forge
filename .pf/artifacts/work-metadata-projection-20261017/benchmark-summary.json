@@ -1,0 +1,91 @@
+{
+  "scope": "standalone source tool_result with project-declared immutable distribution resources; no server started; cold means empty process parse cache, not cold disk",
+  "baseline_source_commit": "f3fecf7e4150a1b70c43a0cafcb2a0bfaba8392c",
+  "corpus": {
+    "files": 1529,
+    "sha256": "58a9e8ffbf1297fdef207eb3497d6c858f817586d2e18a144b9ccb1c63b15450"
+  },
+  "full_payloads_equal": true,
+  "payloads_compared": 20,
+  "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+  "before": {
+    "cold": {
+      "samples": 5,
+      "wall_median_seconds": 15.966656200005673,
+      "wall_min_seconds": 15.461548899998888,
+      "wall_max_seconds": 17.581384900026023,
+      "cpu_median_seconds": 15.640625,
+      "parse_counts": [
+        2701
+      ],
+      "eviction_counts": [
+        1833
+      ],
+      "retained_cache_bytes": [
+        67068397
+      ],
+      "working_set_median_bytes": 160030720,
+      "peak_working_set_bytes": 160985088
+    },
+    "warm": {
+      "samples": 5,
+      "wall_median_seconds": 16.44074200000614,
+      "wall_min_seconds": 16.105781200050842,
+      "wall_max_seconds": 17.866783800011035,
+      "cpu_median_seconds": 16.21875,
+      "parse_counts": [
+        2701
+      ],
+      "eviction_counts": [
+        2701
+      ],
+      "retained_cache_bytes": [
+        67068397
+      ],
+      "working_set_median_bytes": 160145408,
+      "peak_working_set_bytes": 160985088
+    }
+  },
+  "after": {
+    "cold": {
+      "samples": 5,
+      "wall_median_seconds": 6.1505336000118405,
+      "wall_min_seconds": 5.952172700024676,
+      "wall_max_seconds": 6.41294069995638,
+      "cpu_median_seconds": 6.078125,
+      "parse_counts": [
+        1686
+      ],
+      "eviction_counts": [
+        0
+      ],
+      "retained_cache_bytes": [
+        41522551
+      ],
+      "working_set_median_bytes": 85241856,
+      "peak_working_set_bytes": 129806336
+    },
+    "warm": {
+      "samples": 5,
+      "wall_median_seconds": 1.6247193000162952,
+      "wall_min_seconds": 1.5736794999684207,
+      "wall_max_seconds": 1.7403895999887027,
+      "cpu_median_seconds": 1.59375,
+      "parse_counts": [
+        0
+      ],
+      "eviction_counts": [
+        0
+      ],
+      "retained_cache_bytes": [
+        41522551
+      ],
+      "working_set_median_bytes": 85118976,
+      "peak_working_set_bytes": 129806336
+    }
+  },
+  "cold_speedup": 2.5959790220437027,
+  "cold_reduction_percent": 61.47888748296806,
+  "warm_speedup": 10.119127654753191,
+  "warm_reduction_percent": 90.11772522179541
+}

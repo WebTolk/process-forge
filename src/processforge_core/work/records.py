@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator
 
 from ..common.yaml_io import _parse_simple_yaml
 from ..documents.reader import YamlDocumentReader
 from .projection import WorkProjectionPolicy
 from .inventory import WorkInventory
+from .metadata import WorkMetadataReadPass
 
 __all__ = ()
 
@@ -43,6 +44,7 @@ class YamlWorkRecordReader:
 class CurrentWorkService:
     project_root: Path
     documents: YamlDocumentReader = field(default_factory=lambda: YamlDocumentReader(_parse_simple_yaml))
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def summary(self) -> dict[str, Any]:
         active = self.active_items()
@@ -72,7 +74,7 @@ class CurrentWorkService:
         return {"active": active[0] if active else None, "historical": historical}
 
     def items(self) -> list[dict[str, Any]]:
-        records = YamlWorkRecordReader(self.project_root, self.documents)
+        records = self.work_metadata() if self.work_metadata is not None else WorkMetadataReadPass(self.project_root, self.documents)
         projection = WorkProjectionPolicy()
         rows: list[dict[str, Any]] = []
         for run_path, run in records.runs():
@@ -85,11 +87,9 @@ class CurrentWorkService:
                 if not isinstance(entry, dict):
                     continue
                 task_id = str(entry.get("id") or "")
-                task_path = records.assignment_path(task_id)
-                task = records.load_assignment(task_id) if task_path.is_file() else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
+                task = records.assignment(task_id) if records.assignment_exists(task_id) else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
                 rows.append(projection.work_item(run_id=run_id, run_status=run_status, task=task, run=run))
-        first = records.assignment_path("first-assignment")
-        if first.is_file():
-            task = records.load_assignment("first-assignment")
+        if records.assignment_exists("first-assignment"):
+            task = records.assignment("first-assignment")
             rows.append(projection.work_item(run_id="", run_status="", task=task, run={}))
         return rows

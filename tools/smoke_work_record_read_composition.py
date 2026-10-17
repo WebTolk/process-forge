@@ -32,6 +32,9 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.common.request_scope import request_scope
 from processforge_core.work.records import YamlWorkRecordReader
+from processforge_core.work.records import CurrentWorkService
+from processforge_core.work.metadata import WorkMetadataReadPass
+from processforge_core.work.inventory import WorkInventory
 
 BASELINE = None
 SCRATCH = None
@@ -267,13 +270,13 @@ class LiveReaderTests(unittest.TestCase):
         self.write(self.run_path('z-history'), {'id': 'z-history', 'process': 'p',
                                               'tasks': [{'id': 'broken'}]})
         self.write(foreign, {'id': 'broken', 'run_id': 'z-history', 'process': 'p'})
-        original = YamlDocumentReader.load
+        original = Path.read_text
         failure = OSError('unrelated historical document')
-        def load(reader, path):
+        def read(path, *args, **kwargs):
             if path == foreign:
                 raise failure
-            return original(reader, path)
-        with patch.object(YamlDocumentReader, 'load', load):
+            return original(path, *args, **kwargs)
+        with patch.object(Path, 'read_text', read):
             self.assertEqual(self.service._select_work(run_id='r', assignment_id='a')[1]['id'], 'a')
             for selectors in ({'assignment_id': 'a'}, {'run_id': 'r'}, {}):
                 with self.assertRaises(OSError) as caught:
@@ -438,6 +441,133 @@ class LiveReaderTests(unittest.TestCase):
             self.assertEqual(self.service._load_assignment('a'), namespace['baseline_load_assignment'](legacy, 'a'))
             comparisons += 2
         print('Original read differential comparisons:', comparisons)
+
+
+    def test_metadata_shared_pass_reads_each_source_once(self):
+        self.seed()
+        metadata = WorkMetadataReadPass(self.root)
+        current = CurrentWorkService(self.root, work_metadata=lambda: metadata)
+        service = build_process_execution_service(self.root, None, self.core, work_metadata=lambda: metadata)
+        reads, enumerations = [], []
+        original, inventory = Path.read_text, WorkInventory.run_paths
+        def read(path, *args, **kwargs):
+            reads.append(path)
+            return original(path, *args, **kwargs)
+        def paths(owner):
+            enumerations.append(owner.flow_root)
+            yield from inventory(owner)
+        with patch.object(Path, 'read_text', read), patch.object(WorkInventory, 'run_paths', paths):
+            self.assertEqual(current.summary()['active_work'][0]['assignment_id'], 'a')
+            self.assertEqual(service._work_records(include_historical=True)[0]['assignment_id'], 'a')
+        self.assertEqual(enumerations, [self.flow])
+        self.assertEqual(reads.count(self.run_path()), 1)
+        self.assertEqual(reads.count(self.assignment_path()), 1)
+
+    def test_metadata_keeps_different_summary_and_catalog_activity(self):
+        self.write(self.run_path(), {'id': 'r', 'status': 'in_progress', 'tasks': [{'id': 'a'}]})
+        self.write(self.assignment_path(), {'id': 'a', 'status': 'done'})
+        metadata = WorkMetadataReadPass(self.root)
+        summary = CurrentWorkService(self.root, work_metadata=lambda: metadata).summary()
+        service = build_process_execution_service(self.root, None, self.core, work_metadata=lambda: metadata)
+        self.assertTrue(summary['governed'])
+        self.assertFalse(service._work_records(include_historical=True)[0]['active'])
+
+    def test_metadata_documents_are_independent_and_rebuilt_after_write(self):
+        self.seed()
+        metadata = WorkMetadataReadPass(self.root)
+        run = next(metadata.runs())[1]
+        run['tasks'].clear()
+        assignment = metadata.assignment('a')
+        assignment['status'] = 'done'
+        self.assertEqual(next(metadata.runs())[1]['tasks'], [{'id': 'a'}])
+        self.assertEqual(metadata.assignment('a')['status'], 'open')
+        with request_scope():
+            self.assertEqual(self.service._work_records(include_historical=True)[0]['status'], 'open')
+            path = self.assignment_path()
+            previous = path.stat()
+            text = path.read_text(encoding='utf-8')
+            path.write_text(text.replace('open', 'done'), encoding='utf-8')
+            os.utime(path, ns=(previous.st_atime_ns, previous.st_mtime_ns))
+            self.assertEqual(path.stat().st_size, previous.st_size)
+            self.assertEqual(self.service._work_records(include_historical=True)[0]['status'], 'done')
+
+    def test_metadata_completion_uses_full_live_alias_documents(self):
+        self.write(self.run_path(), {'id': 'r', 'status': 'completed', 'tasks': [{'id': 'alias'}],
+                                    'process_execution': {'snapshot_id': 'original'}, 'run_future': [1]})
+        self.write(self.assignment_path('alias'), {'id': 'a', 'status': 'done', 'task_future': [2]})
+        journal = self.root / 'private-completion-intent.yaml'
+        self.write(journal, {'pending': True})
+        calls = []
+        def intent(owner, run, assignment):
+            self.assertEqual(run['run_future'], [1])
+            self.assertEqual(run['process_execution']['snapshot_id'], 'original')
+            self.assertEqual(assignment['task_future'], [2])
+            calls.append((run['id'], assignment['id']))
+            return {'pending': True}, None
+        with patch.object(ProcessExecutionService, '_completion_intent_path', return_value=journal), \
+                patch.object(ProcessExecutionService, '_load_completion_intent', intent):
+            record = self.service._work_records(include_historical=False)[0]
+        self.assertEqual(calls, [('r', 'a')])
+        self.assertTrue(record['pending_completion'] and record['active'])
+
+    def test_metadata_preserves_lazy_read_error_order(self):
+        self.seed()
+        later = self.run_path('z')
+        self.write(later, {'id': 'z', 'tasks': []})
+        first_failure, later_failure = OSError('assignment first'), OSError('later run')
+        original = Path.read_text
+        def read(path, *args, **kwargs):
+            if path == self.assignment_path():
+                raise first_failure
+            if path == later:
+                raise later_failure
+            return original(path, *args, **kwargs)
+        with patch.object(Path, 'read_text', read):
+            for operation in (CurrentWorkService(self.root).items,
+                              lambda: self.service._work_records(include_historical=True)):
+                with self.assertRaises(OSError) as caught:
+                    operation()
+                self.assertIs(caught.exception, first_failure)
+
+    def test_metadata_warm_history_avoids_parsing_and_full_reads(self):
+        from processforge_core.common.request_scope import _PARSE_CACHE
+        self.write(self.run_path(), {'id': 'r', 'status': 'completed', 'tasks': [{'id': 'a'}],
+                                    'stage_history': [{'notes': 'history' * 1000}] * 8})
+        self.write(self.assignment_path(), {'id': 'a', 'status': 'done',
+                                           'stage_history': [{'notes': 'history' * 1000}] * 8})
+        _PARSE_CACHE.clear()
+        def operation():
+            metadata = WorkMetadataReadPass(self.root)
+            CurrentWorkService(self.root, work_metadata=lambda: metadata).summary()
+            return build_process_execution_service(self.root, None, self.core,
+                        work_metadata=lambda: metadata)._work_records(include_historical=True)
+        with patch.object(YamlDocumentReader, 'load', side_effect=AssertionError('Full history read')):
+            with request_scope() as cold:
+                operation()
+            with request_scope() as warm:
+                operation()
+        self.assertEqual(cold.parses, 2)
+        self.assertEqual(warm.parses, 0)
+
+    def test_metadata_summary_and_catalog_partial_document_differential(self):
+        if BASELINE is None:
+            self.skipTest('Use --baseline for original partial-document differential')
+        namespace = dict(vars(execution))
+        exec(compile(BASELINE.read_text(encoding='utf-8'), str(BASELINE), 'exec'), namespace)
+        tasks = ({}, {'future': [1]}, {'id': None}, {'id': False, 'session': []},
+                 {'id': 'a', 'status': 'done'}, {'id': 'a', 'objective': ['legacy']})
+        runs = ({'id': 'r', 'status': 'open'}, {'status': 'completed'}, {'id': None}, {'id': False})
+        comparisons = 0
+        for run, task in itertools.product(runs, tasks):
+            self.write(self.run_path(), {**run, 'tasks': [{'id': 'a'}, {'id': 'a'}, None, {'id': 'missing'}]})
+            self.write(self.assignment_path(), task)
+            expected = namespace['baseline_current_items'](CurrentWorkService(self.root))
+            self.assertEqual(CurrentWorkService(self.root).items(), expected)
+            for historical in (False, True):
+                expected = namespace['baseline_work_records'](self.service, include_historical=historical)
+                self.assertEqual(self.service._work_records(include_historical=historical), expected)
+            comparisons += 3
+        print('Metadata partial-document differential comparisons:', comparisons)
 
 
 def main():

@@ -143,13 +143,16 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         return session_read.session_activity_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root, limit=arguments.get("limit"))
     if name == "pf.context":
         bound_project = resolve_garage_project()
-        service = build_project_context_service(bound_project, workplace, core)
+        from processforge_core.composition import build_work_metadata_read_pass
+
+        work_metadata = build_work_metadata_read_pass(bound_project)
+        service = build_project_context_service(bound_project, workplace, core, work_metadata=lambda: work_metadata)
         context = service.context(session_id=supplied_session)
         snapshot = service.snapshot()
         knowledge = snapshot.get("knowledge_resources") if isinstance(snapshot.get("knowledge_resources"), dict) else {}
         selected = knowledge.get("selected") if isinstance(knowledge.get("selected"), list) else []
         active_work = context.get("work", {}).get("active_work", []) if isinstance(context.get("work"), dict) else []
-        current_work = build_process_execution_service(bound_project, workplace, core).state(session_id=supplied_session)
+        current_work = build_process_execution_service(bound_project, workplace, core, work_metadata=lambda: work_metadata).state(session_id=supplied_session)
         # Keep the MCP bootstrap response bounded. Full assignment objectives
         # can be large and are already available through the governed capsule.
         payload = {

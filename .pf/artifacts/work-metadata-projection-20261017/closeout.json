@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "run_id": "garage-work-metadata-projection-20261017-implement-the-user-approved-sha",
+  "assignment_id": "work-metadata-projection-20261017-implement-the-user-approved-shared-ram",
+  "context_id": "work-metadata-projection-20261017-implement-the-user-approved-shared-ram-capsule",
+  "capsule_checksum": "sha256:a46c17c5be4b63dde22653ffbb5de3c3a9a5dc930d8b68e97b1be3d0ee39f9a5",
+  "native_action": "run_completed",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "blockers": [],
+  "task_doctor": "pass",
+  "run_doctor": "pass",
+  "qualification": "source_only",
+  "checks": "checks.json",
+  "review": "review.md",
+  "benchmark": "benchmark-summary.json",
+  "decoded_context_payloads_equal": 20,
+  "decoded_inventory_rows_equal": 1882,
+  "warm_before_seconds": 16.440742,
+  "warm_after_seconds": 1.6247193,
+  "archive_installed_runtime_connected_mcp": "Separate newly authorized dev-release qualification; not claimed by this source closeout."
+}

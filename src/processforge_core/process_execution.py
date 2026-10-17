@@ -18,6 +18,7 @@ from .work.start_documents import WorkStartDocumentBuilder
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work.metadata import WorkMetadataReadPass
     from .completion.request import WorkCompletionRequestService
     from .work.record_catalog import WorkRecordCatalogService
     from .work.events import WorkEventPublisher
@@ -189,6 +190,7 @@ class ProcessExecutionService:
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     definitions: ProcessDefinitionReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -774,6 +776,8 @@ class ProcessExecutionService:
             identifier_pattern=lambda: SAFE_ID_RE, intent_reader=lambda: self._load_completion_intent,
             active_assignment_statuses=lambda: ACTIVE_ASSIGNMENT_STATUSES,
             active_run_statuses=lambda: ACTIVE_RUN_STATUSES,
+            work_metadata=self.work_metadata,
+            intent_path=self._completion_intent_path,
         )
 
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:

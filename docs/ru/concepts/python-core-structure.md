@@ -24,7 +24,7 @@ Work. Он не импортирует argparse, Runtime и CLI-монолит, 
 а `__init__.py` — минимальным.
 
 Существующие Work-модули перенесены в `processforge_core.work`: `context`,
-`context_read`, `inventory`, `records`, `resources`, `resource_material`,
+`context_read`, `inventory`, `records`, `metadata`, `resources`, `resource_material`,
 `selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`,
 `transition_rejection`, `publication`, `events` и `capsule_publication`. Например,
 `WorkResourceService` импортируется из `processforge_core.work.resources`.
@@ -90,6 +90,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
 | `src/processforge_core/garage.py` | Оставшиеся legacy helpers; текущие Work readers находятся в `work/records.py`, контекст проекта и reconciliation — в `project/`. |
 | `src/processforge_core/work/projection.py` | Прежние чистые правила проекций и классификации Work, без Core и полномочий lifecycle. |
+| `src/processforge_core/work/metadata.py` | Явный проход чтения метаданных Run/Assignment для сводки и каталога; повторное использование разбора текущего содержимого и полные актуальные входы проверки журнала завершения. |
 | `src/processforge_core/work/bootstrap.py` | Прежние guidance/start через явную сводку и отложенную типизированную зависимость запуска. |
 | `src/processforge_core/work/creation_scope.py` | Прежние проверка scope и наложение на Assignment через явные отложенные зависимости, без полномочий lifecycle. |
 | `src/processforge_core/work/start_documents.py` | Прежнее чистое построение Run/Assignment с сохранением полей и ссылок. |

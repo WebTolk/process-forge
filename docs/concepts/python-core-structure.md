@@ -15,7 +15,7 @@ may contain a service, its errors and related helpers. There is no class-per-fil
 requirement. Keep the package tree shallow and package initializers minimal.
 
 The existing Work modules now live in `processforge_core.work`: `context`,
-`context_read`, `inventory`, `records`, `resources`, `resource_material`,
+`context_read`, `inventory`, `records`, `metadata`, `resources`, `resource_material`,
 `selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`,
 `transition_rejection`, `publication`, `events` and `capsule_publication`. For example,
 import `WorkResourceService` from `processforge_core.work.resources`. Current
@@ -85,6 +85,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
 | `src/processforge_core/garage.py` | Remaining legacy helpers; current Work readers live under `work/records.py` and project context under `project/`. |
 | `src/processforge_core/work/projection.py` | Existing pure Work projection/classification rules, without Core or lifecycle authority. |
+| `src/processforge_core/work/metadata.py` | Explicit operation-local Run/Assignment metadata acquisition shared by summary/catalog, with current-content parse reuse and full live completion inputs when needed. |
 | `src/processforge_core/work/bootstrap.py` | Existing guidance/start delegation through explicit summary and deferred typed start dependencies. |
 | `src/processforge_core/work/creation_scope.py` | Existing scope validation/overlay with explicit deferred dependencies, without lifecycle authority. |
 | `src/processforge_core/work/start_documents.py` | Existing pure Run/Assignment construction, preserving fields and references. |

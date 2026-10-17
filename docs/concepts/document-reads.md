@@ -25,6 +25,36 @@ the growing history. Full document reads continue to return complete data.
 Cold parsing and reading/hash-checking current contents still cost work; this
 does not replace a durable runtime-state index or migrate Work YAML to SQL.
 
+## Shared Work metadata
+
+`work/metadata.py` owns an explicit `WorkMetadataReadPass`. In `pf.context`,
+the Work summary and automatic selection share this pass. It observes sorted
+Run paths and reads compact Run/Assignment fields lazily in the consumer's
+original order. Returned documents are independent copies. The summary and
+catalog retain their different activity, fallback, ordering and selection rules.
+
+Each new operation gets a fresh pass and reads current file contents before
+reusing a parsed projection. Native catalog factories create passes lazily;
+injected full record readers keep their existing path. A shared pass belongs to
+one read operation and must be released before a write or a later request. There
+is no request-wide Work snapshot, TTL, required watcher or writer invalidation
+protocol. Different processes keep separate parse caches and observe changes
+through their next current-content reads.
+
+Completion journal paths come from their existing owner and are checked even
+for terminal runs. Where a journal exists,
+its existing validator receives full current Run/Assignment documents. Exact
+canonical selectors retain their short path and final full live reads. Scope,
+capsules, pins, source bytes, evidence and readiness are validated by their
+existing owners rather than stored as authority in the metadata pass.
+
+Custom document readers and unusual documents with no selected fields retain
+the original full-read behavior. The existing bounded parser cache holds normal
+compact projections between requests; the pass itself is released after the
+operation. Cold or changed documents still require complete safe YAML parsing,
+and current-content reads remain linear. This is a RAM optimization, without a
+new durable index or an atomic transaction across externally written files.
+
 The common path serves project/process/resource/Work readers and Runtime
 metrics. Configuration's strict loader and live configuration resolver,
 one-shot archive/update validation and other distinct validation boundaries
