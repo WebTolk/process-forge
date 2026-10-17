@@ -1,0 +1,94 @@
+{
+  "version": "1.2.0",
+  "qualification": "installed dev candidate and connected MCP checked; final documentation/package follow-up required",
+  "qualified_source_commit": "d5947ea6ab4a186dc4d9958aa19010a6dfc5c711",
+  "archive_sha256": "8103664d38b48543a91c1d3b1ed0760c3135732abaf2e4e34b3bc40b7d900045",
+  "reused_source_checks": 274,
+  "reused_source_checks_result": "PASS",
+  "reused_archive_additional_checks": 7,
+  "reused_installed_checks": 5,
+  "installed_owned_files_verified": 1306,
+  "local_configuration_preserved": true,
+  "actual_connected_mcp": "PASS",
+  "runtime_health": "ready",
+  "native_diagnostics_passed": 7,
+  "sqlite_quick_checks_passed": 2,
+  "latency": [
+    {
+      "operation": "version",
+      "median_seconds": 0.7532232999801636,
+      "minimum_seconds": 0.7259263999876566,
+      "maximum_seconds": 0.8170162999886088,
+      "surface": "installed_cli"
+    },
+    {
+      "operation": "project-context-check",
+      "median_seconds": 1.5705155999748968,
+      "minimum_seconds": 1.540444300044328,
+      "maximum_seconds": 1.6635089999763295,
+      "surface": "installed_cli"
+    },
+    {
+      "operation": "work-state",
+      "median_seconds": 0.881963399995584,
+      "minimum_seconds": 0.8206865999964066,
+      "maximum_seconds": 0.894655000010971,
+      "surface": "installed_cli"
+    },
+    {
+      "operation": "work-resolve",
+      "median_seconds": 1.8372366999974474,
+      "minimum_seconds": 1.8342270000139251,
+      "maximum_seconds": 2.0412323999917135,
+      "surface": "installed_cli"
+    },
+    {
+      "operation": "pf.context",
+      "median_seconds": 14.675,
+      "minimum_seconds": 14.637,
+      "maximum_seconds": 14.836,
+      "surface": "connected_mcp"
+    },
+    {
+      "operation": "pf.work.state",
+      "median_seconds": 0.053,
+      "minimum_seconds": 0.039,
+      "maximum_seconds": 0.061,
+      "surface": "connected_mcp"
+    },
+    {
+      "operation": "pf.work.resolve",
+      "median_seconds": 2.087,
+      "minimum_seconds": 1.743,
+      "maximum_seconds": 3.32,
+      "surface": "connected_mcp"
+    },
+    {
+      "operation": "pf.work.search",
+      "median_seconds": 2.102,
+      "minimum_seconds": 1.99,
+      "maximum_seconds": 2.144,
+      "surface": "connected_mcp"
+    }
+  ],
+  "cpu": {
+    "wall_seconds": 90.0014261000324,
+    "logical_processors": 4,
+    "runtime_cpu_seconds": 26.0625,
+    "device_percent": 7.239468619928517,
+    "one_core_percent": 28.957874479714068,
+    "window_device_percent": [
+      8.489491788308296,
+      6.718643263149504,
+      6.510280818808294
+    ]
+  },
+  "limitations": [
+    "context latency",
+    "partial runtime metrics",
+    "live worker not repeated after latest dev update",
+    "Linux/macOS unverified",
+    "single-primary report review"
+  ],
+  "public_publication_performed": false
+}
