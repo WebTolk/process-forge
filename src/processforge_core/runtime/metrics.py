@@ -11,10 +11,14 @@ import os
 import stat
 import time
 from datetime import datetime, timezone
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 
-import yaml
+from ..common.request_scope import safe_load
+
+# Preserve the existing required parser dependency at this module's boundary.
+yaml = import_module("yaml")
 
 FIELDS = {"registrations": ("projects", "sessions"),
           "sessions": ("online", "stale", "offline"),
@@ -110,7 +114,7 @@ class Budget:
         if len(raw) > maximum:
             self.issues.add("budget")
             raise ValueError("oversize record")
-        data = json.loads(raw) if path.suffix == ".json" else yaml.load(raw.decode("utf-8"), Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
+        data = json.loads(raw) if path.suffix == ".json" else safe_load(raw.decode("utf-8"))
         if not isinstance(data, dict):
             raise ValueError("invalid record")
         return data

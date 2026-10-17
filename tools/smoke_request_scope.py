@@ -24,6 +24,9 @@ from processforge_core.common import request_scope as scope
 
 
 class RequestScopeTests(unittest.TestCase):
+    def setUp(self):
+        scope._PARSE_CACHE.clear()
+
     def test_reuse_and_mutation_isolation(self):
         text = "a: &value [1, 2]\nb: *value\n"
         with scope.request_scope() as current:
@@ -37,7 +40,7 @@ class RequestScopeTests(unittest.TestCase):
             self.assertEqual((current.loads, current.parses, current.hits), (3, 1, 2))
         with scope.request_scope() as other:
             scope.safe_load(text)
-            self.assertEqual((other.parses, other.hits), (1, 0))
+            self.assertEqual((other.parses, other.hits), (0, 1))
 
     def test_unchanged_metadata_does_not_hide_changes_or_deletion(self):
         with tempfile.TemporaryDirectory(dir=ROOT / ".pf" / "tmp") as directory:
@@ -74,7 +77,6 @@ class RequestScopeTests(unittest.TestCase):
                 if original is not None:
                     del yaml.CSafeLoader
                 self.assertEqual(scope.safe_load("value: yes\n"), {"value": True})
-                self.assertIn((yaml.SafeLoader, "value: yes\n"), current.documents)
                 self.assertEqual(current.parses, 2 if original is not None else 1)
             finally:
                 if original is not None:
@@ -107,7 +109,7 @@ class RequestScopeTests(unittest.TestCase):
                     return current.parses, current.hits, current is outer
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-                self.assertEqual(list(pool.map(lambda _: worker(), range(4))), [(1, 0, False)] * 4)
+                self.assertEqual(list(pool.map(lambda _: worker(), range(4))), [(0, 1, False)] * 4)
             self.assertEqual((outer.parses, outer.hits), (1, 0))
 
     def test_frozen_exception_identity_survives_context_and_trace(self):
@@ -148,7 +150,7 @@ class RequestScopeTests(unittest.TestCase):
             scope.safe_load("a: 1\n")
             scope.safe_load("a: 2\n")
             scope.safe_load("a: 2\n")
-            self.assertEqual((len(current.documents), current.parses), (1, 3))
+            self.assertEqual((len(current.documents), current.parses, current.hits), (1, 2, 1))
         with patch.object(scope, "MAX_CACHE_BYTES", 4), scope.request_scope() as current:
             scope.safe_load("a: 1\n")
             self.assertFalse(current.documents)

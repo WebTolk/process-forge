@@ -12423,7 +12423,7 @@ def active_run_ids(project_root: Path) -> list[str]:
     if not root.is_dir():
         return ids
     for path in sorted(root.glob("*/run.yaml")):
-        data = load_yaml_document(path)
+        data = _yaml_documents.load_fields(path, ("id", "status", "__yaml_error__"))
         if yaml_error(data):
             continue
         status = str(data.get("status", ""))

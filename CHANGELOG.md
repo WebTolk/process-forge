@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- Reuse unchanged safe YAML parsing across requests with bounded, content-keyed
+  memory and isolated results. Runtime Run discovery retains only validated
+  identity/status fields instead of copying complete histories. Current file
+  reads, safe-loader rules and authority checks remain live; see
+  [document reads](docs/concepts/document-reads.md).
+
 ## 1.2.0 - 2026-10-16
 
 ### Changed

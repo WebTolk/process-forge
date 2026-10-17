@@ -1,4 +1,4 @@
-"""Bounded parsing reuse for one synchronous request; never cache file reads."""
+"""Safe content-based parsing reuse, with an additional synchronous request scope."""
 from __future__ import annotations
 
 import contextvars
@@ -8,15 +8,17 @@ from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
 from .. import diagnostics
+from ..documents.parse_cache import YamlParseCache
 
 MAX_DOCUMENT_BYTES = 512 * 1024
 MAX_CACHE_BYTES = 8 * 1024 * 1024
 MAX_CACHE_ENTRIES = 1024
+_PARSE_CACHE = YamlParseCache()
 
 
 @dataclass
 class RequestScope:
-    documents: dict[tuple[type, str], Any] = field(default_factory=dict)
+    documents: dict[tuple[Any, ...], Any] = field(default_factory=dict)
     bytes: int = 0
     loads: int = 0
     parses: int = 0
@@ -70,21 +72,36 @@ def scoped_request(function: F) -> F:
 
 
 def safe_load(text: str) -> Any:
+    return _load(text, None)
+
+
+def safe_load_fields(text: str, fields: tuple[str, ...]) -> dict[str, Any]:
+    return _load(text, fields)
+
+
+def _load(text: str, fields: tuple[str, ...] | None) -> Any:
     import yaml
 
     loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+    policy = _PARSE_CACHE.policy(loader, yaml.load)
     scope = _CURRENT.get()
-    if scope is None:
-        return yaml.load(text, Loader=loader)
-    scope.loads += 1
-    key = (loader, text)
-    if key in scope.documents:
+    key = (policy, fields, text)
+    if scope is not None:
+        scope.loads += 1
+    if scope is not None and policy is not None and key in scope.documents:
         scope.hits += 1
         return copy.deepcopy(scope.documents[key])
-    scope.parses += 1
-    value = yaml.load(text, Loader=loader)
+    if scope is not None:
+        scope.parses += 1
+    value, reused = _PARSE_CACHE.load(text, loader, yaml.load, policy=policy, fields=fields)
+    if scope is None:
+        return value
+    if reused:
+        scope.parses -= 1
+        scope.hits += 1
     # Retain an independent snapshot; callers may mutate even the first result.
-    if len(text) <= MAX_DOCUMENT_BYTES:
+    if (policy is not None and _PARSE_CACHE.policy(loader, yaml.load) == policy
+            and len(text) <= MAX_DOCUMENT_BYTES):
         size = len(text.encode("utf-8"))
         if (size <= MAX_DOCUMENT_BYTES and len(scope.documents) < MAX_CACHE_ENTRIES
                 and scope.bytes + size <= MAX_CACHE_BYTES):
