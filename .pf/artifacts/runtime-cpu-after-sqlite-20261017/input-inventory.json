@@ -1,0 +1,48 @@
+{
+  "run_yaml_files": 569,
+  "run_yaml_bytes": 16028005,
+  "host_state_bytes": 37833078,
+  "installed_source_parity": [
+    {
+      "path": "tools/pf_runtime/host.py",
+      "installed_sha256": "6952f250eaf1d1f569214e6dda650a740a1b3553ed59cfc596944b7056fbce8d",
+      "matches_source": false,
+      "qualified_commit_sha256": "6952f250eaf1d1f569214e6dda650a740a1b3553ed59cfc596944b7056fbce8d",
+      "installed_matches_qualified_commit": true,
+      "working_matches_after_newline_normalization": true,
+      "working_crlf_count": 1464,
+      "installed_crlf_count": 0
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "installed_sha256": "591824baff2a57fac3b1376d4dd819afe70651ba9e2de17cce54b18fea6c3f9b",
+      "matches_source": true,
+      "qualified_commit_sha256": "591824baff2a57fac3b1376d4dd819afe70651ba9e2de17cce54b18fea6c3f9b",
+      "installed_matches_qualified_commit": true,
+      "working_matches_after_newline_normalization": true,
+      "working_crlf_count": 0,
+      "installed_crlf_count": 0
+    },
+    {
+      "path": "tools/processforge.py",
+      "installed_sha256": "cb1e4638a465174e98dc16a92349b9965f7b02ebb55d2786090535a08b397ac0",
+      "matches_source": true,
+      "qualified_commit_sha256": "cb1e4638a465174e98dc16a92349b9965f7b02ebb55d2786090535a08b397ac0",
+      "installed_matches_qualified_commit": true,
+      "working_matches_after_newline_normalization": true,
+      "working_crlf_count": 0,
+      "installed_crlf_count": 0
+    },
+    {
+      "path": "src/processforge_core/process_event_journal.py",
+      "installed_sha256": "441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1",
+      "matches_source": true,
+      "qualified_commit_sha256": "441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1",
+      "installed_matches_qualified_commit": true,
+      "working_matches_after_newline_normalization": true,
+      "working_crlf_count": 0,
+      "installed_crlf_count": 0
+    }
+  ],
+  "source_parity_note": "host.py in the main checkout has CRLF; installed/archive/qualified Git blob use LF. Text and line locations match; installed bytes match the exact qualified commit."
+}

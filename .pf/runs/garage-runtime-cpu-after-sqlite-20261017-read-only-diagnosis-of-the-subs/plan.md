@@ -1,0 +1,3 @@
+# Run Plan: runtime-cpu-after-sqlite-20261017: Read-only diagnosis of the substantial remain
+
+Objective: runtime-cpu-after-sqlite-20261017: Read-only diagnosis of the substantial remaining CPU consumption in actual updated Runtime PID9716 after the completed dev SQLite device cutover. Reuse the prior actual-process diagnostic method, verify current stacks and quantify remaining owners; explain the current work without guessing from old NDJSON evidence. No source edits, new update/migration/restart or broad PF1.2.0 acceptance. Produce a concrete bounded handoff for any necessary source fix under the existing user resource-resolution request.

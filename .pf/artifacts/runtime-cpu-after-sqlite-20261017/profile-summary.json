@@ -1,0 +1,225 @@
+{
+  "total_gil_samples": 1980,
+  "owners": {
+    "scheduler": {
+      "samples": 1721,
+      "percent": 86.92
+    },
+    "other": {
+      "samples": 3,
+      "percent": 0.15
+    },
+    "ingress": {
+      "samples": 240,
+      "percent": 12.12
+    },
+    "metrics": {
+      "samples": 16,
+      "percent": 0.81
+    }
+  },
+  "top_inclusive": [
+    {
+      "frame": "run (threading.py:1024)",
+      "samples": 1978,
+      "percent": 99.9
+    },
+    {
+      "frame": "_bootstrap_inner (threading.py:1082)",
+      "samples": 1978,
+      "percent": 99.9
+    },
+    {
+      "frame": "_bootstrap (threading.py:1044)",
+      "samples": 1978,
+      "percent": 99.9
+    },
+    {
+      "frame": "scheduler_loop (pf_runtime\\service.py:576)",
+      "samples": 1632,
+      "percent": 82.42
+    },
+    {
+      "frame": "call_quiet (pf_runtime\\host.py:382)",
+      "samples": 1259,
+      "percent": 63.59
+    },
+    {
+      "frame": "tick_payload (pf_runtime\\host.py:1420)",
+      "samples": 1228,
+      "percent": 62.02
+    },
+    {
+      "frame": "safe_load (processforge_core\\common\\request_scope.py:78)",
+      "samples": 1125,
+      "percent": 56.82
+    },
+    {
+      "frame": "load (yaml\\__init__.py:81)",
+      "samples": 1124,
+      "percent": 56.77
+    },
+    {
+      "frame": "load_yaml_document (processforge.py:8145)",
+      "samples": 1100,
+      "percent": 55.56
+    },
+    {
+      "frame": "load (processforge_core\\documents\\reader.py:21)",
+      "samples": 1085,
+      "percent": 54.8
+    },
+    {
+      "frame": "command_supervisor_tick (processforge.py:18169)",
+      "samples": 981,
+      "percent": 49.55
+    },
+    {
+      "frame": "active_run_ids (processforge.py:12426)",
+      "samples": 978,
+      "percent": 49.39
+    },
+    {
+      "frame": "get_single_data (yaml\\constructor.py:49)",
+      "samples": 710,
+      "percent": 35.86
+    },
+    {
+      "frame": "get_single_data (yaml\\constructor.py:51)",
+      "samples": 383,
+      "percent": 19.34
+    },
+    {
+      "frame": "construct_document (yaml\\constructor.py:60)",
+      "samples": 377,
+      "percent": 19.04
+    },
+    {
+      "frame": "load_state (pf_runtime\\host.py:386)",
+      "samples": 306,
+      "percent": 15.45
+    },
+    {
+      "frame": "read_json (pf_runtime\\host.py:370)",
+      "samples": 306,
+      "percent": 15.45
+    },
+    {
+      "frame": "write_json (pf_runtime\\host.py:376)",
+      "samples": 300,
+      "percent": 15.15
+    },
+    {
+      "frame": "save_state (pf_runtime\\host.py:407)",
+      "samples": 300,
+      "percent": 15.15
+    },
+    {
+      "frame": "construct_yaml_map (yaml\\constructor.py:413)",
+      "samples": 297,
+      "percent": 15.0
+    },
+    {
+      "frame": "construct_mapping (yaml\\constructor.py:218)",
+      "samples": 273,
+      "percent": 13.79
+    },
+    {
+      "frame": "finish_request (socketserver.py:362)",
+      "samples": 241,
+      "percent": 12.17
+    },
+    {
+      "frame": "__init__ (socketserver.py:766)",
+      "samples": 241,
+      "percent": 12.17
+    },
+    {
+      "frame": "process_request_thread (socketserver.py:697)",
+      "samples": 241,
+      "percent": 12.17
+    },
+    {
+      "frame": "handle (http\\server.py:496)",
+      "samples": 241,
+      "percent": 12.17
+    }
+  ],
+  "top_leaf": [
+    {
+      "frame": "get_single_data (yaml\\constructor.py:49)",
+      "samples": 466,
+      "percent": 23.54
+    },
+    {
+      "frame": "iterencode (json\\encoder.py:263)",
+      "samples": 187,
+      "percent": 9.44
+    },
+    {
+      "frame": "raw_decode (json\\decoder.py:361)",
+      "samples": 134,
+      "percent": 6.77
+    },
+    {
+      "frame": "read_text (pathlib\\__init__.py:788)",
+      "samples": 114,
+      "percent": 5.76
+    },
+    {
+      "frame": "write_text (pathlib\\__init__.py:810)",
+      "samples": 92,
+      "percent": 4.65
+    },
+    {
+      "frame": "decode (<frozen codecs>:325)",
+      "samples": 79,
+      "percent": 3.99
+    },
+    {
+      "frame": "resolve (yaml\\resolver.py:151)",
+      "samples": 60,
+      "percent": 3.03
+    },
+    {
+      "frame": "load (yaml\\__init__.py:81)",
+      "samples": 31,
+      "percent": 1.57
+    },
+    {
+      "frame": "resolve (yaml\\resolver.py:149)",
+      "samples": 30,
+      "percent": 1.52
+    },
+    {
+      "frame": "construct_scalar (yaml\\constructor.py:178)",
+      "samples": 29,
+      "percent": 1.46
+    },
+    {
+      "frame": "__instancecheck__ (<frozen abc>:117)",
+      "samples": 29,
+      "percent": 1.46
+    },
+    {
+      "frame": "resolve (yaml\\resolver.py:150)",
+      "samples": 28,
+      "percent": 1.41
+    },
+    {
+      "frame": "open (pathlib\\__init__.py:771)",
+      "samples": 24,
+      "percent": 1.21
+    },
+    {
+      "frame": "construct_object (yaml\\constructor.py:111)",
+      "samples": 24,
+      "percent": 1.21
+    },
+    {
+      "frame": "write_json (pf_runtime\\host.py:376)",
+      "samples": 24,
+      "percent": 1.21
+    }
+  ]
+}

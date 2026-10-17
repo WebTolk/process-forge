@@ -1,0 +1,217 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "code-assurance",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "changed-files",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "change-summary",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "runtime-cpu-after-sqlite-20261017-read-only-diagnosis-of-the-substantial",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "changed-files",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "change-summary",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "implementation-scope-respected"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "implementation"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:f0bbc95394a1e2dc0a0be128556b7cb0c878f562890ac8ddb67e010e61294a91",
+    "id": "runtime-cpu-after-sqlite-20261017-read-only-diagnosis-of-the-substantial-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:bbde9a5006ec206e22f04904090500a6c304242b63fc9e365f08c73d2d0ca51e",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "implementation",
+        "parameters": {},
+        "produced_artifacts": [
+          "changed-files",
+          "change-summary"
+        ],
+        "required_capabilities": [
+          "repository_write"
+        ],
+        "required_inputs": [
+          "implementation-plan"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/runtime-cpu-after-sqlite-20261017/**",
+      ".pf/handoffs/runtime-cpu-after-sqlite-20261017.md",
+      ".pf/logs/runtime-cpu-after-sqlite-20261017.md",
+      ".pf/tmp/runtime-cpu-after-sqlite-20261017/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/hook-sqlite-device-cutover-20261017/**",
+      ".pf/artifacts/hook-sqlite-migration-20261017/**",
+      ".pf/artifacts/project-profile.md",
+      ".pf/artifacts/runtime-cpu*/**",
+      ".pf/assignments/**",
+      ".pf/contexts/**",
+      ".pf/handoffs/**",
+      ".pf/process-forge.yaml",
+      ".pf/runs/**",
+      ".pf/runtime/**",
+      ".pf/tmp/hook-sqlite-device-cutover-20261017/**",
+      ".pf/tmp/runtime-cpu*/**",
+      "AGENTS.md",
+      "VERSION",
+      "bin/**",
+      "docs/**",
+      "schemas/**",
+      "src/**",
+      "tools/**"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "architecture-plan-ready",
+          "kind": "gate",
+          "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/stage-assessment.md",
+          "recorded_at": "2026-10-17T07:05:43Z",
+          "sha256": "sha256:341aee628a5076be00f491954de493ceda30cb7fa248a7ca3c40ee1bddae9981",
+          "status": "passed",
+          "summary": "Current actual Runtime profile and byte/input provenance reviewed:1980 samples/0 errors, scheduler86.92%, ingress12.12%; Run YAML discovery and37.8MB Host JSON dominate. Read-only diagnosis complete; concrete separate repair boundary retained, no product or infrastructure actions."
+        },
+        "id": "architecture-plan-ready",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "implementation-scope-respected",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "changed-files",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "change-summary",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "implementation-scope-respected"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "implementation"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "implementation",
+  "obligations": [],
+  "previous_stage_id": "architecture-plan",
+  "process": {
+    "fingerprint": "sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "implementation-plan",
+        "kind": "artifact",
+        "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/stage-assessment.md",
+        "recorded_at": "2026-10-17T07:05:43Z",
+        "sha256": "sha256:341aee628a5076be00f491954de493ceda30cb7fa248a7ca3c40ee1bddae9981",
+        "status": "ready"
+      },
+      "id": "implementation-plan",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-runtime-cpu-after-sqlite-20261017-read-only-diagnosis-of-the-subs",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "implementation",
+    "status": "in_progress",
+    "title": "Implementation"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

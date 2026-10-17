@@ -1,0 +1,53 @@
+{
+  "total_gil_samples": 1980,
+  "exclusive_buckets": {
+    "scheduler_supervisor_actions": {
+      "samples": 247,
+      "percent": 12.47
+    },
+    "other": {
+      "samples": 3,
+      "percent": 0.15
+    },
+    "ingress_other": {
+      "samples": 63,
+      "percent": 3.18
+    },
+    "ingress_host_json_write": {
+      "samples": 103,
+      "percent": 5.2
+    },
+    "scheduler_run_discovery": {
+      "samples": 981,
+      "percent": 49.55
+    },
+    "ingress_host_json_read": {
+      "samples": 74,
+      "percent": 3.74
+    },
+    "metrics": {
+      "samples": 16,
+      "percent": 0.81
+    },
+    "scheduler_other": {
+      "samples": 48,
+      "percent": 2.42
+    },
+    "scheduler_director": {
+      "samples": 12,
+      "percent": 0.61
+    },
+    "scheduler_host_json_read": {
+      "samples": 232,
+      "percent": 11.72
+    },
+    "scheduler_host_json_write": {
+      "samples": 197,
+      "percent": 9.95
+    },
+    "scheduler_projection": {
+      "samples": 4,
+      "percent": 0.2
+    }
+  }
+}

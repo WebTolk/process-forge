@@ -1,0 +1,6 @@
+{
+  "stage": "code-assurance",
+  "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/stage-assessment.md",
+  "summary": "Current actual Runtime profile and byte/input provenance reviewed:1980 samples/0 errors, scheduler86.92%, ingress12.12%; Run YAML discovery and37.8MB Host JSON dominate. Read-only diagnosis complete; concrete separate repair boundary retained, no product or infrastructure actions.",
+  "notes": "Complete this bounded diagnostic stage using actual retained profile and explicit owner/repair boundaries. Do not claim CPU resolved, repeat the installed SQLite update/migration, alter historical Work/conversations, or broaden the immutable read-only capsule."
+}
