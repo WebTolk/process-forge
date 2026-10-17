@@ -275,7 +275,9 @@ class GarageSnapshotTests(unittest.TestCase):
         host = SimpleNamespace(resolve_project=lambda reference, core: Path(reference),
                                project_for_session=lambda *a: Path('bound'))
         runtime = SimpleNamespace(host=host, core=core)
-        def factory(root, workplace, given_core):
+        def factory(root, workplace, given_core, *, work_metadata=None):
+            if work_metadata is not None:
+                self.assertEqual(work_metadata().project_root, root)
             calls.append((root, workplace, given_core))
             return service
         with patch.object(composition, 'build_project_context_service', side_effect=factory), patch.object(composition, 'build_process_execution_service', return_value=SimpleNamespace(state=lambda **k: {'action': 'start_recommended'})):
