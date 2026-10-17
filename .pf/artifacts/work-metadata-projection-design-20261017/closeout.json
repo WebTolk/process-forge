@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "status": "architecture_delivered",
+  "generated_at": "2026-10-17 17:15:20 UTC",
+  "work": {
+    "run_id": "garage-work-metadata-projection-design-20261017-design-only-the-shared-c",
+    "assignment_id": "work-metadata-projection-design-20261017-design-only-the-shared-current",
+    "context_id": "work-metadata-projection-design-20261017-design-only-the-shared-current-capsule",
+    "capsule_checksum": "sha256:7ec2754a2be7265e980d76c7543983e4618b2ea27d13860faafe8335d934497a",
+    "action": "run_completed",
+    "run_status": "completed",
+    "assignment_status": "done",
+    "context_validation": "valid"
+  },
+  "artifacts": {
+    "architecture": ".pf/artifacts/work-metadata-projection-design-20261017/architecture.md",
+    "implementation_plan": ".pf/artifacts/work-metadata-projection-design-20261017/implementation-plan.md",
+    "review": ".pf/artifacts/work-metadata-projection-design-20261017/review.md",
+    "device_logging_policy": ".pf/artifacts/work-metadata-projection-design-20261017/device-logging-policy.md",
+    "handoff": ".pf/handoffs/work-metadata-projection-design-20261017.md"
+  },
+  "checks": {
+    "task_doctor_exit": 0,
+    "run_doctor_exit": 0,
+    "product_code_changes": false,
+    "product_tests_run": false,
+    "implementation_benchmark_run": false,
+    "infrastructure_restart": false,
+    "private_device_config_changed_by_explicit_operator_request": true
+  },
+  "device_settings": {
+    "logging": {
+      "raw_hooks": false,
+      "events": true
+    },
+    "runtime": {
+      "garage_hooks": false,
+      "metrics": {
+        "interval_seconds": 10
+      }
+    },
+    "device_revision": "sha256:8eb64975e50035d2e3e5a3e636e03eaaeb067ff8fabf91822443d7f1c4d786ad",
+    "current_project_overrides": false,
+    "current_project_effective_logging": {
+      "raw_hooks": false,
+      "events": true
+    },
+    "verified_by": "native installed CLI readback",
+    "live_ingress_proven": false
+  },
+  "limitations": [
+    "Design only; implementation explicitly deferred.",
+    "Cold parsing and linear current-content reads remain.",
+    "RAM working-set fit and future actual speed are unmeasured.",
+    "Read pass is not a global filesystem transaction.",
+    "Raw history disabled; mandatory admissions and pending delivery state preserved."
+  ]
+}
