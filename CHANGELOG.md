@@ -4,6 +4,11 @@
 
 ### Changed
 
+- Make automatic Garage hooks opt-in with inherited `runtime.garage_hooks`
+  configuration, while Forge retains its required gatekeeper. Native session
+  hooks register/check out automatically through Runtime or CLI; first allowed
+  hooks cover live opt-in without creating an avoidable deferred message.
+  See [hook configuration](docs/concepts/runtime-configuration.md).
 - Reuse unchanged safe YAML parsing across requests with bounded, content-keyed
   memory and isolated results. Runtime Run discovery retains only validated
   identity/status fields instead of copying complete histories. Current file

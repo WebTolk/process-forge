@@ -16,6 +16,7 @@
     "runtime": {
       "type": "object", "additionalProperties": false,
       "properties": {
+        "garage_hooks": {"type": "boolean", "default": false},
         "metrics": {
           "type": "object", "additionalProperties": false,
           "properties": {

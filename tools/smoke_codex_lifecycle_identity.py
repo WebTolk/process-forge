@@ -52,6 +52,7 @@ def main() -> int:
             "cwd": str(project),
             "session_id": "lifecycle-session",
         }
+        pf("config", "update", "--workplace", str(workplace), "--key", "runtime.garage_hooks", "--value", "true")
         startup = {**common, "source": "startup"}
         resume = {**common, "source": "resume"}
         startup_event = normalized_event(startup)
@@ -97,7 +98,14 @@ def main() -> int:
         ], lifecycle
         assert len({event["event_id"] for event in lifecycle}) == 2
 
-    print("PASS: Codex lifecycle event identity smoke")
+    # Keep the new mode/lifecycle cases in this existing release-test gate.
+    import unittest
+    from smoke_garage_hook_policy import PolicyTests
+
+    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(PolicyTests))
+    if not result.wasSuccessful():
+        return 1
+    print("PASS: Codex lifecycle identity, mode admission and automatic native session hooks")
     return 0
 
 

@@ -27,10 +27,22 @@ class MetricsConfig:
 @dataclass(frozen=True)
 class RuntimeConfig:
     metrics: MetricsConfig = field(default_factory=MetricsConfig)
+    garage_hooks: bool = False
 
     def __post_init__(self) -> None:
         if type(self.metrics) is not MetricsConfig:
             raise InvalidConfiguration("configuration_metrics_invalid")
+        if type(self.garage_hooks) is not bool:
+            raise InvalidConfiguration("configuration_garage_hooks_invalid")
+
+
+@dataclass(frozen=True)
+class RuntimeOverrides:
+    garage_hooks: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.garage_hooks is not None and type(self.garage_hooks) is not bool:
+            raise InvalidConfiguration("configuration_garage_hooks_invalid")
 
 
 @dataclass(frozen=True)
@@ -95,10 +107,10 @@ class PFConfig:
     @classmethod
     def from_dict(cls, value: dict) -> PFConfig:
         root = _section(value, {"schema_version", "runtime", "logging"})
-        runtime = _section(root.get("runtime", {}), {"metrics"})
+        runtime = _section(root.get("runtime", {}), {"metrics", "garage_hooks"})
         metrics = _section(runtime.get("metrics", {}), {"interval_seconds"})
         logging = _section(root.get("logging", {}), {"raw_hooks", "events"})
-        return cls(runtime=RuntimeConfig(MetricsConfig(**metrics)), schema_version=root.get("schema_version", 1),
+        return cls(runtime=RuntimeConfig(MetricsConfig(**metrics), runtime.get("garage_hooks", False)), schema_version=root.get("schema_version", 1),
                    logging=LoggingConfig(**logging))
 
     def to_dict(self) -> dict:
@@ -109,7 +121,7 @@ class PFConfig:
 
     def with_changes(self, changes: dict[str, Any]) -> PFConfig:
         return self.from_dict(_with_changes(self.to_dict(), changes, {
-            "runtime.metrics.interval_seconds", "logging.raw_hooks", "logging.events",
+            "runtime.metrics.interval_seconds", "runtime.garage_hooks", "logging.raw_hooks", "logging.events",
         }))
 
     def for_project(self, overrides: ProjectPFConfig) -> PFConfig:
@@ -117,26 +129,33 @@ class PFConfig:
             raise InvalidConfiguration("configuration_project_model_required")
         values = {key: getattr(self.logging, key) if value is None else value
                   for key, value in asdict(overrides.logging).items()}
-        return replace(self, logging=LoggingConfig(**values))
+        garage_hooks = overrides.runtime.garage_hooks
+        runtime = self.runtime if garage_hooks is None else replace(self.runtime, garage_hooks=garage_hooks)
+        return replace(self, runtime=runtime, logging=LoggingConfig(**values))
 
 
 @dataclass(frozen=True)
 class ProjectPFConfig:
-    """Only explicit logging overrides; null means inherit the device value."""
+    """Explicit project overrides; null means inherit the workplace value."""
     logging: LoggingOverrides = field(default_factory=LoggingOverrides)
     schema_version: int = 1
+    runtime: RuntimeOverrides = field(default_factory=RuntimeOverrides)
 
     def __post_init__(self) -> None:
         if type(self.schema_version) is not int or self.schema_version != 1:
             raise InvalidConfiguration("configuration_version_unsupported")
         if type(self.logging) is not LoggingOverrides:
             raise InvalidConfiguration("configuration_logging_invalid")
+        if type(self.runtime) is not RuntimeOverrides:
+            raise InvalidConfiguration("configuration_runtime_invalid")
 
     @classmethod
     def from_dict(cls, value: dict) -> ProjectPFConfig:
-        root = _section(value, {"schema_version", "logging"})
+        root = _section(value, {"schema_version", "logging", "runtime"})
         logging = _section(root.get("logging", {}), {"raw_hooks", "events"})
-        return cls(logging=LoggingOverrides(**logging), schema_version=root.get("schema_version", 1))
+        runtime = _section(root.get("runtime", {}), {"garage_hooks"})
+        return cls(logging=LoggingOverrides(**logging), schema_version=root.get("schema_version", 1),
+                   runtime=RuntimeOverrides(**runtime))
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -145,4 +164,6 @@ class ProjectPFConfig:
         return _get(self.to_dict(), key)
 
     def with_changes(self, changes: dict[str, Any]) -> ProjectPFConfig:
-        return self.from_dict(_with_changes(self.to_dict(), changes, {"logging.raw_hooks", "logging.events"}))
+        return self.from_dict(_with_changes(self.to_dict(), changes, {
+            "logging.raw_hooks", "logging.events", "runtime.garage_hooks",
+        }))

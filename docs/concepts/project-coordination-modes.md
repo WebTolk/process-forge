@@ -53,6 +53,10 @@ Effective mode resolution:
   Director Office.
 - `inherit` follows the workplace default.
 
+Automatic hook collection follows this resolved mode. Forge always admits its
+gatekeeper; Garage defaults to no collection and can opt in through inherited
+`runtime.garage_hooks` configuration. See [hook configuration](runtime-configuration.md).
+
 Use:
 
 ```bash

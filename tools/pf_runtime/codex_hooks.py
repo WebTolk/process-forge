@@ -146,14 +146,14 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
-    envelope = native_envelope(payload)
-    if not envelope:
+    project_ref = str(payload.get("cwd") or "")
+    if not project_ref:
         return {"status": "ignored"}
     runtime = runtime_bootstrap()
     core = runtime.core
     host = runtime.host
     service = runtime.service
-    project_root = Path(str(envelope["source_project_ref"])).expanduser()
+    project_root = Path(project_ref).expanduser()
     try:
         core.require_flow_root(project_root)
     except SystemExit:
@@ -164,8 +164,15 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
     # unavailable daemon must not fail or delay the Codex turn, so fall back to
     # the durable Host/Core path that was used before the daemon was started.
     workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+    _configuration, collect = host.hook_configuration(project_root, workplace_root, core)
+    if not collect:
+        return host.ignored_hook()
+    envelope = native_envelope(payload)
+    if not envelope:
+        return {"status": "ignored"}
     try:
-        with contextlib.redirect_stdout(io.StringIO()):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
             exit_code = service.runtime_request(
                 argparse.Namespace(workplace=str(workplace_root), json=True),
                 core,
@@ -173,12 +180,17 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 envelope,
             )
         if exit_code == 0:
+            body = json.loads(output.getvalue()) if output.getvalue().strip() else {}
+            if isinstance(body, dict) and body.get("routing_status") in {"ignored", "denied"}:
+                return {**body, "status": "ignored", "transport": "runtime"}
             return {"status": "delivered", "transport": "runtime"}
     except (OSError, SystemExit, ValueError):
         pass
 
     with contextlib.redirect_stdout(io.StringIO()):
         result = host.ingest_event(envelope, None, core)
+    if result.get("routing_status") in {"ignored", "denied"}:
+        return {**result, "status": "ignored", "transport": "ledger-fallback"}
     return {"status": "delivered", "transport": "ledger-fallback", **result}
 
 

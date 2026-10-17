@@ -24,7 +24,7 @@ class ConfigurationCommandParser:
         for name in ("create", "read", "update", "delete"):
             command = commands.add_parser(name)
             command.add_argument("--workplace", required=True, help="Workplace directory or workplace.yaml.")
-            command.add_argument("--project-root", help="Manage this project's logging overrides; null inherits the device value.")
+            command.add_argument("--project-root", help="Manage this project's configuration overrides; null inherits the workplace value.")
             command.add_argument("--json", action="store_true", help="Return one JSON object.")
             if name in {"read", "update", "delete"}:
                 command.add_argument("--key", required=name == "update", help="Dotted setting name; delete with a key resets it to its default.")

@@ -81,6 +81,7 @@ def main() -> int:
         (first / "README.md").write_text("# first\n", encoding="utf-8")
         (second / "README.md").write_text("# second\n", encoding="utf-8")
         pf("workplace-init", "--workplace", str(workplace), "--apply")
+        pf("config", "update", "--workplace", str(workplace), "--key", "runtime.garage_hooks", "--value", "true")
         pf("project-onboard", "--project-root", str(first), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
         pf("project-onboard", "--project-root", str(second), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
 

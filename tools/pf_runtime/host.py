@@ -446,6 +446,21 @@ def route_project(project_ref: str, workplace_root: Path, core: Any) -> dict[str
     }
 
 
+def hook_configuration(project_root: Path, workplace_root: Path, core: Any):
+    from processforge_core.agents.hook_admission import collect_hooks
+
+    configuration = core.project_configuration(project_root, workplace_root)
+    coordination = core.effective_project_coordination(project_root, str(workplace_root))
+    return configuration, collect_hooks(str(coordination["effective_mode"]), configuration.config)
+
+
+def ignored_hook() -> dict[str, Any]:
+    return {"status": "ignored", "reason": "garage_hooks_disabled", "raw_event_id": None,
+            "accepted": False, "deduplicated": False, "raw_location": None,
+            "routing_status": "ignored", "normalized_event_ids": [], "chat_message_ids": [],
+            "diagnostics": {"hook_collection": {"status": "disabled", "mode": "garage"}}}
+
+
 def remember_project(state: dict[str, Any], handle: dict[str, Any]) -> None:
     projects = [item for item in state.get("projects", []) if isinstance(item, dict) and item.get("project_id") != handle["project_id"]]
     projects.append(handle)
@@ -608,6 +623,8 @@ def command_event(args: argparse.Namespace, core: Any) -> int:
     payload = ingest_event(raw, workplace_root, core, project_ref=getattr(args, "project_root", None))
     if getattr(args, "json", False):
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif payload.get("routing_status") == "ignored":
+        return 0
     else:
         print(f"EVENT: {payload['event_id']} duplicate={str(payload['duplicate']).lower()} project={payload['project_id']}")
     return 0
@@ -625,6 +642,7 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         source = raw.get("source") if isinstance(raw.get("source"), dict) else {}
         session_id = str(source.get("session_id") or raw.get("session_id") or "")
         event_type = str(raw.get("event_type") or raw.get("type") or "")
+        presence: dict[str, Any] = {}
         if session_id:
             presence = ledger_session(session_id, workplace_root, core)
             if presence:
@@ -635,8 +653,12 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         remember_project(state, handle)
         event = normalize_event(raw, project_root, core)
         duplicate = event_exists(project_root, core.event_id_value(event), core)
-        if not duplicate:
+        if not duplicate or (not presence and event_type in {"agent.session.started", "agent.session.resumed"}):
             ledger_from_event(raw, project_root, workplace_root, handle, core)
+        if session_id and event_type in {"agent.session.started", "agent.session.resumed"}:
+            registered = ledger_session(session_id, workplace_root, core)
+            if not registered or str(registered.get("project_id") or "") != handle["project_id"]:
+                raise PermissionError("runtime session registration failed")
         duplicate = not core.admit_process_event(project_root, event, workplace_root=workplace_root)
         remember_session(state, session_id, handle, str(source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""), core)
         save_state(workplace_root, state, core)
@@ -759,6 +781,33 @@ def _adapter_admission(envelope: dict[str, Any], project_root: Path, core: Any,
 def _is_worker_conversation(envelope: dict[str, Any], registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> bool:
     policy = registry.resolve(envelope)
     return policy is not None and policy.session_mode == "worker"
+
+
+def _ensure_hook_session(envelope: dict[str, Any], project_root: Path, workplace_root: Path,
+                         core: Any, registry: AdapterRegistry) -> str:
+    """Enroll only explicitly trusted native host adapters, never PF workers."""
+    policy = registry.resolve(envelope)
+    if policy is None or policy.session_mode != "ledger" or not policy.can_register_session(envelope):
+        return ""
+    session_id = str(envelope.get("source_session_id") or "")
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    matches = [item for item in AgentPresenceReader(workplace_root).records()
+               if str(item.get("session_id") or "") == session_id]
+    if len(matches) > 1:
+        return "session_ambiguous"
+    if matches:
+        # Existing downstream project checks retain their precise denial path.
+        return ""
+    derived = envelope.get("derived_event")
+    if isinstance(derived, dict) and _derived_event_type(derived) in {"agent.session.started", "agent.session.resumed"}:
+        return ""  # The normal lifecycle registers once through Ledger/Core.
+    handle = route_project(str(project_root), workplace_root, core)
+    checkin = {"event_type": "agent.session.started", "session_id": session_id,
+               "source": {"agent": policy.provider, "session_id": session_id}}
+    ledger_from_event(checkin, project_root, workplace_root, handle, core)
+    presence = ledger_session(session_id, workplace_root, core)
+    return "" if presence and str(presence.get("project_id") or "") == handle["project_id"] else "session_registration_failed"
 
 
 def _pending_conversation_key(project_root: Path, session_id: str, core: Any) -> tuple[str, str]:
@@ -1060,6 +1109,11 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
     project_root = resolve_project(source_project_ref, core)
     workplace_root = workplace_root or core.resolve_workplace_root(None, project_root=project_root)
     policy = registry.resolve(envelope)
+    configuration, collect = hook_configuration(project_root, workplace_root, core)
+    # Explicit PF operations include governed worker report collection; this
+    # setting controls automatic observer hooks, not their mandatory results.
+    if not collect and not (policy is not None and policy.session_mode in {"none", "worker"}):
+        return ignored_hook()
     try:
         identity_valid = policy is None or policy.valid_raw_identity(envelope)
     except (Exception, SystemExit):
@@ -1083,7 +1137,6 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         source_session_id=str(envelope.get("source_session_id") or "") or None,
         source_project_ref=source_project_ref,
     )
-    configuration = core.project_configuration(project_root, workplace_root)
     settings = configuration.config.logging
     # Refuse a half-migrated project before admitting new raw work.
     event_journal().count(core.event_runtime_paths(project_root)[0])
@@ -1101,6 +1154,13 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         kernel.finish(str(receipt.raw_event_id), response)
         return response
 
+    reason = _ensure_hook_session(envelope, project_root, workplace_root, core, registry)
+    if reason:
+        response["routing_status"] = "denied"
+        response["diagnostics"]["conversation"] = {"status": "denied", "reason": reason}
+        kernel.finish(str(receipt.raw_event_id), response)
+        return response
+
     if receipt.deduplicated:
         previous = kernel.result(str(receipt.raw_event_id))
         required_ids = list(previous.get("normalized_event_ids", [])) if previous else []
@@ -1109,6 +1169,8 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
                                 for message_id in previous.get("chat_message_ids", []))
         if (previous and previous.get("routing_status") == "routed"
                 and not _conversation_reason(previous.get("diagnostics", {}))
+                and (policy is None or policy.session_mode != "ledger"
+                     or bool(ledger_session(str(envelope.get("source_session_id") or ""), workplace_root, core)))
                 and all(event_exists(project_root, identifier, core) for identifier in required_ids)):
             return {**previous, "deduplicated": True, "duplicate": True,
                     "diagnostics": {**previous.get("diagnostics", {}), **response["diagnostics"]}}

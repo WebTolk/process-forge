@@ -4,11 +4,17 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from .codex_hooks import native_envelope
+from .codex_hooks import EVENTS, native_envelope
 from .provider_adapters import AdapterPolicy, WorkerBinding, worker_input_summary
 
 
 class CodexHooksPolicy(AdapterPolicy):
+    def can_register_session(self, envelope: dict[str, Any]) -> bool:
+        hook = envelope.get("native_event_type")
+        return bool(envelope.get("source_session_id")) and hook in (
+            set(EVENTS) - {"SessionEnd"} | {"UserPromptSubmit", "Stop", "SubagentStop"}
+        )
+
     def valid_raw_identity(self, envelope: dict[str, Any]) -> bool:
         return (envelope.get("native_event_id") is None and envelope.get("native_id_scope") == "session"
                 and envelope.get("native_event_id_stable") is False and envelope.get("payload_version") == "codex-hooks.v1")

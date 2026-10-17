@@ -1,11 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://processforge.local/schemas/project-configuration.schema.json",
-  "title": "Project logging overrides",
+  "title": "Project operational configuration overrides",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "schema_version": {"type": "integer", "const": 1},
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "garage_hooks": {"type": ["boolean", "null"], "default": null}
+      }
+    },
     "logging": {
       "type": "object", "additionalProperties": false,
       "properties": {

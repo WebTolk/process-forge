@@ -49,6 +49,7 @@ def main() -> int:
     try:
         workplace = root / "workplace"
         pf("workplace-init", "--workplace", str(workplace), "--apply")
+        pf("config", "update", "--workplace", str(workplace), "--key", "runtime.garage_hooks", "--value", "true")
         first, second = project(root, "first", workplace), project(root, "second", workplace)
         pf("runtime-host", "event", "--workplace", str(workplace), "--input", str(event(root / "a.json", first, "sess-a", "codex")))
         pf("runtime-host", "event", "--workplace", str(workplace), "--input", str(event(root / "b.json", second, "sess-b", "codex")))

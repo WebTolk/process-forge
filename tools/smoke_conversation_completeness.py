@@ -107,12 +107,14 @@ def assert_no_extra_content(project: Path, forbidden: list[str]) -> None:
             raise AssertionError(f"forbidden marker leaked into project-visible runtime output: {marker}")
 
 
-def setup_basic_project(root: Path, name: str) -> tuple[Path, Path]:
+def setup_basic_project(root: Path, name: str, *, garage_hooks: bool = True) -> tuple[Path, Path]:
     workplace, project = root / f"{name}-workplace", root / name
     project.mkdir()
     (project / "README.md").write_text("# fixture\n", encoding="utf-8")
     pf("workplace-init", "--workplace", str(workplace), "--apply")
     pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
+    if garage_hooks:
+        pf("config", "update", "--workplace", str(workplace), "--key", "runtime.garage_hooks", "--value", "true")
     return workplace, project
 
 
@@ -283,21 +285,19 @@ def smoke_codex_user_prompt(root: Path) -> None:
     race_session = "conversation-race-session"
     race_prompt = native_envelope({"hook_event_name": "UserPromptSubmit", "cwd": str(project), "session_id": race_session, "turn_id": "turn-race", "prompt": "Capture after start."})
     assert race_prompt is not None
-    deferred = event(workplace, race_prompt, root / "race-prompt.json")
-    deferred_repeat = event(workplace, race_prompt, root / "race-prompt-repeat.json")
-    diagnostics = deferred.get("diagnostics") if isinstance(deferred.get("diagnostics"), dict) else {}
-    conversation = diagnostics.get("conversation") if isinstance(diagnostics.get("conversation"), dict) else {}
-    if deferred.get("chat_message_ids") != [] or conversation.get("status") != "deferred":
-        raise AssertionError(f"expected pre-start prompt to defer, got {json.dumps(deferred, ensure_ascii=False, sort_keys=True)}")
-    if deferred_repeat.get("chat_message_ids") != []:
-        raise AssertionError("duplicate pre-start prompt should remain pending without transcript output")
+    first_prompt = event(workplace, race_prompt, root / "race-prompt.json")
+    repeated_prompt = event(workplace, race_prompt, root / "race-prompt-repeat.json")
+    if len(first_prompt.get("chat_message_ids", [])) != 1:
+        raise AssertionError("first allowed native prompt did not register and capture its session")
+    if repeated_prompt.get("chat_message_ids") != first_prompt["chat_message_ids"]:
+        raise AssertionError("first-hook registration duplicated a message")
     race_start = native_envelope({"hook_event_name": "SessionStart", "cwd": str(project), "session_id": race_session})
     assert race_start is not None
     race_started = event(workplace, race_start, root / "race-start.json")
-    if len(race_started["chat_message_ids"]) != 1:
-        raise AssertionError(f"expected start to flush one pending prompt, got {json.dumps(race_started, ensure_ascii=False, sort_keys=True)}")
+    if race_started["chat_message_ids"]:
+        raise AssertionError("late SessionStart recaptured the already delivered prompt")
     race_after_start = event(workplace, race_prompt, root / "race-prompt-after-start.json")
-    if race_after_start["chat_message_ids"] != race_started["chat_message_ids"]:
+    if race_after_start["chat_message_ids"] != first_prompt["chat_message_ids"]:
         raise AssertionError("flushed prompt and duplicate replay used different chat ids")
     race_rows = transcript(project, race_session)
     assert len(race_rows) == 1 and race_rows[0]["message"]["role"] == "user"

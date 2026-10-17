@@ -36,6 +36,10 @@ class AdapterPolicy:
     def allows_message(self, envelope: dict[str, Any], item: dict[str, Any]) -> bool:
         return False
 
+    def can_register_session(self, envelope: dict[str, Any]) -> bool:
+        """Opt in to first-hook native check-in after provenance admission."""
+        return False
+
     def worker_binding(self, envelope: dict[str, Any]) -> WorkerBinding | None:
         return None
 
