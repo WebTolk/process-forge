@@ -1,0 +1,33 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "review-findings",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/code-assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-plan",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/code-assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-cases",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/code-assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-report",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/code-assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "assurance-complete",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/code-assurance.md",
+    "status": "passed",
+    "summary": "Primary source review,14 focused smoke programs, frozen corpus parity and isolated syntax/schema/public/checksum/diff gates pass."
+  }
+]

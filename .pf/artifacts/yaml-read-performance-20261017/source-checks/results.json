@@ -1,0 +1,52 @@
+{
+  "syntax": "pass",
+  "checks": [
+    {
+      "check": "schema",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate\\tools\\validate-process-forge-schemas.py",
+        "--root",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 22.457
+    },
+    {
+      "check": "public-cleanliness",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate\\tools\\validate-public-cleanliness.py",
+        "--root",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 7.386
+    },
+    {
+      "check": "checksums",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate\\tools\\validate-process-forge-checksums.py",
+        "--root",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate",
+        "--check"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.741
+    },
+    {
+      "check": "diff",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.484
+    }
+  ]
+}

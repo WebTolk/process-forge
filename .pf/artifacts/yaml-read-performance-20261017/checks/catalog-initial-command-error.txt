@@ -1,0 +1,3 @@
+usage: smoke_process_catalog_real_core.py [-h] --scratch-root SCRATCH_ROOT
+                                          [--baseline-root BASELINE_ROOT]
+smoke_process_catalog_real_core.py: error: the following arguments are required: --scratch-root

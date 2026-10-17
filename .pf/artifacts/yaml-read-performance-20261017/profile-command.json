@@ -1,0 +1,31 @@
+{
+  "command": [
+    "D:\\Dev\\process-forge\\.pf\\tmp\\runtime-cpu-root-cause-20261017\\profiler\\unpacked\\py_spy-0.4.2.data\\scripts\\py-spy.exe",
+    "record",
+    "--pid",
+    "18280",
+    "--duration",
+    "30",
+    "--rate",
+    "100",
+    "--gil",
+    "--format",
+    "raw",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\yaml-read-performance-20261017\\runtime-gil-30s.txt"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 29.592,
+  "stdout": "py-spy> Sampling process 100 times a second for 30 seconds. Press Control-C to exit.\n\npy-spy> Wrote raw flamegraph data to 'D:\\Dev\\process-forge\\.pf\\artifacts\\yaml-read-performance-20261017\\runtime-gil-30s.txt'. Samples: 1280 Errors: 0\npy-spy> You can use the flamegraph.pl script from https://github.com/brendangregg/flamegraph to generate a SVG\n",
+  "stderr": "",
+  "owner_before": {
+    "pid": 18280,
+    "instance_id": "e6906e3fd2a74ffdba75b60cae8df1b7",
+    "started_at": "2026-10-17T07:42:08Z"
+  },
+  "owner_after": {
+    "pid": 18280,
+    "instance_id": "e6906e3fd2a74ffdba75b60cae8df1b7",
+    "started_at": "2026-10-17T07:42:08Z"
+  }
+}

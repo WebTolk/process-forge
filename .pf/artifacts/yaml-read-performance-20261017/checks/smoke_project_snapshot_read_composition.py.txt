@@ -1,0 +1,13 @@
+test_capsule_immutable_guard_before_load_and_capture_injection (__main__.SnapshotTests.test_capsule_immutable_guard_before_load_and_capture_injection) ... ok
+test_construction_and_forwarding_without_io (__main__.SnapshotTests.test_construction_and_forwarding_without_io) ... ok
+test_default_core_hash_and_single_pin_path (__main__.SnapshotTests.test_default_core_hash_and_single_pin_path) ... ok
+test_imports_and_isolated_package_without_cli (__main__.SnapshotTests.test_imports_and_isolated_package_without_cli) ... ok
+test_injected_pin_and_resources (__main__.SnapshotTests.test_injected_pin_and_resources) ... ok
+test_live_reads_and_raw_checksums_equal_size_mtime (__main__.SnapshotTests.test_live_reads_and_raw_checksums_equal_size_mtime) ... ok
+test_original_method_differential (__main__.SnapshotTests.test_original_method_differential) ... skipped 'No retained baseline supplied'
+test_start_preflight_uses_injection_before_capsule (__main__.SnapshotTests.test_start_preflight_uses_injection_before_capsule) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.894s
+
+OK (skipped=1)

@@ -1,0 +1,58 @@
+{
+  "total_gil_samples": 1280,
+  "owners": {
+    "scheduler": {
+      "samples": 1261,
+      "percent": 98.52
+    },
+    "metrics": {
+      "samples": 19,
+      "percent": 1.48
+    }
+  },
+  "exclusive_buckets": {
+    "scheduler_host_json_read": {
+      "samples": 537,
+      "percent": 41.95
+    },
+    "scheduler_host_json_write": {
+      "samples": 443,
+      "percent": 34.61
+    },
+    "scheduler_supervisor_actions": {
+      "samples": 164,
+      "percent": 12.81
+    },
+    "scheduler_other": {
+      "samples": 71,
+      "percent": 5.55
+    },
+    "scheduler_run_discovery": {
+      "samples": 44,
+      "percent": 3.44
+    },
+    "metrics_other": {
+      "samples": 19,
+      "percent": 1.48
+    },
+    "scheduler_director": {
+      "samples": 2,
+      "percent": 0.16
+    }
+  },
+  "inclusive_details_do_not_add_to_buckets": {
+    "shared_cache_work": {
+      "samples": 49,
+      "percent": 3.83
+    },
+    "native_yaml_parser": {
+      "samples": 0,
+      "percent": 0.0
+    },
+    "run_discovery_native_yaml_parser": {
+      "samples": 0,
+      "percent": 0.0
+    }
+  },
+  "sampling_note": "GIL stack proportions are statistical, not direct device CPU accounting; the CPU measurement is separate."
+}

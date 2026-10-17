@@ -1,0 +1,6 @@
+{
+  "stage": "investigation",
+  "path": ".pf/artifacts/yaml-read-performance-20261017/investigation.md",
+  "summary": "Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut.",
+  "notes": "Proceed in pinned order with the concrete shared-reader design. Preserve all original YAML/error/loader contracts and real data; qualify source and an actual new installed dev artifact before CPU claims."
+}

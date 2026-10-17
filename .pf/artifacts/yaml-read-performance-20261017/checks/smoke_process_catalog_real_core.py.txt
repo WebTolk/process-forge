@@ -1,0 +1,15 @@
+copied Core default passed without monolith/Host
+test_copied_default_core_python_isolated_without_monolith (__main__.CatalogTests.test_copied_default_core_python_isolated_without_monolith) ... ok
+test_definition_exact_exception_and_falsey_catalog_boundaries (__main__.CatalogTests.test_definition_exact_exception_and_falsey_catalog_boundaries) ... ok
+test_live_same_size_mtime_create_delete_and_mutation (__main__.CatalogTests.test_live_same_size_mtime_create_delete_and_mutation) ... ok
+test_malformed_explicit_path_and_normalized_yaml (__main__.CatalogTests.test_malformed_explicit_path_and_normalized_yaml) ... ok
+test_precedence_metadata_warnings_and_available (__main__.CatalogTests.test_precedence_metadata_warnings_and_available) ... ok
+test_real_definition_guards_and_independent_results (__main__.CatalogTests.test_real_definition_guards_and_independent_results) ... ok
+test_retained_real_catalog_context_and_definition_parity (__main__.CatalogTests.test_retained_real_catalog_context_and_definition_parity) ... skipped 'Retained originals not supplied'
+test_two_projects_threaded_and_request_scope_live_reads (__main__.CatalogTests.test_two_projects_threaded_and_request_scope_live_reads) ... ok
+test_workplace_live_statuses_local_precedence_and_constants (__main__.CatalogTests.test_workplace_live_statuses_local_precedence_and_constants) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 2.135s
+
+OK (skipped=1)

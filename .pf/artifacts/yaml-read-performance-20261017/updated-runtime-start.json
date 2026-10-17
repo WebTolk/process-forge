@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "server",
+    "start",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--timeout",
+    "30"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 2.495,
+  "stdout": "RUNTIME: started pid=18280 endpoint=http://127.0.0.1:56732\n",
+  "stderr": ""
+}

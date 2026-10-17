@@ -1,0 +1,17 @@
+test_active_run_discovery_matches_legacy_types_errors_and_order (__main__.YamlCacheTests.test_active_run_discovery_matches_legacy_types_errors_and_order) ... ok
+test_actual_bytes_win_over_same_size_and_restored_mtime (__main__.YamlCacheTests.test_actual_bytes_win_over_same_size_and_restored_mtime) ... ok
+test_concurrent_reuse_has_independent_values_and_bounded_accounting (__main__.YamlCacheTests.test_concurrent_reuse_has_independent_values_and_bounded_accounting) ... ok
+test_cross_request_reuse_preserves_aliases_cycles_and_isolation (__main__.YamlCacheTests.test_cross_request_reuse_preserves_aliases_cycles_and_isolation) ... ok
+test_custom_constructor_effects_are_not_cached (__main__.YamlCacheTests.test_custom_constructor_effects_are_not_cached) ... ok
+test_full_value_can_supply_projection_without_another_parse (__main__.YamlCacheTests.test_full_value_can_supply_projection_without_another_parse) ... ok
+test_invalid_unsafe_and_surrogate_input_keep_native_errors (__main__.YamlCacheTests.test_invalid_unsafe_and_surrogate_input_keep_native_errors) ... ok
+test_projection_validates_complete_history_and_keeps_memory_small (__main__.YamlCacheTests.test_projection_validates_complete_history_and_keeps_memory_small) ... ok
+test_reader_fallback_and_strict_error_envelope (__main__.YamlCacheTests.test_reader_fallback_and_strict_error_envelope) ... ok
+test_resolver_change_is_visible_even_inside_one_request (__main__.YamlCacheTests.test_resolver_change_is_visible_even_inside_one_request) ... ok
+test_retention_limits_eviction_and_oversize_bypass (__main__.YamlCacheTests.test_retention_limits_eviction_and_oversize_bypass) ... ok
+test_safe_scalar_collection_and_timestamp_types_match_native (__main__.YamlCacheTests.test_safe_scalar_collection_and_timestamp_types_match_native) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.152s
+
+OK

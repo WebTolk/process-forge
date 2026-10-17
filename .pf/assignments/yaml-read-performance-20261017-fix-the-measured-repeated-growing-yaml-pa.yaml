@@ -1,0 +1,464 @@
+schema_version: 1
+id: yaml-read-performance-20261017-fix-the-measured-repeated-growing-yaml-pa
+title: 'yaml-read-performance-20261017: Fix the measured repeated growing YAML parse/rea'
+run_id: garage-yaml-read-performance-20261017-fix-the-measured-repeated-growing
+process: software-feature-development
+status: done
+created_at: '2026-10-17T07:10:59Z'
+updated_at: '2026-10-17T07:51:32Z'
+objective: 'yaml-read-performance-20261017: Fix the measured repeated growing YAML parse/read cost in actual Runtime and audit the common PF document-read path for the same systemic issue. Preserve fresh authoritative data, exact external YAML/CLI/MCP/error contracts and mutable return isolation; no blind TTL or indefinitely stale file cache. Use bounded existing owners with focused growth/mutation/concurrency validation. Complete source delivery to both dev remotes, build a new qualified dev artifact, update installed PF through native controls and restart the actual Runtime for CPU verification. Do not repeat the prior SQLite journal migration, edit unrelated historical Work, or broaden to general PF1.2.0/stable acceptance.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Bounded YAML task complete across source/archive/installed/actual Runtime evidence. Complete this exact Work; keep Host JSON, degraded scheduler, actual connected MCP and general1.2.0 acceptance separate.
+  artifacts:
+    - .pf/artifacts/yaml-read-performance-20261017/architecture.md
+    - .pf/artifacts/yaml-read-performance-20261017/code-assurance.md
+    - .pf/artifacts/yaml-read-performance-20261017/delivery-report.md
+    - .pf/artifacts/yaml-read-performance-20261017/domain.md
+    - .pf/artifacts/yaml-read-performance-20261017/evolution-report.md
+    - .pf/artifacts/yaml-read-performance-20261017/implementation.md
+    - .pf/artifacts/yaml-read-performance-20261017/investigation.md
+    - .pf/artifacts/yaml-read-performance-20261017/orchestration.md
+    - .pf/artifacts/yaml-read-performance-20261017/scope.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+  operator_authorization: User explicitly requests fixing repeated YAML reads/parses and the systemic PF performance issue after the measured updated Runtime profile. Complete source fix, focused assurance, both-remote delivery and a newly qualified dev artifact/device update/restart plus actual CPU check using established operator controls. Do not replay prior successful archive update or journal migration; actual host reconnection stays distinct. Preserve current data and unrelated state.
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-17T07:46:07Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/yaml-read-performance-20261017/evolution-report.md
+      status: ready
+      recorded_at: '2026-10-17T07:51:32Z'
+      sha256: 'sha256:8fce781b6e663f44ffa0fd71a6af1b9ecdaa88948dcfa67ca528dc68bac5b00c'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/yaml-read-performance-20261017/evolution-report.md
+      status: passed
+      summary: Delivered YAML parsing improvement, user-confirmed RAM-cache behavior, measured Host JSON residual and precise continuation boundaries recorded.
+      recorded_at: '2026-10-17T07:51:32Z'
+      sha256: 'sha256:8fce781b6e663f44ffa0fd71a6af1b9ecdaa88948dcfa67ca528dc68bac5b00c'
+  notes: Bounded YAML task complete across source/archive/installed/actual Runtime evidence. Complete this exact Work; keep Host JSON, degraded scheduler, actual connected MCP and general1.2.0 acceptance separate.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-17T07:10:59Z'
+    completed_at: '2026-10-17T07:17:39Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/yaml-read-performance-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T07:17:39Z'
+        sha256: 'sha256:a1d8d6bc993499eca7c4f1c003c8f8784b6d39da4611bd2299add068cb111400'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/yaml-read-performance-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T07:17:39Z'
+        sha256: 'sha256:a1d8d6bc993499eca7c4f1c003c8f8784b6d39da4611bd2299add068cb111400'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/yaml-read-performance-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T07:17:39Z'
+        sha256: 'sha256:a1d8d6bc993499eca7c4f1c003c8f8784b6d39da4611bd2299add068cb111400'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/yaml-read-performance-20261017/orchestration.md
+        status: passed
+        summary: Fresh exact implementation capsule, preserved freshness/mutation/contracts, bounded shared YAML and Runtime Run discovery scope with actual dev-device acceptance authorized.
+        recorded_at: '2026-10-17T07:17:39Z'
+        sha256: 'sha256:a1d8d6bc993499eca7c4f1c003c8f8784b6d39da4611bd2299add068cb111400'
+    notes: Proceed in pinned order. No stale metadata/TTL cache, no Work-state rewrite or prior SQLite migration replay. Shared source fix must be qualified and actually installed before claiming Runtime effect.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-17T07:17:39Z'
+    completed_at: '2026-10-17T07:17:43Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/yaml-read-performance-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T07:17:43Z'
+        sha256: 'sha256:edd4067ed0622ae21ac79bc12817f9c7137bd0d642791f79356e238e2521cd49'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/yaml-read-performance-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T07:17:43Z'
+        sha256: 'sha256:edd4067ed0622ae21ac79bc12817f9c7137bd0d642791f79356e238e2521cd49'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/yaml-read-performance-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T07:17:43Z'
+        sha256: 'sha256:edd4067ed0622ae21ac79bc12817f9c7137bd0d642791f79356e238e2521cd49'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/yaml-read-performance-20261017/scope.md
+        status: passed
+        summary: Fresh exact implementation capsule, preserved freshness/mutation/contracts, bounded shared YAML and Runtime Run discovery scope with actual dev-device acceptance authorized.
+        recorded_at: '2026-10-17T07:17:43Z'
+        sha256: 'sha256:edd4067ed0622ae21ac79bc12817f9c7137bd0d642791f79356e238e2521cd49'
+    notes: Proceed in pinned order. No stale metadata/TTL cache, no Work-state rewrite or prior SQLite migration replay. Shared source fix must be qualified and actually installed before claiming Runtime effect.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-17T07:17:43Z'
+    completed_at: '2026-10-17T07:23:49Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/yaml-read-performance-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:49Z'
+        sha256: 'sha256:30ff5e9061c143e6b646c5950585939d4927e0f2da57b4c914cb553235fde2e3'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/yaml-read-performance-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:49Z'
+        sha256: 'sha256:30ff5e9061c143e6b646c5950585939d4927e0f2da57b4c914cb553235fde2e3'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/yaml-read-performance-20261017/investigation.md
+        status: passed
+        summary: Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut.
+        recorded_at: '2026-10-17T07:23:49Z'
+        sha256: 'sha256:30ff5e9061c143e6b646c5950585939d4927e0f2da57b4c914cb553235fde2e3'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/yaml-read-performance-20261017/investigation.md
+        status: passed
+        summary: Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut.
+        recorded_at: '2026-10-17T07:23:49Z'
+        sha256: 'sha256:30ff5e9061c143e6b646c5950585939d4927e0f2da57b4c914cb553235fde2e3'
+    notes: Proceed in pinned order with the concrete shared-reader design. Preserve all original YAML/error/loader contracts and real data; qualify source and an actual new installed dev artifact before CPU claims.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-17T07:23:49Z'
+    completed_at: '2026-10-17T07:23:51Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/yaml-read-performance-20261017/domain.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:51Z'
+        sha256: 'sha256:7ba281d39df28af528e584a224cca2eab1b7557c8677ee03cf1c40f5b821a420'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/yaml-read-performance-20261017/domain.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:51Z'
+        sha256: 'sha256:7ba281d39df28af528e584a224cca2eab1b7557c8677ee03cf1c40f5b821a420'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/yaml-read-performance-20261017/domain.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:51Z'
+        sha256: 'sha256:7ba281d39df28af528e584a224cca2eab1b7557c8677ee03cf1c40f5b821a420'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/yaml-read-performance-20261017/domain.md
+        status: passed
+        summary: Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut.
+        recorded_at: '2026-10-17T07:23:51Z'
+        sha256: 'sha256:7ba281d39df28af528e584a224cca2eab1b7557c8677ee03cf1c40f5b821a420'
+    notes: Proceed in pinned order with the concrete shared-reader design. Preserve all original YAML/error/loader contracts and real data; qualify source and an actual new installed dev artifact before CPU claims.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-17T07:23:51Z'
+    completed_at: '2026-10-17T07:23:54Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/yaml-read-performance-20261017/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:54Z'
+        sha256: 'sha256:2c3fdb661f06d0defd1797f422c07734df60cb7ee0b8f4174bd255be52bf0c58'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/yaml-read-performance-20261017/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:54Z'
+        sha256: 'sha256:2c3fdb661f06d0defd1797f422c07734df60cb7ee0b8f4174bd255be52bf0c58'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/yaml-read-performance-20261017/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T07:23:54Z'
+        sha256: 'sha256:2c3fdb661f06d0defd1797f422c07734df60cb7ee0b8f4174bd255be52bf0c58'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/yaml-read-performance-20261017/architecture.md
+        status: passed
+        summary: Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut.
+        recorded_at: '2026-10-17T07:23:54Z'
+        sha256: 'sha256:2c3fdb661f06d0defd1797f422c07734df60cb7ee0b8f4174bd255be52bf0c58'
+    notes: Proceed in pinned order with the concrete shared-reader design. Preserve all original YAML/error/loader contracts and real data; qualify source and an actual new installed dev artifact before CPU claims.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-17T07:23:54Z'
+    completed_at: '2026-10-17T07:37:38Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/yaml-read-performance-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T07:37:38Z'
+        sha256: 'sha256:28b2680e14a49653ccd29558e597cce08826cce5ec2504aca7e79a576ad5cba1'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/yaml-read-performance-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T07:37:38Z'
+        sha256: 'sha256:28b2680e14a49653ccd29558e597cce08826cce5ec2504aca7e79a576ad5cba1'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/yaml-read-performance-20261017/implementation.md
+        status: passed
+        summary: Shared safe YAML parse reuse and small validated Run projection implemented; focused freshness and compatibility checks pass.
+        recorded_at: '2026-10-17T07:37:38Z'
+        sha256: 'sha256:28b2680e14a49653ccd29558e597cce08826cce5ec2504aca7e79a576ad5cba1'
+    notes: Source implementation complete. Proceed to primary source review and isolated qualification; installed Runtime delivery and CPU proof still required.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-17T07:37:38Z'
+    completed_at: '2026-10-17T07:39:00Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/yaml-read-performance-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T07:39:00Z'
+        sha256: 'sha256:76ec7c1e52eec093c36a9f1181ad7902a4fa541725519db2361f1f1d128b6e9e'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/yaml-read-performance-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T07:39:00Z'
+        sha256: 'sha256:76ec7c1e52eec093c36a9f1181ad7902a4fa541725519db2361f1f1d128b6e9e'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/yaml-read-performance-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T07:39:00Z'
+        sha256: 'sha256:76ec7c1e52eec093c36a9f1181ad7902a4fa541725519db2361f1f1d128b6e9e'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/yaml-read-performance-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T07:39:00Z'
+        sha256: 'sha256:76ec7c1e52eec093c36a9f1181ad7902a4fa541725519db2361f1f1d128b6e9e'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/yaml-read-performance-20261017/code-assurance.md
+        status: passed
+        summary: Primary source review,14 focused smoke programs, frozen corpus parity and isolated syntax/schema/public/checksum/diff gates pass.
+        recorded_at: '2026-10-17T07:39:00Z'
+        sha256: 'sha256:76ec7c1e52eec093c36a9f1181ad7902a4fa541725519db2361f1f1d128b6e9e'
+    notes: Source qualification complete; proceed to scoped publication, exact dev archive qualification and actual installed Runtime CPU verification.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-17T07:39:00Z'
+    completed_at: '2026-10-17T07:46:07Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/yaml-read-performance-20261017/delivery-report.md
+        status: ready
+        recorded_at: '2026-10-17T07:46:07Z'
+        sha256: 'sha256:bb1cf25eb1051ca8abeb6efeecbe81df869e92e65ec01487177dac5b4a428092'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/yaml-read-performance-20261017/delivery-report.md
+        status: passed
+        summary: Exact clean dev archive qualified, installed once and verified, managed Runtime restarted; actual60s CPU15.4427% and30s profile establish YAML improvement with separate Host JSON residual.
+        recorded_at: '2026-10-17T07:46:07Z'
+        sha256: 'sha256:bb1cf25eb1051ca8abeb6efeecbe81df869e92e65ec01487177dac5b4a428092'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/yaml-read-performance-20261017/delivery-report.md
+        status: passed
+        summary: Exact clean dev archive qualified, installed once and verified, managed Runtime restarted; actual60s CPU15.4427% and30s profile establish YAML improvement with separate Host JSON residual.
+        recorded_at: '2026-10-17T07:46:07Z'
+        sha256: 'sha256:bb1cf25eb1051ca8abeb6efeecbe81df869e92e65ec01487177dac5b4a428092'
+    notes: Bounded YAML delivery accepted. General1.2.0 acceptance, actual closed connected MCP and Host JSON performance remain explicit residuals; do not repeat SQLite migration or this successful update.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-17T07:46:07Z'
+    completed_at: '2026-10-17T07:51:32Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/yaml-read-performance-20261017/evolution-report.md
+        status: ready
+        recorded_at: '2026-10-17T07:51:32Z'
+        sha256: 'sha256:8fce781b6e663f44ffa0fd71a6af1b9ecdaa88948dcfa67ca528dc68bac5b00c'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/yaml-read-performance-20261017/evolution-report.md
+        status: passed
+        summary: Delivered YAML parsing improvement, user-confirmed RAM-cache behavior, measured Host JSON residual and precise continuation boundaries recorded.
+        recorded_at: '2026-10-17T07:51:32Z'
+        sha256: 'sha256:8fce781b6e663f44ffa0fd71a6af1b9ecdaa88948dcfa67ca528dc68bac5b00c'
+    notes: Bounded YAML task complete across source/archive/installed/actual Runtime evidence. Complete this exact Work; keep Host JSON, degraded scheduler, actual connected MCP and general1.2.0 acceptance separate.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.0
+  process_fingerprint: 'sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e'
+  snapshot_id: ctx-20261016-091113-310bed
+  snapshot_checksum: 'sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be'
+  assignment_capsule: .pf/contexts/assignment-capsules/yaml-read-performance-20261017-fix-the-measured-repeated-growing-yaml-pa.capsule.yaml
+  assignment_capsule_checksum: 'sha256:ae0e5ec515d7e3364d71e6a69b8645fb0cdeeaebc87d20aee8ffcb315dc91c20'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_files:
+  - .pf/artifacts/yaml-read-performance-20261017/**
+  - .pf/tmp/yaml-read-performance-20261017/**
+  - .pf/logs/yaml-read-performance-20261017.md
+  - .pf/handoffs/yaml-read-performance-20261017.md
+  - src/processforge_core/documents/**
+  - src/processforge_core/common/request_scope.py
+  - src/processforge_core/runtime/**
+  - tools/processforge.py
+  - tools/pf_runtime/service.py
+  - tools/pf_runtime/host.py
+  - tools/pf_cli/application.py
+  - tools/smoke_request_scope.py
+  - tools/smoke_yaml*.py
+  - tools/smoke_runtime_*.py
+  - tools/smoke_long_lived_runtime.py
+  - docs/concepts/document-reads.md
+  - docs/ru/concepts/document-reads.md
+  - checksums/processforge.sha256
+  - CHANGELOG.md
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/runtime/**
+  - .pf/artifacts/**
+  - .pf/handoffs/**
+  - .pf/tmp/yaml-read-performance-20261017/**
+  - .pf/tmp/runtime-cpu*/**
+  - .pf/tmp/hook-sqlite-device-cutover-20261017/**
+  - src/**
+  - tools/**
+  - bin/**
+  - docs/**
+  - schemas/**
+  - templates/**
+  - packs/**
+  - processes/**
+  - checksums/**
+  - updates/**
+  - VERSION
+  - CHANGELOG.md
+  - README.md
+  - requirements.txt
+  - pyproject.toml
+  - .gitattributes
+  - .gitignore
+expected_report:
+  artifact: .pf/artifacts/yaml-read-performance-20261017/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: yaml-read-performance-report
+    path: .pf/artifacts/yaml-read-performance-20261017/report.md
+    type: report
+    required: true
+coordination_requirements:
+  scope_predecessor:
+    run_id: garage-runtime-cpu-after-sqlite-20261017-read-only-diagnosis-of-the-subs
+    assignment_id: runtime-cpu-after-sqlite-20261017-read-only-diagnosis-of-the-substantial
+    capsule_checksum: 'sha256:f0bbc95394a1e2dc0a0be128556b7cb0c878f562890ac8ddb67e010e61294a91'
+  scope_handoff:
+    path: .pf/handoffs/runtime-cpu-after-sqlite-20261017.md
+    checksum: 'sha256:ef87db28511eabef6208310eea210c0aab011b74b0742d06d24de41b2caa9fb5'

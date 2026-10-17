@@ -1,0 +1,6 @@
+{
+  "stage": "release-delivery",
+  "path": ".pf/artifacts/yaml-read-performance-20261017/delivery-report.md",
+  "summary": "Exact clean dev archive qualified, installed once and verified, managed Runtime restarted; actual60s CPU15.4427% and30s profile establish YAML improvement with separate Host JSON residual.",
+  "notes": "Bounded YAML delivery accepted. General1.2.0 acceptance, actual closed connected MCP and Host JSON performance remain explicit residuals; do not repeat SQLite migration or this successful update."
+}

@@ -1,0 +1,38 @@
+{
+  "capabilities": {
+    "guarded_shutdown": 1
+  },
+  "endpoint": "http://127.0.0.1:56732",
+  "health": "ready",
+  "instance_id": "e6906e3fd2a74ffdba75b60cae8df1b7",
+  "pid": 18280,
+  "processforge_core_version": "1.2.0",
+  "protocol_version": "pf-runtime-poc-1",
+  "runtime_version": "1.0.0-poc",
+  "scheduler": {
+    "jobs": {
+      "director": {
+        "last_result": "not_started",
+        "period_seconds": 10
+      },
+      "inspector": {
+        "last_result": "not_started",
+        "period_seconds": 5
+      },
+      "ledger": {
+        "last_result": "not_started",
+        "period_seconds": 5
+      },
+      "projection": {
+        "last_result": "not_started",
+        "period_seconds": 30
+      }
+    }
+  },
+  "schema_version": 1,
+  "started_at": "2026-10-17T07:42:08Z",
+  "status": "ready",
+  "updated_at": "2026-10-17T07:42:09Z",
+  "workplace_id": "processforge-workplace",
+  "workplace_root": "D:\\.agents\\processforge-workplace"
+}

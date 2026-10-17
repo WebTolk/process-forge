@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "project-context-check",
+    "--project-root",
+    "D:\\Dev\\process-forge",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--json"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 1.858,
+  "stdout": "{\n  \"broken\": false,\n  \"broken_refs\": [],\n  \"check_update_candidates\": \"if_due\",\n  \"execution_readiness\": {\n    \"blockers\": [],\n    \"missing_capabilities\": [],\n    \"status\": \"ready\"\n  },\n  \"fresh\": true,\n  \"health\": {\n    \"status\": \"warn\"\n  },\n  \"policy\": {\n    \"action\": \"continue\"\n  },\n  \"policy_action\": \"continue\",\n  \"readiness\": {\n    \"context\": {\n      \"status\": \"fresh\"\n    },\n    \"execution\": {\n      \"blockers\": [],\n      \"missing_capabilities\": [],\n      \"status\": \"ready\"\n    },\n    \"resources\": {\n      \"blockers\": [],\n      \"status\": \"fresh\"\n    }\n  },\n  \"recommended_action\": \"continue\",\n  \"resource_readiness\": {\n    \"blockers\": [],\n    \"status\": \"fresh\"\n  },\n  \"session_start\": false,\n  \"snapshot_id\": \"ctx-20261016-091113-310bed\",\n  \"snapshot_sha256\": \"sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be\",\n  \"stale\": false,\n  \"stale_resources\": [],\n  \"status\": \"fresh\",\n  \"updates_available\": []\n}\n",
+  "stderr": ""
+}

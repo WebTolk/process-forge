@@ -1,0 +1,26 @@
+PASS: real copied Core context without CLI/Host
+test_constructor_factory_bootstrap_do_not_read (__main__.CompositionTests.test_constructor_factory_bootstrap_do_not_read) ... ok
+test_imports_do_not_load_monolithic_cli (__main__.CompositionTests.test_imports_do_not_load_monolithic_cli) ... ok
+test_context_guard_precedes_injected_callbacks (__main__.InjectedContextTests.test_context_guard_precedes_injected_callbacks) ... ok
+test_empty_grants_remain_blocked_separately_from_action (__main__.InjectedContextTests.test_empty_grants_remain_blocked_separately_from_action) ... ok
+test_fake_context_state_requires_no_paths_or_legacy_core (__main__.InjectedContextTests.test_fake_context_state_requires_no_paths_or_legacy_core) ... ok
+test_normalization_error_keeps_original_reason (__main__.InjectedContextTests.test_normalization_error_keeps_original_reason) ... ok
+test_observer_noop_trace_sink_failure_and_exception_identity (__main__.InjectedContextTests.test_observer_noop_trace_sink_failure_and_exception_identity) ... PF diagnostic_delivery_failed: optional serious record lost; inspect diagnostics health.
+ok
+test_original_state_payload_parity (__main__.InjectedContextTests.test_original_state_payload_parity) ... skipped 'Use --baseline for original state proof'
+test_projects_threads_do_not_share_context_or_observer_identity (__main__.InjectedContextTests.test_projects_threads_do_not_share_context_or_observer_identity) ... ok
+test_baseline_validation_corpus (__main__.CapsuleTests.test_baseline_validation_corpus) ... skipped 'Use --baseline for original validation proof'
+test_checksums_bom_and_validation_forwarding (__main__.CapsuleTests.test_checksums_bom_and_validation_forwarding) ... ok
+test_default_owns_paths_without_private_callbacks (__main__.CapsuleTests.test_default_owns_paths_without_private_callbacks) ... ok
+test_invalid_yaml_unicode_nonmapping_and_oversized (__main__.CapsuleTests.test_invalid_yaml_unicode_nonmapping_and_oversized) ... ok
+test_live_changes_same_metadata_creation_deletion_and_result_isolation (__main__.CapsuleTests.test_live_changes_same_metadata_creation_deletion_and_result_isolation) ... ok
+test_missing_pinned_and_legacy (__main__.CapsuleTests.test_missing_pinned_and_legacy) ... ok
+test_post_read_size_and_read_error_boundary (__main__.CapsuleTests.test_post_read_size_and_read_error_boundary) ... ok
+test_symlink_and_containment_checks_precede_read (__main__.CapsuleTests.test_symlink_and_containment_checks_precede_read) ... ok
+test_validator_exception_tuple_remains_exact (__main__.CapsuleTests.test_validator_exception_tuple_remains_exact) ... ok
+test_real_default_inputs_and_copied_core_without_cli (__main__.DefaultCoreTests.test_real_default_inputs_and_copied_core_without_cli) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 1.893s
+
+OK (skipped=2)

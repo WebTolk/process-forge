@@ -1,0 +1,16 @@
+{
+  "baseline_runtime_pid": 9716,
+  "current_runtime_pid": 18280,
+  "before_device_cpu_percent": 18.587,
+  "after_device_cpu_percent": 15.4427,
+  "absolute_percentage_point_reduction": 3.1443,
+  "relative_reduction_percent": 16.92,
+  "logical_processors": 4,
+  "current_wall_seconds": 60.0,
+  "current_median_device_cpu_percent": 17.083199999999998,
+  "current_peak_device_cpu_percent": 25.5793,
+  "host_state_bytes": 37833078,
+  "profile_samples": 1280,
+  "host_json_profile_samples": 980,
+  "measurement_limit": "Separate actual service observations; sampled stack proportions are not CPU accounting or a fixed-workload SLA."
+}

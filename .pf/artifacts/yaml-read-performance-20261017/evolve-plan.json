@@ -1,0 +1,6 @@
+{
+  "stage": "evolve",
+  "path": ".pf/artifacts/yaml-read-performance-20261017/evolution-report.md",
+  "summary": "Delivered YAML parsing improvement, user-confirmed RAM-cache behavior, measured Host JSON residual and precise continuation boundaries recorded.",
+  "notes": "Bounded YAML task complete across source/archive/installed/actual Runtime evidence. Complete this exact Work; keep Host JSON, degraded scheduler, actual connected MCP and general1.2.0 acceptance separate."
+}

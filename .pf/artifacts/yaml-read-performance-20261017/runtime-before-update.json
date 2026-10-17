@@ -1,0 +1,164 @@
+{
+  "capabilities": {
+    "guarded_shutdown": 1
+  },
+  "configuration": {
+    "error": null,
+    "logging": {
+      "events": true,
+      "raw_hooks": true
+    },
+    "metrics_interval_seconds": 10.0,
+    "status": "valid"
+  },
+  "endpoint": "http://127.0.0.1:55798",
+  "health": "degraded",
+  "instance_id": "1c0b979a99bb4da095fa7e1510d0e141",
+  "last_scheduler_error": "D:\\Dev\\process-forge: project scheduler pass failed with status 1",
+  "last_scheduler_result": {
+    "projects": [
+      {
+        "director": "tick",
+        "effective_mode": "organized",
+        "inspector": "tick",
+        "project_id": "process-forge",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      },
+      {
+        "director": "skipped_simple",
+        "effective_mode": "simple",
+        "inspector": "tick",
+        "project_id": "wt-image-resize-and-convert-joomla-plugin",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      }
+    ],
+    "status": "failed"
+  },
+  "metrics": {
+    "groups": {
+      "leases": {
+        "counts": {
+          "expired": 0,
+          "held": 0,
+          "inactive": 85
+        },
+        "coverage": "complete",
+        "issues": [],
+        "observed": {
+          "expired": 0,
+          "held": 0,
+          "inactive": 85
+        },
+        "source": "lease_records"
+      },
+      "registrations": {
+        "counts": {
+          "projects": null,
+          "sessions": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "coverage"
+        ],
+        "observed": {
+          "projects": 0,
+          "sessions": 0
+        },
+        "source": "host_registration_cache"
+      },
+      "sessions": {
+        "counts": {
+          "offline": null,
+          "online": null,
+          "stale": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "budget",
+          "invalid",
+          "unreadable"
+        ],
+        "observed": {
+          "offline": 0,
+          "online": 0,
+          "stale": 0
+        },
+        "source": "agent_presence_ttl"
+      },
+      "work": {
+        "counts": {
+          "blocked": null,
+          "in_progress": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "coverage"
+        ],
+        "observed": {
+          "blocked": 0,
+          "in_progress": 0
+        },
+        "source": "run_records"
+      },
+      "workers": {
+        "counts": {
+          "running": null
+        },
+        "coverage": "partial",
+        "issues": [
+          "coverage"
+        ],
+        "observed": {
+          "running": 0
+        },
+        "source": "worker_status_records"
+      }
+    },
+    "instance_id": "1c0b979a99bb4da095fa7e1510d0e141",
+    "interval_seconds": 10.0,
+    "observed_at": "2026-10-17T07:40:50.503740+00:00",
+    "schema_version": 1
+  },
+  "pid": 9716,
+  "processforge_core_version": "1.2.0",
+  "project_errors": {
+    "D:\\Dev\\process-forge": "project scheduler pass failed with status 1"
+  },
+  "protocol_version": "pf-runtime-poc-1",
+  "runtime_version": "1.0.0-poc",
+  "scheduler": {
+    "jobs": {
+      "director": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T07:40:50Z",
+        "period_seconds": 10
+      },
+      "inspector": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T07:40:50Z",
+        "period_seconds": 5
+      },
+      "ledger": {
+        "last_result": "ok",
+        "last_run": "2026-10-17T07:40:50Z",
+        "period_seconds": 5
+      },
+      "metrics": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T07:40:50.503740+00:00",
+        "period_seconds": 10.0
+      },
+      "projection": {
+        "last_result": "failed",
+        "last_run": "2026-10-17T07:40:50Z",
+        "period_seconds": 30
+      }
+    }
+  },
+  "schema_version": 1,
+  "started_at": "2026-10-17T06:49:26Z",
+  "status": "ready",
+  "updated_at": "2026-10-17T07:40:50Z",
+  "workplace_id": "processforge-workplace",
+  "workplace_root": "D:\\.agents\\processforge-workplace"
+}

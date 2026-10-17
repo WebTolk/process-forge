@@ -1,0 +1,28 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\sample_cpu.py",
+    "--pid",
+    "18280",
+    "--seconds",
+    "60",
+    "--interval",
+    "2",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\yaml-read-performance-20261017\\settled-cpu.json"
+  ],
+  "returncode": 0,
+  "stdout": "{\"started_at\": \"2026-10-17T07:43:18.838613+00:00\", \"ended_at\": \"2026-10-17T07:44:18.839197+00:00\", \"logical_processors\": 4, \"wall_seconds\": 60.0, \"formula\": \"delta process kernel+user seconds / delta wall seconds / logical CPUs * 100\"}\n{\"pid\": 18280, \"created_filetime\": 134366965278318302, \"initial_cpu_seconds\": 49.1875, \"last_cpu_seconds\": 86.25, \"average_device_cpu_percent\": 15.4427, \"minimum_device_cpu_percent\": 2.7332, \"maximum_device_cpu_percent\": 25.5793, \"median_device_cpu_percent\": 17.083199999999998}\n",
+  "stderr": "",
+  "owner_before": {
+    "pid": 18280,
+    "instance_id": "e6906e3fd2a74ffdba75b60cae8df1b7",
+    "started_at": "2026-10-17T07:42:08Z"
+  },
+  "owner_after": {
+    "pid": 18280,
+    "instance_id": "e6906e3fd2a74ffdba75b60cae8df1b7",
+    "started_at": "2026-10-17T07:42:08Z"
+  }
+}

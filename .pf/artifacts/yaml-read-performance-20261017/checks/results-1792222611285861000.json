@@ -1,0 +1,27 @@
+[
+  {
+    "check": "smoke_process_catalog_real_core.py",
+    "returncode": 0,
+    "elapsed_seconds": 2.576
+  },
+  {
+    "check": "smoke_prepared_execution_context.py",
+    "returncode": 0,
+    "elapsed_seconds": 52.157
+  },
+  {
+    "check": "smoke_capsule_pins_context_snapshot.py",
+    "returncode": 0,
+    "elapsed_seconds": 9.713
+  },
+  {
+    "check": "smoke_work_transition_emits_stage_events.py",
+    "returncode": 0,
+    "elapsed_seconds": 10.069
+  },
+  {
+    "check": "smoke_hook_sqlite_runtime.py",
+    "returncode": 0,
+    "elapsed_seconds": 13.967
+  }
+]

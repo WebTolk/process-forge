@@ -1,0 +1,13 @@
+# Shared YAML investigation
+
+Core YamlDocumentReader calls common.request_scope.safe_load. The latter uses the safe C loader when available and an8MiB/1024-entry/512KiB-document request cache. Without a scope it always parses; a new scope also loses prior parsed data. Runtime supervisor scans are unscoped, so unchanged569 Run documents were reparsed in every measured scheduler pass. The same reader is shared by process/project/catalog/resource/Work readers; prepared/context paths also use safe_load directly.
+
+Frozen current corpus:570 Run files,16065514bytes,49 active IDs. Three unchanged baseline passes cost4.546875/4.25/3.4375 CPU seconds (wall4.925/4.630/3.540s), identical result SHA256ffdb1edcdec9be05cf4e7c740e8fec06e6ef21e63f6e38815fbb8205c4d3a40e. Inputs and outputs retained in frozen-corpus.json/baseline-runs.json. No source changes before the baseline.
+
+Common-reader integration covers facade load/read YAML, project metadata/snapshot sources, official/process/resource catalogs and Work readers. Runtime metrics Budget.read is another repeated safe-C-load caller that can adopt the same parser cache without changing byte/containment/budget checks. Deliberate bypasses remain: configuration uses its own strict custom loader/live last-valid config contract; archive migrations/updates and schema validators are one-shot; answers/resources security boundaries and legacy YAML adapters use distinct validation/loader contracts. They are not blindly replaced by a different parser policy.
+
+Existing request-scope tests explicitly require same-size/restored-mtime edits and deletion/recreation to be visible. The earlier YAML-reader architecture also forbids stale path/stat caches and constructor I/O. Therefore retain current reads and content validation; share only safe parse results by actual content/policy, with isolated mutable results. Run discovery needs only id/status/error, so retain a tiny projection rather than a complete growing history object.
+
+Sources consulted first: resolved docs.python local data-model.md (identity/mutability), prior yaml-refactor-20261005 architecture, current shared-reader/request-scope/metrics source and focused tests. Missing detailed copy/OrderedDict/PyYAML material was checked in official Python and PyYAML documentation. No new package dependency or system installation.
+
+Separate owner:37.8MB Host JSON still contributes30.61% of GIL samples across scheduler/ingress. This YAML slice must quantify the actual remaining cost rather than infer zero idle CPU. Current device remains Runtime9716/installed69c59ec, ready/degraded; original SQLite migration is not repeated.
