@@ -1,0 +1,12 @@
+{
+  "source_commit": "5e710da914e90888ca8fc8092f066e34b7388808",
+  "branch": "dev",
+  "origin_dev": "5e710da914e90888ca8fc8092f066e34b7388808",
+  "gitverse_dev": "5e710da914e90888ca8fc8092f066e34b7388808",
+  "gitverse_authentication": "GITVERSE_TOKEN; noninteractive; credential helpers disabled",
+  "source_qualification": "passed",
+  "installed_core": "not_changed",
+  "actual_runtime": "not_changed",
+  "connected_mcp": "not_changed",
+  "actual_device_migration": "not_applied"
+}

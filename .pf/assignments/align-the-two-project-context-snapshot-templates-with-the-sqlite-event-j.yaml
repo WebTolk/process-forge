@@ -1,0 +1,422 @@
+schema_version: 1
+id: align-the-two-project-context-snapshot-templates-with-the-sqlite-event-j
+title: Align the two project-context snapshot templates with the SQLite event journal p
+run_id: garage-align-the-two-project-context-snapshot-templates-with-the-sqlite
+process: software-feature-development
+status: done
+created_at: '2026-10-17T05:48:15Z'
+updated_at: '2026-10-17T05:57:36Z'
+objective: Align the two project-context snapshot templates with the SQLite event journal path implemented by the user-authorized hook migration. Bounded two-template correction only; no code, services or migration execution.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Source scope complete and published identically to both dev remotes. Final report, qualified hashes and exact follow-up handoff retained. Installed Core/Runtime/actual connected MCP and real journals unchanged; no live CPU acceptance claimed. Temporary migrator retained for the later controlled cutover.
+  artifacts:
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/architecture-plan.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/code-assurance.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/delivery.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/domain-modeling.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/evolve.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/implementation.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/intake-scope.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/investigation.md
+    - .pf/artifacts/hook-sqlite-template-alignment-20261017/orchestration.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-17T05:56:38Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/hook-sqlite-template-alignment-20261017/evolve.md
+      status: ready
+      recorded_at: '2026-10-17T05:57:36Z'
+      sha256: 'sha256:ec3065b3652b9ffc05ea5c3d03c5d37a09ccea6b5386e0fe31fb2f4ae6cf9dba'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/hook-sqlite-template-alignment-20261017/evolve.md
+      status: passed
+      summary: Source objective complete, lessons and exact operator qualification boundary retained; no duplicate device acceptance work or unrequested infrastructure action.
+      recorded_at: '2026-10-17T05:57:36Z'
+      sha256: 'sha256:ec3065b3652b9ffc05ea5c3d03c5d37a09ccea6b5386e0fe31fb2f4ae6cf9dba'
+  notes: Source scope complete and published identically to both dev remotes. Final report, qualified hashes and exact follow-up handoff retained. Installed Core/Runtime/actual connected MCP and real journals unchanged; no live CPU acceptance claimed. Temporary migrator retained for the later controlled cutover.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-17T05:48:15Z'
+    completed_at: '2026-10-17T05:49:12Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:12Z'
+        sha256: 'sha256:5aa32327a31f1d656c4c54bebf40f18164e0bcc6b2c86e7cc0057e7e0472733f'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:12Z'
+        sha256: 'sha256:5aa32327a31f1d656c4c54bebf40f18164e0bcc6b2c86e7cc0057e7e0472733f'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:12Z'
+        sha256: 'sha256:5aa32327a31f1d656c4c54bebf40f18164e0bcc6b2c86e7cc0057e7e0472733f'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/orchestration.md
+        status: passed
+        summary: Bounded companion to the user-authorized SQLite migration. The primary Work does not grant the two snapshot templates; this disjoint exact Work owns only those templates and its private evidence/log. Immutable capsule 8118923d62bb050720d55e
+        recorded_at: '2026-10-17T05:49:12Z'
+        sha256: 'sha256:5aa32327a31f1d656c4c54bebf40f18164e0bcc6b2c86e7cc0057e7e0472733f'
+    notes: Bounded companion to the user-authorized SQLite migration. The primary Work does not grant the two snapshot templates; this disjoint exact Work owns only those templates and its private evidence/log. Immutable capsule 8118923d62bb050720d55eb591a2ebb3356b4d6120e0d8e87ab772e2add78c8e, valid/fresh context, one primary writer, no subagents or infrastructure operations. Deliver with the migration source commit.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-17T05:49:12Z'
+    completed_at: '2026-10-17T05:49:19Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:19Z'
+        sha256: 'sha256:4a3418d50ad1843d2c20e9bab282fbab46f2f694934bdb007d8e9ede3b29db62'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:19Z'
+        sha256: 'sha256:4a3418d50ad1843d2c20e9bab282fbab46f2f694934bdb007d8e9ede3b29db62'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:19Z'
+        sha256: 'sha256:4a3418d50ad1843d2c20e9bab282fbab46f2f694934bdb007d8e9ede3b29db62'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/intake-scope.md
+        status: passed
+        summary: 'Requirement: newly copied snapshot examples must name .pf/runtime/events/events.sqlite3, matching Core event_runtime_paths and ProjectContextSnapshotRenderer. Exactly templates/project-context.snapshot.yaml and templates/project-context.sna'
+        recorded_at: '2026-10-17T05:49:19Z'
+        sha256: 'sha256:4a3418d50ad1843d2c20e9bab282fbab46f2f694934bdb007d8e9ede3b29db62'
+    notes: 'Requirement: newly copied snapshot examples must name .pf/runtime/events/events.sqlite3, matching Core event_runtime_paths and ProjectContextSnapshotRenderer. Exactly templates/project-context.snapshot.yaml and templates/project-context.snapshot.md change. Preserve all other fields/instructions; no live snapshots are refreshed.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-17T05:49:19Z'
+    completed_at: '2026-10-17T05:49:30Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:30Z'
+        sha256: 'sha256:1083548df55511083cf90a7a75342de31453d792bc568a759814c36d4909a496'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:30Z'
+        sha256: 'sha256:1083548df55511083cf90a7a75342de31453d792bc568a759814c36d4909a496'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/investigation.md
+        status: passed
+        summary: Both template files contain one old .pf/runtime/events/events.ndjson reference. Core event_runtime_paths and current snapshot renderer now name events.sqlite3. These templates are static examples; onboarding refresh uses the Core path. No e
+        recorded_at: '2026-10-17T05:49:30Z'
+        sha256: 'sha256:1083548df55511083cf90a7a75342de31453d792bc568a759814c36d4909a496'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/investigation.md
+        status: passed
+        summary: Both template files contain one old .pf/runtime/events/events.ndjson reference. Core event_runtime_paths and current snapshot renderer now name events.sqlite3. These templates are static examples; onboarding refresh uses the Core path. No e
+        recorded_at: '2026-10-17T05:49:30Z'
+        sha256: 'sha256:1083548df55511083cf90a7a75342de31453d792bc568a759814c36d4909a496'
+    notes: Both template files contain one old .pf/runtime/events/events.ndjson reference. Core event_runtime_paths and current snapshot renderer now name events.sqlite3. These templates are static examples; onboarding refresh uses the Core path. No executable control flow, policy or serialized envelope changes are needed.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-17T05:49:30Z'
+    completed_at: '2026-10-17T05:49:37Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/domain-modeling.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:37Z'
+        sha256: 'sha256:706cdac12f74a73fe4854d6fc4df10ddf0b5e7abca0348b080b82d122e7364ed'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/domain-modeling.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:37Z'
+        sha256: 'sha256:706cdac12f74a73fe4854d6fc4df10ddf0b5e7abca0348b080b82d122e7364ed'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/domain-modeling.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:37Z'
+        sha256: 'sha256:706cdac12f74a73fe4854d6fc4df10ddf0b5e7abca0348b080b82d122e7364ed'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/domain-modeling.md
+        status: passed
+        summary: The named value is a private project journal location, not project identity, Work state or context freshness proof. SQLite changes storage, not the snapshot startup contract. Both examples must describe the same project-scoped event owner.
+        recorded_at: '2026-10-17T05:49:37Z'
+        sha256: 'sha256:706cdac12f74a73fe4854d6fc4df10ddf0b5e7abca0348b080b82d122e7364ed'
+    notes: The named value is a private project journal location, not project identity, Work state or context freshness proof. SQLite changes storage, not the snapshot startup contract. Both examples must describe the same project-scoped event owner.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-17T05:49:37Z'
+    completed_at: '2026-10-17T05:49:47Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/architecture-plan.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:47Z'
+        sha256: 'sha256:912852361493869ef547434939897d67b51f82db92321742892fbd2c2ad97f02'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/architecture-plan.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:47Z'
+        sha256: 'sha256:912852361493869ef547434939897d67b51f82db92321742892fbd2c2ad97f02'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/architecture-plan.md
+        status: ready
+        recorded_at: '2026-10-17T05:49:47Z'
+        sha256: 'sha256:912852361493869ef547434939897d67b51f82db92321742892fbd2c2ad97f02'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/architecture-plan.md
+        status: passed
+        summary: Replace the single exact path reference in each template. Keep YAML schema/other fields and Markdown prose intact. Verify exact two-line diff, YAML parse, new path in both, and agreement with Core. Record source-only delivery; no infrastruc
+        recorded_at: '2026-10-17T05:49:47Z'
+        sha256: 'sha256:912852361493869ef547434939897d67b51f82db92321742892fbd2c2ad97f02'
+    notes: Replace the single exact path reference in each template. Keep YAML schema/other fields and Markdown prose intact. Verify exact two-line diff, YAML parse, new path in both, and agreement with Core. Record source-only delivery; no infrastructure, migration or context refresh. Primary review is permitted; delegation is forbidden by capsule.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-17T05:49:47Z'
+    completed_at: '2026-10-17T05:50:15Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T05:50:15Z'
+        sha256: 'sha256:743984c9d49d0316fc8b29753182c397a9521ae234c082cdecdd829ccbbc592c'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T05:50:15Z'
+        sha256: 'sha256:743984c9d49d0316fc8b29753182c397a9521ae234c082cdecdd829ccbbc592c'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/implementation.md
+        status: passed
+        summary: Changed exactly one path reference in each authorized template, from .pf/runtime/events/events.ndjson to .pf/runtime/events/events.sqlite3. No other template content changed. YAML parse and new path assertions passed. Changes remain in the separate exact companion capsule; main migration scope unchanged.
+        recorded_at: '2026-10-17T05:50:15Z'
+        sha256: 'sha256:743984c9d49d0316fc8b29753182c397a9521ae234c082cdecdd829ccbbc592c'
+    notes: Changed exactly one path reference in each authorized template, from .pf/runtime/events/events.ndjson to .pf/runtime/events/events.sqlite3. No other template content changed. YAML parse and new path assertions passed. Changes remain in the separate exact companion capsule; main migration scope unchanged.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-17T05:50:15Z'
+    completed_at: '2026-10-17T05:50:23Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:50:23Z'
+        sha256: 'sha256:3fd79c6ac8a2b9f55c86ca2b665a58854f7593c6f91be0b01bade5a47ae55da5'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:50:23Z'
+        sha256: 'sha256:3fd79c6ac8a2b9f55c86ca2b665a58854f7593c6f91be0b01bade5a47ae55da5'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:50:23Z'
+        sha256: 'sha256:3fd79c6ac8a2b9f55c86ca2b665a58854f7593c6f91be0b01bade5a47ae55da5'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/code-assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:50:23Z'
+        sha256: 'sha256:3fd79c6ac8a2b9f55c86ca2b665a58854f7593c6f91be0b01bade5a47ae55da5'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/code-assurance.md
+        status: passed
+        summary: 'Primary review of the exact two-line diff passed. YAML parses, both templates use the new Core journal path, no legacy path remains in either template. This low-impact textual correction needs no added test program. No independent/subagent review claimed: capsule forbids delegation. Delivery is the shared SQLite migration commit with both remotes read back.'
+        recorded_at: '2026-10-17T05:50:23Z'
+        sha256: 'sha256:3fd79c6ac8a2b9f55c86ca2b665a58854f7593c6f91be0b01bade5a47ae55da5'
+    notes: 'Primary review of the exact two-line diff passed. YAML parses, both templates use the new Core journal path, no legacy path remains in either template. This low-impact textual correction needs no added test program. No independent/subagent review claimed: capsule forbids delegation. Delivery is the shared SQLite migration commit with both remotes read back.'
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-17T05:50:23Z'
+    completed_at: '2026-10-17T05:56:38Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/delivery.md
+        status: ready
+        recorded_at: '2026-10-17T05:56:38Z'
+        sha256: 'sha256:4c4e56b82c93eab71e2879bc0cdfb109607bd15029a7efae6321f97e81710abe'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/delivery.md
+        status: passed
+        summary: Accepted source-only; same qualified commit published and read back from both dev remotes. Device/full release qualification remains separate.
+        recorded_at: '2026-10-17T05:56:38Z'
+        sha256: 'sha256:4c4e56b82c93eab71e2879bc0cdfb109607bd15029a7efae6321f97e81710abe'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/delivery.md
+        status: passed
+        summary: Focused source profile passed. Archive/installed/Runtime/connected-host/device profile explicitly skipped because this Work authorizes source delivery only.
+        recorded_at: '2026-10-17T05:56:38Z'
+        sha256: 'sha256:4c4e56b82c93eab71e2879bc0cdfb109607bd15029a7efae6321f97e81710abe'
+    notes: Source committed/pushed/read back from both remotes. Qualified source hashes match commit. Actual installed Core/Runtime/connected MCP and device journals unchanged; operator cutover handoff retained. Next evolve records remaining operational qualification without claiming device acceptance.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-17T05:56:38Z'
+    completed_at: '2026-10-17T05:57:36Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/evolve.md
+        status: ready
+        recorded_at: '2026-10-17T05:57:36Z'
+        sha256: 'sha256:ec3065b3652b9ffc05ea5c3d03c5d37a09ccea6b5386e0fe31fb2f4ae6cf9dba'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/hook-sqlite-template-alignment-20261017/evolve.md
+        status: passed
+        summary: Source objective complete, lessons and exact operator qualification boundary retained; no duplicate device acceptance work or unrequested infrastructure action.
+        recorded_at: '2026-10-17T05:57:36Z'
+        sha256: 'sha256:ec3065b3652b9ffc05ea5c3d03c5d37a09ccea6b5386e0fe31fb2f4ae6cf9dba'
+    notes: Source scope complete and published identically to both dev remotes. Final report, qualified hashes and exact follow-up handoff retained. Installed Core/Runtime/actual connected MCP and real journals unchanged; no live CPU acceptance claimed. Temporary migrator retained for the later controlled cutover.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.0
+  process_fingerprint: 'sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e'
+  snapshot_id: ctx-20261016-091113-310bed
+  snapshot_checksum: 'sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be'
+  assignment_capsule: .pf/contexts/assignment-capsules/align-the-two-project-context-snapshot-templates-with-the-sqlite-event-j.capsule.yaml
+  assignment_capsule_checksum: 'sha256:8118923d62bb050720d55eb591a2ebb3356b4d6120e0d8e87ab772e2add78c8e'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_files:
+  - templates/project-context.snapshot.yaml
+  - templates/project-context.snapshot.md
+  - .pf/artifacts/hook-sqlite-template-alignment-20261017/**
+  - .pf/logs/hook-sqlite-template-alignment-20261017.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/artifacts/hook-sqlite-migration-20261017/**
+  - templates/project-context.snapshot.yaml
+  - templates/project-context.snapshot.md
+  - src/processforge_core/project/snapshot_rendering.py
+  - tools/processforge.py
+  - docs/concepts/hook-journal-sqlite.md
+expected_report:
+  artifact: .pf/artifacts/hook-sqlite-template-alignment-20261017/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/hook-sqlite-template-alignment-20261017/report.md
+    type: markdown
+    required: true
