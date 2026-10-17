@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+## 1.2.0 - 2026-10-17
+
 ### Changed
 
+- Store project event and native hook journals in separate local SQLite databases
+  with transactional admissions, indexed replay and independent history controls.
+  Existing journals require a controlled cutover with the explicit temporary
+  migrator; installing Core does not import or delete legacy history. See
+  [journal migration](docs/concepts/hook-journal-sqlite.md).
 - Remove each Runtime publisher's failed staging file while preserving the
   destination and original error. Host JSON/history share the bounded Windows
   publication writer; the standalone hook installer retains its backup and
@@ -22,10 +29,6 @@
   identity/status fields instead of copying complete histories. Current file
   reads, safe-loader rules and authority checks remain live; see
   [document reads](docs/concepts/document-reads.md).
-
-## 1.2.0 - 2026-10-16
-
-### Changed
 
 - Fixed an intermediate checkpoint of the ongoing Core refactoring: concrete
   readers, context/resource policies, lifecycle rules and journal owners serve
