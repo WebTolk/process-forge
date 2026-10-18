@@ -1,0 +1,2291 @@
+{
+  "status": "passed",
+  "started_at": "2026-10-18T17:48:31.273854+00:00",
+  "finished_at": "2026-10-18T17:50:33.528009+00:00",
+  "source_sha256": {
+    "tools/processforge.py": "ebd867d78eca02239112f8d2eee4b027b5d58509d1a9784453f6b2e22433a2ac",
+    "src/processforge_core/project/classification.py": "22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00",
+    "src/processforge_core/common/paths.py": "19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56",
+    "src/processforge_core/process_catalog/artifacts.py": "7ab9b30545e08e4db688760be8099ccae707c2ebd6621492b65d1449ece8a2a6"
+  },
+  "baseline_source_sha256": "f973f5de5df2b672ec904ee94d772dd1cab8b13f4fe5309ea19408c878f3dc11",
+  "groups": {
+    "artifact_conversion_order": {
+      "total": 6,
+      "passed": 6
+    },
+    "artifact_declarations": {
+      "total": 24,
+      "passed": 24
+    },
+    "artifact_produced": {
+      "total": 13,
+      "passed": 13
+    },
+    "ast_parity": {
+      "total": 9,
+      "passed": 9
+    },
+    "classifier": {
+      "total": 37,
+      "passed": 37
+    },
+    "classifier_short_circuit": {
+      "total": 8,
+      "passed": 8
+    },
+    "evidence": {
+      "total": 7,
+      "passed": 7
+    },
+    "imports": {
+      "total": 4,
+      "passed": 4
+    },
+    "matcher": {
+      "total": 22,
+      "passed": 22
+    },
+    "migration": {
+      "total": 7,
+      "passed": 7
+    }
+  },
+  "total": 137,
+  "passed": 137,
+  "exceptions": [
+    {
+      "group": "classifier",
+      "name": "rule-shape-0",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-1",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "all-*",
+      "baseline": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "any-missing",
+      "baseline": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "valid-condition-native-iter-error",
+      "baseline": {
+        "exception": "TypeError",
+        "message": "'NoneType' object is not iterable"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "'NoneType' object is not iterable"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "path-native-error",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-15",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'replace'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'replace'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-16",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-17",
+      "baseline": {
+        "exception": "TypeError",
+        "message": "a bytes-like object is required, not 'str'"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "a bytes-like object is required, not 'str'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-18",
+      "baseline": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not NoneType"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not NoneType"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-19",
+      "baseline": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not int"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not int"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-20",
+      "baseline": {
+        "exception": "TypeError",
+        "message": "cannot use a bytes pattern on a string-like object"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "cannot use a bytes pattern on a string-like object"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-0",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-0",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-1",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-1",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-0",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-1",
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "str-second-call-error",
+      "baseline": {
+        "exception": "ValueError",
+        "message": "second str"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "second str"
+      }
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "definition-error-before-external",
+      "baseline": {
+        "exception": "ValueError",
+        "message": "definition first"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "definition first"
+      }
+    }
+  ],
+  "imports": {
+    "direct": {
+      "passed": true,
+      "checks": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "forbidden_imports": [],
+      "all_core_imports_under_selected_root": true,
+      "catalog_service_loaded": true,
+      "imported_core_modules": [
+        "processforge_core",
+        "processforge_core.bootstrap",
+        "processforge_core.common",
+        "processforge_core.common.ids",
+        "processforge_core.common.paths",
+        "processforge_core.common.request_scope",
+        "processforge_core.common.yaml_io",
+        "processforge_core.diagnostics",
+        "processforge_core.documents",
+        "processforge_core.documents.parse_cache",
+        "processforge_core.documents.reader",
+        "processforge_core.process_catalog",
+        "processforge_core.process_catalog.artifacts",
+        "processforge_core.process_catalog.models",
+        "processforge_core.process_catalog.service",
+        "processforge_core.project",
+        "processforge_core.project.classification"
+      ]
+    },
+    "copied": {
+      "passed": true,
+      "checks": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "forbidden_imports": [],
+      "all_core_imports_under_selected_root": true,
+      "catalog_service_loaded": true,
+      "imported_core_modules": [
+        "processforge_core",
+        "processforge_core.bootstrap",
+        "processforge_core.common",
+        "processforge_core.common.ids",
+        "processforge_core.common.paths",
+        "processforge_core.common.request_scope",
+        "processforge_core.common.yaml_io",
+        "processforge_core.diagnostics",
+        "processforge_core.documents",
+        "processforge_core.documents.parse_cache",
+        "processforge_core.documents.reader",
+        "processforge_core.process_catalog",
+        "processforge_core.process_catalog.artifacts",
+        "processforge_core.process_catalog.models",
+        "processforge_core.process_catalog.service",
+        "processforge_core.project",
+        "processforge_core.project.classification"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "group": "classifier",
+      "name": "rule-shape-0",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-1",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-2",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-3",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-4",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-5",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-6",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-7",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-8",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-9",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-10",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-11",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-12",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-13",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-14",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "rule-shape-15",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-0-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-0-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-1-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-1-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-2-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-2-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-3-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-3-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-4-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-4-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-5-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-5-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-6-all",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-6-any",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-7-all",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-7-any",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-8-all",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-8-any",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-9-all",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "condition-9-any",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier",
+      "name": "empty-paths",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "all-missing",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "any-*",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "all-*",
+      "passed": true,
+      "baseline": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "any-missing",
+      "passed": true,
+      "baseline": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "unreachable condition evaluated"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "empty-all-suppresses-any-error",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "invalid-condition-does-not-touch-paths",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "valid-condition-native-iter-error",
+      "passed": true,
+      "baseline": {
+        "exception": "TypeError",
+        "message": "'NoneType' object is not iterable"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "'NoneType' object is not iterable"
+      }
+    },
+    {
+      "group": "classifier_short_circuit",
+      "name": "path-native-error",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-0",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-1",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-2",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-3",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-4",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-5",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-6",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-7",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-8",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-9",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-10",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-11",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-12",
+      "passed": true,
+      "baseline": {
+        "result": true,
+        "type": "bool"
+      },
+      "actual": {
+        "result": true,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-13",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-14",
+      "passed": true,
+      "baseline": {
+        "result": false,
+        "type": "bool"
+      },
+      "actual": {
+        "result": false,
+        "type": "bool"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-15",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'replace'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'replace'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-16",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'int' object has no attribute 'replace'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-17",
+      "passed": true,
+      "baseline": {
+        "exception": "TypeError",
+        "message": "a bytes-like object is required, not 'str'"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "a bytes-like object is required, not 'str'"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-18",
+      "passed": true,
+      "baseline": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not NoneType"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not NoneType"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-19",
+      "passed": true,
+      "baseline": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not int"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "expected str, bytes or os.PathLike object, not int"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "path-20",
+      "passed": true,
+      "baseline": {
+        "exception": "TypeError",
+        "message": "cannot use a bytes pattern on a string-like object"
+      },
+      "actual": {
+        "exception": "TypeError",
+        "message": "cannot use a bytes pattern on a string-like object"
+      }
+    },
+    {
+      "group": "matcher",
+      "name": "native-platform-fnmatch",
+      "passed": true,
+      "expected": true
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-0",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-0",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-1",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-1",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-2",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-2",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-3",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-3",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-4",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-4",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-5",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-5",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-6",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "",
+          " x ",
+          "False",
+          "None"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "",
+          " x ",
+          "False",
+          "None"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-6",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "",
+          " x ",
+          "False",
+          "None"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "",
+          " x ",
+          "False",
+          "None"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-7",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "  ",
+          "1",
+          "['x']",
+          "a",
+          "{'x': 1}"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "  ",
+          "1",
+          "['x']",
+          "a",
+          "{'x': 1}"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-7",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "  ",
+          "1",
+          "['x']",
+          "a",
+          "{'x': 1}"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "  ",
+          "1",
+          "['x']",
+          "a",
+          "{'x': 1}"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-8",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-8",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "0",
+          "None",
+          "a"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "0",
+          "None",
+          "a"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-9",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-9",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "True",
+          "a"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "True",
+          "a"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-10",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-10",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "defined_ids-11",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "a"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "a"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_declarations",
+      "name": "declared_ids-11",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-0",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'NoneType' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-1",
+      "passed": true,
+      "baseline": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      },
+      "actual": {
+        "exception": "AttributeError",
+        "message": "'list' object has no attribute 'get'"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-2",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-3",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-4",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-5",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-6",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-7",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-8",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "a",
+          "b",
+          "c"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "a",
+          "b",
+          "c"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-9",
+      "passed": true,
+      "baseline": {
+        "result": [
+          " a ",
+          "0",
+          "False",
+          "None",
+          "['x']",
+          "a",
+          "{'x': 1}"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          " a ",
+          "0",
+          "False",
+          "None",
+          "['x']",
+          "a",
+          "{'x': 1}"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-10",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-11",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "a",
+          "b",
+          "c"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "a",
+          "b",
+          "c"
+        ],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_produced",
+      "name": "produced-12",
+      "passed": true,
+      "baseline": {
+        "result": [],
+        "type": "set"
+      },
+      "actual": {
+        "result": [],
+        "type": "set"
+      }
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "id-truth-before-str",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "x"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "x"
+        ],
+        "type": "set"
+      },
+      "traces": [
+        [
+          "id:bool",
+          "id:str",
+          "id:bool"
+        ],
+        [
+          "id:bool",
+          "id:str",
+          "id:bool"
+        ]
+      ]
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "dict-keys-no-truth-filter",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "key"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "key"
+        ],
+        "type": "set"
+      },
+      "traces": [
+        [
+          "id:str"
+        ],
+        [
+          "id:str"
+        ]
+      ]
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "list-str-twice-untrimmed",
+      "passed": true,
+      "baseline": {
+        "result": [
+          " changed "
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          " changed "
+        ],
+        "type": "set"
+      },
+      "traces": [
+        [
+          "id:str",
+          "id:str",
+          "id:str"
+        ],
+        [
+          "id:str",
+          "id:str",
+          "id:str"
+        ]
+      ]
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "str-second-call-error",
+      "passed": true,
+      "baseline": {
+        "exception": "ValueError",
+        "message": "second str"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "second str"
+      },
+      "traces": [
+        [
+          "id:str",
+          "id:str"
+        ],
+        [
+          "id:str",
+          "id:str"
+        ]
+      ]
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "definition-error-before-external",
+      "passed": true,
+      "baseline": {
+        "exception": "ValueError",
+        "message": "definition first"
+      },
+      "actual": {
+        "exception": "ValueError",
+        "message": "definition first"
+      },
+      "traces": [
+        [
+          "id:bool",
+          "id:str"
+        ],
+        [
+          "id:bool",
+          "id:str"
+        ]
+      ]
+    },
+    {
+      "group": "artifact_conversion_order",
+      "name": "declared-group-order",
+      "passed": true,
+      "baseline": {
+        "result": [
+          "external_artifacts",
+          "generated_files",
+          "input_definitions",
+          "virtual_artifacts"
+        ],
+        "type": "set"
+      },
+      "actual": {
+        "result": [
+          "external_artifacts",
+          "generated_files",
+          "input_definitions",
+          "virtual_artifacts"
+        ],
+        "type": "set"
+      },
+      "traces": [
+        [
+          "input_definitions:bool",
+          "input_definitions:str",
+          "external_artifacts:bool",
+          "external_artifacts:str",
+          "virtual_artifacts:bool",
+          "virtual_artifacts:str",
+          "generated_files:bool",
+          "generated_files:str"
+        ],
+        [
+          "input_definitions:bool",
+          "input_definitions:str",
+          "external_artifacts:bool",
+          "external_artifacts:str",
+          "virtual_artifacts:bool",
+          "virtual_artifacts:str",
+          "generated_files:bool",
+          "generated_files:str"
+        ]
+      ]
+    },
+    {
+      "group": "evidence",
+      "name": "primary-smokes-seven-passed",
+      "passed": true
+    },
+    {
+      "group": "evidence",
+      "name": "primary-source-hashes-match",
+      "passed": true
+    },
+    {
+      "group": "migration",
+      "name": "obsolete-symbols-absent",
+      "passed": true,
+      "found": []
+    },
+    {
+      "group": "migration",
+      "name": "no-monolith-matcher-definition",
+      "passed": true
+    },
+    {
+      "group": "migration",
+      "name": "classifier-both-callers",
+      "passed": true,
+      "callers": {
+        "inactive_official_classifier_hints": [
+          "_project_classifier_rule_policy.matches"
+        ],
+        "classify_project": [
+          "_project_classifier_rule_policy.matches"
+        ],
+        "detection_group_matches": [
+          "path_matches_pattern"
+        ],
+        "platform_detection_matches": [
+          "path_matches_pattern"
+        ],
+        "validate_process_authoring_logic": [
+          "_process_artifact_declaration_policy.declared_ids"
+        ],
+        "validate_process_contract": [
+          "_process_artifact_declaration_policy.declared_ids",
+          "_process_artifact_declaration_policy.produced_ids"
+        ],
+        "builtin_process_catalog_report": [
+          "_process_artifact_declaration_policy.produced_ids",
+          "_process_artifact_declaration_policy.declared_ids",
+          "_process_artifact_declaration_policy.produced_ids",
+          "_process_artifact_declaration_policy.declared_ids"
+        ]
+      }
+    },
+    {
+      "group": "migration",
+      "name": "shared-matcher-callers",
+      "passed": true
+    },
+    {
+      "group": "migration",
+      "name": "generic-helpers-retained",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "project_classifier_rule_matches",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "project_classifier_condition_matches",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "path_matches_pattern",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "as_list",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "string_list",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "artifact_definition_ids",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "declared_process_artifact_ids",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "produced_process_artifact_ids",
+      "passed": true
+    },
+    {
+      "group": "ast_parity",
+      "name": "rel-source-unchanged",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "name": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "name": "copied",
+      "passed": true
+    },
+    {
+      "group": "evidence",
+      "name": "sources-stable-through-qa",
+      "passed": true
+    },
+    {
+      "group": "evidence",
+      "name": "exact-current-work-valid-ready",
+      "passed": true
+    },
+    {
+      "group": "evidence",
+      "name": "all-prepared-source-hashes-match",
+      "passed": true
+    },
+    {
+      "group": "evidence",
+      "name": "frozen-monolith-source-hash",
+      "passed": true,
+      "git_lf_sha256": "9ace7a979264eee2c0b18bc79387bd2c3cd9214b57e2c5c35f9e4a3262efcf0d",
+      "working_crlf_sha256": "f973f5de5df2b672ec904ee94d772dd1cab8b13f4fe5309ea19408c878f3dc11",
+      "reason": "The frozen source hash uses CRLF working-file bytes; Git stores LF. Only this evidence comparison accounts for that representation."
+    },
+    {
+      "group": "migration",
+      "name": "every-original-caller-migrated",
+      "passed": true,
+      "expected": [
+        {
+          "owner": "builtin_process_catalog_report",
+          "call": "_process_artifact_declaration_policy.declared_ids",
+          "count": 2
+        },
+        {
+          "owner": "builtin_process_catalog_report",
+          "call": "_process_artifact_declaration_policy.produced_ids",
+          "count": 2
+        },
+        {
+          "owner": "classify_project",
+          "call": "_project_classifier_rule_policy.matches",
+          "count": 1
+        },
+        {
+          "owner": "detection_group_matches",
+          "call": "path_matches_pattern",
+          "count": 1
+        },
+        {
+          "owner": "inactive_official_classifier_hints",
+          "call": "_project_classifier_rule_policy.matches",
+          "count": 1
+        },
+        {
+          "owner": "platform_detection_matches",
+          "call": "path_matches_pattern",
+          "count": 1
+        },
+        {
+          "owner": "validate_process_authoring_logic",
+          "call": "_process_artifact_declaration_policy.declared_ids",
+          "count": 1
+        },
+        {
+          "owner": "validate_process_contract",
+          "call": "_process_artifact_declaration_policy.declared_ids",
+          "count": 1
+        },
+        {
+          "owner": "validate_process_contract",
+          "call": "_process_artifact_declaration_policy.produced_ids",
+          "count": 1
+        }
+      ],
+      "actual": [
+        {
+          "owner": "builtin_process_catalog_report",
+          "call": "_process_artifact_declaration_policy.declared_ids",
+          "count": 2
+        },
+        {
+          "owner": "builtin_process_catalog_report",
+          "call": "_process_artifact_declaration_policy.produced_ids",
+          "count": 2
+        },
+        {
+          "owner": "classify_project",
+          "call": "_project_classifier_rule_policy.matches",
+          "count": 1
+        },
+        {
+          "owner": "detection_group_matches",
+          "call": "path_matches_pattern",
+          "count": 1
+        },
+        {
+          "owner": "inactive_official_classifier_hints",
+          "call": "_project_classifier_rule_policy.matches",
+          "count": 1
+        },
+        {
+          "owner": "platform_detection_matches",
+          "call": "path_matches_pattern",
+          "count": 1
+        },
+        {
+          "owner": "validate_process_authoring_logic",
+          "call": "_process_artifact_declaration_policy.declared_ids",
+          "count": 1
+        },
+        {
+          "owner": "validate_process_contract",
+          "call": "_process_artifact_declaration_policy.declared_ids",
+          "count": 1
+        },
+        {
+          "owner": "validate_process_contract",
+          "call": "_process_artifact_declaration_policy.produced_ids",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "group": "migration",
+      "name": "obsolete-names-absent-src-tools",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "name": "owner-dependencies-classification",
+      "passed": true,
+      "dependencies": [
+        "__future__",
+        "typing",
+        "processforge_core.common.paths"
+      ]
+    },
+    {
+      "group": "imports",
+      "name": "owner-dependencies-artifacts",
+      "passed": true,
+      "dependencies": [
+        "__future__",
+        "typing"
+      ]
+    },
+    {
+      "group": "evidence",
+      "name": "final-source-hashes-still-match",
+      "passed": true
+    }
+  ],
+  "evidence_paths": [
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/baseline-functions.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/smoke-results.json",
+    ".pf/tmp/p121-policies/qa/parity.py",
+    ".pf/artifacts/pf121-oop-policies-20261018/qa/results.json",
+    ".pf/tmp/p121-policies/qa/verify-evidence.py",
+    ".pf/artifacts/pf121-oop-policies-20261018/qa/work-state.json"
+  ],
+  "limitations": [
+    "No fixture smokes rerun; primary receipt retained with two symlink skips.",
+    "No release, archive, installation, Runtime or host acceptance."
+  ],
+  "identity": {
+    "project_id": "process-forge",
+    "run_id": "garage-p121-policies-qa-after-implementation-and-primary-fixture-based-s",
+    "assignment_id": "p121-policies-qa-after-implementation-and-primary-fixture-based-smoke-ex",
+    "context_id": "p121-policies-qa-after-implementation-and-primary-fixture-based-smoke-ex-capsule"
+  },
+  "input_sha256": {
+    ".pf/contexts/assignment-capsules/p121-policies-qa-after-implementation-and-primary-fixture-based-smoke-ex.capsule.yaml": "586125197d742bfc48135f61704c2e6eb17bb81e37f08b0c6423ccc1671c3df9",
+    ".pf/contexts/project-context.snapshot.yaml": "7d12cdcd1b29dc5070fe5df6a9950fb1a21df3618283d50b3d73510768d5a3e3",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/brief.md": "6a5e82000be1c0461dd363c3b510bb57a4b4a2312abf51704046f160e8eec1dc",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/baseline-functions.json": "315d71dd1986207a2991d1a7b0678e32f5b95c17238d52b4a582e9909a0e459d",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/smoke-results.json": "4a64600c85762d39e050c5d9172daadf4538f0765549abc85bc1cdefd402e2eb",
+    ".pf/artifacts/pf121-oop-policies-20261018/core/report.md": "bc6b84dcd4cbd11bc3003025d032f02d1747af83fde456acd555678678deea52",
+    "src/processforge_core/AGENTS.md": "65abf9c838b8b6c53e9008f8426e9b0b9f3a2c25523281463827ec966f54a988"
+  },
+  "scratch_retention": "Two bounded harness scripts retained as evidence; copied Core removed after import checks.",
+  "harness_correction": "The supplemental collector initially formed the capsule filename from context_id; corrected to the exact assignment path. Its additional Git source hash comparison initially compared LF Git bytes with the frozen CRLF working-file hash; both representations are now recorded. No product edits or parity/smoke test reruns."
+}

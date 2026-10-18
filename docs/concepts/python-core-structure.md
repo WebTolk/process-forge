@@ -126,6 +126,9 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading through concrete Core YAML and file digest readers, bound to the project root. |
 | `src/processforge_core/common/digests.py` | Existing raw-byte SHA256 file reading, shared by snapshot reads, monolithic facades and maintenance update. |
 | `src/processforge_core/configuration/parameters.py` | Stateless ParameterMergePolicy owning existing parameter-map merging and ordered provenance, without a monolith dependency. |
+| `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for matching existing classifier rules; registry, traversal and activation remain legacy responsibilities. |
+| `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
+| `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; full validators and companion-file I/O remain legacy responsibilities. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
@@ -525,3 +528,37 @@ capture and coordination also retain existing legacy dependencies. Extracting
 the merge policy does not make the complete context compiler independent of
 the monolith. This ownership reference describes source code; archive,
 installed-Core, Runtime and connected-host acceptance remain separate.
+
+## Classifier matching and process artifact declarations
+
+`project.classification.ProjectClassifierRulePolicy` owns the existing rule
+algorithm through its ordinary instance method `matches(rule, available_paths)`;
+condition matching is private. Both `inactive_official_classifier_hints` and
+`classify_project` in `tools/processforge.py` call this owner directly. A list-valued
+`when.all` takes precedence even when empty (which returns false); nonempty `all`
+and `any` retain short-circuit evaluation. Existing shape checks and nonblank
+`exists` string handling are unchanged.
+
+`common.paths.path_matches_pattern` is the shared primitive used by this policy,
+`detection_group_matches` and `platform_detection_matches`. It preserves backslash
+normalization and standard-library `fnmatch.fnmatch` checks on the full path then
+its `Path(...).name`, including platform-dependent matching. `rel` is unchanged.
+The two old classifier definitions and the old matcher definition are removed
+from the monolith; consumers import the owning Core modules explicitly.
+
+`process_catalog.artifacts.ProcessArtifactDeclarationPolicy` owns the ordinary
+instance methods `defined_ids(process)`, `declared_ids(process)` and
+`produced_ids(process)`. Authoring validation, process contract validation and
+builtin catalog reporting in `tools/processforge.py` call the owner directly;
+the three old artifact-ID definitions are removed. Private value-shaping helpers
+preserve list-only handling, string-list conversion/filter order, comma-separated
+strings, dict/list distinctions, ID truthiness, duplicate handling and native
+exception order. The generic monolith helpers keep their other consumers.
+
+Both policies are stateless, perform no I/O and have no monolith callback or
+import. Classifier registry loading, tree walking and activation remain in the
+legacy CLI paths. Full process validators, companion-file reading, catalog
+registration and activation also retain their existing legacy ownership. These
+pure policy extractions do not fully migrate classification or validation,
+complete any OOP epic, or establish archive, installed-Core, Runtime or
+connected-host acceptance.

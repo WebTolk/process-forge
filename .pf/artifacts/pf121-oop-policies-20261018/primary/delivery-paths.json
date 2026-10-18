@@ -1,0 +1,32 @@
+{
+  "paths": [
+    ".pf/artifacts/oop-night-20261018/log.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/consumers/report.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/core/report.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/docs/inventory-changes.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/docs/report.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/baseline-functions.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/brief.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/delivery-paths.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/evolution.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/implementation.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/product-manifest.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/qa-summary.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/report.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/review-acceptance.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/smoke-results.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/source.patch",
+    ".pf/artifacts/pf121-oop-policies-20261018/primary/verification.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/qa/report.md",
+    ".pf/artifacts/pf121-oop-policies-20261018/qa/results.json",
+    ".pf/artifacts/pf121-oop-policies-20261018/review/report.md",
+    ".pf/handoffs/pf121-oop-policies-20261018.md",
+    "checksums/processforge.sha256",
+    "docs/concepts/python-core-structure.md",
+    "docs/ru/concepts/python-core-structure.md",
+    "src/processforge_core/common/paths.py",
+    "src/processforge_core/process_catalog/artifacts.py",
+    "src/processforge_core/project/classification.py",
+    "tools/processforge.py"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "timestamp_utc": "2026-10-18T17:45:36.940291+00:00",
+  "role": "worker-p121-policies-docs",
+  "status": "completed",
+  "assignment_id": "p121-policies-docs-after-code-completion-update-only-the-two-en-ru-core",
+  "run_id": "garage-p121-policies-docs-after-code-completion-update-only-the-two-en-r",
+  "context_id": "p121-policies-docs-after-code-completion-update-only-the-two-en-ru-core-capsule",
+  "inventory": "checksums/processforge.sha256",
+  "hash_helper": "tools/validate-process-forge-checksums.py:sha256/released_content",
+  "inventory_raw_sha256_before": "3c8f1dd6b2a9d98ad45c2b19f050a2f09869e28dcb850e5a2974a62354356e59",
+  "inventory_raw_sha256_after": "80e879e79ed4879bc7002fe80f64ac851390f93334cb50668a12b1a615376eeb",
+  "changes": [
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "action": "updated",
+      "old_sha256": "306bbb8ad150a3dd8846facbe3e3762a2d1091e0582fa86b116e14be82098cb2",
+      "new_sha256": "509e18a67f19c2fb2a1a4ffecd46cdeb0b11e032e5ff1c2c72e2284f2dcf34ce"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "action": "updated",
+      "old_sha256": "ac46e9dd4e8f8f527f0218e18d8ccc0e85af72ca11a80b4f4d09c4eec555b522",
+      "new_sha256": "be5ea4e276ca0410c30a5233d957fe0f73e8cc9bdb1e070e39398221b4991dd0"
+    },
+    {
+      "path": "src/processforge_core/common/paths.py",
+      "action": "updated",
+      "old_sha256": "82847d5b1ad6f157744c02a5f6d87d482544ecc12575662fa71aded2f7078862",
+      "new_sha256": "19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56"
+    },
+    {
+      "path": "src/processforge_core/process_catalog/artifacts.py",
+      "action": "added",
+      "old_sha256": null,
+      "new_sha256": "7ab9b30545e08e4db688760be8099ccae707c2ebd6621492b65d1449ece8a2a6"
+    },
+    {
+      "path": "src/processforge_core/project/classification.py",
+      "action": "added",
+      "old_sha256": null,
+      "new_sha256": "22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00"
+    },
+    {
+      "path": "tools/processforge.py",
+      "action": "updated",
+      "old_sha256": "9ace7a979264eee2c0b18bc79387bd2c3cd9214b57e2c5c35f9e4a3262efcf0d",
+      "new_sha256": "8cb03ae180d361fbdc0e1870313483f40f2794cc3bd45eec92dfadfaaf40d30e"
+    }
+  ],
+  "verification": {
+    "updated_rows": 4,
+    "added_rows": 2,
+    "removed_rows": 0,
+    "non_target_rows": 1313,
+    "non_target_rows_byte_identical": true,
+    "non_target_rows_raw_sha256": "9e519c8ddb0bf9d72de64f33d9e07ee9a32074c69e43cdaad0877e8c56cb9f36",
+    "known_preexisting_mismatches": "Preserved by byte-identical non-target rows; not revalidated.",
+    "global_inventory_validation_run": false,
+    "inventory_regenerated": false
+  },
+  "follow_up": "Primary coordinates focused QA, independent review and native transitions."
+}

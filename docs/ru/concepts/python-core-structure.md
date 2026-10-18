@@ -134,6 +134,9 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot через конкретные читатели YAML и файловых хешей Core, привязанные к корню проекта. |
 | `src/processforge_core/common/digests.py` | Прежнее чтение SHA256 исходных байтов файла, общее для snapshot, фасадов монолита и maintenance update. |
 | `src/processforge_core/configuration/parameters.py` | ParameterMergePolicy без состояния: прежнее слияние карт параметров и упорядоченный provenance без зависимости от монолита. |
+| `src/processforge_core/project/classification.py` | ProjectClassifierRulePolicy без состояния для проверки прежних правил классификации; реестры, обход и активация сохраняют legacy-владельцев. |
+| `src/processforge_core/common/paths.py` | Общий примитив path_matches_pattern для классификации и обнаружения вместе с неизменённым helper rel. |
+| `src/processforge_core/process_catalog/artifacts.py` | ProcessArtifactDeclarationPolicy без состояния для defined, declared и produced ID артефактов; полные валидаторы и I/O companion-файлов сохраняют legacy-владельцев. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
@@ -538,3 +541,37 @@ Assignment, пути и хеши snapshot, определение проекта
 merge policy не делает полный компилятор контекста независимым от монолита.
 Справочник описывает исходный код; приёмка архива, установленного Core, Runtime и
 подключённых хостов остаётся отдельной.
+
+## Проверка правил классификации и объявления артефактов процесса
+
+`project.classification.ProjectClassifierRulePolicy` владеет прежним алгоритмом
+правил через обычный метод экземпляра `matches(rule, available_paths)`; проверка
+условий остаётся приватной. `inactive_official_classifier_hints` и
+`classify_project` в `tools/processforge.py` вызывают владельца напрямую. Список
+`when.all` имеет приоритет даже при пустом значении (результат false); непустой
+`all` и `any` сохраняют короткое замыкание. Прежние проверки формы данных и
+обработка непустой строки `exists` сохранены.
+
+`common.paths.path_matches_pattern` — общий примитив для этой policy,
+`detection_group_matches` и `platform_detection_matches`. Он сохраняет нормализацию
+обратных слешей и проверки стандартным `fnmatch.fnmatch` сначала полного пути,
+затем его `Path(...).name`, включая платформенную семантику сравнения. `rel` не
+изменён. Два старых определения классификатора и старое определение matcher
+удалены из монолита; потребители явно импортируют модули-владельцы Core.
+
+`process_catalog.artifacts.ProcessArtifactDeclarationPolicy` владеет обычными
+методами экземпляра `defined_ids(process)`, `declared_ids(process)` и
+`produced_ids(process)`. Проверка authoring, контракта процесса и отчёт builtin
+catalog в `tools/processforge.py` вызывают владельца напрямую; три старых
+определения сбора ID артефактов удалены. Приватные helpers сохраняют обработку
+только списков, порядок преобразования и фильтрации string-list, строки через
+запятую, различия dict/list, истинность ID, обработку дубликатов и прежний порядок
+исключений. Общие helpers монолита остаются для других потребителей.
+
+Обе policy не хранят состояние, не выполняют I/O и не импортируют монолит и не
+вызывают его через callbacks. Загрузка реестров классификаторов, обход дерева и
+активация остаются в legacy-путях CLI. Полные валидаторы процессов, чтение
+companion-файлов, регистрация каталога и активация также сохраняют прежних
+legacy-владельцев. Выделение чистых policy не означает полного переноса
+классификации или валидации, завершения OOP-эпиков или приёмки архива,
+установленного Core, Runtime либо подключённых хостов.

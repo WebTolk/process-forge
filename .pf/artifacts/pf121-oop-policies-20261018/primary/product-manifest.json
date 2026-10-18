@@ -1,0 +1,12 @@
+{
+  "scope": "source_only",
+  "files": {
+    "src/processforge_core/project/classification.py": "22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00",
+    "src/processforge_core/common/paths.py": "19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56",
+    "src/processforge_core/process_catalog/artifacts.py": "7ab9b30545e08e4db688760be8099ccae707c2ebd6621492b65d1449ece8a2a6",
+    "tools/processforge.py": "ebd867d78eca02239112f8d2eee4b027b5d58509d1a9784453f6b2e22433a2ac",
+    "docs/concepts/python-core-structure.md": "509e18a67f19c2fb2a1a4ffecd46cdeb0b11e032e5ff1c2c72e2284f2dcf34ce",
+    "docs/ru/concepts/python-core-structure.md": "be5ea4e276ca0410c30a5233d957fe0f73e8cc9bdb1e070e39398221b4991dd0",
+    "checksums/processforge.sha256": "80e879e79ed4879bc7002fe80f64ac851390f93334cb50668a12b1a615376eeb"
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "status": "passed_source_only",
+  "baseline_commit": "c75797d9a2d206c3ce5b3b6c5968fed092cbcd1e",
+  "qa_total": 137,
+  "qa_passed": 137,
+  "groups": {
+    "artifact_conversion_order": {
+      "total": 6,
+      "passed": 6
+    },
+    "artifact_declarations": {
+      "total": 24,
+      "passed": 24
+    },
+    "artifact_produced": {
+      "total": 13,
+      "passed": 13
+    },
+    "ast_parity": {
+      "total": 9,
+      "passed": 9
+    },
+    "classifier": {
+      "total": 37,
+      "passed": 37
+    },
+    "classifier_short_circuit": {
+      "total": 8,
+      "passed": 8
+    },
+    "evidence": {
+      "total": 7,
+      "passed": 7
+    },
+    "imports": {
+      "total": 4,
+      "passed": 4
+    },
+    "matcher": {
+      "total": 22,
+      "passed": 22
+    },
+    "migration": {
+      "total": 7,
+      "passed": 7
+    }
+  },
+  "native_exception_cases": 20,
+  "existing_smokes": [
+    {
+      "name": "smoke_project_classification_data_driven",
+      "passed": true,
+      "duration_seconds": 0.775
+    },
+    {
+      "name": "smoke_classifier_inventory_pruning",
+      "passed": true,
+      "duration_seconds": 0.821
+    },
+    {
+      "name": "smoke_official_pack_classifier_data_driven",
+      "passed": true,
+      "duration_seconds": 6.822
+    },
+    {
+      "name": "smoke_no_hardcoded_file_project_detection",
+      "passed": true,
+      "duration_seconds": 0.327
+    },
+    {
+      "name": "smoke_builtin_process_catalog",
+      "passed": true,
+      "duration_seconds": 2.358
+    },
+    {
+      "name": "smoke_process_stage_contract_normalization",
+      "passed": true,
+      "duration_seconds": 13.73
+    },
+    {
+      "name": "smoke_process_definition_schema_contract",
+      "passed": true,
+      "duration_seconds": 4.967
+    }
+  ],
+  "isolated_imports": {
+    "direct": {
+      "passed": true,
+      "forbidden_imports": [],
+      "all_core_imports_under_selected_root": true
+    },
+    "copied": {
+      "passed": true,
+      "forbidden_imports": [],
+      "all_core_imports_under_selected_root": true
+    }
+  },
+  "independent_review": {
+    "status": "passed",
+    "blocking_findings": 0,
+    "path": ".pf/artifacts/pf121-oop-policies-20261018/review/report.md",
+    "sha256": "a8e5dd57507648febff6cbbcf2b8b1c40902e29c9da4c11a79c73cfd5ac12897"
+  },
+  "same_source_bytes_across_executors": true,
+  "product_sha256": {
+    "src/processforge_core/project/classification.py": "22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00",
+    "src/processforge_core/common/paths.py": "19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56",
+    "src/processforge_core/process_catalog/artifacts.py": "7ab9b30545e08e4db688760be8099ccae707c2ebd6621492b65d1449ece8a2a6",
+    "tools/processforge.py": "ebd867d78eca02239112f8d2eee4b027b5d58509d1a9784453f6b2e22433a2ac",
+    "docs/concepts/python-core-structure.md": "509e18a67f19c2fb2a1a4ffecd46cdeb0b11e032e5ff1c2c72e2284f2dcf34ce",
+    "docs/ru/concepts/python-core-structure.md": "be5ea4e276ca0410c30a5233d957fe0f73e8cc9bdb1e070e39398221b4991dd0",
+    "checksums/processforge.sha256": "80e879e79ed4879bc7002fe80f64ac851390f93334cb50668a12b1a615376eeb"
+  },
+  "inventory": {
+    "changed_rows": 4,
+    "new_rows": 2,
+    "untouched_rows": 1313,
+    "known_unrelated_drift": "preserved_without_global_revalidation"
+  },
+  "limitations": [
+    "Two symlink probes were skipped by the existing inventory smoke because symlink creation was unavailable.",
+    "No archive/install/Runtime/connected-host qualification."
+  ],
+  "zip_content_checks": "excluded_by_user",
+  "delivery": "pending_exact_commit_and_dual_remote_readback"
+}

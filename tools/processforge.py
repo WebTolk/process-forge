@@ -56,6 +56,8 @@ ROOT = _bootstrap_repo_src()
 from processforge_core.agents.presence import AgentPresenceReader
 from processforge_core.chat.transcripts import ChatTranscriptReader
 from processforge_core.common.ndjson import NdjsonReader
+from processforge_core.common.paths import path_matches_pattern
+from processforge_core.project.classification import ProjectClassifierRulePolicy
 from processforge_core.work.context_documents import ContextContractInputs
 from processforge_core.work.scope_conflicts import ScopeConflictService
 from processforge_core.common.digests import FileDigestReader
@@ -73,12 +75,15 @@ from processforge_core.project.context_sources import ProjectContextSourcesReade
 from processforge_core.resources.versioning import ResourceVersionPolicy
 from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
+from processforge_core.process_catalog.artifacts import ProcessArtifactDeclarationPolicy
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.sqlite_storage import JournalError
 from processforge_core.configuration.parameters import ParameterMergePolicy
 from processforge_core.configuration.resolution import ConfigurationResolver
 
 _file_digests = FileDigestReader()
+_project_classifier_rule_policy = ProjectClassifierRulePolicy()
+_process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
 _process_event_journal = ProcessEventJournal()
 _configuration_resolver = ConfigurationResolver()
 _context_contract_inputs = ContextContractInputs()
@@ -3754,7 +3759,7 @@ def inactive_official_classifier_hints(workplace_manifest: Path | None, project_
             ):
                 continue
             for rule in classifier.get("rules", []) if isinstance(classifier.get("rules"), list) else []:
-                if not isinstance(rule, dict) or not project_classifier_rule_matches(rule, available_paths):
+                if not isinstance(rule, dict) or not _project_classifier_rule_policy.matches(rule, available_paths):
                     continue
                 key = f"{pack_id}:{classifier_id or classifier.get('id')}"
                 if key in seen:
@@ -3766,33 +3771,6 @@ def inactive_official_classifier_hints(workplace_manifest: Path | None, project_
                     "then rerun project-context-refresh."
                 )
     return hints
-
-
-def project_classifier_condition_matches(condition: dict[str, Any], available_paths: set[str]) -> bool:
-    exists = condition.get("exists")
-    if not isinstance(exists, str) or not exists.strip():
-        return False
-    pattern = exists.strip().replace("\\", "/")
-    return any(path_matches_pattern(path, pattern) for path in available_paths)
-
-
-def project_classifier_rule_matches(rule: dict[str, Any], available_paths: set[str]) -> bool:
-    when = rule.get("when")
-    if not isinstance(when, dict):
-        return False
-    all_conditions = when.get("all")
-    any_conditions = when.get("any")
-    if isinstance(all_conditions, list):
-        return bool(all_conditions) and all(
-            isinstance(item, dict) and project_classifier_condition_matches(item, available_paths)
-            for item in all_conditions
-        )
-    if isinstance(any_conditions, list):
-        return any(
-            isinstance(item, dict) and project_classifier_condition_matches(item, available_paths)
-            for item in any_conditions
-        )
-    return False
 
 
 def classify_project(
@@ -3824,7 +3802,7 @@ def classify_project(
         if not isinstance(rules, list):
             continue
         for rule in rules:
-            if not isinstance(rule, dict) or not project_classifier_rule_matches(rule, available_paths):
+            if not isinstance(rule, dict) or not _project_classifier_rule_policy.matches(rule, available_paths):
                 continue
             classify_as = rule.get("classify_as")
             if not isinstance(classify_as, dict):
@@ -3984,12 +3962,6 @@ def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, pro
         if hint_matches(project_type, platform_contract_project_type_hints(contract)):
             matched.append(contract_id.removeprefix("platform."))
     return sorted(set(item for item in matched if item))
-
-
-def path_matches_pattern(path: str, pattern: str) -> bool:
-    normalized = path.replace("\\", "/")
-    name = Path(normalized).name
-    return fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(name, pattern)
 
 
 def detection_group_matches(values: Any, available: set[str], *, all_required: bool) -> bool:
@@ -13345,7 +13317,7 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
 
     role_ids = id_values(roles, "role")
     artifact_ids = id_values(artifacts, "artifact")
-    declared_artifact_ids = declared_process_artifact_ids(process)
+    declared_artifact_ids = _process_artifact_declaration_policy.declared_ids(process)
     evidence_ids = id_values(evidence, "evidence") if evidence else set()
     gate_ids = id_values(gates, "gate")
     stage_ids = id_values(stages, "stage")
@@ -13901,34 +13873,6 @@ def process_is_public_stable(process: dict[str, Any]) -> bool:
     return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
 
 
-def artifact_definition_ids(process: dict[str, Any]) -> set[str]:
-    definitions = process.get("artifact_definitions")
-    if isinstance(definitions, dict):
-        return {str(key) for key in definitions.keys()}
-    return {str(item.get("id")) for item in as_list(definitions) if isinstance(item, dict) and item.get("id")}
-
-
-def declared_process_artifact_ids(process: dict[str, Any]) -> set[str]:
-    ids = artifact_definition_ids(process)
-    for key in ["input_definitions", "external_artifacts", "virtual_artifacts", "generated_files"]:
-        value = process.get(key)
-        if isinstance(value, dict):
-            ids.update(str(item) for item in value.keys())
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict) and item.get("id"):
-                    ids.add(str(item["id"]))
-    return ids
-
-
-def produced_process_artifact_ids(process: dict[str, Any]) -> set[str]:
-    produced: set[str] = set()
-    for stage in as_list(process.get("stages")):
-        if isinstance(stage, dict):
-            produced.update(str(item) for item in string_list(stage.get("produced_artifacts")))
-    return produced
-
-
 def process_companion_paths(root: Path, process_id: str) -> dict[str, Path]:
     return {
         "process": root / "processes" / f"{process_id}.yaml",
@@ -13976,9 +13920,9 @@ def validate_process_contract(
             responsibilities = [role.get("responsibility")]
         checks.append(check("PASS" if string_list(responsibilities) else ("FAIL" if hard else "WARN"), f"{label} responsibilities declared"))
 
-    defined_artifacts = declared_process_artifact_ids(process)
+    defined_artifacts = _process_artifact_declaration_policy.declared_ids(process)
     evidence_ids = {str(item.get("id")) for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict) and item.get("id")}
-    produced = produced_process_artifact_ids(process)
+    produced = _process_artifact_declaration_policy.produced_ids(process)
     missing = sorted(produced - defined_artifacts)
     checks.append(check("PASS" if not missing else ("FAIL" if hard else "WARN"), f"{process_id} produced artifacts declared: {', '.join(missing) if missing else 'all'}"))
     gate_ids = {str(item.get("id")) for item in as_list(process.get("gates")) if isinstance(item, dict) and item.get("id")}
@@ -14161,8 +14105,8 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
                 "has_prompt": companions["prompt"].is_file(),
                 "has_process_doc": companions["doc"].is_file(),
                 "has_authoring_example": companions["example"].is_file(),
-                "artifact_definitions_complete": not (produced_process_artifact_ids(process) - declared_process_artifact_ids(process)),
-                "stage_artifacts_declared": not (produced_process_artifact_ids(process) - declared_process_artifact_ids(process)),
+                "artifact_definitions_complete": not (_process_artifact_declaration_policy.produced_ids(process) - _process_artifact_declaration_policy.declared_ids(process)),
+                "stage_artifacts_declared": not (_process_artifact_declaration_policy.produced_ids(process) - _process_artifact_declaration_policy.declared_ids(process)),
                 "gates_valid": not any("gates valid:" in item.message and item.level == "FAIL" for item in strict_checks),
                 "handoff_semantics": "process_transition" if process.get("process_transitions") else ("run_summary" if process.get("run_completion") else ("stage_note" if process.get("stage_completion") else "none")),
                 "doctor_contexts": process_catalog_contexts(process),

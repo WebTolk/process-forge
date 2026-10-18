@@ -1,0 +1,75 @@
+{
+  "started_at": "2026-10-18T17:42:14.656094+00:00",
+  "executor": "primary",
+  "python": "3.14.3",
+  "reason": "The known restricted-worker fixture limitation is avoided by running only affected unchanged existing smokes in primary-owned scratch. No ACL, dependency or test changes.",
+  "scratch": ".pf/tmp/p121-policies/primary/checks",
+  "source_hashes": {
+    "tools/processforge.py": "ebd867d78eca02239112f8d2eee4b027b5d58509d1a9784453f6b2e22433a2ac",
+    "src/processforge_core/project/classification.py": "22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00",
+    "src/processforge_core/common/paths.py": "19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56",
+    "src/processforge_core/process_catalog/artifacts.py": "7ab9b30545e08e4db688760be8099ccae707c2ebd6621492b65d1449ece8a2a6"
+  },
+  "checks": [
+    {
+      "name": "smoke_project_classification_data_driven",
+      "exit_code": 0,
+      "duration_seconds": 0.775,
+      "stdout": "PASS: smoke_project_classification_data_driven\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_classifier_inventory_pruning",
+      "exit_code": 0,
+      "duration_seconds": 0.821,
+      "stdout": "SKIP: directory symlink unavailable: OSError\nSKIP: file symlink unavailable: OSError\nPASS: smoke_classifier_inventory_pruning\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_official_pack_classifier_data_driven",
+      "exit_code": 0,
+      "duration_seconds": 6.822,
+      "stdout": "PASS: smoke_official_pack_classifier_data_driven\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_no_hardcoded_file_project_detection",
+      "exit_code": 0,
+      "duration_seconds": 0.327,
+      "stdout": "PASS: smoke_no_hardcoded_file_project_detection\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_builtin_process_catalog",
+      "exit_code": 0,
+      "duration_seconds": 2.358,
+      "stdout": "PASS: built-in process catalog smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_stage_contract_normalization",
+      "exit_code": 0,
+      "duration_seconds": 13.73,
+      "stdout": "PASS: process/stage contract normalization smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_definition_schema_contract",
+      "exit_code": 0,
+      "duration_seconds": 4.967,
+      "stdout": "PASS: process definition schema contract smoke\n",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "source_stable": true,
+  "finished_at": "2026-10-18T17:42:44.464093+00:00",
+  "passed": true,
+  "harness_correction": "Three existing scripts use descriptive PASS messages instead of their filenames. The initial collector misclassified their zero exits and PASS output. Recognition was corrected against retained original output, with no test reruns or test/product edits."
+}
