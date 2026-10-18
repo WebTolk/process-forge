@@ -49,3 +49,17 @@ class ProjectMetadataReader:
         if isinstance(project, dict) and project.get("id"):
             return str(project["id"])
         return safe_id(self.project_root.name, "project")
+
+    def workplace_manifest(self) -> Path | None:
+        local_config = self.flow_root() / "process-forge.local.yaml"
+        if not local_config.is_file():
+            return None
+        data = self.documents.load(local_config)
+        workplace = data.get("workplace") if isinstance(data, dict) else {}
+        manifest = workplace.get("manifest") if isinstance(workplace, dict) else None
+        if not manifest:
+            return None
+        path = Path(str(manifest)).expanduser()
+        if not path.is_absolute():
+            path = (self.project_root / path).resolve()
+        return path

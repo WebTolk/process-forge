@@ -246,7 +246,8 @@ def build_verification_state(item: dict[str, Any], project_root: Path, core: Any
     event_type = str(event.get("event_type") or "") if event else ""
     result = "passed" if event_type == passed_event else ("failed" if event_type == failed_event else "not_run")
     event_data = event.get("data") if event and isinstance(event.get("data"), dict) else {}
-    current_inputs = core.task_verification_fingerprint(project_root, task)
+    from processforge_core.work.outputs import WorkOutputPolicy
+    current_inputs = WorkOutputPolicy().fingerprint(project_root, task)
     evidence_inputs = str(event_data.get("verification_fingerprint") or "")
     readiness = "ready" if result == "passed" and evidence_inputs == current_inputs else ("stale" if result == "passed" and evidence_inputs else ("missing" if result == "passed" else ("invalid" if result == "failed" else "missing")))
     row = obligation_base(item, required, core)
@@ -355,7 +356,8 @@ def stage_obligations_payload(project_root: Path, core: Any) -> dict[str, Any]:
                     if current.get("status") != output.get("status") or current.get("sha256") != output.get("sha256"):
                         freshness = "stale"
             verification = row.get("verification") if isinstance(row.get("verification"), dict) else {}
-            if verification and str(verification.get("input_fingerprint") or "") != core.task_verification_fingerprint(project_root, task):
+            from processforge_core.work.outputs import WorkOutputPolicy
+            if verification and str(verification.get("input_fingerprint") or "") != WorkOutputPolicy().fingerprint(project_root, task):
                 freshness = "stale"
         except (OSError, SystemExit, ValueError):
             freshness = "stale"
@@ -1360,7 +1362,8 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
     events_path, _outbox = core.event_runtime_paths(project_root)
-    supervisor = core.json_read(core.supervisor_state_path(project_root))
+    from processforge_core.common.json_io import json_read
+    supervisor = json_read(core.supervisor_state_path(project_root))
     projection = stage_obligations_payload(project_root, core)
     obligations = projection.get("obligations") if isinstance(projection.get("obligations"), list) else []
     execution = active_execution_records(project_root, core)

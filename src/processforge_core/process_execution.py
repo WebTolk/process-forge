@@ -14,6 +14,8 @@ from .common.yaml_io import _parse_simple_yaml
 from .documents.reader import YamlDocumentReader
 from .work.inventory import WorkInventory
 from .work.state import WorkStatePolicy
+from .work.outputs import WorkOutputPolicy
+from .common.checks import Check
 from .work.start_documents import WorkStartDocumentBuilder
 from .evidence.collection import EvidenceCollectionPolicy
 
@@ -191,6 +193,8 @@ class ProcessExecutionService:
     definitions: ProcessDefinitionReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, kw_only=True, repr=False, compare=False)
+    output_checks: Callable[[Path, dict[str, Any]], list[Check]] | None = field(default_factory=lambda: WorkOutputPolicy().checks, kw_only=True, repr=False, compare=False)
+    verification_fingerprint: Callable[[Path, dict[str, Any]], str] | None = field(default_factory=lambda: WorkOutputPolicy().fingerprint, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -815,7 +819,7 @@ class ProcessExecutionService:
         from .composition import build_automation_readiness_service
 
         return build_automation_readiness_service(
-            project_root=self.project_root, has_output_checks=lambda: hasattr(self.core, 'required_output_checks'), output_checks=lambda root, assignment: self.core.required_output_checks(root, assignment), has_fingerprint=lambda: hasattr(self.core, 'task_verification_fingerprint'), fingerprint=lambda root, assignment: self.core.task_verification_fingerprint(root, assignment), has_event_paths=lambda: hasattr(self.core, 'event_runtime_paths'), event_paths=lambda root: self.core.event_runtime_paths(root), latest_event=self._latest_assignment_event
+            project_root=self.project_root, has_output_checks=lambda: self.output_checks is not None, output_checks=lambda root, assignment: self.output_checks(root, assignment), has_fingerprint=lambda: self.verification_fingerprint is not None, fingerprint=lambda root, assignment: self.verification_fingerprint(root, assignment), has_event_paths=lambda: hasattr(self.core, 'event_runtime_paths'), event_paths=lambda root: self.core.event_runtime_paths(root), latest_event=self._latest_assignment_event
         )
 
     def _automation_states(self, process: dict[str, Any], stage: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:

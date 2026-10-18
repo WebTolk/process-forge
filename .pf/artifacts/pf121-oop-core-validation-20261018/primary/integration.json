@@ -1,0 +1,77 @@
+{
+  "status": "integrated",
+  "removed_definitions": [
+    "contract_extends",
+    "contract_includes",
+    "contract_optional_items",
+    "contract_recommended_items",
+    "contract_required_capabilities",
+    "contract_required_items",
+    "contract_required_platforms",
+    "json_read",
+    "normalize_platform_ref",
+    "platform_refs_from",
+    "process_companion_paths",
+    "project_workplace_manifest",
+    "public_yaml_has_private_path",
+    "required_output_checks",
+    "runtime_driver_for_task",
+    "runtime_driver_for_worker_state",
+    "task_verification_fingerprint",
+    "validate_process_authoring_logic",
+    "validate_process_definition_files"
+  ],
+  "moved_constants": [
+    "ERROR_WORKFLOW_FALLBACKS",
+    "ERROR_WORKFLOW_MODES",
+    "ITERATION_KINDS"
+  ],
+  "migrated_name_consumers": {
+    "required_output_checks": 2,
+    "task_verification_fingerprint": 1,
+    "runtime_driver_for_task": 2,
+    "runtime_driver_for_worker_state": 7,
+    "normalize_platform_ref": 0,
+    "platform_refs_from": 0,
+    "contract_required_platforms": 4,
+    "contract_extends": 4,
+    "contract_required_capabilities": 2,
+    "contract_required_items": 8,
+    "contract_includes": 4,
+    "contract_recommended_items": 8,
+    "contract_optional_items": 4,
+    "validate_process_authoring_logic": 5,
+    "validate_process_definition_files": 1,
+    "process_companion_paths": 2
+  },
+  "bound_metadata_calls": 6,
+  "external_consumers": {
+    "tools/smoke_expected_report_containment.py": {
+      "task_verification_fingerprint": 1,
+      "required_output_checks": 1
+    },
+    "tools/smoke_prepared_execution_recovery.py": {
+      "json_read": 4,
+      "terminal_driver_selection_spy": 1
+    },
+    "tools/smoke_process_run_task_batch.py": {
+      "required_output_checks": 2
+    },
+    "tools/pf_runtime/host.py": {
+      "task_verification_fingerprint": 2,
+      "json_read": 1
+    },
+    "tools/pf_runtime/service.py": {
+      "json_read": 1
+    }
+  },
+  "special_consumers": [
+    "src/processforge_core/process_execution.py",
+    "tools/smoke_automation_readiness.py"
+  ],
+  "intentional_legacy_trap_preserved": "tools/smoke_session_identity_roundtrip.py unchanged; it proves presence owners never invoke the monolith JSON/presence bindings. Monolith JSON name is a needed canonical import, not a retained definition.",
+  "runtime_bootstrap": "Preserve self.core evaluation at the old JSON call point before lazy canonical import.",
+  "terminal_driver_selection_spy_preserved": true,
+  "optional_ports": "Two independent keyword-only optional callables, canonical defaults, explicit None unavailable; unused capabilities remain lazy and other legacy fields unchanged.",
+  "primary_preflight_all_before_write": true
+}

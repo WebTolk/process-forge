@@ -140,7 +140,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/coordination.py` | ProjectCoordinationReader for existing project/workplace coordination defaults, mode normalization and live config reads. |
 | `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Canonical shared text patterns/predicates and existing evolve findings/redaction/recursive value transformation. |
 | `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy for existing trust, URL/env/source shape checks, registry validation and stable sorting. |
-| `src/processforge_core/work/outputs.py` | WorkOutputPolicy for existing declared output/report paths, containment and waiver parsing. |
+| `src/processforge_core/work/outputs.py` | WorkOutputPolicy for existing output/report paths, waivers, required-output checks and verification fingerprints. |
 | `src/processforge_core/project/detection.py` | ProjectDetectionService for current generic file inventory and existing platform detection rules. |
 | `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy for placeholder expansion, durable explicit environment and launch-only inheritance. |
 | `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks for the existing JSON Schema subset and current schema-file checks with an explicit distribution root. |
@@ -148,6 +148,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/runtime/command.py` | WorkerCommandBuilder for existing sandbox projection and command composition with concrete Core policies. |
 | `src/processforge_core/project/platforms.py` | PlatformContractReader for live seed/project/workplace catalog overlays and exact registry fallback. |
 | `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader for existing registry paths, YAML/JSON reads, doctor checks and local file-URL resolution. |
+| `src/processforge_core/runtime/selection.py` | RuntimeDriverSelectionService for existing task/saved-command driver selection through concrete Core readers and policies. |
+| `src/processforge_core/project/platform_policy.py` | PlatformContractPolicy for existing reference, dependency and required/recommended/optional resource projections. |
+| `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService for existing authoring logic, companion paths/file checks and canonical workflow/iteration constants. |
+| `src/processforge_core/common/json_io.py` | Canonical existing json_read primitive with current file reads and unchanged native failures. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
@@ -700,9 +704,10 @@ contracts; evidence remains limited to the qualified source slice.
 `expected_report` and `default_report`. It uses existing `ContextContractInputs`
 for normalization and preserves traversal/drive/absolute-path checks before
 resolution, containment, native failures and existing defaults. Required-output
-normalization calls the existing Core owner directly. Required-output readiness,
-optional capabilities and lifecycle remain with their existing owners. Host and
-existing consumers call the policy at their former guard positions.
+normalization calls the existing Core owner directly. The same policy owns
+required-output `checks` and verification `fingerprint`; lifecycle remains with
+the application service. Host and existing consumers call the policy at their
+former guard positions. Optional application dependencies are described below.
 
 `project.detection.ProjectDetectionService` owns `files`, `group_matches` and
 `matches`, using canonical `common.paths` and `common.values.list_value`.
@@ -762,3 +767,38 @@ parsed mapping. Construction performs no I/O. Network fetch, effects and update
 lifecycle remain legacy responsibilities. Egress and prepared-input consumers
 use canonical Work paths but retain their other unmoved dependencies. This is
 bounded source ownership, with later delivery layers and OOP epics still separate.
+
+## Output readiness, driver selection and validation
+
+`WorkOutputPolicy.checks` and `fingerprint` preserve optional-output skipping,
+waivers, missing/pending/invalid distinctions, live file observations and exact
+JSON/hash encoding. Earlier fields, constructor and path methods are unchanged.
+`ProcessExecutionService` receives independent optional keyword-only callables
+`output_checks` and `verification_fingerprint`, with canonical Core methods by
+default and explicit `None` for unavailability. Frozen/repr/compare behavior and
+the three positional constructor arguments remain intact. Existing automation
+projectors retain their guards, reasons and exception identity; unused
+capabilities remain lazy. Event/journal dependencies retain their earlier wiring.
+
+`runtime.selection.RuntimeDriverSelectionService(distribution_root)` owns
+`for_task` and `for_worker_state`, preserving saved command reads, direct-path
+copies, fallback and validation/error order. The existing
+`ProjectMetadataReader.workplace_manifest()` owns the local-only workplace
+manifest lookup with project identity bound in the reader. It remains distinct
+from broader automatic workplace resolution. `common.json_io.json_read` owns
+the existing primitive, including raw JSON types and native parse/read failures.
+
+`project.platform_policy.PlatformContractPolicy(catalog)` receives a concrete
+`PlatformContractReader` for canonical IDs. It owns reference normalization,
+extends/requires and required/recommended/optional resource projections, retaining
+type/truthiness distinctions, sorting, deduplication and existing includes rules.
+Hierarchy resolution and package catalog assembly retain their legacy owners.
+
+`process_catalog.validation.ProcessAuthoringValidationService` owns `logic`,
+`files` and `paths`, using existing evolution/artifact policies and canonical
+workflow/iteration constants. Guard/check order, nested ID validation, warnings,
+companion-root handling and file observations are unchanged. The shared
+`common.privacy.public_yaml_has_private_path` retains its original serialization
+and predicate. Full process-contract/route validation, publication and recovery
+remain with their existing owners. These are internal source interfaces; external
+1.2.0 contracts and later delivery-layer acceptance remain separate.

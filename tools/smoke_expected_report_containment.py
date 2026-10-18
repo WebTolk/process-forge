@@ -47,8 +47,10 @@ def main() -> int:
             with patch.object(Path, "read_text", guarded_read), patch.object(Path, "read_bytes", guarded_bytes):
                 from processforge_core.work.outputs import WorkOutputPolicy
                 assert WorkOutputPolicy().task_path(project, {"path": report_rel}) is None
-                assert any(item.level == "FAIL" for item in core.required_output_checks(project, task))
-                assert core.task_verification_fingerprint(project, task).startswith("sha256:")
+                from processforge_core.work.outputs import WorkOutputPolicy
+                assert any(item.level == "FAIL" for item in WorkOutputPolicy().checks(project, task))
+                from processforge_core.work.outputs import WorkOutputPolicy
+                assert WorkOutputPolicy().fingerprint(project, task).startswith("sha256:")
                 with contextlib.redirect_stdout(io.StringIO()):
                     assert core.command_task_doctor(argparse.Namespace(project_root=str(project), task=task_id)) == 1
                     assert core.command_worker_run_collect(argparse.Namespace(project_root=str(project), task=task_id)) == 1

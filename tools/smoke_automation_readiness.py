@@ -16,6 +16,12 @@ def retained(path):
     exec('from __future__ import annotations\n'+ast.unparse(cls),old.__dict__)
     return old.ProcessExecutionService
 def suite(cls,root):
+    def service(core):
+        kwargs={}
+        if "output_checks" in cls.__dataclass_fields__:
+            kwargs={"output_checks":vars(core).get("required_output_checks"),
+                    "verification_fingerprint":vars(core).get("task_verification_fingerprint")}
+        return cls(root,None,core,**kwargs)
     (root/'events.sqlite3').unlink(missing_ok=True)
     assignment={'id':'task'}
     rows=[]
@@ -34,7 +40,7 @@ def suite(cls,root):
     assert lazy._latest_assignment_event('task',set()) is None
     rows.append('lazy optional capabilities')
     def project(stage,core=SimpleNamespace(),event=None):
-        svc=cls(root,None,core)
+        svc=service(core)
         if event is not None:object.__setattr__(svc,'_latest_assignment_event',lambda *a:event)
         return svc._automation_states({},stage,assignment)
     assert project({})==[];rows.append([])
@@ -51,10 +57,10 @@ def suite(cls,root):
         if fp is not None:core.task_verification_fingerprint=lambda *a:fp
         r=project({'automation_bindings':[v]},core,event);assert r[0]['status']==expected;rows.append(r)
     r=project({'automation_bindings':[{'projector':'verification-state'}]});assert r[0]['status']=='ready';rows.append(r)
-    svc=cls(root,None,SimpleNamespace())
+    svc=service(SimpleNamespace())
     assert svc._latest_assignment_event('task',{'passed'}) is None
     events=root/'events.sqlite3'
-    svc=cls(root,None,SimpleNamespace(event_runtime_paths=lambda *a:(events,None)))
+    svc=service(SimpleNamespace(event_runtime_paths=lambda *a:(events,None)))
     assert svc._latest_assignment_event('task',{'passed'}) is None
     for index,(data,expected) in enumerate([
             ([{'event_type':'passed','assignment':{'id':'task'}}], 'passed'),
@@ -68,7 +74,7 @@ def suite(cls,root):
     else:raise AssertionError('malformed event accepted')
     error=RuntimeError('required output failure')
     def fail(*args):raise error
-    svc=cls(root,None,SimpleNamespace(required_output_checks=fail))
+    svc=service(SimpleNamespace(required_output_checks=fail))
     try:svc._automation_states({}, {'automation_bindings':[binding]},assignment)
     except RuntimeError as e:assert e is error;rows.append('required exception identity')
     else:raise AssertionError('required error swallowed')

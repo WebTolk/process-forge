@@ -1,0 +1,414 @@
+{
+  "passed": true,
+  "total": 63,
+  "native_exceptions": 6,
+  "groups": {
+    "annotations": 19,
+    "outputs": 7,
+    "application": 10,
+    "metadata": 4,
+    "json": 4,
+    "runtime": 5,
+    "platform": 5,
+    "authoring": 5,
+    "privacy": 1,
+    "bootstrap": 1,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "required_output_checks",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "task_verification_fingerprint",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "runtime_driver_for_task",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "runtime_driver_for_worker_state",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_platform_ref",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_refs_from",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_required_platforms",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_extends",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_required_capabilities",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_required_items",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_includes",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_recommended_items",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "contract_optional_items",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_process_authoring_logic",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_process_definition_files",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_companion_paths",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "json_read",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "public_yaml_has_private_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "bound-metadata-return",
+      "passed": true
+    },
+    {
+      "group": "outputs",
+      "case": "present-duplicate-report",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "cc724e9b86566a31c1a58025686a8bc1e23c02381b60cb3e31eaa6d679004c5b"
+    },
+    {
+      "group": "outputs",
+      "case": "fingerprint-present",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8ca7a104147358f280e2b05e0ef1e5a1344eba2b749f6b1f46d4513be4aa8f94"
+    },
+    {
+      "group": "outputs",
+      "case": "same-stat-fresh-hash",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f05948100dfd95b427ce7670d942bdff3531bcb9f8fc5060eeae7fff64f5d328"
+    },
+    {
+      "group": "outputs",
+      "case": "content-change-visible",
+      "passed": true
+    },
+    {
+      "group": "outputs",
+      "case": "missing-pending",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a7c3a593ff86b8b8d20437de7571dfda340c69476d77366c610fb16439b2f608"
+    },
+    {
+      "group": "outputs",
+      "case": "waiver-precedence",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c0eafc292639f77f11c95f83ec1b3912632b81ad243cbe7b09b3536a269cdfc7"
+    },
+    {
+      "group": "outputs",
+      "case": "native-empty-alias-keyerror",
+      "passed": true,
+      "exception": "KeyError",
+      "observation_sha256": "12af5aedb6a37c5bb4726486df2ba598123b15e9e4b53eb0b30c20f4fb603603"
+    },
+    {
+      "group": "application",
+      "case": "default-core-ready",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "optional-unused-lazy",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "explicit-none-unsupported",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "default-fingerprint-ready",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "fresh-fingerprint-stale",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "fingerprint-independent",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "none-fingerprint-retains-ready",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "output_checks-field-contract",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "verification_fingerprint-field-contract",
+      "passed": true
+    },
+    {
+      "group": "application",
+      "case": "frozen-preserved",
+      "passed": true
+    },
+    {
+      "group": "metadata",
+      "case": "no-local-file",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4ae1a81a83c6c5fb9c7917a5c528e45f6cd5dae2611527759c597953b26d5705"
+    },
+    {
+      "group": "metadata",
+      "case": "relative-a",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0a210e6577e4942cec6cd974954b68c1b8c018f6dedd4e3d760bcf66306edd18"
+    },
+    {
+      "group": "metadata",
+      "case": "same-stat-relative-b",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "179566f251021df0e2ebd920732fa003cdd3f0522ae1fd681af8fe74ac4d3840"
+    },
+    {
+      "group": "metadata",
+      "case": "live-local-read",
+      "passed": true
+    },
+    {
+      "group": "json",
+      "case": "missing",
+      "passed": true,
+      "exception": "JSONDecodeError",
+      "observation_sha256": "65508661bfdf8e84c02d0e1514f9b7b9147c9402035f5cb513b8b7abd3cf131d"
+    },
+    {
+      "group": "json",
+      "case": "raw-list",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "24a6753e421fe1943dc5771337235431f3447162fa79199cb2765fbf96731739"
+    },
+    {
+      "group": "json",
+      "case": "raw-scalar",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "292ba9e25b28a35762b1e67fd1491283227e4506ef5e5fa026165a42e297c861"
+    },
+    {
+      "group": "json",
+      "case": "native-parse-error",
+      "passed": true,
+      "exception": "JSONDecodeError",
+      "observation_sha256": "65508661bfdf8e84c02d0e1514f9b7b9147c9402035f5cb513b8b7abd3cf131d"
+    },
+    {
+      "group": "runtime",
+      "case": "manual-default",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "93d6319b928a265f94cff1fa9c3111a54b513462ea7595d78abd53546ec39941"
+    },
+    {
+      "group": "runtime",
+      "case": "unknown-ref",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "d531af43ff665f1cc2676b8ef963ecf9ae3f01a784b8bc91f4efb863bf734221"
+    },
+    {
+      "group": "runtime",
+      "case": "direct-path-ref",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a503d8080961e863ca044352befb88a732f4cd5fea82e0644760fa3583ef992b"
+    },
+    {
+      "group": "runtime",
+      "case": "current-saved-ref",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "edb299946655d269ea84ba881c7f2c576d8a46260046be120d25c99c91ee65ef"
+    },
+    {
+      "group": "runtime",
+      "case": "saved-ref-error-cause",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "79faaef2b0244774928eac79ef04c7c573d4ebae563adb9a87e1023b4b1a4134"
+    },
+    {
+      "group": "platform",
+      "case": "raw-default",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0fec27c01c2ff65e0b49b0a7a9dd74dc19dc779b666073c796675a3f04426d19"
+    },
+    {
+      "group": "platform",
+      "case": "mapping-coercion-alias",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "9571d5c10440392ff873e538477c7a56af739bfe767dcf535a4b0b23df4be730"
+    },
+    {
+      "group": "platform",
+      "case": "required-identity",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "aaec5375fb94f4cc76cbb3e7967b99c2cc3704fd51fc66d18a3dfcc06c7253f6"
+    },
+    {
+      "group": "platform",
+      "case": "optional-includes",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "fa1d93f90139b0694bbf165b5aedace0ac1d1dc66d15dc5d3cb76af3165e85d9"
+    },
+    {
+      "group": "platform",
+      "case": "raw-string",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c660db686470b25a40be47f53b8da2d792c3cf9b149da94facba623610755189"
+    },
+    {
+      "group": "authoring",
+      "case": "minimal-logic",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "192370ad86d2ece7c248e96be59a77672476dd112a72681cc014d4a017f31e99"
+    },
+    {
+      "group": "authoring",
+      "case": "native-json-error",
+      "passed": true,
+      "exception": "TypeError",
+      "observation_sha256": "5f07e51b76be7449173e12f5ca8f8e3e4e65da743d3868ea619ca3727c97e140"
+    },
+    {
+      "group": "authoring",
+      "case": "companion-paths",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7db22030144646294af6a11ba6ea1906252180eb91eff92c6d7ea9b4c6d01602"
+    },
+    {
+      "group": "authoring",
+      "case": "missing-companions",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "150038600448faa5d505956952afa414bfa014b722d90d135ea8768925418161"
+    },
+    {
+      "group": "authoring",
+      "case": "existing-companions",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "150038600448faa5d505956952afa414bfa014b722d90d135ea8768925418161"
+    },
+    {
+      "group": "privacy",
+      "case": "canonical-primitive",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "87b38f44fdffb18cf98210482dffce4bf06c3f86a5e58497a7eb27956adb3274"
+    },
+    {
+      "group": "bootstrap",
+      "case": "active-reader-access-order",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "docs/concepts/python-core-structure.md": "5d28fe0727f13296d3938407a0917d19fc848c39469202b1403c9dbeed2ee6f5",
+    "docs/ru/concepts/python-core-structure.md": "b5eec3769a13a1d222acde0d40e8ae143370ac6ccae55cd77fdc24a5035b4a50",
+    "src/processforge_core/process_execution.py": "81a6bf756ee528203b52470067a864e28791777a12915cb8420b40ca7a0788e6",
+    "tools/pf_runtime/host.py": "b6dcae85561f8ed66e02683ec81f40513f05aa92de8f7a33c917da01eafc3ff2",
+    "tools/pf_runtime/service.py": "f2e3744417b90e26c98534318e164de6ed1c039f1eebfd3ada818e92e5871daf",
+    "tools/processforge.py": "56cb814f508a02a95b6ebb2b09eac19ea8ff08e3e7196664c227120f0532abf0",
+    "tools/smoke_automation_readiness.py": "1f5033060cdfa6e9be19ff0de4d1200b85f23e87c6f84e373876ecbb4cea7185",
+    "tools/smoke_expected_report_containment.py": "7b895660b95e6926e385bf13903b2bfeaf7e6590bca90afdea4dd1e83cb7811b",
+    "tools/smoke_prepared_execution_recovery.py": "a1637e9a6a5607812d4e44c076f9a28aa14b2ef4a8b08586744f4246c7d4f8b9",
+    "tools/smoke_process_run_task_batch.py": "3b93d61fd56cdb2d9c87e69fb331e83ce5c1b9a20520c5ccd49337874921c47c",
+    "tools/smoke_session_identity_roundtrip.py": "42b03122934c6797cadd258e7129a5aacfae847eaf0ac714b33da9fc84fe9be1",
+    "src/processforge_core/work/outputs.py": "a4134bac8a070dd652c2b160f480bf6bd14e11cea30140b7c7f040a40dc085f2",
+    "src/processforge_core/runtime/selection.py": "d428e95a5ee5bc0a1ddc982836c04c0080b56fdf196a8cf291f6c913da65ca75",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/common/json_io.py": "8f91f58a6152a713b621d3d5e03218bce8bb66e597c7c37eb63405a7e7aba013",
+    "src/processforge_core/project/platform_policy.py": "e2beaf9cc56934140ad1b653eedb1e8b0a8dd96447ae7c8db489ceb417fcc29e",
+    "src/processforge_core/process_catalog/validation.py": "7e4b5fb31934d4bd22c015f563e2e6c29b62b20b5373caace2c23ff767246616",
+    "src/processforge_core/common/privacy.py": "d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074"
+  },
+  "scope": "Source-only exact legacy/new parity and real default composition/live reads; complete moved algorithms and prior owners are proved separately by native receipts. No Runtime process or archive/installation/connected-host/ZIP checks."
+}

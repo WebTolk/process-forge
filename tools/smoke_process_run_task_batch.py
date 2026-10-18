@@ -158,7 +158,8 @@ def required_output_check_matrix(root: Path) -> None:
         ({"id": "report", "path": "missing.md", "required": False}, {}, True, "PASS", "required output optional: report"),
     ]
     for output, waivers, enforce_missing, level, message in cases:
-        checks = core.required_output_checks(root, {"required_outputs": [output]}, waivers, enforce_missing)
+        from processforge_core.work.outputs import WorkOutputPolicy
+        checks = WorkOutputPolicy().checks(root, {"required_outputs": [output]}, waivers, enforce_missing)
         actual = [(item.level, item.message) for item in checks]
         if actual != [(level, message)]:
             raise AssertionError(f"unexpected checks for {output!r}: {actual!r}")
@@ -170,7 +171,8 @@ def required_output_check_matrix(root: Path) -> None:
         ("missing.md", {"expected-report": "accepted"}, True, "WARN", "expected report waived: missing.md (accepted)"),
         ("missing.md", {"expected_report": "accepted"}, True, "WARN", "expected report waived: missing.md (accepted)"),
     ]:
-        checks = core.required_output_checks(root, {"expected_report": {"artifact": artifact}}, waivers, enforce_missing)
+        from processforge_core.work.outputs import WorkOutputPolicy
+        checks = WorkOutputPolicy().checks(root, {"expected_report": {"artifact": artifact}}, waivers, enforce_missing)
         actual = [(item.level, item.message) for item in checks]
         if actual != [(level, message)]:
             raise AssertionError(f"unexpected expected_report checks: {actual!r}")

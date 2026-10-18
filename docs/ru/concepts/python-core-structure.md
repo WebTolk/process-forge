@@ -148,7 +148,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/coordination.py` | ProjectCoordinationReader: прежние defaults, нормализация режимов и актуальное чтение project/workplace coordination. |
 | `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Общие канонические текстовые шаблоны/предикаты и прежние evolve findings, redaction и рекурсивное преобразование значений. |
 | `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy: прежние trust/URL/env/source проверки, валидация реестра и стабильная сортировка. |
-| `src/processforge_core/work/outputs.py` | WorkOutputPolicy: прежние пути выходов и отчётов, containment и разбор waiver. |
+| `src/processforge_core/work/outputs.py` | WorkOutputPolicy: прежние пути выходов/отчётов, waiver, проверки required outputs и verification fingerprint. |
 | `src/processforge_core/project/detection.py` | ProjectDetectionService: актуальный общий список файлов и прежние правила обнаружения платформы. |
 | `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy: placeholders, сохраняемое явное окружение и наследование только при запуске. |
 | `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks: существующее подмножество JSON Schema и актуальное чтение схем с явным корнем дистрибутива. |
@@ -156,6 +156,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/runtime/command.py` | WorkerCommandBuilder: прежняя проекция sandbox и сборка команды через конкретные политики Core. |
 | `src/processforge_core/project/platforms.py` | PlatformContractReader: актуальный каталог seed/project/workplace с прежним перекрытием и fallback. |
 | `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader: прежние пути реестров, YAML/JSON, doctor checks и локальные file URL. |
+| `src/processforge_core/runtime/selection.py` | RuntimeDriverSelectionService: прежний выбор драйвера задания и сохранённой команды через конкретные Core readers/policies. |
+| `src/processforge_core/project/platform_policy.py` | PlatformContractPolicy: прежние проекции ссылок, зависимостей и required/recommended/optional ресурсов. |
+| `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService: прежние authoring logic, companion paths/checks и канонические workflow/iteration constants. |
+| `src/processforge_core/common/json_io.py` | Каноническая прежняя json_read с актуальным чтением и исходными ошибками. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
@@ -715,9 +719,10 @@ defaults, формой remote/artifact URL, env-reference и source checks, пр
 `ContextContractInputs`. Сохранены проверки traversal, drive и абсолютных путей
 до разрешения, containment, исходные ошибки и значения по умолчанию.
 Нормализация required outputs вызывает прежнего владельца Core напрямую.
-Готовность обязательных выходов, optional capabilities и lifecycle остаются
-у существующих владельцев. Host и остальные потребители вызывают политику
-на прежних местах защитных проверок.
+Та же политика владеет `checks` обязательных выходов и verification `fingerprint`;
+lifecycle остаётся у прикладного сервиса. Host и остальные потребители вызывают
+политику на прежних местах защитных проверок. Необязательные зависимости
+прикладного сервиса описаны ниже.
 
 `project.detection.ProjectDetectionService` владеет `files`, `group_matches`
 и `matches`, используя канонические `common.paths` и `common.values.list_value`.
@@ -776,3 +781,38 @@ doctor может добавить ошибки схемы и всё равно 
 у прежних владельцев. Egress и prepared inputs используют канонические пути
 Work, сохраняя остальные неперенесённые зависимости. Приёмка ограничена
 исходниками; более поздние слои поставки и OOP-эпики проверяются отдельно.
+
+## Готовность выходов, выбор драйвера и проверки
+
+`WorkOutputPolicy.checks` и `fingerprint` сохраняют пропуск optional outputs,
+waivers, различия missing/pending/invalid, актуальное чтение и точное JSON/hash
+кодирование. Прежние поля, конструктор и методы путей не меняются.
+`ProcessExecutionService` получает независимые необязательные keyword-only
+callables `output_checks` и `verification_fingerprint`. По умолчанию используются
+методы Core, явный `None` означает недоступность. Frozen/repr/compare и три
+позиционных аргумента сохранены. Projectors сохраняют guards, reasons и
+идентичность исключений; неиспользуемые capabilities остаются ленивыми.
+Зависимости событий и журнала сохраняют прежнюю сборку.
+
+`runtime.selection.RuntimeDriverSelectionService(distribution_root)` владеет
+`for_task` и `for_worker_state`, сохраняя чтение сохранённой команды, копирование
+direct path, fallback и порядок проверок/ошибок. Существующий
+`ProjectMetadataReader.workplace_manifest()` владеет локальным поиском manifest
+с проектом, привязанным к reader. Он отличается от широкого автоматического
+разрешения workplace. `common.json_io.json_read` сохраняет прежние raw JSON types
+и исходные ошибки чтения/разбора.
+
+`project.platform_policy.PlatformContractPolicy(catalog)` получает конкретный
+`PlatformContractReader` для канонических ID. Ему принадлежат нормализация ссылок,
+extends/requires и проекции required/recommended/optional ресурсов с прежними
+различиями типов/truthiness, сортировкой, dedup и includes. Разрешение иерархии
+и сборка каталога packages остаются у прежних владельцев.
+
+`process_catalog.validation.ProcessAuthoringValidationService` владеет `logic`,
+`files` и `paths`, используя готовые evolution/artifact policies и канонические
+workflow/iteration constants. Порядок checks, вложенная проверка ID, warnings,
+companion root и наблюдение файлов сохранены. Общая
+`common.privacy.public_yaml_has_private_path` сохраняет прежнюю сериализацию
+и предикат. Полная проверка process contract/routes, публикация и recovery
+остаются у существующих владельцев. Внешние контракты 1.2.0 и приёмка более
+поздних слоёв поставки проверяются отдельно.

@@ -527,7 +527,9 @@ class RuntimeProcess:
             try:
                 agent_runs = self.core.locate_flow_root(project_root) / "runtime" / "agent-runs"
                 for status_path in agent_runs.glob("*/*/status.json") if agent_runs.is_dir() else []:
-                    state = self.core.json_read(status_path)
+                    self.core
+                    from processforge_core.common.json_io import json_read
+                    state = json_read(status_path)
                     if str(state.get("status") or "") == "running":
                         count += 1
             except Exception as exc:  # noqa: BLE001 - status must survive one project.

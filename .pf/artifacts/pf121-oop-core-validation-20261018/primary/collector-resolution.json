@@ -1,0 +1,4 @@
+{
+  "check": "smoke_core_work_state",
+  "reason": "Existing unittest runner reports Ran 24 tests / OK (skipped=1) on stderr and exit zero. Retained successful output recognized without rerun; product unchanged."
+}

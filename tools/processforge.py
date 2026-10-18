@@ -170,6 +170,20 @@ _work_paths = WorkPaths()
 _worker_command_builder = WorkerCommandBuilder(ROOT)
 _platform_contract_reader = PlatformContractReader(ROOT)
 _update_document_reader = UpdateDocumentReader(ROOT)
+from processforge_core.common.json_io import json_read
+from processforge_core.common.privacy import public_yaml_has_private_path
+from processforge_core.runtime.selection import RuntimeDriverSelectionService
+from processforge_core.project.platform_policy import PlatformContractPolicy
+from processforge_core.process_catalog.validation import (
+    ProcessAuthoringValidationService,
+    ERROR_WORKFLOW_MODES,
+    ERROR_WORKFLOW_FALLBACKS,
+    ITERATION_KINDS,
+)
+
+_runtime_driver_selection_service = RuntimeDriverSelectionService(ROOT)
+_platform_contract_policy = PlatformContractPolicy(_platform_contract_reader)
+_process_authoring_validation_service = ProcessAuthoringValidationService()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -344,8 +358,6 @@ PROJECT_FLOW_DIRS = [
     "runtime/registries",
 ]
 
-ERROR_WORKFLOW_MODES = {"none", "director_inbox", "route_to_process", "needs_operator"}
-ERROR_WORKFLOW_FALLBACKS = {"needs_operator", "fail_validation"}
 
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
@@ -3740,7 +3752,7 @@ def platform_contract_parent_type_hints(
     """Return project type hints declared by a contract's parent graph."""
     seen = set() if visited is None else set(visited)
     hints: set[str] = set()
-    parent_refs = [*contract_extends(contract), *contract_required_platforms(contract)]
+    parent_refs = [*_platform_contract_policy.extends(contract), *_platform_contract_policy.required_platforms(contract)]
     for ref in parent_refs:
         parent_id = ref["id"]
         if parent_id in seen:
@@ -4013,86 +4025,22 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
 
 
 
-def normalize_platform_ref(value: Any, *, default_required: bool = True) -> dict[str, Any] | None:
-    if isinstance(value, str):
-        ref_id = value.strip()
-        if not ref_id:
-            return None
-        return {"id": _platform_contract_reader.contract_id(ref_id), "required": default_required}
-    if isinstance(value, dict):
-        raw_id = value.get("id") or value.get("platform") or value.get("package_id")
-        if not raw_id:
-            return None
-        record: dict[str, Any] = {"id": _platform_contract_reader.contract_id(str(raw_id)), "required": bool(value.get("required", default_required))}
-        if value.get("version"):
-            record["version"] = str(value["version"])
-        return record
-    return None
 
 
-def platform_refs_from(value: Any, *, default_required: bool = True) -> list[dict[str, Any]]:
-    values = value if isinstance(value, list) else ([value] if value else [])
-    refs: list[dict[str, Any]] = []
-    for item in values:
-        ref = normalize_platform_ref(item, default_required=default_required)
-        if ref:
-            refs.append(ref)
-    return refs
 
 
-def contract_extends(contract: dict[str, Any]) -> list[dict[str, Any]]:
-    return platform_refs_from(contract.get("extends"), default_required=True)
 
 
-def contract_required_platforms(contract: dict[str, Any]) -> list[dict[str, Any]]:
-    requires = contract.get("requires", {}) if isinstance(contract.get("requires"), dict) else {}
-    return platform_refs_from(requires.get("platforms"), default_required=True)
 
 
-def contract_required_capabilities(contract: dict[str, Any]) -> list[str]:
-    requires = contract.get("requires", {}) if isinstance(contract.get("requires"), dict) else {}
-    return sorted(set(list_value(contract.get("capabilities"))).union(list_value(requires.get("capabilities"))))
 
 
-def contract_required_items(contract: dict[str, Any], key: str) -> list[str]:
-    requires = contract.get("requires", {}) if isinstance(contract.get("requires"), dict) else {}
-    includes = contract.get("includes", {}) if isinstance(contract.get("includes"), dict) else {}
-    required = set(list_value(requires.get(key)))
-    for item in includes.get(key, []) if isinstance(includes.get(key), list) else []:
-        if isinstance(item, dict) and item.get("required") is True:
-            item_id = item.get("id") or item.get("package") or item.get("template") or item.get("capability")
-            if item_id:
-                required.add(str(item_id))
-    return sorted(required)
 
 
-def contract_includes(contract: dict[str, Any], key: str) -> list[str]:
-    includes = contract.get("includes", {}) if isinstance(contract.get("includes"), dict) else {}
-    output: list[str] = []
-    value = includes.get(key)
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, list):
-        for item in value:
-            if isinstance(item, str):
-                output.append(item)
-            elif isinstance(item, dict) and item.get("required") is not True:
-                item_id = item.get("id") or item.get("package") or item.get("template") or item.get("capability")
-                if item_id:
-                    output.append(str(item_id))
-    return sorted(set(output))
 
 
-def contract_recommended_items(contract: dict[str, Any], key: str) -> list[str]:
-    recommends = contract.get("recommends") if isinstance(contract.get("recommends"), dict) else {}
-    values = list_value(recommends.get(key))
-    values.extend(contract_includes(contract, key))
-    return sorted(set(values))
 
 
-def contract_optional_items(contract: dict[str, Any], key: str) -> list[str]:
-    optional = contract.get("optional") if isinstance(contract.get("optional"), dict) else {}
-    return sorted(set(list_value(optional.get(key))))
 
 
 def package_dependency_ids(manifest: dict[str, Any]) -> list[str]:
@@ -4150,8 +4098,8 @@ def resolve_platform_contracts(
             source = "staged"
         else:
             contract, entry, status, source = _platform_contract_reader.load(workplace_manifest, contract_id, project_root)
-        extends_refs = contract_extends(contract)
-        required_platform_refs = contract_required_platforms(contract)
+        extends_refs = _platform_contract_policy.extends(contract)
+        required_platform_refs = _platform_contract_policy.required_platforms(contract)
         for ref in extends_refs:
             if ref["id"] in resolving:
                 cycle = " -> ".join([*resolving[resolving.index(ref["id"]):], ref["id"]])
@@ -4179,16 +4127,16 @@ def resolve_platform_contracts(
         }
         platform_stack.append(platform_record)
         if include_resources:
-            required_capabilities.update(contract_required_capabilities(contract))
+            required_capabilities.update(_platform_contract_policy.required_capabilities(contract))
             owner = contract_id
-            merge_id_list(required_knowledge_packages, contract_required_items(contract, "knowledge_packages"), owner, resource_conflicts)
-            merge_id_list(recommended_knowledge_packages, contract_recommended_items(contract, "knowledge_packages"), owner, resource_conflicts)
-            merge_id_list(required_tools, contract_required_items(contract, "tools"), owner, resource_conflicts)
-            merge_id_list(recommended_tools, contract_recommended_items(contract, "tools"), owner, resource_conflicts)
-            merge_id_list(required_mcp, contract_required_items(contract, "mcp"), owner, resource_conflicts)
-            merge_id_list(recommended_mcp, contract_recommended_items(contract, "mcp"), owner, resource_conflicts)
-            merge_id_list(required_templates, contract_required_items(contract, "templates"), owner, resource_conflicts)
-            merge_id_list(recommended_templates, contract_recommended_items(contract, "templates"), owner, resource_conflicts)
+            merge_id_list(required_knowledge_packages, _platform_contract_policy.required_items(contract, "knowledge_packages"), owner, resource_conflicts)
+            merge_id_list(recommended_knowledge_packages, _platform_contract_policy.recommended_items(contract, "knowledge_packages"), owner, resource_conflicts)
+            merge_id_list(required_tools, _platform_contract_policy.required_items(contract, "tools"), owner, resource_conflicts)
+            merge_id_list(recommended_tools, _platform_contract_policy.recommended_items(contract, "tools"), owner, resource_conflicts)
+            merge_id_list(required_mcp, _platform_contract_policy.required_items(contract, "mcp"), owner, resource_conflicts)
+            merge_id_list(recommended_mcp, _platform_contract_policy.recommended_items(contract, "mcp"), owner, resource_conflicts)
+            merge_id_list(required_templates, _platform_contract_policy.required_items(contract, "templates"), owner, resource_conflicts)
+            merge_id_list(recommended_templates, _platform_contract_policy.recommended_items(contract, "templates"), owner, resource_conflicts)
         contracts_by_id[contract_id] = {
             "id": contract_id,
             "platform": contract_id.removeprefix("platform."),
@@ -4200,24 +4148,24 @@ def resolve_platform_contracts(
             "inherited_by": inherited_by,
             "extends": [ref["id"] for ref in extends_refs],
             "requires_platforms": [ref["id"] for ref in required_platform_refs],
-            "required_capabilities": sorted(contract_required_capabilities(contract)),
+            "required_capabilities": sorted(_platform_contract_policy.required_capabilities(contract)),
             "required": {
-                "knowledge_packages": sorted(contract_required_items(contract, "knowledge_packages")),
-                "tools": sorted(contract_required_items(contract, "tools")),
-                "mcp": sorted(contract_required_items(contract, "mcp")),
-                "templates": sorted(contract_required_items(contract, "templates")),
+                "knowledge_packages": sorted(_platform_contract_policy.required_items(contract, "knowledge_packages")),
+                "tools": sorted(_platform_contract_policy.required_items(contract, "tools")),
+                "mcp": sorted(_platform_contract_policy.required_items(contract, "mcp")),
+                "templates": sorted(_platform_contract_policy.required_items(contract, "templates")),
             },
             "recommended": {
-                "knowledge_packages": sorted(contract_recommended_items(contract, "knowledge_packages")),
-                "tools": sorted(contract_recommended_items(contract, "tools")),
-                "mcp": sorted(contract_recommended_items(contract, "mcp")),
-                "templates": sorted(contract_recommended_items(contract, "templates")),
+                "knowledge_packages": sorted(_platform_contract_policy.recommended_items(contract, "knowledge_packages")),
+                "tools": sorted(_platform_contract_policy.recommended_items(contract, "tools")),
+                "mcp": sorted(_platform_contract_policy.recommended_items(contract, "mcp")),
+                "templates": sorted(_platform_contract_policy.recommended_items(contract, "templates")),
             },
             "optional": {
-                "knowledge_packages": sorted(contract_optional_items(contract, "knowledge_packages")),
-                "tools": sorted(contract_optional_items(contract, "tools")),
-                "mcp": sorted(contract_optional_items(contract, "mcp")),
-                "templates": sorted(contract_optional_items(contract, "templates")),
+                "knowledge_packages": sorted(_platform_contract_policy.optional_items(contract, "knowledge_packages")),
+                "tools": sorted(_platform_contract_policy.optional_items(contract, "tools")),
+                "mcp": sorted(_platform_contract_policy.optional_items(contract, "mcp")),
+                "templates": sorted(_platform_contract_policy.optional_items(contract, "templates")),
             },
             "parameters": parameter_payload(contract),
         }
@@ -8820,7 +8768,7 @@ def workplace_registry_entry(workplace_manifest: Path | None, registry: str, ref
 def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, workplace_manifest: Path | None = None) -> dict[str, Any]:
     from processforge_core.resources.snapshot import WorkspacePathReferenceReader
 
-    manifest = normalize_workplace_manifest(workplace_manifest or project_workplace_manifest(project_root))
+    manifest = normalize_workplace_manifest(workplace_manifest or _ProjectMetadataReader(project_root).workplace_manifest())
     return WorkspacePathReferenceReader(
         project_root, manifest.parent if manifest else None, workplace_manifest=manifest,
     ).resolve(path_ref)
@@ -9652,7 +9600,7 @@ def event_runtime_paths(project_root: Path) -> tuple[Path, Path]:
 
 def project_configuration(project_root: Path, workplace_root: Path | None = None):
     if workplace_root is None:
-        manifest = project_workplace_manifest(project_root)
+        manifest = _ProjectMetadataReader(project_root).workplace_manifest()
         workplace_root = manifest.parent.resolve() if manifest else None
     device_path = workplace_root / "configuration.yaml" if workplace_root is not None else None
     return _configuration_resolver.resolve(device_path, locate_flow_root(project_root) / "configuration.yaml")
@@ -10985,48 +10933,6 @@ def normalize_context_artifacts(value: Any) -> list[dict[str, Any]]:
 
 
 
-def required_output_checks(project_root: Path, task: dict[str, Any], waivers: dict[str, str] | None = None, enforce_missing: bool = True) -> list[Check]:
-    waiver_map = waivers or {}
-    checks: list[Check] = []
-    for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
-        output_id = safe_id(str(output.get("id") or "output"), "output")
-        if not bool(output.get("required", True)):
-            checks.append(check("PASS", f"required output optional: {output_id}"))
-            continue
-        out_path = _work_output_policy.task_path(project_root, output)
-        if out_path is None:
-            if output_id in waiver_map:
-                checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
-            else:
-                checks.append(check("FAIL", f"required output has no path: {output_id}"))
-            continue
-        output_rel = _context_contract_inputs.normalize_assignment_path(str(output.get("path") or ""))
-        if out_path.is_file():
-            checks.append(check("PASS", f"required output exists: {output_rel}"))
-        elif output_id in waiver_map:
-            checks.append(check("WARN", f"required output waived: {output_id} ({waiver_map[output_id]})"))
-        elif not enforce_missing:
-            checks.append(check("WARN", f"required output pending: {output_rel}"))
-        else:
-            checks.append(check("FAIL", f"required output missing: {output_rel}"))
-    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
-    expected_artifact = _context_contract_inputs.normalize_assignment_path(str(expected.get("artifact") or ""))
-    if expected_artifact:
-        try:
-            expected_path = _work_output_policy.path(project_root, expected_artifact)
-        except (OSError, ValueError):
-            checks.append(check("FAIL", "expected report path is outside project output scope"))
-            return checks
-        if expected_path.is_file():
-            checks.append(check("PASS", f"expected report exists: {expected_artifact}"))
-        elif "expected-report" in waiver_map or "expected_report" in waiver_map:
-            waiver_reason = waiver_map.get("expected-report") or waiver_map["expected_report"]
-            checks.append(check("WARN", f"expected report waived: {expected_artifact} ({waiver_reason})"))
-        elif not enforce_missing:
-            checks.append(check("WARN", f"expected report pending: {expected_artifact}"))
-        else:
-            checks.append(check("FAIL", f"expected report missing: {expected_artifact}"))
-    return checks
 
 
 def normalize_execution_mode(value: Any) -> dict[str, Any]:
@@ -11307,7 +11213,6 @@ def command_capsule_doctor(args: argparse.Namespace) -> int:
 
 RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}
 TASK_STATUSES = {"open", "in_progress", "blocked", "debugging", "review", "done", "cancelled", "failed"}
-ITERATION_KINDS = {"work", "debug", "fix", "review", "test", "research", "handoff", "note"}
 ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed", "cancelled"}
 
 
@@ -11963,8 +11868,6 @@ def update_run_task_status_locked(project_root: Path, run_id: str, task_id: str,
         save_run_locked(project_root, run)
 
 
-def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
-    return not is_public_path_safe(json.dumps(data, ensure_ascii=False))
 
 
 def validate_run_consistency(project_root: Path, run_id: str, include_runtime_events: bool = False) -> list[Check]:
@@ -12075,7 +11978,7 @@ def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
         result_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), list) else []
         checks.append(check("PASS" if result_summary or result_artifacts else "FAIL", "completed task has result summary or artifact"))
     result_waivers = result.get("waivers") if isinstance(result.get("waivers"), dict) else {}
-    checks.extend(required_output_checks(project_root, task, {str(key): str(value) for key, value in result_waivers.items()}, enforce_missing=status == "done"))
+    checks.extend(_work_output_policy.checks(project_root, task, {str(key): str(value) for key, value in result_waivers.items()}, enforce_missing=status == "done"))
     return checks
 
 
@@ -12139,101 +12042,6 @@ def append_authoring_log(paths: dict[str, Path], message: str) -> None:
 
 
 
-def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str, Any] | None = None) -> list[Check]:
-    checks: list[Check] = []
-    text = json.dumps({"process": process, "answers": answers or {}}, ensure_ascii=False)
-    checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "authoring data has no private absolute paths"))
-    checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "authoring data contains no secret-like values"))
-    for key in ["schema_version", "id", "name", "version", "status", "description", "stages", "roles", "artifact_definitions", "gates", "evolution_policy"]:
-        checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
-    checks.extend(_process_evolution_policy.validate_block(str(process.get("id") or "process"), process.get("evolve"), hard=bool(answers and "evolve" in answers)))
-    if answers is not None and answers and "evolve" not in answers:
-        checks.append(check("FAIL", "authoring answers include explicit evolve decision"))
-    execution_mode = str(process.get("execution_mode") or "single_agent")
-    checks.append(check("PASS" if execution_mode in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else "FAIL", f"process.execution_mode valid: {execution_mode}"))
-    coordination_requirements = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
-    coordination_mode = str(coordination_requirements.get("mode") or "simple_allowed")
-    checks.append(check("PASS" if coordination_mode in PROCESS_COORDINATION_MODES else "FAIL", f"process.coordination_requirements.mode valid: {coordination_mode}"))
-    director_inbox = coordination_requirements.get("director_inbox") if isinstance(coordination_requirements.get("director_inbox"), dict) else {}
-    if coordination_mode == "simple_allowed" and bool(director_inbox.get("required", False)):
-        checks.append(check("FAIL", "simple_allowed process must not require Director inbox"))
-    error_workflow = coordination_requirements.get("error_workflow") if isinstance(coordination_requirements.get("error_workflow"), dict) else {}
-    error_workflow_mode = str(error_workflow.get("mode") or "none")
-    checks.append(check("PASS" if error_workflow_mode in ERROR_WORKFLOW_MODES else "FAIL", f"process.coordination_requirements.error_workflow.mode valid: {error_workflow_mode}"))
-    error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
-    if error_handling:
-        handling_mode = str(error_handling.get("mode") or "none")
-        fallback = str(error_handling.get("fallback_if_no_director") or "needs_operator")
-        checks.append(check("PASS" if handling_mode in ERROR_WORKFLOW_MODES else "FAIL", f"process.error_handling.mode valid: {handling_mode}"))
-        checks.append(check("PASS" if fallback in ERROR_WORKFLOW_FALLBACKS else "FAIL", f"process.error_handling.fallback_if_no_director valid: {fallback}"))
-    roles = [item for item in as_list(process.get("roles")) if isinstance(item, dict)]
-    stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
-    artifacts = [item for item in as_list(process.get("artifact_definitions")) if isinstance(item, dict)]
-    evidence = [item for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict)]
-    gates = [item for item in as_list(process.get("gates")) if isinstance(item, dict)]
-
-    def id_values(items: list[dict[str, Any]], label: str) -> set[str]:
-        values: list[str] = [safe_id(str(item.get("id", "")), label) for item in items]
-        duplicates = sorted({item for item in values if values.count(item) > 1})
-        checks.append(check("PASS" if not duplicates else "FAIL", f"{label} ids unique" + (f": {', '.join(duplicates)}" if duplicates else "")))
-        return set(values)
-
-    role_ids = id_values(roles, "role")
-    artifact_ids = id_values(artifacts, "artifact")
-    declared_artifact_ids = _process_artifact_declaration_policy.declared_ids(process)
-    evidence_ids = id_values(evidence, "evidence") if evidence else set()
-    gate_ids = id_values(gates, "gate")
-    stage_ids = id_values(stages, "stage")
-    checks.append(check("PASS" if stage_ids else "FAIL", "at least one stage exists"))
-    checks.append(check("PASS" if role_ids else "FAIL", "at least one role exists"))
-    checks.append(check("PASS" if artifact_ids else "FAIL", "at least one artifact exists"))
-    checks.append(check("PASS" if gate_ids else "FAIL", "at least one gate exists"))
-
-    for stage in stages:
-        stage_id = safe_id(str(stage.get("id", "")), "stage")
-        role_id = safe_id(str(stage.get("required_role", "")), "role")
-        checks.append(check("PASS" if role_id in role_ids else "FAIL", f"stage {stage_id} references existing role"))
-        for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
-            for artifact_id in [safe_id(value, "artifact") for value in string_list(stage.get(field))]:
-                checks.append(check("PASS" if artifact_id in declared_artifact_ids else "FAIL", f"stage {stage_id} {field} references known artifact {artifact_id}"))
-        for evidence_id in [safe_id(value, "evidence") for value in string_list(stage.get("required_evidence"))]:
-            checks.append(check("PASS" if evidence_id in evidence_ids else "FAIL", f"stage {stage_id} references known evidence {evidence_id}"))
-        for gate_id in [safe_id(value, "gate") for value in string_list(stage.get("entry_gates")) + string_list(stage.get("exit_gates"))]:
-            checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"stage {stage_id} references known gate {gate_id}"))
-        if stage.get("gates"):
-            checks.append(check("WARN", f"stage {stage_id} uses deprecated gates alias; use exit_gates"))
-        if stage.get("technical_obligations"):
-            checks.append(check("WARN", f"stage {stage_id} uses deprecated technical_obligations; use automation_bindings"))
-        for binding in as_list(stage.get("automation_bindings")):
-            if not isinstance(binding, dict):
-                checks.append(check("FAIL", f"stage {stage_id} automation binding is an object"))
-                continue
-            binding_id = safe_id(str(binding.get("id") or ""), "binding")
-            checks.append(check("PASS" if binding.get("projector") else "FAIL", f"stage {stage_id} automation binding {binding_id} projector declared"))
-            if binding.get("artifact"):
-                artifact_id = safe_id(str(binding.get("artifact")), "artifact")
-                checks.append(check("PASS" if artifact_id in declared_artifact_ids else "FAIL", f"automation binding {binding_id} artifact exists: {artifact_id}"))
-            if binding.get("gate"):
-                gate_id = safe_id(str(binding.get("gate")), "gate")
-                checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"automation binding {binding_id} gate exists: {gate_id}"))
-    for artifact in artifacts:
-        owner = safe_id(str(artifact.get("owner_role", "")), "role")
-        checks.append(check("PASS" if owner in role_ids else "FAIL", f"artifact {artifact.get('id', '')} owner role exists"))
-    for gate_item in gates:
-        gate_id = safe_id(str(gate_item.get("id", "")), "gate")
-        required_artifact = gate_item.get("required_artifact")
-        if required_artifact:
-            artifact_id = safe_id(str(required_artifact), "artifact")
-            checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"gate {gate_id} required artifact exists: {artifact_id}"))
-    run_model = process.get("run_model") if isinstance(process.get("run_model"), dict) else {}
-    task_loop = run_model.get("default_task_loop") if isinstance(run_model.get("default_task_loop"), dict) else {}
-    if run_model.get("supports_multiple_tasks") is True:
-        loop_enabled = task_loop.get("enabled") is True
-        kinds = string_list(task_loop.get("iteration_kinds"))
-        checks.append(check("PASS" if loop_enabled and kinds else "FAIL", "multiple-task processes define a default task loop"))
-        for kind in kinds:
-            checks.append(check("PASS" if kind in ITERATION_KINDS else "FAIL", f"default task loop iteration kind valid: {kind}"))
-    return checks
 
 
 def command_process_authoring_start(args: argparse.Namespace) -> int:
@@ -12278,7 +12086,7 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
         raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
     answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
     draft = read_yaml_file(paths["draft"])
-    checks = validate_process_authoring_logic(draft, answers)
+    checks = _process_authoring_validation_service.logic(draft, answers)
     paths["logic_review"].write_text(_process_authoring_renderer.logic_review(draft, checks), encoding="utf-8")
     append_authoring_log(paths, "logic review created")
     result = print_checks(checks)
@@ -12424,7 +12232,7 @@ def build_process_create_plan(
     draft.setdefault("catalog", {})
     if isinstance(draft["catalog"], dict):
         draft["catalog"].setdefault("role", "canonical")
-    checks = validate_process_authoring_logic(draft, answers)
+    checks = _process_authoring_validation_service.logic(draft, answers)
     failures = [item.message for item in checks if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: process authoring logic failed: " + "; ".join(failures))
@@ -12508,7 +12316,7 @@ def build_process_create_plan(
             "process-definition.schema.json",
             f"process {process_id}",
         )
-        candidate_checks = validate_process_authoring_logic(candidate, answers)
+        candidate_checks = _process_authoring_validation_service.logic(candidate, answers)
         candidate_failures = [item.message for item in candidate_checks if item.level == "FAIL"]
         if candidate_failures:
             raise SystemExit("FAIL: staged process validation failed: " + "; ".join(candidate_failures))
@@ -12641,26 +12449,6 @@ def process_definition_path(project_root: Path, process_or_path: str) -> Path:
     return resolve_process_definition(project_root, process_or_path).path
 
 
-def validate_process_definition_files(
-    project_root: Path,
-    process: dict[str, Any],
-    process_path: Path,
-    *,
-    companion_root: Path | None = None,
-) -> list[Check]:
-    process_id = str(process.get("id") or process_path.stem)
-    checks = validate_process_authoring_logic(process, {})
-    checks.append(check("PASS" if not public_yaml_has_private_path(process) else "FAIL", f"{rel(process_path, project_root)} has no private absolute paths"))
-    companions = process_companion_paths(companion_root or project_root, process_id)
-    prompt = companions["prompt"]
-    doc = companions["doc"]
-    example = companions["example"]
-    pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
-    example_required = bool(pack.get("example_required", True))
-    checks.append(check("PASS" if prompt.is_file() else "FAIL", f"{rel(prompt, project_root)} exists"))
-    checks.append(check("PASS" if doc.is_file() else "FAIL", f"{rel(doc, project_root)} exists"))
-    checks.append(check("PASS" if example.is_file() or not example_required else "FAIL", f"{rel(example, project_root)} exists or is explicitly exempt"))
-    return checks
 
 
 PROCESS_CATALOG_CLASSIFICATIONS = CATALOG_PROCESS_CATALOG_CLASSIFICATIONS
@@ -12675,13 +12463,6 @@ def process_is_public_stable(process: dict[str, Any]) -> bool:
     return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
 
 
-def process_companion_paths(root: Path, process_id: str) -> dict[str, Path]:
-    return {
-        "process": root / "processes" / f"{process_id}.yaml",
-        "prompt": root / "prompts" / f"{process_id}-agent.md",
-        "doc": root / "docs" / "processes" / f"{process_id}.md",
-        "example": root / "examples" / "process-authoring" / process_id / "README.md",
-    }
 
 
 def validate_process_contract(
@@ -12795,7 +12576,7 @@ def validate_process_contract(
                 )
                 checks.append(check("PASS" if same_contract else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route contract matches: {route_id}"))
 
-    companions = process_companion_paths(companion_root or project_root, process_id)
+    companions = _process_authoring_validation_service.paths(companion_root or project_root, process_id)
     pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
     agent_prompt = process.get("agent_prompt") if isinstance(process.get("agent_prompt"), dict) else {}
     prompt_required = bool(agent_prompt.get("required", True))
@@ -12889,7 +12670,7 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
             summary["pass"] += 1
         process_pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
         package_id = str(process_pack.get("package") or (string_list(process.get("required_packages"))[0] if string_list(process.get("required_packages")) else ""))
-        companions = process_companion_paths(entry.root if entry.origin == "official" else root, process_id)
+        companions = _process_authoring_validation_service.paths(entry.root if entry.origin == "official" else root, process_id)
         rows.append(
             {
                 "id": process_id,
@@ -12973,7 +12754,7 @@ def command_process_doctor(args: argparse.Namespace) -> int:
         "process-definition.schema.json",
         f"process {args.process}",
     )
-    checks.extend(validate_process_definition_files(project_root, process, path, companion_root=companion_root))
+    checks.extend(_process_authoring_validation_service.files(project_root, process, path, companion_root=companion_root))
     checks.extend(
         validate_process_contract(
             project_root,
@@ -14041,8 +13822,8 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
     unsupported = process_unsupported_fields(source)
     status, diffs = compare_process_semantics(source, candidate)
     answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
-    logic_checks = validate_process_authoring_logic(candidate, answers)
-    source_logic_checks = validate_process_authoring_logic(source, answers)
+    logic_checks = _process_authoring_validation_service.logic(candidate, answers)
+    source_logic_checks = _process_authoring_validation_service.logic(source, answers)
     source_failures = {item.message for item in source_logic_checks if item.level == "FAIL"}
     candidate_failures = {item.message for item in logic_checks if item.level == "FAIL"}
     introduced_failures = sorted(candidate_failures - source_failures)
@@ -14329,7 +14110,7 @@ def resolve_workplace_root(value: str | None, *, project_root: Path | None = Non
             path = project_root / path
         return path.resolve()
     if project_root is not None:
-        manifest = project_workplace_manifest(project_root)
+        manifest = _ProjectMetadataReader(project_root).workplace_manifest()
         if manifest:
             return manifest.parent.resolve()
     raise SystemExit("FAIL: --workplace is required")
@@ -15339,19 +15120,6 @@ AGENT_RUN_FAILURE_TERMINAL_STATUSES = {"failed", "timed_out", "unknown_exit", "l
 AGENT_RUN_START_SKIP_STATUSES = {"running", "completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}
 
 
-def project_workplace_manifest(project_root: Path) -> Path | None:
-    local_config = locate_flow_root(project_root) / "process-forge.local.yaml"
-    if not local_config.is_file():
-        return None
-    data = load_yaml_document(local_config)
-    workplace = data.get("workplace") if isinstance(data, dict) else {}
-    manifest = workplace.get("manifest") if isinstance(workplace, dict) else None
-    if not manifest:
-        return None
-    path = Path(str(manifest)).expanduser()
-    if not path.is_absolute():
-        path = (project_root / path).resolve()
-    return path
 
 
 def normalize_workplace_manifest(path: Path | None) -> Path | None:
@@ -15399,7 +15167,7 @@ def command_runtime_driver_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
         require_flow_root(project_root)
-    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     for driver_id, status, source in _runtime_driver_catalog_reader.ids(workplace_manifest=workplace_manifest, project_root=project_root):
         print(f"{driver_id}\t{status}\t{source}")
     return 0
@@ -15409,7 +15177,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
         require_flow_root(project_root)
-    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
 
@@ -15418,7 +15186,7 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
         require_flow_root(project_root)
-    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     driver.pop("_source_path", None)
     print(dump_yaml(driver))
@@ -15436,10 +15204,6 @@ def json_write(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def json_read(path: Path) -> dict[str, Any]:
-    if not path.is_file():
-        return {}
-    return json.loads(path.read_text(encoding="utf-8"))
 
 
 
@@ -15470,31 +15234,8 @@ def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> 
 
 
 
-def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg: str | None = None) -> dict[str, Any]:
-    driver_id = driver_arg or str(task.get("runtime_driver") or "manual")
-    workplace_manifest = project_workplace_manifest(project_root)
-    driver = _runtime_driver_catalog_reader.resolve(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
-    if driver_arg and _runtime_driver_catalog_reader.ref_is_direct_path(driver_arg):
-        driver = copy.deepcopy(driver)
-        driver["_driver_ref"] = _runtime_driver_catalog_reader.normalized_ref(driver_arg, project_root)
-    failures = [item.message for item in _runtime_driver_definition_policy.validate(driver) if item.level == "FAIL"]
-    if failures:
-        raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
-    return driver
 
 
-def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], state: dict[str, Any], fallback_driver_ref: str | None = None) -> dict[str, Any]:
-    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
-    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
-    command = json_read(_work_paths.worker_run(project_root, run_id, task_id)["command"])
-    driver_ref = command.get("driver_ref")
-    if isinstance(driver_ref, str) and driver_ref.strip():
-        try:
-            return runtime_driver_for_task(project_root, task, driver_ref.strip())
-        except SystemExit as exc:
-            raise SystemExit(f"FAIL: saved runtime driver_ref invalid for {run_id}/{task_id}: {driver_ref}: {exc}") from exc
-    driver_id = str(state.get("driver_id") or fallback_driver_ref or task.get("runtime_driver") or "manual")
-    return runtime_driver_for_task(project_root, task, driver_id)
 
 
 def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, task_id: str, state: dict[str, Any]) -> bool:
@@ -15525,7 +15266,7 @@ def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallba
     state = load_agent_run_state(project_root, run_id, task_id)
     if str(state.get("status") or "") != "running":
         return None
-    driver = runtime_driver_for_worker_state(project_root, task, state, fallback_driver_ref)
+    driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state, fallback_driver_ref)
     observed = observe_worker_run(project_root, task, driver, state) if worker_run_state_requires_reconciliation(project_root, run_id, task_id, state) else state
     if str(observed.get("status") or "") == "running":
         return observed, driver, paths
@@ -15667,7 +15408,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     if isinstance(driver, str):
-        driver = runtime_driver_for_worker_state(project_root, task, state, driver)
+        driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state, driver)
     paths = _work_paths.worker_run(project_root, run_id, task_id)
     status = str(state.get("status") or "")
     if status != "running":
@@ -15784,7 +15525,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
                                              prepared_capsule, sys.modules[__name__], require_ready=True)
     if validation["status"] != "valid":
         raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid") + "; create_successor_work")
-    driver = runtime_driver_for_task(project_root, task, driver_arg)
+    driver = _runtime_driver_selection_service.for_task(project_root, task, driver_arg)
     start_failures = [
         item.message
         for item in _runtime_driver_definition_policy.validate(driver, executable_override, include_start_readiness=True)
@@ -15887,9 +15628,9 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         if state.get("status") in {"ready", "manual_required"}:
             paths = _work_paths.worker_run(project_root, run_id, task_id)
             saved = json_read(paths["command"])
-            driver = runtime_driver_for_worker_state(project_root, task, state)
+            driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
             requested_driver = getattr(args, "driver", None)
-            if requested_driver and runtime_driver_for_task(project_root, task, requested_driver).get("id") != saved.get("driver_id"):
+            if requested_driver and _runtime_driver_selection_service.for_task(project_root, task, requested_driver).get("id") != saved.get("driver_id"):
                 print("FAIL: prepared driver differs; use explicit worker-run prepare")
                 return 1
             for option, field in (("model", "agent_model"), ("reasoning_effort", "agent_reasoning_effort"), ("executable", "executable_override")):
@@ -15972,7 +15713,7 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
         state = load_agent_run_state(project_root, run_id, task_id)
         if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
-            driver = runtime_driver_for_worker_state(project_root, task, state)
+            driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
             state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"STATUS: not-prepared {task_id}")
@@ -15997,7 +15738,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             os.kill(int(pid), signal.SIGTERM)
-    driver = runtime_driver_for_worker_state(project_root, task, state)
+    driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
     paths = _work_paths.worker_run(project_root, run_id, task_id)
     if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
@@ -16021,7 +15762,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
     task_id, run_id = task["id"], task["run_id"]
     state = load_agent_run_state(project_root, run_id, task_id)
     if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
-        driver = runtime_driver_for_worker_state(project_root, task, state)
+        driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
         state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"FAIL: worker run is not prepared: {task_id}")
@@ -16060,7 +15801,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         lines.append(f"- subagent_policy_failure: `{item}`")
     paths["collection"].write_text("\n".join(lines) + "\n", encoding="utf-8")
     if missing or subagent_failures:
-        driver = runtime_driver_for_worker_state(project_root, task, state)
+        driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
         reasons = []
         if missing:
             reasons.append("missing outputs: " + ", ".join(missing))
@@ -17841,7 +17582,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
         print(f"DRY-RUN: would complete task {task_id}")
         return 0
     waivers = _work_output_policy.waivers(getattr(args, "waive_required_output", []))
-    output_failures = [item.message for item in required_output_checks(project_root, task, waivers) if item.level == "FAIL"]
+    output_failures = [item.message for item in _work_output_policy.checks(project_root, task, waivers) if item.level == "FAIL"]
     if output_failures:
         raise SystemExit("FAIL: task required outputs are not complete: " + "; ".join(output_failures))
     artifacts = [item for item in (args.artifact or [])]
@@ -17861,27 +17602,6 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
     return 0
 
 
-def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> str:
-    """Fingerprint the task declaration and its declared verification inputs."""
-    inputs: list[dict[str, Any]] = []
-    for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
-        if not bool(output.get("required", True)):
-            continue
-        path = _work_output_policy.task_path(project_root, output)
-        item = {"id": str(output.get("id") or "output"), "path": rel(path, project_root) if path else "", "status": "missing"}
-        if path and path.is_file():
-            item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
-        inputs.append(item)
-    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
-    expected_path = str(expected.get("artifact") or "")
-    if expected_path:
-        path = _work_output_policy.task_path(project_root, {"path": expected_path})
-        item = {"id": "expected-report", "path": _context_contract_inputs.normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
-        if path and path.is_file():
-            item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
-        inputs.append(item)
-    payload = {"assignment": task, "inputs": inputs}
-    return "sha256:" + hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def command_task_doctor(args: argparse.Namespace) -> int:
@@ -17890,7 +17610,7 @@ def command_task_doctor(args: argparse.Namespace) -> int:
     checks = validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
     task = load_task(project_root, task_id)
-    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
+    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": _work_output_policy.fingerprint(project_root, task)})
     return result
 
 
@@ -20687,8 +20407,8 @@ def platform_contract_semantic_checks(
     checks.append(check("PASS" if isinstance(hints, list) and hints else "WARN", "project_type_hints configured"))
     requires = data.get("requires") if isinstance(data.get("requires"), dict) else {}
     checks.append(check("PASS" if requires.get("capabilities") else "WARN", "required capabilities listed"))
-    extends_refs = contract_extends(data)
-    required_platform_refs = contract_required_platforms(data)
+    extends_refs = _platform_contract_policy.extends(data)
+    required_platform_refs = _platform_contract_policy.required_platforms(data)
     checks.append(check("PASS", "extends entries are valid") if all(ref.get("id") for ref in extends_refs) else check("FAIL", "extends entries are valid"))
     checks.append(check("PASS", "requires.platforms entries are valid") if all(ref.get("id") for ref in required_platform_refs) else check("FAIL", "requires.platforms entries are valid"))
     for ref in extends_refs:
@@ -20765,7 +20485,7 @@ def platform_contract_semantic_checks(
                 "mark it as required: false or move it to includes.knowledge_packages if optional",
             )
         )
-    for package_id in contract_includes(data, "knowledge_packages"):
+    for package_id in _platform_contract_policy.includes(data, "knowledge_packages"):
         manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
         checks.append(
             check("PASS", f"optional knowledge package available: {package_id}")
@@ -20789,7 +20509,7 @@ def platform_contract_semantic_checks(
                 "move it to includes.templates if optional",
             )
         )
-    for template_id in contract_includes(data, "templates"):
+    for template_id in _platform_contract_policy.includes(data, "templates"):
         checks.append(
             check("PASS", f"optional template available: {template_id}")
             if template_manifest_path(workplace_root, template_id)
@@ -20848,8 +20568,8 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
         checks.append(check("PASS" if isinstance(hints, list) and hints else "WARN", "project_type_hints configured"))
         requires = data.get("requires") if isinstance(data.get("requires"), dict) else {}
         checks.append(check("PASS" if requires.get("capabilities") else "WARN", "required capabilities listed"))
-        extends_refs = contract_extends(data)
-        required_platform_refs = contract_required_platforms(data)
+        extends_refs = _platform_contract_policy.extends(data)
+        required_platform_refs = _platform_contract_policy.required_platforms(data)
         checks.append(check("PASS", "extends entries are valid") if all(ref.get("id") for ref in extends_refs) else check("FAIL", "extends entries are valid"))
         checks.append(check("PASS", "requires.platforms entries are valid") if all(ref.get("id") for ref in required_platform_refs) else check("FAIL", "requires.platforms entries are valid"))
         for ref in extends_refs:
@@ -20926,7 +20646,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
                     "mark it as required: false or move it to includes.knowledge_packages if optional",
                 )
             )
-        for package_id in contract_includes(data, "knowledge_packages"):
+        for package_id in _platform_contract_policy.includes(data, "knowledge_packages"):
             manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
             checks.append(
                 check("PASS", f"optional knowledge package available: {package_id}")
@@ -20950,7 +20670,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
                     "move it to includes.templates if optional",
                 )
             )
-        for template_id in contract_includes(data, "templates"):
+        for template_id in _platform_contract_policy.includes(data, "templates"):
             checks.append(
                 check("PASS", f"optional template available: {template_id}")
                 if template_manifest_path(workplace_root, template_id)

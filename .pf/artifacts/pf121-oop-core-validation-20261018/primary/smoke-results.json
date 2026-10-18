@@ -1,0 +1,112 @@
+{
+  "started_at": "2026-10-18T21:13:05.039287+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "docs/concepts/python-core-structure.md": "5d28fe0727f13296d3938407a0917d19fc848c39469202b1403c9dbeed2ee6f5",
+    "docs/ru/concepts/python-core-structure.md": "b5eec3769a13a1d222acde0d40e8ae143370ac6ccae55cd77fdc24a5035b4a50",
+    "src/processforge_core/process_execution.py": "81a6bf756ee528203b52470067a864e28791777a12915cb8420b40ca7a0788e6",
+    "tools/pf_runtime/host.py": "b6dcae85561f8ed66e02683ec81f40513f05aa92de8f7a33c917da01eafc3ff2",
+    "tools/pf_runtime/service.py": "f2e3744417b90e26c98534318e164de6ed1c039f1eebfd3ada818e92e5871daf",
+    "tools/processforge.py": "56cb814f508a02a95b6ebb2b09eac19ea8ff08e3e7196664c227120f0532abf0",
+    "tools/smoke_automation_readiness.py": "1f5033060cdfa6e9be19ff0de4d1200b85f23e87c6f84e373876ecbb4cea7185",
+    "tools/smoke_expected_report_containment.py": "7b895660b95e6926e385bf13903b2bfeaf7e6590bca90afdea4dd1e83cb7811b",
+    "tools/smoke_prepared_execution_recovery.py": "a1637e9a6a5607812d4e44c076f9a28aa14b2ef4a8b08586744f4246c7d4f8b9",
+    "tools/smoke_process_run_task_batch.py": "3b93d61fd56cdb2d9c87e69fb331e83ce5c1b9a20520c5ccd49337874921c47c",
+    "tools/smoke_session_identity_roundtrip.py": "42b03122934c6797cadd258e7129a5aacfae847eaf0ac714b33da9fc84fe9be1",
+    "src/processforge_core/work/outputs.py": "a4134bac8a070dd652c2b160f480bf6bd14e11cea30140b7c7f040a40dc085f2",
+    "src/processforge_core/runtime/selection.py": "d428e95a5ee5bc0a1ddc982836c04c0080b56fdf196a8cf291f6c913da65ca75",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/common/json_io.py": "8f91f58a6152a713b621d3d5e03218bce8bb66e597c7c37eb63405a7e7aba013",
+    "src/processforge_core/project/platform_policy.py": "e2beaf9cc56934140ad1b653eedb1e8b0a8dd96447ae7c8db489ceb417fcc29e",
+    "src/processforge_core/process_catalog/validation.py": "7e4b5fb31934d4bd22c015f563e2e6c29b62b20b5373caace2c23ff767246616",
+    "src/processforge_core/common/privacy.py": "d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074"
+  },
+  "checks": [
+    {
+      "name": "smoke_automation_readiness",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.436,
+      "stdout": "{\"cases\": 20, \"results\": [\"lazy optional capabilities\", [], [{\"gate\": \"\", \"id\": \"u\", \"projector\": \"other\", \"status\": \"unsupported\"}], [{\"failures\": [], \"gate\": \"\", \"id\": \"o\", \"projector\": \"required-output-readiness\", \"status\": \"ready\"}], [{\"failures\": [], \"gate\": \"\", \"id\": \"o\", \"projector\": \"required-output-readiness\", \"status\": \"ready\"}], [{\"failures\": [\"FAIL\"], \"gate\": \"\", \"id\": \"o\", \"projector\": \"required-output-readiness\", \"status\": \"blocked\"}], [{\"failures\": [\"FAIL\", \"FAIL\"], \"gate\": \"\", \"id\": \"o\", \"projector\": \"required-output-readiness\", \"status\": \"blocked\"}], [{\"gate\": \"\", \"id\": \"o\", \"projector\": \"required-output-readiness\", \"status\": \"unsupported\"}], [{\"event_type\": \"\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"missing\"}], [{\"event_type\": \"passed\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"ready\"}], [{\"event_type\": \"failed\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"blocked\"}], [{\"event_type\": \"unknown\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"missing\"}], [{\"event_type\": \"passed\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"ready\"}], [{\"event_type\": \"passed\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"stale\"}], [{\"event_type\": \"\", \"gate\": \"\", \"id\": \"verification-state\", \"projector\": \"verification-state\", \"status\": \"ready\"}], {\"assignment\": {\"id\": \"task\"}, \"event_id\": \"evt_0_0\", \"event_type\": \"passed\"}, {\"event_id\": \"evt_1_0\", \"event_type\": \"failed\", \"subject\": \"task\"}, {\"data\": {\"verification_fingerprint\": \"fp\"}, \"event_id\": \"evt_2_0\", \"event_type\": \"passed\", \"subject\": \"task\"}, \"invalid identity rejected before commit\", \"required exception identity\"], \"status\": \"pass\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_expected_report_containment",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 12.386,
+      "stdout": "SKIP: symlink creation unavailable\nPASS: report traversal, absolute and symlink escapes rejected before reads; valid collection works\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_run_task_batch",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 58.066,
+      "stdout": "PASS: smoke_process_run_task_batch\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_core_work_state",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.953,
+      "stdout": "",
+      "stderr": "test_ambiguity_and_context_guard_before_process_read (__main__.FixtureTests.test_ambiguity_and_context_guard_before_process_read) ... ok\ntest_blockers_and_terminal_precedence (__main__.FixtureTests.test_blockers_and_terminal_precedence) ... ok\ntest_completion_and_stage_override (__main__.FixtureTests.test_completion_and_stage_override) ... ok\ntest_differential_original_state (__main__.FixtureTests.test_differential_original_state) ... skipped 'pass --baseline for differential characterization'\ntest_invalid_outcome_remains_incomplete (__main__.FixtureTests.test_invalid_outcome_remains_incomplete) ... ok\ntest_missing_and_explicit_selectors (__main__.FixtureTests.test_missing_and_explicit_selectors) ... ok\ntest_permission_readiness_stays_separate (__main__.FixtureTests.test_permission_readiness_stays_separate) ... ok\ntest_ready_shape_and_unknown_fields_preserved (__main__.FixtureTests.test_ready_shape_and_unknown_fields_preserved) ... ok\ntest_stage_blocked_fallback_and_default_contract_reason (__main__.FixtureTests.test_stage_blocked_fallback_and_default_contract_reason) ... ok\ntest_policy_isolated_import_without_cli_or_host (__main__.PolicyTests.test_policy_isolated_import_without_cli_or_host) ... ok\ntest_policy_no_io_and_no_mutation (__main__.PolicyTests.test_policy_no_io_and_no_mutation) ... ok\ntest_ambient_observer_not_captured_at_construction (__main__.ObserverTests.test_ambient_observer_not_captured_at_construction) ... ok\ntest_noop_does_not_create_project_files (__main__.ObserverTests.test_noop_does_not_create_project_files) ... ok\ntest_original_exception_and_frozen_exception (__main__.ObserverTests.test_original_exception_and_frozen_exception) ... ok\ntest_profiles_noop_result_and_duration (__main__.ObserverTests.test_profiles_noop_result_and_duration) ... ok\ntest_reused_observer_threads_and_missing_work_do_not_leak (__main__.ObserverTests.test_reused_observer_threads_and_missing_work_do_not_leak) ... ok\ntest_sink_failure_preserves_result_and_exception (__main__.ObserverTests.test_sink_failure_preserves_result_and_exception) ... ok\ntest_validation_trace_span (__main__.ObserverTests.test_validation_trace_span) ... ok\ntest_bootstrap_additive_method_preserves_fields (__main__.CompositionTests.test_bootstrap_additive_method_preserves_fields) ... ok\ntest_constructor_and_factory_no_io (__main__.CompositionTests.test_constructor_and_factory_no_io) ... ok\ntest_installed_shaped_package_import_without_cli (__main__.CompositionTests.test_installed_shaped_package_import_without_cli) ... ok\ntest_cli_factory_and_output_parity (__main__.AdapterTests.test_cli_factory_and_output_parity) ... ok\ntest_host_factory_shared_payload_and_denied_guard (__main__.AdapterTests.test_host_factory_shared_payload_and_denied_guard) ... ok\ntest_mcp_factory_selectors_and_guard (__main__.AdapterTests.test_mcp_factory_selectors_and_guard) ... ok\n\n----------------------------------------------------------------------\nRan 24 tests in 0.695s\n\nOK (skipped=1)\n"
+    },
+    {
+      "name": "smoke_session_identity_roundtrip",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 12.077,
+      "stdout": "PASS: copied Core presence reader without CLI or Host\nPASS: copied Core chat reader without CLI or Host\nPASS: exact opaque session identity round trip\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_runtime_driver_registry",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 9.951,
+      "stdout": "PASS: runtime driver registry smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_authoring_materialization_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 4.264,
+      "stdout": "PASS: process-authoring materialization parity smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_onboard_platform_selection",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.445,
+      "stdout": "PASS: project onboarding selects derived platforms only with evidence\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.945,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_prepared_execution_recovery.terminal_worker_admission",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.644,
+      "stdout": "Terminal admission: 71/71 cases passed\nPASS: existing terminal admission with canonical selection and command spies\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Nine affected existing scripts, including retained-old-class automation comparison, plus existing terminal-admission function. No ZIP, broad recovery, scheduler, release, archive, installation or connected-host checks. A preceding direct automation invocation lost its display receipt during context compaction; this bounded invocation records durable evidence.",
+  "binding_correction": ".pf/artifacts/pf121-oop-core-validation-20261018/primary/binding-correction.json",
+  "collector_resolution": ".pf/artifacts/pf121-oop-core-validation-20261018/primary/collector-resolution.json",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-18T21:16:03.915035+00:00"
+}

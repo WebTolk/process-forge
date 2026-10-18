@@ -18,6 +18,7 @@ import yaml
 
 import processforge as core
 from processforge_core.runtime.command import WorkerCommandBuilder
+from processforge_core.runtime.selection import RuntimeDriverSelectionService
 import processforge_core.prepared.input as prepared_input
 from process_execution_smoke_support import fixture
 from processforge_core.prepared.input import private_file
@@ -78,8 +79,9 @@ def terminal_worker_admission() -> None:
                 stack.enter_context(patch.object(core, 'require_flow_root'))
                 stack.enter_context(patch.object(core, 'load_task', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
-                stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name != "build_worker_process_command"}))
+                stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name not in {"build_worker_process_command", "runtime_driver_for_task"}}))
                 stack.enter_context(patch.object(WorkerCommandBuilder, "build", spies["build_worker_process_command"]))
+                stack.enter_context(patch.object(RuntimeDriverSelectionService, "for_task", spies["runtime_driver_for_task"]))
                 stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
                 stack.enter_context(patch.object(prepared_input, 'load', provider))
                 stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
@@ -175,7 +177,8 @@ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
     task = core.load_task(project, task_id)
     from processforge_core.work.paths import WorkPaths
     paths = WorkPaths().worker_run(project, run_id, task_id)
-    state = core.json_read(paths['status'])
+    from processforge_core.common.json_io import json_read
+    state = json_read(paths['status'])
     reader = CapturedAttemptReader(project)
     captured = reader.read(task, state, run_id=run_id)
     require(captured is not None and captured.attempt == state['attempt'], 'real capture not recognized')
@@ -362,7 +365,8 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
     from processforge_core.work.paths import WorkPaths
     paths = WorkPaths().worker_run(project, run_id, task_id)
     state_raw = paths['status'].read_bytes()
-    state = core.json_read(paths['status'])
+    from processforge_core.common.json_io import json_read
+    state = json_read(paths['status'])
     source = project / '.pf/artifacts/capture-input.txt'
     original_source = source.read_bytes()
     attempt = (project / state['prepared_input']['path']).parent
@@ -495,7 +499,8 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
         require(code == 0 and 'observed=1' in output, output)
         code, output = call(project, task_id, 'prepare', driver=str(driver))
         require(code == 0, output)
-        new_state = core.json_read(paths['status'])
+        from processforge_core.common.json_io import json_read
+        new_state = json_read(paths['status'])
         require(new_state['attempt'] > state['attempt'] and store.read(task, new_state, run_id=run_id) is None, 'new attempt inherited refusal')
         code, output = call(project, task_id, 'start', driver=str(driver))
         require(code == 0, output)
@@ -611,7 +616,8 @@ core.command_worker_run_collect(argparse.Namespace(project_root=sys.argv[2],task
         from processforge_core.work.paths import WorkPaths
         paths = WorkPaths().worker_run(project, RUN_ID, "crash-task")
         lock = paths["root"] / ".lifecycle.lock"
-        state = core.json_read(paths["status"])
+        from processforge_core.common.json_io import json_read
+        state = json_read(paths["status"])
         attempt = (project / state["prepared_input"]["path"]).parent
         receipt = attempt / "collection-receipt.json"
         complete = attempt / "collection-complete.json"

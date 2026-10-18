@@ -1,7 +1,9 @@
 """Shared privacy patterns and predicates for public content."""
 from __future__ import annotations
 
+import json
 import re
+from typing import Any
 
 
 BACKSLASH = chr(92)
@@ -26,3 +28,7 @@ def is_public_path_safe(text: str) -> bool:
 
 def contains_secret_value(text: str) -> bool:
     return any(pattern.search(text) for pattern in SECRET_VALUE_PATTERNS)
+
+
+def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
+    return not is_public_path_safe(json.dumps(data, ensure_ascii=False))

@@ -1,0 +1,9 @@
+{
+  "path": "tools/processforge.py",
+  "before": "3a39bd1c008cd1a90ed9bdf3d93bd6ec98d165a2edd053afca9f4c2fa5390670",
+  "after": "56cb814f508a02a95b6ebb2b09eac19ea8ff08e3e7196664c227120f0532abf0",
+  "reason": "Use the pre-existing _ProjectMetadataReader import alias for the six newly bound workplace_manifest consumers. No owner, application service or automation fixture change.",
+  "retained_pass": "smoke_automation_readiness uses ProcessExecutionService and does not import the monolith. Its retained-old-class comparison remains valid on unchanged code.",
+  "failed_check": "smoke_expected_report_containment will be rerun after the actual binding fix.",
+  "prior_receipt_sha256": "5c4e3df22a73192115ef6fc7e8e3211b78b727d33fce0410efcfeaa45630d53d"
+}
