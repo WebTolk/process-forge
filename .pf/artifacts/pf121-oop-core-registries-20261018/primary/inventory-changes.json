@@ -1,0 +1,104 @@
+{
+  "rows_before": 1353,
+  "rows_after": 1356,
+  "changed_rows": 12,
+  "new_rows": 3,
+  "untouched_rows": 1341,
+  "changes": [
+    {
+      "path": "tools/processforge.py",
+      "previous": "7bf2e7bde8f6ff94c1894d75872c1dfd2ad3a0e137b34a6be066c141d22efb73",
+      "sha256": "c24d9a17ebc48166f828ae6187de7928dfff38ed60558106357e1f3ad584bfb6",
+      "kind": "changed"
+    },
+    {
+      "path": "tools/smoke_project_onboard_platform_selection.py",
+      "previous": "ff60e2d48e6dba820506c61b95ac97b249d1cd4cb874726f23608cf448e93490",
+      "sha256": "74c781e6e0703940088578db8a15cd8bef2d7fa7b43a20e33d4e15f1a65c783f",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "previous": "77112529e06912b44a72ef78362af639bbba3072c9557b42760e57794d618ed7",
+      "sha256": "38fea3c3615d22447b7dae324c1f90c42750e031dd26bc61ad530e415cae034a",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "previous": "235770e2c090c3c5d539b599be7f51f47a559296f602a1aa5323735885eea512",
+      "sha256": "3d071e5a832070e3943ce4960a17c8ce8b9a9b2c1ec1c9322f738ea4961981e3",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/resources/project_packages.py",
+      "previous": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130",
+      "sha256": "87da19314b5acd8ca4ae9df0554205165b224e45a27742633a4e8c241ef29d03",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/platform_selection.py",
+      "previous": null,
+      "sha256": "ace870c7f64d1a77e11e5f1cf8f6d737a93d8bcda8926f49655011f042f99887",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/documents/answers.py",
+      "previous": "3f28fcb96fe516df7b02b9a65749b850ecc71b883e87a26039e0707b1219060a",
+      "sha256": "331f602047ffa16e53176d0f4de5fbe6a0b2dac0f714e9161e6b632cc8964776",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/documents/reader.py",
+      "previous": "d60afda961e74996ad97a14a3d32a90dea7d5555234f125d25ad9ad95da1a7cd",
+      "sha256": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/classification.py",
+      "previous": "22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00",
+      "sha256": "ea4d6ab14135eced28d1b76cf8b37708d25e09d670be39457bfc4a24eca69892",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/common/values.py",
+      "previous": "28b5a9d632c36d10aeb6fc320432193a3a8a76bb2137d3f169493dbcde1a480f",
+      "sha256": "26c0d3e47ca6b6fcf99d54e3fd6b187799292c34663ac03d392887c657849984",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/platforms.py",
+      "previous": "4281ffb1e114ccc4f3b58a932cc0ac31bf86e67d6cb653a94235ccf19aaa66a0",
+      "sha256": "b28771560b3efdfdf5bfcac5bcb154fea5a5a7f5504d4a32970b028af9ad31c9",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "previous": null,
+      "sha256": "9318ce83e41add134d286022aa4f3502b56ebeffad788b03ebc2f77d9c6249f3",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/maintenance/documents.py",
+      "previous": "9918e7d69cf5cf93d7dd84fcb78e78f00fc79c1e1c4ef04ae36ce4cff3c40b3c",
+      "sha256": "70ca9ad829459fb887f3682f569defd63d9ed08b36547cb0c675e6deb40b4b63",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/process_catalog/contracts.py",
+      "previous": null,
+      "sha256": "41fc9fa82ad08ad84301be5045d5bcbd8066cfddc7d7f20b37426343246c405a",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/process_catalog/service.py",
+      "previous": "07804b4ded1ea7afdcaab87508766ba70477ae09975724e760a30cdfd800efc7",
+      "sha256": "06bef2a6f14e9ad5fbf40028b0f69f9c92bae9fcc73a52717c98d2421721aae2",
+      "kind": "changed"
+    }
+  ],
+  "preserved_known_drift": [
+    ".pf/process-forge.yaml",
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ]
+}

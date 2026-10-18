@@ -1,0 +1,99 @@
+{
+  "started_at": "2026-10-18T22:52:22.644321+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "23ae5e4972fd6c1ee7bbac61c713da5cdf35f8ec701b744e1f022c7128b74ce8",
+    "tools/smoke_project_onboard_platform_selection.py": "74c781e6e0703940088578db8a15cd8bef2d7fa7b43a20e33d4e15f1a65c783f",
+    "docs/concepts/python-core-structure.md": "38fea3c3615d22447b7dae324c1f90c42750e031dd26bc61ad530e415cae034a",
+    "docs/ru/concepts/python-core-structure.md": "3d071e5a832070e3943ce4960a17c8ce8b9a9b2c1ec1c9322f738ea4961981e3",
+    "src/processforge_core/resources/project_packages.py": "87da19314b5acd8ca4ae9df0554205165b224e45a27742633a4e8c241ef29d03",
+    "src/processforge_core/project/platform_selection.py": "ace870c7f64d1a77e11e5f1cf8f6d737a93d8bcda8926f49655011f042f99887",
+    "src/processforge_core/documents/answers.py": "331f602047ffa16e53176d0f4de5fbe6a0b2dac0f714e9161e6b632cc8964776",
+    "src/processforge_core/documents/reader.py": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+    "src/processforge_core/project/classification.py": "ea4d6ab14135eced28d1b76cf8b37708d25e09d670be39457bfc4a24eca69892",
+    "src/processforge_core/common/values.py": "f7bcc6434d68d7591d3c310bc01ab6e84b15394e785dbad5c2a1d43d48f56702",
+    "src/processforge_core/project/platforms.py": "b28771560b3efdfdf5bfcac5bcb154fea5a5a7f5504d4a32970b028af9ad31c9",
+    "src/processforge_core/maintenance/registries.py": "9318ce83e41add134d286022aa4f3502b56ebeffad788b03ebc2f77d9c6249f3",
+    "src/processforge_core/maintenance/documents.py": "70ca9ad829459fb887f3682f569defd63d9ed08b36547cb0c675e6deb40b4b63",
+    "src/processforge_core/process_catalog/contracts.py": "41fc9fa82ad08ad84301be5045d5bcbd8066cfddc7d7f20b37426343246c405a",
+    "src/processforge_core/process_catalog/service.py": "06bef2a6f14e9ad5fbf40028b0f69f9c92bae9fcc73a52717c98d2421721aae2"
+  },
+  "checks": [
+    {
+      "name": "smoke_project_local_package_index_detection",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.463,
+      "stdout": "PASS: project-local package index detection\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_onboard_platform_selection",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.56,
+      "stdout": "PASS: project onboarding selects derived platforms only with evidence\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_platform_create_include_levels",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.915,
+      "stdout": "PASS: platform-create include levels\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_authoring_materialization_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 4.328,
+      "stdout": "PASS: process-authoring materialization parity smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 6.795,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"compatibility containers preserve strict governed and unique Run membership\",\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"signed overlap diagnostics remain advisory; scope grants and immutable bytes stay protected\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_catalog_not_implicit_execution_route",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 6.128,
+      "stdout": "PASS: manifest process catalogs do not imply execution routes\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_update_sites_schema",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.323,
+      "stdout": "PASS: unified update-site schema smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_update_candidate_discovery",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.624,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.979,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Nine affected existing scripts. Full legacy/new algorithm proof and bounded live package/platform/update/contract/library wiring are recorded separately. No broad Runtime/scheduler/recovery/release/archive/install/connected-host/ZIP suites or external model orchestration.",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-18T22:52:48.771095+00:00"
+}

@@ -136,3 +136,12 @@ class UpdateDocumentReader:
         except Exception:
             return {}
         return data if isinstance(data, dict) else {}
+
+    def runtime_root(self, workplace_root: Path) -> Path:
+        return workplace_root / "runtime" / "update"
+
+    def candidates_path(self, workplace_root: Path) -> Path:
+        return self.runtime_root(workplace_root) / "candidates.json"
+
+    def notifications_path(self, workplace_root: Path) -> Path:
+        return self.runtime_root(workplace_root) / "notifications.json"

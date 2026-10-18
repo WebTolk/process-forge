@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ..common.ids import safe_id
 from ..common.yaml_io import yaml_error
 from ..resources.snapshot import WorkspacePathReferenceReader
 from ..work.context_documents import ContextContractInputs
@@ -109,3 +110,7 @@ class PlatformContractReader:
         if registry_entry and str(registry_entry.get("status", "available")) in {"missing", "disabled"}:
             return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, str(registry_entry.get("status")), "registry"
         return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, "missing", "missing"
+
+    def normalize_id_pair(self, raw: str) -> tuple[str, str]:
+        platform_id = safe_id(raw.removeprefix("platform."), "platform")
+        return platform_id, self.contract_id(platform_id)

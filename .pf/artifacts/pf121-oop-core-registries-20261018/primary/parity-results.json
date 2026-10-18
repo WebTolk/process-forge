@@ -1,0 +1,598 @@
+{
+  "passed": true,
+  "total": 94,
+  "native_exceptions": 2,
+  "groups": {
+    "annotations": 34,
+    "packages": 14,
+    "platform": 13,
+    "policy": 7,
+    "updates": 12,
+    "contracts": 12,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "package_root_entries",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "resolve_package_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_path_candidates",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "resolve_package_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "find_workplace_package_manifests",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_workplace_package_manifest",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "selected_project_platforms",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_project_type_hints",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_parent_type_hints",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "workplace_platform_ids_for_project_type",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_ids_from_detection_rules",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_resource_findings",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_binding_matches",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "optional_platform_resource_warnings",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "forbidden_base_technology_platform_reference",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "available_platform_contract_records",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_entity_manifest_records",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_site_overrides",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "installed_subjects_by_key",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_install_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_runtime_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_candidates_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_notifications_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_process_contract",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_routes_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_process_route_map",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "answer_strings",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_hint",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "hint_matches",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "registry_ids",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_platform_id",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_catalog_metadata",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_is_public_stable",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "policy-old-annotations-plus-required-root",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "empty-root-registry",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c45102e36cad40edd786518c2723710bc9f01622f86b7db2d6af81f0731b2820"
+    },
+    {
+      "group": "packages",
+      "case": "fallback-public-root",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "17e27fb65f88db955d4b979a5eb62b0ad14e4388697d62d4f47f416835fbe0c7"
+    },
+    {
+      "group": "packages",
+      "case": "public-model",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "candidate-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7ad6500a87574bbdf0e75678ac45a3ff77c461daaec71c28fa89c5ff80e5f057"
+    },
+    {
+      "group": "packages",
+      "case": "fallback-path",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3e84d85d1f96e5a45c5f4357b4f5014a20cf44b4a0605ff507e9c0759ca9d76e"
+    },
+    {
+      "group": "packages",
+      "case": "explicit-root",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1851267f325c763a1dd784c4c321d1eb50b6f2787279e6638acfef6a62db2f69"
+    },
+    {
+      "group": "packages",
+      "case": "missing-root-refusal",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "51e959c63bc3475dc957aad8f2a79e342dccc00072351af05081204225867898"
+    },
+    {
+      "group": "packages",
+      "case": "manifest-choice-and-duplicate-warning",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "903236cc6037eb626ab269fc72e9c8b6c5f1c4e214783255c69435ba0b6523f0"
+    },
+    {
+      "group": "packages",
+      "case": "manifest-discovery",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8c8077680eaf6832306999f161a91883b919e4a420d8924b74a90a362262ca5c"
+    },
+    {
+      "group": "packages",
+      "case": "shared-public-root-identity",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "resource-normalization",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "containment-refusal",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "c556924e3257417deaf02cbaf2d5d71beb0fc80b9b421646724e0a40ca96b777"
+    },
+    {
+      "group": "packages",
+      "case": "soft-invalid-yaml",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "903236cc6037eb626ab269fc72e9c8b6c5f1c4e214783255c69435ba0b6523f0"
+    },
+    {
+      "group": "packages",
+      "case": "strict-invalid-yaml",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "135d5f8e7268883aafc148da77b1fc581e75216c1394a3c24f53ce1abad4f21d"
+    },
+    {
+      "group": "platform",
+      "case": "recursive-answer-values",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0e9a8a97f27cbc7e6354f83e053451d458930ede891dc8c1e793963d198a6890"
+    },
+    {
+      "group": "platform",
+      "case": "hint-normalization",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e300b1ece74c528446ba1ae94a0dfff6d9cdcf0c3d7bf4b4179daf6e3b624259"
+    },
+    {
+      "group": "platform",
+      "case": "hint-match",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "9a3a3a027c7710ffd7a8406ffa228ba2bb09255df2b1e35b14d2d26c5960efdc"
+    },
+    {
+      "group": "platform",
+      "case": "literal-registry-aliases",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f7fb7c82fecf52d1107f71bc2c26c7b6e1d3399087512ead50605efa21cdea3c"
+    },
+    {
+      "group": "platform",
+      "case": "platform-id-pair",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1caa2dda9b24b7c32c93cd6c6981238ba41ee63b262065e882b003ecf05a5ccd"
+    },
+    {
+      "group": "platform",
+      "case": "contract-local-hints",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e0bc728a7305e359e378031c4bbd33168d68eee91cbd9c29b6f260e7a41cdac1"
+    },
+    {
+      "group": "platform",
+      "case": "parent-cycle",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8f63f77e0478b83b9d73aa2d9c6bef3755294405997ce8ef45c484838cd0428d"
+    },
+    {
+      "group": "platform",
+      "case": "selection-default-readers",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ae2bc85e66e2ec88bdc30d32cda5e15250a43b6b90ec999db5b8239da8cfd8d2"
+    },
+    {
+      "group": "platform",
+      "case": "selection-explicit-result",
+      "passed": true
+    },
+    {
+      "group": "platform",
+      "case": "resource-findings-live-registries",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8a5595dcea505a32fe95831b1268a335a2c2c4ec557c15680e8209c00985f99e"
+    },
+    {
+      "group": "platform",
+      "case": "optional-resource-warnings",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "edf55ae6132c8878cb4ab58f6161bbbd6379975406f155cb06e13c2ec4aa7db0"
+    },
+    {
+      "group": "platform",
+      "case": "binding-stack-and-process",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "6334a39630707799a615f1df9d35c6ad7a6f42ee2ec98cfde300d9e581d35036"
+    },
+    {
+      "group": "platform",
+      "case": "available-record-statuses",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "366af820a94f0eb0cce6c8d0edbf58c77f4e84a47e0f14981a09afe177a2aebc"
+    },
+    {
+      "group": "policy",
+      "case": "missing-policy",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a6e32af05f27a9a92ff68bf49a0e0535476b991d6442c57917270be4085f5613"
+    },
+    {
+      "group": "policy",
+      "case": "forbidden-base-reference",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "91eb139963a536ec8c06104485705e47cb19e2c908ce8258a38dfbfae62f8248"
+    },
+    {
+      "group": "policy",
+      "case": "actual-forbidden",
+      "passed": true
+    },
+    {
+      "group": "policy",
+      "case": "allowed-example-context",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "dd2bc2481b6b3e76c392176297354a919291b97e5f0bcf5b841554e56c38ba7e"
+    },
+    {
+      "group": "policy",
+      "case": "live-policy-content",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "53669552b746fa587c347d1e147f2fc3f881c5e15e7fe7d7b87e4701bdec2083"
+    },
+    {
+      "group": "policy",
+      "case": "updated-policy-visible",
+      "passed": true
+    },
+    {
+      "group": "policy",
+      "case": "invalid-policy-soft",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a6e32af05f27a9a92ff68bf49a0e0535476b991d6442c57917270be4085f5613"
+    },
+    {
+      "group": "updates",
+      "case": "entity-discovery-default-composition",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "12bae1eb4ae6b6940cbdc8bd916b0fd9a209973b9f09c38d8a389a3e0f742509"
+    },
+    {
+      "group": "updates",
+      "case": "actual-record-types",
+      "passed": true
+    },
+    {
+      "group": "updates",
+      "case": "override-priority-last-wins",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "372fb6b2487c453c501a3f4cb9a3da0e65d39497357493cd7e253811779d587f"
+    },
+    {
+      "group": "updates",
+      "case": "actual-last-wins",
+      "passed": true
+    },
+    {
+      "group": "updates",
+      "case": "installed-alias-last-wins",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "fa432a6804dcf15df9594b0c5b3b636ada606d8152f460a3a56278e29986c022"
+    },
+    {
+      "group": "updates",
+      "case": "install-current-record",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c2828c32e2a3ffa9acc9eac1825014e6e3d7869ec9d21657100b1d3a136000cb"
+    },
+    {
+      "group": "updates",
+      "case": "install-explicit-override",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ed15159f86eebf967762d55de2bea93b1d5bd24799c2a32e43273e8ab396705a"
+    },
+    {
+      "group": "updates",
+      "case": "install-fallback-after-live-change",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "809236639440d784c2b14fd34486bdf84bd8565f6a4dc9b4e82a8b1e4d5466af"
+    },
+    {
+      "group": "updates",
+      "case": "actual-fallback-path",
+      "passed": true
+    },
+    {
+      "group": "updates",
+      "case": "update_runtime_root",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "fb53432e9f6f2b30af4894deed30852fe2e06856192d63a9c58c4dd9aad19793"
+    },
+    {
+      "group": "updates",
+      "case": "update_candidates_path",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "96ab2b9a448cf7c947ad81a3a597794ca54b257bcda952695e4657d8485e4ec7"
+    },
+    {
+      "group": "updates",
+      "case": "update_notifications_path",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "552009993162d93ec7f3f2b221bbd5be8efe1c7413f3fb6cfbcd436b0947c8c0"
+    },
+    {
+      "group": "contracts",
+      "case": "metadata-canonical-wrapper-removal",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "903c4d59277e8272434cc2af0b3969f5e2a761ffc724febbc7bef4ae5a5e1e6f"
+    },
+    {
+      "group": "contracts",
+      "case": "public-stable-truthiness",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1bce9958ad17ef0d261c63275a06bd9188d3086ad5487700507996b8cf3a3efd"
+    },
+    {
+      "group": "contracts",
+      "case": "route-location",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a9d2cfb4ac6c7791a7e97cc575f7582228cbe7a4bd56efeba63a5e61c9c687d5"
+    },
+    {
+      "group": "contracts",
+      "case": "missing-route-defaults",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "84649bc1f8c339da7deac2dfe9fdd6a331880da9acc61bc70bd182bf5b44ec64"
+    },
+    {
+      "group": "contracts",
+      "case": "route-data-and-default-mutation",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f53cbeb4570ec539407b883a39b00900e5c626c9b7f6b5c85426d8af9f8b3b2c"
+    },
+    {
+      "group": "contracts",
+      "case": "full-warning-check-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "39c394610bd281f82efe0a93daf3ba858737d2fe7fde1ed77651a1a1e615bb2d"
+    },
+    {
+      "group": "contracts",
+      "case": "strict-check-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "2c2da840e476a94c8652824d3abf9c839e1cea95b6db22c9b645636e6ed2366f"
+    },
+    {
+      "group": "contracts",
+      "case": "strict-actually-refuses",
+      "passed": true
+    },
+    {
+      "group": "contracts",
+      "case": "stable-fixture-is-public-active",
+      "passed": true
+    },
+    {
+      "group": "contracts",
+      "case": "stable-companion-and-template-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "2f3bd193f1ded6a800a9d6234cd943537b6392400077114b41089d807c53161f"
+    },
+    {
+      "group": "contracts",
+      "case": "soft-invalid-route",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "84649bc1f8c339da7deac2dfe9fdd6a331880da9acc61bc70bd182bf5b44ec64"
+    },
+    {
+      "group": "contracts",
+      "case": "contract-invalid-route-read",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "479439e810a4454c801da07ccaff037c0c34a4769ae0d188553d6f32b8efb1f7"
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "23ae5e4972fd6c1ee7bbac61c713da5cdf35f8ec701b744e1f022c7128b74ce8",
+    "tools/smoke_project_onboard_platform_selection.py": "74c781e6e0703940088578db8a15cd8bef2d7fa7b43a20e33d4e15f1a65c783f",
+    "docs/concepts/python-core-structure.md": "38fea3c3615d22447b7dae324c1f90c42750e031dd26bc61ad530e415cae034a",
+    "docs/ru/concepts/python-core-structure.md": "3d071e5a832070e3943ce4960a17c8ce8b9a9b2c1ec1c9322f738ea4961981e3",
+    "src/processforge_core/resources/project_packages.py": "87da19314b5acd8ca4ae9df0554205165b224e45a27742633a4e8c241ef29d03",
+    "src/processforge_core/project/platform_selection.py": "ace870c7f64d1a77e11e5f1cf8f6d737a93d8bcda8926f49655011f042f99887",
+    "src/processforge_core/documents/answers.py": "331f602047ffa16e53176d0f4de5fbe6a0b2dac0f714e9161e6b632cc8964776",
+    "src/processforge_core/documents/reader.py": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+    "src/processforge_core/project/classification.py": "ea4d6ab14135eced28d1b76cf8b37708d25e09d670be39457bfc4a24eca69892",
+    "src/processforge_core/common/values.py": "f7bcc6434d68d7591d3c310bc01ab6e84b15394e785dbad5c2a1d43d48f56702",
+    "src/processforge_core/project/platforms.py": "b28771560b3efdfdf5bfcac5bcb154fea5a5a7f5504d4a32970b028af9ad31c9",
+    "src/processforge_core/maintenance/registries.py": "9318ce83e41add134d286022aa4f3502b56ebeffad788b03ebc2f77d9c6249f3",
+    "src/processforge_core/maintenance/documents.py": "70ca9ad829459fb887f3682f569defd63d9ed08b36547cb0c675e6deb40b4b63",
+    "src/processforge_core/process_catalog/contracts.py": "41fc9fa82ad08ad84301be5045d5bcbd8066cfddc7d7f20b37426343246c405a",
+    "src/processforge_core/process_catalog/service.py": "06bef2a6f14e9ad5fbf40028b0f69f9c92bae9fcc73a52717c98d2421721aae2"
+  },
+  "scope": "Actual default and copied Core composition, public root aliases and live YAML/registry/policy/install-path/contract reads. Complete algorithms and previous owner preservation have separate native proofs. No service, archive, installed, connected-host or ZIP checks."
+}

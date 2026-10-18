@@ -90,6 +90,9 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/process_catalog/semantics.py` | Existing authoring coverage, semantic projections and ordered compatibility comparison. |
 | `src/processforge_core/presentation/process_parity.py` | Existing process import/parity Markdown reports, separate from semantic rules. |
 | `src/processforge_core/runtime/worker_plans.py` | Existing worker plan defaults, subagent/dependency projections, recursion and current assignment-completion reads. |
+| `src/processforge_core/project/platform_selection.py` | Existing platform/type/registry selection and findings with concrete answer, document, detection, platform and package owners. |
+| `src/processforge_core/maintenance/registries.py` | Existing entity/override/installed registry reads and install-target resolution; no installation or version-write authority. |
+| `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
@@ -804,8 +807,8 @@ Hierarchy resolution and project package catalogs use the concrete owners below.
 workflow/iteration constants. Guard/check order, nested ID validation, warnings,
 companion-root handling and file observations are unchanged. The shared
 `common.privacy.public_yaml_has_private_path` retains its original serialization
-and predicate. Full process-contract/route validation, publication and recovery
-remain with their existing owners. These are internal source interfaces; external
+and predicate. Full process-contract checks use the concrete owner below. Route-map validation,
+publication and recovery remain with their existing owners. These are internal source interfaces; external
 1.2.0 contracts and later delivery-layer acceptance remain separate.
 
 ## Project packages, platform hierarchy, process semantics and worker plans
@@ -844,3 +847,46 @@ dependency projections, recursive reachability, literal overlap policy and
 YAML reads. Execution, scope/lease checks, locks, lifecycle and recovery retain
 their existing owners. These are internal source responsibilities; external
 1.2.0 behavior and later delivery-layer acceptance remain separate.
+
+## Package roots, platform selection, update registries and process contracts
+
+`ProjectPackageCatalogReader` also owns root registry reads, root/path resolution,
+manifest discovery and manifest loading through the existing concrete
+`WorkspacePathReferenceReader`. The canonical algorithms are reused, with the
+public root record retained through one explicit field converter. Existing
+private snapshot records and their callers remain unchanged. Prior package
+catalog behavior and constructor/field contracts are retained.
+
+`project.platform_selection.ProjectPlatformSelectionService(distribution_root)`
+owns existing selected/derived platform decisions, project/parent type hints,
+current detection, registry findings, binding matching and forbidden-base rules.
+It uses concrete readers and operation-local project/workplace arguments.
+`AnswersDocumentReader.strings` owns the recursive answer flattener;
+`PlatformContractReader.normalize_id_pair` owns the existing two-ID projection.
+Hint normalization/matching live in `project.classification`; `common.values.registry_ids`
+is the shared literal registry projection. All previous owner methods and data
+remain unchanged. No MCP resource use is introduced by reading existing registry metadata.
+
+`YamlDocumentReader.policy(name, root=None, *, distribution_root)` owns the earlier
+policy document lookup. The explicit required keyword replaces the old module
+ROOT without capturing a dummy project or changing the constructor. File guards,
+soft YAML errors and returned values are unchanged; all callers supply the actual
+distribution root. Other document reads retain their earlier behavior.
+
+`maintenance.registries.UpdateRegistryReader(distribution_root)` owns entity
+manifest records, overrides, installed subject lookup and install-target selection.
+`UpdateDocumentReader` also owns runtime/candidates/notifications locations.
+Discovery and override priority, installed-record aliases, package-only dedup and
+install override/current-record/fallback precedence remain intact. These operations
+read/resolve only; installation, timestamped version writes and update lifecycle
+retain their previous owners.
+
+`process_catalog.contracts.ProcessContractValidationService(distribution_root)`
+owns the existing full process contract checks, with concrete metadata,
+evolution, artifact, authoring and route-document owners. `ProcessRouteDocumentReader`
+owns route location and soft document reading. The actual metadata function and
+stable predicate live in `process_catalog.service`; shared handoff modes belong
+to `contracts`. Guard/check/refusal and filesystem-observation order, strict/stable
+severity, unknowns, companion/template precedence and route defaults remain unchanged.
+Route-map validation, handoff execution, authoring callbacks/transactions, lifecycle,
+locks, recovery and later delivery-layer qualification remain separate work.

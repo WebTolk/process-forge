@@ -85,7 +85,8 @@ platforms:
 
 
 def selected(pf: object, project: Path, workplace: Path, *, project_type: str = "fixture-extension", detected: list[str] | None = None, answers: dict[str, object] | None = None) -> list[str]:
-    return pf.selected_project_platforms(
+    from processforge_core.project.platform_selection import ProjectPlatformSelectionService
+    return ProjectPlatformSelectionService(pf.ROOT).selected(
         {"platforms": detected or []},
         answers or {"project": {}},
         project_type,

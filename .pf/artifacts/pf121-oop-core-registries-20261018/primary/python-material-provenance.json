@@ -1,0 +1,28 @@
+[
+  {
+    "resource_id": "docs.python:root",
+    "document": "simple-statements.md",
+    "lines": [
+      454,
+      480
+    ],
+    "sha256": "sha256:c93902a569c34ad1882aeb6e6fc399feb1ecdcf1aa7abc071efce674d8b669a1",
+    "application": "Concrete default composition, reuse of canonical owners and original per-module future annotation behavior.",
+    "material_kind": "fulltext",
+    "material_fingerprint": "sha256:0d5e255d8c7bf06e6f259954d5ba7960e0aeaa09c0a9b1b8ede7d57b9c794801",
+    "snapshot_id": "ctx-20261018-083156-60cda1"
+  },
+  {
+    "resource_id": "docs.python-practices:root",
+    "document": "pep20.md",
+    "lines": [
+      39,
+      57
+    ],
+    "sha256": "sha256:9ee7c54f484c758a2e59d242d66326ec7f198de5eadbdf017eaefcf090718d5a",
+    "application": "Concrete default composition, reuse of canonical owners and original per-module future annotation behavior.",
+    "material_kind": "fulltext",
+    "material_fingerprint": "sha256:a79ec68220e1b953af3364cd20d4d80a5fb31de2b3226f04e046592283ec22fe",
+    "snapshot_id": "ctx-20261018-083156-60cda1"
+  }
+]

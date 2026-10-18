@@ -12,7 +12,7 @@ from ..documents.reader import YamlDocumentReader
 from ..process_catalog.official_read import OfficialProcessPackReader
 from ..project.metadata import ProjectMetadataReader
 from ..work.context_documents import ContextContractInputs
-from .snapshot import WorkspacePathReferenceReader
+from .snapshot import WorkspacePathReferenceReader, _PackageRootResolution
 
 
 @dataclass
@@ -37,6 +37,9 @@ class ProjectPackageCatalogReader:
             inputs=ContextContractInputs(documents=documents),
         )
         root = paths.package_root_resolution_from_entry(workplace_root, entry)
+        return self._public_root(root)
+
+    def _public_root(self, root: _PackageRootResolution) -> PackageRootResolution:
         return PackageRootResolution(
             root_id=root.root_id,
             original_path=root.original_path,
@@ -46,6 +49,64 @@ class ProjectPackageCatalogReader:
             fallback=root.fallback,
             entry=root.entry,
         )
+
+    def root_entries(self, workplace_root: Path) -> list[dict[str, Any]]:
+        documents = YamlDocumentReader(_parse_simple_yaml)
+        paths = WorkspacePathReferenceReader(
+            workplace_root, workplace_root,
+            inputs=ContextContractInputs(documents=documents),
+        )
+        return paths.package_root_entries(workplace_root)
+
+    def resolve_root(self, workplace_root: Path, package_root_id: str | None = None, *, mode: str = "read") -> PackageRootResolution:
+        documents = YamlDocumentReader(_parse_simple_yaml)
+        paths = WorkspacePathReferenceReader(
+            workplace_root, workplace_root,
+            inputs=ContextContractInputs(documents=documents),
+        )
+        return self._public_root(paths.resolve_package_root(workplace_root, package_root_id, mode=mode))
+
+    def path_candidates(self, root_path: Path, package_id: str) -> list[Path]:
+        documents = YamlDocumentReader(_parse_simple_yaml)
+        paths = WorkspacePathReferenceReader(
+            root_path, root_path,
+            inputs=ContextContractInputs(documents=documents),
+        )
+        return paths.package_path_candidates(root_path, package_id)
+
+    def resolve_path(self, workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[PackageRootResolution, Path]:
+        documents = YamlDocumentReader(_parse_simple_yaml)
+        paths = WorkspacePathReferenceReader(
+            workplace_root, workplace_root,
+            inputs=ContextContractInputs(documents=documents),
+        )
+        root, path = paths.resolve_package_path(workplace_root, package_id, package_root_id, mode=mode)
+        return self._public_root(root), path
+
+    def find_manifests(self, workplace_root: Path, package_id: str) -> list[tuple[PackageRootResolution, Path]]:
+        documents = YamlDocumentReader(_parse_simple_yaml)
+        paths = WorkspacePathReferenceReader(
+            workplace_root, workplace_root,
+            inputs=ContextContractInputs(documents=documents),
+        )
+        manifests = paths.find_workplace_package_manifests(workplace_root, package_id)
+        public_roots: dict[int, PackageRootResolution] = {}
+        public_manifests: list[tuple[PackageRootResolution, Path]] = []
+        for root, path in manifests:
+            identity = id(root)
+            if identity not in public_roots:
+                public_roots[identity] = self._public_root(root)
+            public_manifests.append((public_roots[identity], path))
+        return public_manifests
+
+    def load_manifest(self, workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[Path, dict[str, Any], PackageRootResolution]:
+        documents = YamlDocumentReader(_parse_simple_yaml)
+        paths = WorkspacePathReferenceReader(
+            workplace_root, workplace_root,
+            inputs=ContextContractInputs(documents=documents),
+        )
+        path, data, root = paths.load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode=mode)
+        return path, data, self._public_root(root)
 
     def workplace_roots(self, workplace_manifest: Path | None) -> list[PackageRootResolution]:
         if not workplace_manifest or not workplace_manifest.is_file():

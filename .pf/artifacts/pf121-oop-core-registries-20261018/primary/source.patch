@@ -1,0 +1,2431 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index a20fab6..25c120a 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-77112529e06912b44a72ef78362af639bbba3072c9557b42760e57794d618ed7  docs/concepts/python-core-structure.md
++38fea3c3615d22447b7dae324c1f90c42750e031dd26bc61ad530e415cae034a  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-235770e2c090c3c5d539b599be7f51f47a559296f602a1aa5323735885eea512  docs/ru/concepts/python-core-structure.md
++3d071e5a832070e3943ce4960a17c8ce8b9a9b2c1ec1c9322f738ea4961981e3  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -682,7 +682,7 @@ ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processfor
+ 19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56  src/processforge_core/common/paths.py
+ d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074  src/processforge_core/common/privacy.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
+-28b5a9d632c36d10aeb6fc320432193a3a8a76bb2137d3f169493dbcde1a480f  src/processforge_core/common/values.py
++26c0d3e47ca6b6fcf99d54e3fd6b187799292c34663ac03d392887c657849984  src/processforge_core/common/values.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+ 85105a5f90b9a60f7cf8b9049f17a54f0b5937cb265425924e415fa9fb8cd33a  src/processforge_core/completion/__init__.py
+ 539739a814d91e34a0d7a0c273b89507a3ed8b030973372f482872d926dbcc22  src/processforge_core/completion/documents.py
+@@ -703,9 +703,9 @@ c54e686f978a737f933cf952fc22f0f0fce5f9f8df28c883ee8120aa975134d8  src/processfor
+ fb6f27bdd50913d0b94fe82766655d58071a35916cddfaee5651ccac3fd560fb  src/processforge_core/configuration/yaml_store.py
+ e915e2318733a880cabb9661c9387912f6bb1905283fe92bbd8a935d750d2321  src/processforge_core/diagnostics.py
+ a6f4a0fef2f8ec9d7b2abeaf49cd00a5aa0fc0fd3509087ea9f083e036786e50  src/processforge_core/documents/__init__.py
+-3f28fcb96fe516df7b02b9a65749b850ecc71b883e87a26039e0707b1219060a  src/processforge_core/documents/answers.py
++331f602047ffa16e53176d0f4de5fbe6a0b2dac0f714e9161e6b632cc8964776  src/processforge_core/documents/answers.py
+ 10416eb48ad3d4dfa01bebe729ff22a6b9d12d1192d3b9d0c933e10e2021f1ce  src/processforge_core/documents/parse_cache.py
+-d60afda961e74996ad97a14a3d32a90dea7d5555234f125d25ad9ad95da1a7cd  src/processforge_core/documents/reader.py
++ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf  src/processforge_core/documents/reader.py
+ 612e6edc94b0d85d486241001dd1687a3edc965ecade536d291ce65e42b0572c  src/processforge_core/egress/__init__.py
+ 9b52bad0e3071d098ef038015ac1eeb9cdd0255af6bdc8c6e2b789b1f3466470  src/processforge_core/egress/contracts.py
+ af7cae971d496ff154bedea7e54cb31a2db74b42489c5f88535ee610d4a414bc  src/processforge_core/egress/engine.py
+@@ -723,8 +723,9 @@ d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef  src/processfor
+ f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de  src/processforge_core/evolution/privacy.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
+-9918e7d69cf5cf93d7dd84fcb78e78f00fc79c1e1c4ef04ae36ce4cff3c40b3c  src/processforge_core/maintenance/documents.py
++70ca9ad829459fb887f3682f569defd63d9ed08b36547cb0c675e6deb40b4b63  src/processforge_core/maintenance/documents.py
+ f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1  src/processforge_core/maintenance/presentation.py
++9318ce83e41add134d286022aa4f3502b56ebeffad788b03ebc2f77d9c6249f3  src/processforge_core/maintenance/registries.py
+ 5c27d092f2cfdf1102b082159de30accfa59af4fd7ca34d91bc6a3d45f97895b  src/processforge_core/maintenance/schema_checks.py
+ 4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7  src/processforge_core/maintenance/sites.py
+ d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f  src/processforge_core/maintenance/source_contracts.py
+@@ -747,6 +748,7 @@ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processfor
+ 3c12bf127fc08105bddc2332cd6c21f8ad2118ef2af479948f211f101f9b7bd3  src/processforge_core/process_catalog/artifacts.py
+ 99abdb6ba983f6f77f1b7a22d3ca9b3267c26af1f1620cf8716d9a50af5125a2  src/processforge_core/process_catalog/authoring.py
+ 80dd26391dfd5af0b62a7fd0e2062af32d6245b2b8c4e75ac9e971ae6e8b1cad  src/processforge_core/process_catalog/catalog_read.py
++41fc9fa82ad08ad84301be5045d5bcbd8066cfddc7d7f20b37426343246c405a  src/processforge_core/process_catalog/contracts.py
+ 98e4edee5f6f161b50698735e30945af4ead15832992c57fec340484812b0676  src/processforge_core/process_catalog/coordination.py
+ e5936d407aa0793795c8aa1b774acd3f76dc58205e15c0b1b1d18b8b336416ac  src/processforge_core/process_catalog/definition_read.py
+ 84fbfa98942a73a392c03ca8ceb3da39461e2b0e75dc7963a9d33bb45169a50f  src/processforge_core/process_catalog/evolution.py
+@@ -756,14 +758,14 @@ d7825e9222392321ad8e4e1991e215c97a632f10d3674f9071000f6109669527  src/processfor
+ 6383c251dcd5f8801810083f8d73c90351d433667c00111e64b9292c921a4b88  src/processforge_core/process_catalog/presentation.py
+ 6252712fe29c7cde1134d48db54ca1c635ba609fddc162c12c6babb8236c2920  src/processforge_core/process_catalog/selection.py
+ c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2  src/processforge_core/process_catalog/semantics.py
+-07804b4ded1ea7afdcaab87508766ba70477ae09975724e760a30cdfd800efc7  src/processforge_core/process_catalog/service.py
++06bef2a6f14e9ad5fbf40028b0f69f9c92bae9fcc73a52717c98d2421721aae2  src/processforge_core/process_catalog/service.py
+ 8c0c440625809b5b4211e21de80eaa3ee8221b7053c4df76df2b2f0824ed78e1  src/processforge_core/process_catalog/summary.py
+ 7e4b5fb31934d4bd22c015f563e2e6c29b62b20b5373caace2c23ff767246616  src/processforge_core/process_catalog/validation.py
+ 441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1  src/processforge_core/process_event_journal.py
+ d01a20db07657672540855ce55743651d52691f20a67a7b61307a45685d6da3c  src/processforge_core/process_execution.py
+ 80890b5341eba46b6730e15c4ed0a31438a8e0b7e31af11ecaf9a695b23d5ecb  src/processforge_core/project/__init__.py
+ c015f45b82159e64d8ac55ef9bcd78684563f7884f7a265e3ef5f680a4cf8806  src/processforge_core/project/capability_registry.py
+-22b8865a70a03390d379afed9853afb1bc12f0ee831875e91d6ad3ec63d10b00  src/processforge_core/project/classification.py
++ea4d6ab14135eced28d1b76cf8b37708d25e09d670be39457bfc4a24eca69892  src/processforge_core/project/classification.py
+ cf03b7e48c8e2596a2e2d6200034bb7e747a3480bf6c133620ae3bfd9d9ddc3d  src/processforge_core/project/context.py
+ ab4086d754b254ec52c02ca74b5b2a792ddbeb5edb1fc44ef7b901a42ab98267  src/processforge_core/project/context_policy.py
+ ae664b3fac858723a91f41b5795d20447bc965ef24a6dd4ae625520db27d650d  src/processforge_core/project/context_read.py
+@@ -778,7 +780,8 @@ dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e  src/processfor
+ 9f87f464f366b7c8f3f680145e0c8f20b6d7c9af3d4ef1fc7c5319302a604f55  src/processforge_core/project/mode.py
+ e2beaf9cc56934140ad1b653eedb1e8b0a8dd96447ae7c8db489ceb417fcc29e  src/processforge_core/project/platform_policy.py
+ 5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda  src/processforge_core/project/platform_resolution.py
+-4281ffb1e114ccc4f3b58a932cc0ac31bf86e67d6cb653a94235ccf19aaa66a0  src/processforge_core/project/platforms.py
++ace870c7f64d1a77e11e5f1cf8f6d737a93d8bcda8926f49655011f042f99887  src/processforge_core/project/platform_selection.py
++b28771560b3efdfdf5bfcac5bcb154fea5a5a7f5504d4a32970b028af9ad31c9  src/processforge_core/project/platforms.py
+ 7c55ccadd9156a08b9afd83c525e3b8178cd9a81a0f352b30969e20ef2f2d24d  src/processforge_core/project/readiness.py
+ 8996b55c64966e6bc808d3dac89fa2d3aa58ec0050f50455c2e31a0ca7d4bca2  src/processforge_core/project/reconciliation.py
+ f0b95163dad744983bd1a4a3d912a458aea619c358780d2bd1d757d870d9aaf9  src/processforge_core/project/reports.py
+@@ -793,7 +796,7 @@ de067fb47a624cb21f983fb187f332763a4d74693b0660791481544b0f4f3b61  src/processfor
+ 05de8bf040b7f2a405f49b57745fe00629e72f69768a80fc82e0a052946a780f  src/processforge_core/resources/access.py
+ f1d8caeddb95a678d3254829f144bda3acd334e5b6fff1d48663e6b131127f19  src/processforge_core/resources/catalog_read.py
+ 404ad3bb84e4c69fd42804d6d32cea17ac15ef5cb750f6147ed3dbaa4c19bf92  src/processforge_core/resources/local_search.py
+-e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130  src/processforge_core/resources/project_packages.py
++87da19314b5acd8ca4ae9df0554205165b224e45a27742633a4e8c241ef29d03  src/processforge_core/resources/project_packages.py
+ 47af88ad1dfc3670f13e141b6862592ca68cacb3dd38268e5780d6e2865fc005  src/processforge_core/resources/resolve_read.py
+ cbd7d0c29a26719ded5471eee83bfdbaa837abfeb1b575ae04690bc0cbd59e59  src/processforge_core/resources/snapshot.py
+ bff728e23d056f8b20e789cafc04cd40b8e76c883e8cc400299efa822c247a51  src/processforge_core/resources/versioning.py
+@@ -1022,7 +1025,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-7bf2e7bde8f6ff94c1894d75872c1dfd2ad3a0e137b34a6be066c141d22efb73  tools/processforge.py
++c24d9a17ebc48166f828ae6187de7928dfff38ed60558106357e1f3ad584bfb6  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+@@ -1201,7 +1204,7 @@ d7aaf5124465e2412c49faf212c5d4c2af4544de0aa80cb5161858ac01ff8f9c  tools/smoke_pr
+ d69770be992f85e13c02dc6b09c76a5c012336142ad735cd07003f382df932ab  tools/smoke_project_init_local_search_mcp.py
+ 679428756ab9b154f45f64d334e78447ac5ef1aaaf98925edf2b17f96b17ff5d  tools/smoke_project_local_package_index_detection.py
+ 826db6b232146af66d8c6ddd545b6c2c6e88ef42a2c2a38ea19ad325cdcfb2cb  tools/smoke_project_metadata_real_core.py
+-ff60e2d48e6dba820506c61b95ac97b249d1cd4cb874726f23608cf448e93490  tools/smoke_project_onboard_platform_selection.py
++74c781e6e0703940088578db8a15cd8bef2d7fa7b43a20e33d4e15f1a65c783f  tools/smoke_project_onboard_platform_selection.py
+ 10a5c093673a3045ff235616a3fdc336acbf9cfb6a693a74c8c7a9c25b2dc4aa  tools/smoke_project_override_does_not_mutate_workspace.py
+ 3c6e51bda991eb0dafcfb26b705319f87a989a2b9a18273e6810a205af0409ab  tools/smoke_project_overrides_capsule_summary.py
+ 10eaaf211f9f3200a441ab684575f00393774ccda49649c85cb8e52e5ba89305  tools/smoke_project_overrides_freshness.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index 34a6ada..e82249e 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -90,6 +90,9 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/process_catalog/semantics.py` | Existing authoring coverage, semantic projections and ordered compatibility comparison. |
+ | `src/processforge_core/presentation/process_parity.py` | Existing process import/parity Markdown reports, separate from semantic rules. |
+ | `src/processforge_core/runtime/worker_plans.py` | Existing worker plan defaults, subagent/dependency projections, recursion and current assignment-completion reads. |
++| `src/processforge_core/project/platform_selection.py` | Existing platform/type/registry selection and findings with concrete answer, document, detection, platform and package owners. |
++| `src/processforge_core/maintenance/registries.py` | Existing entity/override/installed registry reads and install-target resolution; no installation or version-write authority. |
++| `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
+ | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
+ | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
+ | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
+@@ -804,8 +807,8 @@ Hierarchy resolution and project package catalogs use the concrete owners below.
+ workflow/iteration constants. Guard/check order, nested ID validation, warnings,
+ companion-root handling and file observations are unchanged. The shared
+ `common.privacy.public_yaml_has_private_path` retains its original serialization
+-and predicate. Full process-contract/route validation, publication and recovery
+-remain with their existing owners. These are internal source interfaces; external
++and predicate. Full process-contract checks use the concrete owner below. Route-map validation,
++publication and recovery remain with their existing owners. These are internal source interfaces; external
+ 1.2.0 contracts and later delivery-layer acceptance remain separate.
+ 
+ ## Project packages, platform hierarchy, process semantics and worker plans
+@@ -844,3 +847,46 @@ dependency projections, recursive reachability, literal overlap policy and
+ YAML reads. Execution, scope/lease checks, locks, lifecycle and recovery retain
+ their existing owners. These are internal source responsibilities; external
+ 1.2.0 behavior and later delivery-layer acceptance remain separate.
++
++## Package roots, platform selection, update registries and process contracts
++
++`ProjectPackageCatalogReader` also owns root registry reads, root/path resolution,
++manifest discovery and manifest loading through the existing concrete
++`WorkspacePathReferenceReader`. The canonical algorithms are reused, with the
++public root record retained through one explicit field converter. Existing
++private snapshot records and their callers remain unchanged. Prior package
++catalog behavior and constructor/field contracts are retained.
++
++`project.platform_selection.ProjectPlatformSelectionService(distribution_root)`
++owns existing selected/derived platform decisions, project/parent type hints,
++current detection, registry findings, binding matching and forbidden-base rules.
++It uses concrete readers and operation-local project/workplace arguments.
++`AnswersDocumentReader.strings` owns the recursive answer flattener;
++`PlatformContractReader.normalize_id_pair` owns the existing two-ID projection.
++Hint normalization/matching live in `project.classification`; `common.values.registry_ids`
++is the shared literal registry projection. All previous owner methods and data
++remain unchanged. No MCP resource use is introduced by reading existing registry metadata.
++
++`YamlDocumentReader.policy(name, root=None, *, distribution_root)` owns the earlier
++policy document lookup. The explicit required keyword replaces the old module
++ROOT without capturing a dummy project or changing the constructor. File guards,
++soft YAML errors and returned values are unchanged; all callers supply the actual
++distribution root. Other document reads retain their earlier behavior.
++
++`maintenance.registries.UpdateRegistryReader(distribution_root)` owns entity
++manifest records, overrides, installed subject lookup and install-target selection.
++`UpdateDocumentReader` also owns runtime/candidates/notifications locations.
++Discovery and override priority, installed-record aliases, package-only dedup and
++install override/current-record/fallback precedence remain intact. These operations
++read/resolve only; installation, timestamped version writes and update lifecycle
++retain their previous owners.
++
++`process_catalog.contracts.ProcessContractValidationService(distribution_root)`
++owns the existing full process contract checks, with concrete metadata,
++evolution, artifact, authoring and route-document owners. `ProcessRouteDocumentReader`
++owns route location and soft document reading. The actual metadata function and
++stable predicate live in `process_catalog.service`; shared handoff modes belong
++to `contracts`. Guard/check/refusal and filesystem-observation order, strict/stable
++severity, unknowns, companion/template precedence and route defaults remain unchanged.
++Route-map validation, handoff execution, authoring callbacks/transactions, lifecycle,
++locks, recovery and later delivery-layer qualification remain separate work.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index c8b1444..1712995 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -95,6 +95,9 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/process_catalog/semantics.py` | Прежняя полнота авторинга, проекции семантики и упорядоченное сравнение совместимости. |
+ | `src/processforge_core/presentation/process_parity.py` | Прежние Markdown-отчёты импорта и паритета процесса отдельно от семантических правил. |
+ | `src/processforge_core/runtime/worker_plans.py` | Прежние начальные планы работников, правила подагентов и зависимостей, рекурсия и актуальное чтение завершённости назначений. |
++| `src/processforge_core/project/platform_selection.py` | Прежний выбор платформ/типов/реестров и находки через конкретных владельцев ответов, документов, обнаружения, платформ и пакетов. |
++| `src/processforge_core/maintenance/registries.py` | Прежнее чтение entity/override/installed реестров и разрешение пути установки; без установки и записи версий. |
++| `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
+ | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
+ | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
+ | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
+@@ -818,8 +821,8 @@ extends/requires и проекции required/recommended/optional ресурс
+ workflow/iteration constants. Порядок checks, вложенная проверка ID, warnings,
+ companion root и наблюдение файлов сохранены. Общая
+ `common.privacy.public_yaml_has_private_path` сохраняет прежнюю сериализацию
+-и предикат. Полная проверка process contract/routes, публикация и recovery
+-остаются у существующих владельцев. Внешние контракты 1.2.0 и приёмка более
++и предикат. Полная проверка process contract использует конкретного владельца ниже; проверка
++route-map, публикация и recovery остаются у существующих владельцев. Внешние контракты 1.2.0 и приёмка более
+ поздних слоёв поставки проверяются отдельно.
+ 
+ ## Пакеты проекта, иерархия платформ, семантика процессов и планы работников
+@@ -859,3 +862,46 @@ companion root и наблюдение файлов сохранены. Обща
+ актуальные пути Work и строгое чтение YAML. Исполнение, scopes/leases, блокировки,
+ жизненный цикл и восстановление остаются у прежних владельцев. Внешнее поведение
+ 1.2.0 и приёмка более поздних слоёв поставки проверяются отдельно.
++
++## Корни пакетов, выбор платформ, реестры обновлений и контракты процессов
++
++`ProjectPackageCatalogReader` также владеет чтением реестра корней, разрешением
++корней и путей, поиском и загрузкой манифестов через готовый конкретный
++`WorkspacePathReferenceReader`. Алгоритмы переиспользованы; публичная модель корня
++сохраняется через одно явное сопоставление полей. Частная модель snapshot и её
++потребители не меняются. Прежние методы каталога, поля и конструктор сохранены.
++
++`project.platform_selection.ProjectPlatformSelectionService(distribution_root)`
++владеет прежним выбором обычных и производных платформ, подсказками типов проекта
++и родителей, актуальным обнаружением, находками реестров, сопоставлением bindings
++и правилами запрета базовой технологии. Используются конкретные читатели и явные
++проект/workplace на операции. `AnswersDocumentReader.strings` владеет рекурсивным
++сбором строк ответа; `PlatformContractReader.normalize_id_pair` — прежней парой ID.
++Нормализация и сопоставление подсказок находятся в `project.classification`,
++`common.values.registry_ids` сохраняет буквальную проекцию реестра. Прежние методы
++и данные владельцев не меняются. Чтение прежних метаданных MCP не добавляет
++использование MCP-ресурсов.
++
++`YamlDocumentReader.policy(name, root=None, *, distribution_root)` владеет прежним
++поиском policy-документа. Обязательный аргумент по имени заменяет глобальный ROOT,
++не захватывая фиктивный проект и не меняя конструктор. Guards файлов, мягкие ошибки
++YAML и возвращаемые значения сохранены; потребители передают действительный корень
++дистрибутива. Остальные методы документов остаются прежними.
++
++`maintenance.registries.UpdateRegistryReader(distribution_root)` владеет записями
++манифестов, overrides, поиском установленных subject и выбором пути установки.
++`UpdateDocumentReader` также владеет путями runtime/candidates/notifications.
++Порядок поиска и приоритет overrides, ссылки на записи, устранение повторов только
++пакетов и порядок override/installed/fallback сохранены. Эти операции читают и
++разрешают пути; установка, запись версии с timestamp и lifecycle обновлений
++остаются у прежних владельцев.
++
++`process_catalog.contracts.ProcessContractValidationService(distribution_root)`
++владеет полной проверкой контракта процесса через готовых владельцев metadata,
++evolution, артефактов, авторинга и route-документов. `ProcessRouteDocumentReader`
++владеет путём и мягким чтением карты. Канонические metadata и stable predicate
++находятся в `process_catalog.service`; общие handoff modes — в `contracts`.
++Порядок guards/checks/отказов и наблюдений файлов, severity strict/stable, неизвестные
++поля, приоритет companion/templates и defaults карты сохранены. Проверка самой
++route-map, исполнение handoff, callbacks/транзакции авторинга, lifecycle,
++блокировки, recovery и приёмка последующих слоёв остаются отдельной работой.
+diff --git a/src/processforge_core/common/values.py b/src/processforge_core/common/values.py
+index 4e71768..7e7481d 100644
+--- a/src/processforge_core/common/values.py
++++ b/src/processforge_core/common/values.py
+@@ -34,3 +34,17 @@ def list_value(value: Any) -> list[str]:
+ def parameter_payload(data: dict[str, Any]) -> dict[str, Any]:
+     parameters = data.get("parameters") if isinstance(data, dict) else {}
+     return parameters if isinstance(parameters, dict) else {}
++
++
++def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
++    entries = data.get(collection_key) if isinstance(data, dict) else None
++    ids: set[str] = set()
++    if not isinstance(entries, list):
++        return ids
++    for entry in entries:
++        if isinstance(entry, dict):
++            for key in ["id", "package_id", "capability"]:
++                value = entry.get(key)
++                if value:
++                    ids.add(str(value))
++    return ids
+diff --git a/src/processforge_core/documents/answers.py b/src/processforge_core/documents/answers.py
+index 3d7444e..dc5ccab 100644
+--- a/src/processforge_core/documents/answers.py
++++ b/src/processforge_core/documents/answers.py
+@@ -27,3 +27,15 @@ class AnswersDocumentReader:
+             return data if isinstance(data, dict) else {}
+         except ModuleNotFoundError:
+             return _parse_simple_yaml(text)
++
++    def strings(self, value: Any) -> list[str]:
++        strings: list[str] = []
++        if isinstance(value, str):
++            strings.append(value)
++        elif isinstance(value, list):
++            for item in value:
++                strings.extend(self.strings(item))
++        elif isinstance(value, dict):
++            for item in value.values():
++                strings.extend(self.strings(item))
++        return strings
+diff --git a/src/processforge_core/documents/reader.py b/src/processforge_core/documents/reader.py
+index 633327f..166d15d 100644
+--- a/src/processforge_core/documents/reader.py
++++ b/src/processforge_core/documents/reader.py
+@@ -7,6 +7,7 @@ from pathlib import Path
+ from typing import Any, Callable
+ 
+ from ..common.request_scope import safe_load, safe_load_fields
++from ..common.yaml_io import yaml_error
+ 
+ 
+ @dataclass(frozen=True)
+@@ -38,3 +39,10 @@ class YamlDocumentReader:
+         if isinstance(error, str) and error:
+             raise SystemExit(f"FAIL: {path} is invalid YAML: {error}")
+         return data
++
++    def policy(self, name: str, root: Path | None = None, *, distribution_root: Path) -> dict[str, Any]:
++        path = (root or distribution_root) / "policies" / name
++        if not path.is_file():
++            return {}
++        data = self.load(path)
++        return data if isinstance(data, dict) and not yaml_error(data) else {}
+diff --git a/src/processforge_core/maintenance/documents.py b/src/processforge_core/maintenance/documents.py
+index a5405fa..8a2adee 100644
+--- a/src/processforge_core/maintenance/documents.py
++++ b/src/processforge_core/maintenance/documents.py
+@@ -136,3 +136,12 @@ class UpdateDocumentReader:
+         except Exception:
+             return {}
+         return data if isinstance(data, dict) else {}
++
++    def runtime_root(self, workplace_root: Path) -> Path:
++        return workplace_root / "runtime" / "update"
++
++    def candidates_path(self, workplace_root: Path) -> Path:
++        return self.runtime_root(workplace_root) / "candidates.json"
++
++    def notifications_path(self, workplace_root: Path) -> Path:
++        return self.runtime_root(workplace_root) / "notifications.json"
+diff --git a/src/processforge_core/maintenance/registries.py b/src/processforge_core/maintenance/registries.py
+new file mode 100644
+index 0000000..5237283
+--- /dev/null
++++ b/src/processforge_core/maintenance/registries.py
+@@ -0,0 +1,191 @@
++"""Live update subject discovery and registry lookup through Core owners."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.ids import safe_id
++from ..resources.project_packages import ProjectPackageCatalogReader
++from ..resources.snapshot import WorkspacePathReferenceReader
++from .documents import UpdateDocumentReader
++from .sites import UpdateSitePolicy
++from .source_contracts import UPDATE_SUBJECT_TYPES
++
++
++class UpdateRegistryReader:
++    """Read current workplace update records without retaining document state."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.distribution_root = distribution_root
++        self.documents = UpdateDocumentReader(distribution_root)
++        self.packages = ProjectPackageCatalogReader(distribution_root)
++        self.sites = UpdateSitePolicy()
++
++    def _references(self, workplace_root: Path) -> WorkspacePathReferenceReader:
++        return WorkspacePathReferenceReader(workplace_root, workplace_root, inputs=self.documents.inputs)
++
++    def entities(self, workplace_root: Path) -> list[dict[str, Any]]:
++        manifest = workplace_root / "workplace.yaml"
++        records: list[dict[str, Any]] = []
++        seen: set[Path] = set()
++
++        package_roots = self.packages.workplace_root_paths(manifest if manifest.is_file() else None)
++        if not package_roots:
++            package_roots = [self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/packages"))]
++        for root in package_roots:
++            for path in self.documents.manifest_candidates(root, ["*.yaml", "*.yml", "*/package.yaml", "*/package.yml"]):
++                if path in seen:
++                    continue
++                seen.add(path)
++                data = self.documents.yaml(path)
++                if not data.get("id"):
++                    continue
++                subject_type = str(data.get("type") or "knowledge_package")
++                if subject_type not in UPDATE_SUBJECT_TYPES:
++                    subject_type = "knowledge_package"
++                records.append(
++                    {
++                        "type": subject_type,
++                        "id": str(data.get("id")),
++                        "scope": str(data.get("scope") or "global"),
++                        "version": str(data.get("version") or ""),
++                        "manifest_path": path,
++                        "data": data,
++                    }
++                )
++
++        process_root = self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/processes"))
++        for path in self.documents.manifest_candidates(process_root, ["*.yaml", "*.yml"]):
++            data = self.documents.yaml(path)
++            if data.get("id"):
++                subject_type = str(data.get("type") or "process_definition")
++                if subject_type not in UPDATE_SUBJECT_TYPES:
++                    subject_type = "process_definition"
++                records.append(
++                    {
++                        "type": subject_type,
++                        "id": str(data.get("id")),
++                        "scope": "global",
++                        "version": str(data.get("version") or ""),
++                        "manifest_path": path,
++                        "data": data,
++                    }
++                )
++
++        template_roots = self.documents.registry_paths(workplace_root, "templates.yaml", "template_roots")
++        if not template_roots:
++            template_roots = [self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, "${PF_TEMPLATES}"))]
++        for root in template_roots:
++            for path in self.documents.manifest_candidates(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
++                data = self.documents.yaml(path)
++                if data.get("id"):
++                    subject_type = str(data.get("type") or "reusable_template")
++                    if subject_type not in UPDATE_SUBJECT_TYPES:
++                        subject_type = "reusable_template"
++                    records.append(
++                        {
++                            "type": subject_type,
++                            "id": str(data.get("id")),
++                            "scope": str(data.get("scope") or "global"),
++                            "version": str(data.get("version") or ""),
++                            "manifest_path": path,
++                            "data": data,
++                        }
++                    )
++
++        platform_roots = self.documents.registry_paths(workplace_root, "platform-contract-roots.yaml", "platform_contract_roots")
++        if not platform_roots:
++            platform_roots = [
++                self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, "${PF_PLATFORM_CONTRACTS}")),
++                self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/platforms")),
++            ]
++        for root in platform_roots:
++            for path in self.documents.manifest_candidates(root, ["*.yaml", "*.yml", "*/platform.yaml", "*/platform.yml", "*/platform-contract.yaml", "*/platform-contract.yml"]):
++                data = self.documents.yaml(path)
++                if data.get("id") and data.get("type") == "platform_contract":
++                    records.append(
++                        {
++                            "type": "platform_contract",
++                            "id": str(data.get("id")),
++                            "scope": "global",
++                            "version": str(data.get("version") or ""),
++                            "manifest_path": path,
++                            "data": data,
++                        }
++                    )
++
++        tools_path = workplace_root / "registries" / "tools.yaml"
++        tools_data = self.documents.yaml(tools_path)
++        for entry in tools_data.get("tools", []) if isinstance(tools_data.get("tools"), list) else []:
++            if isinstance(entry, dict) and entry.get("id"):
++                subject_type = str(entry.get("type") or "tool_definition")
++                if subject_type not in UPDATE_SUBJECT_TYPES:
++                    subject_type = "tool_definition"
++                records.append(
++                    {
++                        "type": subject_type,
++                        "id": str(entry.get("id")),
++                        "scope": str(entry.get("scope") or "global"),
++                        "version": str(entry.get("version") or ""),
++                        "manifest_path": tools_path,
++                        "data": entry,
++                    }
++                )
++
++        mcp_path = workplace_root / "registries" / "mcp.yaml"
++        mcp_data = self.documents.yaml(mcp_path)
++        for entry in mcp_data.get("mcp_servers", []) if isinstance(mcp_data.get("mcp_servers"), list) else []:
++            if isinstance(entry, dict) and entry.get("id"):
++                records.append(
++                    {
++                        "type": "mcp_definition",
++                        "id": str(entry.get("id")),
++                        "scope": str(entry.get("scope") or "global"),
++                        "version": str(entry.get("version") or ""),
++                        "manifest_path": mcp_path,
++                        "data": entry,
++                    }
++                )
++        return records
++
++    def overrides(self, workplace_root: Path) -> dict[str, dict[str, Any]]:
++        path = self.documents.overrides_path(workplace_root)
++        data = self.documents.yaml(path)
++        overrides = data.get("overrides") if isinstance(data.get("overrides"), list) else []
++        result: dict[str, dict[str, Any]] = {}
++        for item in overrides:
++            if not isinstance(item, dict):
++                continue
++            key = item.get("site_id") if isinstance(item.get("site_id"), str) else None
++            subject = item.get("subject") if isinstance(item.get("subject"), dict) else {}
++            update_site_id = item.get("update_site_id") or item.get("source_id")
++            if not key and isinstance(update_site_id, str) and subject.get("type") and subject.get("id"):
++                key = self.sites.stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
++            if not key and isinstance(item.get("subject_id"), str):
++                key = str(item.get("subject_id"))
++            if not key and isinstance(item.get("subject"), dict) and subject.get("type") and subject.get("id"):
++                key = f"{subject.get('type')}:{subject.get('id')}"
++            if key:
++                result[key] = item
++        return result
++
++    def installed_subjects(self, workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
++        data = self.documents.yaml(self.documents.installed_registry(workplace_root))
++        result: dict[tuple[str, str], dict[str, Any]] = {}
++        for subject in data.get("subjects", []) if isinstance(data.get("subjects"), list) else []:
++            if isinstance(subject, dict) and isinstance(subject.get("type"), str) and isinstance(subject.get("id"), str):
++                result[(str(subject["type"]), str(subject["id"]))] = subject
++        return result
++
++    def install_path(self, workplace_root: Path, candidate: dict[str, Any]) -> Path:
++        policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
++        install_path = policy.get("install_path")
++        if isinstance(install_path, str) and install_path.strip():
++            return self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, install_path))
++        installed = self.installed_subjects(workplace_root)
++        subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
++        installed_subject = installed.get((str(subject.get("type")), str(subject.get("id"))), {})
++        if isinstance(installed_subject.get("install_path"), str) and str(installed_subject["install_path"]).strip():
++            return self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, str(installed_subject["install_path"])))
++        return workplace_root / "packages" / safe_id(str(subject.get("id") or "package"))
+diff --git a/src/processforge_core/process_catalog/contracts.py b/src/processforge_core/process_catalog/contracts.py
+new file mode 100644
+index 0000000..18ec4a5
+--- /dev/null
++++ b/src/processforge_core/process_catalog/contracts.py
+@@ -0,0 +1,191 @@
++"""Read process route documents and validate existing process contracts."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from processforge_core.common.checks import Check, check
++from processforge_core.common.paths import rel
++from processforge_core.common.values import as_list, string_list
++from processforge_core.common.yaml_io import _parse_simple_yaml, yaml_error
++from processforge_core.documents.reader import YamlDocumentReader
++from processforge_core.project.metadata import ProjectMetadataReader
++
++from .artifacts import ProcessArtifactDeclarationPolicy
++from .coordination import PROCESS_COORDINATION_MODES
++from .evolution import ProcessEvolutionPolicy
++from .service import (
++    PROCESS_CATALOG_CLASSIFICATIONS,
++    process_catalog_metadata,
++    process_is_public_stable,
++)
++from .validation import ERROR_WORKFLOW_MODES, ProcessAuthoringValidationService
++
++HANDOFF_MODES = {"wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"}
++
++
++class ProcessRouteDocumentReader:
++    """Read current project routes with the existing soft YAML semantics."""
++
++    def __init__(self) -> None:
++        self.documents = YamlDocumentReader(_parse_simple_yaml)
++
++    def path(self, project_root: Path) -> Path:
++        return ProjectMetadataReader(project_root, documents=self.documents).flow_root() / "process-routes.yaml"
++
++    def read(self, project_root: Path) -> dict[str, Any]:
++        data = self.documents.load(self.path(project_root))
++        if yaml_error(data) or not data:
++            return {"schema_version": 1, "routes": []}
++        data.setdefault("schema_version", 1)
++        data.setdefault("routes", [])
++        return data
++
++
++class ProcessContractValidationService:
++    """Validate process contracts using concrete Core policies and readers."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.distribution_root = distribution_root
++        self._routes = ProcessRouteDocumentReader()
++        self._evolution = ProcessEvolutionPolicy()
++        self._artifacts = ProcessArtifactDeclarationPolicy()
++        self._authoring = ProcessAuthoringValidationService()
++
++    def validate(
++        self,
++        project_root: Path,
++        process: dict[str, Any],
++        process_path: Path,
++        *,
++        strict: bool = False,
++        companion_root: Path | None = None,
++    ) -> list[Check]:
++        process_id = str(process.get("id") or process_path.stem)
++        meta = process_catalog_metadata(process)
++        stable = process_is_public_stable(process)
++        hard = strict or stable
++        checks: list[Check] = []
++        checks.append(check("PASS" if meta["classification"] in PROCESS_CATALOG_CLASSIFICATIONS else "FAIL", f"{process_id} catalog classification valid"))
++        checks.append(check("PASS" if process.get("execution_mode") in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else ("FAIL" if hard else "WARN"), f"{process_id} execution_mode declared"))
++        coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
++        checks.append(check("PASS" if coordination.get("mode") in PROCESS_COORDINATION_MODES else ("FAIL" if hard else "WARN"), f"{process_id} coordination_requirements.mode declared"))
++        error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
++        checks.append(check("PASS" if error_handling.get("mode") in ERROR_WORKFLOW_MODES and "enabled" in error_handling else ("FAIL" if hard else "WARN"), f"{process_id} error_handling declared"))
++        checks.extend(self._evolution.validate_block(process_id, process.get("evolve"), hard=hard))
++        checks.append(check("PASS" if isinstance(process.get("responsibility_boundaries"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} responsibility_boundaries declared"))
++        if process.get("execution_mode") in {"single_agent_with_subagents", "orchestrated_agents"}:
++            checks.append(check("PASS" if isinstance(process.get("subagent_policy"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} subagent_policy declared"))
++        if process.get("execution_mode") == "orchestrated_agents":
++            runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
++            checks.append(check("PASS" if "supervisor_required" in runtime_requirements or coordination.get("mode") != "organized_required" else ("FAIL" if hard else "WARN"), f"{process_id} runtime requirements declared where needed"))
++
++        for role in as_list(process.get("roles")):
++            if not isinstance(role, dict):
++                checks.append(check("FAIL" if hard else "WARN", f"{process_id} role entry is not an object"))
++                continue
++            label = f"{process_id} role {role.get('id', '<missing>')}"
++            checks.append(check("PASS" if role.get("kind") else ("FAIL" if hard else "WARN"), f"{label} kind declared"))
++            responsibilities = role.get("responsibilities")
++            if responsibilities is None and role.get("responsibility"):
++                responsibilities = [role.get("responsibility")]
++            checks.append(check("PASS" if string_list(responsibilities) else ("FAIL" if hard else "WARN"), f"{label} responsibilities declared"))
++
++        defined_artifacts = self._artifacts.declared_ids(process)
++        evidence_ids = {str(item.get("id")) for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict) and item.get("id")}
++        produced = self._artifacts.produced_ids(process)
++        missing = sorted(produced - defined_artifacts)
++        checks.append(check("PASS" if not missing else ("FAIL" if hard else "WARN"), f"{process_id} produced artifacts declared: {', '.join(missing) if missing else 'all'}"))
++        gate_ids = {str(item.get("id")) for item in as_list(process.get("gates")) if isinstance(item, dict) and item.get("id")}
++        for gate in as_list(process.get("gates")):
++            if isinstance(gate, dict) and gate.get("required_artifact"):
++                artifact_id = str(gate.get("required_artifact"))
++                checks.append(check("PASS" if artifact_id in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id} gate {gate.get('id', '')} required artifact declared: {artifact_id}"))
++        for stage in as_list(process.get("stages")):
++            if not isinstance(stage, dict):
++                continue
++            stage_id = str(stage.get("id") or "stage")
++            checks.append(check("PASS" if stage.get("actor") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} actor declared"))
++            checks.append(check("PASS" if stage.get("goal") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} goal declared"))
++            unknown_gates = sorted(set(string_list(stage.get("entry_gates")) + string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
++            checks.append(check("PASS" if not unknown_gates else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} gates valid: {', '.join(unknown_gates) if unknown_gates else 'all'}"))
++            for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
++                unknown_artifacts = sorted(set(string_list(stage.get(field))) - defined_artifacts)
++                checks.append(check("PASS" if not unknown_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} {field} valid: {', '.join(unknown_artifacts) if unknown_artifacts else 'all'}"))
++            unknown_evidence = sorted(set(string_list(stage.get("required_evidence"))) - evidence_ids)
++            checks.append(check("PASS" if not unknown_evidence else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} evidence valid: {', '.join(unknown_evidence) if unknown_evidence else 'all'}"))
++            if stage.get("gates"):
++                checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated gates alias"))
++            if stage.get("technical_obligations"):
++                checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated technical_obligations alias"))
++            for binding in as_list(stage.get("automation_bindings")):
++                if not isinstance(binding, dict):
++                    checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} automation binding is object"))
++                    continue
++                binding_id = str(binding.get("id") or "binding")
++                checks.append(check("PASS" if binding.get("projector") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} projector declared"))
++                if binding.get("artifact"):
++                    checks.append(check("PASS" if str(binding.get("artifact")) in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} artifact valid"))
++                if binding.get("gate"):
++                    checks.append(check("PASS" if str(binding.get("gate")) in gate_ids else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} gate valid"))
++            if "handoff_required" in stage:
++                checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} deprecated handoff_required used without explicit semantics"))
++        if "handoff_required" in process:
++            checks.append(check("FAIL" if hard else "WARN", f"{process_id} deprecated handoff_required used without explicit semantics"))
++        transitions = as_list(process.get("process_transitions"))
++        route_file = self._routes.path(project_root)
++        route_map = self._routes.read(project_root) if route_file.is_file() else {"routes": []}
++        routes_by_id = {
++            str(route.get("id") or ""): route
++            for route in as_list(route_map.get("routes"))
++            if isinstance(route, dict) and route.get("id")
++        }
++        transition_ids: set[str] = set()
++        for transition in transitions:
++            if not isinstance(transition, dict):
++                checks.append(check("FAIL" if hard else "WARN", f"{process_id} transition is an object"))
++                continue
++            transition_id = str(transition.get("id") or "")
++            checks.append(check("PASS" if transition_id and transition_id not in transition_ids else ("FAIL" if hard else "WARN"), f"{process_id} transition id unique: {transition_id or 'missing'}"))
++            transition_ids.add(transition_id)
++            checks.append(check("PASS" if str(transition.get("from_process") or "") == process_id else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} starts from declaring process"))
++            checks.append(check("PASS" if transition.get("to_process") else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} target declared"))
++            checks.append(check("PASS" if str(transition.get("mode") or "") in HANDOFF_MODES else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} mode valid"))
++            route_id = str(transition.get("route_id") or "")
++            if route_id:
++                checks.append(check("PASS" if route_file.is_file() else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route map exists"))
++                route = routes_by_id.get(route_id)
++                checks.append(check("PASS" if route is not None else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route exists: {route_id}"))
++                if route is not None:
++                    same_contract = (
++                        str(route.get("from_process") or "") == process_id
++                        and str(route.get("to_process") or "") == str(transition.get("to_process") or "")
++                        and str(route.get("mode") or "") == str(transition.get("mode") or "")
++                    )
++                    checks.append(check("PASS" if same_contract else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route contract matches: {route_id}"))
++
++        companions = self._authoring.paths(companion_root or project_root, process_id)
++        pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
++        agent_prompt = process.get("agent_prompt") if isinstance(process.get("agent_prompt"), dict) else {}
++        prompt_required = bool(agent_prompt.get("required", True))
++        if stable:
++            checks.append(check("PASS" if companions["prompt"].is_file() or not prompt_required else "FAIL", f"{rel(companions['prompt'], project_root)} exists or is explicitly exempt"))
++            checks.append(check("PASS" if companions["doc"].is_file() else "FAIL", f"{rel(companions['doc'], project_root)} exists"))
++            example_required = bool(pack.get("example_required", True))
++            checks.append(check("PASS" if companions["example"].is_file() or not example_required else "FAIL", f"{rel(companions['example'], project_root)} exists or is explicitly exempt"))
++        else:
++            checks.append(check("PASS", f"{process_id} companion completeness not strict for {meta['classification']}"))
++
++        for template_id in string_list(process.get("required_templates")):
++            template_ref = Path(template_id)
++            candidates = [
++                project_root / "templates" / template_ref,
++                project_root / "templates" / f"{template_id}.yaml",
++                project_root / "templates" / f"{template_id}.md",
++                self.distribution_root / "templates" / template_ref,
++                self.distribution_root / "templates" / f"{template_id}.yaml",
++                self.distribution_root / "templates" / f"{template_id}.md",
++            ]
++            checks.append(check("PASS" if any(candidate.is_file() for candidate in candidates) else ("FAIL" if hard else "WARN"), f"{process_id} required template exists: {template_id}"))
++        return checks
+diff --git a/src/processforge_core/process_catalog/service.py b/src/processforge_core/process_catalog/service.py
+index d211a8c..a3a564e 100644
+--- a/src/processforge_core/process_catalog/service.py
++++ b/src/processforge_core/process_catalog/service.py
+@@ -333,3 +333,8 @@ def process_definition_exists(context: ProcessCatalogContext, process_id: str) -
+         return True
+     except SystemExit:
+         return False
++
++
++def process_is_public_stable(process: dict[str, Any]) -> bool:
++    meta = process_catalog_metadata(process)
++    return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
+diff --git a/src/processforge_core/project/classification.py b/src/processforge_core/project/classification.py
+index 47252ff..99593ac 100644
+--- a/src/processforge_core/project/classification.py
++++ b/src/processforge_core/project/classification.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import re
+ from typing import Any
+ 
+ from processforge_core.common.paths import path_matches_pattern
+@@ -32,3 +33,16 @@ class ProjectClassifierRulePolicy:
+             return False
+         pattern = exists.strip().replace("\\", "/")
+         return any(path_matches_pattern(path, pattern) for path in available_paths)
++
++
++def normalize_hint(value: str) -> str:
++    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
++
++
++def hint_matches(candidate: str, hints: list[str]) -> bool:
++    candidate_variants = {candidate, normalize_hint(candidate), normalize_hint(candidate).replace(" ", "-")}
++    for hint in hints:
++        hint_variants = {hint, normalize_hint(hint), normalize_hint(hint).replace(" ", "-")}
++        if candidate_variants.intersection(hint_variants):
++            return True
++    return False
+diff --git a/src/processforge_core/project/platform_selection.py b/src/processforge_core/project/platform_selection.py
+new file mode 100644
+index 0000000..0736d2c
+--- /dev/null
++++ b/src/processforge_core/project/platform_selection.py
+@@ -0,0 +1,217 @@
++"""Select existing project platforms and report registry requirements."""
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.values import list_value, registry_ids
++from ..common.yaml_io import _parse_simple_yaml
++from ..documents.answers import AnswersDocumentReader
++from ..documents.reader import YamlDocumentReader
++from ..resources.project_packages import ProjectPackageCatalogReader
++from ..resources.snapshot import WorkspacePathReferenceReader
++from ..work.context_documents import ContextContractInputs
++from .classification import hint_matches
++from .detection import ProjectDetectionService
++from .platform_policy import PlatformContractPolicy
++from .platforms import PlatformContractReader
++
++
++class ProjectPlatformSelectionService:
++    """Coordinate concrete Core readers without retaining project document state."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.distribution_root = distribution_root
++        self.contracts = PlatformContractReader(distribution_root)
++        self.contract_policy = PlatformContractPolicy(self.contracts)
++        self.detection = ProjectDetectionService()
++        self.packages = ProjectPackageCatalogReader(distribution_root)
++        self.answers = AnswersDocumentReader()
++        self.documents = YamlDocumentReader(_parse_simple_yaml)
++
++    def _references(self, workplace_manifest: Path | None, project_root: Path | None = None) -> WorkspacePathReferenceReader:
++        return WorkspacePathReferenceReader(
++            project_root or (workplace_manifest.parent if workplace_manifest else self.distribution_root),
++            workplace_manifest.parent if workplace_manifest else None,
++            workplace_manifest=workplace_manifest,
++            inputs=ContextContractInputs(documents=self.documents),
++        )
++
++    def selected(self, detected: dict[str, Any], answers: dict[str, Any], project_type: str, workplace_manifest: Path | None, project_root: Path) -> list[str]:
++        project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
++        selected = set(str(item) for item in detected.get("platforms", []) if item)
++        for key in ["platform", "platforms", "platform_contract", "platform_contracts"]:
++            value = project_answers.get(key)
++            if value:
++                selected.update(self.contracts.contract_id(item).removeprefix("platform.") for item in self.answers.strings(value))
++        selected.update(self.detected_ids(workplace_manifest, project_root))
++        selected.update(self.ids_for_project_type(workplace_manifest, project_type, project_root))
++        return sorted(selected)
++
++    def project_type_hints(self, contract: dict[str, Any]) -> list[str]:
++        hints = list_value(contract.get("project_type_hints"))
++        applies_to = contract.get("applies_to") if isinstance(contract.get("applies_to"), dict) else {}
++        detection = contract.get("detection") if isinstance(contract.get("detection"), dict) else {}
++        hints.extend(list_value(applies_to.get("project_type_hints")))
++        hints.extend(list_value(applies_to.get("project_types")))
++        hints.extend(list_value(detection.get("project_type_hints")))
++        return sorted(set(str(item) for item in hints if item))
++
++    def parent_type_hints(
++        self,
++        contract: dict[str, Any],
++        contracts: dict[str, dict[str, Any]],
++        visited: set[str] | None = None,
++    ) -> list[str]:
++        """Return project type hints declared by a contract's parent graph."""
++        seen = set() if visited is None else set(visited)
++        hints: set[str] = set()
++        parent_refs = [*self.contract_policy.extends(contract), *self.contract_policy.required_platforms(contract)]
++        for ref in parent_refs:
++            parent_id = ref["id"]
++            if parent_id in seen:
++                continue
++            seen.add(parent_id)
++            parent_entry = contracts.get(parent_id)
++            if not isinstance(parent_entry, dict):
++                continue
++            parent_contract = parent_entry.get("contract")
++            if not isinstance(parent_contract, dict):
++                continue
++            hints.update(self.project_type_hints(parent_contract))
++            hints.update(self.parent_type_hints(parent_contract, contracts, seen))
++        return sorted(hints)
++
++    def ids_for_project_type(self, workplace_manifest: Path | None, project_type: str, project_root: Path | None = None) -> list[str]:
++        """Return contracts selected by project type without promoting descendants.
++
++    A derived contract may declare a specific project type, which is valid
++    selection evidence. A type hint inherited from its parent, however, makes
++    it only a candidate: select it through explicit input, project-classifier
++    evidence, or its own concrete detection rules.
++    """
++        matched: list[str] = []
++        contracts = self.contracts.index(workplace_manifest, project_root)
++        for contract_id, entry in contracts.items():
++            contract = entry["contract"]
++            parent_hints = self.parent_type_hints(contract, contracts)
++            if parent_hints and hint_matches(project_type, parent_hints):
++                continue
++            if hint_matches(project_type, self.project_type_hints(contract)):
++                matched.append(contract_id.removeprefix("platform."))
++        return sorted(set(item for item in matched if item))
++
++    def detected_ids(self, workplace_manifest: Path | None, project_root: Path) -> list[str]:
++        matched: list[str] = []
++        for contract_id, entry in self.contracts.index(workplace_manifest, project_root).items():
++            if self.detection.matches(entry["contract"], project_root):
++                matched.append(contract_id.removeprefix("platform."))
++        return sorted(set(matched))
++
++    def resource_findings(self, workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
++        package_ids = registry_ids(self._references(workplace_manifest).load_workplace_registry(workplace_manifest, "package_roots", "package-roots.yaml"), "package_roots")
++        if workplace_manifest and workplace_manifest.is_file():
++            package_ids = package_ids.union(set(self.packages.index(workplace_manifest.parent, None, workplace_manifest)) - {"__duplicates__"})
++        if package_index_ids:
++            package_ids = package_ids.union(package_index_ids)
++        tool_ids = registry_ids(self._references(workplace_manifest).load_workplace_registry(workplace_manifest, "tools", "tools.yaml"), "tools")
++        mcp_ids = registry_ids(self._references(workplace_manifest).load_workplace_registry(workplace_manifest, "mcp", "mcp.yaml"), "mcp_servers")
++        templates_registry = self._references(workplace_manifest).load_workplace_registry(workplace_manifest, "templates", "templates.yaml")
++        template_ids = registry_ids(templates_registry, "template_roots").union(registry_ids(templates_registry, "templates"))
++        required_missing: list[dict[str, Any]] = []
++        recommended_missing: list[dict[str, Any]] = []
++
++        for group, available, collection in [
++            ("knowledge_package", package_ids, resolved.get("required_knowledge_packages", [])),
++            ("tool", tool_ids, resolved.get("required_tools", [])),
++            ("mcp", mcp_ids, resolved.get("required_mcp", [])),
++            ("template", template_ids, resolved.get("required_templates", [])),
++        ]:
++            for item in collection:
++                if item not in available:
++                    required_missing.append({"kind": group, "id": item, "status": "missing", "severity": "fail", "requirement": "required"})
++
++        for group, available, collection in [
++            ("knowledge_package", package_ids, resolved.get("recommended_knowledge_packages", [])),
++            ("tool", tool_ids, resolved.get("recommended_tools", [])),
++            ("mcp", mcp_ids, resolved.get("recommended_mcp", [])),
++            ("template", template_ids, resolved.get("recommended_templates", [])),
++        ]:
++            for item in collection:
++                if item not in available:
++                    recommended_missing.append({"kind": group, "id": item, "status": "missing", "severity": "warn", "requirement": "recommended"})
++        return required_missing, recommended_missing
++
++    def binding_matches(self, binding: dict[str, Any], selected_platforms: list[str], platform_stack: list[dict[str, Any]], process_id: str | None = None) -> bool:
++        selected = {self.contracts.contract_id(item) for item in selected_platforms}
++        stack_ids = {str(item.get("id") or self.contracts.contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
++        binding_platforms = {self.contracts.contract_id(item) for item in list_value(binding.get("platforms"))}
++        stack_includes = {self.contracts.contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
++        process_filter = set(list_value(binding.get("applies_to_processes")))
++        if process_filter and process_id and process_id not in process_filter:
++            return False
++        return bool(selected.intersection(binding_platforms) or stack_ids.intersection(stack_includes))
++
++    def optional_warnings(self, workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> list[dict[str, Any]]:
++        _required_missing, recommended_missing = self.resource_findings(workplace_manifest, resolved, package_index_ids)
++        return recommended_missing
++
++    def forbidden_base_reference(self, text: str) -> bool:
++        policy = self.documents.policy("platform-id-policy.yaml", distribution_root=self.distribution_root)
++        discouraged = [
++            str(item.get("id") if isinstance(item, dict) else item)
++            for item in policy.get("discouraged_platform_ids", [])
++            if (item.get("id") if isinstance(item, dict) else item)
++        ]
++        if not discouraged:
++            return False
++        allowed_markers = [
++            "incorrect",
++            "discouraged",
++            "do not create",
++            "not as platform contracts",
++            "not platform contracts",
++            "не создавайте",
++            "а не как platform contracts",
++            "не как platform contracts",
++            "не являются platform contracts",
++        ]
++        lines = text.splitlines()
++        for index, line in enumerate(lines):
++            lower = line.lower()
++            matched = [platform_id for platform_id in discouraged if platform_id.lower() in lower]
++            if not matched:
++                continue
++            context = " ".join(lines[max(0, index - 2) : min(len(lines), index + 3)]).lower()
++            allowed_discouraged_example = any(marker in context for marker in allowed_markers)
++            if not allowed_discouraged_example:
++                return True
++        return False
++
++    def available_records(self, workplace_manifest: Path | None, project_root: Path | None = None) -> list[dict[str, Any]]:
++        if not workplace_manifest or not workplace_manifest.is_file():
++            return []
++        registry = self._references(workplace_manifest, project_root).load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
++        entries = registry.get("platforms") if isinstance(registry, dict) else []
++        records: list[dict[str, Any]] = []
++        if not isinstance(entries, list):
++            return records
++        for entry in entries:
++            if not isinstance(entry, dict):
++                continue
++            if str(entry.get("status", "available")) in {"missing", "disabled"}:
++                continue
++            raw_id = str(entry.get("package_id") or entry.get("id") or "")
++            if not raw_id:
++                continue
++            platform_id, contract_id = self.contracts.normalize_id_pair(raw_id)
++            records.append(
++                {
++                    "id": contract_id,
++                    "platform": platform_id,
++                    "registry_entry": str(entry.get("id") or platform_id),
++                    "source": str(entry.get("path") or ""),
++                    "status": "available",
++                }
++            )
++        return sorted(records, key=lambda item: item["id"])
+diff --git a/src/processforge_core/project/platforms.py b/src/processforge_core/project/platforms.py
+index 29ca2a6..53383ea 100644
+--- a/src/processforge_core/project/platforms.py
++++ b/src/processforge_core/project/platforms.py
+@@ -4,6 +4,7 @@ from __future__ import annotations
+ from pathlib import Path
+ from typing import Any
+ 
++from ..common.ids import safe_id
+ from ..common.yaml_io import yaml_error
+ from ..resources.snapshot import WorkspacePathReferenceReader
+ from ..work.context_documents import ContextContractInputs
+@@ -109,3 +110,7 @@ class PlatformContractReader:
+         if registry_entry and str(registry_entry.get("status", "available")) in {"missing", "disabled"}:
+             return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, str(registry_entry.get("status")), "registry"
+         return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, "missing", "missing"
++
++    def normalize_id_pair(self, raw: str) -> tuple[str, str]:
++        platform_id = safe_id(raw.removeprefix("platform."), "platform")
++        return platform_id, self.contract_id(platform_id)
+diff --git a/src/processforge_core/resources/project_packages.py b/src/processforge_core/resources/project_packages.py
+index aefcaf9..9865bc0 100644
+--- a/src/processforge_core/resources/project_packages.py
++++ b/src/processforge_core/resources/project_packages.py
+@@ -12,7 +12,7 @@ from ..documents.reader import YamlDocumentReader
+ from ..process_catalog.official_read import OfficialProcessPackReader
+ from ..project.metadata import ProjectMetadataReader
+ from ..work.context_documents import ContextContractInputs
+-from .snapshot import WorkspacePathReferenceReader
++from .snapshot import WorkspacePathReferenceReader, _PackageRootResolution
+ 
+ 
+ @dataclass
+@@ -37,6 +37,9 @@ class ProjectPackageCatalogReader:
+             inputs=ContextContractInputs(documents=documents),
+         )
+         root = paths.package_root_resolution_from_entry(workplace_root, entry)
++        return self._public_root(root)
++
++    def _public_root(self, root: _PackageRootResolution) -> PackageRootResolution:
+         return PackageRootResolution(
+             root_id=root.root_id,
+             original_path=root.original_path,
+@@ -47,6 +50,64 @@ class ProjectPackageCatalogReader:
+             entry=root.entry,
+         )
+ 
++    def root_entries(self, workplace_root: Path) -> list[dict[str, Any]]:
++        documents = YamlDocumentReader(_parse_simple_yaml)
++        paths = WorkspacePathReferenceReader(
++            workplace_root, workplace_root,
++            inputs=ContextContractInputs(documents=documents),
++        )
++        return paths.package_root_entries(workplace_root)
++
++    def resolve_root(self, workplace_root: Path, package_root_id: str | None = None, *, mode: str = "read") -> PackageRootResolution:
++        documents = YamlDocumentReader(_parse_simple_yaml)
++        paths = WorkspacePathReferenceReader(
++            workplace_root, workplace_root,
++            inputs=ContextContractInputs(documents=documents),
++        )
++        return self._public_root(paths.resolve_package_root(workplace_root, package_root_id, mode=mode))
++
++    def path_candidates(self, root_path: Path, package_id: str) -> list[Path]:
++        documents = YamlDocumentReader(_parse_simple_yaml)
++        paths = WorkspacePathReferenceReader(
++            root_path, root_path,
++            inputs=ContextContractInputs(documents=documents),
++        )
++        return paths.package_path_candidates(root_path, package_id)
++
++    def resolve_path(self, workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[PackageRootResolution, Path]:
++        documents = YamlDocumentReader(_parse_simple_yaml)
++        paths = WorkspacePathReferenceReader(
++            workplace_root, workplace_root,
++            inputs=ContextContractInputs(documents=documents),
++        )
++        root, path = paths.resolve_package_path(workplace_root, package_id, package_root_id, mode=mode)
++        return self._public_root(root), path
++
++    def find_manifests(self, workplace_root: Path, package_id: str) -> list[tuple[PackageRootResolution, Path]]:
++        documents = YamlDocumentReader(_parse_simple_yaml)
++        paths = WorkspacePathReferenceReader(
++            workplace_root, workplace_root,
++            inputs=ContextContractInputs(documents=documents),
++        )
++        manifests = paths.find_workplace_package_manifests(workplace_root, package_id)
++        public_roots: dict[int, PackageRootResolution] = {}
++        public_manifests: list[tuple[PackageRootResolution, Path]] = []
++        for root, path in manifests:
++            identity = id(root)
++            if identity not in public_roots:
++                public_roots[identity] = self._public_root(root)
++            public_manifests.append((public_roots[identity], path))
++        return public_manifests
++
++    def load_manifest(self, workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[Path, dict[str, Any], PackageRootResolution]:
++        documents = YamlDocumentReader(_parse_simple_yaml)
++        paths = WorkspacePathReferenceReader(
++            workplace_root, workplace_root,
++            inputs=ContextContractInputs(documents=documents),
++        )
++        path, data, root = paths.load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode=mode)
++        return path, data, self._public_root(root)
++
+     def workplace_roots(self, workplace_manifest: Path | None) -> list[PackageRootResolution]:
+         if not workplace_manifest or not workplace_manifest.is_file():
+             return []
+diff --git a/tools/processforge.py b/tools/processforge.py
+index 11ac943..015a073 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -196,6 +196,17 @@ _platform_contract_resolver = PlatformContractResolver(ROOT)
+ _process_semantic_policy = ProcessSemanticPolicy()
+ _process_parity_renderer = ProcessParityRenderer()
+ _worker_plan_policy = WorkerPlanPolicy()
++from processforge_core.project.platform_selection import ProjectPlatformSelectionService
++from processforge_core.project.classification import normalize_hint, hint_matches
++from processforge_core.common.values import registry_ids
++from processforge_core.maintenance.registries import UpdateRegistryReader
++from processforge_core.process_catalog.contracts import ProcessContractValidationService, ProcessRouteDocumentReader, HANDOFF_MODES
++from processforge_core.process_catalog.service import process_is_public_stable
++
++_project_platform_selection_service = ProjectPlatformSelectionService(ROOT)
++_update_registry_reader = UpdateRegistryReader(ROOT)
++_process_contract_validation_service = ProcessContractValidationService(ROOT)
++_process_route_document_reader = ProcessRouteDocumentReader()
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -205,11 +216,10 @@ _context_contract_inputs = ContextContractInputs()
+ _resource_version_policy = ResourceVersionPolicy()
+ _project_snapshot_resolved_comparison = ProjectSnapshotResolvedComparison(versions=_resource_version_policy)
+ from processforge_core.process_catalog import (
+-    PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
+     ProcessCatalogContext,
+     ProcessDefinitionRef,
+     official_process_definition_refs as catalog_official_process_definition_refs,
+-    process_catalog_metadata as catalog_process_catalog_metadata,
++    process_catalog_metadata,
+     process_catalog_entries as catalog_process_catalog_entries,
+     process_catalog_role as catalog_process_catalog_role,
+     process_definition_exists as catalog_process_definition_exists,
+@@ -2862,7 +2872,7 @@ def package_root_registry_checks(workplace_root: Path) -> list[Check]:
+     registry_path = workplace_root / "registries" / "package-roots.yaml"
+     if not registry_path.is_file():
+         return [check("WARN", "registries/package-roots.yaml missing; package writes will use fallback <workplace-root>/packages")]
+-    entries = package_root_entries(workplace_root)
++    entries = _project_package_catalog_reader.root_entries(workplace_root)
+     if not entries:
+         return [check("WARN", "package_roots registry is empty; package writes will use fallback <workplace-root>/packages")]
+     ids: dict[str, int] = {}
+@@ -3699,109 +3709,24 @@ def detect_project(
+     }
+ 
+ 
+-def answer_strings(value: Any) -> list[str]:
+-    strings: list[str] = []
+-    if isinstance(value, str):
+-        strings.append(value)
+-    elif isinstance(value, list):
+-        for item in value:
+-            strings.extend(answer_strings(item))
+-    elif isinstance(value, dict):
+-        for item in value.values():
+-            strings.extend(answer_strings(item))
+-    return strings
+ 
+ 
+-def normalize_hint(value: str) -> str:
+-    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+ 
+ 
+-def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any], project_type: str, workplace_manifest: Path | None, project_root: Path) -> list[str]:
+-    project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
+-    selected = set(str(item) for item in detected.get("platforms", []) if item)
+-    for key in ["platform", "platforms", "platform_contract", "platform_contracts"]:
+-        value = project_answers.get(key)
+-        if value:
+-            selected.update(_platform_contract_reader.contract_id(item).removeprefix("platform.") for item in answer_strings(value))
+-    selected.update(platform_ids_from_detection_rules(workplace_manifest, project_root))
+-    selected.update(workplace_platform_ids_for_project_type(workplace_manifest, project_type, project_root))
+-    return sorted(selected)
+-
+-
+-def platform_contract_project_type_hints(contract: dict[str, Any]) -> list[str]:
+-    hints = list_value(contract.get("project_type_hints"))
+-    applies_to = contract.get("applies_to") if isinstance(contract.get("applies_to"), dict) else {}
+-    detection = contract.get("detection") if isinstance(contract.get("detection"), dict) else {}
+-    hints.extend(list_value(applies_to.get("project_type_hints")))
+-    hints.extend(list_value(applies_to.get("project_types")))
+-    hints.extend(list_value(detection.get("project_type_hints")))
+-    return sorted(set(str(item) for item in hints if item))
+-
+-
+-def hint_matches(candidate: str, hints: list[str]) -> bool:
+-    candidate_variants = {candidate, normalize_hint(candidate), normalize_hint(candidate).replace(" ", "-")}
+-    for hint in hints:
+-        hint_variants = {hint, normalize_hint(hint), normalize_hint(hint).replace(" ", "-")}
+-        if candidate_variants.intersection(hint_variants):
+-            return True
+-    return False
+ 
+ 
+-def platform_contract_parent_type_hints(
+-    contract: dict[str, Any],
+-    contracts: dict[str, dict[str, Any]],
+-    visited: set[str] | None = None,
+-) -> list[str]:
+-    """Return project type hints declared by a contract's parent graph."""
+-    seen = set() if visited is None else set(visited)
+-    hints: set[str] = set()
+-    parent_refs = [*_platform_contract_policy.extends(contract), *_platform_contract_policy.required_platforms(contract)]
+-    for ref in parent_refs:
+-        parent_id = ref["id"]
+-        if parent_id in seen:
+-            continue
+-        seen.add(parent_id)
+-        parent_entry = contracts.get(parent_id)
+-        if not isinstance(parent_entry, dict):
+-            continue
+-        parent_contract = parent_entry.get("contract")
+-        if not isinstance(parent_contract, dict):
+-            continue
+-        hints.update(platform_contract_project_type_hints(parent_contract))
+-        hints.update(platform_contract_parent_type_hints(parent_contract, contracts, seen))
+-    return sorted(hints)
+ 
+ 
+-def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, project_type: str, project_root: Path | None = None) -> list[str]:
+-    """Return contracts selected by project type without promoting descendants.
+ 
+-    A derived contract may declare a specific project type, which is valid
+-    selection evidence. A type hint inherited from its parent, however, makes
+-    it only a candidate: select it through explicit input, project-classifier
+-    evidence, or its own concrete detection rules.
+-    """
+-    matched: list[str] = []
+-    contracts = _platform_contract_reader.index(workplace_manifest, project_root)
+-    for contract_id, entry in contracts.items():
+-        contract = entry["contract"]
+-        parent_hints = platform_contract_parent_type_hints(contract, contracts)
+-        if parent_hints and hint_matches(project_type, parent_hints):
+-            continue
+-        if hint_matches(project_type, platform_contract_project_type_hints(contract)):
+-            matched.append(contract_id.removeprefix("platform."))
+-    return sorted(set(item for item in matched if item))
+ 
+ 
+ 
+ 
+ 
+ 
+-def platform_ids_from_detection_rules(workplace_manifest: Path | None, project_root: Path) -> list[str]:
+-    matched: list[str] = []
+-    for contract_id, entry in _platform_contract_reader.index(workplace_manifest, project_root).items():
+-        if _project_detection_service.matches(entry["contract"], project_root):
+-            matched.append(contract_id.removeprefix("platform."))
+-    return sorted(set(matched))
++
++
++
+ 
+ 
+ def project_mode(project_root: Path, answers: dict[str, Any]) -> str:
+@@ -4052,53 +3977,8 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
+ 
+ 
+ 
+-def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
+-    entries = data.get(collection_key) if isinstance(data, dict) else None
+-    ids: set[str] = set()
+-    if not isinstance(entries, list):
+-        return ids
+-    for entry in entries:
+-        if isinstance(entry, dict):
+-            for key in ["id", "package_id", "capability"]:
+-                value = entry.get(key)
+-                if value:
+-                    ids.add(str(value))
+-    return ids
+ 
+ 
+-def platform_resource_findings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+-    package_ids = registry_ids(load_workplace_registry(workplace_manifest, "package_roots", "package-roots.yaml"), "package_roots")
+-    if workplace_manifest and workplace_manifest.is_file():
+-        package_ids = package_ids.union(set(_project_package_catalog_reader.index(workplace_manifest.parent, None, workplace_manifest)) - {"__duplicates__"})
+-    if package_index_ids:
+-        package_ids = package_ids.union(package_index_ids)
+-    tool_ids = registry_ids(load_workplace_registry(workplace_manifest, "tools", "tools.yaml"), "tools")
+-    mcp_ids = registry_ids(load_workplace_registry(workplace_manifest, "mcp", "mcp.yaml"), "mcp_servers")
+-    templates_registry = load_workplace_registry(workplace_manifest, "templates", "templates.yaml")
+-    template_ids = registry_ids(templates_registry, "template_roots").union(registry_ids(templates_registry, "templates"))
+-    required_missing: list[dict[str, Any]] = []
+-    recommended_missing: list[dict[str, Any]] = []
+-
+-    for group, available, collection in [
+-        ("knowledge_package", package_ids, resolved.get("required_knowledge_packages", [])),
+-        ("tool", tool_ids, resolved.get("required_tools", [])),
+-        ("mcp", mcp_ids, resolved.get("required_mcp", [])),
+-        ("template", template_ids, resolved.get("required_templates", [])),
+-    ]:
+-        for item in collection:
+-            if item not in available:
+-                required_missing.append({"kind": group, "id": item, "status": "missing", "severity": "fail", "requirement": "required"})
+-
+-    for group, available, collection in [
+-        ("knowledge_package", package_ids, resolved.get("recommended_knowledge_packages", [])),
+-        ("tool", tool_ids, resolved.get("recommended_tools", [])),
+-        ("mcp", mcp_ids, resolved.get("recommended_mcp", [])),
+-        ("template", template_ids, resolved.get("recommended_templates", [])),
+-    ]:
+-        for item in collection:
+-            if item not in available:
+-                recommended_missing.append({"kind": group, "id": item, "status": "missing", "severity": "warn", "requirement": "recommended"})
+-    return required_missing, recommended_missing
+ 
+ 
+ RESOURCE_GROUP_KEYS = ("knowledge_packages", "tools", "mcp", "templates")
+@@ -4263,15 +4143,6 @@ def load_specialization(workplace_manifest: Path | None, specialization_id: str,
+     return specialization_manifest_index(workplace_manifest, project_root).get(specialization_resource_id(specialization_id))
+ 
+ 
+-def platform_binding_matches(binding: dict[str, Any], selected_platforms: list[str], platform_stack: list[dict[str, Any]], process_id: str | None = None) -> bool:
+-    selected = {_platform_contract_reader.contract_id(item) for item in selected_platforms}
+-    stack_ids = {str(item.get("id") or _platform_contract_reader.contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
+-    binding_platforms = {_platform_contract_reader.contract_id(item) for item in list_value(binding.get("platforms"))}
+-    stack_includes = {_platform_contract_reader.contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
+-    process_filter = set(list_value(binding.get("applies_to_processes")))
+-    if process_filter and process_id and process_id not in process_filter:
+-        return False
+-    return bool(selected.intersection(binding_platforms) or stack_ids.intersection(stack_includes))
+ 
+ 
+ def project_overrides_path(project_root: Path) -> Path:
+@@ -4608,7 +4479,7 @@ def resolve_specialization_context(
+         spec_capabilities = set(str(item) for item in as_list(spec.get("provides_capabilities")) if str(item))
+         matched_bindings: list[dict[str, Any]] = []
+         for binding in spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []:
+-            if isinstance(binding, dict) and platform_binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
++            if isinstance(binding, dict) and _project_platform_selection_service.binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
+                 matched_bindings.append(binding)
+                 merge_resource_buckets(resources, binding.get("resources") if isinstance(binding.get("resources"), dict) else {})
+                 spec_capabilities.update(str(item) for item in as_list(binding.get("provides_capabilities")) if str(item))
+@@ -4721,9 +4592,6 @@ def resolve_specialization_context(
+     }
+ 
+ 
+-def optional_platform_resource_warnings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> list[dict[str, Any]]:
+-    _required_missing, recommended_missing = platform_resource_findings(workplace_manifest, resolved, package_index_ids)
+-    return recommended_missing
+ 
+ 
+ def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], required: list[str], optional: list[str]) -> dict[str, list[str]]:
+@@ -4759,7 +4627,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
+     flow_root = project_root / PROJECT_FLOW_ROOT
+     detected = detect_project(project_root, workplace_manifest)
+     defaults = project_defaults(project_root, answers, detected)
+-    detected["platforms"] = selected_project_platforms(detected, answers, defaults["type"], workplace_manifest, project_root)
++    detected["platforms"] = _project_platform_selection_service.selected(detected, answers, defaults["type"], workplace_manifest, project_root)
+     mode = project_mode(project_root, answers)
+     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
+     project_coordination = _project_coordination_reader.project_defaults(coordination_answers.get("mode", "inherit"))
+@@ -4770,7 +4638,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
+     required = [str(item) for item in required if str(item)]
+     optional = [str(item) for item in optional if str(item)]
+     platform_resolution = _platform_contract_resolver.resolve(workplace_manifest, detected["platforms"], project_root=project_root)
+-    required_platform_missing, recommended_platform_missing = platform_resource_findings(workplace_manifest, platform_resolution)
++    required_platform_missing, recommended_platform_missing = _project_platform_selection_service.resource_findings(workplace_manifest, platform_resolution)
+     required = sorted(set(required).union(platform_resolution["required_capabilities"]))
+     matches = match_global_resources(workplace_manifest, detected, required, optional)
+     knowledge_stack = [
+@@ -5901,41 +5769,10 @@ def forbidden_powershell_reference(text: str) -> bool:
+     return ".ps1" in text.lower()
+ 
+ 
+-def forbidden_base_technology_platform_reference(text: str) -> bool:
+-    policy = load_policy_document("platform-id-policy.yaml")
+-    discouraged = [
+-        str(item.get("id") if isinstance(item, dict) else item)
+-        for item in policy.get("discouraged_platform_ids", [])
+-        if (item.get("id") if isinstance(item, dict) else item)
+-    ]
+-    if not discouraged:
+-        return False
+-    allowed_markers = [
+-        "incorrect",
+-        "discouraged",
+-        "do not create",
+-        "not as platform contracts",
+-        "not platform contracts",
+-        "не создавайте",
+-        "а не как platform contracts",
+-        "не как platform contracts",
+-        "не являются platform contracts",
+-    ]
+-    lines = text.splitlines()
+-    for index, line in enumerate(lines):
+-        lower = line.lower()
+-        matched = [platform_id for platform_id in discouraged if platform_id.lower() in lower]
+-        if not matched:
+-            continue
+-        context = " ".join(lines[max(0, index - 2) : min(len(lines), index + 3)]).lower()
+-        allowed_discouraged_example = any(marker in context for marker in allowed_markers)
+-        if not allowed_discouraged_example:
+-            return True
+-    return False
+ 
+ 
+ def core_hardcode_violations(root: Path) -> list[str]:
+-    policy = load_policy_document("core-hardcode-policy.yaml", root)
++    policy = _context_contract_inputs.documents.policy("core-hardcode-policy.yaml", root, distribution_root=ROOT)
+     patterns = policy_entries(policy, "forbidden_core_patterns")
+     if not patterns:
+         return []
+@@ -6035,7 +5872,7 @@ def release_agent_entry_checks(root: Path) -> list[Check]:
+ def release_checks(root: Path) -> list[Check]:
+     checks: list[Check] = []
+     patterns = release_ignore_patterns(root)
+-    public_support_policy = load_policy_document("public-support-policy.yaml", root)
++    public_support_policy = _context_contract_inputs.documents.policy("public-support-policy.yaml", root, distribution_root=ROOT)
+     public_support_policy_loaded = bool(policy_entries(public_support_policy, "blocked_public_surface_patterns"))
+     public_support_policy_failed = False
+     if not patterns:
+@@ -6075,7 +5912,7 @@ def release_checks(root: Path) -> list[Check]:
+                     "move the rule to a seed manifest or policy YAML and keep tools/processforge.py generic",
+                 )
+             )
+-    elif load_policy_document("core-hardcode-policy.yaml", root):
++    elif _context_contract_inputs.documents.policy("core-hardcode-policy.yaml", root, distribution_root=ROOT):
+         checks.append(
+             check("PASS", "core platform hardcode policy passed")
+         )
+@@ -6108,7 +5945,7 @@ def release_checks(root: Path) -> list[Check]:
+                         "replace the command with python bin/pf.py or python .pf/runtime/bin/pf.py",
+                     )
+                 )
+-            if release_text_group in {"docs", "prompts", "examples", "templates", "packages", "processes"} and forbidden_base_technology_platform_reference(text):
++            if release_text_group in {"docs", "prompts", "examples", "templates", "packages", "processes"} and _project_platform_selection_service.forbidden_base_reference(text):
+                 checks.append(
+                     check_with_hint(
+                         "FAIL",
+@@ -6304,7 +6141,7 @@ def command_examples_check(args: argparse.Namespace) -> int:
+                 text = path.read_text(encoding="utf-8", errors="replace")
+                 if forbidden_powershell_reference(text):
+                     checks.append(check_with_hint("FAIL", f"{rel_path}: mentions PowerShell/.ps1", "Public examples should not mention removed wrappers.", "use python bin/pf.py or python .pf/runtime/bin/pf.py"))
+-                if forbidden_base_technology_platform_reference(text):
++                if _project_platform_selection_service.forbidden_base_reference(text):
+                     checks.append(check_with_hint("FAIL", f"{rel_path}: introduces a base-technology platform", "Domain classifications belong to explicit process packs, not core platform contracts.", "move the data into an official or custom process pack and keep it inactive by default"))
+                 if not is_public_path_safe(text):
+                     checks.append(check_with_hint("FAIL", f"{rel_path}: contains private absolute path", "Examples must be portable.", "replace local paths with relative paths or placeholders"))
+@@ -7572,12 +7409,6 @@ def yaml_error(data: Any) -> str | None:
+     return None
+ 
+ 
+-def load_policy_document(name: str, root: Path | None = None) -> dict[str, Any]:
+-    path = (root or ROOT) / "policies" / name
+-    if not path.is_file():
+-        return {}
+-    data = load_yaml_document(path)
+-    return data if isinstance(data, dict) and not yaml_error(data) else {}
+ 
+ 
+ def policy_entries(policy: dict[str, Any], key: str) -> list[dict[str, Any]]:
+@@ -7731,111 +7562,16 @@ def collect_project_source_inventory(project_root: Path, distribution_root: Path
+     return {"scan_policy": policy, "path_roles": roles, "included": included, "excluded": excluded}
+ 
+ 
+-def available_platform_contract_records(workplace_manifest: Path | None, project_root: Path | None = None) -> list[dict[str, Any]]:
+-    if not workplace_manifest or not workplace_manifest.is_file():
+-        return []
+-    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
+-    entries = registry.get("platforms") if isinstance(registry, dict) else []
+-    records: list[dict[str, Any]] = []
+-    if not isinstance(entries, list):
+-        return records
+-    for entry in entries:
+-        if not isinstance(entry, dict):
+-            continue
+-        if str(entry.get("status", "available")) in {"missing", "disabled"}:
+-            continue
+-        raw_id = str(entry.get("package_id") or entry.get("id") or "")
+-        if not raw_id:
+-            continue
+-        platform_id, contract_id = normalize_platform_id(raw_id)
+-        records.append(
+-            {
+-                "id": contract_id,
+-                "platform": platform_id,
+-                "registry_entry": str(entry.get("id") or platform_id),
+-                "source": str(entry.get("path") or ""),
+-                "status": "available",
+-            }
+-        )
+-    return sorted(records, key=lambda item: item["id"])
+ 
+ 
+-def package_root_entries(workplace_root: Path) -> list[dict[str, Any]]:
+-    registry = load_yaml_document(workplace_root / "registries" / "package-roots.yaml")
+-    entries = registry.get("package_roots") if isinstance(registry, dict) else None
+-    return [entry for entry in entries if isinstance(entry, dict)] if isinstance(entries, list) else []
+ 
+ 
+ 
+ 
+-def resolve_package_root(workplace_root: Path, package_root_id: str | None = None, *, mode: str = "read") -> PackageRootResolution:
+-    entries = package_root_entries(workplace_root)
+-    fallback = PackageRootResolution(
+-        root_id="fallback",
+-        original_path="packages",
+-        resolved_path=workplace_root / "packages",
+-        status="fallback",
+-        warnings=["WARN: registries/package-roots.yaml is missing or empty; using fallback <workplace-root>/packages"],
+-        fallback=True,
+-        entry=None,
+-    )
+-    if not entries:
+-        return fallback
+-    if package_root_id:
+-        for entry in entries:
+-            if str(entry.get("id")) == package_root_id:
+-                selected = _project_package_catalog_reader.root_from_entry(workplace_root, entry)
+-                break
+-        else:
+-            raise SystemExit(f"FAIL: package root '{package_root_id}' not found in registries/package-roots.yaml")
+-    else:
+-        available = [entry for entry in entries if str(entry.get("status", "available")) == "available"]
+-        default_entries = [entry for entry in available if bool(entry.get("default", False))]
+-        selected_entry = default_entries[0] if default_entries else (available[0] if available else None)
+-        if selected_entry is None:
+-            existing = [
+-                entry for entry in entries
+-                if entry.get("path") and _project_package_catalog_reader.root_from_entry(workplace_root, entry).resolved_path.exists()
+-            ]
+-            selected_entry = existing[0] if existing else entries[0]
+-        selected = _project_package_catalog_reader.root_from_entry(workplace_root, selected_entry)
+-    if selected.warnings:
+-        if mode == "write":
+-            if not selected.fallback:
+-                raise SystemExit("FAIL: package root path cannot be resolved: " + "; ".join(selected.warnings))
+-    if not selected.fallback and not selected.resolved_path.is_dir():
+-        selected.warnings.append(f"WARN: package root '{selected.root_id}' path does not exist: {selected.resolved_path.as_posix()}")
+-    if selected.entry is not None and str(selected.entry.get("writable", True)).lower() == "false" and mode == "write":
+-        raise SystemExit(f"FAIL: package root '{selected.root_id}' is not writable")
+-    if mode == "write" and not selected.fallback and not selected.resolved_path.is_dir():
+-        raise SystemExit(f"FAIL: selected package root '{selected.root_id}' path does not exist: {selected.resolved_path.as_posix()}")
+-    return selected
+ 
+ 
+-def package_path_candidates(root_path: Path, package_id: str) -> list[Path]:
+-    validated_id = validate_resource_id(package_id, "knowledge package")
+-    return [
+-        contained_resource_path(
+-            root_path,
+-            root_path / validated_id / "package.yaml",
+-            "knowledge package",
+-        ),
+-        contained_resource_path(
+-            root_path,
+-            root_path / f"{validated_id}.yaml",
+-            "knowledge package",
+-        ),
+-    ]
+ 
+ 
+-def resolve_package_path(workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[PackageRootResolution, Path]:
+-    validated_id = validate_resource_id(package_id, "knowledge package")
+-    root = resolve_package_root(workplace_root, package_root_id, mode=mode)
+-    return root, contained_resource_path(
+-        root.resolved_path,
+-        root.resolved_path / validated_id / "package.yaml",
+-        "knowledge package",
+-    )
+ 
+ 
+ 
+@@ -8026,7 +7762,7 @@ def resolve_project_parameters(
+             private=str(spec.get("__source") or "") == "workplace",
+         )
+         for binding_index, binding in enumerate(spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []):
+-            if isinstance(binding, dict) and platform_binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
++            if isinstance(binding, dict) and _project_platform_selection_service.binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
+                 add_parameter_source(
+                     result,
+                     source_id=f"specialization:{specialization_id}:binding:{binding_index + 1}",
+@@ -8325,26 +8061,12 @@ def resource_id_from_url(url: str, fallback: str = "resource") -> str:
+     return safe_id("-".join(piece for piece in pieces if piece), fallback)
+ 
+ 
+-def find_workplace_package_manifests(workplace_root: Path, package_id: str) -> list[tuple[PackageRootResolution, Path]]:
+-    manifests: list[tuple[PackageRootResolution, Path]] = []
+-    roots = package_root_entries(workplace_root)
+-    if roots:
+-        root_resolutions = [_project_package_catalog_reader.root_from_entry(workplace_root, entry) for entry in roots]
+-    else:
+-        root_resolutions = [resolve_package_root(workplace_root, None, mode="read")]
+-    for root in root_resolutions:
+-        if root.warnings and not root.fallback:
+-            continue
+-        for path in package_path_candidates(root.resolved_path, package_id):
+-            if path.is_file():
+-                manifests.append((root, path))
+-    return manifests
+ 
+ 
+ def package_manifest_path_for_write(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> tuple[PackageRootResolution, Path]:
+-    existing = find_workplace_package_manifests(workplace_root, package_id)
++    existing = _project_package_catalog_reader.find_manifests(workplace_root, package_id)
+     if package_root_id:
+-        root, default_path = resolve_package_path(workplace_root, package_id, package_root_id, mode="write")
++        root, default_path = _project_package_catalog_reader.resolve_path(workplace_root, package_id, package_root_id, mode="write")
+         for existing_root, existing_path in existing:
+             if existing_root.root_id == root.root_id:
+                 return existing_root, existing_path
+@@ -8357,49 +8079,12 @@ def package_manifest_path_for_write(workplace_root: Path, package_id: str, packa
+         if not root.resolved_path.is_dir() and not root.fallback:
+             raise SystemExit(f"FAIL: package root '{root.root_id}' path does not exist: {root.resolved_path.as_posix()}")
+         return root, path
+-    root, default_path = resolve_package_path(workplace_root, package_id, None, mode="write")
++    root, default_path = _project_package_catalog_reader.resolve_path(workplace_root, package_id, None, mode="write")
+     if root.fallback:
+         root.resolved_path.mkdir(parents=True, exist_ok=True)
+     return root, default_path
+ 
+ 
+-def load_workplace_package_manifest(workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[Path, dict[str, Any], PackageRootResolution]:
+-    existing = find_workplace_package_manifests(workplace_root, package_id)
+-    if package_root_id:
+-        root, default_path = resolve_package_path(workplace_root, package_id, package_root_id, mode=mode)
+-        path = default_path
+-        for existing_root, existing_path in existing:
+-            if existing_root.root_id == root.root_id:
+-                root, path = existing_root, existing_path
+-                break
+-    elif existing:
+-        if len(existing) > 1:
+-            roots = ", ".join(f"{root.root_id}:{path.as_posix()}" for root, path in existing)
+-            root, path = existing[0]
+-            root.warnings.append(f"WARN: duplicate package id '{package_id}' found across package roots: {roots}")
+-        else:
+-            root, path = existing[0]
+-    else:
+-        root, path = resolve_package_path(workplace_root, package_id, None, mode=mode)
+-    data = load_yaml_document(path)
+-    error = yaml_error(data)
+-    if error:
+-        if mode == "write":
+-            raise SystemExit(f"FAIL: package manifest YAML invalid: {rel(path, workplace_root)}: {error}")
+-        return path, data, root
+-    if not data:
+-        data = {
+-            "schema_version": 1,
+-            "id": package_id,
+-            "name": package_id.replace(".", " ").replace("-", " ").title(),
+-            "version": "1.0.0",
+-            "kind": "documentation" if "docs" in package_id or "documentation" in package_id else "platform",
+-            "scope": "workplace",
+-            "resources": [],
+-        }
+-    if "resources" not in data or not isinstance(data.get("resources"), list):
+-        data["resources"] = []
+-    return path, data, root
+ 
+ 
+ def resource_index_path_for_package(manifest_path: Path, workplace_root: Path, package_id: str) -> Path:
+@@ -8583,7 +8268,7 @@ def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]
+ 
+ 
+ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> list[Check]:
+-    manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="read")
++    manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="read")
+     checks: list[Check] = []
+     if not manifest_path.is_file():
+         return [
+@@ -8670,7 +8355,7 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
+                 f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {dependency_id} --package-root global --title \"{dependency_id}\" --apply",
+             )
+         )
+-    package_policy = load_policy_document("package-id-policy.yaml")
++    package_policy = _context_contract_inputs.documents.policy("package-id-policy.yaml", distribution_root=ROOT)
+     for entry in policy_entries(package_policy, "package_id_rules"):
+         if policy_id_matches(package_id, entry):
+             level = str(entry.get("level", "WARN")).upper()
+@@ -8926,7 +8611,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
+     if not manifest_platform_ids and not meta_project_without_selection:
+         manifest_platform_ids = classification["platforms"]
+     platform_resolution = _platform_contract_resolver.resolve(workplace_manifest_path, manifest_platform_ids, project_root=project_root)
+-    available_platform_contracts = available_platform_contract_records(workplace_manifest_path, project_root)
++    available_platform_contracts = _project_platform_selection_service.available_records(workplace_manifest_path, project_root)
+     if meta_project_without_selection:
+         platform_selection = {
+             "status": "not_applicable",
+@@ -8937,7 +8622,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
+     else:
+         platform_selection = {"status": "not_selected", "reason": "No platform contracts were selected for this project."}
+     package_index_ids = set(_project_package_catalog_reader.index(project_root, distribution_root, workplace_manifest_path))
+-    required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
++    required_resource_missing, recommended_resource_missing = _project_platform_selection_service.resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
+     process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
+     process_selection = project_process_selection(manifest_data)
+     package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
+@@ -12202,155 +11887,14 @@ def process_definition_path(project_root: Path, process_or_path: str) -> Path:
+ 
+ 
+ 
+-PROCESS_CATALOG_CLASSIFICATIONS = CATALOG_PROCESS_CATALOG_CLASSIFICATIONS
+ 
+ 
+-def process_catalog_metadata(process: dict[str, Any]) -> dict[str, Any]:
+-    return catalog_process_catalog_metadata(process)
+ 
+ 
+-def process_is_public_stable(process: dict[str, Any]) -> bool:
+-    meta = process_catalog_metadata(process)
+-    return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
+ 
+ 
+ 
+ 
+-def validate_process_contract(
+-    project_root: Path,
+-    process: dict[str, Any],
+-    process_path: Path,
+-    *,
+-    strict: bool = False,
+-    companion_root: Path | None = None,
+-) -> list[Check]:
+-    process_id = str(process.get("id") or process_path.stem)
+-    meta = process_catalog_metadata(process)
+-    stable = process_is_public_stable(process)
+-    hard = strict or stable
+-    checks: list[Check] = []
+-    checks.append(check("PASS" if meta["classification"] in PROCESS_CATALOG_CLASSIFICATIONS else "FAIL", f"{process_id} catalog classification valid"))
+-    checks.append(check("PASS" if process.get("execution_mode") in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else ("FAIL" if hard else "WARN"), f"{process_id} execution_mode declared"))
+-    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+-    checks.append(check("PASS" if coordination.get("mode") in PROCESS_COORDINATION_MODES else ("FAIL" if hard else "WARN"), f"{process_id} coordination_requirements.mode declared"))
+-    error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
+-    checks.append(check("PASS" if error_handling.get("mode") in ERROR_WORKFLOW_MODES and "enabled" in error_handling else ("FAIL" if hard else "WARN"), f"{process_id} error_handling declared"))
+-    checks.extend(_process_evolution_policy.validate_block(process_id, process.get("evolve"), hard=hard))
+-    checks.append(check("PASS" if isinstance(process.get("responsibility_boundaries"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} responsibility_boundaries declared"))
+-    if process.get("execution_mode") in {"single_agent_with_subagents", "orchestrated_agents"}:
+-        checks.append(check("PASS" if isinstance(process.get("subagent_policy"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} subagent_policy declared"))
+-    if process.get("execution_mode") == "orchestrated_agents":
+-        runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
+-        checks.append(check("PASS" if "supervisor_required" in runtime_requirements or coordination.get("mode") != "organized_required" else ("FAIL" if hard else "WARN"), f"{process_id} runtime requirements declared where needed"))
+-
+-    for role in as_list(process.get("roles")):
+-        if not isinstance(role, dict):
+-            checks.append(check("FAIL" if hard else "WARN", f"{process_id} role entry is not an object"))
+-            continue
+-        label = f"{process_id} role {role.get('id', '<missing>')}"
+-        checks.append(check("PASS" if role.get("kind") else ("FAIL" if hard else "WARN"), f"{label} kind declared"))
+-        responsibilities = role.get("responsibilities")
+-        if responsibilities is None and role.get("responsibility"):
+-            responsibilities = [role.get("responsibility")]
+-        checks.append(check("PASS" if string_list(responsibilities) else ("FAIL" if hard else "WARN"), f"{label} responsibilities declared"))
+-
+-    defined_artifacts = _process_artifact_declaration_policy.declared_ids(process)
+-    evidence_ids = {str(item.get("id")) for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict) and item.get("id")}
+-    produced = _process_artifact_declaration_policy.produced_ids(process)
+-    missing = sorted(produced - defined_artifacts)
+-    checks.append(check("PASS" if not missing else ("FAIL" if hard else "WARN"), f"{process_id} produced artifacts declared: {', '.join(missing) if missing else 'all'}"))
+-    gate_ids = {str(item.get("id")) for item in as_list(process.get("gates")) if isinstance(item, dict) and item.get("id")}
+-    for gate in as_list(process.get("gates")):
+-        if isinstance(gate, dict) and gate.get("required_artifact"):
+-            artifact_id = str(gate.get("required_artifact"))
+-            checks.append(check("PASS" if artifact_id in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id} gate {gate.get('id', '')} required artifact declared: {artifact_id}"))
+-    for stage in as_list(process.get("stages")):
+-        if not isinstance(stage, dict):
+-            continue
+-        stage_id = str(stage.get("id") or "stage")
+-        checks.append(check("PASS" if stage.get("actor") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} actor declared"))
+-        checks.append(check("PASS" if stage.get("goal") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} goal declared"))
+-        unknown_gates = sorted(set(string_list(stage.get("entry_gates")) + string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
+-        checks.append(check("PASS" if not unknown_gates else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} gates valid: {', '.join(unknown_gates) if unknown_gates else 'all'}"))
+-        for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
+-            unknown_artifacts = sorted(set(string_list(stage.get(field))) - defined_artifacts)
+-            checks.append(check("PASS" if not unknown_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} {field} valid: {', '.join(unknown_artifacts) if unknown_artifacts else 'all'}"))
+-        unknown_evidence = sorted(set(string_list(stage.get("required_evidence"))) - evidence_ids)
+-        checks.append(check("PASS" if not unknown_evidence else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} evidence valid: {', '.join(unknown_evidence) if unknown_evidence else 'all'}"))
+-        if stage.get("gates"):
+-            checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated gates alias"))
+-        if stage.get("technical_obligations"):
+-            checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated technical_obligations alias"))
+-        for binding in as_list(stage.get("automation_bindings")):
+-            if not isinstance(binding, dict):
+-                checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} automation binding is object"))
+-                continue
+-            binding_id = str(binding.get("id") or "binding")
+-            checks.append(check("PASS" if binding.get("projector") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} projector declared"))
+-            if binding.get("artifact"):
+-                checks.append(check("PASS" if str(binding.get("artifact")) in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} artifact valid"))
+-            if binding.get("gate"):
+-                checks.append(check("PASS" if str(binding.get("gate")) in gate_ids else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} gate valid"))
+-        if "handoff_required" in stage:
+-            checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} deprecated handoff_required used without explicit semantics"))
+-    if "handoff_required" in process:
+-        checks.append(check("FAIL" if hard else "WARN", f"{process_id} deprecated handoff_required used without explicit semantics"))
+-    transitions = as_list(process.get("process_transitions"))
+-    route_file = process_routes_path(project_root)
+-    route_map = load_process_route_map(project_root) if route_file.is_file() else {"routes": []}
+-    routes_by_id = {
+-        str(route.get("id") or ""): route
+-        for route in as_list(route_map.get("routes"))
+-        if isinstance(route, dict) and route.get("id")
+-    }
+-    transition_ids: set[str] = set()
+-    for transition in transitions:
+-        if not isinstance(transition, dict):
+-            checks.append(check("FAIL" if hard else "WARN", f"{process_id} transition is an object"))
+-            continue
+-        transition_id = str(transition.get("id") or "")
+-        checks.append(check("PASS" if transition_id and transition_id not in transition_ids else ("FAIL" if hard else "WARN"), f"{process_id} transition id unique: {transition_id or 'missing'}"))
+-        transition_ids.add(transition_id)
+-        checks.append(check("PASS" if str(transition.get("from_process") or "") == process_id else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} starts from declaring process"))
+-        checks.append(check("PASS" if transition.get("to_process") else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} target declared"))
+-        checks.append(check("PASS" if str(transition.get("mode") or "") in HANDOFF_MODES else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} mode valid"))
+-        route_id = str(transition.get("route_id") or "")
+-        if route_id:
+-            checks.append(check("PASS" if route_file.is_file() else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route map exists"))
+-            route = routes_by_id.get(route_id)
+-            checks.append(check("PASS" if route is not None else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route exists: {route_id}"))
+-            if route is not None:
+-                same_contract = (
+-                    str(route.get("from_process") or "") == process_id
+-                    and str(route.get("to_process") or "") == str(transition.get("to_process") or "")
+-                    and str(route.get("mode") or "") == str(transition.get("mode") or "")
+-                )
+-                checks.append(check("PASS" if same_contract else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route contract matches: {route_id}"))
+-
+-    companions = _process_authoring_validation_service.paths(companion_root or project_root, process_id)
+-    pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
+-    agent_prompt = process.get("agent_prompt") if isinstance(process.get("agent_prompt"), dict) else {}
+-    prompt_required = bool(agent_prompt.get("required", True))
+-    if stable:
+-        checks.append(check("PASS" if companions["prompt"].is_file() or not prompt_required else "FAIL", f"{rel(companions['prompt'], project_root)} exists or is explicitly exempt"))
+-        checks.append(check("PASS" if companions["doc"].is_file() else "FAIL", f"{rel(companions['doc'], project_root)} exists"))
+-        example_required = bool(pack.get("example_required", True))
+-        checks.append(check("PASS" if companions["example"].is_file() or not example_required else "FAIL", f"{rel(companions['example'], project_root)} exists or is explicitly exempt"))
+-    else:
+-        checks.append(check("PASS", f"{process_id} companion completeness not strict for {meta['classification']}"))
+-
+-    for template_id in string_list(process.get("required_templates")):
+-        template_ref = Path(template_id)
+-        candidates = [
+-            project_root / "templates" / template_ref,
+-            project_root / "templates" / f"{template_id}.yaml",
+-            project_root / "templates" / f"{template_id}.md",
+-            ROOT / "templates" / template_ref,
+-            ROOT / "templates" / f"{template_id}.yaml",
+-            ROOT / "templates" / f"{template_id}.md",
+-        ]
+-        checks.append(check("PASS" if any(candidate.is_file() for candidate in candidates) else ("FAIL" if hard else "WARN"), f"{process_id} required template exists: {template_id}"))
+-    return checks
+ 
+ 
+ def process_catalog_contexts(process: dict[str, Any]) -> dict[str, str]:
+@@ -12398,7 +11942,7 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
+         if public and meta["classification"] == "INTERNAL_MAINTENANCE":
+             strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
+         else:
+-            strict_checks = validate_process_contract(
++            strict_checks = _process_contract_validation_service.validate(
+                 root,
+                 process,
+                 path,
+@@ -12507,7 +12051,7 @@ def command_process_doctor(args: argparse.Namespace) -> int:
+     )
+     checks.extend(_process_authoring_validation_service.files(project_root, process, path, companion_root=companion_root))
+     checks.extend(
+-        validate_process_contract(
++        _process_contract_validation_service.validate(
+             project_root,
+             process,
+             path,
+@@ -13619,7 +13163,6 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
+     return 1 if result == "FAIL" else 0
+ 
+ 
+-HANDOFF_MODES = {"wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"}
+ HANDOFF_STATUSES = {"waiting_for_agent", "ready", "accepted", "in_progress", "returned", "finalized", "needs_operator", "cancelled"}
+ LEASE_STATUSES = {"active", "released", "revoked", "expired", "stale"}
+ 
+@@ -14118,22 +13661,13 @@ def mark_expired_agent_leases(workplace_root: Path) -> int:
+     return changed
+ 
+ 
+-def process_routes_path(project_root: Path) -> Path:
+-    return locate_flow_root(project_root) / "process-routes.yaml"
+ 
+ 
+-def load_process_route_map(project_root: Path) -> dict[str, Any]:
+-    data = load_yaml_document(process_routes_path(project_root))
+-    if yaml_error(data) or not data:
+-        return {"schema_version": 1, "routes": []}
+-    data.setdefault("schema_version", 1)
+-    data.setdefault("routes", [])
+-    return data
+ 
+ 
+ def route_by_id(project_root: Path, route_id: str) -> dict[str, Any]:
+     route_id = safe_id(route_id, "route")
+-    routes = load_process_route_map(project_root).get("routes", [])
++    routes = _process_route_document_reader.read(project_root).get("routes", [])
+     for route in routes if isinstance(routes, list) else []:
+         if isinstance(route, dict) and str(route.get("id")) == route_id:
+             return route
+@@ -14143,7 +13677,7 @@ def route_by_id(project_root: Path, route_id: str) -> dict[str, Any]:
+ def command_process_route_list(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    routes = [item for item in load_process_route_map(project_root).get("routes", []) if isinstance(item, dict)]
++    routes = [item for item in _process_route_document_reader.read(project_root).get("routes", []) if isinstance(item, dict)]
+     if getattr(args, "json", False):
+         print(json.dumps({"routes": routes}, ensure_ascii=False, indent=2))
+     else:
+@@ -14153,7 +13687,7 @@ def command_process_route_list(args: argparse.Namespace) -> int:
+ 
+ 
+ def validate_process_route_map(project_root: Path) -> list[Check]:
+-    data = load_process_route_map(project_root)
++    data = _process_route_document_reader.read(project_root)
+     routes = data.get("routes") if isinstance(data.get("routes"), list) else []
+     checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
+     _update_schema_checks.append(checks, data, "process-route-map.schema.json", "process route map")
+@@ -17763,153 +17297,10 @@ def command_update_sources(args: argparse.Namespace) -> int:
+ 
+ 
+ 
+-def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]:
+-    manifest = workplace_root / "workplace.yaml"
+-    records: list[dict[str, Any]] = []
+-    seen: set[Path] = set()
+-
+-    package_roots = _project_package_catalog_reader.workplace_root_paths(manifest if manifest.is_file() else None)
+-    if not package_roots:
+-        package_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/packages"))]
+-    for root in package_roots:
+-        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/package.yaml", "*/package.yml"]):
+-            if path in seen:
+-                continue
+-            seen.add(path)
+-            data = _update_document_reader.yaml(path)
+-            if not data.get("id"):
+-                continue
+-            subject_type = str(data.get("type") or "knowledge_package")
+-            if subject_type not in UPDATE_SUBJECT_TYPES:
+-                subject_type = "knowledge_package"
+-            records.append(
+-                {
+-                    "type": subject_type,
+-                    "id": str(data.get("id")),
+-                    "scope": str(data.get("scope") or "global"),
+-                    "version": str(data.get("version") or ""),
+-                    "manifest_path": path,
+-                    "data": data,
+-                }
+-            )
+-
+-    process_root = path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/processes"))
+-    for path in _update_document_reader.manifest_candidates(process_root, ["*.yaml", "*.yml"]):
+-        data = _update_document_reader.yaml(path)
+-        if data.get("id"):
+-            subject_type = str(data.get("type") or "process_definition")
+-            if subject_type not in UPDATE_SUBJECT_TYPES:
+-                subject_type = "process_definition"
+-            records.append(
+-                {
+-                    "type": subject_type,
+-                    "id": str(data.get("id")),
+-                    "scope": "global",
+-                    "version": str(data.get("version") or ""),
+-                    "manifest_path": path,
+-                    "data": data,
+-                }
+-            )
+-
+-    template_roots = _update_document_reader.registry_paths(workplace_root, "templates.yaml", "template_roots")
+-    if not template_roots:
+-        template_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_TEMPLATES}"))]
+-    for root in template_roots:
+-        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
+-            data = _update_document_reader.yaml(path)
+-            if data.get("id"):
+-                subject_type = str(data.get("type") or "reusable_template")
+-                if subject_type not in UPDATE_SUBJECT_TYPES:
+-                    subject_type = "reusable_template"
+-                records.append(
+-                    {
+-                        "type": subject_type,
+-                        "id": str(data.get("id")),
+-                        "scope": str(data.get("scope") or "global"),
+-                        "version": str(data.get("version") or ""),
+-                        "manifest_path": path,
+-                        "data": data,
+-                    }
+-                )
+-
+-    platform_roots = _update_document_reader.registry_paths(workplace_root, "platform-contract-roots.yaml", "platform_contract_roots")
+-    if not platform_roots:
+-        platform_roots = [
+-            path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_PLATFORM_CONTRACTS}")),
+-            path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/platforms")),
+-        ]
+-    for root in platform_roots:
+-        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/platform.yaml", "*/platform.yml", "*/platform-contract.yaml", "*/platform-contract.yml"]):
+-            data = _update_document_reader.yaml(path)
+-            if data.get("id") and data.get("type") == "platform_contract":
+-                records.append(
+-                    {
+-                        "type": "platform_contract",
+-                        "id": str(data.get("id")),
+-                        "scope": "global",
+-                        "version": str(data.get("version") or ""),
+-                        "manifest_path": path,
+-                        "data": data,
+-                    }
+-                )
+-
+-    tools_path = workplace_root / "registries" / "tools.yaml"
+-    tools_data = _update_document_reader.yaml(tools_path)
+-    for entry in tools_data.get("tools", []) if isinstance(tools_data.get("tools"), list) else []:
+-        if isinstance(entry, dict) and entry.get("id"):
+-            subject_type = str(entry.get("type") or "tool_definition")
+-            if subject_type not in UPDATE_SUBJECT_TYPES:
+-                subject_type = "tool_definition"
+-            records.append(
+-                {
+-                    "type": subject_type,
+-                    "id": str(entry.get("id")),
+-                    "scope": str(entry.get("scope") or "global"),
+-                    "version": str(entry.get("version") or ""),
+-                    "manifest_path": tools_path,
+-                    "data": entry,
+-                }
+-            )
+-
+-    mcp_path = workplace_root / "registries" / "mcp.yaml"
+-    mcp_data = _update_document_reader.yaml(mcp_path)
+-    for entry in mcp_data.get("mcp_servers", []) if isinstance(mcp_data.get("mcp_servers"), list) else []:
+-        if isinstance(entry, dict) and entry.get("id"):
+-            records.append(
+-                {
+-                    "type": "mcp_definition",
+-                    "id": str(entry.get("id")),
+-                    "scope": str(entry.get("scope") or "global"),
+-                    "version": str(entry.get("version") or ""),
+-                    "manifest_path": mcp_path,
+-                    "data": entry,
+-                }
+-            )
+-    return records
+ 
+ 
+ 
+ 
+-def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
+-    path = _update_document_reader.overrides_path(workplace_root)
+-    data = _update_document_reader.yaml(path)
+-    overrides = data.get("overrides") if isinstance(data.get("overrides"), list) else []
+-    result: dict[str, dict[str, Any]] = {}
+-    for item in overrides:
+-        if not isinstance(item, dict):
+-            continue
+-        key = item.get("site_id") if isinstance(item.get("site_id"), str) else None
+-        subject = item.get("subject") if isinstance(item.get("subject"), dict) else {}
+-        update_site_id = item.get("update_site_id") or item.get("source_id")
+-        if not key and isinstance(update_site_id, str) and subject.get("type") and subject.get("id"):
+-            key = _update_site_policy.stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
+-        if not key and isinstance(item.get("subject_id"), str):
+-            key = str(item.get("subject_id"))
+-        if not key and isinstance(item.get("subject"), dict) and subject.get("type") and subject.get("id"):
+-            key = f"{subject.get('type')}:{subject.get('id')}"
+-        if key:
+-            result[key] = item
+-    return result
+ 
+ 
+ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> list[Check]:
+@@ -17973,10 +17364,10 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any],
+     overrides_path = _update_document_reader.overrides_path(workplace_root)
+     if overrides_path.is_file():
+         checks.extend(validate_update_site_overrides_data(_update_document_reader.yaml(overrides_path), overrides_path))
+-    overrides = update_site_overrides(workplace_root)
++    overrides = _update_registry_reader.overrides(workplace_root)
+     installed_versions = installed_subject_version_map(workplace_root)
+     sites: list[dict[str, Any]] = []
+-    for record in update_entity_manifest_records(workplace_root):
++    for record in _update_registry_reader.entities(workplace_root):
+         installed_version = installed_versions.get((record["type"], record["id"]), record["version"])
+         data = record["data"]
+         update_sites = data.get("update_sites")
+@@ -18239,16 +17630,10 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
+     return 0
+ 
+ 
+-def update_runtime_root(workplace_root: Path) -> Path:
+-    return workplace_root / "runtime" / "update"
+ 
+ 
+-def update_candidates_path(workplace_root: Path) -> Path:
+-    return update_runtime_root(workplace_root) / "candidates.json"
+ 
+ 
+-def update_notifications_path(workplace_root: Path) -> Path:
+-    return update_runtime_root(workplace_root) / "notifications.json"
+ 
+ 
+ 
+@@ -18295,17 +17680,10 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
+ 
+ 
+ 
+-def installed_subjects_by_key(workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
+-    data = _update_document_reader.yaml(_update_document_reader.installed_registry(workplace_root))
+-    result: dict[tuple[str, str], dict[str, Any]] = {}
+-    for subject in data.get("subjects", []) if isinstance(data.get("subjects"), list) else []:
+-        if isinstance(subject, dict) and isinstance(subject.get("type"), str) and isinstance(subject.get("id"), str):
+-            result[(str(subject["type"]), str(subject["id"]))] = subject
+-    return result
+ 
+ 
+ def read_update_candidates(workplace_root: Path) -> dict[str, Any]:
+-    path = update_candidates_path(workplace_root)
++    path = _update_document_reader.candidates_path(workplace_root)
+     if not path.is_file():
+         return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+     try:
+@@ -18335,7 +17713,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+         target_sites = _update_document_reader.derived_sites_path(workplace_root)
+         target_sites.parent.mkdir(parents=True, exist_ok=True)
+         target_sites.write_text(json.dumps(derived, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+-    installed = installed_subjects_by_key(workplace_root)
++    installed = _update_registry_reader.installed_subjects(workplace_root)
+     candidates: list[dict[str, Any]] = []
+     conflicts: list[dict[str, Any]] = []
+     for site in derived.get("sites", []) if isinstance(derived.get("sites"), list) else []:
+@@ -18401,13 +17779,13 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+     if args.dry_run:
+         print(json.dumps(cache, ensure_ascii=False, indent=2, sort_keys=True))
+         return 0
+-    path = update_candidates_path(workplace_root)
++    path = _update_document_reader.candidates_path(workplace_root)
+     path.parent.mkdir(parents=True, exist_ok=True)
+     path.write_text(json.dumps(cache, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+     create_update_notifications_from_candidates(workplace_root, candidates)
+     print(f"CANDIDATES: {len(candidates)}")
+     print(f"TARGET: {rel(path, workplace_root)}")
+-    print(f"NOTIFICATIONS: {rel(update_notifications_path(workplace_root), workplace_root)}")
++    print(f"NOTIFICATIONS: {rel(_update_document_reader.notifications_path(workplace_root), workplace_root)}")
+     return 0
+ 
+ 
+@@ -18439,7 +17817,7 @@ def command_update_candidates_show(args: argparse.Namespace) -> int:
+ 
+ def command_update_candidates_clear(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    for path in [update_candidates_path(workplace_root), update_notifications_path(workplace_root)]:
++    for path in [_update_document_reader.candidates_path(workplace_root), _update_document_reader.notifications_path(workplace_root)]:
+         if path.is_file() and not args.dry_run:
+             path.unlink()
+     print("CLEARED: update candidates and notifications" if not args.dry_run else "DRY_RUN: would clear update candidates and notifications")
+@@ -18447,7 +17825,7 @@ def command_update_candidates_clear(args: argparse.Namespace) -> int:
+ 
+ 
+ def create_update_notifications_from_candidates(workplace_root: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+-    path = update_notifications_path(workplace_root)
++    path = _update_document_reader.notifications_path(workplace_root)
+     existing = {}
+     if path.is_file():
+         try:
+@@ -18515,7 +17893,7 @@ def command_update_notifications_create(args: argparse.Namespace) -> int:
+ 
+ def command_update_notifications_list(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    path = update_notifications_path(workplace_root)
++    path = _update_document_reader.notifications_path(workplace_root)
+     data = {}
+     if path.is_file():
+         try:
+@@ -18537,7 +17915,7 @@ def command_update_notifications_list(args: argparse.Namespace) -> int:
+ 
+ def command_update_notifications_acknowledge(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    path = update_notifications_path(workplace_root)
++    path = _update_document_reader.notifications_path(workplace_root)
+     if not path.is_file():
+         print(f"FAIL: notifications cache not found: {path}")
+         return 1
+@@ -18627,7 +18005,7 @@ def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
+ 
+ 
+ def staged_update_record_path(workplace_root: Path, candidate_id: str) -> Path:
+-    return update_runtime_root(workplace_root) / "staged" / candidate_id / "stage-record.yaml"
++    return _update_document_reader.runtime_root(workplace_root) / "staged" / candidate_id / "stage-record.yaml"
+ 
+ 
+ def read_staged_update_record(workplace_root: Path, candidate_id: str) -> dict[str, Any]:
+@@ -18643,7 +18021,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
+     if candidate.get("status") != "available" or not candidate.get("installable"):
+         print(f"FAIL: candidate is not installable: {candidate.get('status')}")
+         return 1
+-    stage_dir = update_runtime_root(workplace_root) / "staged" / str(candidate["id"])
++    stage_dir = _update_document_reader.runtime_root(workplace_root) / "staged" / str(candidate["id"])
+     if args.dry_run:
+         print(f"DRY_RUN: would stage {candidate['id']} into {rel(stage_dir, workplace_root)}")
+         return 0
+@@ -18707,17 +18085,6 @@ def command_update_verify(args: argparse.Namespace) -> int:
+     return 0
+ 
+ 
+-def update_install_path(workplace_root: Path, candidate: dict[str, Any]) -> Path:
+-    policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
+-    install_path = policy.get("install_path")
+-    if isinstance(install_path, str) and install_path.strip():
+-        return path_resolution_to_path(workplace_path_resolution(workplace_root, install_path))
+-    installed = installed_subjects_by_key(workplace_root)
+-    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+-    installed_subject = installed.get((str(subject.get("type")), str(subject.get("id"))), {})
+-    if isinstance(installed_subject.get("install_path"), str) and str(installed_subject["install_path"]).strip():
+-        return path_resolution_to_path(workplace_path_resolution(workplace_root, str(installed_subject["install_path"])))
+-    return workplace_root / "packages" / safe_id(str(subject.get("id") or "package"))
+ 
+ 
+ def update_installed_subject_version(workplace_root: Path, candidate: dict[str, Any], install_path: Path | None = None) -> None:
+@@ -18817,8 +18184,8 @@ def command_update_apply(args: argparse.Namespace) -> int:
+         return 1
+     artifact_info = record.get("artifact") if isinstance(record.get("artifact"), dict) else {}
+     artifact_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(artifact_info.get("path") or "")))
+-    backup_dir = update_runtime_root(workplace_root) / "backups" / args.candidate
+-    apply_dir = update_runtime_root(workplace_root) / "applied" / args.candidate
++    backup_dir = _update_document_reader.runtime_root(workplace_root) / "backups" / args.candidate
++    apply_dir = _update_document_reader.runtime_root(workplace_root) / "applied" / args.candidate
+     if args.dry_run:
+         print(f"DRY_RUN: would apply {args.candidate}")
+         return 0
+@@ -18839,7 +18206,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
+         shutil.copy2(artifact_path, destination)
+         install_path = destination
+     else:
+-        install_path = update_install_path(workplace_root, candidate)
++        install_path = _update_registry_reader.install_path(workplace_root, candidate)
+         if install_path.exists():
+             backup_target = backup_dir / "previous"
+             shutil.copytree(install_path, backup_target)
+@@ -18872,7 +18239,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
+         return 1
+     subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+     policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
+-    backup_dir = update_runtime_root(workplace_root) / "backups" / args.candidate
++    backup_dir = _update_document_reader.runtime_root(workplace_root) / "backups" / args.candidate
+     if policy.get("mode") == "replace_file" or subject.get("type") in {"tool_definition", "tool_package", "tool"}:
+         paths = policy.get("executable_paths") if isinstance(policy.get("executable_paths"), list) else []
+         if not paths:
+@@ -18886,7 +18253,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
+         shutil.copy2(backup_file, destination)
+         restore_path = destination
+     else:
+-        install_path = update_install_path(workplace_root, candidate)
++        install_path = _update_registry_reader.install_path(workplace_root, candidate)
+         backup_tree = backup_dir / "previous"
+         if not backup_tree.is_dir():
+             print(f"FAIL: backup not found: {backup_tree}")
+@@ -18896,7 +18263,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
+         shutil.copytree(backup_tree, install_path)
+         restore_path = install_path
+     record = {"schema_version": 1, "candidate_id": args.candidate, "rolled_back_at": now_utc(), "status": "rolled_back", "restore_path": rel(restore_path, workplace_root)}
+-    rollback_dir = update_runtime_root(workplace_root) / "rollbacks" / args.candidate
++    rollback_dir = _update_document_reader.runtime_root(workplace_root) / "rollbacks" / args.candidate
+     rollback_dir.mkdir(parents=True, exist_ok=True)
+     (rollback_dir / "rollback-record.yaml").write_text(dump_yaml(record), encoding="utf-8")
+     marked = mark_impacted_project_contexts_after_update(workplace_root, candidate, reason="update-rollback")
+@@ -18912,16 +18279,16 @@ def command_update_doctor(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+     checks: list[Check] = []
+     candidates = read_update_candidates(workplace_root)
+-    _update_schema_checks.append(checks, candidates, "update-candidates.schema.json", str(update_candidates_path(workplace_root)))
++    _update_schema_checks.append(checks, candidates, "update-candidates.schema.json", str(_update_document_reader.candidates_path(workplace_root)))
+     notifications = {}
+-    if update_notifications_path(workplace_root).is_file():
++    if _update_document_reader.notifications_path(workplace_root).is_file():
+         try:
+-            notifications = json.loads(update_notifications_path(workplace_root).read_text(encoding="utf-8"))
++            notifications = json.loads(_update_document_reader.notifications_path(workplace_root).read_text(encoding="utf-8"))
+         except json.JSONDecodeError:
+             notifications = {}
+     if notifications:
+-        _update_schema_checks.append(checks, notifications, "update-notifications.schema.json", str(update_notifications_path(workplace_root)))
+-    staged_root = update_runtime_root(workplace_root) / "staged"
++        _update_schema_checks.append(checks, notifications, "update-notifications.schema.json", str(_update_document_reader.notifications_path(workplace_root)))
++    staged_root = _update_document_reader.runtime_root(workplace_root) / "staged"
+     checks.append(check("PASS" if staged_root.exists() or candidates.get("candidates") is not None else "WARN", "update runtime state readable"))
+     return print_checks(checks)
+ 
+@@ -19214,7 +18581,7 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     package_id = str(args.package)
+     package_root_id = getattr(args, "package_root", None)
+-    package_root = resolve_package_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
++    package_root = _project_package_catalog_reader.resolve_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
+     emit_package_root_resolution_event(workplace_root, "knowledge-add-url", package_id, package_root)
+     resource_id = safe_id(args.id or resource_id_from_url(args.url, "article"), "resource")
+     resource = normalize_resource_record(
+@@ -19259,7 +18626,7 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
+             print(warning)
+         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+         return 0
+-    _manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="write")
++    _manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="write")
+     package_existed = _manifest_path.is_file()
+     result = upsert_resource(manifest["resources"], resource)
+     manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
+@@ -19321,7 +18688,7 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     package_id = str(args.package)
+     package_root_id = getattr(args, "package_root", None)
+-    package_root = resolve_package_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
++    package_root = _project_package_catalog_reader.resolve_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
+     emit_package_root_resolution_event(workplace_root, "knowledge-add-resource", package_id, package_root)
+     data = load_yaml_document(Path(args.resource_file).expanduser().resolve())
+     if not data or yaml_error(data):
+@@ -19371,7 +18738,7 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
+             print(warning)
+         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+         return 0
+-    _manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="write")
++    _manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="write")
+     package_existed = _manifest_path.is_file()
+     result = upsert_resource(manifest["resources"], resource)
+     manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
+@@ -19436,7 +18803,7 @@ def build_knowledge_resource_add_plan(
+         raise SystemExit(f"FAIL: workplace is not initialized: {workplace_root}")
+     package_id = validate_resource_id(str(args.package), "knowledge package")
+     package_root_id = getattr(args, "package_root", None)
+-    manifest_path, manifest, package_root = load_workplace_package_manifest(
++    manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(
+         workplace_root,
+         package_id,
+         package_root_id,
+@@ -19675,7 +19042,7 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     package_id = str(args.package)
+     package_root_id = getattr(args, "package_root", None)
+-    manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="read" if args.dry_run else "write")
++    manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="read" if args.dry_run else "write")
+     emit_package_root_resolution_event(workplace_root, "knowledge-index-refresh", package_id, package_root)
+     index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
+     slug, proposal_path = write_resource_proposal(
+@@ -19725,7 +19092,7 @@ def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
+ def command_knowledge_package_create(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     package_id = validate_resource_id(str(args.id), "knowledge package")
+-    package_root = resolve_package_root(workplace_root, args.package_root, mode="write" if args.apply else "read")
++    package_root = _project_package_catalog_reader.resolve_root(workplace_root, args.package_root, mode="write" if args.apply else "read")
+     package_dir = contained_resource_path(
+         package_root.resolved_path,
+         package_root.resolved_path / package_id,
+@@ -19780,13 +19147,10 @@ def command_knowledge_package_create(args: argparse.Namespace) -> int:
+     return doctor_status
+ 
+ 
+-def normalize_platform_id(raw: str) -> tuple[str, str]:
+-    platform_id = safe_id(raw.removeprefix("platform."), "platform")
+-    return platform_id, _platform_contract_reader.contract_id(platform_id)
+ 
+ 
+ def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
+-    platform_id, contract_id = normalize_platform_id(platform)
++    platform_id, contract_id = _platform_contract_reader.normalize_id_pair(platform)
+     for candidate_id in [contract_id, platform_id]:
+         entry = _platform_contract_reader.registry_entry(workplace_root / "workplace.yaml", candidate_id)
+         if entry and entry.get("path"):
+@@ -19810,7 +19174,7 @@ def platform_contract_semantic_checks(
+     checks: list[Check] = []
+     checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
+     contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
+-    for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
++    for entry in policy_entries(_context_contract_inputs.documents.policy("platform-id-policy.yaml", distribution_root=ROOT), "discouraged_platform_ids"):
+         if policy_id_matches(contract_id, entry):
+             checks.append(
+                 check_with_hint(
+@@ -19873,7 +19237,7 @@ def platform_contract_semantic_checks(
+         )
+     checks.append(check("PASS" if platform_resolution["platform_stack"] else "FAIL", "resolved platform stack valid"))
+     checks.append(check("PASS", "resolved platform stack computed without mutating workplace state"))
+-    inherited_required, inherited_recommended = platform_resource_findings(workplace_root / "workplace.yaml", platform_resolution)
++    inherited_required, inherited_recommended = _project_platform_selection_service.resource_findings(workplace_root / "workplace.yaml", platform_resolution)
+     for item in inherited_required:
+         checks.append(
+             check_with_hint(
+@@ -19971,7 +19335,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
+             return print_checks(checks)
+         checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
+         contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
+-        for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
++        for entry in policy_entries(_context_contract_inputs.documents.policy("platform-id-policy.yaml", distribution_root=ROOT), "discouraged_platform_ids"):
+             if policy_id_matches(contract_id, entry):
+                 checks.append(
+                     check_with_hint(
+@@ -20034,7 +19398,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
+             )
+         checks.append(check("PASS" if platform_resolution["platform_stack"] else "FAIL", "resolved platform stack valid"))
+         checks.append(check("PASS", "resolved platform stack computed without mutating workplace state"))
+-        inherited_required, inherited_recommended = platform_resource_findings(workplace_root / "workplace.yaml", platform_resolution)
++        inherited_required, inherited_recommended = _project_platform_selection_service.resource_findings(workplace_root / "workplace.yaml", platform_resolution)
+         for item in inherited_required:
+             checks.append(
+                 check_with_hint(
+@@ -20788,7 +20152,7 @@ def platform_dependency_preflight(
+ ) -> None:
+     missing: list[str] = []
+     for package_id in required_packages:
+-        if not find_workplace_package_manifests(workplace_root, package_id):
++        if not _project_package_catalog_reader.find_manifests(workplace_root, package_id):
+             missing.append(f"knowledge package {package_id}")
+     for template_id in required_templates:
+         if template_manifest_path(workplace_root, template_id) is None:
+diff --git a/tools/smoke_project_onboard_platform_selection.py b/tools/smoke_project_onboard_platform_selection.py
+index ebbde2b..9468673 100644
+--- a/tools/smoke_project_onboard_platform_selection.py
++++ b/tools/smoke_project_onboard_platform_selection.py
+@@ -85,7 +85,8 @@ platforms:
+ 
+ 
+ def selected(pf: object, project: Path, workplace: Path, *, project_type: str = "fixture-extension", detected: list[str] | None = None, answers: dict[str, object] | None = None) -> list[str]:
+-    return pf.selected_project_platforms(
++    from processforge_core.project.platform_selection import ProjectPlatformSelectionService
++    return ProjectPlatformSelectionService(pf.ROOT).selected(
+         {"platforms": detected or []},
+         answers or {"project": {}},
+         project_type,

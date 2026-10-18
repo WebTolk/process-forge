@@ -27,3 +27,15 @@ class AnswersDocumentReader:
             return data if isinstance(data, dict) else {}
         except ModuleNotFoundError:
             return _parse_simple_yaml(text)
+
+    def strings(self, value: Any) -> list[str]:
+        strings: list[str] = []
+        if isinstance(value, str):
+            strings.append(value)
+        elif isinstance(value, list):
+            for item in value:
+                strings.extend(self.strings(item))
+        elif isinstance(value, dict):
+            for item in value.values():
+                strings.extend(self.strings(item))
+        return strings

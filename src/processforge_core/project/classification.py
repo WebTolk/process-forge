@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from processforge_core.common.paths import path_matches_pattern
@@ -32,3 +33,16 @@ class ProjectClassifierRulePolicy:
             return False
         pattern = exists.strip().replace("\\", "/")
         return any(path_matches_pattern(path, pattern) for path in available_paths)
+
+
+def normalize_hint(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+
+def hint_matches(candidate: str, hints: list[str]) -> bool:
+    candidate_variants = {candidate, normalize_hint(candidate), normalize_hint(candidate).replace(" ", "-")}
+    for hint in hints:
+        hint_variants = {hint, normalize_hint(hint), normalize_hint(hint).replace(" ", "-")}
+        if candidate_variants.intersection(hint_variants):
+            return True
+    return False

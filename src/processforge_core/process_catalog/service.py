@@ -333,3 +333,8 @@ def process_definition_exists(context: ProcessCatalogContext, process_id: str) -
         return True
     except SystemExit:
         return False
+
+
+def process_is_public_stable(process: dict[str, Any]) -> bool:
+    meta = process_catalog_metadata(process)
+    return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"

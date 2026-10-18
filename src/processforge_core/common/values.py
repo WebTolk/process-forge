@@ -34,3 +34,17 @@ def list_value(value: Any) -> list[str]:
 def parameter_payload(data: dict[str, Any]) -> dict[str, Any]:
     parameters = data.get("parameters") if isinstance(data, dict) else {}
     return parameters if isinstance(parameters, dict) else {}
+
+
+def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
+    entries = data.get(collection_key) if isinstance(data, dict) else None
+    ids: set[str] = set()
+    if not isinstance(entries, list):
+        return ids
+    for entry in entries:
+        if isinstance(entry, dict):
+            for key in ["id", "package_id", "capability"]:
+                value = entry.get(key)
+                if value:
+                    ids.add(str(value))
+    return ids
