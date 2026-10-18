@@ -1042,7 +1042,12 @@ def _conversation_messages(
         # Its private transcript may retain diagnostic path text. Native host
         # messages and all metadata retain the automatic-capture path filter.
         owned_report = is_worker and policy is not None and policy.owns_report(envelope, item)
-        if (not owned_report and not _is_safe_automatic_content(content)) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)) or core.contains_secret_value(content):
+        if (not owned_report and not _is_safe_automatic_content(content)) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)):
+            return _conversation_denial("unsafe_automatic_content", sequence=sequence)
+
+        from processforge_core.common.privacy import contains_secret_value
+
+        if contains_secret_value(content):
             return _conversation_denial("unsafe_automatic_content", sequence=sequence)
         raw_id = str(receipt.raw_event_id or "")
         key = deterministic_derived_key(

@@ -19,6 +19,7 @@ import yaml
 
 from ..common.request_scope import safe_load
 from ..configuration.parameters import ParameterMergePolicy
+from .context_documents import ContextContractInputs
 from ..project.capability_registry import CapabilityRegistryReader
 from ..project.readiness import ProjectContextReadinessPolicy
 
@@ -425,7 +426,7 @@ def build_context_fields(project: Path, assignment_path: Path, metadata: dict[st
         "resources": {"selected_ids": selected, "bindings_checksum": fingerprint(bindings)},
         "scope": copy.deepcopy(normalized["scope"]), "required_sources": sources, "outputs": copy.deepcopy(normalized["outputs"]),
         "capabilities": {"required": required_records, "optional": optional_records}, "workspace_access": copy.deepcopy(normalized["workspace_access"]),
-        "parameters": parameters, "coordination": core.capsule_coordination_block(snapshot, metadata),
+        "parameters": parameters, "coordination": ContextContractInputs().capsule_coordination_block(snapshot, metadata),
         "worker_may_rebuild_context": False, "source_limits": dict(SOURCE_LIMITS),
         "readiness": {"status": "blocked" if blockers else "ready", "blockers": blockers},
     }

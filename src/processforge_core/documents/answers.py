@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Any
 
+from ..common.privacy import SECRET_VALUE_PATTERNS
 from ..common.yaml_io import _parse_simple_yaml
-
-
-SECRET_VALUE_PATTERNS = [
-    re.compile(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
-    re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
-]
 
 
 class AnswersDocumentReader:

@@ -1,0 +1,22 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-contracts-20261018/review/report.md",
+  "review_sha256": "e16549064988f579d5694cb2e095ac038c9d1c6cf0d3efc4bbdfaf8d6e078e96",
+  "product_sha256": {
+    "tools/processforge.py": "fd429a1b8d2a563cee4f90e989a3b828957874f6c24308594bf2e5e32bbce0c0",
+    "src/processforge_core/work/context.py": "dbb2c03240484f86595b35afa81eccd3293ac2242b7b5b90812101a1a8d976dd",
+    "tools/pf_runtime/host.py": "968d02105b39e1c76f262e7c4c30b55777da562ec06b14bfa892a84e14e2eb70",
+    "tools/smoke_authenticated_report_content.py": "418dec1ef34be4df52154f9033c4b722b85d5aa9d2b03eea6d3d822cf163fcec",
+    "tools/smoke_work_start_scope.py": "7c36b53fb2828a626a7556caa3c7c7e92dbb575ebd07ea1abc0fea8ccdd2f812",
+    "docs/concepts/python-core-structure.md": "985129fa02212b0d640e2b33aabef2e272aefc4d26d43f88fbb95fb93926a685",
+    "docs/ru/concepts/python-core-structure.md": "30fd7938827b224322f23c127d3d18ec60cb6042549507941768b348ae1ed714",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5",
+    "src/processforge_core/project/coordination.py": "680cb8467fbe0678e3dbbe0a96c6ae8f2e3d8bcf820e243a94a1751fdb395338",
+    "src/processforge_core/common/privacy.py": "8d80721229bd0801f6562d2e72f85c2f3c15b76314c917f52c3b650d6f886cfe",
+    "src/processforge_core/evolution/privacy.py": "f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de",
+    "src/processforge_core/documents/answers.py": "3f28fcb96fe516df7b02b9a65749b850ecc71b883e87a26039e0707b1219060a",
+    "src/processforge_core/maintenance/source_contracts.py": "d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f",
+    "checksums/processforge.sha256": "ac54cfd0a4f7ea5981427158ba9bb0fec82b0c25e1552604734f88beb9626653"
+  },
+  "scope": "Source-only behavior preservation. Symlink containment unavailable; package/install/Runtime/connected-host and ZIP-content are not qualified."
+}

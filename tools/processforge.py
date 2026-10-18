@@ -127,6 +127,30 @@ _runtime_driver_catalog_reader = RuntimeDriverCatalogReader(ROOT)
 _knowledge_candidate_targeting_policy = KnowledgeCandidateTargetingPolicy()
 _update_version_selection_policy = UpdateVersionSelectionPolicy()
 _update_assessment_renderer = UpdateAssessmentRenderer()
+from processforge_core.common.privacy import (
+    BACKSLASH,
+    LOCAL_PATH_PATTERNS,
+    SECRET_VALUE_PATTERNS,
+    is_public_path_safe,
+    contains_secret_value,
+)
+from processforge_core.project.coordination import (
+    COORDINATION_PROJECT_MODES,
+    WORKPLACE_DEFAULT_PROJECT_MODES,
+    DIRECTOR_OFFICE_DEFAULTS,
+    ProjectCoordinationReader,
+)
+from processforge_core.evolution.privacy import EvolvePrivacyPolicy
+from processforge_core.maintenance.source_contracts import (
+    UPDATE_SUBJECT_TYPES,
+    CONTROL_CHAR_RE,
+    ENV_REFERENCE_RE,
+    UpdateSourceContractPolicy,
+)
+
+_project_coordination_reader = ProjectCoordinationReader()
+_evolve_privacy_policy = EvolvePrivacyPolicy()
+_update_source_contract_policy = UpdateSourceContractPolicy()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -227,7 +251,6 @@ from pf_cli.parsers.work import WorkCommandParser
 from pf_cli.parsers.workplace import WorkplaceCommandParser
 from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
-from processforge_core.documents.answers import SECRET_VALUE_PATTERNS
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
@@ -302,23 +325,8 @@ PROJECT_FLOW_DIRS = [
     "runtime/registries",
 ]
 
-COORDINATION_PROJECT_MODES = {"inherit", "simple", "organized"}
-WORKPLACE_DEFAULT_PROJECT_MODES = {"simple", "organized"}
 ERROR_WORKFLOW_MODES = {"none", "director_inbox", "route_to_process", "needs_operator"}
 ERROR_WORKFLOW_FALLBACKS = {"needs_operator", "fail_validation"}
-DIRECTOR_OFFICE_DEFAULTS = {
-    "process_id": "agent-director-supervision",
-    "scope": "workplace",
-    "office_path": ".pf/director",
-    "inbox_path": ".pf/director/inbox",
-    "outbox_path": ".pf/director/outbox",
-    "cases_path": ".pf/director/cases",
-    "runs_path": ".pf/director/runs",
-    "artifacts_path": ".pf/director/artifacts",
-    "history_path": ".pf/director/history",
-    "continuations_path": ".pf/director/continuations",
-    "runtime_path": ".pf/director/runtime",
-}
 
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
@@ -512,15 +520,7 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "authoring_parity.completed",
 ]
 
-BACKSLASH = chr(92)
 COLON_WS = ":" + r"\s*"
-LOCAL_PATH_PATTERNS = [
-    re.compile(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH)),
-    re.compile(r"(?<![A-Za-z])[A-Za-z]:/"),
-    re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
-    re.compile("/" + "Users" + "/[A-Za-z0-9_.-]+/"),
-    re.compile("/" + "srv" + "/"),
-]
 
 EVOLVE_CANDIDATE_CATEGORIES = {
     "domain",
@@ -1435,12 +1435,8 @@ def iter_flow_roots(project_root: Path) -> list[Path]:
     return [pf_root] if pf_root.is_dir() else []
 
 
-def is_public_path_safe(text: str) -> bool:
-    return not any(pattern.search(text) for pattern in LOCAL_PATH_PATTERNS)
 
 
-def contains_secret_value(text: str) -> bool:
-    return any(pattern.search(text) for pattern in SECRET_VALUE_PATTERNS)
 
 
 def parse_scalar(value: str) -> Any:
@@ -1867,10 +1863,10 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
     director_answers = coordination_answers.get("director", {}) if isinstance(coordination_answers.get("director"), dict) else {}
     workplace_parameters = answers.get("parameters") if isinstance(answers.get("parameters"), dict) else {}
-    workplace_coordination = default_workplace_coordination()
+    workplace_coordination = _project_coordination_reader.workplace_defaults()
     workplace_coordination["director_enabled"] = bool(coordination_answers.get("director_enabled", False))
     workplace_coordination["director_office_enabled"] = bool(coordination_answers.get("director_office_enabled", False))
-    workplace_coordination["default_project_mode"] = normalize_workplace_default_project_mode(coordination_answers.get("default_project_mode", "simple"))
+    workplace_coordination["default_project_mode"] = _project_coordination_reader.workplace_mode(coordination_answers.get("default_project_mode", "simple"))
     workplace_coordination["director"].update({key: value for key, value in director_answers.items() if value not in (None, "")})
     path_constants = dict(DEFAULT_PATH_CONSTANTS)
     answer_constants = paths_answers.get("path_constants")
@@ -2306,7 +2302,7 @@ def command_init_workplace(args: argparse.Namespace) -> int:
             results.append(write_global_agent_section(path, force=args.force))
         else:
             results.append(write_file(path, content, force=args.force))
-    workplace_coordination = workplace_coordination_config(root / "workplace.yaml")
+    workplace_coordination = _project_coordination_reader.workplace(root / "workplace.yaml")
     if workplace_coordination.get("director_office_enabled"):
         initialize_director_office(root, workplace_coordination)
     append_workplace_event(root, "workplace.structure.created", payload={"directories": [rel(path, root) for path in planned_dirs]})
@@ -2455,7 +2451,7 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
         "coordination": {
             "director_enabled": bool(coordination.get("director_capability", False)),
             "director_office_enabled": bool(coordination.get("initialize_director_office", False)),
-            "default_project_mode": normalize_workplace_default_project_mode(coordination.get("default_project_mode", "simple")),
+            "default_project_mode": _project_coordination_reader.workplace_mode(coordination.get("default_project_mode", "simple")),
         },
     }
 
@@ -2499,7 +2495,7 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
         "platform_policy": answers.get("platform_contracts", {}),
         "coordination": {
             "director_capability": bool(coordination.get("director_capability", False)),
-            "default_project_mode": normalize_workplace_default_project_mode(coordination.get("default_project_mode", "simple")),
+            "default_project_mode": _project_coordination_reader.workplace_mode(coordination.get("default_project_mode", "simple")),
             "initialize_director_office": bool(coordination.get("initialize_director_office", False)),
         },
         "first_project": first_project,
@@ -2908,7 +2904,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         else:
             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
         load_doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
-        cfg = workplace_coordination_config(manifest)
+        cfg = _project_coordination_reader.workplace(manifest)
         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
         if cfg.get("director_office_enabled"):
@@ -3048,7 +3044,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
 def command_workplace_mode_status(args: argparse.Namespace) -> int:
     workplace_root = normalize_workplace_path(Path(args.workplace))
     manifest = workplace_root / "workplace.yaml"
-    cfg = workplace_coordination_config(manifest)
+    cfg = _project_coordination_reader.workplace(manifest)
     office_exists = director_office_exists(workplace_root, cfg)
     payload = {
         "workplace_root": normalize_path_string(str(workplace_root)),
@@ -3104,7 +3100,7 @@ def update_workplace_coordination(workplace_root: Path, updater: Any) -> dict[st
     if not manifest.is_file():
         raise SystemExit(f"FAIL: workplace.yaml missing: {manifest}")
     data = read_yaml_file(manifest)
-    cfg = workplace_coordination_config(manifest)
+    cfg = _project_coordination_reader.workplace(manifest)
     updater(cfg)
     data["coordination"] = cfg
     write_yaml_file(manifest, data)
@@ -3135,7 +3131,7 @@ def command_workplace_mode_set(args: argparse.Namespace) -> int:
 
 def command_workplace_mode_set_default_project_mode(args: argparse.Namespace) -> int:
     workplace_root = normalize_workplace_path(Path(args.workplace))
-    mode = normalize_workplace_default_project_mode(args.mode)
+    mode = _project_coordination_reader.workplace_mode(args.mode)
 
     def updater(cfg: dict[str, Any]) -> None:
         cfg["default_project_mode"] = mode
@@ -3151,7 +3147,7 @@ def command_workplace_mode_doctor(args: argparse.Namespace) -> int:
     manifest = workplace_root / "workplace.yaml"
     checks.append(check("PASS" if manifest.is_file() else "FAIL", "workplace.yaml found"))
     if manifest.is_file():
-        cfg = workplace_coordination_config(manifest)
+        cfg = _project_coordination_reader.workplace(manifest)
         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
         if cfg.get("director_office_enabled") or cfg.get("director_enabled"):
@@ -3178,7 +3174,7 @@ def command_project_mode_status(args: argparse.Namespace) -> int:
 def command_project_mode_set(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     flow_root = require_flow_root(project_root)
-    mode = normalize_project_coordination_mode(args.mode)
+    mode = _project_coordination_reader.project_mode(args.mode)
     if mode == "organized":
         status = effective_project_coordination(project_root, getattr(args, "workplace", None))
         if not status["workplace_director_enabled"]:
@@ -3190,7 +3186,7 @@ def command_project_mode_set(args: argparse.Namespace) -> int:
             raise SystemExit("FAIL: organized project mode requires an initialized Director Office; rerun with --init-office or enable workplace Director Office")
     manifest = flow_root / "process-forge.yaml"
     data = read_yaml_file(manifest)
-    coordination = data.get("coordination") if isinstance(data.get("coordination"), dict) else default_project_coordination()
+    coordination = data.get("coordination") if isinstance(data.get("coordination"), dict) else _project_coordination_reader.project_defaults()
     director = coordination.get("director") if isinstance(coordination.get("director"), dict) else {}
     coordination["mode"] = mode
     director.setdefault("use_workplace_director", True)
@@ -3257,7 +3253,7 @@ def command_director_inbox_submit(args: argparse.Namespace) -> int:
     else:
         if not workplace_root:
             raise SystemExit("FAIL: director-inbox-submit requires --project-root or --workplace")
-        cfg = workplace_coordination_config(workplace_root / "workplace.yaml")
+        cfg = _project_coordination_reader.workplace(workplace_root / "workplace.yaml")
         if not cfg.get("director_enabled"):
             raise SystemExit("FAIL: workplace Director is not enabled")
         coordination = {"effective_mode": "workspace", "workplace_root": normalize_path_string(str(workplace_root))}
@@ -5114,7 +5110,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
     detected["platforms"] = selected_project_platforms(detected, answers, defaults["type"], workplace_manifest, project_root)
     mode = project_mode(project_root, answers)
     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
-    project_coordination = default_project_coordination(coordination_answers.get("mode", "inherit"))
+    project_coordination = _project_coordination_reader.project_defaults(coordination_answers.get("mode", "inherit"))
     if isinstance(coordination_answers.get("director"), dict):
         project_coordination["director"].update(coordination_answers["director"])
     required = answers.get("required_capabilities") if isinstance(answers.get("required_capabilities"), list) else []
@@ -11100,17 +11096,10 @@ def as_list(value: Any) -> list[Any]:
     return [value]
 
 
-def normalize_assignment_path(value: Any) -> str:
-    return _context_contract_inputs.normalize_assignment_path(value)
 
 
-def assignment_path_key(value: Any) -> str:
-    text = normalize_assignment_path(value)
-    return text.lower() if os.name == "nt" else text
 
 
-def assignment_scope_items(value: Any) -> list[str]:
-    return _context_contract_inputs.assignment_scope_items(value)
 
 
 def normalize_context_artifacts(value: Any) -> list[dict[str, Any]]:
@@ -11173,7 +11162,7 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
             else:
                 checks.append(check("FAIL", f"required output has no path: {output_id}"))
             continue
-        output_rel = normalize_assignment_path(str(output.get("path") or ""))
+        output_rel = _context_contract_inputs.normalize_assignment_path(str(output.get("path") or ""))
         if out_path.is_file():
             checks.append(check("PASS", f"required output exists: {output_rel}"))
         elif output_id in waiver_map:
@@ -11183,7 +11172,7 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
         else:
             checks.append(check("FAIL", f"required output missing: {output_rel}"))
     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
-    expected_artifact = normalize_assignment_path(str(expected.get("artifact") or ""))
+    expected_artifact = _context_contract_inputs.normalize_assignment_path(str(expected.get("artifact") or ""))
     if expected_artifact:
         try:
             expected_path = project_output_path(project_root, expected_artifact)
@@ -11214,24 +11203,8 @@ def normalize_non_overlap(value: Any, current_write_scope: list[str]) -> dict[st
     return _context_contract_inputs.normalize_non_overlap(value, current_write_scope)
 
 
-def assignment_write_scope(metadata: dict[str, Any]) -> list[str]:
-    allowed = assignment_scope_items(metadata.get("allowed_files"))
-    ownership = metadata.get("ownership") if isinstance(metadata.get("ownership"), dict) else {}
-    owned = assignment_scope_items(ownership.get("owned_files"))
-    owned.extend(assignment_scope_items(ownership.get("owned_globs")))
-    owned.extend(assignment_scope_items(metadata.get("allowed_globs")))
-    result: list[str] = []
-    seen: set[str] = set()
-    for item in [*allowed, *owned]:
-        key = assignment_path_key(item)
-        if key not in seen:
-            result.append(item)
-            seen.add(key)
-    return result
 
 
-def assignment_has_glob(value: str) -> bool:
-    return any(char in value for char in "*?[")
 
 
 def validate_assignment_scope_overlaps(
@@ -11243,8 +11216,8 @@ def validate_assignment_scope_overlaps(
     current_id = safe_id(str(metadata.get("id") or (assignment_path.stem if assignment_path else "assignment")), "assignment")
     from processforge_core.process_execution import scope_handoff_predecessor
     handed_off_predecessor = scope_handoff_predecessor(project_root, metadata, sys.modules[__name__])
-    current_scope = assignment_write_scope(metadata)
-    forbidden_scope = assignment_scope_items(metadata.get("forbidden_files"))
+    current_scope = _context_contract_inputs.assignment_write_scope(metadata)
+    forbidden_scope = _context_contract_inputs.assignment_scope_items(metadata.get("forbidden_files"))
     scope_conflicts = ScopeConflictService(project_root)
     conflicts = scope_conflicts.conflicts(
         current_id,
@@ -11264,14 +11237,14 @@ def validate_assignment_scope_overlaps(
         status = str(other.get("status", "")).strip()
         if status not in ACTIVE_ASSIGNMENT_STATUSES:
             continue
-        other_scope = assignment_write_scope(other)
+        other_scope = _context_contract_inputs.assignment_write_scope(other)
         if not other_scope:
             continue
         other_id = safe_id(str(other.get("id") or candidate.stem), "assignment")
         if other_id == handed_off_predecessor:
             continue
-        current_deps = assignment_dependency_set(metadata)
-        other_deps = assignment_dependency_set(other)
+        current_deps = _context_contract_inputs.assignment_dependency_set(metadata)
+        other_deps = _context_contract_inputs.assignment_dependency_set(other)
         if other_id in current_deps or current_id in other_deps:
             continue
         conflicts.extend(scope_conflicts.conflicts(current_id, current_scope, other_id, other_scope))
@@ -11288,19 +11261,8 @@ def overlap_allowed_check(overlap_check: dict[str, Any], source: str) -> dict[st
     return resolved
 
 
-def assignment_allows_write_scope_overlap(metadata: dict[str, Any]) -> bool:
-    non_overlap = metadata.get("non_overlap") if isinstance(metadata.get("non_overlap"), dict) else {}
-    return str(non_overlap.get("policy") or "") == "allow_write_scope_overlap"
 
 
-def assignment_dependency_set(metadata: dict[str, Any]) -> set[str]:
-    dependencies = metadata.get("dependencies") if isinstance(metadata.get("dependencies"), dict) else {}
-    values = [
-        *as_list(dependencies.get("blocked_by")),
-        *as_list(metadata.get("dependencies") if not isinstance(metadata.get("dependencies"), dict) else []),
-        *as_list(metadata.get("depends_on")),
-    ]
-    return {safe_id(str(item), "assignment") for item in values if item}
 
 
 def normalized_assignment_contract(project_root: Path, assignment: Path, metadata: dict[str, Any]) -> dict[str, Any]:
@@ -11319,47 +11281,8 @@ def workspace_access_public_path_issues(access: dict[str, list[Any]]) -> list[st
     return _context_contract_inputs.workspace_access_public_path_issues(access)
 
 
-def validate_assignment_required_sources(project_root: Path, contract: dict[str, Any]) -> list[str]:
-    missing: list[str] = []
-    required_sources = contract.get("context", {}).get("required_sources", [])
-    for source in required_sources if isinstance(required_sources, list) else []:
-        path = project_root / str(source)
-        if not path.is_file():
-            missing.append(str(source))
-    artifacts = contract.get("context", {}).get("context_artifacts", [])
-    for item in artifacts if isinstance(artifacts, list) else []:
-        if isinstance(item, dict) and item.get("required", True):
-            source = str(item.get("path", ""))
-            if source and not (project_root / source).is_file():
-                missing.append(source)
-    return sorted(set(missing))
 
 
-def capsule_coordination_block(snapshot: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
-    coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
-    effective_mode = str(coordination.get("effective_mode") or "simple")
-    raw_requirements = metadata.get("coordination_requirements") if isinstance(metadata.get("coordination_requirements"), dict) else {}
-    inbox_requirements = raw_requirements.get("director_inbox") if isinstance(raw_requirements.get("director_inbox"), dict) else {}
-    submit_required = bool(inbox_requirements.get("required", False) or metadata.get("director_inbox_submit_required", False))
-    if effective_mode != "organized":
-        if submit_required:
-            raise SystemExit("FAIL: assignment requires Director inbox but project effective coordination mode is simple")
-        return {
-            "effective_mode": "simple",
-            "director_required": False,
-            "director_available_at_workplace": bool(coordination.get("director_available_at_workplace", False)),
-        }
-    director_inbox = coordination.get("director_inbox") if isinstance(coordination.get("director_inbox"), dict) else {}
-    return {
-        "effective_mode": "organized",
-        "director_required": bool(coordination.get("director_required", True)),
-        "director_process": coordination.get("director_process") or "agent-director-supervision",
-        "director_inbox": {
-            "enabled": bool(director_inbox.get("enabled", True)),
-            "submit_required": submit_required or bool(director_inbox.get("submit_required", False)),
-            "allowed_message_types": director_inbox.get("allowed_message_types", ["worker_report", "error_report", "decision_request"]),
-        },
-    }
 
 
 def command_assignment_capsule(args: argparse.Namespace) -> int:
@@ -11403,11 +11326,11 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     workspace_access_issues = workspace_access_public_path_issues(contract["workspace_access"])
     if workspace_access_issues:
         raise SystemExit("FAIL: workspace access must use public refs: " + "; ".join(workspace_access_issues))
-    missing_sources = validate_assignment_required_sources(project_root, contract)
+    missing_sources = _context_contract_inputs.validate_assignment_required_sources(project_root, contract)
     if missing_sources:
         raise SystemExit("FAIL: assignment required sources missing: " + ", ".join(missing_sources))
     overlap_check = validate_assignment_scope_overlaps(project_root, metadata, assignment_path=assignment)
-    if assignment_allows_write_scope_overlap(metadata):
+    if _context_contract_inputs.assignment_allows_write_scope_overlap(metadata):
         overlap_check = overlap_allowed_check(overlap_check, "plan.allow_write_scope_overlap")
     if overlap_check["status"] == "fail" and not args.force:
         raise SystemExit("FAIL: assignment write scope overlaps active assignments: " + dump_yaml(overlap_check))
@@ -11462,7 +11385,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         "agent_model": contract["agent_model"],
         "agent_reasoning_effort": contract["agent_reasoning_effort"],
         "subagent_policy": contract["subagent_policy"],
-        "workplace_coordination": capsule_coordination_block(snapshot, metadata),
+        "workplace_coordination": _context_contract_inputs.capsule_coordination_block(snapshot, metadata),
         "capabilities": {"required": required_records, "optional": optional_records},
         "telemetry": {"events": telemetry_rel, "event_correlation_id": f"assignment-{assn_id}"},
         "required_sources": contract["context"]["required_sources"],
@@ -11773,18 +11696,8 @@ def parse_cli_bool(value: Any, *, name: str = "value") -> bool:
     raise SystemExit(f"FAIL: {name} must be true or false")
 
 
-def normalize_project_coordination_mode(value: Any) -> str:
-    mode = str(value or "inherit").strip().lower()
-    if mode not in COORDINATION_PROJECT_MODES:
-        raise SystemExit("FAIL: project coordination mode must be inherit, simple, or organized")
-    return mode
 
 
-def normalize_workplace_default_project_mode(value: Any) -> str:
-    mode = str(value or "simple").strip().lower()
-    if mode not in WORKPLACE_DEFAULT_PROJECT_MODES:
-        raise SystemExit("FAIL: workplace default_project_mode must be simple or organized")
-    return mode
 
 
 def normalize_workplace_path(path: Path) -> Path:
@@ -11799,64 +11712,12 @@ def workplace_manifest_path_from_root(workplace: Path) -> Path:
     return root if root.name == "workplace.yaml" else root / "workplace.yaml"
 
 
-def default_workplace_coordination() -> dict[str, Any]:
-    return {
-        "director_enabled": False,
-        "director_office_enabled": False,
-        "default_project_mode": "simple",
-        "director": dict(DIRECTOR_OFFICE_DEFAULTS),
-        "error_workflow_support": True,
-    }
 
 
-def default_project_coordination(mode: str = "inherit") -> dict[str, Any]:
-    return {
-        "mode": normalize_project_coordination_mode(mode),
-        "director": {
-            "use_workplace_director": True,
-            "inbox_submit_required": False,
-        },
-    }
 
 
-def workplace_coordination_config(workplace_manifest: Path | None) -> dict[str, Any]:
-    config = default_workplace_coordination()
-    if workplace_manifest and workplace_manifest.is_file():
-        data = load_yaml_document(workplace_manifest)
-        raw = data.get("coordination") if isinstance(data, dict) else None
-        if isinstance(raw, dict):
-            config.update({key: value for key, value in raw.items() if key != "director"})
-            if isinstance(raw.get("director"), dict):
-                director = dict(DIRECTOR_OFFICE_DEFAULTS)
-                director.update(raw["director"])
-                config["director"] = director
-    config["director_enabled"] = bool(config.get("director_enabled", False))
-    config["director_office_enabled"] = bool(config.get("director_office_enabled", False))
-    config["default_project_mode"] = normalize_workplace_default_project_mode(config.get("default_project_mode"))
-    if not isinstance(config.get("director"), dict):
-        config["director"] = dict(DIRECTOR_OFFICE_DEFAULTS)
-    return config
 
 
-def project_coordination_config(project_root: Path) -> dict[str, Any]:
-    flow_root = locate_flow_root(project_root)
-    manifest = flow_root / "process-forge.yaml"
-    data = load_yaml_document(manifest) if manifest.is_file() else {}
-    raw = data.get("coordination") if isinstance(data, dict) else None
-    config = default_project_coordination()
-    if isinstance(raw, dict):
-        config.update({key: value for key, value in raw.items() if key != "director"})
-        director = config.get("director") if isinstance(config.get("director"), dict) else {}
-        if isinstance(raw.get("director"), dict):
-            director = dict(director)
-            director.update(raw["director"])
-        config["director"] = director
-    config["mode"] = normalize_project_coordination_mode(config.get("mode"))
-    if not isinstance(config.get("director"), dict):
-        config["director"] = default_project_coordination()["director"]
-    config["director"].setdefault("use_workplace_director", True)
-    config["director"].setdefault("inbox_submit_required", False)
-    return config
 
 
 def resolve_project_workplace_manifest(project_root: Path, explicit_workplace: str | None = None) -> Path | None:
@@ -11877,7 +11738,7 @@ def resolve_project_workplace_manifest(project_root: Path, explicit_workplace: s
 
 
 def director_office_paths(workplace_root: Path, coordination: dict[str, Any] | None = None) -> dict[str, Path]:
-    cfg = coordination or workplace_coordination_config(workplace_root / "workplace.yaml")
+    cfg = coordination or _project_coordination_reader.workplace(workplace_root / "workplace.yaml")
     director = cfg.get("director") if isinstance(cfg.get("director"), dict) else {}
     paths: dict[str, Path] = {}
     for key, default in DIRECTOR_OFFICE_DEFAULTS.items():
@@ -11933,12 +11794,12 @@ def initialize_director_office(workplace_root: Path, coordination: dict[str, Any
 
 
 def effective_project_coordination(project_root: Path, explicit_workplace: str | None = None) -> dict[str, Any]:
-    project_cfg = project_coordination_config(project_root)
+    project_cfg = _project_coordination_reader.project(project_root)
     workplace_manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
     workplace_root = workplace_manifest.parent if workplace_manifest else None
-    workplace_cfg = workplace_coordination_config(workplace_manifest)
-    project_mode = normalize_project_coordination_mode(project_cfg.get("mode"))
-    default_mode = normalize_workplace_default_project_mode(workplace_cfg.get("default_project_mode"))
+    workplace_cfg = _project_coordination_reader.workplace(workplace_manifest)
+    project_mode = _project_coordination_reader.project_mode(project_cfg.get("mode"))
+    default_mode = _project_coordination_reader.workplace_mode(workplace_cfg.get("default_project_mode"))
     effective_mode = default_mode if project_mode == "inherit" else project_mode
     director_available = bool(workplace_cfg.get("director_enabled"))
     office_exists = bool(workplace_root and director_office_exists(workplace_root, workplace_cfg))
@@ -13595,40 +13456,10 @@ def ensure_learning_layout(workplace: Path) -> Path:
     return root
 
 
-def evolve_sanitizer_findings(text: str) -> list[str]:
-    findings: list[str] = []
-    if not is_public_path_safe(text):
-        findings.append("private_absolute_path")
-    if contains_secret_value(text):
-        findings.append("secret_like_value")
-    if re.search(r"(?im)^\s*[A-Za-z_][A-Za-z0-9_]*\s*=\s*[^\s#]+", text) and ".env" in text.lower():
-        findings.append("env_value")
-    if re.search(r"https?://[^\s/@]+:[^\s/@]+@", text):
-        findings.append("credentialed_repo_url")
-    if len(text) > 20000:
-        findings.append("large_source_dump")
-    return sorted(set(findings))
 
 
-def evolve_sanitize_text(text: str) -> str:
-    sanitized = text
-    sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH) + r"[^\n\r\t ]+", "<redacted-path>", sanitized)
-    sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:/[^\n\r\t ]+", "<redacted-path>", sanitized)
-    sanitized = re.sub(r"/(?:home|Users|srv)/[^\n\r\t ]+", "<redacted-path>", sanitized)
-    sanitized = re.sub(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}", r"\1: <redacted-secret>", sanitized)
-    sanitized = re.sub(r"https?://([^\s/@]+):([^\s/@]+)@", "https://<redacted-credentials>@", sanitized)
-    sanitized = re.sub(r"-----BEGIN [A-Z ]+PRIVATE KEY-----.*?-----END [A-Z ]+PRIVATE KEY-----", "<redacted-private-key>", sanitized, flags=re.DOTALL)
-    return sanitized
 
 
-def evolve_sanitize_value(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {key: evolve_sanitize_value(child) for key, child in value.items()}
-    if isinstance(value, list):
-        return [evolve_sanitize_value(item) for item in value]
-    if isinstance(value, str):
-        return evolve_sanitize_text(value)
-    return value
 
 
 
@@ -13660,7 +13491,7 @@ def validate_knowledge_candidate(data: dict[str, Any]) -> list[Check]:
     checks.extend(_knowledge_candidate_targeting_policy.validate(data, strict=True))
     checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
     checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
-    findings = evolve_sanitizer_findings(json.dumps(data, ensure_ascii=False))
+    findings = _evolve_privacy_policy.findings(json.dumps(data, ensure_ascii=False))
     checks.append(check("PASS" if not findings else "FAIL", "candidate has no unsanitized private paths or secrets" + (f": {', '.join(findings)}" if findings else "")))
     return checks
 
@@ -13706,7 +13537,7 @@ def command_evolve_candidate_sanitize(args: argparse.Namespace) -> int:
     if not path.is_file():
         raise SystemExit(f"FAIL: candidate file not found: {path}")
     data = read_yaml_file(path)
-    sanitized_data = evolve_sanitize_value(data)
+    sanitized_data = _evolve_privacy_policy.value(data)
     if not isinstance(sanitized_data, dict):
         sanitized_data = data
     privacy = sanitized_data.get("privacy") if isinstance(sanitized_data.get("privacy"), dict) else {}
@@ -13757,7 +13588,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
         data = read_yaml_file(path)
         if not _knowledge_candidate_targeting_policy.destination_matches(data, target_package):
             continue
-        findings = evolve_sanitizer_findings(dump_yaml(data))
+        findings = _evolve_privacy_policy.findings(dump_yaml(data))
         if findings:
             raise SystemExit("FAIL: candidate export blocked by sanitizer findings in " + path.name + ": " + ", ".join(findings))
         selected.append((path, data))
@@ -15088,10 +14919,10 @@ def command_agent_lease_grant(args: argparse.Namespace) -> int:
             "task_id": args.task or "",
         },
         "access": {
-            "capsule": normalize_assignment_path(args.capsule or ""),
-            "allowed_files": [normalize_assignment_path(item) for item in as_list(args.allowed_file)],
-            "allowed_read_files": [normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
-            "forbidden_files": [normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
+            "capsule": _context_contract_inputs.normalize_assignment_path(args.capsule or ""),
+            "allowed_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.allowed_file)],
+            "allowed_read_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
+            "forbidden_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
         },
         "issued_at": issued.isoformat().replace("+00:00", "Z"),
         "expires_at": expires.isoformat().replace("+00:00", "Z"),
@@ -15367,7 +15198,7 @@ def command_handoff_return(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     handoff = load_handoff(project_root, args.handoff)
-    artifacts = [normalize_assignment_path(item) for item in as_list(args.artifact)]
+    artifacts = [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.artifact)]
     missing = [item for item in artifacts if not (project_root / item).is_file()]
     if missing:
         print("FAIL: return artifacts missing: " + ", ".join(missing))
@@ -15521,7 +15352,7 @@ def command_continuation_create(args: argparse.Namespace) -> int:
         "id": continuation_id,
         "agent_id": args.agent or "",
         "previous_session_id": args.session or "",
-        "waiting_for": {"handoff_id": args.handoff or "", "expected_artifacts": [normalize_assignment_path(item) for item in as_list(args.expected_artifact)]},
+        "waiting_for": {"handoff_id": args.handoff or "", "expected_artifacts": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.expected_artifact)]},
         "resume": {"process": args.process or "", "run_id": args.run or "", "stage": args.stage or "", "instruction": args.instruction or ""},
         "status": "waiting",
         "created_at": now_utc(),
@@ -15594,7 +15425,7 @@ def validate_subagent_policy_outputs(project_root: Path, task: dict[str, Any]) -
         return []
     if not policy.get("require_reports"):
         return []
-    reports_dir = normalize_assignment_path(str(policy.get("reports_dir") or ""))
+    reports_dir = _context_contract_inputs.normalize_assignment_path(str(policy.get("reports_dir") or ""))
     if not reports_dir.startswith(".pf/artifacts/subagents/"):
         return [f"subagent reports_dir outside allowed artifacts dir: {reports_dir or 'missing'}"]
     report_root = project_root / reports_dir
@@ -15841,7 +15672,7 @@ def expected_report_artifact(task: dict[str, Any]) -> str:
     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     value = str(expected.get("artifact") or "")
     if value:
-        return normalize_assignment_path(value)
+        return _context_contract_inputs.normalize_assignment_path(value)
     task_id = safe_id(str(task.get("id") or "task"), "task")
     return default_expected_report_artifact(task_id)
 
@@ -16326,7 +16157,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
             argparse.Namespace(
                 project_root=str(project_root),
                 assignment=str(assignment_yaml_path(project_root, task_id)),
-                force=assignment_allows_write_scope_overlap(task),
+                force=_context_contract_inputs.assignment_allows_write_scope_overlap(task),
             ),
         )
         print(output, end="")
@@ -16591,7 +16422,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         raw_path = output.get("path") if isinstance(output, dict) else ""
         out_path = task_output_path(project_root, output)
         if out_path is None or not out_path.is_file():
-            missing.append(normalize_assignment_path(str(raw_path)))
+            missing.append(_context_contract_inputs.normalize_assignment_path(str(raw_path)))
     try:
         report_path = project_output_path(project_root, expected_report_artifact(task))
     except (OSError, ValueError) as exc:
@@ -16923,7 +16754,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
                 observed.append(task_id)
                 if observed_state.get("status") == "running":
                     running.append(task_id)
-                    running_scopes[task_id] = assignment_write_scope(task)
+                    running_scopes[task_id] = _context_contract_inputs.assignment_write_scope(task)
                 elif observed_state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
                     if historical_worker_capture(project_root, run_id, task_id):
                         historical_observed.append(task_id)
@@ -16979,7 +16810,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
                 prepare_worker_run(project_root, task_id, driver_id, None)
                 skipped.append(task_id)
                 continue
-            current_scope = assignment_write_scope(task)
+            current_scope = _context_contract_inputs.assignment_write_scope(task)
             conflict = False
             if not allow_write_scope_overlap:
                 for other_id, other_scope in running_scopes.items():
@@ -17301,17 +17132,6 @@ def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_
     return data
 
 
-def path_allowed_by_scope(path: str, scopes: list[str]) -> bool:
-    key = assignment_path_key(path)
-    for scope in scopes:
-        scope_key = assignment_path_key(scope)
-        if scope_key in {".pf/artifacts/**", ".pf/artifacts/*"} and key.startswith(".pf/artifacts/"):
-            return True
-        if assignment_has_glob(scope_key) and fnmatch.fnmatch(key, scope_key):
-            return True
-        if key == scope_key:
-            return True
-    return False
 
 
 def worker_dependency_set(worker: dict[str, Any]) -> set[str]:
@@ -17454,9 +17274,9 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         worker_id = safe_id(str(raw_worker.get("id") or ""), "worker")
         checks.append(check("PASS" if worker_id and worker_id not in seen else "FAIL", f"worker id unique: {worker_id or 'missing'}"))
         seen.add(worker_id)
-        allowed = assignment_scope_items(raw_worker.get("allowed_files"))
-        forbidden = assignment_scope_items(raw_worker.get("forbidden_files"))
-        read_allowed = assignment_scope_items(raw_worker.get("allowed_read_files"))
+        allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_files"))
+        forbidden = _context_contract_inputs.assignment_scope_items(raw_worker.get("forbidden_files"))
+        read_allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_read_files"))
         workspace_access = normalize_workspace_access(raw_worker.get("workspace_access"))
         outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
         writer = bool(raw_worker.get("writer", True))
@@ -17490,10 +17310,10 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
             checks.append(check("PASS" if reports_dir.startswith(".pf/artifacts/subagents/") else "FAIL", f"{worker_id} subagent reports_dir inside .pf/artifacts/subagents"))
             checks.append(check("PASS" if int(subagent_policy.get("max_subagents") or 0) > 0 else "FAIL", f"{worker_id} subagent max_subagents positive"))
         for output in outputs:
-            out_path = normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
+            out_path = _context_contract_inputs.normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
             checks.append(check("PASS" if out_path else "FAIL", f"{worker_id} required output has path"))
             if out_path:
-                allowed_output = path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
+                allowed_output = _context_contract_inputs.path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
                 checks.append(check("PASS" if allowed_output else "FAIL", f"{worker_id} required output inside allowed or artifact area: {out_path}"))
         checks.append(check("PASS" if not bool(raw_worker.get("worker_may_rebuild_context", False)) else "FAIL", f"{worker_id} worker_may_rebuild_context false by default"))
         if writer:
@@ -17519,9 +17339,9 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
     capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
     workspace_access = rel(worker_run_paths(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
     requested_workspace_access = normalize_workspace_access(task.get("workspace_access"))
-    allowed_files = assignment_scope_items(task.get("allowed_files"))
-    allowed_read_files = assignment_scope_items(task.get("allowed_read_files"))
-    forbidden_files = assignment_scope_items(task.get("forbidden_files"))
+    allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
+    allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
+    forbidden_files = _context_contract_inputs.assignment_scope_items(task.get("forbidden_files"))
     required_outputs = normalize_required_outputs(task.get("required_outputs"))
     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
@@ -17681,9 +17501,9 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
                 "reasoning_effort": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
                 "allow_subagents": bool(worker.get("allow_subagents", False)),
                 "subagent_policy": worker_subagent_policy(worker),
-                "allowed_files": assignment_scope_items(worker.get("allowed_files")),
-                "allowed_read_files": assignment_scope_items(worker.get("allowed_read_files")),
-                "forbidden_files": assignment_scope_items(worker.get("forbidden_files")),
+                "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
+                "allowed_read_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
+                "forbidden_files": _context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
                 "required_outputs": normalize_required_outputs(worker.get("required_outputs")),
                 "workspace_access": normalize_workspace_access(worker.get("workspace_access")),
                 "expected_report_artifact": str(worker.get("expected_report_artifact") or default_expected_report_artifact(worker_id)),
@@ -17807,7 +17627,7 @@ def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) ->
                 "policy": "allow_write_scope_overlap",
                 "overlap_policy": "allow",
                 "overlap_policy_source": "plan.allow_write_scope_overlap",
-                "current_write_scope": assignment_write_scope(task),
+                "current_write_scope": _context_contract_inputs.assignment_write_scope(task),
                 "rule": "Write scope overlap is allowed for workers in this resolved plan.",
                 "overlap_check": overlap_check,
             }
@@ -17928,17 +17748,17 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     objective=str(worker.get("objective") or worker.get("title") or task_id),
                     order=order,
                     execution_mode=str(worker.get("execution_mode") or "implementation"),
-                    allowed_file=assignment_scope_items(worker.get("allowed_files")),
+                    allowed_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
                     allowed_glob=[],
-                    allowed_read_file=assignment_scope_items(worker.get("allowed_read_files")),
+                    allowed_read_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
                     read_file=[],
                     context_artifact=normalize_context_artifacts(worker.get("context_artifacts")),
-                    required_source=assignment_scope_items(worker.get("required_sources")),
+                    required_source=_context_contract_inputs.assignment_scope_items(worker.get("required_sources")),
                     workspace_knowledge_resource=normalize_workspace_access(worker.get("workspace_access"))["knowledge_resources"],
                     workspace_template=normalize_workspace_access(worker.get("workspace_access"))["templates"],
                     workspace_tool=normalize_workspace_access(worker.get("workspace_access"))["tools"],
                     workspace_mcp=normalize_workspace_access(worker.get("workspace_access"))["mcp"],
-                    forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
+                    forbidden_file=_context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
                     forbidden_glob=[],
                     owner=str(worker.get("owner") or task_id),
                     role=str(worker.get("role") or "worker"),
@@ -18010,9 +17830,9 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     run=run_id,
                     task=task_id,
                     capsule=rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
-                    allowed_file=assignment_scope_items(worker.get("allowed_files")),
-                    allowed_read_file=assignment_scope_items(worker.get("allowed_read_files")),
-                    forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
+                    allowed_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
+                    allowed_read_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
+                    forbidden_file=_context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
                     ttl=3600,
                 )
             )
@@ -18261,11 +18081,11 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
     }
     if stage_id:
         task["stage"] = stage_id
-    allowed_files = assignment_scope_items([*as_list(getattr(args, "allowed_file", [])), *as_list(getattr(args, "allowed_glob", []))])
-    allowed_read_files = assignment_scope_items([*as_list(getattr(args, "read_file", [])), *as_list(getattr(args, "allowed_read_file", []))])
+    allowed_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "allowed_file", [])), *as_list(getattr(args, "allowed_glob", []))])
+    allowed_read_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "read_file", [])), *as_list(getattr(args, "allowed_read_file", []))])
     context_artifacts = normalize_context_artifacts(getattr(args, "context_artifact", []))
-    required_sources = assignment_scope_items(getattr(args, "required_source", []))
-    forbidden_files = assignment_scope_items([*as_list(getattr(args, "forbidden_file", [])), *as_list(getattr(args, "forbidden_glob", []))])
+    required_sources = _context_contract_inputs.assignment_scope_items(getattr(args, "required_source", []))
+    forbidden_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "forbidden_file", [])), *as_list(getattr(args, "forbidden_glob", []))])
     required_outputs = normalize_required_outputs(getattr(args, "required_output", []))
     if getattr(args, "execution_mode", None):
         task["execution_mode"] = normalize_execution_mode(args.execution_mode)
@@ -18305,7 +18125,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         task["non_overlap"] = {
             "policy": "block_on_write_overlap",
             "active_parallel_tasks": [],
-            "current_write_scope": assignment_write_scope(task),
+            "current_write_scope": _context_contract_inputs.assignment_write_scope(task),
             "rule": "Do not edit files owned by active parallel tasks.",
         }
     if required_outputs:
@@ -18320,7 +18140,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
     if getattr(args, "expected_report_language", None):
         expected_report["language"] = args.expected_report_language
     if getattr(args, "expected_report_artifact", None):
-        expected_report["artifact"] = normalize_assignment_path(args.expected_report_artifact)
+        expected_report["artifact"] = _context_contract_inputs.normalize_assignment_path(args.expected_report_artifact)
         if len(required_outputs) == 1:
             required_outputs[0].setdefault("path", expected_report["artifact"])
     missing_output_paths = [str(item.get("id") or "output") for item in required_outputs if not str(item.get("path") or "").strip()]
@@ -18344,7 +18164,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         print_plan("task-create dry run", planned, project_root)
         if allowed_files or forbidden_files:
             print("WRITE_SCOPE:")
-            for item in assignment_write_scope(task):
+            for item in _context_contract_inputs.assignment_write_scope(task):
                 print(f"- {item}")
             print("OVERLAP_CHECK: " + overlap_check["status"])
         return 0
@@ -18442,7 +18262,7 @@ def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> s
     expected_path = str(expected.get("artifact") or "")
     if expected_path:
         path = task_output_path(project_root, {"path": expected_path})
-        item = {"id": "expected-report", "path": normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
+        item = {"id": "expected-report", "path": _context_contract_inputs.normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
         if path and path.is_file():
             item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
         inputs.append(item)
@@ -19078,33 +18898,10 @@ Fix:
     return print_checks(checks)
 
 
-UPDATE_SUBJECT_TYPES = {
-    "*",
-    "processforge_distribution",
-    "workplace",
-    "process_package",
-    "knowledge_package",
-    "template_package",
-    "tool_package",
-    "tool_definition",
-    "mcp_definition",
-    "knowledge_resource",
-    "process_definition",
-    "reusable_template",
-    "platform_contract",
-    "project_pf",
-    # Legacy aliases kept for existing registries and smokes.
-    "template",
-    "tool",
-    "mcp_server",
-    "package",
-}
 
 
 
 SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
-ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
-CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 def update_workplace_root(raw: str) -> Path:
     path = Path(raw).expanduser().resolve()
@@ -19153,13 +18950,6 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
 
 
 
-def source_requires_https(source: dict[str, Any], defaults: dict[str, Any] | None = None) -> bool:
-    trust = source.get("trust") if isinstance(source.get("trust"), dict) else {}
-    if "require_https" in trust:
-        return bool(trust.get("require_https"))
-    if defaults and "require_https" in defaults:
-        return bool(defaults.get("require_https"))
-    return True
 
 
 def update_schema_type_matches(value: Any, expected: str) -> bool:
@@ -19364,183 +19154,20 @@ def load_doctor_yaml(
     return data
 
 
-def valid_remote_url_shape(url: str, *, require_https: bool) -> tuple[bool, str]:
-    if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
-        return False, "must not contain whitespace or control characters"
-    parsed = urlparse(url)
-    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
-        return False, "must be a valid remote URL with scheme and host"
-    if require_https and parsed.scheme.lower() != "https":
-        return False, "must use https unless local trust policy disables require_https"
-    return True, ""
 
 
-def valid_artifact_url_shape(url: str, artifact: dict[str, Any]) -> tuple[bool, str]:
-    if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
-        return False, "must not contain whitespace or control characters"
-    parsed = urlparse(url)
-    if parsed.scheme.lower() == "file":
-        if parsed.path or parsed.netloc:
-            return True, ""
-        return False, "file URL must include a path"
-    if parsed.scheme.lower() in {"http", "https"}:
-        if not parsed.netloc:
-            return False, "remote URL must include a host"
-        if source_requires_https(artifact) and parsed.scheme.lower() != "https":
-            return False, "remote URL must use https unless local trust policy disables require_https"
-        return True, ""
-    return False, "must be an https or file URL"
 
 
-def append_env_reference_checks(checks: list[Check], source: dict[str, Any], label: str) -> None:
-    for field in ("headers_env", "query_env", "custom_headers_env"):
-        values = source.get(field)
-        if values is None:
-            continue
-        if not isinstance(values, dict):
-            checks.append(check("FAIL", f"{label} {field} must be an object"))
-            continue
-        for key, value in values.items():
-            if not isinstance(value, str) or not ENV_REFERENCE_RE.fullmatch(value):
-                checks.append(check("FAIL", f"{label} {field}.{key} must be an env variable name or auth_ref:/secret_ref: reference"))
 
 
-def append_update_source_checks(
-    checks: list[Check],
-    source: Any,
-    label: str,
-    *,
-    provider_key: str,
-    defaults: dict[str, Any] | None = None,
-    require_subjects: bool = False,
-    require_priority: bool = False,
-) -> None:
-    if not isinstance(source, dict):
-        checks.append(check("FAIL", f"{label} must be an object"))
-        return
-
-    source_id = source.get("id")
-    if source_id is not None and (not isinstance(source_id, str) or not source_id.strip()):
-        checks.append(check("FAIL", f"{label} id must be a non-empty string when present"))
-    elif isinstance(source_id, str) and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", source_id):
-        checks.append(check("FAIL", f"{label} id must use letters, digits, dot, underscore, or hyphen"))
-
-    enabled = source.get("enabled")
-    if enabled is not None and not isinstance(enabled, bool):
-        checks.append(check("FAIL", f"{label} enabled must be a boolean when present"))
-
-    provider = source.get(provider_key)
-    if not provider:
-        provider = source.get("provider" if provider_key == "type" else "type")
-    if provider is not None and (not isinstance(provider, str) or not provider.strip()):
-        checks.append(check("FAIL", f"{label} {provider_key} must be a non-empty string when present"))
-
-    if "url" in source:
-        checks.append(check("FAIL", f"{label} uses unsupported url field; use manifest_url"))
-
-    if "priority" not in source:
-        if require_priority:
-            checks.append(check("FAIL", f"{label} missing priority"))
-    elif not isinstance(source.get("priority"), int):
-        checks.append(check("FAIL", f"{label} priority must be an integer"))
-
-    channels = source.get("channels")
-    if channels is not None and (
-        not isinstance(channels, list) or not all(isinstance(item, str) and item.strip() for item in channels)
-    ):
-        checks.append(check("FAIL", f"{label} channels must be a list of non-empty strings"))
-
-    if require_subjects:
-        subjects = source.get("subjects")
-        if not isinstance(subjects, list) or not subjects:
-            checks.append(check("FAIL", f"{label} missing subjects"))
-        else:
-            for index, subject in enumerate(subjects):
-                subject_label = f"{label}.subjects[{index}]"
-                if not isinstance(subject, dict):
-                    checks.append(check("FAIL", f"{subject_label} must be an object"))
-                    continue
-                subject_type = subject.get("type")
-                ids = subject.get("ids")
-                if subject_type not in UPDATE_SUBJECT_TYPES:
-                    checks.append(check("FAIL", f"{subject_label}.type unsupported subject type {subject_type!r}"))
-                if not isinstance(ids, list) or not all(isinstance(item, str) and item.strip() for item in ids):
-                    checks.append(check("FAIL", f"{subject_label}.ids must be a list of non-empty strings"))
-
-    manifest_url = source.get("manifest_url")
-    if not isinstance(manifest_url, str) or not manifest_url.strip():
-        checks.append(check("FAIL", f"{label} missing manifest_url"))
-    else:
-        parsed = urlparse(manifest_url)
-        scheme = parsed.scheme.lower()
-        if scheme in {"http", "https"}:
-            valid, reason = valid_remote_url_shape(manifest_url, require_https=source_requires_https(source, defaults))
-            if not valid:
-                checks.append(check("FAIL", f"{label} manifest_url {reason}"))
-        elif scheme == "file" or not scheme:
-            if CONTROL_CHAR_RE.search(manifest_url) or any(char.isspace() for char in manifest_url):
-                checks.append(check("FAIL", f"{label} manifest_url must not contain whitespace or control characters"))
-            if scheme == "file" and not (parsed.path or parsed.netloc):
-                checks.append(check("FAIL", f"{label} manifest_url file URL must include a path"))
-        else:
-            checks.append(check("FAIL", f"{label} manifest_url unsupported scheme {scheme!r}"))
-
-    changelog_url = source.get("changelog_url")
-    if not isinstance(changelog_url, str) or not changelog_url.strip():
-        checks.append(check("FAIL", f"{label} missing changelog_url"))
-
-    auth = source.get("auth")
-    if isinstance(auth, dict):
-        for key in auth:
-            if str(key).lower() in {"token", "password", "secret", "authorization", "api_key"}:
-                checks.append(check("FAIL", f"{label} auth must not contain raw secret key {key!r}; use *_env or auth_ref"))
-    append_env_reference_checks(checks, source, label)
 
 
-def validate_update_source_registry_data(data: dict[str, Any], path: Path) -> list[Check]:
-    checks: list[Check] = []
-    if not data:
-        return [check("FAIL", f"{path} missing or invalid")]
-    if data.get("schema_version") != 1:
-        checks.append(check("FAIL", "update source registry schema_version must be 1"))
-    if data.get("product") != "processforge":
-        checks.append(check("FAIL", "update source registry product must be processforge"))
-    defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
-    sources = data.get("sources")
-    if not isinstance(sources, list):
-        checks.append(check("FAIL", "update source registry sources must be a list"))
-        return checks
-
-    seen: set[str] = set()
-    for index, source in enumerate(sources):
-        source_id = source.get("id") if isinstance(source, dict) else None
-        if isinstance(source_id, str):
-            if source_id in seen:
-                checks.append(check("FAIL", f"sources[{index}] duplicate id {source_id}"))
-            seen.add(source_id)
-        append_update_source_checks(
-            checks,
-            source,
-            f"sources[{index}]",
-            provider_key="provider",
-            defaults=defaults,
-            require_subjects=False,
-            require_priority=False,
-        )
-    if not checks:
-        checks.append(check("PASS", f"{path} valid"))
-    return checks
 
 
-def sorted_update_sources(data: dict[str, Any]) -> list[dict[str, Any]]:
-    sources = data.get("sources") if isinstance(data.get("sources"), list) else []
-    indexed = [(index, source) for index, source in enumerate(sources) if isinstance(source, dict)]
-    indexed.sort(key=lambda item: (not bool(item[1].get("enabled")), int(item[1].get("priority", 1000)), item[0]))
-    return [source for _, source in indexed]
 
 
 def print_update_source_list(data: dict[str, Any], *, json_output: bool = False) -> int:
-    sources = sorted_update_sources(data)
+    sources = _update_source_contract_policy.sorted_sources(data)
     if json_output:
         print(json.dumps({"schema_version": 1, "sources": sources}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -19575,7 +19202,7 @@ def command_update_bootstrap_source_list(args: argparse.Namespace) -> int:
 def command_update_bootstrap_source_validate(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
     path = update_source_registry_path(workplace_root)
-    checks = validate_update_source_registry_data(load_update_yaml(path), path)
+    checks = _update_source_contract_policy.validate_registry(load_update_yaml(path), path)
     return print_checks(checks)
 
 
@@ -19789,9 +19416,9 @@ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> lis
             not isinstance(item.get("channels"), list) or not all(isinstance(channel, str) and channel.strip() for channel in item.get("channels", []))
         ):
             checks.append(check("FAIL", f"{label}.channels must be a list of non-empty strings"))
-        append_env_reference_checks(checks, item, label)
+        _update_source_contract_policy.append_env_checks(checks, item, label)
         preserved = item.get("preserved_local") if isinstance(item.get("preserved_local"), dict) else {}
-        append_env_reference_checks(checks, preserved, f"{label}.preserved_local")
+        _update_source_contract_policy.append_env_checks(checks, preserved, f"{label}.preserved_local")
     if not checks:
         checks.append(check("PASS", f"{path} valid update site overrides"))
     return checks
@@ -19830,7 +19457,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
             seen: set[str] = set()
             for index, site in enumerate(update_sites):
                 label = f"{rel(record['manifest_path'], workplace_root)}.update_sites[{index}]"
-                append_update_source_checks(checks, site, label, provider_key="type")
+                _update_source_contract_policy.append_source_checks(checks, site, label, provider_key="type")
                 if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
                     source_id = _update_site_policy.source_id(site)
                     if source_id in seen:
@@ -19866,7 +19493,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
                     continue
                 for index, site in enumerate(resource_sites):
                     label = f"{rel(record['manifest_path'], workplace_root)}.resources[{resource.get('id')}].update_sites[{index}]"
-                    append_update_source_checks(checks, site, label, provider_key="type")
+                    _update_source_contract_policy.append_source_checks(checks, site, label, provider_key="type")
                     if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
                         sites.append(
                             _update_site_policy.record(
@@ -19995,7 +19622,7 @@ def validate_normalized_update_manifest_data(data: dict[str, Any], path: Path) -
                 elif not isinstance(artifact_url, str):
                     checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url must be a string"))
                 else:
-                    valid, reason = valid_artifact_url_shape(artifact_url, artifact)
+                    valid, reason = _update_source_contract_policy.artifact_url_shape(artifact_url, artifact)
                     if not valid:
                         checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url {reason}"))
                 artifact_sha256 = artifact.get("sha256")

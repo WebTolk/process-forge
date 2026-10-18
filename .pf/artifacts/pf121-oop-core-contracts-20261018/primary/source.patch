@@ -1,0 +1,2003 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index 0fdc80d..e9a7a22 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-f7f3494f9d18c341745e5f3eafa713b2fb82a1faf534e3825ca553a8498d593a  docs/concepts/python-core-structure.md
++985129fa02212b0d640e2b33aabef2e272aefc4d26d43f88fbb95fb93926a685  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-472e99968a93fa82b1d9860d686bc2a2b6e75563f48a2eb996b07e18c608a497  docs/ru/concepts/python-core-structure.md
++30fd7938827b224322f23c127d3d18ec60cb6042549507941768b348ae1ed714  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -679,6 +679,7 @@ ab7b6b4e9970e4e5bf3c22352354052fb5f45b33432d6b96f41a211b1619535e  src/processfor
+ ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processforge_core/common/ids.py
+ 929ab865d31a4b72f5ae8728f513d8514add9cf4ab98c4f7c0269c0178ecabdf  src/processforge_core/common/ndjson.py
+ 19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56  src/processforge_core/common/paths.py
++8d80721229bd0801f6562d2e72f85c2f3c15b76314c917f52c3b650d6f886cfe  src/processforge_core/common/privacy.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
+ 6eccd5af14370433f8e49611f3a38f262a5f2a86ce9447f30ccfb51a3bde509c  src/processforge_core/common/values.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+@@ -701,7 +702,7 @@ c54e686f978a737f933cf952fc22f0f0fce5f9f8df28c883ee8120aa975134d8  src/processfor
+ fb6f27bdd50913d0b94fe82766655d58071a35916cddfaee5651ccac3fd560fb  src/processforge_core/configuration/yaml_store.py
+ e915e2318733a880cabb9661c9387912f6bb1905283fe92bbd8a935d750d2321  src/processforge_core/diagnostics.py
+ a6f4a0fef2f8ec9d7b2abeaf49cd00a5aa0fc0fd3509087ea9f083e036786e50  src/processforge_core/documents/__init__.py
+-761dc70199ffc62edee310d403d5e98e2ca9672cd05e1097d180bcde4d2527be  src/processforge_core/documents/answers.py
++3f28fcb96fe516df7b02b9a65749b850ecc71b883e87a26039e0707b1219060a  src/processforge_core/documents/answers.py
+ 10416eb48ad3d4dfa01bebe729ff22a6b9d12d1192d3b9d0c933e10e2021f1ce  src/processforge_core/documents/parse_cache.py
+ d60afda961e74996ad97a14a3d32a90dea7d5555234f125d25ad9ad95da1a7cd  src/processforge_core/documents/reader.py
+ 612e6edc94b0d85d486241001dd1687a3edc965ecade536d291ce65e42b0572c  src/processforge_core/egress/__init__.py
+@@ -718,10 +719,12 @@ ecf6d5f79b7defc6673e03348c172a4d5c20a84158a013a2ff2b0b3071ccaf55  src/processfor
+ 53cf905f795a6925dfab941a9e82b8f4fff8dcf4ccf97490aa7dbebfbc5bb532  src/processforge_core/evidence/validation.py
+ d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef  src/processforge_core/evolution/__init__.py
+ 0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8  src/processforge_core/evolution/candidates.py
++f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de  src/processforge_core/evolution/privacy.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
+ f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1  src/processforge_core/maintenance/presentation.py
+ 4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7  src/processforge_core/maintenance/sites.py
++d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f  src/processforge_core/maintenance/source_contracts.py
+ 4eebb2407446439a008273923d6b9317cc08b6845c6d89cf826f6ab609114dfe  src/processforge_core/maintenance/temporary_files.py
+ 646b38abbe1a8ead93d00b1fc84e75555073dea8efbca0fbbb2987443d7c1756  src/processforge_core/maintenance/update.py
+ 64cd8e795d9b63c178ea21fb2b3038d8d2c6326c60d98d25adb1e7bac5cb66dc  src/processforge_core/maintenance/versions.py
+@@ -760,6 +763,7 @@ ab4086d754b254ec52c02ca74b5b2a792ddbeb5edb1fc44ef7b901a42ab98267  src/processfor
+ ae664b3fac858723a91f41b5795d20447bc965ef24a6dd4ae625520db27d650d  src/processforge_core/project/context_read.py
+ 392f9963a71c5c16f6f90d518ac876ea1eaf7c06f6f3ce795874b9b4d741df87  src/processforge_core/project/context_rules.py
+ 6c0d2224fa7e23408ca6c9b8b3d740b53d7fc4d7c833124f078d84814fc3c4b3  src/processforge_core/project/context_sources.py
++680cb8467fbe0678e3dbbe0a96c6ae8f2e3d8bcf820e243a94a1751fdb395338  src/processforge_core/project/coordination.py
+ 489d9810c12abbf74f8b084de150e7f333b85af4eff3610ca17c24378b67c6bf  src/processforge_core/project/host_integration.py
+ 73c2fe7f415b8ff2457706db04058032b5a284f3d4a6bf35ef210c787a8f18dd  src/processforge_core/project/initialization.py
+ ca249dfd6b769f07f02b4f26661e9f822af60d64679b0ba9f1a707687447f121  src/processforge_core/project/knowledge_selection.py
+@@ -794,8 +798,8 @@ b373a52476eb6aa626295975618458b6605f5d5bb8c40be72c914d56ddc9e707  src/processfor
+ 062642fce66e6e0315086dc59191834311b51eb7f0a8a883532d4e032bbecea8  src/processforge_core/work/boundary_advisory.py
+ 788f590f38fa42a1863abb36fe32f84c882d42e521a28e4053c1207b8c788c66  src/processforge_core/work/cancellation_replay.py
+ 8a752253c676155b7b8187dd6b0266f25e9c283ccad3bc472d1fea6bf66e1fbd  src/processforge_core/work/capsule_publication.py
+-b5ccb12c95ef258f6461a88f7ae48bc78411dfe8e2ae096c177d038219f37b81  src/processforge_core/work/context.py
+-1e1233d315dfb9b0f4458defd81ff84c52f567fd17d2f87f866c55d6d491afa2  src/processforge_core/work/context_documents.py
++dbb2c03240484f86595b35afa81eccd3293ac2242b7b5b90812101a1a8d976dd  src/processforge_core/work/context.py
++035f85f7d8741659167304f668bccbf18a4229240eff3537f7e91fa8242eedcc  src/processforge_core/work/context_documents.py
+ ab48a3ad173b9c2227f4566ba9670c7d08ab4da9aa8b3f6a62460de3a2b8f95b  src/processforge_core/work/context_read.py
+ 2026996a1398f1c471d42d504ec9c491b0c1c83d8dac36e245fad65e5bbb1a03  src/processforge_core/work/continuation.py
+ ca31755333494bd7c40d89334d37226f52fce8edb6cde95a9179394d001462d9  src/processforge_core/work/continuation_contract.py
+@@ -990,7 +994,7 @@ abf554dad66d83c4aa2c8d7077873256b61c90ff76d5ba822fe7c9ea6f26bb01  tools/pf_runti
+ c88b77c7560a938cb4f264ccf098aa796c93485e9bc85a2818125d514edc40ee  tools/pf_runtime/codex_hooks.py
+ 1b1dfafaba990964d71f6741206d1b1b3cec873ad5b7fa372eeb2fdea39ae7b6  tools/pf_runtime/codex_integration.py
+ 9fc01f05c2fd365adfb4bb10479c45704ee570b4ae6e4331f637ded4fb2e564e  tools/pf_runtime/codex_mcp.py
+-cb76e6e9ad3c86c61b8ec2d05f50c07538740d45dc6178abd2c6e631c3df9b3d  tools/pf_runtime/host.py
++e7d3cf0b9ebd09922cddfc42c91ab975599ed4b602cf7d8fd01b34e81678ed46  tools/pf_runtime/host.py
+ bad15ce0a1e82773b5de636b1bc49aceeabfb95f3b242113011ff269e771debf  tools/pf_runtime/mcp_server.py
+ 3e8104bc7f7202543db58ca830c0b49507eff5815ff8a57b6c8fbc2713ce1ec6  tools/pf_runtime/monitor.py
+ 6b04880e06be71e362dead8bca901f70b89993140ab7cb1a5021158ee6ad8ac0  tools/pf_runtime/provider_adapters.py
+@@ -1001,7 +1005,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-6db3af88d3b1abbaf268ee88f96ddb055abe54d6d8c0789a032e349417176926  tools/processforge.py
++ec825f2277d856a02b4d49bfe2a3808bca66373e28282b9491ec4ccfc29d131a  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+@@ -1013,7 +1017,7 @@ c6906397a9bcb932112165d1b1996d2ad8486447fa2e9f9bbf623fc4e6e68208  tools/smoke_ag
+ 5619a7a9894a9bbdba7eb70ab092fbe6176ae8400c1933c350f075db60419021  tools/smoke_agent_ledger.py
+ 83c758cf778a52af275ce7ce64b3d0c673ad67f8dad93e5859b245c57e02ceed  tools/smoke_agent_start_prompt.py
+ bf0ba8f7a2f69d6a911917078fab950daa79aa22c7d5fee1394fd6367747723a  tools/smoke_agent_workspace_platform_availability_snapshot.py
+-2fa5cc6bfa828ba7e958e77510385b197f42abfee8b139a86d2cc98b5d1195a2  tools/smoke_authenticated_report_content.py
++418dec1ef34be4df52154f9033c4b722b85d5aa9d2b03eea6d3d822cf163fcec  tools/smoke_authenticated_report_content.py
+ b4583db80c8a022e26c9654aa04990cff68594a6e0733d9800326a8c1ef98713  tools/smoke_authoring_crash_recovery.py
+ 50e3880e9606d62eecc2a4af98d3c7fd7514fcb46918d2a41b13dac3fff28c46  tools/smoke_automation_readiness.py
+ d6b6c103b98678b427d29d52f63c334bfea0ebb9f41f1195d5c2121853183506  tools/smoke_builtin_process_catalog.py
+@@ -1295,7 +1299,7 @@ e96421595f31e6b2d655a753ae6df96d21d0ff836a66f671941185931f77fce8  tools/smoke_wo
+ 721c3a2d5a554d842600cb3542117ae8e7a70d2a1fe498b1140a2b7aee9f6446  tools/smoke_work_resource_binding.py
+ a9e56e455fd83b3dc4c9c69a11616537e5fea51a2867d9ce143863dbdd206bef  tools/smoke_work_selection_service.py
+ 0bf5292c04a9da70855d2b7667d9c3e40f7c31f065724bfa3fbfc1ab1a04d8a2  tools/smoke_work_start_no_stage_guessing.py
+-a55f4bd874aa0a2ef8a9c4dd0d8cc34cc754c5b8c4f8be9e184d8576751168c9  tools/smoke_work_start_scope.py
++7c36b53fb2828a626a7556caa3c7c7e92dbb575ebd07ea1abc0fea8ccdd2f812  tools/smoke_work_start_scope.py
+ 57f1da97d5a1a6bc258be9581bcc740733e2aa397eda2ac748832508c6553b0f  tools/smoke_work_state_current_stage.py
+ ed7232782cb2b6194865ca772bf9928dc455adcdbaba9dea92c92f1d5672f7db  tools/smoke_work_transition_blocks_missing_gate.py
+ 6607f8428a5fc091d8da63eed916a78d4eaa1d5ad4e68658fda5c7a953569214  tools/smoke_work_transition_branching_if_supported.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index 772a884..737f2de 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -118,7 +118,7 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/work/publication.py` | Existing atomic Work text/YAML publication through explicit deferred formatter/writer dependencies. |
+ | `src/processforge_core/work/events.py` | Existing Work event envelope and subsequent diagnostics through a typed, dynamically resolved emitter. |
+ | `src/processforge_core/work/context_read.py` | Live capsule validation and assignment normalization through concrete Core contract inputs. |
+-| `src/processforge_core/work/context_documents.py` | Concrete field normalization and document/path/identity inputs for Work context reads. |
++| `src/processforge_core/work/context_documents.py` | Concrete Work field/document inputs, path/scope/dependency projection, required-source observations and capsule coordination projection. |
+ | `src/processforge_core/work/context.py` | Existing assignment context compilation; parameter merging uses ParameterMergePolicy directly, while the compiler retains other legacy dependencies. |
+ | `src/processforge_core/process_catalog/` | Concrete catalog and effective ProcessDefinition readers; offered process selection and pin construction retain their explicit operation dependencies. |
+ | `src/processforge_core/process_catalog/summary.py` | Allowed-process context summary using a concrete catalog by default and an optional narrow catalog port for injection, without a monolith callback. |
+@@ -137,6 +137,9 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader for existing live registry/document lookup with an explicit distribution root and concrete Core readers. |
+ | `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy for existing candidate identity, target/routing, promotion readiness and targeting validation. |
+ | `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Existing update-version normalization/selection and assessment rendering. |
++| `src/processforge_core/project/coordination.py` | ProjectCoordinationReader for existing project/workplace coordination defaults, mode normalization and live config reads. |
++| `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Canonical shared text patterns/predicates and existing evolve findings/redaction/recursive value transformation. |
++| `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy for existing trust, URL/env/source shape checks, registry validation and stable sorting. |
+ | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
+ | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
+ | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
+@@ -645,3 +648,40 @@ assessment text. Fetching, update orchestration, installation and recovery remai
+ with their existing owners. These internal interfaces establish source ownership;
+ external commands, MCP schemas and delivery-layer acceptance retain their existing
+ contracts.
++
++## Work fields, coordination, shared privacy and source contracts
++
++The existing `work.context_documents.ContextContractInputs` owns eight additional
++existing operations: assignment path keys, write-scope projection, glob and
++overlap flags, dependency sets, required-source file observations, capsule
++coordination and path/scope matching. Its original fields, frozen constructor and
++20 earlier methods are unchanged. Existing normalization methods are reused;
++two obsolete monolith wrappers are removed. The context compiler calls capsule
++coordination directly at the former projection site. Scope decisions retain
++platform behavior and empty-scope handling; access, admission, lifecycle and the
++remaining compiler dependencies retain their existing owners.
++
++`project.coordination.ProjectCoordinationReader` owns the existing project and
++workplace defaults, mode normalization and configuration reads. Its concrete
++YAML reader and project metadata reader preserve live observations, shallow
++director merges, unknown fields, fresh defaults and refusal order. The reader
++retains no project, Work or parsed configuration. Effective coordination assembly
++and Director operations remain legacy responsibilities.
++
++`common.privacy` owns `BACKSLASH`, `LOCAL_PATH_PATTERNS`, `SECRET_VALUE_PATTERNS`,
++`is_public_path_safe` and `contains_secret_value`. `AnswersDocumentReader` uses
++the canonical data with its original class algorithm. `evolution.privacy.EvolvePrivacyPolicy`
++owns `findings`, `text` and `value`, preserving regex patterns/flags, redactions,
++recursive behavior, dictionary keys, tuple identity and native errors. Host uses
++the canonical secret predicate after the existing automatic-content filters;
++short-circuit order, bootstrap timing and all authentication/provenance/hash
++guards are preserved.
++
++`maintenance.source_contracts.UpdateSourceContractPolicy` owns existing HTTPS
++defaults, remote/artifact URL shapes, env-reference and source checks, registry
++validation and source sorting. It preserves mutation of the supplied check list,
++type/truthiness distinctions, native errors and check order. Schema-based override
++and full normalized-manifest validation continue to call these shared helpers
++from their legacy owners. No scanner, trust, authorization or update rule is added.
++These internal moves preserve module annotation semantics and external 1.2.0
++contracts; evidence remains limited to the qualified source slice.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index b2452ee..52e0d3b 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -127,7 +127,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/documents/reader.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
+ | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
+ | `src/processforge_core/work/context_read.py` | Актуальная проверка капсулы и нормализация Assignment через конкретные зависимости Core. |
+-| `src/processforge_core/work/context_documents.py` | Нормализация полей и конкретное чтение документов, путей и идентификаторов для Work context. |
++| `src/processforge_core/work/context_documents.py` | Конкретные поля и документы Work, проекции путей/scopes/dependencies, наблюдение required sources и проекция coordination капсулы. |
+ | `src/processforge_core/work/context.py` | Прежняя компиляция контекста Assignment; слияние параметров вызывает ParameterMergePolicy напрямую, остальные legacy-зависимости компилятора сохраняются. |
+ | `src/processforge_core/process_catalog/` | Конкретные читатели каталога и effective ProcessDefinition; выбор из предложенных процессов и подготовка pin сохраняют явные зависимости операций. |
+ | `src/processforge_core/project/metadata.py` | Живое чтение ID проекта, manifest и корня .pf через Core YAML; общий владелец для контекста, каталога и ресурсов. |
+@@ -145,6 +145,9 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader: актуальное чтение реестров и документов с явным корнем дистрибутива и конкретными читателями Core. |
+ | `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy: прежние идентификаторы, target/routing, готовность promotion и проверка targeting. |
+ | `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Прежняя нормализация и выбор версий обновления, оформление assessment. |
++| `src/processforge_core/project/coordination.py` | ProjectCoordinationReader: прежние defaults, нормализация режимов и актуальное чтение project/workplace coordination. |
++| `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Общие канонические текстовые шаблоны/предикаты и прежние evolve findings, redaction и рекурсивное преобразование значений. |
++| `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy: прежние trust/URL/env/source проверки, валидация реестра и стабильная сортировка. |
+ | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
+ | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
+ | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
+@@ -660,3 +663,39 @@ builder не изменены. `process_catalog.presentation.ProcessAuthoringRen
+ и восстановление остаются у прежних владельцев. Эти внутренние интерфейсы
+ фиксируют владение исходниками; внешние команды, схемы MCP и приёмка слоёв
+ поставки сохраняют существующие контракты.
++
++## Поля Work, coordination, общие privacy и контракты источников
++
++Существующий `work.context_documents.ContextContractInputs` дополнен восемью
++прежними операциями: ключи путей Assignment, проекция write scope, признаки glob
++и overlap, зависимости, наблюдение файлов required sources, coordination капсулы
++и сопоставление пути со scope. Поля, frozen-конструктор и 20 предыдущих методов
++не изменены. Нормализация переиспользована; две старые обёртки монолита удалены.
++Компилятор контекста вызывает проекцию coordination напрямую на прежнем месте.
++Платформенная семантика и пустые scopes сохранены; доступ, admission, lifecycle
++и остальные зависимости компилятора остаются у существующих владельцев.
++
++`project.coordination.ProjectCoordinationReader` владеет прежними defaults,
++нормализацией режимов и чтением project/workplace configuration. Конкретные
++читатели YAML и метаданных проекта сохраняют актуальное чтение, поверхностное
++слияние director, неизвестные поля, свежие defaults и порядок отказов. Reader
++не хранит проект, Work или разобранную конфигурацию. Общая сборка effective
++coordination и операции Director остаются у прежних владельцев.
++
++`common.privacy` содержит `BACKSLASH`, `LOCAL_PATH_PATTERNS`,
++`SECRET_VALUE_PATTERNS`, `is_public_path_safe` и `contains_secret_value`.
++`AnswersDocumentReader` использует канонические данные с прежним алгоритмом
++класса. `evolution.privacy.EvolvePrivacyPolicy` владеет `findings`, `text` и
++`value`, сохраняя regex/flags, замены, рекурсию, ключи словарей, идентичность
++tuple и исходные ошибки. Host вызывает канонический secret-предикат после
++прежних фильтров автоматического содержимого. Короткое замыкание, bootstrap
++и все проверки authentication/provenance/hash сохранены.
++
++`maintenance.source_contracts.UpdateSourceContractPolicy` владеет прежними HTTPS
++defaults, формой remote/artifact URL, env-reference и source checks, проверкой
++реестра и сортировкой. Сохранены изменение переданного списка checks, различия
++типов/truthiness, исходные ошибки и порядок проверок. Schema-based overrides и
++полная проверка normalized manifest вызывают эти общие методы из прежних
++владельцев. Новые scanner/trust/authorization/update правила не добавлены.
++Перенос сохраняет модульные аннотации и внешние контракты 1.2.0; доказательства
++относятся к квалифицированному срезу исходников.
+diff --git a/src/processforge_core/common/privacy.py b/src/processforge_core/common/privacy.py
+new file mode 100644
+index 0000000..ffddc78
+--- /dev/null
++++ b/src/processforge_core/common/privacy.py
+@@ -0,0 +1,28 @@
++"""Shared privacy patterns and predicates for public content."""
++from __future__ import annotations
++
++import re
++
++
++BACKSLASH = chr(92)
++
++LOCAL_PATH_PATTERNS = [
++    re.compile(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH)),
++    re.compile(r"(?<![A-Za-z])[A-Za-z]:/"),
++    re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
++    re.compile("/" + "Users" + "/[A-Za-z0-9_.-]+/"),
++    re.compile("/" + "srv" + "/"),
++]
++
++SECRET_VALUE_PATTERNS = [
++    re.compile(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
++    re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
++]
++
++
++def is_public_path_safe(text: str) -> bool:
++    return not any(pattern.search(text) for pattern in LOCAL_PATH_PATTERNS)
++
++
++def contains_secret_value(text: str) -> bool:
++    return any(pattern.search(text) for pattern in SECRET_VALUE_PATTERNS)
+diff --git a/src/processforge_core/documents/answers.py b/src/processforge_core/documents/answers.py
+index 0a8a220..3d7444e 100644
+--- a/src/processforge_core/documents/answers.py
++++ b/src/processforge_core/documents/answers.py
+@@ -2,19 +2,13 @@
+ 
+ from __future__ import annotations
+ 
+-import re
+ from pathlib import Path
+ from typing import Any
+ 
++from ..common.privacy import SECRET_VALUE_PATTERNS
+ from ..common.yaml_io import _parse_simple_yaml
+ 
+ 
+-SECRET_VALUE_PATTERNS = [
+-    re.compile(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
+-    re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
+-]
+-
+-
+ class AnswersDocumentReader:
+     """Read the strict answers mapping without retaining document state."""
+ 
+diff --git a/src/processforge_core/evolution/privacy.py b/src/processforge_core/evolution/privacy.py
+new file mode 100644
+index 0000000..3c48b37
+--- /dev/null
++++ b/src/processforge_core/evolution/privacy.py
+@@ -0,0 +1,44 @@
++"""Existing privacy findings and redaction policy for evolution content."""
++from __future__ import annotations
++
++import re
++from typing import Any
++
++from ..common.privacy import BACKSLASH, contains_secret_value, is_public_path_safe
++
++
++class EvolvePrivacyPolicy:
++    """Inspect and sanitize evolution values without retaining state."""
++
++    def findings(self, text: str) -> list[str]:
++        findings: list[str] = []
++        if not is_public_path_safe(text):
++            findings.append("private_absolute_path")
++        if contains_secret_value(text):
++            findings.append("secret_like_value")
++        if re.search(r"(?im)^\s*[A-Za-z_][A-Za-z0-9_]*\s*=\s*[^\s#]+", text) and ".env" in text.lower():
++            findings.append("env_value")
++        if re.search(r"https?://[^\s/@]+:[^\s/@]+@", text):
++            findings.append("credentialed_repo_url")
++        if len(text) > 20000:
++            findings.append("large_source_dump")
++        return sorted(set(findings))
++
++    def text(self, text: str) -> str:
++        sanitized = text
++        sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH) + r"[^\n\r\t ]+", "<redacted-path>", sanitized)
++        sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:/[^\n\r\t ]+", "<redacted-path>", sanitized)
++        sanitized = re.sub(r"/(?:home|Users|srv)/[^\n\r\t ]+", "<redacted-path>", sanitized)
++        sanitized = re.sub(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}", r"\1: <redacted-secret>", sanitized)
++        sanitized = re.sub(r"https?://([^\s/@]+):([^\s/@]+)@", "https://<redacted-credentials>@", sanitized)
++        sanitized = re.sub(r"-----BEGIN [A-Z ]+PRIVATE KEY-----.*?-----END [A-Z ]+PRIVATE KEY-----", "<redacted-private-key>", sanitized, flags=re.DOTALL)
++        return sanitized
++
++    def value(self, value: Any) -> Any:
++        if isinstance(value, dict):
++            return {key: self.value(child) for key, child in value.items()}
++        if isinstance(value, list):
++            return [self.value(item) for item in value]
++        if isinstance(value, str):
++            return self.text(value)
++        return value
+diff --git a/src/processforge_core/maintenance/source_contracts.py b/src/processforge_core/maintenance/source_contracts.py
+new file mode 100644
+index 0000000..d6272be
+--- /dev/null
++++ b/src/processforge_core/maintenance/source_contracts.py
+@@ -0,0 +1,215 @@
++from __future__ import annotations
++
++import re
++from pathlib import Path
++from typing import Any
++from urllib.parse import urlparse
++
++from processforge_core.common.checks import Check, check
++
++
++UPDATE_SUBJECT_TYPES = {
++    "*",
++    "processforge_distribution",
++    "workplace",
++    "process_package",
++    "knowledge_package",
++    "template_package",
++    "tool_package",
++    "tool_definition",
++    "mcp_definition",
++    "knowledge_resource",
++    "process_definition",
++    "reusable_template",
++    "platform_contract",
++    "project_pf",
++    # Legacy aliases kept for existing registries and smokes.
++    "template",
++    "tool",
++    "mcp_server",
++    "package",
++}
++CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
++ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
++
++
++class UpdateSourceContractPolicy:
++    """Validate update source contracts and preserve registry source ordering."""
++
++    def requires_https(self, source: dict[str, Any], defaults: dict[str, Any] | None = None) -> bool:
++        trust = source.get("trust") if isinstance(source.get("trust"), dict) else {}
++        if "require_https" in trust:
++            return bool(trust.get("require_https"))
++        if defaults and "require_https" in defaults:
++            return bool(defaults.get("require_https"))
++        return True
++
++    def remote_url_shape(self, url: str, *, require_https: bool) -> tuple[bool, str]:
++        if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
++            return False, "must not contain whitespace or control characters"
++        parsed = urlparse(url)
++        if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
++            return False, "must be a valid remote URL with scheme and host"
++        if require_https and parsed.scheme.lower() != "https":
++            return False, "must use https unless local trust policy disables require_https"
++        return True, ""
++
++    def artifact_url_shape(self, url: str, artifact: dict[str, Any]) -> tuple[bool, str]:
++        if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
++            return False, "must not contain whitespace or control characters"
++        parsed = urlparse(url)
++        if parsed.scheme.lower() == "file":
++            if parsed.path or parsed.netloc:
++                return True, ""
++            return False, "file URL must include a path"
++        if parsed.scheme.lower() in {"http", "https"}:
++            if not parsed.netloc:
++                return False, "remote URL must include a host"
++            if self.requires_https(artifact) and parsed.scheme.lower() != "https":
++                return False, "remote URL must use https unless local trust policy disables require_https"
++            return True, ""
++        return False, "must be an https or file URL"
++
++    def append_env_checks(self, checks: list[Check], source: dict[str, Any], label: str) -> None:
++        for field in ("headers_env", "query_env", "custom_headers_env"):
++            values = source.get(field)
++            if values is None:
++                continue
++            if not isinstance(values, dict):
++                checks.append(check("FAIL", f"{label} {field} must be an object"))
++                continue
++            for key, value in values.items():
++                if not isinstance(value, str) or not ENV_REFERENCE_RE.fullmatch(value):
++                    checks.append(check("FAIL", f"{label} {field}.{key} must be an env variable name or auth_ref:/secret_ref: reference"))
++
++    def append_source_checks(
++        self,
++        checks: list[Check],
++        source: Any,
++        label: str,
++        *,
++        provider_key: str,
++        defaults: dict[str, Any] | None = None,
++        require_subjects: bool = False,
++        require_priority: bool = False,
++    ) -> None:
++        if not isinstance(source, dict):
++            checks.append(check("FAIL", f"{label} must be an object"))
++            return
++
++        source_id = source.get("id")
++        if source_id is not None and (not isinstance(source_id, str) or not source_id.strip()):
++            checks.append(check("FAIL", f"{label} id must be a non-empty string when present"))
++        elif isinstance(source_id, str) and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", source_id):
++            checks.append(check("FAIL", f"{label} id must use letters, digits, dot, underscore, or hyphen"))
++
++        enabled = source.get("enabled")
++        if enabled is not None and not isinstance(enabled, bool):
++            checks.append(check("FAIL", f"{label} enabled must be a boolean when present"))
++
++        provider = source.get(provider_key)
++        if not provider:
++            provider = source.get("provider" if provider_key == "type" else "type")
++        if provider is not None and (not isinstance(provider, str) or not provider.strip()):
++            checks.append(check("FAIL", f"{label} {provider_key} must be a non-empty string when present"))
++
++        if "url" in source:
++            checks.append(check("FAIL", f"{label} uses unsupported url field; use manifest_url"))
++
++        if "priority" not in source:
++            if require_priority:
++                checks.append(check("FAIL", f"{label} missing priority"))
++        elif not isinstance(source.get("priority"), int):
++            checks.append(check("FAIL", f"{label} priority must be an integer"))
++
++        channels = source.get("channels")
++        if channels is not None and (
++            not isinstance(channels, list) or not all(isinstance(item, str) and item.strip() for item in channels)
++        ):
++            checks.append(check("FAIL", f"{label} channels must be a list of non-empty strings"))
++
++        if require_subjects:
++            subjects = source.get("subjects")
++            if not isinstance(subjects, list) or not subjects:
++                checks.append(check("FAIL", f"{label} missing subjects"))
++            else:
++                for index, subject in enumerate(subjects):
++                    subject_label = f"{label}.subjects[{index}]"
++                    if not isinstance(subject, dict):
++                        checks.append(check("FAIL", f"{subject_label} must be an object"))
++                        continue
++                    subject_type = subject.get("type")
++                    ids = subject.get("ids")
++                    if subject_type not in UPDATE_SUBJECT_TYPES:
++                        checks.append(check("FAIL", f"{subject_label}.type unsupported subject type {subject_type!r}"))
++                    if not isinstance(ids, list) or not all(isinstance(item, str) and item.strip() for item in ids):
++                        checks.append(check("FAIL", f"{subject_label}.ids must be a list of non-empty strings"))
++
++        manifest_url = source.get("manifest_url")
++        if not isinstance(manifest_url, str) or not manifest_url.strip():
++            checks.append(check("FAIL", f"{label} missing manifest_url"))
++        else:
++            parsed = urlparse(manifest_url)
++            scheme = parsed.scheme.lower()
++            if scheme in {"http", "https"}:
++                valid, reason = self.remote_url_shape(manifest_url, require_https=self.requires_https(source, defaults))
++                if not valid:
++                    checks.append(check("FAIL", f"{label} manifest_url {reason}"))
++            elif scheme == "file" or not scheme:
++                if CONTROL_CHAR_RE.search(manifest_url) or any(char.isspace() for char in manifest_url):
++                    checks.append(check("FAIL", f"{label} manifest_url must not contain whitespace or control characters"))
++                if scheme == "file" and not (parsed.path or parsed.netloc):
++                    checks.append(check("FAIL", f"{label} manifest_url file URL must include a path"))
++            else:
++                checks.append(check("FAIL", f"{label} manifest_url unsupported scheme {scheme!r}"))
++
++        changelog_url = source.get("changelog_url")
++        if not isinstance(changelog_url, str) or not changelog_url.strip():
++            checks.append(check("FAIL", f"{label} missing changelog_url"))
++
++        auth = source.get("auth")
++        if isinstance(auth, dict):
++            for key in auth:
++                if str(key).lower() in {"token", "password", "secret", "authorization", "api_key"}:
++                    checks.append(check("FAIL", f"{label} auth must not contain raw secret key {key!r}; use *_env or auth_ref"))
++        self.append_env_checks(checks, source, label)
++
++    def validate_registry(self, data: dict[str, Any], path: Path) -> list[Check]:
++        checks: list[Check] = []
++        if not data:
++            return [check("FAIL", f"{path} missing or invalid")]
++        if data.get("schema_version") != 1:
++            checks.append(check("FAIL", "update source registry schema_version must be 1"))
++        if data.get("product") != "processforge":
++            checks.append(check("FAIL", "update source registry product must be processforge"))
++        defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
++        sources = data.get("sources")
++        if not isinstance(sources, list):
++            checks.append(check("FAIL", "update source registry sources must be a list"))
++            return checks
++
++        seen: set[str] = set()
++        for index, source in enumerate(sources):
++            source_id = source.get("id") if isinstance(source, dict) else None
++            if isinstance(source_id, str):
++                if source_id in seen:
++                    checks.append(check("FAIL", f"sources[{index}] duplicate id {source_id}"))
++                seen.add(source_id)
++            self.append_source_checks(
++                checks,
++                source,
++                f"sources[{index}]",
++                provider_key="provider",
++                defaults=defaults,
++                require_subjects=False,
++                require_priority=False,
++            )
++        if not checks:
++            checks.append(check("PASS", f"{path} valid"))
++        return checks
++
++    def sorted_sources(self, data: dict[str, Any]) -> list[dict[str, Any]]:
++        sources = data.get("sources") if isinstance(data.get("sources"), list) else []
++        indexed = [(index, source) for index, source in enumerate(sources) if isinstance(source, dict)]
++        indexed.sort(key=lambda item: (not bool(item[1].get("enabled")), int(item[1].get("priority", 1000)), item[0]))
++        return [source for _, source in indexed]
+diff --git a/src/processforge_core/project/coordination.py b/src/processforge_core/project/coordination.py
+new file mode 100644
+index 0000000..bd34b80
+--- /dev/null
++++ b/src/processforge_core/project/coordination.py
+@@ -0,0 +1,102 @@
++"""Live coordination configuration reads through concrete Core readers."""
++
++from __future__ import annotations
++
++from dataclasses import dataclass, field
++from pathlib import Path
++from typing import Any
++
++from ..common.yaml_io import _parse_simple_yaml
++from ..documents.reader import YamlDocumentReader
++from .metadata import ProjectMetadataReader
++
++COORDINATION_PROJECT_MODES = {"inherit", "simple", "organized"}
++WORKPLACE_DEFAULT_PROJECT_MODES = {"simple", "organized"}
++DIRECTOR_OFFICE_DEFAULTS = {
++    "process_id": "agent-director-supervision",
++    "scope": "workplace",
++    "office_path": ".pf/director",
++    "inbox_path": ".pf/director/inbox",
++    "outbox_path": ".pf/director/outbox",
++    "cases_path": ".pf/director/cases",
++    "runs_path": ".pf/director/runs",
++    "artifacts_path": ".pf/director/artifacts",
++    "history_path": ".pf/director/history",
++    "continuations_path": ".pf/director/continuations",
++    "runtime_path": ".pf/director/runtime",
++}
++
++
++@dataclass(frozen=True)
++class ProjectCoordinationReader:
++    documents: YamlDocumentReader = field(
++        default_factory=lambda: YamlDocumentReader(_parse_simple_yaml),
++    )
++
++    def project_mode(self, value: Any) -> str:
++        mode = str(value or "inherit").strip().lower()
++        if mode not in COORDINATION_PROJECT_MODES:
++            raise SystemExit("FAIL: project coordination mode must be inherit, simple, or organized")
++        return mode
++
++    def workplace_mode(self, value: Any) -> str:
++        mode = str(value or "simple").strip().lower()
++        if mode not in WORKPLACE_DEFAULT_PROJECT_MODES:
++            raise SystemExit("FAIL: workplace default_project_mode must be simple or organized")
++        return mode
++
++    def workplace_defaults(self) -> dict[str, Any]:
++        return {
++            "director_enabled": False,
++            "director_office_enabled": False,
++            "default_project_mode": "simple",
++            "director": dict(DIRECTOR_OFFICE_DEFAULTS),
++            "error_workflow_support": True,
++        }
++
++    def project_defaults(self, mode: str = "inherit") -> dict[str, Any]:
++        return {
++            "mode": self.project_mode(mode),
++            "director": {
++                "use_workplace_director": True,
++                "inbox_submit_required": False,
++            },
++        }
++
++    def workplace(self, workplace_manifest: Path | None) -> dict[str, Any]:
++        config = self.workplace_defaults()
++        if workplace_manifest and workplace_manifest.is_file():
++            data = self.documents.load(workplace_manifest)
++            raw = data.get("coordination") if isinstance(data, dict) else None
++            if isinstance(raw, dict):
++                config.update({key: value for key, value in raw.items() if key != "director"})
++                if isinstance(raw.get("director"), dict):
++                    director = dict(DIRECTOR_OFFICE_DEFAULTS)
++                    director.update(raw["director"])
++                    config["director"] = director
++        config["director_enabled"] = bool(config.get("director_enabled", False))
++        config["director_office_enabled"] = bool(config.get("director_office_enabled", False))
++        config["default_project_mode"] = self.workplace_mode(config.get("default_project_mode"))
++        if not isinstance(config.get("director"), dict):
++            config["director"] = dict(DIRECTOR_OFFICE_DEFAULTS)
++        return config
++
++    def project(self, project_root: Path) -> dict[str, Any]:
++        flow_root = ProjectMetadataReader(project_root).flow_root()
++        manifest = flow_root / "process-forge.yaml"
++        data = self.documents.load(manifest) if manifest.is_file() else {}
++        raw = data.get("coordination") if isinstance(data, dict) else None
++        config = self.project_defaults()
++        if isinstance(raw, dict):
++            config.update({key: value for key, value in raw.items() if key != "director"})
++            director = config.get("director") if isinstance(config.get("director"), dict) else {}
++            if isinstance(raw.get("director"), dict):
++                director = dict(director)
++                director.update(raw["director"])
++            config["director"] = director
++        config["mode"] = self.project_mode(config.get("mode"))
++        if not isinstance(config.get("director"), dict):
++            config["director"] = self.project_defaults()["director"]
++        config["director"].setdefault("use_workplace_director", True)
++        config["director"].setdefault("inbox_submit_required", False)
++        return config
+diff --git a/src/processforge_core/work/context.py b/src/processforge_core/work/context.py
+index e639d50..c44e51a 100644
+--- a/src/processforge_core/work/context.py
++++ b/src/processforge_core/work/context.py
+@@ -19,6 +19,7 @@ import yaml
+ 
+ from ..common.request_scope import safe_load
+ from ..configuration.parameters import ParameterMergePolicy
++from .context_documents import ContextContractInputs
+ from ..project.capability_registry import CapabilityRegistryReader
+ from ..project.readiness import ProjectContextReadinessPolicy
+ 
+@@ -425,7 +426,7 @@ def build_context_fields(project: Path, assignment_path: Path, metadata: dict[st
+         "resources": {"selected_ids": selected, "bindings_checksum": fingerprint(bindings)},
+         "scope": copy.deepcopy(normalized["scope"]), "required_sources": sources, "outputs": copy.deepcopy(normalized["outputs"]),
+         "capabilities": {"required": required_records, "optional": optional_records}, "workspace_access": copy.deepcopy(normalized["workspace_access"]),
+-        "parameters": parameters, "coordination": core.capsule_coordination_block(snapshot, metadata),
++        "parameters": parameters, "coordination": ContextContractInputs().capsule_coordination_block(snapshot, metadata),
+         "worker_may_rebuild_context": False, "source_limits": dict(SOURCE_LIMITS),
+         "readiness": {"status": "blocked" if blockers else "ready", "blockers": blockers},
+     }
+diff --git a/src/processforge_core/work/context_documents.py b/src/processforge_core/work/context_documents.py
+index 90ab620..295886f 100644
+--- a/src/processforge_core/work/context_documents.py
++++ b/src/processforge_core/work/context_documents.py
+@@ -1,13 +1,16 @@
+ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
++import fnmatch
+ import json
++import os
+ from pathlib import Path
+ import re
+ from typing import Any
+ 
+ from ..common.ids import safe_id
+ from ..common.paths import rel
++from ..common.values import as_list
+ from ..common.yaml_io import _parse_simple_yaml
+ from ..documents.reader import YamlDocumentReader
+ from ..project.metadata import PROJECT_FLOW_ROOT, ProjectMetadataReader
+@@ -58,6 +61,94 @@ class ContextContractInputs:
+                 seen.add(text)
+         return items
+ 
++    def assignment_path_key(self, value: Any) -> str:
++        text = self.normalize_assignment_path(value)
++        return text.lower() if os.name == "nt" else text
++
++    def assignment_write_scope(self, metadata: dict[str, Any]) -> list[str]:
++        allowed = self.assignment_scope_items(metadata.get("allowed_files"))
++        ownership = metadata.get("ownership") if isinstance(metadata.get("ownership"), dict) else {}
++        owned = self.assignment_scope_items(ownership.get("owned_files"))
++        owned.extend(self.assignment_scope_items(ownership.get("owned_globs")))
++        owned.extend(self.assignment_scope_items(metadata.get("allowed_globs")))
++        result: list[str] = []
++        seen: set[str] = set()
++        for item in [*allowed, *owned]:
++            key = self.assignment_path_key(item)
++            if key not in seen:
++                result.append(item)
++                seen.add(key)
++        return result
++
++    def assignment_has_glob(self, value: str) -> bool:
++        return any(char in value for char in "*?[")
++
++    def assignment_allows_write_scope_overlap(self, metadata: dict[str, Any]) -> bool:
++        non_overlap = metadata.get("non_overlap") if isinstance(metadata.get("non_overlap"), dict) else {}
++        return str(non_overlap.get("policy") or "") == "allow_write_scope_overlap"
++
++    def assignment_dependency_set(self, metadata: dict[str, Any]) -> set[str]:
++        dependencies = metadata.get("dependencies") if isinstance(metadata.get("dependencies"), dict) else {}
++        values = [
++            *as_list(dependencies.get("blocked_by")),
++            *as_list(metadata.get("dependencies") if not isinstance(metadata.get("dependencies"), dict) else []),
++            *as_list(metadata.get("depends_on")),
++        ]
++        return {safe_id(str(item), "assignment") for item in values if item}
++
++    def validate_assignment_required_sources(self, project_root: Path, contract: dict[str, Any]) -> list[str]:
++        missing: list[str] = []
++        required_sources = contract.get("context", {}).get("required_sources", [])
++        for source in required_sources if isinstance(required_sources, list) else []:
++            path = project_root / str(source)
++            if not path.is_file():
++                missing.append(str(source))
++        artifacts = contract.get("context", {}).get("context_artifacts", [])
++        for item in artifacts if isinstance(artifacts, list) else []:
++            if isinstance(item, dict) and item.get("required", True):
++                source = str(item.get("path", ""))
++                if source and not (project_root / source).is_file():
++                    missing.append(source)
++        return sorted(set(missing))
++
++    def capsule_coordination_block(self, snapshot: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
++        coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
++        effective_mode = str(coordination.get("effective_mode") or "simple")
++        raw_requirements = metadata.get("coordination_requirements") if isinstance(metadata.get("coordination_requirements"), dict) else {}
++        inbox_requirements = raw_requirements.get("director_inbox") if isinstance(raw_requirements.get("director_inbox"), dict) else {}
++        submit_required = bool(inbox_requirements.get("required", False) or metadata.get("director_inbox_submit_required", False))
++        if effective_mode != "organized":
++            if submit_required:
++                raise SystemExit("FAIL: assignment requires Director inbox but project effective coordination mode is simple")
++            return {
++                "effective_mode": "simple",
++                "director_required": False,
++                "director_available_at_workplace": bool(coordination.get("director_available_at_workplace", False)),
++            }
++        director_inbox = coordination.get("director_inbox") if isinstance(coordination.get("director_inbox"), dict) else {}
++        return {
++            "effective_mode": "organized",
++            "director_required": bool(coordination.get("director_required", True)),
++            "director_process": coordination.get("director_process") or "agent-director-supervision",
++            "director_inbox": {
++                "enabled": bool(director_inbox.get("enabled", True)),
++                "submit_required": submit_required or bool(director_inbox.get("submit_required", False)),
++                "allowed_message_types": director_inbox.get("allowed_message_types", ["worker_report", "error_report", "decision_request"]),
++            },
++        }
++
++    def path_allowed_by_scope(self, path: str, scopes: list[str]) -> bool:
++        key = self.assignment_path_key(path)
++        for scope in scopes:
++            scope_key = self.assignment_path_key(scope)
++            if scope_key in {".pf/artifacts/**", ".pf/artifacts/*"} and key.startswith(".pf/artifacts/"):
++                return True
++            if self.assignment_has_glob(scope_key) and fnmatch.fnmatch(key, scope_key):
++                return True
++            if key == scope_key:
++                return True
++        return False
++
+     def normalize_context_artifacts(self, value: Any) -> list[dict[str, Any]]:
+         artifacts: list[dict[str, Any]] = []
+         for item in self._list(value):
+diff --git a/tools/pf_runtime/host.py b/tools/pf_runtime/host.py
+index 6c17fdf..2bd954f 100644
+--- a/tools/pf_runtime/host.py
++++ b/tools/pf_runtime/host.py
+@@ -1042,7 +1042,12 @@ def _conversation_messages(
+         # Its private transcript may retain diagnostic path text. Native host
+         # messages and all metadata retain the automatic-capture path filter.
+         owned_report = is_worker and policy is not None and policy.owns_report(envelope, item)
+-        if (not owned_report and not _is_safe_automatic_content(content)) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)) or core.contains_secret_value(content):
++        if (not owned_report and not _is_safe_automatic_content(content)) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)):
++            return _conversation_denial("unsafe_automatic_content", sequence=sequence)
++
++        from processforge_core.common.privacy import contains_secret_value
++
++        if contains_secret_value(content):
+             return _conversation_denial("unsafe_automatic_content", sequence=sequence)
+         raw_id = str(receipt.raw_event_id or "")
+         key = deterministic_derived_key(
+diff --git a/tools/processforge.py b/tools/processforge.py
+index faab6b4..9d47e2e 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -127,6 +127,30 @@ _runtime_driver_catalog_reader = RuntimeDriverCatalogReader(ROOT)
+ _knowledge_candidate_targeting_policy = KnowledgeCandidateTargetingPolicy()
+ _update_version_selection_policy = UpdateVersionSelectionPolicy()
+ _update_assessment_renderer = UpdateAssessmentRenderer()
++from processforge_core.common.privacy import (
++    BACKSLASH,
++    LOCAL_PATH_PATTERNS,
++    SECRET_VALUE_PATTERNS,
++    is_public_path_safe,
++    contains_secret_value,
++)
++from processforge_core.project.coordination import (
++    COORDINATION_PROJECT_MODES,
++    WORKPLACE_DEFAULT_PROJECT_MODES,
++    DIRECTOR_OFFICE_DEFAULTS,
++    ProjectCoordinationReader,
++)
++from processforge_core.evolution.privacy import EvolvePrivacyPolicy
++from processforge_core.maintenance.source_contracts import (
++    UPDATE_SUBJECT_TYPES,
++    CONTROL_CHAR_RE,
++    ENV_REFERENCE_RE,
++    UpdateSourceContractPolicy,
++)
++
++_project_coordination_reader = ProjectCoordinationReader()
++_evolve_privacy_policy = EvolvePrivacyPolicy()
++_update_source_contract_policy = UpdateSourceContractPolicy()
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -227,7 +251,6 @@ from pf_cli.parsers.work import WorkCommandParser
+ from pf_cli.parsers.workplace import WorkplaceCommandParser
+ from processforge_core.documents.reader import YamlDocumentReader
+ from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
+-from processforge_core.documents.answers import SECRET_VALUE_PATTERNS
+ from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
+ 
+ PROJECT_FLOW_ROOT = ".pf"
+@@ -302,23 +325,8 @@ PROJECT_FLOW_DIRS = [
+     "runtime/registries",
+ ]
+ 
+-COORDINATION_PROJECT_MODES = {"inherit", "simple", "organized"}
+-WORKPLACE_DEFAULT_PROJECT_MODES = {"simple", "organized"}
+ ERROR_WORKFLOW_MODES = {"none", "director_inbox", "route_to_process", "needs_operator"}
+ ERROR_WORKFLOW_FALLBACKS = {"needs_operator", "fail_validation"}
+-DIRECTOR_OFFICE_DEFAULTS = {
+-    "process_id": "agent-director-supervision",
+-    "scope": "workplace",
+-    "office_path": ".pf/director",
+-    "inbox_path": ".pf/director/inbox",
+-    "outbox_path": ".pf/director/outbox",
+-    "cases_path": ".pf/director/cases",
+-    "runs_path": ".pf/director/runs",
+-    "artifacts_path": ".pf/director/artifacts",
+-    "history_path": ".pf/director/history",
+-    "continuations_path": ".pf/director/continuations",
+-    "runtime_path": ".pf/director/runtime",
+-}
+ 
+ 
+ GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
+@@ -512,15 +520,7 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
+     "authoring_parity.completed",
+ ]
+ 
+-BACKSLASH = chr(92)
+ COLON_WS = ":" + r"\s*"
+-LOCAL_PATH_PATTERNS = [
+-    re.compile(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH)),
+-    re.compile(r"(?<![A-Za-z])[A-Za-z]:/"),
+-    re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
+-    re.compile("/" + "Users" + "/[A-Za-z0-9_.-]+/"),
+-    re.compile("/" + "srv" + "/"),
+-]
+ 
+ EVOLVE_CANDIDATE_CATEGORIES = {
+     "domain",
+@@ -1435,12 +1435,8 @@ def iter_flow_roots(project_root: Path) -> list[Path]:
+     return [pf_root] if pf_root.is_dir() else []
+ 
+ 
+-def is_public_path_safe(text: str) -> bool:
+-    return not any(pattern.search(text) for pattern in LOCAL_PATH_PATTERNS)
+ 
+ 
+-def contains_secret_value(text: str) -> bool:
+-    return any(pattern.search(text) for pattern in SECRET_VALUE_PATTERNS)
+ 
+ 
+ def parse_scalar(value: str) -> Any:
+@@ -1867,10 +1863,10 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
+     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
+     director_answers = coordination_answers.get("director", {}) if isinstance(coordination_answers.get("director"), dict) else {}
+     workplace_parameters = answers.get("parameters") if isinstance(answers.get("parameters"), dict) else {}
+-    workplace_coordination = default_workplace_coordination()
++    workplace_coordination = _project_coordination_reader.workplace_defaults()
+     workplace_coordination["director_enabled"] = bool(coordination_answers.get("director_enabled", False))
+     workplace_coordination["director_office_enabled"] = bool(coordination_answers.get("director_office_enabled", False))
+-    workplace_coordination["default_project_mode"] = normalize_workplace_default_project_mode(coordination_answers.get("default_project_mode", "simple"))
++    workplace_coordination["default_project_mode"] = _project_coordination_reader.workplace_mode(coordination_answers.get("default_project_mode", "simple"))
+     workplace_coordination["director"].update({key: value for key, value in director_answers.items() if value not in (None, "")})
+     path_constants = dict(DEFAULT_PATH_CONSTANTS)
+     answer_constants = paths_answers.get("path_constants")
+@@ -2306,7 +2302,7 @@ def command_init_workplace(args: argparse.Namespace) -> int:
+             results.append(write_global_agent_section(path, force=args.force))
+         else:
+             results.append(write_file(path, content, force=args.force))
+-    workplace_coordination = workplace_coordination_config(root / "workplace.yaml")
++    workplace_coordination = _project_coordination_reader.workplace(root / "workplace.yaml")
+     if workplace_coordination.get("director_office_enabled"):
+         initialize_director_office(root, workplace_coordination)
+     append_workplace_event(root, "workplace.structure.created", payload={"directories": [rel(path, root) for path in planned_dirs]})
+@@ -2455,7 +2451,7 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
+         "coordination": {
+             "director_enabled": bool(coordination.get("director_capability", False)),
+             "director_office_enabled": bool(coordination.get("initialize_director_office", False)),
+-            "default_project_mode": normalize_workplace_default_project_mode(coordination.get("default_project_mode", "simple")),
++            "default_project_mode": _project_coordination_reader.workplace_mode(coordination.get("default_project_mode", "simple")),
+         },
+     }
+ 
+@@ -2499,7 +2495,7 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
+         "platform_policy": answers.get("platform_contracts", {}),
+         "coordination": {
+             "director_capability": bool(coordination.get("director_capability", False)),
+-            "default_project_mode": normalize_workplace_default_project_mode(coordination.get("default_project_mode", "simple")),
++            "default_project_mode": _project_coordination_reader.workplace_mode(coordination.get("default_project_mode", "simple")),
+             "initialize_director_office": bool(coordination.get("initialize_director_office", False)),
+         },
+         "first_project": first_project,
+@@ -2908,7 +2904,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
+         else:
+             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
+         load_doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
+-        cfg = workplace_coordination_config(manifest)
++        cfg = _project_coordination_reader.workplace(manifest)
+         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
+         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
+         if cfg.get("director_office_enabled"):
+@@ -3048,7 +3044,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
+ def command_workplace_mode_status(args: argparse.Namespace) -> int:
+     workplace_root = normalize_workplace_path(Path(args.workplace))
+     manifest = workplace_root / "workplace.yaml"
+-    cfg = workplace_coordination_config(manifest)
++    cfg = _project_coordination_reader.workplace(manifest)
+     office_exists = director_office_exists(workplace_root, cfg)
+     payload = {
+         "workplace_root": normalize_path_string(str(workplace_root)),
+@@ -3104,7 +3100,7 @@ def update_workplace_coordination(workplace_root: Path, updater: Any) -> dict[st
+     if not manifest.is_file():
+         raise SystemExit(f"FAIL: workplace.yaml missing: {manifest}")
+     data = read_yaml_file(manifest)
+-    cfg = workplace_coordination_config(manifest)
++    cfg = _project_coordination_reader.workplace(manifest)
+     updater(cfg)
+     data["coordination"] = cfg
+     write_yaml_file(manifest, data)
+@@ -3135,7 +3131,7 @@ def command_workplace_mode_set(args: argparse.Namespace) -> int:
+ 
+ def command_workplace_mode_set_default_project_mode(args: argparse.Namespace) -> int:
+     workplace_root = normalize_workplace_path(Path(args.workplace))
+-    mode = normalize_workplace_default_project_mode(args.mode)
++    mode = _project_coordination_reader.workplace_mode(args.mode)
+ 
+     def updater(cfg: dict[str, Any]) -> None:
+         cfg["default_project_mode"] = mode
+@@ -3151,7 +3147,7 @@ def command_workplace_mode_doctor(args: argparse.Namespace) -> int:
+     manifest = workplace_root / "workplace.yaml"
+     checks.append(check("PASS" if manifest.is_file() else "FAIL", "workplace.yaml found"))
+     if manifest.is_file():
+-        cfg = workplace_coordination_config(manifest)
++        cfg = _project_coordination_reader.workplace(manifest)
+         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
+         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
+         if cfg.get("director_office_enabled") or cfg.get("director_enabled"):
+@@ -3178,7 +3174,7 @@ def command_project_mode_status(args: argparse.Namespace) -> int:
+ def command_project_mode_set(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     flow_root = require_flow_root(project_root)
+-    mode = normalize_project_coordination_mode(args.mode)
++    mode = _project_coordination_reader.project_mode(args.mode)
+     if mode == "organized":
+         status = effective_project_coordination(project_root, getattr(args, "workplace", None))
+         if not status["workplace_director_enabled"]:
+@@ -3190,7 +3186,7 @@ def command_project_mode_set(args: argparse.Namespace) -> int:
+             raise SystemExit("FAIL: organized project mode requires an initialized Director Office; rerun with --init-office or enable workplace Director Office")
+     manifest = flow_root / "process-forge.yaml"
+     data = read_yaml_file(manifest)
+-    coordination = data.get("coordination") if isinstance(data.get("coordination"), dict) else default_project_coordination()
++    coordination = data.get("coordination") if isinstance(data.get("coordination"), dict) else _project_coordination_reader.project_defaults()
+     director = coordination.get("director") if isinstance(coordination.get("director"), dict) else {}
+     coordination["mode"] = mode
+     director.setdefault("use_workplace_director", True)
+@@ -3257,7 +3253,7 @@ def command_director_inbox_submit(args: argparse.Namespace) -> int:
+     else:
+         if not workplace_root:
+             raise SystemExit("FAIL: director-inbox-submit requires --project-root or --workplace")
+-        cfg = workplace_coordination_config(workplace_root / "workplace.yaml")
++        cfg = _project_coordination_reader.workplace(workplace_root / "workplace.yaml")
+         if not cfg.get("director_enabled"):
+             raise SystemExit("FAIL: workplace Director is not enabled")
+         coordination = {"effective_mode": "workspace", "workplace_root": normalize_path_string(str(workplace_root))}
+@@ -5114,7 +5110,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
+     detected["platforms"] = selected_project_platforms(detected, answers, defaults["type"], workplace_manifest, project_root)
+     mode = project_mode(project_root, answers)
+     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
+-    project_coordination = default_project_coordination(coordination_answers.get("mode", "inherit"))
++    project_coordination = _project_coordination_reader.project_defaults(coordination_answers.get("mode", "inherit"))
+     if isinstance(coordination_answers.get("director"), dict):
+         project_coordination["director"].update(coordination_answers["director"])
+     required = answers.get("required_capabilities") if isinstance(answers.get("required_capabilities"), list) else []
+@@ -11100,17 +11096,10 @@ def as_list(value: Any) -> list[Any]:
+     return [value]
+ 
+ 
+-def normalize_assignment_path(value: Any) -> str:
+-    return _context_contract_inputs.normalize_assignment_path(value)
+ 
+ 
+-def assignment_path_key(value: Any) -> str:
+-    text = normalize_assignment_path(value)
+-    return text.lower() if os.name == "nt" else text
+ 
+ 
+-def assignment_scope_items(value: Any) -> list[str]:
+-    return _context_contract_inputs.assignment_scope_items(value)
+ 
+ 
+ def normalize_context_artifacts(value: Any) -> list[dict[str, Any]]:
+@@ -11173,7 +11162,7 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
+             else:
+                 checks.append(check("FAIL", f"required output has no path: {output_id}"))
+             continue
+-        output_rel = normalize_assignment_path(str(output.get("path") or ""))
++        output_rel = _context_contract_inputs.normalize_assignment_path(str(output.get("path") or ""))
+         if out_path.is_file():
+             checks.append(check("PASS", f"required output exists: {output_rel}"))
+         elif output_id in waiver_map:
+@@ -11183,7 +11172,7 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
+         else:
+             checks.append(check("FAIL", f"required output missing: {output_rel}"))
+     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+-    expected_artifact = normalize_assignment_path(str(expected.get("artifact") or ""))
++    expected_artifact = _context_contract_inputs.normalize_assignment_path(str(expected.get("artifact") or ""))
+     if expected_artifact:
+         try:
+             expected_path = project_output_path(project_root, expected_artifact)
+@@ -11214,24 +11203,8 @@ def normalize_non_overlap(value: Any, current_write_scope: list[str]) -> dict[st
+     return _context_contract_inputs.normalize_non_overlap(value, current_write_scope)
+ 
+ 
+-def assignment_write_scope(metadata: dict[str, Any]) -> list[str]:
+-    allowed = assignment_scope_items(metadata.get("allowed_files"))
+-    ownership = metadata.get("ownership") if isinstance(metadata.get("ownership"), dict) else {}
+-    owned = assignment_scope_items(ownership.get("owned_files"))
+-    owned.extend(assignment_scope_items(ownership.get("owned_globs")))
+-    owned.extend(assignment_scope_items(metadata.get("allowed_globs")))
+-    result: list[str] = []
+-    seen: set[str] = set()
+-    for item in [*allowed, *owned]:
+-        key = assignment_path_key(item)
+-        if key not in seen:
+-            result.append(item)
+-            seen.add(key)
+-    return result
+ 
+ 
+-def assignment_has_glob(value: str) -> bool:
+-    return any(char in value for char in "*?[")
+ 
+ 
+ def validate_assignment_scope_overlaps(
+@@ -11243,8 +11216,8 @@ def validate_assignment_scope_overlaps(
+     current_id = safe_id(str(metadata.get("id") or (assignment_path.stem if assignment_path else "assignment")), "assignment")
+     from processforge_core.process_execution import scope_handoff_predecessor
+     handed_off_predecessor = scope_handoff_predecessor(project_root, metadata, sys.modules[__name__])
+-    current_scope = assignment_write_scope(metadata)
+-    forbidden_scope = assignment_scope_items(metadata.get("forbidden_files"))
++    current_scope = _context_contract_inputs.assignment_write_scope(metadata)
++    forbidden_scope = _context_contract_inputs.assignment_scope_items(metadata.get("forbidden_files"))
+     scope_conflicts = ScopeConflictService(project_root)
+     conflicts = scope_conflicts.conflicts(
+         current_id,
+@@ -11264,14 +11237,14 @@ def validate_assignment_scope_overlaps(
+         status = str(other.get("status", "")).strip()
+         if status not in ACTIVE_ASSIGNMENT_STATUSES:
+             continue
+-        other_scope = assignment_write_scope(other)
++        other_scope = _context_contract_inputs.assignment_write_scope(other)
+         if not other_scope:
+             continue
+         other_id = safe_id(str(other.get("id") or candidate.stem), "assignment")
+         if other_id == handed_off_predecessor:
+             continue
+-        current_deps = assignment_dependency_set(metadata)
+-        other_deps = assignment_dependency_set(other)
++        current_deps = _context_contract_inputs.assignment_dependency_set(metadata)
++        other_deps = _context_contract_inputs.assignment_dependency_set(other)
+         if other_id in current_deps or current_id in other_deps:
+             continue
+         conflicts.extend(scope_conflicts.conflicts(current_id, current_scope, other_id, other_scope))
+@@ -11288,19 +11261,8 @@ def overlap_allowed_check(overlap_check: dict[str, Any], source: str) -> dict[st
+     return resolved
+ 
+ 
+-def assignment_allows_write_scope_overlap(metadata: dict[str, Any]) -> bool:
+-    non_overlap = metadata.get("non_overlap") if isinstance(metadata.get("non_overlap"), dict) else {}
+-    return str(non_overlap.get("policy") or "") == "allow_write_scope_overlap"
+ 
+ 
+-def assignment_dependency_set(metadata: dict[str, Any]) -> set[str]:
+-    dependencies = metadata.get("dependencies") if isinstance(metadata.get("dependencies"), dict) else {}
+-    values = [
+-        *as_list(dependencies.get("blocked_by")),
+-        *as_list(metadata.get("dependencies") if not isinstance(metadata.get("dependencies"), dict) else []),
+-        *as_list(metadata.get("depends_on")),
+-    ]
+-    return {safe_id(str(item), "assignment") for item in values if item}
+ 
+ 
+ def normalized_assignment_contract(project_root: Path, assignment: Path, metadata: dict[str, Any]) -> dict[str, Any]:
+@@ -11319,47 +11281,8 @@ def workspace_access_public_path_issues(access: dict[str, list[Any]]) -> list[st
+     return _context_contract_inputs.workspace_access_public_path_issues(access)
+ 
+ 
+-def validate_assignment_required_sources(project_root: Path, contract: dict[str, Any]) -> list[str]:
+-    missing: list[str] = []
+-    required_sources = contract.get("context", {}).get("required_sources", [])
+-    for source in required_sources if isinstance(required_sources, list) else []:
+-        path = project_root / str(source)
+-        if not path.is_file():
+-            missing.append(str(source))
+-    artifacts = contract.get("context", {}).get("context_artifacts", [])
+-    for item in artifacts if isinstance(artifacts, list) else []:
+-        if isinstance(item, dict) and item.get("required", True):
+-            source = str(item.get("path", ""))
+-            if source and not (project_root / source).is_file():
+-                missing.append(source)
+-    return sorted(set(missing))
+-
+-
+-def capsule_coordination_block(snapshot: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+-    coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
+-    effective_mode = str(coordination.get("effective_mode") or "simple")
+-    raw_requirements = metadata.get("coordination_requirements") if isinstance(metadata.get("coordination_requirements"), dict) else {}
+-    inbox_requirements = raw_requirements.get("director_inbox") if isinstance(raw_requirements.get("director_inbox"), dict) else {}
+-    submit_required = bool(inbox_requirements.get("required", False) or metadata.get("director_inbox_submit_required", False))
+-    if effective_mode != "organized":
+-        if submit_required:
+-            raise SystemExit("FAIL: assignment requires Director inbox but project effective coordination mode is simple")
+-        return {
+-            "effective_mode": "simple",
+-            "director_required": False,
+-            "director_available_at_workplace": bool(coordination.get("director_available_at_workplace", False)),
+-        }
+-    director_inbox = coordination.get("director_inbox") if isinstance(coordination.get("director_inbox"), dict) else {}
+-    return {
+-        "effective_mode": "organized",
+-        "director_required": bool(coordination.get("director_required", True)),
+-        "director_process": coordination.get("director_process") or "agent-director-supervision",
+-        "director_inbox": {
+-            "enabled": bool(director_inbox.get("enabled", True)),
+-            "submit_required": submit_required or bool(director_inbox.get("submit_required", False)),
+-            "allowed_message_types": director_inbox.get("allowed_message_types", ["worker_report", "error_report", "decision_request"]),
+-        },
+-    }
++
++
+ 
+ 
+ def command_assignment_capsule(args: argparse.Namespace) -> int:
+@@ -11403,11 +11326,11 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
+     workspace_access_issues = workspace_access_public_path_issues(contract["workspace_access"])
+     if workspace_access_issues:
+         raise SystemExit("FAIL: workspace access must use public refs: " + "; ".join(workspace_access_issues))
+-    missing_sources = validate_assignment_required_sources(project_root, contract)
++    missing_sources = _context_contract_inputs.validate_assignment_required_sources(project_root, contract)
+     if missing_sources:
+         raise SystemExit("FAIL: assignment required sources missing: " + ", ".join(missing_sources))
+     overlap_check = validate_assignment_scope_overlaps(project_root, metadata, assignment_path=assignment)
+-    if assignment_allows_write_scope_overlap(metadata):
++    if _context_contract_inputs.assignment_allows_write_scope_overlap(metadata):
+         overlap_check = overlap_allowed_check(overlap_check, "plan.allow_write_scope_overlap")
+     if overlap_check["status"] == "fail" and not args.force:
+         raise SystemExit("FAIL: assignment write scope overlaps active assignments: " + dump_yaml(overlap_check))
+@@ -11462,7 +11385,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
+         "agent_model": contract["agent_model"],
+         "agent_reasoning_effort": contract["agent_reasoning_effort"],
+         "subagent_policy": contract["subagent_policy"],
+-        "workplace_coordination": capsule_coordination_block(snapshot, metadata),
++        "workplace_coordination": _context_contract_inputs.capsule_coordination_block(snapshot, metadata),
+         "capabilities": {"required": required_records, "optional": optional_records},
+         "telemetry": {"events": telemetry_rel, "event_correlation_id": f"assignment-{assn_id}"},
+         "required_sources": contract["context"]["required_sources"],
+@@ -11773,18 +11696,8 @@ def parse_cli_bool(value: Any, *, name: str = "value") -> bool:
+     raise SystemExit(f"FAIL: {name} must be true or false")
+ 
+ 
+-def normalize_project_coordination_mode(value: Any) -> str:
+-    mode = str(value or "inherit").strip().lower()
+-    if mode not in COORDINATION_PROJECT_MODES:
+-        raise SystemExit("FAIL: project coordination mode must be inherit, simple, or organized")
+-    return mode
+ 
+ 
+-def normalize_workplace_default_project_mode(value: Any) -> str:
+-    mode = str(value or "simple").strip().lower()
+-    if mode not in WORKPLACE_DEFAULT_PROJECT_MODES:
+-        raise SystemExit("FAIL: workplace default_project_mode must be simple or organized")
+-    return mode
+ 
+ 
+ def normalize_workplace_path(path: Path) -> Path:
+@@ -11799,64 +11712,12 @@ def workplace_manifest_path_from_root(workplace: Path) -> Path:
+     return root if root.name == "workplace.yaml" else root / "workplace.yaml"
+ 
+ 
+-def default_workplace_coordination() -> dict[str, Any]:
+-    return {
+-        "director_enabled": False,
+-        "director_office_enabled": False,
+-        "default_project_mode": "simple",
+-        "director": dict(DIRECTOR_OFFICE_DEFAULTS),
+-        "error_workflow_support": True,
+-    }
+ 
+ 
+-def default_project_coordination(mode: str = "inherit") -> dict[str, Any]:
+-    return {
+-        "mode": normalize_project_coordination_mode(mode),
+-        "director": {
+-            "use_workplace_director": True,
+-            "inbox_submit_required": False,
+-        },
+-    }
+ 
+ 
+-def workplace_coordination_config(workplace_manifest: Path | None) -> dict[str, Any]:
+-    config = default_workplace_coordination()
+-    if workplace_manifest and workplace_manifest.is_file():
+-        data = load_yaml_document(workplace_manifest)
+-        raw = data.get("coordination") if isinstance(data, dict) else None
+-        if isinstance(raw, dict):
+-            config.update({key: value for key, value in raw.items() if key != "director"})
+-            if isinstance(raw.get("director"), dict):
+-                director = dict(DIRECTOR_OFFICE_DEFAULTS)
+-                director.update(raw["director"])
+-                config["director"] = director
+-    config["director_enabled"] = bool(config.get("director_enabled", False))
+-    config["director_office_enabled"] = bool(config.get("director_office_enabled", False))
+-    config["default_project_mode"] = normalize_workplace_default_project_mode(config.get("default_project_mode"))
+-    if not isinstance(config.get("director"), dict):
+-        config["director"] = dict(DIRECTOR_OFFICE_DEFAULTS)
+-    return config
+-
+-
+-def project_coordination_config(project_root: Path) -> dict[str, Any]:
+-    flow_root = locate_flow_root(project_root)
+-    manifest = flow_root / "process-forge.yaml"
+-    data = load_yaml_document(manifest) if manifest.is_file() else {}
+-    raw = data.get("coordination") if isinstance(data, dict) else None
+-    config = default_project_coordination()
+-    if isinstance(raw, dict):
+-        config.update({key: value for key, value in raw.items() if key != "director"})
+-        director = config.get("director") if isinstance(config.get("director"), dict) else {}
+-        if isinstance(raw.get("director"), dict):
+-            director = dict(director)
+-            director.update(raw["director"])
+-        config["director"] = director
+-    config["mode"] = normalize_project_coordination_mode(config.get("mode"))
+-    if not isinstance(config.get("director"), dict):
+-        config["director"] = default_project_coordination()["director"]
+-    config["director"].setdefault("use_workplace_director", True)
+-    config["director"].setdefault("inbox_submit_required", False)
+-    return config
++
++
+ 
+ 
+ def resolve_project_workplace_manifest(project_root: Path, explicit_workplace: str | None = None) -> Path | None:
+@@ -11877,7 +11738,7 @@ def resolve_project_workplace_manifest(project_root: Path, explicit_workplace: s
+ 
+ 
+ def director_office_paths(workplace_root: Path, coordination: dict[str, Any] | None = None) -> dict[str, Path]:
+-    cfg = coordination or workplace_coordination_config(workplace_root / "workplace.yaml")
++    cfg = coordination or _project_coordination_reader.workplace(workplace_root / "workplace.yaml")
+     director = cfg.get("director") if isinstance(cfg.get("director"), dict) else {}
+     paths: dict[str, Path] = {}
+     for key, default in DIRECTOR_OFFICE_DEFAULTS.items():
+@@ -11933,12 +11794,12 @@ def initialize_director_office(workplace_root: Path, coordination: dict[str, Any
+ 
+ 
+ def effective_project_coordination(project_root: Path, explicit_workplace: str | None = None) -> dict[str, Any]:
+-    project_cfg = project_coordination_config(project_root)
++    project_cfg = _project_coordination_reader.project(project_root)
+     workplace_manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
+     workplace_root = workplace_manifest.parent if workplace_manifest else None
+-    workplace_cfg = workplace_coordination_config(workplace_manifest)
+-    project_mode = normalize_project_coordination_mode(project_cfg.get("mode"))
+-    default_mode = normalize_workplace_default_project_mode(workplace_cfg.get("default_project_mode"))
++    workplace_cfg = _project_coordination_reader.workplace(workplace_manifest)
++    project_mode = _project_coordination_reader.project_mode(project_cfg.get("mode"))
++    default_mode = _project_coordination_reader.workplace_mode(workplace_cfg.get("default_project_mode"))
+     effective_mode = default_mode if project_mode == "inherit" else project_mode
+     director_available = bool(workplace_cfg.get("director_enabled"))
+     office_exists = bool(workplace_root and director_office_exists(workplace_root, workplace_cfg))
+@@ -13595,40 +13456,10 @@ def ensure_learning_layout(workplace: Path) -> Path:
+     return root
+ 
+ 
+-def evolve_sanitizer_findings(text: str) -> list[str]:
+-    findings: list[str] = []
+-    if not is_public_path_safe(text):
+-        findings.append("private_absolute_path")
+-    if contains_secret_value(text):
+-        findings.append("secret_like_value")
+-    if re.search(r"(?im)^\s*[A-Za-z_][A-Za-z0-9_]*\s*=\s*[^\s#]+", text) and ".env" in text.lower():
+-        findings.append("env_value")
+-    if re.search(r"https?://[^\s/@]+:[^\s/@]+@", text):
+-        findings.append("credentialed_repo_url")
+-    if len(text) > 20000:
+-        findings.append("large_source_dump")
+-    return sorted(set(findings))
+-
+-
+-def evolve_sanitize_text(text: str) -> str:
+-    sanitized = text
+-    sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH) + r"[^\n\r\t ]+", "<redacted-path>", sanitized)
+-    sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:/[^\n\r\t ]+", "<redacted-path>", sanitized)
+-    sanitized = re.sub(r"/(?:home|Users|srv)/[^\n\r\t ]+", "<redacted-path>", sanitized)
+-    sanitized = re.sub(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}", r"\1: <redacted-secret>", sanitized)
+-    sanitized = re.sub(r"https?://([^\s/@]+):([^\s/@]+)@", "https://<redacted-credentials>@", sanitized)
+-    sanitized = re.sub(r"-----BEGIN [A-Z ]+PRIVATE KEY-----.*?-----END [A-Z ]+PRIVATE KEY-----", "<redacted-private-key>", sanitized, flags=re.DOTALL)
+-    return sanitized
+-
+-
+-def evolve_sanitize_value(value: Any) -> Any:
+-    if isinstance(value, dict):
+-        return {key: evolve_sanitize_value(child) for key, child in value.items()}
+-    if isinstance(value, list):
+-        return [evolve_sanitize_value(item) for item in value]
+-    if isinstance(value, str):
+-        return evolve_sanitize_text(value)
+-    return value
++
++
++
++
+ 
+ 
+ 
+@@ -13660,7 +13491,7 @@ def validate_knowledge_candidate(data: dict[str, Any]) -> list[Check]:
+     checks.extend(_knowledge_candidate_targeting_policy.validate(data, strict=True))
+     checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
+     checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
+-    findings = evolve_sanitizer_findings(json.dumps(data, ensure_ascii=False))
++    findings = _evolve_privacy_policy.findings(json.dumps(data, ensure_ascii=False))
+     checks.append(check("PASS" if not findings else "FAIL", "candidate has no unsanitized private paths or secrets" + (f": {', '.join(findings)}" if findings else "")))
+     return checks
+ 
+@@ -13706,7 +13537,7 @@ def command_evolve_candidate_sanitize(args: argparse.Namespace) -> int:
+     if not path.is_file():
+         raise SystemExit(f"FAIL: candidate file not found: {path}")
+     data = read_yaml_file(path)
+-    sanitized_data = evolve_sanitize_value(data)
++    sanitized_data = _evolve_privacy_policy.value(data)
+     if not isinstance(sanitized_data, dict):
+         sanitized_data = data
+     privacy = sanitized_data.get("privacy") if isinstance(sanitized_data.get("privacy"), dict) else {}
+@@ -13757,7 +13588,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
+         data = read_yaml_file(path)
+         if not _knowledge_candidate_targeting_policy.destination_matches(data, target_package):
+             continue
+-        findings = evolve_sanitizer_findings(dump_yaml(data))
++        findings = _evolve_privacy_policy.findings(dump_yaml(data))
+         if findings:
+             raise SystemExit("FAIL: candidate export blocked by sanitizer findings in " + path.name + ": " + ", ".join(findings))
+         selected.append((path, data))
+@@ -15088,10 +14919,10 @@ def command_agent_lease_grant(args: argparse.Namespace) -> int:
+             "task_id": args.task or "",
+         },
+         "access": {
+-            "capsule": normalize_assignment_path(args.capsule or ""),
+-            "allowed_files": [normalize_assignment_path(item) for item in as_list(args.allowed_file)],
+-            "allowed_read_files": [normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
+-            "forbidden_files": [normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
++            "capsule": _context_contract_inputs.normalize_assignment_path(args.capsule or ""),
++            "allowed_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.allowed_file)],
++            "allowed_read_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
++            "forbidden_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
+         },
+         "issued_at": issued.isoformat().replace("+00:00", "Z"),
+         "expires_at": expires.isoformat().replace("+00:00", "Z"),
+@@ -15367,7 +15198,7 @@ def command_handoff_return(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+     handoff = load_handoff(project_root, args.handoff)
+-    artifacts = [normalize_assignment_path(item) for item in as_list(args.artifact)]
++    artifacts = [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.artifact)]
+     missing = [item for item in artifacts if not (project_root / item).is_file()]
+     if missing:
+         print("FAIL: return artifacts missing: " + ", ".join(missing))
+@@ -15521,7 +15352,7 @@ def command_continuation_create(args: argparse.Namespace) -> int:
+         "id": continuation_id,
+         "agent_id": args.agent or "",
+         "previous_session_id": args.session or "",
+-        "waiting_for": {"handoff_id": args.handoff or "", "expected_artifacts": [normalize_assignment_path(item) for item in as_list(args.expected_artifact)]},
++        "waiting_for": {"handoff_id": args.handoff or "", "expected_artifacts": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.expected_artifact)]},
+         "resume": {"process": args.process or "", "run_id": args.run or "", "stage": args.stage or "", "instruction": args.instruction or ""},
+         "status": "waiting",
+         "created_at": now_utc(),
+@@ -15594,7 +15425,7 @@ def validate_subagent_policy_outputs(project_root: Path, task: dict[str, Any]) -
+         return []
+     if not policy.get("require_reports"):
+         return []
+-    reports_dir = normalize_assignment_path(str(policy.get("reports_dir") or ""))
++    reports_dir = _context_contract_inputs.normalize_assignment_path(str(policy.get("reports_dir") or ""))
+     if not reports_dir.startswith(".pf/artifacts/subagents/"):
+         return [f"subagent reports_dir outside allowed artifacts dir: {reports_dir or 'missing'}"]
+     report_root = project_root / reports_dir
+@@ -15841,7 +15672,7 @@ def expected_report_artifact(task: dict[str, Any]) -> str:
+     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+     value = str(expected.get("artifact") or "")
+     if value:
+-        return normalize_assignment_path(value)
++        return _context_contract_inputs.normalize_assignment_path(value)
+     task_id = safe_id(str(task.get("id") or "task"), "task")
+     return default_expected_report_artifact(task_id)
+ 
+@@ -16326,7 +16157,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+             argparse.Namespace(
+                 project_root=str(project_root),
+                 assignment=str(assignment_yaml_path(project_root, task_id)),
+-                force=assignment_allows_write_scope_overlap(task),
++                force=_context_contract_inputs.assignment_allows_write_scope_overlap(task),
+             ),
+         )
+         print(output, end="")
+@@ -16591,7 +16422,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+         raw_path = output.get("path") if isinstance(output, dict) else ""
+         out_path = task_output_path(project_root, output)
+         if out_path is None or not out_path.is_file():
+-            missing.append(normalize_assignment_path(str(raw_path)))
++            missing.append(_context_contract_inputs.normalize_assignment_path(str(raw_path)))
+     try:
+         report_path = project_output_path(project_root, expected_report_artifact(task))
+     except (OSError, ValueError) as exc:
+@@ -16923,7 +16754,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
+                 observed.append(task_id)
+                 if observed_state.get("status") == "running":
+                     running.append(task_id)
+-                    running_scopes[task_id] = assignment_write_scope(task)
++                    running_scopes[task_id] = _context_contract_inputs.assignment_write_scope(task)
+                 elif observed_state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
+                     if historical_worker_capture(project_root, run_id, task_id):
+                         historical_observed.append(task_id)
+@@ -16979,7 +16810,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
+                 prepare_worker_run(project_root, task_id, driver_id, None)
+                 skipped.append(task_id)
+                 continue
+-            current_scope = assignment_write_scope(task)
++            current_scope = _context_contract_inputs.assignment_write_scope(task)
+             conflict = False
+             if not allow_write_scope_overlap:
+                 for other_id, other_scope in running_scopes.items():
+@@ -17301,17 +17132,6 @@ def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_
+     return data
+ 
+ 
+-def path_allowed_by_scope(path: str, scopes: list[str]) -> bool:
+-    key = assignment_path_key(path)
+-    for scope in scopes:
+-        scope_key = assignment_path_key(scope)
+-        if scope_key in {".pf/artifacts/**", ".pf/artifacts/*"} and key.startswith(".pf/artifacts/"):
+-            return True
+-        if assignment_has_glob(scope_key) and fnmatch.fnmatch(key, scope_key):
+-            return True
+-        if key == scope_key:
+-            return True
+-    return False
+ 
+ 
+ def worker_dependency_set(worker: dict[str, Any]) -> set[str]:
+@@ -17454,9 +17274,9 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
+         worker_id = safe_id(str(raw_worker.get("id") or ""), "worker")
+         checks.append(check("PASS" if worker_id and worker_id not in seen else "FAIL", f"worker id unique: {worker_id or 'missing'}"))
+         seen.add(worker_id)
+-        allowed = assignment_scope_items(raw_worker.get("allowed_files"))
+-        forbidden = assignment_scope_items(raw_worker.get("forbidden_files"))
+-        read_allowed = assignment_scope_items(raw_worker.get("allowed_read_files"))
++        allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_files"))
++        forbidden = _context_contract_inputs.assignment_scope_items(raw_worker.get("forbidden_files"))
++        read_allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_read_files"))
+         workspace_access = normalize_workspace_access(raw_worker.get("workspace_access"))
+         outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
+         writer = bool(raw_worker.get("writer", True))
+@@ -17490,10 +17310,10 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
+             checks.append(check("PASS" if reports_dir.startswith(".pf/artifacts/subagents/") else "FAIL", f"{worker_id} subagent reports_dir inside .pf/artifacts/subagents"))
+             checks.append(check("PASS" if int(subagent_policy.get("max_subagents") or 0) > 0 else "FAIL", f"{worker_id} subagent max_subagents positive"))
+         for output in outputs:
+-            out_path = normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
++            out_path = _context_contract_inputs.normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
+             checks.append(check("PASS" if out_path else "FAIL", f"{worker_id} required output has path"))
+             if out_path:
+-                allowed_output = path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
++                allowed_output = _context_contract_inputs.path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
+                 checks.append(check("PASS" if allowed_output else "FAIL", f"{worker_id} required output inside allowed or artifact area: {out_path}"))
+         checks.append(check("PASS" if not bool(raw_worker.get("worker_may_rebuild_context", False)) else "FAIL", f"{worker_id} worker_may_rebuild_context false by default"))
+         if writer:
+@@ -17519,9 +17339,9 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
+     capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+     workspace_access = rel(worker_run_paths(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
+     requested_workspace_access = normalize_workspace_access(task.get("workspace_access"))
+-    allowed_files = assignment_scope_items(task.get("allowed_files"))
+-    allowed_read_files = assignment_scope_items(task.get("allowed_read_files"))
+-    forbidden_files = assignment_scope_items(task.get("forbidden_files"))
++    allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
++    allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
++    forbidden_files = _context_contract_inputs.assignment_scope_items(task.get("forbidden_files"))
+     required_outputs = normalize_required_outputs(task.get("required_outputs"))
+     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+     subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
+@@ -17681,9 +17501,9 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
+                 "reasoning_effort": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
+                 "allow_subagents": bool(worker.get("allow_subagents", False)),
+                 "subagent_policy": worker_subagent_policy(worker),
+-                "allowed_files": assignment_scope_items(worker.get("allowed_files")),
+-                "allowed_read_files": assignment_scope_items(worker.get("allowed_read_files")),
+-                "forbidden_files": assignment_scope_items(worker.get("forbidden_files")),
++                "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
++                "allowed_read_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
++                "forbidden_files": _context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
+                 "required_outputs": normalize_required_outputs(worker.get("required_outputs")),
+                 "workspace_access": normalize_workspace_access(worker.get("workspace_access")),
+                 "expected_report_artifact": str(worker.get("expected_report_artifact") or default_expected_report_artifact(worker_id)),
+@@ -17807,7 +17627,7 @@ def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) ->
+                 "policy": "allow_write_scope_overlap",
+                 "overlap_policy": "allow",
+                 "overlap_policy_source": "plan.allow_write_scope_overlap",
+-                "current_write_scope": assignment_write_scope(task),
++                "current_write_scope": _context_contract_inputs.assignment_write_scope(task),
+                 "rule": "Write scope overlap is allowed for workers in this resolved plan.",
+                 "overlap_check": overlap_check,
+             }
+@@ -17928,17 +17748,17 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+                     objective=str(worker.get("objective") or worker.get("title") or task_id),
+                     order=order,
+                     execution_mode=str(worker.get("execution_mode") or "implementation"),
+-                    allowed_file=assignment_scope_items(worker.get("allowed_files")),
++                    allowed_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
+                     allowed_glob=[],
+-                    allowed_read_file=assignment_scope_items(worker.get("allowed_read_files")),
++                    allowed_read_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
+                     read_file=[],
+                     context_artifact=normalize_context_artifacts(worker.get("context_artifacts")),
+-                    required_source=assignment_scope_items(worker.get("required_sources")),
++                    required_source=_context_contract_inputs.assignment_scope_items(worker.get("required_sources")),
+                     workspace_knowledge_resource=normalize_workspace_access(worker.get("workspace_access"))["knowledge_resources"],
+                     workspace_template=normalize_workspace_access(worker.get("workspace_access"))["templates"],
+                     workspace_tool=normalize_workspace_access(worker.get("workspace_access"))["tools"],
+                     workspace_mcp=normalize_workspace_access(worker.get("workspace_access"))["mcp"],
+-                    forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
++                    forbidden_file=_context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
+                     forbidden_glob=[],
+                     owner=str(worker.get("owner") or task_id),
+                     role=str(worker.get("role") or "worker"),
+@@ -18010,9 +17830,9 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+                     run=run_id,
+                     task=task_id,
+                     capsule=rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
+-                    allowed_file=assignment_scope_items(worker.get("allowed_files")),
+-                    allowed_read_file=assignment_scope_items(worker.get("allowed_read_files")),
+-                    forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
++                    allowed_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
++                    allowed_read_file=_context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
++                    forbidden_file=_context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
+                     ttl=3600,
+                 )
+             )
+@@ -18261,11 +18081,11 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+     }
+     if stage_id:
+         task["stage"] = stage_id
+-    allowed_files = assignment_scope_items([*as_list(getattr(args, "allowed_file", [])), *as_list(getattr(args, "allowed_glob", []))])
+-    allowed_read_files = assignment_scope_items([*as_list(getattr(args, "read_file", [])), *as_list(getattr(args, "allowed_read_file", []))])
++    allowed_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "allowed_file", [])), *as_list(getattr(args, "allowed_glob", []))])
++    allowed_read_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "read_file", [])), *as_list(getattr(args, "allowed_read_file", []))])
+     context_artifacts = normalize_context_artifacts(getattr(args, "context_artifact", []))
+-    required_sources = assignment_scope_items(getattr(args, "required_source", []))
+-    forbidden_files = assignment_scope_items([*as_list(getattr(args, "forbidden_file", [])), *as_list(getattr(args, "forbidden_glob", []))])
++    required_sources = _context_contract_inputs.assignment_scope_items(getattr(args, "required_source", []))
++    forbidden_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "forbidden_file", [])), *as_list(getattr(args, "forbidden_glob", []))])
+     required_outputs = normalize_required_outputs(getattr(args, "required_output", []))
+     if getattr(args, "execution_mode", None):
+         task["execution_mode"] = normalize_execution_mode(args.execution_mode)
+@@ -18305,7 +18125,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         task["non_overlap"] = {
+             "policy": "block_on_write_overlap",
+             "active_parallel_tasks": [],
+-            "current_write_scope": assignment_write_scope(task),
++            "current_write_scope": _context_contract_inputs.assignment_write_scope(task),
+             "rule": "Do not edit files owned by active parallel tasks.",
+         }
+     if required_outputs:
+@@ -18320,7 +18140,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+     if getattr(args, "expected_report_language", None):
+         expected_report["language"] = args.expected_report_language
+     if getattr(args, "expected_report_artifact", None):
+-        expected_report["artifact"] = normalize_assignment_path(args.expected_report_artifact)
++        expected_report["artifact"] = _context_contract_inputs.normalize_assignment_path(args.expected_report_artifact)
+         if len(required_outputs) == 1:
+             required_outputs[0].setdefault("path", expected_report["artifact"])
+     missing_output_paths = [str(item.get("id") or "output") for item in required_outputs if not str(item.get("path") or "").strip()]
+@@ -18344,7 +18164,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         print_plan("task-create dry run", planned, project_root)
+         if allowed_files or forbidden_files:
+             print("WRITE_SCOPE:")
+-            for item in assignment_write_scope(task):
++            for item in _context_contract_inputs.assignment_write_scope(task):
+                 print(f"- {item}")
+             print("OVERLAP_CHECK: " + overlap_check["status"])
+         return 0
+@@ -18442,7 +18262,7 @@ def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> s
+     expected_path = str(expected.get("artifact") or "")
+     if expected_path:
+         path = task_output_path(project_root, {"path": expected_path})
+-        item = {"id": "expected-report", "path": normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
++        item = {"id": "expected-report", "path": _context_contract_inputs.normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
+         if path and path.is_file():
+             item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+         inputs.append(item)
+@@ -19078,33 +18898,10 @@ Fix:
+     return print_checks(checks)
+ 
+ 
+-UPDATE_SUBJECT_TYPES = {
+-    "*",
+-    "processforge_distribution",
+-    "workplace",
+-    "process_package",
+-    "knowledge_package",
+-    "template_package",
+-    "tool_package",
+-    "tool_definition",
+-    "mcp_definition",
+-    "knowledge_resource",
+-    "process_definition",
+-    "reusable_template",
+-    "platform_contract",
+-    "project_pf",
+-    # Legacy aliases kept for existing registries and smokes.
+-    "template",
+-    "tool",
+-    "mcp_server",
+-    "package",
+-}
+ 
+ 
+ 
+ SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
+-ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
+-CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+ 
+ def update_workplace_root(raw: str) -> Path:
+     path = Path(raw).expanduser().resolve()
+@@ -19153,13 +18950,6 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
+ 
+ 
+ 
+-def source_requires_https(source: dict[str, Any], defaults: dict[str, Any] | None = None) -> bool:
+-    trust = source.get("trust") if isinstance(source.get("trust"), dict) else {}
+-    if "require_https" in trust:
+-        return bool(trust.get("require_https"))
+-    if defaults and "require_https" in defaults:
+-        return bool(defaults.get("require_https"))
+-    return True
+ 
+ 
+ def update_schema_type_matches(value: Any, expected: str) -> bool:
+@@ -19364,183 +19154,20 @@ def load_doctor_yaml(
+     return data
+ 
+ 
+-def valid_remote_url_shape(url: str, *, require_https: bool) -> tuple[bool, str]:
+-    if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
+-        return False, "must not contain whitespace or control characters"
+-    parsed = urlparse(url)
+-    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+-        return False, "must be a valid remote URL with scheme and host"
+-    if require_https and parsed.scheme.lower() != "https":
+-        return False, "must use https unless local trust policy disables require_https"
+-    return True, ""
+ 
+ 
+-def valid_artifact_url_shape(url: str, artifact: dict[str, Any]) -> tuple[bool, str]:
+-    if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
+-        return False, "must not contain whitespace or control characters"
+-    parsed = urlparse(url)
+-    if parsed.scheme.lower() == "file":
+-        if parsed.path or parsed.netloc:
+-            return True, ""
+-        return False, "file URL must include a path"
+-    if parsed.scheme.lower() in {"http", "https"}:
+-        if not parsed.netloc:
+-            return False, "remote URL must include a host"
+-        if source_requires_https(artifact) and parsed.scheme.lower() != "https":
+-            return False, "remote URL must use https unless local trust policy disables require_https"
+-        return True, ""
+-    return False, "must be an https or file URL"
+-
+-
+-def append_env_reference_checks(checks: list[Check], source: dict[str, Any], label: str) -> None:
+-    for field in ("headers_env", "query_env", "custom_headers_env"):
+-        values = source.get(field)
+-        if values is None:
+-            continue
+-        if not isinstance(values, dict):
+-            checks.append(check("FAIL", f"{label} {field} must be an object"))
+-            continue
+-        for key, value in values.items():
+-            if not isinstance(value, str) or not ENV_REFERENCE_RE.fullmatch(value):
+-                checks.append(check("FAIL", f"{label} {field}.{key} must be an env variable name or auth_ref:/secret_ref: reference"))
+ 
+ 
+-def append_update_source_checks(
+-    checks: list[Check],
+-    source: Any,
+-    label: str,
+-    *,
+-    provider_key: str,
+-    defaults: dict[str, Any] | None = None,
+-    require_subjects: bool = False,
+-    require_priority: bool = False,
+-) -> None:
+-    if not isinstance(source, dict):
+-        checks.append(check("FAIL", f"{label} must be an object"))
+-        return
+ 
+-    source_id = source.get("id")
+-    if source_id is not None and (not isinstance(source_id, str) or not source_id.strip()):
+-        checks.append(check("FAIL", f"{label} id must be a non-empty string when present"))
+-    elif isinstance(source_id, str) and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", source_id):
+-        checks.append(check("FAIL", f"{label} id must use letters, digits, dot, underscore, or hyphen"))
+-
+-    enabled = source.get("enabled")
+-    if enabled is not None and not isinstance(enabled, bool):
+-        checks.append(check("FAIL", f"{label} enabled must be a boolean when present"))
+-
+-    provider = source.get(provider_key)
+-    if not provider:
+-        provider = source.get("provider" if provider_key == "type" else "type")
+-    if provider is not None and (not isinstance(provider, str) or not provider.strip()):
+-        checks.append(check("FAIL", f"{label} {provider_key} must be a non-empty string when present"))
+-
+-    if "url" in source:
+-        checks.append(check("FAIL", f"{label} uses unsupported url field; use manifest_url"))
+-
+-    if "priority" not in source:
+-        if require_priority:
+-            checks.append(check("FAIL", f"{label} missing priority"))
+-    elif not isinstance(source.get("priority"), int):
+-        checks.append(check("FAIL", f"{label} priority must be an integer"))
+-
+-    channels = source.get("channels")
+-    if channels is not None and (
+-        not isinstance(channels, list) or not all(isinstance(item, str) and item.strip() for item in channels)
+-    ):
+-        checks.append(check("FAIL", f"{label} channels must be a list of non-empty strings"))
+-
+-    if require_subjects:
+-        subjects = source.get("subjects")
+-        if not isinstance(subjects, list) or not subjects:
+-            checks.append(check("FAIL", f"{label} missing subjects"))
+-        else:
+-            for index, subject in enumerate(subjects):
+-                subject_label = f"{label}.subjects[{index}]"
+-                if not isinstance(subject, dict):
+-                    checks.append(check("FAIL", f"{subject_label} must be an object"))
+-                    continue
+-                subject_type = subject.get("type")
+-                ids = subject.get("ids")
+-                if subject_type not in UPDATE_SUBJECT_TYPES:
+-                    checks.append(check("FAIL", f"{subject_label}.type unsupported subject type {subject_type!r}"))
+-                if not isinstance(ids, list) or not all(isinstance(item, str) and item.strip() for item in ids):
+-                    checks.append(check("FAIL", f"{subject_label}.ids must be a list of non-empty strings"))
+-
+-    manifest_url = source.get("manifest_url")
+-    if not isinstance(manifest_url, str) or not manifest_url.strip():
+-        checks.append(check("FAIL", f"{label} missing manifest_url"))
+-    else:
+-        parsed = urlparse(manifest_url)
+-        scheme = parsed.scheme.lower()
+-        if scheme in {"http", "https"}:
+-            valid, reason = valid_remote_url_shape(manifest_url, require_https=source_requires_https(source, defaults))
+-            if not valid:
+-                checks.append(check("FAIL", f"{label} manifest_url {reason}"))
+-        elif scheme == "file" or not scheme:
+-            if CONTROL_CHAR_RE.search(manifest_url) or any(char.isspace() for char in manifest_url):
+-                checks.append(check("FAIL", f"{label} manifest_url must not contain whitespace or control characters"))
+-            if scheme == "file" and not (parsed.path or parsed.netloc):
+-                checks.append(check("FAIL", f"{label} manifest_url file URL must include a path"))
+-        else:
+-            checks.append(check("FAIL", f"{label} manifest_url unsupported scheme {scheme!r}"))
+-
+-    changelog_url = source.get("changelog_url")
+-    if not isinstance(changelog_url, str) or not changelog_url.strip():
+-        checks.append(check("FAIL", f"{label} missing changelog_url"))
+-
+-    auth = source.get("auth")
+-    if isinstance(auth, dict):
+-        for key in auth:
+-            if str(key).lower() in {"token", "password", "secret", "authorization", "api_key"}:
+-                checks.append(check("FAIL", f"{label} auth must not contain raw secret key {key!r}; use *_env or auth_ref"))
+-    append_env_reference_checks(checks, source, label)
+ 
+ 
+-def validate_update_source_registry_data(data: dict[str, Any], path: Path) -> list[Check]:
+-    checks: list[Check] = []
+-    if not data:
+-        return [check("FAIL", f"{path} missing or invalid")]
+-    if data.get("schema_version") != 1:
+-        checks.append(check("FAIL", "update source registry schema_version must be 1"))
+-    if data.get("product") != "processforge":
+-        checks.append(check("FAIL", "update source registry product must be processforge"))
+-    defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
+-    sources = data.get("sources")
+-    if not isinstance(sources, list):
+-        checks.append(check("FAIL", "update source registry sources must be a list"))
+-        return checks
+ 
+-    seen: set[str] = set()
+-    for index, source in enumerate(sources):
+-        source_id = source.get("id") if isinstance(source, dict) else None
+-        if isinstance(source_id, str):
+-            if source_id in seen:
+-                checks.append(check("FAIL", f"sources[{index}] duplicate id {source_id}"))
+-            seen.add(source_id)
+-        append_update_source_checks(
+-            checks,
+-            source,
+-            f"sources[{index}]",
+-            provider_key="provider",
+-            defaults=defaults,
+-            require_subjects=False,
+-            require_priority=False,
+-        )
+-    if not checks:
+-        checks.append(check("PASS", f"{path} valid"))
+-    return checks
+ 
+ 
+-def sorted_update_sources(data: dict[str, Any]) -> list[dict[str, Any]]:
+-    sources = data.get("sources") if isinstance(data.get("sources"), list) else []
+-    indexed = [(index, source) for index, source in enumerate(sources) if isinstance(source, dict)]
+-    indexed.sort(key=lambda item: (not bool(item[1].get("enabled")), int(item[1].get("priority", 1000)), item[0]))
+-    return [source for _, source in indexed]
+ 
+ 
+ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False) -> int:
+-    sources = sorted_update_sources(data)
++    sources = _update_source_contract_policy.sorted_sources(data)
+     if json_output:
+         print(json.dumps({"schema_version": 1, "sources": sources}, ensure_ascii=False, indent=2, sort_keys=True))
+         return 0
+@@ -19575,7 +19202,7 @@ def command_update_bootstrap_source_list(args: argparse.Namespace) -> int:
+ def command_update_bootstrap_source_validate(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+     path = update_source_registry_path(workplace_root)
+-    checks = validate_update_source_registry_data(load_update_yaml(path), path)
++    checks = _update_source_contract_policy.validate_registry(load_update_yaml(path), path)
+     return print_checks(checks)
+ 
+ 
+@@ -19789,9 +19416,9 @@ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> lis
+             not isinstance(item.get("channels"), list) or not all(isinstance(channel, str) and channel.strip() for channel in item.get("channels", []))
+         ):
+             checks.append(check("FAIL", f"{label}.channels must be a list of non-empty strings"))
+-        append_env_reference_checks(checks, item, label)
++        _update_source_contract_policy.append_env_checks(checks, item, label)
+         preserved = item.get("preserved_local") if isinstance(item.get("preserved_local"), dict) else {}
+-        append_env_reference_checks(checks, preserved, f"{label}.preserved_local")
++        _update_source_contract_policy.append_env_checks(checks, preserved, f"{label}.preserved_local")
+     if not checks:
+         checks.append(check("PASS", f"{path} valid update site overrides"))
+     return checks
+@@ -19830,7 +19457,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any],
+             seen: set[str] = set()
+             for index, site in enumerate(update_sites):
+                 label = f"{rel(record['manifest_path'], workplace_root)}.update_sites[{index}]"
+-                append_update_source_checks(checks, site, label, provider_key="type")
++                _update_source_contract_policy.append_source_checks(checks, site, label, provider_key="type")
+                 if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
+                     source_id = _update_site_policy.source_id(site)
+                     if source_id in seen:
+@@ -19866,7 +19493,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any],
+                     continue
+                 for index, site in enumerate(resource_sites):
+                     label = f"{rel(record['manifest_path'], workplace_root)}.resources[{resource.get('id')}].update_sites[{index}]"
+-                    append_update_source_checks(checks, site, label, provider_key="type")
++                    _update_source_contract_policy.append_source_checks(checks, site, label, provider_key="type")
+                     if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
+                         sites.append(
+                             _update_site_policy.record(
+@@ -19995,7 +19622,7 @@ def validate_normalized_update_manifest_data(data: dict[str, Any], path: Path) -
+                 elif not isinstance(artifact_url, str):
+                     checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url must be a string"))
+                 else:
+-                    valid, reason = valid_artifact_url_shape(artifact_url, artifact)
++                    valid, reason = _update_source_contract_policy.artifact_url_shape(artifact_url, artifact)
+                     if not valid:
+                         checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url {reason}"))
+                 artifact_sha256 = artifact.get("sha256")
+diff --git a/tools/smoke_authenticated_report_content.py b/tools/smoke_authenticated_report_content.py
+index 0e55239..8ec3eb4 100644
+--- a/tools/smoke_authenticated_report_content.py
++++ b/tools/smoke_authenticated_report_content.py
+@@ -10,6 +10,7 @@ import tempfile
+ from pathlib import Path
+ 
+ import processforge as core
++from processforge_core.common.privacy import contains_secret_value
+ from pf_runtime import host
+ from smoke_conversation_completeness import setup_worker_project, transcript, worker_envelope
+ 
+@@ -46,7 +47,7 @@ def main() -> int:
+             assert not result.get("chat_message_ids"), result
+         # Authentication must not exempt credentials from the existing scanner.
+         secret = "api_key=" + "private-fixture-value-123456789"
+-        assert core.contains_secret_value(secret)
++        assert contains_secret_value(secret)
+         (project / report_rel).write_text(secret, encoding="utf-8")
+         result = host.ingest_event(envelope(secret), None, core)
+         assert not result.get("chat_message_ids"), result
+diff --git a/tools/smoke_work_start_scope.py b/tools/smoke_work_start_scope.py
+index 3e86094..8b37893 100644
+--- a/tools/smoke_work_start_scope.py
++++ b/tools/smoke_work_start_scope.py
+@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "tools"))
+ import processforge as core
+ from processforge_core.process_execution import ProcessExecutionService
+ from processforge_core.work.scope_conflicts import ScopeConflictService
++from processforge_core.work.context_documents import ContextContractInputs
+ from process_execution_smoke_support import fixture, stage_evidence
+ 
+ validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-schemas.py"))["validate_instance"]
+@@ -43,9 +44,12 @@ def assert_saved_mode(project, result, expected):
+     return path
+ 
+ 
++_scope_inputs = ContextContractInputs()
++
++
+ def prior_overlap(left, right, files):
+     """Frozen pre-repair decisions/reasons, independent of the optimized owner."""
+-    left, right = core.assignment_path_key(left), core.assignment_path_key(right)
++    left, right = _scope_inputs.assignment_path_key(left), _scope_inputs.assignment_path_key(right)
+     left_glob, right_glob = any(c in left for c in "*?["), any(c in right for c in "*?[")
+     if not left_glob and not right_glob:
+         return left == right, "same_file"
+@@ -55,8 +59,8 @@ def prior_overlap(left, right, files):
+         return fnmatch.fnmatch(left, right), "file_matches_glob"
+     if left == right:
+         return True, "same_glob"
+-    if any(fnmatch.fnmatch(core.assignment_path_key(p), left) and
+-           fnmatch.fnmatch(core.assignment_path_key(p), right) for p in files):
++    if any(fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), left) and
++           fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), right) for p in files):
+         return True, "glob_matches_same_file"
+     lp, rp = (re.split(r"[*?\[]", p, maxsplit=1)[0] for p in (left, right))
+     if lp and rp and (lp.startswith(rp) or rp.startswith(lp)):

@@ -118,7 +118,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/work/publication.py` | Existing atomic Work text/YAML publication through explicit deferred formatter/writer dependencies. |
 | `src/processforge_core/work/events.py` | Existing Work event envelope and subsequent diagnostics through a typed, dynamically resolved emitter. |
 | `src/processforge_core/work/context_read.py` | Live capsule validation and assignment normalization through concrete Core contract inputs. |
-| `src/processforge_core/work/context_documents.py` | Concrete field normalization and document/path/identity inputs for Work context reads. |
+| `src/processforge_core/work/context_documents.py` | Concrete Work field/document inputs, path/scope/dependency projection, required-source observations and capsule coordination projection. |
 | `src/processforge_core/work/context.py` | Existing assignment context compilation; parameter merging uses ParameterMergePolicy directly, while the compiler retains other legacy dependencies. |
 | `src/processforge_core/process_catalog/` | Concrete catalog and effective ProcessDefinition readers; offered process selection and pin construction retain their explicit operation dependencies. |
 | `src/processforge_core/process_catalog/summary.py` | Allowed-process context summary using a concrete catalog by default and an optional narrow catalog port for injection, without a monolith callback. |
@@ -137,6 +137,9 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader for existing live registry/document lookup with an explicit distribution root and concrete Core readers. |
 | `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy for existing candidate identity, target/routing, promotion readiness and targeting validation. |
 | `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Existing update-version normalization/selection and assessment rendering. |
+| `src/processforge_core/project/coordination.py` | ProjectCoordinationReader for existing project/workplace coordination defaults, mode normalization and live config reads. |
+| `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Canonical shared text patterns/predicates and existing evolve findings/redaction/recursive value transformation. |
+| `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy for existing trust, URL/env/source shape checks, registry validation and stable sorting. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
@@ -645,3 +648,40 @@ assessment text. Fetching, update orchestration, installation and recovery remai
 with their existing owners. These internal interfaces establish source ownership;
 external commands, MCP schemas and delivery-layer acceptance retain their existing
 contracts.
+
+## Work fields, coordination, shared privacy and source contracts
+
+The existing `work.context_documents.ContextContractInputs` owns eight additional
+existing operations: assignment path keys, write-scope projection, glob and
+overlap flags, dependency sets, required-source file observations, capsule
+coordination and path/scope matching. Its original fields, frozen constructor and
+20 earlier methods are unchanged. Existing normalization methods are reused;
+two obsolete monolith wrappers are removed. The context compiler calls capsule
+coordination directly at the former projection site. Scope decisions retain
+platform behavior and empty-scope handling; access, admission, lifecycle and the
+remaining compiler dependencies retain their existing owners.
+
+`project.coordination.ProjectCoordinationReader` owns the existing project and
+workplace defaults, mode normalization and configuration reads. Its concrete
+YAML reader and project metadata reader preserve live observations, shallow
+director merges, unknown fields, fresh defaults and refusal order. The reader
+retains no project, Work or parsed configuration. Effective coordination assembly
+and Director operations remain legacy responsibilities.
+
+`common.privacy` owns `BACKSLASH`, `LOCAL_PATH_PATTERNS`, `SECRET_VALUE_PATTERNS`,
+`is_public_path_safe` and `contains_secret_value`. `AnswersDocumentReader` uses
+the canonical data with its original class algorithm. `evolution.privacy.EvolvePrivacyPolicy`
+owns `findings`, `text` and `value`, preserving regex patterns/flags, redactions,
+recursive behavior, dictionary keys, tuple identity and native errors. Host uses
+the canonical secret predicate after the existing automatic-content filters;
+short-circuit order, bootstrap timing and all authentication/provenance/hash
+guards are preserved.
+
+`maintenance.source_contracts.UpdateSourceContractPolicy` owns existing HTTPS
+defaults, remote/artifact URL shapes, env-reference and source checks, registry
+validation and source sorting. It preserves mutation of the supplied check list,
+type/truthiness distinctions, native errors and check order. Schema-based override
+and full normalized-manifest validation continue to call these shared helpers
+from their legacy owners. No scanner, trust, authorization or update rule is added.
+These internal moves preserve module annotation semantics and external 1.2.0
+contracts; evidence remains limited to the qualified source slice.

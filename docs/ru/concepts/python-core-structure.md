@@ -127,7 +127,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/documents/reader.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Актуальная проверка капсулы и нормализация Assignment через конкретные зависимости Core. |
-| `src/processforge_core/work/context_documents.py` | Нормализация полей и конкретное чтение документов, путей и идентификаторов для Work context. |
+| `src/processforge_core/work/context_documents.py` | Конкретные поля и документы Work, проекции путей/scopes/dependencies, наблюдение required sources и проекция coordination капсулы. |
 | `src/processforge_core/work/context.py` | Прежняя компиляция контекста Assignment; слияние параметров вызывает ParameterMergePolicy напрямую, остальные legacy-зависимости компилятора сохраняются. |
 | `src/processforge_core/process_catalog/` | Конкретные читатели каталога и effective ProcessDefinition; выбор из предложенных процессов и подготовка pin сохраняют явные зависимости операций. |
 | `src/processforge_core/project/metadata.py` | Живое чтение ID проекта, manifest и корня .pf через Core YAML; общий владелец для контекста, каталога и ресурсов. |
@@ -145,6 +145,9 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader: актуальное чтение реестров и документов с явным корнем дистрибутива и конкретными читателями Core. |
 | `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy: прежние идентификаторы, target/routing, готовность promotion и проверка targeting. |
 | `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Прежняя нормализация и выбор версий обновления, оформление assessment. |
+| `src/processforge_core/project/coordination.py` | ProjectCoordinationReader: прежние defaults, нормализация режимов и актуальное чтение project/workplace coordination. |
+| `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Общие канонические текстовые шаблоны/предикаты и прежние evolve findings, redaction и рекурсивное преобразование значений. |
+| `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy: прежние trust/URL/env/source проверки, валидация реестра и стабильная сортировка. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
@@ -660,3 +663,39 @@ builder не изменены. `process_catalog.presentation.ProcessAuthoringRen
 и восстановление остаются у прежних владельцев. Эти внутренние интерфейсы
 фиксируют владение исходниками; внешние команды, схемы MCP и приёмка слоёв
 поставки сохраняют существующие контракты.
+
+## Поля Work, coordination, общие privacy и контракты источников
+
+Существующий `work.context_documents.ContextContractInputs` дополнен восемью
+прежними операциями: ключи путей Assignment, проекция write scope, признаки glob
+и overlap, зависимости, наблюдение файлов required sources, coordination капсулы
+и сопоставление пути со scope. Поля, frozen-конструктор и 20 предыдущих методов
+не изменены. Нормализация переиспользована; две старые обёртки монолита удалены.
+Компилятор контекста вызывает проекцию coordination напрямую на прежнем месте.
+Платформенная семантика и пустые scopes сохранены; доступ, admission, lifecycle
+и остальные зависимости компилятора остаются у существующих владельцев.
+
+`project.coordination.ProjectCoordinationReader` владеет прежними defaults,
+нормализацией режимов и чтением project/workplace configuration. Конкретные
+читатели YAML и метаданных проекта сохраняют актуальное чтение, поверхностное
+слияние director, неизвестные поля, свежие defaults и порядок отказов. Reader
+не хранит проект, Work или разобранную конфигурацию. Общая сборка effective
+coordination и операции Director остаются у прежних владельцев.
+
+`common.privacy` содержит `BACKSLASH`, `LOCAL_PATH_PATTERNS`,
+`SECRET_VALUE_PATTERNS`, `is_public_path_safe` и `contains_secret_value`.
+`AnswersDocumentReader` использует канонические данные с прежним алгоритмом
+класса. `evolution.privacy.EvolvePrivacyPolicy` владеет `findings`, `text` и
+`value`, сохраняя regex/flags, замены, рекурсию, ключи словарей, идентичность
+tuple и исходные ошибки. Host вызывает канонический secret-предикат после
+прежних фильтров автоматического содержимого. Короткое замыкание, bootstrap
+и все проверки authentication/provenance/hash сохранены.
+
+`maintenance.source_contracts.UpdateSourceContractPolicy` владеет прежними HTTPS
+defaults, формой remote/artifact URL, env-reference и source checks, проверкой
+реестра и сортировкой. Сохранены изменение переданного списка checks, различия
+типов/truthiness, исходные ошибки и порядок проверок. Schema-based overrides и
+полная проверка normalized manifest вызывают эти общие методы из прежних
+владельцев. Новые scanner/trust/authorization/update правила не добавлены.
+Перенос сохраняет модульные аннотации и внешние контракты 1.2.0; доказательства
+относятся к квалифицированному срезу исходников.

@@ -1,0 +1,110 @@
+{
+  "started_at": "2026-10-18T19:31:24.217857+00:00",
+  "executor": "primary",
+  "python": "3.14.3",
+  "reason": "The known restricted-worker fixture limitation is avoided by running only affected unchanged existing smokes in primary-owned scratch. No ACL, dependency or test changes.",
+  "scratch": ".pf/tmp/p121-core-contracts/primary/checks",
+  "source_hashes": {
+    "tools/processforge.py": "fd429a1b8d2a563cee4f90e989a3b828957874f6c24308594bf2e5e32bbce0c0",
+    "src/processforge_core/work/context.py": "dbb2c03240484f86595b35afa81eccd3293ac2242b7b5b90812101a1a8d976dd",
+    "tools/pf_runtime/host.py": "968d02105b39e1c76f262e7c4c30b55777da562ec06b14bfa892a84e14e2eb70",
+    "tools/smoke_authenticated_report_content.py": "418dec1ef34be4df52154f9033c4b722b85d5aa9d2b03eea6d3d822cf163fcec",
+    "tools/smoke_work_start_scope.py": "7c36b53fb2828a626a7556caa3c7c7e92dbb575ebd07ea1abc0fea8ccdd2f812",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5",
+    "src/processforge_core/project/coordination.py": "680cb8467fbe0678e3dbbe0a96c6ae8f2e3d8bcf820e243a94a1751fdb395338",
+    "src/processforge_core/common/privacy.py": "8d80721229bd0801f6562d2e72f85c2f3c15b76314c917f52c3b650d6f886cfe",
+    "src/processforge_core/evolution/privacy.py": "f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de",
+    "src/processforge_core/documents/answers.py": "3f28fcb96fe516df7b02b9a65749b850ecc71b883e87a26039e0707b1219060a",
+    "src/processforge_core/maintenance/source_contracts.py": "d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f"
+  },
+  "checks": [
+    {
+      "name": "smoke_work_start_scope",
+      "exit_code": 0,
+      "duration_seconds": 16.051,
+      "stdout": "SKIP: directory symlink qualification unavailable\nPASS: 484 scope pairs, exact reasons/order, lazy per-operation inventory, live file reads, canonical modes, CLI schema parity, no-publication cases, immutable reuse, predecessor and native transition\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_authenticated_report_content",
+      "exit_code": 0,
+      "duration_seconds": 9.818,
+      "stdout": "PASS: authenticated path report collected exactly once; forged provenance/hash and secrets denied\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_project_coordination_modes",
+      "exit_code": 0,
+      "duration_seconds": 10.186,
+      "stdout": "PASS: project coordination modes smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_privacy_sanitizer",
+      "exit_code": 0,
+      "duration_seconds": 4.635,
+      "stdout": "PASS: evolve privacy sanitizer smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_targeting_privacy_sanitizer",
+      "exit_code": 0,
+      "duration_seconds": 4.963,
+      "stdout": "PASS: evolve targeting privacy sanitizer smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_candidate_schema",
+      "exit_code": 0,
+      "duration_seconds": 1.164,
+      "stdout": "PASS: evolve candidate schema smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_update_sites_schema",
+      "exit_code": 0,
+      "duration_seconds": 2.759,
+      "stdout": "PASS: unified update-site schema smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_update_candidate_discovery",
+      "exit_code": 0,
+      "duration_seconds": 2.488,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_authoring_materialization_parity",
+      "exit_code": 0,
+      "duration_seconds": 4.547,
+      "stdout": "PASS: process-authoring materialization parity smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "duration_seconds": 6.475,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"compatibility containers preserve strict governed and unique Run membership\",\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"signed overlap diagnostics remain advisory; scope grants and immutable bytes stay protected\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": "",
+      "passed": true,
+      "structured_status": "PASS",
+      "structured_checks": 19,
+      "skipped": [
+        "symlink containment unavailable on host: OSError"
+      ]
+    }
+  ],
+  "source_stable": true,
+  "finished_at": "2026-10-18T19:32:27.314987+00:00",
+  "passed": true
+}

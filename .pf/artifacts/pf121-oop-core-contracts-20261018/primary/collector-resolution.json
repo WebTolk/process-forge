@@ -1,0 +1,10 @@
+{
+  "status": "resolved",
+  "reason": "The existing final smoke prints WROTE plus JSON status PASS rather than a PASS: line. Zero exit and explicit structured PASS were verified from retained output; no check was rerun.",
+  "original_receipt_sha256": "a705882d6f829ddf87d7f97dd37aa91af1a90f9622ac42b35aa9ae066050fb06",
+  "final_receipt_sha256": "685eb79ba1239fa48b0510a6541d025f68d2985ba304710db8e98fb527d5cc23",
+  "source_unchanged": true,
+  "skipped": [
+    "symlink containment unavailable on host: OSError"
+  ]
+}

@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 import processforge as core
+from processforge_core.common.privacy import contains_secret_value
 from pf_runtime import host
 from smoke_conversation_completeness import setup_worker_project, transcript, worker_envelope
 
@@ -46,7 +47,7 @@ def main() -> int:
             assert not result.get("chat_message_ids"), result
         # Authentication must not exempt credentials from the existing scanner.
         secret = "api_key=" + "private-fixture-value-123456789"
-        assert core.contains_secret_value(secret)
+        assert contains_secret_value(secret)
         (project / report_rel).write_text(secret, encoding="utf-8")
         result = host.ingest_event(envelope(secret), None, core)
         assert not result.get("chat_message_ids"), result

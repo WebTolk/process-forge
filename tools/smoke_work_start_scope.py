@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.work.scope_conflicts import ScopeConflictService
+from processforge_core.work.context_documents import ContextContractInputs
 from process_execution_smoke_support import fixture, stage_evidence
 
 validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-schemas.py"))["validate_instance"]
@@ -43,9 +44,12 @@ def assert_saved_mode(project, result, expected):
     return path
 
 
+_scope_inputs = ContextContractInputs()
+
+
 def prior_overlap(left, right, files):
     """Frozen pre-repair decisions/reasons, independent of the optimized owner."""
-    left, right = core.assignment_path_key(left), core.assignment_path_key(right)
+    left, right = _scope_inputs.assignment_path_key(left), _scope_inputs.assignment_path_key(right)
     left_glob, right_glob = any(c in left for c in "*?["), any(c in right for c in "*?[")
     if not left_glob and not right_glob:
         return left == right, "same_file"
@@ -55,8 +59,8 @@ def prior_overlap(left, right, files):
         return fnmatch.fnmatch(left, right), "file_matches_glob"
     if left == right:
         return True, "same_glob"
-    if any(fnmatch.fnmatch(core.assignment_path_key(p), left) and
-           fnmatch.fnmatch(core.assignment_path_key(p), right) for p in files):
+    if any(fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), left) and
+           fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), right) for p in files):
         return True, "glob_matches_same_file"
     lp, rp = (re.split(r"[*?\[]", p, maxsplit=1)[0] for p in (left, right))
     if lp and rp and (lp.startswith(rp) or rp.startswith(lp)):

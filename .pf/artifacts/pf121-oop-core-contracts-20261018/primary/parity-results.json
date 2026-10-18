@@ -1,0 +1,1417 @@
+{
+  "status": "passed",
+  "total": 231,
+  "passed": 231,
+  "native_exception_cases": 29,
+  "annotation_mappings": 28,
+  "groups": {
+    "annotations": 28,
+    "coordination": 33,
+    "host_guard": 3,
+    "imports": 2,
+    "privacy": 50,
+    "updates": 46,
+    "work": 69
+  },
+  "source_sha256": {
+    "tools/processforge.py": "fd429a1b8d2a563cee4f90e989a3b828957874f6c24308594bf2e5e32bbce0c0",
+    "src/processforge_core/work/context.py": "dbb2c03240484f86595b35afa81eccd3293ac2242b7b5b90812101a1a8d976dd",
+    "tools/pf_runtime/host.py": "968d02105b39e1c76f262e7c4c30b55777da562ec06b14bfa892a84e14e2eb70",
+    "tools/smoke_authenticated_report_content.py": "418dec1ef34be4df52154f9033c4b722b85d5aa9d2b03eea6d3d822cf163fcec",
+    "tools/smoke_work_start_scope.py": "7c36b53fb2828a626a7556caa3c7c7e92dbb575ebd07ea1abc0fea8ccdd2f812",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5",
+    "src/processforge_core/project/coordination.py": "680cb8467fbe0678e3dbbe0a96c6ae8f2e3d8bcf820e243a94a1751fdb395338",
+    "src/processforge_core/common/privacy.py": "8d80721229bd0801f6562d2e72f85c2f3c15b76314c917f52c3b650d6f886cfe",
+    "src/processforge_core/evolution/privacy.py": "f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de",
+    "src/processforge_core/documents/answers.py": "3f28fcb96fe516df7b02b9a65749b850ecc71b883e87a26039e0707b1219060a",
+    "src/processforge_core/maintenance/source_contracts.py": "d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f"
+  },
+  "checks": [
+    {
+      "group": "annotations",
+      "case": "normalize_assignment_path",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_path_key",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_scope_items",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_write_scope",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_has_glob",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_allows_write_scope_overlap",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_dependency_set",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "validate_assignment_required_sources",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "capsule_coordination_block",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "path_allowed_by_scope",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_project_coordination_mode",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_workplace_default_project_mode",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "default_workplace_coordination",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "default_project_coordination",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "workplace_coordination_config",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "project_coordination_config",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "evolve_sanitizer_findings",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "evolve_sanitize_text",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "evolve_sanitize_value",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "source_requires_https",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "valid_remote_url_shape",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "valid_artifact_url_shape",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "append_env_reference_checks",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "append_update_source_checks",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "validate_update_source_registry_data",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "sorted_update_sources",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "is_public_path_safe",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "annotations",
+      "case": "contains_secret_value",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "normalize_assignment_path:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_path_key:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_scope_items:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_has_glob:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_write_scope:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_allows_write_scope_overlap:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_dependency_set:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_write_scope:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "assignment_allows_write_scope_overlap:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "assignment_dependency_set:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "assignment_write_scope:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_allows_write_scope_overlap:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_dependency_set:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_write_scope:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_allows_write_scope_overlap:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_dependency_set:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_write_scope:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_allows_write_scope_overlap:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_dependency_set:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_write_scope:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_allows_write_scope_overlap:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "assignment_dependency_set:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:82",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:83",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:84",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:85",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:86",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:87",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "path:88",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "capsule:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "capsule:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "capsule:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "capsule:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "capsule:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "required-source:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "work",
+      "case": "required-source:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "work",
+      "case": "required-source:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "project-mode:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-mode:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "defaults:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-defaults",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-read:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-read:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-read:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-read:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-read:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-read:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "workplace-read:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "project-read:3",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "coordination",
+      "case": "same-size-mtime-live",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "coordination",
+      "case": "new unknown value observed",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "coordination",
+      "case": "deleted",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "is_public_path_safe:8",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "privacy",
+      "case": "contains_secret_value:8",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitizer_findings:8",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_text:8",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "privacy",
+      "case": "evolve_sanitize_value:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "nested:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "nested:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "nested:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "nested:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "privacy",
+      "case": "tuple identity preserved",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "updates",
+      "case": "https:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "source:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "env:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "https:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "source:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "https:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "source:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "env:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "https:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "source:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "env:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "https:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "source:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "env:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "https:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "source:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "env:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "https:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "source:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "env:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "remote:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "remote:7",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "artifact:7",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "registry:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "sort:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "registry:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "sort:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "registry:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "sort:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "registry:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "sort:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "registry:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "sort:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "host_guard",
+      "case": "short-circuit:0",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "host_guard",
+      "case": "short-circuit:1",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "host_guard",
+      "case": "short-circuit:2",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "imports",
+      "case": "normal Core without CLI/Host",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "imports",
+      "case": "copied normal Core",
+      "passed": true,
+      "outcome": "contract"
+    }
+  ]
+}

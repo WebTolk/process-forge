@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import fnmatch
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any
 
 from ..common.ids import safe_id
 from ..common.paths import rel
+from ..common.values import as_list
 from ..common.yaml_io import _parse_simple_yaml
 from ..documents.reader import YamlDocumentReader
 from ..project.metadata import PROJECT_FLOW_ROOT, ProjectMetadataReader
@@ -57,6 +60,94 @@ class ContextContractInputs:
                 items.append(text)
                 seen.add(text)
         return items
+
+    def assignment_path_key(self, value: Any) -> str:
+        text = self.normalize_assignment_path(value)
+        return text.lower() if os.name == "nt" else text
+
+    def assignment_write_scope(self, metadata: dict[str, Any]) -> list[str]:
+        allowed = self.assignment_scope_items(metadata.get("allowed_files"))
+        ownership = metadata.get("ownership") if isinstance(metadata.get("ownership"), dict) else {}
+        owned = self.assignment_scope_items(ownership.get("owned_files"))
+        owned.extend(self.assignment_scope_items(ownership.get("owned_globs")))
+        owned.extend(self.assignment_scope_items(metadata.get("allowed_globs")))
+        result: list[str] = []
+        seen: set[str] = set()
+        for item in [*allowed, *owned]:
+            key = self.assignment_path_key(item)
+            if key not in seen:
+                result.append(item)
+                seen.add(key)
+        return result
+
+    def assignment_has_glob(self, value: str) -> bool:
+        return any(char in value for char in "*?[")
+
+    def assignment_allows_write_scope_overlap(self, metadata: dict[str, Any]) -> bool:
+        non_overlap = metadata.get("non_overlap") if isinstance(metadata.get("non_overlap"), dict) else {}
+        return str(non_overlap.get("policy") or "") == "allow_write_scope_overlap"
+
+    def assignment_dependency_set(self, metadata: dict[str, Any]) -> set[str]:
+        dependencies = metadata.get("dependencies") if isinstance(metadata.get("dependencies"), dict) else {}
+        values = [
+            *as_list(dependencies.get("blocked_by")),
+            *as_list(metadata.get("dependencies") if not isinstance(metadata.get("dependencies"), dict) else []),
+            *as_list(metadata.get("depends_on")),
+        ]
+        return {safe_id(str(item), "assignment") for item in values if item}
+
+    def validate_assignment_required_sources(self, project_root: Path, contract: dict[str, Any]) -> list[str]:
+        missing: list[str] = []
+        required_sources = contract.get("context", {}).get("required_sources", [])
+        for source in required_sources if isinstance(required_sources, list) else []:
+            path = project_root / str(source)
+            if not path.is_file():
+                missing.append(str(source))
+        artifacts = contract.get("context", {}).get("context_artifacts", [])
+        for item in artifacts if isinstance(artifacts, list) else []:
+            if isinstance(item, dict) and item.get("required", True):
+                source = str(item.get("path", ""))
+                if source and not (project_root / source).is_file():
+                    missing.append(source)
+        return sorted(set(missing))
+
+    def capsule_coordination_block(self, snapshot: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+        coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
+        effective_mode = str(coordination.get("effective_mode") or "simple")
+        raw_requirements = metadata.get("coordination_requirements") if isinstance(metadata.get("coordination_requirements"), dict) else {}
+        inbox_requirements = raw_requirements.get("director_inbox") if isinstance(raw_requirements.get("director_inbox"), dict) else {}
+        submit_required = bool(inbox_requirements.get("required", False) or metadata.get("director_inbox_submit_required", False))
+        if effective_mode != "organized":
+            if submit_required:
+                raise SystemExit("FAIL: assignment requires Director inbox but project effective coordination mode is simple")
+            return {
+                "effective_mode": "simple",
+                "director_required": False,
+                "director_available_at_workplace": bool(coordination.get("director_available_at_workplace", False)),
+            }
+        director_inbox = coordination.get("director_inbox") if isinstance(coordination.get("director_inbox"), dict) else {}
+        return {
+            "effective_mode": "organized",
+            "director_required": bool(coordination.get("director_required", True)),
+            "director_process": coordination.get("director_process") or "agent-director-supervision",
+            "director_inbox": {
+                "enabled": bool(director_inbox.get("enabled", True)),
+                "submit_required": submit_required or bool(director_inbox.get("submit_required", False)),
+                "allowed_message_types": director_inbox.get("allowed_message_types", ["worker_report", "error_report", "decision_request"]),
+            },
+        }
+
+    def path_allowed_by_scope(self, path: str, scopes: list[str]) -> bool:
+        key = self.assignment_path_key(path)
+        for scope in scopes:
+            scope_key = self.assignment_path_key(scope)
+            if scope_key in {".pf/artifacts/**", ".pf/artifacts/*"} and key.startswith(".pf/artifacts/"):
+                return True
+            if self.assignment_has_glob(scope_key) and fnmatch.fnmatch(key, scope_key):
+                return True
+            if key == scope_key:
+                return True
+        return False
 
     def normalize_context_artifacts(self, value: Any) -> list[dict[str, Any]]:
         artifacts: list[dict[str, Any]] = []
