@@ -1,0 +1,59 @@
+{
+  "path_report": {
+    "captured_messages": 0,
+    "first": {
+      "accepted": true,
+      "chat_message_ids": [],
+      "deduplicated": false,
+      "diagnostics": {
+        "conversation": {
+          "reason": "unsafe_automatic_content",
+          "sequence": 0,
+          "status": "denied"
+        }
+      },
+      "normalized_event_ids": [],
+      "raw_event_id": "raw-worker-output-fixture",
+      "raw_location": "fixture:0",
+      "routing_status": "raw_accepted"
+    },
+    "provenance_authorized_before_safety": true,
+    "retry": {
+      "accepted": true,
+      "chat_message_ids": [],
+      "deduplicated": true,
+      "diagnostics": {
+        "conversation": {
+          "reason": "unsafe_automatic_content",
+          "sequence": 0,
+          "status": "denied"
+        }
+      },
+      "normalized_event_ids": [],
+      "raw_event_id": "raw-worker-output-fixture",
+      "raw_location": "fixture:0",
+      "routing_status": "duplicate_raw"
+    }
+  },
+  "report_path_traversal": {
+    "capture": {
+      "accepted": true,
+      "chat_message_ids": [
+        "msg_9aadb7d8e77853b7a0a6634c8ea1a75d"
+      ],
+      "deduplicated": false,
+      "diagnostics": {},
+      "normalized_event_ids": [],
+      "raw_event_id": "raw_traversal",
+      "raw_location": "fixture:1",
+      "routing_status": "raw_accepted"
+    },
+    "collector_ref": "../outside.md",
+    "helper_value": "../outside.md",
+    "outside_file_exists": true,
+    "raw_payload_report_content": "# Outside fixture\nsecret-free external report\n",
+    "resolved_inside_project": false,
+    "resolved_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-native-ingress-jeo2rek7\\project\\..\\outside.md",
+    "worker_session_authorized": true
+  }
+}

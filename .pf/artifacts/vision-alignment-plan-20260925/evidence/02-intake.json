@@ -1,0 +1,27 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "brief",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/planning-scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "scope",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/planning-scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "task-record",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/planning-scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "scope-accepted",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/planning-scope.md",
+    "status": "passed",
+    "summary": "Reviewed the corresponding sections for the authorized documentation-only planning scope."
+  }
+]

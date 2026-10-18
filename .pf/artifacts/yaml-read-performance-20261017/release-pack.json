@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate\\bin\\pf.py",
+    "release-pack",
+    "--root",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\candidate",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\yaml-read-performance-20261017\\processforge-1.2.0-dev-20261017-yaml-8f00ca1.zip"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 11.879,
+  "stdout": "WROTE: D:/Dev/process-forge/.pf/tmp/yaml-read-performance-20261017/processforge-1.2.0-dev-20261017-yaml-8f00ca1.zip\nWROTE: D:/Dev/process-forge/.pf/tmp/yaml-read-performance-20261017/processforge-1.2.0-dev-20261017-yaml-8f00ca1.manifest.json\nFILES: 1304\n",
+  "stderr": ""
+}

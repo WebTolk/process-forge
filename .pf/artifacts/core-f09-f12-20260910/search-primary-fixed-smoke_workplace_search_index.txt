@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_workplace_search_index.py", line 112, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_workplace_search_index.py", line 81, in main
+    rebuilt = cli("search-index", "rebuild", "--workplace", str(workplace))
+  File "D:\Dev\process-forge\tools\smoke_workplace_search_index.py", line 34, in cli
+    assert result.returncode == 0, result.stdout + result.stderr
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\processforge.py", line 27908, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "D:\Dev\process-forge\tools\processforge.py", line 27904, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "D:\Dev\process-forge\tools\processforge.py", line 23772, in command_search_index_rebuild
+    result = ResourceSearchIndex(workplace_root, snapshot, workplace_root).rebuild()
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 83, in rebuild
+    return rebuild_index(self.project_root, self.snapshot, workplace_root=self.workplace_root)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 650, in rebuild_index
+    return build_index(project_root, snapshot, workplace_root=workplace_root, full_reconciliation=True)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 599, in build_index
+    resources = authorized_roots(project_root, snapshot)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 318, in authorized_roots
+    if identity in seen:
+                   ^^^^
+NameError: name 'seen' is not defined
+

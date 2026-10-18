@@ -1,0 +1,3772 @@
+{
+  "scope": "All registered source commands with --no-clean; broad git diff gate replaced by scoped public check.",
+  "source_suite_status": "FAIL",
+  "remediation_acceptance": "PASS for A01-A11 with independently reproduced baseline counterexamples",
+  "counts": {
+    "PASS": 216,
+    "FAIL": 2
+  },
+  "registered_commands": 218,
+  "attempts": [
+    {
+      "report": "source-full-report-attempt1.json",
+      "counts": {
+        "PASS": 57,
+        "FAIL": 1
+      }
+    },
+    {
+      "report": "source-full-report-remainder.json",
+      "counts": {
+        "PASS": 157,
+        "FAIL": 5
+      }
+    },
+    {
+      "report": "source-final-report.json",
+      "counts": {
+        "PASS": 5
+      }
+    }
+  ],
+  "residuals": {
+    "smoke_user_like_garage_path": "Same empty_corpus failure reproduced on original HEAD. Separate pre-existing first-run search contract investigation.",
+    "smoke_release_manifest_provenance_contract": "Correctly refuses non-clean Git source; clean candidate/archive release qualification outside this source-only run."
+  },
+  "exclusions": {
+    "clean": "Preserve existing unrelated generated artifacts.",
+    "git diff --check": "Whole-checkout private PF dirt preserved; scoped src/tools/docs/checksums check PASS."
+  },
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py",
+        "--root",
+        "D:\\Dev\\process-forge",
+        "--check"
+      ],
+      "elapsed_seconds": 0.401,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:00:20Z",
+      "label": "checksum",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:00:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-final-report.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "doctor-project",
+        "--project-root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 1.225,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:08Z",
+      "label": "doctor-project",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:06Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "events-validate",
+        "--project-root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 1.763,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:06Z",
+      "label": "events-validate",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:05Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "examples-check",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 0.756,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:05Z",
+      "label": "examples-check",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:04Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 5.213,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:20Z",
+      "label": "public cleanliness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "py_compile",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "D:\\Dev\\process-forge\\bin\\pf.py",
+        "D:\\Dev\\process-forge\\tools\\specialization_smoke_helpers.py",
+        "D:\\Dev\\process-forge\\tools\\codex_exec_worker.py"
+      ],
+      "elapsed_seconds": 3.937,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:22Z",
+      "label": "py_compile",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 30,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "release-check",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 1.86,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:04Z",
+      "label": "release-check",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:02Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 25.118,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:14Z",
+      "label": "schema validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:13:49Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_agent_director_tick.py"
+      ],
+      "elapsed_seconds": 12.084,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:34:21Z",
+      "label": "smoke_agent_director_tick",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:34:09Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_agent_ledger.py"
+      ],
+      "elapsed_seconds": 11.14,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:20:46Z",
+      "label": "smoke_agent_ledger",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:20:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_agent_workspace_platform_availability_snapshot.py"
+      ],
+      "elapsed_seconds": 0.568,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:23Z",
+      "label": "smoke_agent_workspace_platform_availability_snapshot",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_authenticated_report_content.py"
+      ],
+      "elapsed_seconds": 10.947,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:13:11Z",
+      "label": "smoke_authenticated_report_content",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:13:00Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_authoring_crash_recovery.py"
+      ],
+      "elapsed_seconds": 0.437,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:21Z",
+      "label": "smoke_authoring_crash_recovery",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_builtin_process_catalog.py"
+      ],
+      "elapsed_seconds": 2.68,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:12Z",
+      "label": "smoke_builtin_process_catalog",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:09Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_builtin_process_pack_completeness.py"
+      ],
+      "elapsed_seconds": 1.408,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:11Z",
+      "label": "smoke_builtin_process_pack_completeness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_builtin_processes_explicit_evolve.py"
+      ],
+      "elapsed_seconds": 2.02,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:20Z",
+      "label": "smoke_builtin_processes_explicit_evolve",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_capability_resolution_data_driven_only.py"
+      ],
+      "elapsed_seconds": 3.382,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:18Z",
+      "label": "smoke_capability_resolution_data_driven_only",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:15Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_capsule_pins_context_snapshot.py"
+      ],
+      "elapsed_seconds": 5.72,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:13Z",
+      "label": "smoke_capsule_pins_context_snapshot",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:08Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_central_event_ingress.py"
+      ],
+      "elapsed_seconds": 15.284,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:36Z",
+      "label": "smoke_central_event_ingress",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:21Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_central_event_replay.py"
+      ],
+      "elapsed_seconds": 11.807,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:17:22Z",
+      "label": "smoke_central_event_replay",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:17:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_child_platform_not_promoted_to_parent.py"
+      ],
+      "elapsed_seconds": 10.419,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:28Z",
+      "label": "smoke_child_platform_not_promoted_to_parent",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:17Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_classifier_distribution_parity.py"
+      ],
+      "elapsed_seconds": 0.437,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:35Z",
+      "label": "smoke_classifier_distribution_parity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_cli_audit_f0608.py"
+      ],
+      "elapsed_seconds": 11.229,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:33Z",
+      "label": "smoke_cli_audit_f0608",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_codex_exec_worker.py"
+      ],
+      "elapsed_seconds": 11.123,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:16:59Z",
+      "label": "smoke_codex_exec_worker",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:16:48Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_codex_lifecycle_identity.py"
+      ],
+      "elapsed_seconds": 4.329,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:13:34Z",
+      "label": "smoke_codex_lifecycle_identity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:13:30Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_codex_worker_governance.py"
+      ],
+      "elapsed_seconds": 0.695,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:17:00Z",
+      "label": "smoke_codex_worker_governance",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:16:59Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_config_behavior_contracts.py"
+      ],
+      "elapsed_seconds": 93.125,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:35:54Z",
+      "label": "smoke_config_behavior_contracts",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:34:21Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_context_freshness_vs_execution_readiness.py"
+      ],
+      "elapsed_seconds": 33.397,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:38:24Z",
+      "label": "smoke_context_freshness_vs_execution_readiness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:37:50Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_conversation_completeness.py"
+      ],
+      "elapsed_seconds": 75.971,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:18:38Z",
+      "label": "smoke_conversation_completeness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:17:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_domain_neutral_still_passes.py"
+      ],
+      "elapsed_seconds": 12.821,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:15:39Z",
+      "label": "smoke_core_domain_neutral_still_passes",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:15:26Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_has_no_domain_knowledge_seeds.py"
+      ],
+      "elapsed_seconds": 0.076,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:36Z",
+      "label": "smoke_core_has_no_domain_knowledge_seeds",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:36Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_process_catalog_domain_neutral.py"
+      ],
+      "elapsed_seconds": 0.824,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:41Z",
+      "label": "smoke_core_process_catalog_domain_neutral",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_prompts_domain_neutral.py"
+      ],
+      "elapsed_seconds": 0.089,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:41Z",
+      "label": "smoke_core_prompts_domain_neutral",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_update_manifest.py"
+      ],
+      "elapsed_seconds": 5.711,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:46Z",
+      "label": "smoke_core_update_manifest",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_update_migration_sources.py"
+      ],
+      "elapsed_seconds": 0.587,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:39Z",
+      "label": "smoke_core_update_migration_sources",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_update_missing_owned.py"
+      ],
+      "elapsed_seconds": 0.415,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:33Z",
+      "label": "smoke_core_update_missing_owned",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:33Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_current_work_ignores_bootstrap_placeholder.py"
+      ],
+      "elapsed_seconds": 3.24,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:42:31Z",
+      "label": "smoke_current_work_ignores_bootstrap_placeholder",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:42:28Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_delivery_profile_not_process.py"
+      ],
+      "elapsed_seconds": 0.583,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:02Z",
+      "label": "smoke_delivery_profile_not_process",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_derived_report_stale_marking.py"
+      ],
+      "elapsed_seconds": 8.286,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:23Z",
+      "label": "smoke_derived_report_stale_marking",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_director_inspector_boundary.py"
+      ],
+      "elapsed_seconds": 26.046,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:19:21Z",
+      "label": "smoke_director_inspector_boundary",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:18:55Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_agent_no_manual_infra.py"
+      ],
+      "elapsed_seconds": 0.088,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:13Z",
+      "label": "smoke_docs_agent_no_manual_infra",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_codex_hooks_optional.py"
+      ],
+      "elapsed_seconds": 0.073,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:14Z",
+      "label": "smoke_docs_codex_hooks_optional",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_current_code_contract.py"
+      ],
+      "elapsed_seconds": 0.607,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:14Z",
+      "label": "smoke_docs_current_code_contract",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_garage_no_runtime_required.py"
+      ],
+      "elapsed_seconds": 0.071,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:13Z",
+      "label": "smoke_docs_garage_no_runtime_required",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_mcp_host_owned_stdio.py"
+      ],
+      "elapsed_seconds": 0.064,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:13Z",
+      "label": "smoke_docs_mcp_host_owned_stdio",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_doctor_gitignore_effective_protection.py"
+      ],
+      "elapsed_seconds": 4.299,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:18Z",
+      "label": "smoke_doctor_gitignore_effective_protection",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_doctor_project_capability_waiver.py"
+      ],
+      "elapsed_seconds": 5.044,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:23Z",
+      "label": "smoke_doctor_project_capability_waiver",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_domain_neutral_music_video_fixtures.py"
+      ],
+      "elapsed_seconds": 2.858,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:26Z",
+      "label": "smoke_domain_neutral_music_video_fixtures",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:23Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_domain_pack_can_classify_after_install.py"
+      ],
+      "elapsed_seconds": 0.291,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:40Z",
+      "label": "smoke_domain_pack_can_classify_after_install",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_empty_workplace_has_no_domain_resources.py"
+      ],
+      "elapsed_seconds": 1.44,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:38Z",
+      "label": "smoke_empty_workplace_has_no_domain_resources",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:36Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_error_workflow.py"
+      ],
+      "elapsed_seconds": 14.79,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:33:49Z",
+      "label": "smoke_error_workflow",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:33:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_candidate_export.py"
+      ],
+      "elapsed_seconds": 4.963,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:51Z",
+      "label": "smoke_evolve_candidate_export",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:46Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_candidate_narrowest_scope.py"
+      ],
+      "elapsed_seconds": 5.11,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:40Z",
+      "label": "smoke_evolve_candidate_narrowest_scope",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_candidate_schema.py"
+      ],
+      "elapsed_seconds": 0.904,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:29Z",
+      "label": "smoke_evolve_candidate_schema",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:29Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_candidate_split_guidance.py"
+      ],
+      "elapsed_seconds": 0.122,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:40Z",
+      "label": "smoke_evolve_candidate_split_guidance",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_candidate_targeting_schema.py"
+      ],
+      "elapsed_seconds": 5.757,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:35Z",
+      "label": "smoke_evolve_candidate_targeting_schema",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:29Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_learning_loop_end_to_end.py"
+      ],
+      "elapsed_seconds": 12.095,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:55Z",
+      "label": "smoke_evolve_learning_loop_end_to_end",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:43Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 240,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_privacy_sanitizer.py"
+      ],
+      "elapsed_seconds": 5.398,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:57Z",
+      "label": "smoke_evolve_privacy_sanitizer",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:51Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_process_agnostic_contract.py"
+      ],
+      "elapsed_seconds": 0.225,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:11Z",
+      "label": "smoke_evolve_process_agnostic_contract",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:11Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_evolve_targeting_privacy_sanitizer.py"
+      ],
+      "elapsed_seconds": 5.661,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:02Z",
+      "label": "smoke_evolve_targeting_privacy_sanitizer",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:57Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_examples_do_not_shadow_official_processes.py"
+      ],
+      "elapsed_seconds": 0.188,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:15:39Z",
+      "label": "smoke_examples_do_not_shadow_official_processes",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:15:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_expected_report_containment.py"
+      ],
+      "elapsed_seconds": 20.636,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:13:00Z",
+      "label": "smoke_expected_report_containment",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_first_run.py"
+      ],
+      "elapsed_seconds": 10.451,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:15:50Z",
+      "label": "smoke_first_run",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:15:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_fulltext_article_indexing.py"
+      ],
+      "elapsed_seconds": 0.209,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:23Z",
+      "label": "smoke_fulltext_article_indexing",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_cross_project_security.py"
+      ],
+      "elapsed_seconds": 27.489,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:41:08Z",
+      "label": "smoke_garage_cross_project_security",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_mode_not_promoted_by_session.py"
+      ],
+      "elapsed_seconds": 8.389,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:01:10Z",
+      "label": "smoke_garage_mode_not_promoted_by_session",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:01:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-final-report.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_no_hooks_sessionless.py"
+      ],
+      "elapsed_seconds": 11.83,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:34Z",
+      "label": "smoke_garage_no_hooks_sessionless",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:23Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_real_joomla_search.py"
+      ],
+      "elapsed_seconds": 0.227,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:41:08Z",
+      "label": "smoke_garage_real_joomla_search",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:41:08Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_session_enhanced.py"
+      ],
+      "elapsed_seconds": 11.709,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:01:01Z",
+      "label": "smoke_garage_session_enhanced",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:00:50Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-final-report.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_work_start_session_bound.py"
+      ],
+      "elapsed_seconds": 5.307,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:41:28Z",
+      "label": "smoke_garage_work_start_session_bound",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:41:23Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_work_start_sessionless.py"
+      ],
+      "elapsed_seconds": 5.549,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:41:23Z",
+      "label": "smoke_garage_work_start_sessionless",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:41:17Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_generated_processes_include_evolve.py"
+      ],
+      "elapsed_seconds": 0.212,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:18Z",
+      "label": "smoke_generated_processes_include_evolve",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_generic_workplace_no_domain_pack_active.py"
+      ],
+      "elapsed_seconds": 2.591,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:54Z",
+      "label": "smoke_generic_workplace_no_domain_pack_active",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:52Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_governed_work_duplicate_prevention.py"
+      ],
+      "elapsed_seconds": 5.983,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:42:28Z",
+      "label": "smoke_governed_work_duplicate_prevention",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:42:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_governed_work_stage_resolution.py"
+      ],
+      "elapsed_seconds": 5.235,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:01:15Z",
+      "label": "smoke_governed_work_stage_resolution",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:01:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-final-report.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_knowledge_hub_import.py"
+      ],
+      "elapsed_seconds": 6.782,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:09Z",
+      "label": "smoke_knowledge_hub_import",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:02Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_knowledge_hub_routes_by_target.py"
+      ],
+      "elapsed_seconds": 8.154,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:17Z",
+      "label": "smoke_knowledge_hub_routes_by_target",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:09Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_knowledge_package_build_from_candidates.py"
+      ],
+      "elapsed_seconds": 7.828,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:35Z",
+      "label": "smoke_knowledge_package_build_from_candidates",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:28Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_knowledge_package_release_update_manifest.py"
+      ],
+      "elapsed_seconds": 7.831,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:54:43Z",
+      "label": "smoke_knowledge_package_release_update_manifest",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_legacy_flat_process_layout_warning.py"
+      ],
+      "elapsed_seconds": 0.758,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:19Z",
+      "label": "smoke_legacy_flat_process_layout_warning",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_long_lived_runtime.py"
+      ],
+      "elapsed_seconds": 70.125,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:32:41Z",
+      "label": "smoke_long_lived_runtime",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:31:31Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 240,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_mcp_codex_contract.py"
+      ],
+      "elapsed_seconds": 9.484,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:17:09Z",
+      "label": "smoke_mcp_codex_contract",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:17:00Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_mcp_jsonrpc_validation.py"
+      ],
+      "elapsed_seconds": 0.358,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:13:11Z",
+      "label": "smoke_mcp_jsonrpc_validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:13:11Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_mcp_missing_session_diagnostics.py"
+      ],
+      "elapsed_seconds": 0.147,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:18Z",
+      "label": "smoke_mcp_missing_session_diagnostics",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_mixed_workplace_projects.py"
+      ],
+      "elapsed_seconds": 8.979,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:33:22Z",
+      "label": "smoke_mixed_workplace_projects",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:33:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_multi_agent_as_composed_sessions.py"
+      ],
+      "elapsed_seconds": 18.611,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:32:59Z",
+      "label": "smoke_multi_agent_as_composed_sessions",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:32:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_multi_process_work_capsule.py"
+      ],
+      "elapsed_seconds": 47.795,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:42:16Z",
+      "label": "smoke_multi_process_work_capsule",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:41:28Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_multi_project_agent_sessions.py"
+      ],
+      "elapsed_seconds": 10.705,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:31:07Z",
+      "label": "smoke_multi_project_agent_sessions",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:30:56Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_no_builtin_user_capability_satisfaction.py"
+      ],
+      "elapsed_seconds": 1.558,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:15Z",
+      "label": "smoke_no_builtin_user_capability_satisfaction",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_no_hardcoded_file_project_detection.py"
+      ],
+      "elapsed_seconds": 0.272,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:39Z",
+      "label": "smoke_no_hardcoded_file_project_detection",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_no_production_example_update_urls.py"
+      ],
+      "elapsed_seconds": 0.085,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:13Z",
+      "label": "smoke_no_production_example_update_urls",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_no_removed_process_refs.py"
+      ],
+      "elapsed_seconds": 0.287,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:27Z",
+      "label": "smoke_no_removed_process_refs",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:27Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_official_pack_classifier_data_driven.py"
+      ],
+      "elapsed_seconds": 9.943,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:15:10Z",
+      "label": "smoke_official_pack_classifier_data_driven",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:15:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_official_pack_manifest_schema.py"
+      ],
+      "elapsed_seconds": 0.222,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:42Z",
+      "label": "smoke_official_pack_manifest_schema",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:42Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_official_pack_not_kernel.py"
+      ],
+      "elapsed_seconds": 0.706,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:52Z",
+      "label": "smoke_official_pack_not_kernel",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:51Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_official_packs_not_examples.py"
+      ],
+      "elapsed_seconds": 0.221,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:42Z",
+      "label": "smoke_official_packs_not_examples",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_official_process_can_start_minimal_run.py"
+      ],
+      "elapsed_seconds": 15.698,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:15:26Z",
+      "label": "smoke_official_process_can_start_minimal_run",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:15:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_official_software_process_available.py"
+      ],
+      "elapsed_seconds": 9.069,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:51Z",
+      "label": "smoke_official_software_process_available",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:42Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_optional_domain_pack_not_default.py"
+      ],
+      "elapsed_seconds": 0.251,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:40Z",
+      "label": "smoke_optional_domain_pack_not_default",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_orchestrator_shell_agents_with_subagent_policy.py"
+      ],
+      "elapsed_seconds": 14.97,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:09Z",
+      "label": "smoke_orchestrator_shell_agents_with_subagent_policy",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:35:54Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_parameter_assignment_capsule.py"
+      ],
+      "elapsed_seconds": 4.816,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:55Z",
+      "label": "smoke_parameter_assignment_capsule",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:50Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_parameter_cascade_resolution.py"
+      ],
+      "elapsed_seconds": 3.399,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:45Z",
+      "label": "smoke_parameter_cascade_resolution",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:42Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_parameter_freshness.py"
+      ],
+      "elapsed_seconds": 4.868,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:50Z",
+      "label": "smoke_parameter_freshness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:45Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_pf_project_process_refs_follow_layout.py"
+      ],
+      "elapsed_seconds": 0.321,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:27Z",
+      "label": "smoke_pf_project_process_refs_follow_layout",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:27Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_platform_create_include_levels.py"
+      ],
+      "elapsed_seconds": 1.848,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:25Z",
+      "label": "smoke_platform_create_include_levels",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:23Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_authoring_evolve_questions.py"
+      ],
+      "elapsed_seconds": 0.122,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:11Z",
+      "label": "smoke_process_authoring_evolve_questions",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:11Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_authoring_evolve_targeting.py"
+      ],
+      "elapsed_seconds": 5.352,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:01Z",
+      "label": "smoke_process_authoring_evolve_targeting",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:54:55Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_authoring_materialization_parity.py"
+      ],
+      "elapsed_seconds": 6.13,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:03Z",
+      "label": "smoke_process_authoring_materialization_parity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:56Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_authoring_materializes_evolve.py"
+      ],
+      "elapsed_seconds": 6.682,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:18Z",
+      "label": "smoke_process_authoring_materializes_evolve",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:11Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_authoring_writes_user_root.py"
+      ],
+      "elapsed_seconds": 1.728,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:18Z",
+      "label": "smoke_process_authoring_writes_user_root",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:16Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_capability_requirement_resolution.py"
+      ],
+      "elapsed_seconds": 5.231,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:14Z",
+      "label": "smoke_process_capability_requirement_resolution",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:09Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_catalog_not_implicit_execution_route.py"
+      ],
+      "elapsed_seconds": 12.219,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:38:36Z",
+      "label": "smoke_process_catalog_not_implicit_execution_route",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:38:24Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_definition_schema_contract.py"
+      ],
+      "elapsed_seconds": 7.011,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:10Z",
+      "label": "smoke_process_definition_schema_contract",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:03Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_directory_layout.py"
+      ],
+      "elapsed_seconds": 0.842,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:12Z",
+      "label": "smoke_process_directory_layout",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:12Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_execution_initial_stage.py"
+      ],
+      "elapsed_seconds": 9.297,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:42:41Z",
+      "label": "smoke_process_execution_initial_stage",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:42:31Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_execution_integrity.py"
+      ],
+      "elapsed_seconds": 49.686,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:14Z",
+      "label": "smoke_process_execution_integrity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:49:25Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 240,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_id_stable_after_move.py"
+      ],
+      "elapsed_seconds": 0.812,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:20Z",
+      "label": "smoke_process_id_stable_after_move",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:19Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_list_origin_filters.py"
+      ],
+      "elapsed_seconds": 2.813,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:16Z",
+      "label": "smoke_process_list_origin_filters",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_owns_acceptance_not_specialization.py"
+      ],
+      "elapsed_seconds": 1.596,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:09Z",
+      "label": "smoke_process_owns_acceptance_not_specialization",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:07Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_resolver_multiple_roots.py"
+      ],
+      "elapsed_seconds": 1.263,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:14Z",
+      "label": "smoke_process_resolver_multiple_roots",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:12Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_root_collision_policy.py"
+      ],
+      "elapsed_seconds": 0.814,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:21Z",
+      "label": "smoke_process_root_collision_policy",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_run_task_batch.py"
+      ],
+      "elapsed_seconds": 74.373,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:20:35Z",
+      "label": "smoke_process_run_task_batch",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:19:21Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_supervisor_tick.py"
+      ],
+      "elapsed_seconds": 17.081,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:18:55Z",
+      "label": "smoke_process_supervisor_tick",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:18:38Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_process_transition_handoff.py"
+      ],
+      "elapsed_seconds": 19.379,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:34:09Z",
+      "label": "smoke_process_transition_handoff",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:33:49Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_processforge_core_package_bootstrap.py"
+      ],
+      "elapsed_seconds": 0.584,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:21Z",
+      "label": "smoke_processforge_core_package_bootstrap",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_processforge_core_project_requires_explicit_type.py"
+      ],
+      "elapsed_seconds": 0.292,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:22Z",
+      "label": "smoke_processforge_core_project_requires_explicit_type",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_classification_data_driven.py"
+      ],
+      "elapsed_seconds": 0.699,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:38Z",
+      "label": "smoke_project_classification_data_driven",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:38Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_context_freshness_policies.py"
+      ],
+      "elapsed_seconds": 21.194,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:37:50Z",
+      "label": "smoke_project_context_freshness_policies",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:37:29Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_context_snapshot_lock_model.py"
+      ],
+      "elapsed_seconds": 4.434,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:37:29Z",
+      "label": "smoke_project_context_snapshot_lock_model",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:37:25Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_coordination_modes.py"
+      ],
+      "elapsed_seconds": 14.164,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:33:14Z",
+      "label": "smoke_project_coordination_modes",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:32:59Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_init_acceptance.py"
+      ],
+      "elapsed_seconds": 44.036,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:04Z",
+      "label": "smoke_project_init_acceptance",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:39:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_init_codex_integration.py"
+      ],
+      "elapsed_seconds": 8.839,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:13Z",
+      "label": "smoke_project_init_codex_integration",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:04Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_init_local_search_mcp.py"
+      ],
+      "elapsed_seconds": 29.539,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:00:50Z",
+      "label": "smoke_project_init_local_search_mcp",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:00:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-final-report.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_local_package_index_detection.py"
+      ],
+      "elapsed_seconds": 0.367,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:22Z",
+      "label": "smoke_project_local_package_index_detection",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_onboard_platform_selection.py"
+      ],
+      "elapsed_seconds": 0.796,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:39Z",
+      "label": "smoke_project_onboard_platform_selection",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:38Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_override_does_not_mutate_workspace.py"
+      ],
+      "elapsed_seconds": 2.26,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:56Z",
+      "label": "smoke_project_override_does_not_mutate_workspace",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:54Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_overrides_capsule_summary.py"
+      ],
+      "elapsed_seconds": 2.68,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:54Z",
+      "label": "smoke_project_overrides_capsule_summary",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:51Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_overrides_freshness.py"
+      ],
+      "elapsed_seconds": 3.062,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:51Z",
+      "label": "smoke_project_overrides_freshness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:48Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_overrides_resolution.py"
+      ],
+      "elapsed_seconds": 1.107,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:45Z",
+      "label": "smoke_project_overrides_resolution",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:44Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_overrides_schema.py"
+      ],
+      "elapsed_seconds": 20.006,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:44Z",
+      "label": "smoke_project_overrides_schema",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:24Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_overrides_snapshot_fingerprint.py"
+      ],
+      "elapsed_seconds": 3.113,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:48Z",
+      "label": "smoke_project_overrides_snapshot_fingerprint",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:45Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_pf_upgrade_assessment_boundary.py"
+      ],
+      "elapsed_seconds": 30.494,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:37:17Z",
+      "label": "smoke_project_pf_upgrade_assessment_boundary",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:46Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_scan_excludes_distribution_root.py"
+      ],
+      "elapsed_seconds": 0.298,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:21Z",
+      "label": "smoke_project_scan_excludes_distribution_root",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:21Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_scan_excludes_knowledge_roots.py"
+      ],
+      "elapsed_seconds": 0.331,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:22Z",
+      "label": "smoke_project_scan_excludes_knowledge_roots",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_scan_excludes_workplace_root.py"
+      ],
+      "elapsed_seconds": 0.394,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:22Z",
+      "label": "smoke_project_scan_excludes_workplace_root",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:21Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_specialization_override_applies.py"
+      ],
+      "elapsed_seconds": 1.918,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:31Z",
+      "label": "smoke_project_specialization_override_applies",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:29Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_public_cleanliness.py"
+      ],
+      "elapsed_seconds": 0.497,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:20Z",
+      "label": "smoke_public_cleanliness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_raw_ingress_incremental_recovery.py"
+      ],
+      "elapsed_seconds": 14.927,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:13:49Z",
+      "label": "smoke_raw_ingress_incremental_recovery",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:13:34Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_release_manifest_provenance_contract.py"
+      ],
+      "elapsed_seconds": 7.915,
+      "exit_code": 1,
+      "finished_at": "2026-09-11T09:53:29Z",
+      "label": "smoke_release_manifest_provenance_contract",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:21Z",
+      "status": "FAIL",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_release_pack_excludes_user_processes.py"
+      ],
+      "elapsed_seconds": 0.214,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:19Z",
+      "label": "smoke_release_pack_excludes_user_processes",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:19Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_release_test_extracted_archive.py"
+      ],
+      "elapsed_seconds": 0.213,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:27Z",
+      "label": "smoke_release_test_extracted_archive",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:26Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_release_test_trace_timeout_reporting.py"
+      ],
+      "elapsed_seconds": 1.464,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:26Z",
+      "label": "smoke_release_test_trace_timeout_reporting",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:25Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_resource_indexing_policy_acceptance.py"
+      ],
+      "elapsed_seconds": 0.489,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:39:20Z",
+      "label": "smoke_resource_indexing_policy_acceptance",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:39:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_resource_versioning_modes.py"
+      ],
+      "elapsed_seconds": 4.798,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:37:25Z",
+      "label": "smoke_resource_versioning_modes",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:37:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_driver_registry.py"
+      ],
+      "elapsed_seconds": 10.458,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:16:00Z",
+      "label": "smoke_runtime_driver_registry",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:15:50Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_host_poc.py"
+      ],
+      "elapsed_seconds": 24.057,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:31:31Z",
+      "label": "smoke_runtime_host_poc",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:31:07Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_mcp_autostart.py"
+      ],
+      "elapsed_seconds": 0.766,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:17:10Z",
+      "label": "smoke_runtime_mcp_autostart",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:17:09Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_no_domain_capability_constants.py"
+      ],
+      "elapsed_seconds": 0.176,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:26Z",
+      "label": "smoke_runtime_no_domain_capability_constants",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:26Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_no_domain_file_patterns.py"
+      ],
+      "elapsed_seconds": 0.69,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:14:41Z",
+      "label": "smoke_runtime_no_domain_file_patterns",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_scheduler_failure_isolation.py"
+      ],
+      "elapsed_seconds": 1.81,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:37Z",
+      "label": "smoke_runtime_scheduler_failure_isolation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_singleton_orphan.py"
+      ],
+      "elapsed_seconds": 1.83,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:39Z",
+      "label": "smoke_runtime_singleton_orphan",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:37Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_status_version_truth.py"
+      ],
+      "elapsed_seconds": 3.587,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:26Z",
+      "label": "smoke_runtime_status_version_truth",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:23Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_search_file_root_containment.py"
+      ],
+      "elapsed_seconds": 0.236,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:34Z",
+      "label": "smoke_search_file_root_containment",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:34Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_search_multiple_roots.py"
+      ],
+      "elapsed_seconds": 0.487,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:35Z",
+      "label": "smoke_search_multiple_roots",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:34Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_search_source_integrity.py"
+      ],
+      "elapsed_seconds": 0.475,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:12:34Z",
+      "label": "smoke_search_source_integrity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:12:33Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_session_identity_roundtrip.py"
+      ],
+      "elapsed_seconds": 18.909,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:13:30Z",
+      "label": "smoke_session_identity_roundtrip",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:13:11Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_session_projection_expiry.py"
+      ],
+      "elapsed_seconds": 3.966,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:40:22Z",
+      "label": "smoke_session_projection_expiry",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:40:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_session_start_context_check.py"
+      ],
+      "elapsed_seconds": 4.121,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:50:59Z",
+      "label": "smoke_session_start_context_check",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:55Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_single_agent_session_flow.py"
+      ],
+      "elapsed_seconds": 13.235,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:30:56Z",
+      "label": "smoke_single_agent_session_flow",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:30:43Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_lifecycle_artifacts.py"
+      ],
+      "elapsed_seconds": 0.137,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:01Z",
+      "label": "smoke_software_lifecycle_artifacts",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_lifecycle_compact_mode.py"
+      ],
+      "elapsed_seconds": 0.143,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:02Z",
+      "label": "smoke_software_lifecycle_compact_mode",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:02Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_lifecycle_description_alignment.py"
+      ],
+      "elapsed_seconds": 0.153,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:01Z",
+      "label": "smoke_software_lifecycle_description_alignment",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_lifecycle_process_contract.py"
+      ],
+      "elapsed_seconds": 0.17,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:01Z",
+      "label": "smoke_software_lifecycle_process_contract",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_lifecycle_prompt_alignment.py"
+      ],
+      "elapsed_seconds": 0.07,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:01Z",
+      "label": "smoke_software_lifecycle_prompt_alignment",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_process_uses_common_evolve.py"
+      ],
+      "elapsed_seconds": 0.205,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:55:01Z",
+      "label": "smoke_software_process_uses_common_evolve",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:55:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_software_profile_activates_official_pack.py"
+      ],
+      "elapsed_seconds": 6.229,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:15:01Z",
+      "label": "smoke_software_profile_activates_official_pack",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:14:54Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_capsule_activation.py"
+      ],
+      "elapsed_seconds": 2.62,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:24Z",
+      "label": "smoke_specialization_capsule_activation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:21Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_context_resolution.py"
+      ],
+      "elapsed_seconds": 1.094,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:02Z",
+      "label": "smoke_specialization_context_resolution",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_create_workplace_resource.py"
+      ],
+      "elapsed_seconds": 0.974,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:58Z",
+      "label": "smoke_specialization_create_workplace_resource",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:57Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_freshness_tracks_definition_change.py"
+      ],
+      "elapsed_seconds": 2.668,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:29Z",
+      "label": "smoke_specialization_freshness_tracks_definition_change",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:26Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_garage_mode_switch.py"
+      ],
+      "elapsed_seconds": 3.279,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:20Z",
+      "label": "smoke_specialization_garage_mode_switch",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:17Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_handoff_routing.py"
+      ],
+      "elapsed_seconds": 2.406,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:17Z",
+      "label": "smoke_specialization_handoff_routing",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_nested_workflow_fields_rejected.py"
+      ],
+      "elapsed_seconds": 0.126,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:26Z",
+      "label": "smoke_specialization_nested_workflow_fields_rejected",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:26Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_no_core_id_hardcode.py"
+      ],
+      "elapsed_seconds": 0.135,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:24Z",
+      "label": "smoke_specialization_no_core_id_hardcode",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:24Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_no_tool_leakage.py"
+      ],
+      "elapsed_seconds": 3.2,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:07Z",
+      "label": "smoke_specialization_no_tool_leakage",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:04Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_no_workflow_ownership.py"
+      ],
+      "elapsed_seconds": 0.119,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:07Z",
+      "label": "smoke_specialization_no_workflow_ownership",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:07Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_platform_binding.py"
+      ],
+      "elapsed_seconds": 2.889,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:01Z",
+      "label": "smoke_specialization_platform_binding",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:58Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_process_policy.py"
+      ],
+      "elapsed_seconds": 0.121,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:14Z",
+      "label": "smoke_specialization_process_policy",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_registry.py"
+      ],
+      "elapsed_seconds": 0.103,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:57Z",
+      "label": "smoke_specialization_registry",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:57Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_same_platform_different_context.py"
+      ],
+      "elapsed_seconds": 2.248,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:04Z",
+      "label": "smoke_specialization_same_platform_different_context",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:02Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_schema.py"
+      ],
+      "elapsed_seconds": 25.654,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:57Z",
+      "label": "smoke_specialization_schema",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:51:31Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_specialization_snapshot_fields.py"
+      ],
+      "elapsed_seconds": 1.447,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:52:21Z",
+      "label": "smoke_specialization_snapshot_fields",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:52:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_tool_update_policy.py"
+      ],
+      "elapsed_seconds": 3.454,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:37:20Z",
+      "label": "smoke_tool_update_policy",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:37:17Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_update_apply_marks_context_stale.py"
+      ],
+      "elapsed_seconds": 8.663,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:51:08Z",
+      "label": "smoke_update_apply_marks_context_stale",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:59Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_update_candidate_discovery.py"
+      ],
+      "elapsed_seconds": 2.369,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:32Z",
+      "label": "smoke_update_candidate_discovery",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:30Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_update_notifications.py"
+      ],
+      "elapsed_seconds": 2.948,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:35Z",
+      "label": "smoke_update_notifications",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:32Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_update_sites_schema.py"
+      ],
+      "elapsed_seconds": 2.724,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:30Z",
+      "label": "smoke_update_sites_schema",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:27Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_update_stage_verify_apply_file_provider.py"
+      ],
+      "elapsed_seconds": 5.027,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:40Z",
+      "label": "smoke_update_stage_verify_apply_file_provider",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:35Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_user_like_garage_path.py"
+      ],
+      "elapsed_seconds": 15.394,
+      "exit_code": 1,
+      "finished_at": "2026-09-11T09:50:42Z",
+      "label": "smoke_user_like_garage_path",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:50:26Z",
+      "status": "FAIL",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_windows_utf8_docs.py"
+      ],
+      "elapsed_seconds": 0.093,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:36:27Z",
+      "label": "smoke_windows_utf8_docs",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:36:27Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_completion_recovery.py"
+      ],
+      "elapsed_seconds": 139.446,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:47:56Z",
+      "label": "smoke_work_completion_recovery",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:45:37Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 360,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_evidence_freshness.py"
+      ],
+      "elapsed_seconds": 118.483,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:45:37Z",
+      "label": "smoke_work_evidence_freshness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:43:38Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 360,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_start_no_stage_guessing.py"
+      ],
+      "elapsed_seconds": 8.465,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:42:49Z",
+      "label": "smoke_work_start_no_stage_guessing",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:42:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_state_current_stage.py"
+      ],
+      "elapsed_seconds": 9.805,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:42:59Z",
+      "label": "smoke_work_state_current_stage",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:42:49Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_blocks_missing_gate.py"
+      ],
+      "elapsed_seconds": 9.101,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:43:19Z",
+      "label": "smoke_work_transition_blocks_missing_gate",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:43:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_branching_if_supported.py"
+      ],
+      "elapsed_seconds": 14.871,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:49:25Z",
+      "label": "smoke_work_transition_branching_if_supported",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:49:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_emits_stage_events.py"
+      ],
+      "elapsed_seconds": 15.726,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:48:31Z",
+      "label": "smoke_work_transition_emits_stage_events",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:48:15Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_final_stage_completes_run.py"
+      ],
+      "elapsed_seconds": 19.875,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:48:51Z",
+      "label": "smoke_work_transition_final_stage_completes_run",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:48:31Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_linear.py"
+      ],
+      "elapsed_seconds": 10.628,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:43:10Z",
+      "label": "smoke_work_transition_linear",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:42:59Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_records_evidence.py"
+      ],
+      "elapsed_seconds": 9.656,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:43:38Z",
+      "label": "smoke_work_transition_records_evidence",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:43:29Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_recovers_after_invalid_evidence.py"
+      ],
+      "elapsed_seconds": 10.02,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:43:29Z",
+      "label": "smoke_work_transition_recovers_after_invalid_evidence",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:43:19Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_snapshot_pinned_process.py"
+      ],
+      "elapsed_seconds": 19.208,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:49:10Z",
+      "label": "smoke_work_transition_snapshot_pinned_process",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:48:51Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_updates_assignment_stage.py"
+      ],
+      "elapsed_seconds": 18.73,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:48:15Z",
+      "label": "smoke_work_transition_updates_assignment_stage",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:47:56Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_worker_awareness_of_director.py"
+      ],
+      "elapsed_seconds": 12.064,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:33:35Z",
+      "label": "smoke_worker_awareness_of_director",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:33:22Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_worker_environment_secret_redaction.py"
+      ],
+      "elapsed_seconds": 0.216,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:16:41Z",
+      "label": "smoke_worker_environment_secret_redaction",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:16:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_worker_run_shell.py"
+      ],
+      "elapsed_seconds": 40.233,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:16:41Z",
+      "label": "smoke_worker_run_shell",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:16:00Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_worker_workspace_access.py"
+      ],
+      "elapsed_seconds": 6.944,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:16:48Z",
+      "label": "smoke_worker_workspace_access",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:16:41Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-attempt1.json"
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_workplace_learning_queue.py"
+      ],
+      "elapsed_seconds": 5.674,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:53:46Z",
+      "label": "smoke_workplace_learning_queue",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:53:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180,
+      "evidence_report": "source-full-report-remainder.json"
+    }
+  ]
+}

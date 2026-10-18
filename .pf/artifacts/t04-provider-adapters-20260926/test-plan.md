@@ -1,0 +1,5 @@
+# T04 assurance plan
+
+Run the independent registered alternate-provider fixture against actual Host and private raw storage: immutable trusted registration, valid alternate start/message, identity/session/provenance rejection, raw durability, native conflict quarantine, stable duplicate effects and recovery. Keep tests isolated from installed/shared services; any Runtime daemon used by existing smoke is its own temporary workplace and is stopped by the fixture.
+
+Compatibility matrix: raw kernel, central ingress/replay, Codex lifecycle, conversation completeness, authenticated report content, expected report containment, Codex worker driver/governance, Runtime Ledger/hooks/MCP and generic initialization/Codex compatibility. T03 parity validates the narrow legacy batch change. Independently review source after implementation and repair concrete findings before final acceptance. Check schema/public cleanliness/checksums and document links, unchanged raw-kernel and main capsule hashes. Source-only proof; actual-host new-feature acceptance T06.

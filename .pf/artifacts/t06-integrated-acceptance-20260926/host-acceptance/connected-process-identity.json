@@ -1,0 +1,16 @@
+﻿[
+    {
+        "pid":  3644,
+        "parent_pid":  8148,
+        "started_at":  "2026-09-26T12:05:46.0906060Z",
+        "executable":  "C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0\\python.exe",
+        "command":  "\"C:\\Users\\musst\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe\" D:\\.agents\\processforge\\tools\\pf_runtime\\mcp_server.py --workplace D:\\.agents\\processforge-workplace"
+    },
+    {
+        "pid":  9696,
+        "parent_pid":  3644,
+        "started_at":  "2026-09-26T12:05:46.4152050Z",
+        "executable":  "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "command":  "\"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\"  D:\\.agents\\processforge\\tools\\pf_runtime\\mcp_server.py --workplace D:\\.agents\\processforge-workplace"
+    }
+]

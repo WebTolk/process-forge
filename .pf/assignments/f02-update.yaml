@@ -1,0 +1,108 @@
+schema_version: 1
+id: f02-update
+title: 'F02: block unowned paths added by a Core archive'
+run_id: core-f01-f02-shell-20260910
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T04:47:12Z'
+updated_at: '2026-09-10T05:13:58Z'
+objective: Execute bounded brief .pf/artifacts/core-f01-f02-20260910/f02-update-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-f01-f02-20260910/f02-update-brief.md
+allowed_files:
+  - src/processforge_core/core_update.py
+  - tools/smoke_core_update_manifest.py
+  - .pf/artifacts/core-f01-f02-20260910/f02-update/**
+  - .pf/tmp/core-f01-f02-20260910/f02-update/**
+allowed_read_files:
+  - src/**
+  - tools/**
+  - docs/**
+  - templates/**
+  - schemas/**
+  - requirements.txt
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+  - .pf/artifacts/core-f01-f02-20260910/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/processforge.py
+  - .pf/process-forge.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+ownership:
+  owner_id: f02-update
+  owner_label: worker-f02-update
+  role: worker
+  writer: true
+  owned_files:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_manifest.py
+    - .pf/artifacts/core-f01-f02-20260910/f02-update/**
+    - .pf/tmp/core-f01-f02-20260910/f02-update/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_manifest.py
+    - .pf/artifacts/core-f01-f02-20260910/f02-update/**
+    - .pf/tmp/core-f01-f02-20260910/f02-update/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: f02-update-report
+    path: .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+  format: concise_markdown
+  include:
+    - f02-update-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

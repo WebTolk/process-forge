@@ -1,0 +1,218 @@
+schema_version: 1
+id: audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease
+title: Audit PF documentation against the current codebase for 1.1.1 prerelease readine
+run_id: garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre
+process: task-batch-execution
+status: done
+created_at: '2026-09-07T12:37:24Z'
+updated_at: '2026-09-07T12:55:14Z'
+objective: 'Audit PF documentation against the current codebase for 1.1.1 prerelease readiness. Analysis-only: verify EN/RU entrypoints, CLI/MCP examples, workflow and search contracts, install/update and release guidance; record evidence-backed discrepancies, severity, coverage and remediation plan. Do not modify product code/docs or bump/publish a version.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Documentation audit finished. Final report and handoff contain eight open documentation findings, evidence, remediation order and prerelease gates. Complete only this audit run; no product fixes, release approval or installed update is implied.
+  artifacts:
+    - .pf/artifacts/docs-audit-1.1.1-iteration-20260907.md
+    - .pf/artifacts/docs-audit-1.1.1-plan-20260907.md
+    - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+    - .pf/contexts/assignment-capsules/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.capsule.yaml
+    - .pf/handoffs/docs-audit-1.1.1-20260907.md
+    - .pf/reviews/docs-audit-1.1.1-review-20260907.md
+    - .pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/run.yaml
+    - .pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/task-index.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-07T12:54:51Z'
+  evidence:
+    -
+      kind: artifact
+      id: run-summary
+      path: .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      status: ready
+      recorded_at: '2026-09-07T12:55:10Z'
+      sha256: 'sha256:28f78a895e021a661a444c90894ebe1968b73f248340cebc3ff8882ad287b0c7'
+    -
+      kind: artifact
+      id: run-handoff
+      path: .pf/handoffs/docs-audit-1.1.1-20260907.md
+      status: ready
+      recorded_at: '2026-09-07T12:55:10Z'
+      sha256: 'sha256:054a7fedebf4fd4743fc3f3b6337fcda2584b6570aa162bbde70cb556836144d'
+    -
+      kind: gate
+      id: run-summary-created
+      status: passed
+      path: .pf/handoffs/docs-audit-1.1.1-20260907.md
+      recorded_at: '2026-09-07T12:55:10Z'
+      sha256: 'sha256:054a7fedebf4fd4743fc3f3b6337fcda2584b6570aa162bbde70cb556836144d'
+  notes: Documentation audit finished. Final report and handoff contain eight open documentation findings, evidence, remediation order and prerelease gates. Complete only this audit run; no product fixes, release approval or installed update is implied.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-07T12:37:24Z'
+    completed_at: '2026-09-07T12:38:43Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        id: run-record
+        path: .pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/run.yaml
+        status: ready
+        recorded_at: '2026-09-07T12:38:39Z'
+        sha256: 'sha256:e2383cabf34f4870df6c0adb8287aa31469302b7a66f16cc36a60ff240e91edd'
+      -
+        kind: gate
+        id: run-has-context
+        status: passed
+        path: .pf/contexts/assignment-capsules/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.capsule.yaml
+        recorded_at: '2026-09-07T12:38:39Z'
+        sha256: 'sha256:abc25f2bc05fa33e8a0c905b300a04ddd48388d0e03b9d27df9a15ab2bc55762'
+    notes: 'Audit baseline: dev 1aecc18b plus the previous uncommitted required-output fix. VERSION is 1.1.0; target 1.1.1 is prerelease intent. Current snapshot and capsule inspected. Scope is evidence and audit artifacts only; no source/docs changes, publication or infrastructure actions.'
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-07T12:38:43Z'
+    completed_at: '2026-09-07T12:38:52Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        id: task-index
+        path: .pf/artifacts/docs-audit-1.1.1-plan-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:38:49Z'
+        sha256: 'sha256:562b0d58ab509230d0928b7d728dabd0c9968921f5fd7c7b9640a9a3d746d53f'
+      -
+        kind: gate
+        id: run-has-tasks
+        status: passed
+        path: .pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/task-index.md
+        recorded_at: '2026-09-07T12:38:49Z'
+        sha256: 'sha256:72eec9889529c152abf95b27f7a6a824150702a88dbde962d334772e8db42168'
+    notes: 'Audit plan recorded: automated CLI/link inventory followed by manual semantic review, EN/RU parity, focused docs checks and prioritized 1.1.1 remediation. One assignment-backed audit task; writes confined to .pf evidence.'
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-07T12:38:52Z'
+    completed_at: '2026-09-07T12:53:20Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        id: task-iteration-log
+        path: .pf/artifacts/docs-audit-1.1.1-iteration-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:53:17Z'
+        sha256: 'sha256:49b6cc258bf0cbac7bacc9bbd695ca304ecf9f257a675e72f534cd2927c1f8b7'
+      -
+        kind: gate
+        id: task-results-recorded
+        status: passed
+        path: .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+        recorded_at: '2026-09-07T12:53:17Z'
+        sha256: 'sha256:28f78a895e021a661a444c90894ebe1968b73f248340cebc3ff8882ad287b0c7'
+    notes: 'Audit execution finished: inventory, semantic evidence, eight findings and remediation plan recorded. Continue with result fixation; product remediation is outside this analysis-only assignment.'
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-07T12:53:20Z'
+    completed_at: '2026-09-07T12:53:48Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        id: task-result
+        path: .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:53:44Z'
+        sha256: 'sha256:28f78a895e021a661a444c90894ebe1968b73f248340cebc3ff8882ad287b0c7'
+      -
+        kind: gate
+        id: all-blocking-tasks-completed
+        status: passed
+        path: .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+        recorded_at: '2026-09-07T12:53:44Z'
+        sha256: 'sha256:28f78a895e021a661a444c90894ebe1968b73f248340cebc3ff8882ad287b0c7'
+    notes: 'All blocking audit deliverables are complete: report, reproducible inventory/probes, validation and remediation plan. The only remaining task is the current lifecycle carrier, finalized by the terminal transition. Documentation/product findings remain open for a separate implementation task.'
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-07T12:53:48Z'
+    completed_at: '2026-09-07T12:54:51Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        id: run-review
+        path: .pf/reviews/docs-audit-1.1.1-review-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:54:48Z'
+        sha256: 'sha256:6630d452044d96ced7b6e49e261cf2a08ed556c6d09e07276ace2724dc0a67bd'
+      -
+        kind: gate
+        id: run-doctor-passed
+        status: passed
+        path: .pf/reviews/docs-audit-1.1.1-review-20260907.md
+        recorded_at: '2026-09-07T12:54:48Z'
+        sha256: 'sha256:6630d452044d96ced7b6e49e261cf2a08ed556c6d09e07276ace2724dc0a67bd'
+    notes: 'Self-review completed: scoped run/task doctors PASS, evidence and preserved public diff verified. Audit report is complete; release readiness remains NOT READY. Proceed to summary and handoff.'
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-07T12:54:51Z'
+    completed_at: '2026-09-07T12:55:14Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        id: run-summary
+        path: .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:55:10Z'
+        sha256: 'sha256:28f78a895e021a661a444c90894ebe1968b73f248340cebc3ff8882ad287b0c7'
+      -
+        kind: artifact
+        id: run-handoff
+        path: .pf/handoffs/docs-audit-1.1.1-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:55:10Z'
+        sha256: 'sha256:054a7fedebf4fd4743fc3f3b6337fcda2584b6570aa162bbde70cb556836144d'
+      -
+        kind: gate
+        id: run-summary-created
+        status: passed
+        path: .pf/handoffs/docs-audit-1.1.1-20260907.md
+        recorded_at: '2026-09-07T12:55:10Z'
+        sha256: 'sha256:054a7fedebf4fd4743fc3f3b6337fcda2584b6570aa162bbde70cb556836144d'
+    notes: Documentation audit finished. Final report and handoff contain eight open documentation findings, evidence, remediation order and prerelease gates. Complete only this audit run; no product fixes, release approval or installed update is implied.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260907-094912-ae667f
+  snapshot_checksum: 'sha256:2751956d7d55c68afd582a55ac385080093f2a2243e3ad9b63163309fa2745cb'
+  assignment_capsule: .pf/contexts/assignment-capsules/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.capsule.yaml
+  assignment_capsule_checksum: 'sha256:abc25f2bc05fa33e8a0c905b300a04ddd48388d0e03b9d27df9a15ab2bc55762'

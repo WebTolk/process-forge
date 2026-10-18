@@ -1,0 +1,131 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "run-review",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "task-result",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "task-result",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "all-blocking-tasks-completed"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "task-result-fixation"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "evidence": [],
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "task-results-recorded",
+          "kind": "gate",
+          "recorded_at": "2026-09-10T11:01:34Z",
+          "status": "passed",
+          "summary": "Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass."
+        },
+        "id": "task-results-recorded",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "all-blocking-tasks-completed",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "task-result",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "all-blocking-tasks-completed"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "task-result-fixation"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "task-result-fixation",
+  "obligations": [],
+  "previous_stage_id": "task-execution-loop",
+  "process": {
+    "fingerprint": "sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2",
+    "id": "task-batch-execution",
+    "pin_status": "pinned",
+    "version": "1.0.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "task-iteration-log",
+        "kind": "artifact",
+        "path": ".pf/artifacts/publish-f06-f08-20260910/iteration-record.md",
+        "recorded_at": "2026-09-10T11:01:34Z",
+        "sha256": "sha256:d64f4485bbf3bf34fcffd6074e7a9a1fae610200f073a93a2c3e3811ea90289d",
+        "status": "ready"
+      },
+      "id": "task-iteration-log",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "task-result-fixation",
+    "status": "in_progress",
+    "title": "Fix task results"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

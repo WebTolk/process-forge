@@ -1,0 +1,13 @@
+# T02 resource domain
+
+Work identity is project + run + assignment. Context identity is its immutable capsule id plus verified checksum; its snapshot id/checksum and process pin remain historical facts. A read requires all three explicit selectors run_id, assignment_id, context_id; none may select a newest/other Work. A real bound session authorizes the project, not a fictitious sessionless identity. Another authorized session may continue the same Work.
+
+Access is pinned Work grants intersected with fresh current project authorization and the stage resource_subset. Missing subset inherits; [] grants none; invalid/unknown/unpinned entries fail explicitly. A selected stage resource whose current access was revoked blocks the requested read/search; revocation never reads old cache content. B newly granted today cannot join old Work A. Current generation/metadata/policy must agree with the pin before content access.
+
+Material has id, generation, metadata fingerprint, material kind, portable reference, normalized declared indexing policy and material fingerprint. Fulltext adds sorted relative file manifest with byte size/SHA-256. Metadata binds only the declaration and source availability, never the recursive contents of mutable outputs/source trees. None exposes no searchable text. Without a declared generation, the verified material digest is its generation token. Declared version/generation does not replace byte verification.
+
+Every file read remains under the currently authorized resolved root and declared sources/include/exclude. Invalid paths/symlink escapes, unreadability, missing required root/source, oversized or over-budget declared material fail with a stable reason; no silent truncation masquerades as exact material. Large corpora require a narrower declared resource/source or successor Work. No automatic whole-corpus copy.
+
+Search verifies the bounded selected material before querying an ephemeral per-request FTS table; it returns only verified metadata/results with resource provenance, never shares mutable Workplace cache content across Works. Resolve distinguishes metadata navigation from verified fulltext material, returns portable manifest and private authorized root only on success. Search availability, material coverage and existing global index readiness are separate fields.
+
+Legacy capsules without verifiable bindings return legacy_contract_incomplete with successor guidance. Unknown binding versions fail closed. New reads never mutate capsule, assignment, snapshot, installed state or shared catalogue. Process evidence can carry the returned resource_provenance under an artifact; that proof describes a completed read and is not a new access grant.

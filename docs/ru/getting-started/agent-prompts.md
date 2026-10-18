@@ -1,8 +1,12 @@
 # Командный справочник агента и промпты
 
 Эта страница написана для ИИ-агентов. Документация для человека должна ссылаться
-сюда, а не дублировать длинные списки команд. Не вшивайте номера релизов в текст,
-примеры, имена архивов и отчёты.
+сюда, а не дублировать длинные списки команд. Повторно используемые инструкции
+и примеры имён архивов должны быть нейтральны к версии. В заметках о выпуске,
+миграции и отчётах о проверках сохраняйте фактическую версию, commit исходников
+и SHA-256 архива, когда они относятся к результату. Не заменяйте записанное
+происхождение плейсхолдером. Перед настройкой и планированием ресурсов проверьте
+[требования](../requirements.md).
 
 ## Правила работы
 
@@ -17,7 +21,9 @@
   его как проект и там намеренно не создан `.pf/process-forge.yaml`.
 - Из корня дистрибутива ProcessForge используйте `python bin/pf.py`.
 - Внутри подключенного проекта используйте `python .pf/runtime/bin/pf.py`.
-- Перед проектной работой читайте `.pf/START_AGENT_HERE.md`.
+- Перед проектной работой читайте корневой `AGENTS.md` (в старом проекте без него — `.pf/AGENTS.md`).
+- `agent-start-prompt` печатает необязательную актуальную подсказку без записи
+  файлов; сохранённый START не даёт полномочий. См. [политику входа](../concepts/agent-entry.md).
 - Для новой настройки машины с участием человека по умолчанию используйте
   пошаговую настройку workplace: `workplace-setup start`,
   `workplace-setup review`, `workplace-setup apply` и
@@ -37,14 +43,21 @@
   Они собирают пакеты знаний, шаблоны, инструменты, MCP providers,
   capabilities, процессы, стандарты кода, project type hints, политики и
   необязательное наследование parent/child platform.
-- Имена архивов конкретного релиза держите в release checklist. В повторно
-  используемых примерах промптов применяйте нейтральные имена архивов.
+- В повторно используемых примерах промптов применяйте нейтральные имена
+  архивов. В release checklist и доказательствах указывайте точный проверенный
+  архив и его происхождение.
 - `--interactive` принимается first-run initialization commands ради
   совместимости пользовательского опыта; текущие команды остаются файловыми и
   не требуют вопросов в терминале.
 - Для обычной проектной работы используйте `pf.context`, при необходимости
-  `pf.search`, затем `pf.resolve` и `pf.work.start`. Текущий context/snapshot
-  важнее historical generated reports.
+  `pf.search`, затем `pf.resolve`, `pf.work.start`, `pf.work.state` и
+  `pf.work.transition` до ответа `run_completed`. Если получен
+  `process_choice_required`, выберите предложенный `process_id` и повторите
+  start; `default` — рекомендация, а не автоматический выбор. Текущий
+  context/snapshot важнее historical generated reports.
+- Полный цикл и примеры evidence приведены в
+  [декларативном исполнении процесса](../concepts/declarative-process-execution.md)
+  и [Garage Core (EN)](../../concepts/garage-core.md).
 - Во время обычной работы не устанавливайте, не запускайте и не ремонтируйте PF
   Runtime, MCP, host hooks, Agent Ledger или search indexes. Используйте
   доступные PF tools и сообщайте operator-level blocker.
@@ -58,6 +71,113 @@
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status` и `worker-launch-prompt create`.
 
+- Для продолжения используйте `pf.continuation.status` или прочитайте названное
+  продолжение. Выберите точные Run/assignment/context, явно создайте continuation,
+  если это нужно, затем вызовите `pf.continuation.resume`. Не выбирайте первый
+  или самый новый вариант автоматически. Без привязанной сессии передавайте
+  возвращённые селекторы в каждый вызов Work.
+- Внутри выбранной Work используйте `pf.work.search` и `pf.work.resolve` с теми
+  же селекторами. Метаданные ресурса не разрешают чтение его тела. Запрет
+  действия или отсутствие обязательного входа блокирует зависимую работу.
+- Подготовленный worker исполняет неизменяемый вход. Он не должен выполнять
+  bootstrap PF, запускать другую Work, перевыбирать процесс или пересобирать
+  контекст. Подключение PF MCP ему не нужно. Соблюдайте контракт доставки
+  результата, включая захват финального ответа, когда это указано.
+- Временные файлы репозитория держите в своей папке внутри `.pf/tmp/`.
+  Удаляйте их после работы, если они не сохранены как доказательства;
+  сохраняйте чужие и используемые файлы.
+
+## Продолжение Work без MCP
+
+Используйте существующий CLI проекта и текущий снимок контекста. Проверьте
+актуальность; не устанавливайте и не запускайте инфраструктуру ради контекста.
+Если контекст или обязательные входы нельзя проверить, остановите зависимую работу.
+
+Найдите кандидатов без создания Work, затем выберите нужные Run, assignment
+и неизменяемый context. При неоднозначности спросите пользователя.
+Плейсхолдеры ниже заменяются только значениями из проверенного ответа PF:
+
+```bash
+python .pf/runtime/bin/pf.py project-context-check --project-root . --json
+python .pf/runtime/bin/pf.py continuation-status --project-root . --json
+python .pf/runtime/bin/pf.py continuation-create --project-root . --id <continuation-id> --run <run-id> --assignment <assignment-id> --context-id <context-id> --apply --json
+python .pf/runtime/bin/pf.py continuation-resume --project-root . --continuation <continuation-id> --json
+python .pf/runtime/bin/pf.py work-state --project-root . --run <run-id> --assignment <assignment-id> --context-id <context-id> --json
+python .pf/runtime/bin/pf.py work-search --project-root . --run <run-id> --assignment <assignment-id> --context-id <context-id> --query "<query>" --json
+python .pf/runtime/bin/pf.py work-resolve --project-root . --run <run-id> --assignment <assignment-id> --context-id <context-id> --resource-id <resource-id> --json
+```
+
+Если continuation уже есть, проверьте его через `continuation-status
+--continuation <continuation-id>` и возобновите вместо создания нового.
+Прочитайте выбранные assignment и capsule, выполните текущую стадию, затем
+вызовите `work-transition` с теми же селекторами, объявленным `--outcome`
+и реальными записями `--evidence-file` или повторяемым `--evidence`.
+Следующую стадию выбирает PF; продолжайте до `action: run_completed`.
+Для новой работы используйте `work-start` с явной областью доступа, как описано ниже.
+Подготовленный worker следует своему входному контракту, а не выполняет
+эту последовательность допуска и продолжения.
+
+## Новая Work с явной областью доступа
+
+Цель задачи сама по себе не даёт прав на файлы. Попросите основного агента
+подготовить область доступа по согласованной задаче. Перед созданием проверьте
+пути и действия; пустая декларация не означает неограниченные полномочия.
+
+Этот пример разрешает изменить один документ и создать собственные
+доказательства и временные материалы. Подставьте пути своей задачи и сохраните
+JSON в UTF-8 как `.pf/tmp/task-note/scope.json`:
+
+```json
+{
+  "schema_version": 1,
+  "assignment": {
+    "allowed_actions": ["read", "write_artifact", "write_product"],
+    "allowed_read_files": [
+      "AGENTS.md", "README.md", "docs/**", ".pf/AGENTS.md",
+      ".pf/process-forge.yaml", ".pf/contexts/**", ".pf/assignments/**",
+      ".pf/artifacts/task-note/**", ".pf/tmp/task-note/**"
+    ],
+    "allowed_files": [
+      "docs/task-note.md", ".pf/artifacts/task-note/**", ".pf/tmp/task-note/**"
+    ],
+    "execution_mode": {
+      "kind": "implementation",
+      "code_changes_allowed": true,
+      "artifact_changes_allowed": true,
+      "requires_review": true
+    },
+    "required_outputs": [
+      {
+        "id": "task-note-report",
+        "path": ".pf/artifacts/task-note/report.md",
+        "type": "markdown",
+        "required": true
+      }
+    ]
+  }
+}
+```
+
+`write_product` относится и к публичному документу, и к исходному коду;
+изменения ограничены явным списком путей. В подключённом проекте выберите только
+предложенный PF процесс и выполните:
+
+```bash
+python .pf/runtime/bin/pf.py work-start --project-root . --process-id <offered-process-id> --objective "Update the task note" --scope-file .pf/tmp/task-note/scope.json --json
+```
+
+В MCP вызовите `pf.work.start` с той же целью `objective`, выбранным `process_id`
+и `project_root`, передав весь JSON-объект выше как `scope_intent`.
+Имя локального файла не является значением MCP `scope_intent`.
+
+Прочитайте возвращённые точные assignment и capsule. Контекст должен быть
+валидным, а `execution_readiness.status` — `ready`, с нужными разрешениями
+чтения и записи и без блокеров. Сам ответ `created_new` ещё не разрешает работу.
+Если область не задана или недостаточна, следуйте возвращённой рекомендации и
+при наличии полномочий создайте управляемого преемника с явными разрешениями.
+Не редактируйте существующую капсулу и не повторяйте запрос вслепую с более
+широкими правами. См. [создание Work с явным scope (EN)](../../concepts/work-context.md#explicit-local-work-creation-scope).
+
 ## Проверки корня дистрибутива
 
 ```bash
@@ -67,8 +187,8 @@ python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
 python bin/pf.py release-test --root . --public --fail-fast
-python bin/pf.py release-pack --root . --output dist/processforge.zip
-python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full
+python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
+python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
 
@@ -180,7 +300,10 @@ python .pf/runtime/bin/pf.py process-list --project-root .
 python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
 ```
 
-## Advanced task batch run
+## Advanced task batch run (совместимость)
+
+Этот путь предназначен только для явно запрошенного управления старым
+run/task lifecycle или операторской диагностики, не для обычной Garage-работы.
 
 ```bash
 python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
@@ -193,6 +316,7 @@ python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --k
 python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
 python .pf/runtime/bin/pf.py run-summary --project-root . --run <run-id> --apply
 python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
+python .pf/runtime/bin/pf.py run-complete --project-root . --run <run-id> --apply
 python .pf/runtime/bin/pf.py session-end --project-root .
 ```
 
@@ -257,11 +381,17 @@ tools, MCP providers, processes, coding standards и capabilities уже
 ## Prompt для человека: работа над проектом
 
 ```text
-Используй ProcessForge для этой задачи. Сначала прочитай
-.pf/START_AGENT_HERE.md, создай или переиспользуй governed work через
-pf.work.start, используй pf.search и pf.resolve для разрешённых ресурсов,
-сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff. Не
-обслуживай инфраструктуру PF.
+Используй ProcessForge для этой задачи. Прочитай корневой AGENTS.md
+(в старом проекте без него — .pf/AGENTS.md) и проверь pf.context. Для продолжения
+найди или прочитай точный continuation и вызови pf.continuation.resume;
+pf.work.start используй для новой работы. Сохраняй возвращённые идентификаторы
+Run, assignment и capsule и передавай точные селекторы без привязанной сессии.
+Для ресурсов выбранной Work используй pf.work.search и pf.work.resolve,
+проверяй текущие обязательства через pf.work.state и переходи между стадиями
+через pf.work.transition(outcome, evidence, notes). Продолжай до run_completed.
+Сохраняй артефакты в .pf, временные файлы в .pf/tmp, выполни проверки
+и заверши кратким handoff.
+Не обслуживай инфраструктуру PF.
 ```
 
 ## Subagent prompt: documentation specialist
@@ -277,7 +407,8 @@ Tasks:
 - обновляй только назначенные файлы документации;
 - держи human docs в формате prompt-only, где это требуется;
 - держи agent docs command-complete;
-- не вшивай номера релизов в prose или archive examples;
+- держи повторно используемые примеры нейтральными к версии; сохраняй точные
+  version/commit/hash в заметках о выпуске и отчётах о проверках;
 - верни список файлов, краткое содержание и остаточные риски.
 ```
 
@@ -305,8 +436,8 @@ Scope: только validation, если тебя явно не попросил
 
 Tasks:
 - запусти назначенные validation commands;
-- пересобирай релизные архивы с нейтральными filenames для свидетельств,
-  предназначенных для документации;
+- используй нейтральные имена в повторно используемых примерах; в доказательствах
+  указывай фактические version, commit исходников и SHA-256 релизного архива;
 - проверь archive после упаковки;
 - сообщи pass/fail status с command names и первой actionable failure.
 ```
@@ -320,12 +451,12 @@ Scope: review changed files и evidence. Не меняй файлы, если ma
 попросил repair.
 
 Tasks:
-- ищи behavioral regressions, stale commands, current-version references в docs,
+- ищи behavioral regressions, stale commands, неверное происхождение релиза,
   смешивание human/agent instructions и missing validation;
 - цитируй files и lines для findings;
 - отделяй blocking findings от non-blocking follow-up.
 ```
-# Lock-модель project context
+## Lock-модель project context
 
 На старте сессии агент должен показать результат
 `project-context-check --session-start --json`. `fresh` продолжает работу,

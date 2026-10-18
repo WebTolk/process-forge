@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "architecture",
+    "path": ".pf/artifacts/artifact-completion-20260927/architecture.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "implementation-plan",
+    "path": ".pf/artifacts/artifact-completion-20260927/implementation-plan.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "decision-log",
+    "path": ".pf/artifacts/artifact-completion-20260927/decision-log.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "architecture-plan-ready",
+    "path": ".pf/artifacts/artifact-completion-20260927/architecture.md",
+    "status": "passed"
+  }
+]

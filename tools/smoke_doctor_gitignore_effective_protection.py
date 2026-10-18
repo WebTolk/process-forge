@@ -39,7 +39,7 @@ def main() -> int:
         (project / ".gitignore").write_text(".codex/hooks.json\n.pf/\n", encoding="utf-8")
         result = cli("doctor-project", "--project-root", str(project), check=False)
         output = result.stdout + result.stderr
-        for entry in [".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
+        for entry in [".codex/hooks.json", ".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
             if f"PASS: .gitignore protects {entry}" not in output:
                 raise AssertionError(f"effective protection was not accepted for {entry}:\n{output}")
             if f"FAIL: .gitignore missing {entry}" in output:

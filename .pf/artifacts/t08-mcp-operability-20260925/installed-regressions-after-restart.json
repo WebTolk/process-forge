@@ -1,0 +1,50 @@
+[
+  {
+    "name": "smoke_classifier_distribution_parity",
+    "finished_at": "2026-09-25T18:00:59.891275+00:00",
+    "exit_code": 0,
+    "seconds": 0.532,
+    "stdout": "PASS: smoke_classifier_distribution_parity\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_mcp_jsonrpc_validation",
+    "finished_at": "2026-09-25T18:01:00.344952+00:00",
+    "exit_code": 0,
+    "seconds": 0.453,
+    "stdout": "PASS: native MCP validates JSON-RPC and tool arguments; notifications stay silent\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_mcp_missing_session_diagnostics",
+    "finished_at": "2026-09-25T18:01:00.530447+00:00",
+    "exit_code": 0,
+    "seconds": 0.185,
+    "stdout": "PASS: MCP missing-session diagnostics are actionable\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_project_init_local_search_mcp",
+    "finished_at": "2026-09-25T18:01:47.325242+00:00",
+    "exit_code": 0,
+    "seconds": 46.794,
+    "stdout": "PASS: snapshot-authorized SQLite FTS5 search smoke\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_garage_mode_not_promoted_by_session",
+    "finished_at": "2026-09-25T18:02:06.214824+00:00",
+    "exit_code": 0,
+    "seconds": 18.889,
+    "stdout": "PASS: bound session enriches Garage without promoting mode\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_garage_no_hooks_sessionless",
+    "finished_at": "2026-09-25T18:02:25.286711+00:00",
+    "exit_code": 0,
+    "seconds": 19.071,
+    "stdout": "PASS: Garage context/search/resolve work without hooks, session, or daemon\n",
+    "stderr": ""
+  }
+]

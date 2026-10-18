@@ -1,0 +1,4 @@
+[
+  {"kind":"artifact","artifact_id":"task-index","status":"ready","path":".pf/artifacts/publish-f06-f08-20260910/orchestrator-plan.yaml"},
+  {"kind":"gate","gate_id":"run-has-tasks","status":"passed","summary":"Two PF shell assignments and immutable capsules materialized, one source writer then independent review; primary owns acceptance and installed update."}
+]

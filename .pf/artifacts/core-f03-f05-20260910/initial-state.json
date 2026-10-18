@@ -1,0 +1,99 @@
+{
+  "action": "work_incomplete",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "task-planning",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "run-record",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "run-record",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "run-has-context"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "run-intake"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "evidence": [],
+  "gates": {
+    "entry": [],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "run-has-context",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "run-record",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "run-has-context"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "run-intake"
+    }
+  ],
+  "kind": "pf.work.state",
+  "obligations": [],
+  "process": {
+    "fingerprint": "sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2",
+    "id": "task-batch-execution",
+    "pin_status": "pinned",
+    "version": "1.0.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [],
+  "run": {
+    "id": "garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "run-intake",
+    "status": "in_progress",
+    "title": "Create or inspect run"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

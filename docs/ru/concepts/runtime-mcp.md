@@ -1,9 +1,45 @@
 # PF Runtime MCP facade
 
+Для просмотра состояния существующего сервиса рабочего места доступен
+[локальный терминальный монитор Runtime](runtime-monitor.md).
+
+Точные идентификаторы Work/контекста, проверка материала и текущего доступа
+описаны в [чтении ресурсов Work](work-resources.md).
+
+Карта загруженных CLI/MCP-операций, точные параметры и дополнительные нативные
+операции воркеров и сессий описаны в [карте действий](action-discovery.md).
+
+Уровни детализации, защиту данных и локальный экспорт описывает
+[контракт диагностики](diagnostics.md). Stdout MCP содержит только JSON-RPC.
+
 `tools/pf_runtime/mcp_server.py` — минимальный stdio MCP-сервер. Процессом
 владеет host: Codex запускает Python-процесс из своей MCP-конфигурации и владеет
 stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
 detached background service.
+
+Необязательный **pf-app-server** — отдельная служба Runtime для планирования
+и координации workplace. Stdio-фасад использует общий Core; контекст Garage
+и управляемая Work не требуют работающего app-server. При отсутствии MCP
+используйте существующий CLI. См. [Garage Core](garage-core.md) и
+[требования](../requirements.md).
+
+## Справка по реализации: транспорт stdio
+
+При запуске сервер задаёт UTF-8 для стандартных текстовых stdin и stdout
+независимо от локали и `PYTHONIOENCODING`. Уже настроенные на UTF-8 потоки
+сохраняют кодировку, в том числе входной поток, который читали до запуска.
+Кодовые точки Unicode-путей сохраняются: имена файлов не транслитерируются
+и не нормализуются. Встроенные текстовые потоки без `reconfigure` сохраняют
+поведение и принадлежность. Входной поток с другой кодировкой нужно настроить
+до чтения; предоставленный `reconfigure` должен принимать стандартные именованные
+аргументы `encoding` и `errors`. Ошибки настройки передаются вызывающему коду.
+
+Транспорт проверяет структуру JSON-RPC 2.0 и объявленную схему аргументов
+инструмента до выполнения запроса. Ошибки разбора JSON, структуры запроса и
+параметров имеют разные коды. Уведомления не создают ответов, в том числе при
+ошибке выполнения; явно заданный `id: null` остаётся запросом.
+
+## Инструменты проекта и Work
 
 Garage read tools принимают явный `project_root` и не требуют session identity,
 hooks, daemon, Ledger event, Director process или chat transcript. Session и
@@ -18,9 +54,16 @@ Forge sessions.
 Доступные tools: `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,
 `pf.project_initialization.repair`, `pf.work_state`, `pf.work.state`,
-`pf.work.start`, `pf.work.transition`,
+`pf.work.start`, `pf.work.transition`, `pf.work.search`, `pf.work.resolve`,
+`pf.continuation.create`, `pf.continuation.status`, `pf.continuation.resume`,
+`pf.work.cancel`,
 `pf.resolve`, `pf.search`, `pf.workplace_state`, `pf.session_context`,
 `pf.session_chat` и `pf.session_activity`.
+
+Дополнительные `pf.actions.*`, `pf.runtime_driver.*`, `pf.worker.*`,
+`pf.session.heartbeat` и `pf.chat.record` описаны в [карте действий](action-discovery.md).
+Полный фактический реестр доступен через `pf.actions.list`. Наличие операции
+и право её выполнить — разные сведения.
 
 `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.work_state`, `pf.work.state`, `pf.resolve` и `pf.search` являются Garage
@@ -41,12 +84,19 @@ onboarding/repair, и требуют точное JSON-значение `apply: 
 возвращается `apply_required`.
 
 `pf.work.start` — предпочтительный переход от Garage-понимания к governed work.
-Агент передает только непустой `objective`; ProcessForge проверяет и закрепляет
-process definition, выбирает объявленную initial stage, создает или повторно
-использует Run и Assignment. Далее агент вызывает `pf.work.state` и
-`pf.work.transition(outcome, evidence)`. Следующая stage не является входом
-агента. Session id может связать
-telemetry, но сам факт session не меняет `mode: garage` на `mode: forge`.
+Агент передаёт непустой `objective` и при необходимости явный `process_id`.
+Если допустим один процесс, PF выбирает его. При нескольких допустимых
+процессах без явного выбора PF возвращает `process_choice_required` с
+кандидатами: выберите предложенный id и повторите start с `process_id`.
+`default` — рекомендация, а не автоматический выбор. Уже начатый Work
+сохраняет закреплённый процесс; повторный start не переключает его.
+
+ProcessForge закрепляет определение процесса, выбирает начальную стадию и
+создаёт или переиспользует Run и Assignment. Далее агент вызывает
+`pf.work.state` и `pf.work.transition(outcome, evidence, notes)` до
+`run_completed`. Следующая стадия не является входным параметром агента.
+Session id может связать telemetry, но сам факт session не меняет
+`mode: garage` на `mode: forge`.
 
 Session-scoped failures возвращают стабильные machine-readable error codes. Для
 `missing_session` payload также содержит ограниченный remediation object:
@@ -63,11 +113,26 @@ reports или registries. Значение выдается только пос
 fresh-snapshot validation, path-ref containment и проверки, что файл принадлежит
 authorized root результата.
 
+`pf.work.search` и `pf.work.resolve` дополнительно требуют точные `run_id`,
+`assignment_id` и `context_id`. Они пересекают закреплённые разрешения с текущими
+правами проекта и ограничениями стадии. См. [ресурсы Work](work-resources.md).
+Старые капсулы при этом не обновляются автоматически.
+
+После повторного подключения сверяйте Run/Assignment/context с сохранённой
+передачей работы. Общий выбор текущей Work после завершения может указать на
+другой незавершённый Run. Идентификатор сессии не заменяет идентификаторы Work.
+
+Перечень инструментов здесь описывает текущий исходный код. Установленный MCP
+может предлагать более ранний набор: проверяйте объявленные инструменты и
+происхождение запущенной сборки. Тесты исходного сервера, новое соединение с
+установленным сервером и вызовы через реальное подключение приложения —
+разные уровни свидетельств.
+
 `pf.work_state` сохранён как compatibility alias для `pf.work.state`. Состояние
 выводится из канонических Run и Assignment и закреплённого Process definition;
 technical projectors остаются declaration-driven.
 
-MCP не является raw-ingress API и не раскрывает workplace raw payloads.
+MCP не является API приёма хуков и не раскрывает их сырые данные.
 `pf.session_chat` показывает только trusted redacted private transcript для той
 же Ledger session. См. [Codex Session Read Layer](../../concepts/codex-session-read.md) и
 [Hooks и события](hooks-events.md).
@@ -76,3 +141,28 @@ Codex host registration можно проверить, установить ил
 `python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
 Install и remove по умолчанию dry-run и требуют `--apply` для изменения Codex
 configuration. После изменения регистрации перезапустите или reload Codex.
+
+Для оператора доступны `pf server` и `python bin/pf-server.py`: start, run,
+status, stop, restart. Защищённая остановка требует свободных работников,
+запросов и планировщика, а также поддержки текущим владельцем; `--force` явно
+обходит эту проверку. Status использует ограниченную проекцию
+[монитора](runtime-monitor.md) без записи. Команды управляют workplace Runtime;
+обновление файлов Core не перезагружает MCP stdio, которым владеет хост.
+
+## Справка по реализации: тело HTTP-запроса Runtime
+
+Существующий локальный HTTP-адаптер Runtime принимает в POST JSON-объект
+размером не более 1 МиБ в байтах. `Content-Length` должен содержать десятичные
+цифры ASCII; пробелы по краям допустимы. Отсутствующая, пустая или нулевая
+длина сохраняет прежнее поведение — пустой объект. Некорректная или чрезмерная
+длина отклоняется до чтения; короткое тело — до разбора JSON и вызова обработчика.
+JSON-числа должны оставаться конечными после преобразования во float:
+`NaN`, `Infinity`, `-Infinity` и переполнение отклоняются, в том числе во
+вложенных значениях. Конечные числа, целые и строки сохраняют обычную семантику JSON.
+
+Эти отказы используют существующий ответ HTTP 400. Причины ошибок:
+`invalid Content-Length`, `incomplete request body` и
+`request JSON numbers must be finite`; прежние сообщения о превышении размера
+и JSON, отличном от объекта, сохранены. Проверки bearer и остановки предшествуют
+чтению тела. Команда `python tools/smoke_runtime_http_body.py` выполняет проверки
+с инертными потоками и изолированным HTTP-сервером; это не приёмка установленного Runtime.

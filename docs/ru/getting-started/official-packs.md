@@ -24,8 +24,8 @@ python bin/pf.py pack-activate --id processforge.official.software-development -
 Проверьте активный каталог:
 
 ```bash
-python bin/pf.py process-list --active --project-root ./my-project --workplace ../pf-workplace
-python bin/pf.py process-show software-feature-development --project-root ./my-project --workplace ../pf-workplace
+python bin/pf.py process-list --active --project-root ../my-project --workplace ../pf-workplace
+python bin/pf.py process-show software-feature-development --project-root ../my-project --workplace ../pf-workplace
 ```
 
 Процесс используется непосредственно из дистрибутива. Не копируйте его

@@ -1,0 +1,11 @@
+# Cutover execution design
+
+Build with the existing release-pack command from the clean detached candidate at 69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab. Name the archive processforge-1.2.0-dev-20261017-sqlite-69c59ec.zip and retain its generated sidecar/Core manifest. Require public cleanliness/checksum/entry-contract checks, exact archive inspection and quick extracted checks. Reuse the already-passed SQLite source qualification; rerun only checks justified by archive or device changes.
+
+Before device writes: retain native update plan/status, original private config hashes, actual process identities and migration diagnostics. For legacy event time-only repeats, prepare a first-seen canonical copy through a bounded temporary SQLite index. Record original hashes and locations; native PF migrator remains unchanged and content conflicts still fail. This avoids editing originals or weakening the release source.
+
+Critical section: use managed Runtime stop and wait for in-flight hook dispatches; prevent old loaded MCP from issuing writes, use existing control when available and terminate only the verified obsolete stdio server if no lifecycle control exists. New source hook fallback cannot append old NDJSON; reject/hold input until migration is ready. Retain stable legacy source backup and signatures, apply the new exact dev Core archive once, run the native migrator against canonical event sources plus original raw sources for both projects, verify ready/integrity/counts and unchanged legacy bytes, then start the new Runtime.
+
+Post-cutover: use newly started CLI/Runtime only; verify installed manifest and representative SQLite hook plus retry, pending cleanup and frozen legacy sources. Measure a settled 60-second Runtime CPU interval with no control calls. Record any scheduler degradation separately. Actual connected-MCP reconnection is tested only if the host supports reattachment; otherwise leave the obsolete writer stopped and retain an exact session-reconnect handoff. Do not repeat install to refresh MCP.
+
+The explicit operator request authorizes this managed update/migration/lifecycle sequence. No additional user confirmation is necessary for its routine reversible steps. Stable release publication and general 1.2.0 acceptance remain deferred.

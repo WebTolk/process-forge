@@ -10,19 +10,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-import yaml
-
-
 ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "tools" / "processforge.py"
 MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+sys.path.insert(0, str(ROOT / "tools"))
 
-
-def cli(*args: str) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run([sys.executable, str(PF), *args], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=120)
-    if result.returncode != 0:
-        raise AssertionError(result.stdout + result.stderr)
-    return result
+from garage_search_smoke_support import register_fixture_resource, run_cli, select_fixture_resource
 
 
 def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[str, object]:
@@ -46,36 +39,22 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[s
     return json.loads(text)
 
 
-def add_fixture_resource(project: Path) -> str:
-    knowledge_root = project / "knowledge" / "articles"
-    knowledge_root.mkdir(parents=True)
-    (knowledge_root / "garage.md").write_text("GarageNoHooksNeedle proves sessionless PF search.", encoding="utf-8")
-    snapshot_path = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
-    snapshot = yaml.safe_load(snapshot_path.read_text(encoding="utf-8"))
-    resource = {
-        "id": "fixture.docs:garage-article",
-        "resource_id": "fixture.docs:garage-article",
-        "package_id": "fixture.docs",
-        "kind": "knowledge",
-        "title": "Garage article",
-        "content_roots": [str(knowledge_root)],
-        "indexing": {"enabled": True, "mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["*.md"], "exclude": []}]},
-    }
-    snapshot.setdefault("resolved", {}).setdefault("available_knowledge_resources", []).append(resource)
-    snapshot["local_search_resources"] = [resource]
-    snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
-    return resource["id"]
-
-
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-garage-no-hooks-") as raw:
         root = Path(raw)
         workplace = root / "workplace"
         project = root / "project"
-        cli("workplace-init", "--workplace", str(workplace), "--apply")
-        cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
+        run_cli("workplace-init", "--workplace", str(workplace), "--apply")
+        resource_id = register_fixture_resource(
+            workplace,
+            "fixture.search-nohooks",
+            "garage-article",
+            {"garage.md": "GarageNoHooksNeedle proves sessionless PF search."},
+            title="Garage article",
+        )
+        run_cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
         shutil.rmtree(project / ".codex", ignore_errors=True)
-        resource_id = add_fixture_resource(project)
+        select_fixture_resource(project, workplace, "fixture.search-nohooks", "garage-article")
 
         context = call_mcp(workplace, "pf.context", {"project_root": str(project)})
         if context.get("kind") != "pf.context" or context.get("context", {}).get("status") != "fresh":
@@ -86,7 +65,7 @@ def main() -> int:
         resolved = call_mcp(workplace, "pf.resolve", {"project_root": str(project), "resource_id": resource_id})
         if resolved.get("resource", {}).get("status") != "available":
             raise AssertionError(resolved)
-    print("PASS: Garage context/search/resolve work without hooks, session, or daemon")
+        print("PASS: Garage context/search/resolve work without hooks, session, or daemon")
     return 0
 
 

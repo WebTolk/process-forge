@@ -1,0 +1,3 @@
+# architecture-plan
+
+Use installed bin/pf.py server restart --workplace D:/.agents/processforge-workplace --timeout 30 --json, preserving normal port/interval defaults as exposed by the existing CLI. Capture exact result, old PID exit and new runtime.lock owner/instance/readyz; do not use --force, OS-kill or manual lock cleanup. After readiness, sample a 30-second startup window and a 60-second settled window with pinned Windows process handles and raw interval data. Report an accurate guarded refusal if it cannot restart; do not hide degraded health or missing source deployment. Current user request authorizes only this managed Runtime lifecycle.

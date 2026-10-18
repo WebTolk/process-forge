@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "codebase-audit-shell-20260910",
+  "task_id": "audit-mcp",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.6-luna",
+  "status": "failed",
+  "pid": 19232,
+  "started_at": "2026-09-10T17:12:02Z",
+  "finished_at": "2026-09-10T17:20:31Z",
+  "exit_code": 1,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/audit-mcp.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/codebase-audit-shell-20260910/worker-prompts/audit-mcp.md",
+  "expected_report_path": ".pf/artifacts/codebase-audit-20260910/audit-mcp/report.md",
+  "stdout_path": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-mcp/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-mcp/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-mcp/heartbeat.json",
+  "last_heartbeat_at": "2026-09-10T17:20:31Z",
+  "failure_reason": null
+}

@@ -1,0 +1,482 @@
+schema_version: 1
+id: hook-sqlite-implementation-20261017-migrate-project-hook-event-journals
+title: 'hook-sqlite-implementation-20261017: migrate project hook/event journals to SQLi'
+run_id: garage-hook-sqlite-implementation-20261017-migrate-project-hook-event-jo
+process: software-feature-development
+status: done
+created_at: '2026-10-17T05:04:41Z'
+updated_at: '2026-10-17T05:57:25Z'
+objective: 'hook-sqlite-implementation-20261017: migrate project hook/event journals to SQLite; device PFConfig defaults and per-project overrides for two logging switches with live reload and CLI management; temporary file migrator, indexed reads/admission, remove full rebuild work from hook ingress. Source implementation, focused assurance, commit/push; no installed-Core or Runtime/MCP lifecycle actions. Explicit predecessor handoff preserves earlier research and narrow ownership.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Source scope complete and published identically to both dev remotes. Final report, qualified hashes and exact follow-up handoff retained. Installed Core/Runtime/actual connected MCP and real journals unchanged; no live CPU acceptance claimed. Temporary migrator retained for the later controlled cutover.
+  artifacts:
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/architecture.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/assurance.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/delivery.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/domain.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/evolve.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/implementation.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/intake.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/investigation.md
+    - .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration-successor.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-17T05:56:31Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/hook-sqlite-migration-20261017/stages/evolve.md
+      status: ready
+      recorded_at: '2026-10-17T05:57:25Z'
+      sha256: 'sha256:b9f5cffa245fffaef970fe2c0f139c2111a3b701c91dcf46bdcb41020ec7e3c3'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/hook-sqlite-migration-20261017/stages/evolve.md
+      status: passed
+      summary: Source objective complete, lessons and exact operator qualification boundary retained; no duplicate device acceptance work or unrequested infrastructure action.
+      recorded_at: '2026-10-17T05:57:25Z'
+      sha256: 'sha256:b9f5cffa245fffaef970fe2c0f139c2111a3b701c91dcf46bdcb41020ec7e3c3'
+  notes: Source scope complete and published identically to both dev remotes. Final report, qualified hashes and exact follow-up handoff retained. Installed Core/Runtime/actual connected MCP and real journals unchanged; no live CPU acceptance claimed. Temporary migrator retained for the later controlled cutover.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-17T05:04:41Z'
+    completed_at: '2026-10-17T05:08:50Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration-successor.md
+        status: ready
+        recorded_at: '2026-10-17T05:08:50Z'
+        sha256: 'sha256:581b385e6c2cd2aa1aa6f79d9979eb415b0a251a0953bb825e27b5ffa6fcb958'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration-successor.md
+        status: ready
+        recorded_at: '2026-10-17T05:08:50Z'
+        sha256: 'sha256:581b385e6c2cd2aa1aa6f79d9979eb415b0a251a0953bb825e27b5ffa6fcb958'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration-successor.md
+        status: ready
+        recorded_at: '2026-10-17T05:08:50Z'
+        sha256: 'sha256:581b385e6c2cd2aa1aa6f79d9979eb415b0a251a0953bb825e27b5ffa6fcb958'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration-successor.md
+        status: passed
+        summary: Exact successor capsule/state valid and ready, readback complete, predecessor handoff and user clarification recorded.
+        recorded_at: '2026-10-17T05:08:50Z'
+        sha256: 'sha256:581b385e6c2cd2aa1aa6f79d9979eb415b0a251a0953bb825e27b5ffa6fcb958'
+    notes: Successor owns actual configuration CLI/parser/tests/template. Research preserved; proceed intake under explicit user authorization.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-17T05:08:50Z'
+    completed_at: '2026-10-17T05:09:00Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/intake.md
+        status: ready
+        recorded_at: '2026-10-17T05:09:00Z'
+        sha256: 'sha256:4336497675590ea606c4fba594768a25b5a079e677266be8fbdb1deb03c5af3f'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/intake.md
+        status: ready
+        recorded_at: '2026-10-17T05:09:00Z'
+        sha256: 'sha256:4336497675590ea606c4fba594768a25b5a079e677266be8fbdb1deb03c5af3f'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/intake.md
+        status: ready
+        recorded_at: '2026-10-17T05:09:00Z'
+        sha256: 'sha256:4336497675590ea606c4fba594768a25b5a079e677266be8fbdb1deb03c5af3f'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/intake.md
+        status: passed
+        summary: Explicit user migration request and clarified project decision-history meaning incorporated; two independent inherited options and verification criteria recorded.
+        recorded_at: '2026-10-17T05:09:00Z'
+        sha256: 'sha256:4336497675590ea606c4fba594768a25b5a079e677266be8fbdb1deb03c5af3f'
+    notes: Intake accepted from explicit user instructions. Events history is optional, authoritative execution/delivery/evidence is preserved. Continue inventory and determine storage contracts.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-17T05:09:00Z'
+    completed_at: '2026-10-17T05:13:56Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T05:13:56Z'
+        sha256: 'sha256:afc2a0faad7a6f2e4929a89685a1e7761c3590eaaf3936be4835afb7ed7f2064'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T05:13:56Z'
+        sha256: 'sha256:afc2a0faad7a6f2e4929a89685a1e7761c3590eaaf3936be4835afb7ed7f2064'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/investigation.md
+        status: passed
+        summary: Inventory identified all product readers/writers and configuration owners; actual readiness dependency and optional-history separation established.
+        recorded_at: '2026-10-17T05:13:56Z'
+        sha256: 'sha256:afc2a0faad7a6f2e4929a89685a1e7761c3590eaaf3936be4835afb7ed7f2064'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/investigation.md
+        status: passed
+        summary: Inventory identified all product readers/writers and configuration owners; actual readiness dependency and optional-history separation established.
+        recorded_at: '2026-10-17T05:13:56Z'
+        sha256: 'sha256:afc2a0faad7a6f2e4929a89685a1e7761c3590eaaf3936be4835afb7ed7f2064'
+    notes: Research confirms SQLite ownership must cover Core readers, Runtime/raw replay and doctors, not only append. User decision-history clarification incorporated; no product edits before architecture.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-17T05:13:56Z'
+    completed_at: '2026-10-17T05:14:09Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/domain.md
+        status: ready
+        recorded_at: '2026-10-17T05:14:09Z'
+        sha256: 'sha256:6ca2a75609259c3edfd8ead7354efe50ce2e248a38204d22dca3842073191657'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/domain.md
+        status: ready
+        recorded_at: '2026-10-17T05:14:09Z'
+        sha256: 'sha256:6ca2a75609259c3edfd8ead7354efe50ce2e248a38204d22dca3842073191657'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/domain.md
+        status: ready
+        recorded_at: '2026-10-17T05:14:09Z'
+        sha256: 'sha256:6ca2a75609259c3edfd8ead7354efe50ce2e248a38204d22dca3842073191657'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/domain.md
+        status: passed
+        summary: Optional history/raw copies separated from minimal admission receipts, pending processing and latest verification state; inheritance/off/retry semantics captured.
+        recorded_at: '2026-10-17T05:14:09Z'
+        sha256: 'sha256:6ca2a75609259c3edfd8ead7354efe50ce2e248a38204d22dca3842073191657'
+    notes: Domain adopts user's decision-history view. Two flags can be disabled independently without disabling Work execution or chat delivery. Continue architecture and migration protocol.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-17T05:14:09Z'
+    completed_at: '2026-10-17T05:14:58Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T05:14:58Z'
+        sha256: 'sha256:8042261ca4b25cf9f578b4b7124327ed3e6a34ba0ca222688384496b16c15036'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T05:14:58Z'
+        sha256: 'sha256:8042261ca4b25cf9f578b4b7124327ed3e6a34ba0ca222688384496b16c15036'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/architecture.md
+        status: ready
+        recorded_at: '2026-10-17T05:14:58Z'
+        sha256: 'sha256:8042261ca4b25cf9f578b4b7124327ed3e6a34ba0ca222688384496b16c15036'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/architecture.md
+        status: passed
+        summary: Owners, SQL schema/indexed APIs, two independent inherited logging settings, operational-state separation and explicit recoverable migrator protocol defined; source-only acceptance and implementation order recorded.
+        recorded_at: '2026-10-17T05:14:58Z'
+        sha256: 'sha256:8042261ca4b25cf9f578b4b7124327ed3e6a34ba0ca222688384496b16c15036'
+    notes: Architecture ready under explicit user authorization. Implement SQL owners first, then config/raw/consumers/migrator and focused checks. Preserve current adapter trust and separate installed-device work.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-17T05:14:58Z'
+    completed_at: '2026-10-17T05:42:58Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T05:42:58Z'
+        sha256: 'sha256:597f8a2528f3be0e5ce17990f5e9d5ec454b2451f919218ed9bc01866bc97a7d'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T05:42:58Z'
+        sha256: 'sha256:597f8a2528f3be0e5ce17990f5e9d5ec454b2451f919218ed9bc01866bc97a7d'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/implementation.md
+        status: passed
+        summary: All changed files in immutable implementation capsule; source-only SQL/config/raw/Runtime/migrator/docs slice, unrelated dirty state preserved.
+        recorded_at: '2026-10-17T05:42:58Z'
+        sha256: 'sha256:597f8a2528f3be0e5ce17990f5e9d5ec454b2451f919218ed9bc01866bc97a7d'
+    notes: Implementation ready. Indexed project SQL owners, optional history/required state, live inherited PFConfig, explicit migration and focused fixtures implemented; next code assurance must qualify concurrency, recovery, off-history behavior, input invalidation and scope. No device deployment or service lifecycle change.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-17T05:42:58Z'
+    completed_at: '2026-10-17T05:52:07Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:52:07Z'
+        sha256: 'sha256:9f102b806bf71c85f3b25abfd95657500dca7e3aff0d49bbc8423029dc4ceabf'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:52:07Z'
+        sha256: 'sha256:9f102b806bf71c85f3b25abfd95657500dca7e3aff0d49bbc8423029dc4ceabf'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:52:07Z'
+        sha256: 'sha256:9f102b806bf71c85f3b25abfd95657500dca7e3aff0d49bbc8423029dc4ceabf'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T05:52:07Z'
+        sha256: 'sha256:9f102b806bf71c85f3b25abfd95657500dca7e3aff0d49bbc8423029dc4ceabf'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/assurance.md
+        status: passed
+        summary: Primary review and focused SQL/config/migration/Runtime/off-history/recovery checks pass. Full schemas/cleanliness/checksums pass in isolated owned source. Known unrelated dirty workspace findings and separate device boundary explicitly recorded.
+        recorded_at: '2026-10-17T05:52:07Z'
+        sha256: 'sha256:9f102b806bf71c85f3b25abfd95657500dca7e3aff0d49bbc8423029dc4ceabf'
+    notes: Source assurance complete with retained focused outputs and primary review. No independent reviewer claimed; delegation forbidden. Final static template paths are owned by a disjoint companion Work. Release delivery must commit only owned changes, publish same SHA to both dev remotes and report source-only qualification; device cutover remains separate.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-17T05:52:07Z'
+    completed_at: '2026-10-17T05:56:31Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/delivery.md
+        status: ready
+        recorded_at: '2026-10-17T05:56:31Z'
+        sha256: 'sha256:c6d45c4fbbcf74d8e5af00e3352edbd732884478511c62e3737dcbad850624b7'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/delivery.md
+        status: passed
+        summary: Accepted source-only; same qualified commit published and read back from both dev remotes. Device/full release qualification remains separate.
+        recorded_at: '2026-10-17T05:56:31Z'
+        sha256: 'sha256:c6d45c4fbbcf74d8e5af00e3352edbd732884478511c62e3737dcbad850624b7'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/delivery.md
+        status: passed
+        summary: Focused source profile passed. Archive/installed/Runtime/connected-host/device profile explicitly skipped because this Work authorizes source delivery only.
+        recorded_at: '2026-10-17T05:56:31Z'
+        sha256: 'sha256:c6d45c4fbbcf74d8e5af00e3352edbd732884478511c62e3737dcbad850624b7'
+    notes: Source committed/pushed/read back from both remotes. Qualified source hashes match commit. Actual installed Core/Runtime/connected MCP and device journals unchanged; operator cutover handoff retained. Next evolve records remaining operational qualification without claiming device acceptance.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-17T05:56:31Z'
+    completed_at: '2026-10-17T05:57:25Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/evolve.md
+        status: ready
+        recorded_at: '2026-10-17T05:57:25Z'
+        sha256: 'sha256:b9f5cffa245fffaef970fe2c0f139c2111a3b701c91dcf46bdcb41020ec7e3c3'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/evolve.md
+        status: passed
+        summary: Source objective complete, lessons and exact operator qualification boundary retained; no duplicate device acceptance work or unrequested infrastructure action.
+        recorded_at: '2026-10-17T05:57:25Z'
+        sha256: 'sha256:b9f5cffa245fffaef970fe2c0f139c2111a3b701c91dcf46bdcb41020ec7e3c3'
+    notes: Source scope complete and published identically to both dev remotes. Final report, qualified hashes and exact follow-up handoff retained. Installed Core/Runtime/actual connected MCP and real journals unchanged; no live CPU acceptance claimed. Temporary migrator retained for the later controlled cutover.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.0
+  process_fingerprint: 'sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e'
+  snapshot_id: ctx-20261016-091113-310bed
+  snapshot_checksum: 'sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be'
+  assignment_capsule: .pf/contexts/assignment-capsules/hook-sqlite-implementation-20261017-migrate-project-hook-event-journals.capsule.yaml
+  assignment_capsule_checksum: 'sha256:6fe6e4d157026bd12a62ea2c27d5d85c4dd5444b72608edf2a53d70a63d5083c'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/artifacts/**
+  - .pf/adr/**
+  - .pf/handoffs/**
+  - .pf/logs/**
+  - .pf/runtime/**
+  - src/**
+  - tools/**
+  - bin/**
+  - docs/**
+  - schemas/**
+  - processes/**
+  - packs/**
+  - templates/**
+  - examples/**
+  - checksums/**
+  - requirements.txt
+  - package.json
+  - .gitignore
+  - .gitattributes
+  - .processforge-releaseignore
+allowed_files:
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/process_execution_smoke_support.py
+  - tools/validate-process-forge-schemas.py
+  - tools/migrate-hook-journals.py
+  - tools/smoke_hook_sqlite*.py
+  - tools/smoke_pfconfig*.py
+  - tools/smoke_process_event_concurrency.py
+  - tools/smoke_runtime*.py
+  - tools/smoke_central_event*.py
+  - tools/smoke_raw_ingress*.py
+  - tools/smoke_codex_lifecycle_identity.py
+  - tools/smoke_automation_readiness.py
+  - tools/smoke_conversation_completeness.py
+  - tools/smoke_first_run.py
+  - tools/smoke_diagnostics.py
+  - tools/smoke_process_run_task_batch.py
+  - tools/smoke_work_completion_recovery.py
+  - tools/smoke_remediation*.py
+  - tools/smoke_prepared_execution_context.py
+  - tools/smoke_provider_adapter_admission.py
+  - tools/smoke_long_lived_runtime.py
+  - bin/**
+  - docs/**
+  - schemas/**
+  - examples/**
+  - checksums/processforge.sha256
+  - .pf/artifacts/hook-sqlite-migration-20261017/**
+  - .pf/tmp/hook-sqlite-migration-20261017/**
+  - .pf/logs/hook-sqlite-migration-20261017.md
+  - .pf/handoffs/hook-sqlite-migration-20261017.md
+  - tools/pf_cli/**
+  - tools/smoke_workplace_configuration.py
+  - tools/smoke_server_operator.py
+  - templates/workplace-configuration.yaml
+ownership:
+  owner_id: codex-hook-sqlite-migration-20261017
+  role: primary
+  writer: true
+expected_report:
+  artifact: .pf/artifacts/hook-sqlite-migration-20261017/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: hook-sqlite-migration-report
+    path: .pf/artifacts/hook-sqlite-migration-20261017/report.md
+    required: true
+    type: report
+coordination_requirements:
+  scope_predecessor:
+    run_id: garage-hook-sqlite-migration-20261017-implement-user-authorized-project
+    assignment_id: hook-sqlite-migration-20261017-implement-user-authorized-project-sqlite
+    capsule_checksum: 'sha256:850c69cb2b015107927bb2a3db688625e166a284c1f8420a23a7b0de9b01f35d'
+  scope_handoff:
+    path: .pf/handoffs/hook-sqlite-migration-20261017.md
+    checksum: 'sha256:9755b0b2b6a68ab1e92b0c9f50ec8a94212c6e3df1e2cd1e27230ecd04c17b04'

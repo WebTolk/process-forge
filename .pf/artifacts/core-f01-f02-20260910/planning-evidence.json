@@ -1,0 +1,14 @@
+[
+  {
+    "path": ".pf/artifacts/core-f01-f02-20260910/orchestrator-plan.yaml",
+    "kind": "artifact",
+    "artifact_id": "task-index",
+    "status": "ready"
+  },
+  {
+    "gate_id": "run-has-tasks",
+    "summary": "Validated specialized shell plan defines two disjoint implementation tasks and dependent assurance/review with explicit acceptance.",
+    "kind": "gate",
+    "status": "passed"
+  }
+]

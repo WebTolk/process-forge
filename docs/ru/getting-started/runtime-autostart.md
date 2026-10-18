@@ -11,13 +11,19 @@
 Garage не требует PF Runtime. Устанавливайте Runtime autostart только для Forge
 workplace, где long-lived service нужен выбранной coordination model. На Linux
 Runtime можно запускать вручную или operator-managed background tooling;
-managed установка `systemd --user` в 1.1.0 не предоставляется.
+Текущий CLI не устанавливает `systemd --user`; вне Windows механизм
+автозапуска сообщает `unsupported`.
 
 Не регистрируйте `tools/pf_runtime/mcp_server.py` в Windows autostart.
 Отсоединенный stdio MCP-процесс не имеет подключенного MCP-клиента и не может
 обслуживать полезный JSON-RPC трафик.
 
-## Ручной lifecycle Runtime
+Команды ниже предназначены оператору для настройки и обслуживания. Агент
+обычного проекта не должен устанавливать, запускать, перезапускать или чинить
+Runtime, MCP и хуки. Используйте Python-окружение из [инструкции установки](installation.md);
+память дополнительных процессов учитывайте отдельно по [требованиям](../requirements.md).
+
+## Управление Runtime вручную
 
 Из корня установленного дистрибутива ProcessForge:
 
@@ -79,8 +85,9 @@ python bin/pf.py runtime status --workplace <workplace>
 python bin/pf.py runtime doctor --workplace <workplace>
 ```
 
-Перемещение Python или установленного ProcessForge меняет scheduled command и
-требует переустановки задачи.
+При перемещении Python, виртуального окружения или ProcessForge задачу нужно
+переустановить: изменится путь в команде. Планировщик не наследует активацию
+окружения из оболочки; в указанном интерпретаторе должен быть установлен PyYAML.
 
 ## Регистрация Codex MCP
 

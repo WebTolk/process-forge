@@ -1,0 +1,15 @@
+{
+  "runs": {
+    "garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0": "completed",
+    "core-f06-f08-shell-20260910": "completed"
+  },
+  "assignments": {
+    "f0608-cli": "done",
+    "f0608-review": "done",
+    "publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using": "done"
+  },
+  "carrier_action": "run_completed",
+  "implementation_worker_execution": "cancelled; primary takeover accepted",
+  "review_worker_execution": "completed exit 0, collected",
+  "final_state": "final-state.json"
+}

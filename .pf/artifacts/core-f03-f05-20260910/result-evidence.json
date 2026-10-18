@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-result",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f03-f05-20260910/integration-report.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "all-blocking-tasks-completed",
+    "status": "passed",
+    "summary": "All four delegated assignments DONE. F03-F05 accepted with genuine tests and independent review; release boundaries retained."
+  }
+]

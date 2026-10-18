@@ -1,0 +1,10 @@
+{
+  "label": "archive-public-full",
+  "started_at": "2026-10-18T04:19:23.567655+00:00",
+  "finished_at": "2026-10-18T04:31:33.375452+00:00",
+  "exit_code": 4294967295,
+  "elapsed_seconds": 729.8077282999875,
+  "raw_sha256": "0e1fe6ce430aaca6b157790786ed2b579f376db1102277f5659ab695fe75aa29",
+  "raw_bytes": 2796,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/baseline-c4d/archive-public-full.log"
+}

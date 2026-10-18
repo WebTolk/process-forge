@@ -1,0 +1,3 @@
+# Intake and scope
+
+Fix reproduced1.2.0 distribution reporting CURRENT/LATEST1.1.0 via legacy local self-update-check. Product writes restricted to updates/processforge-update-index.yaml and checksums/processforge.sha256. Preserve all prior version records, official manifest endpoint, CLI/parser/runtime implementation and device state. Own evidence/scratch/handoff only otherwise. Acceptance: default1.2.0 current/latest/no-update, explicit1.1.0 sees1.2.0/migration guide, schema/cleanliness/checksum/release checks, single inventory-entry delta, review, doctors, separate commit and dual full-SHA readback. Parent reruns exact final public source/archive qualification. Handoff: ../plan.md.

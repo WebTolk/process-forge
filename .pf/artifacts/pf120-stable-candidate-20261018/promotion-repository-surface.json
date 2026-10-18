@@ -1,0 +1,10 @@
+{
+  "label": "promotion-repository-surface",
+  "started_at": "2026-10-18T04:51:05.685840+00:00",
+  "finished_at": "2026-10-18T04:51:05.974973+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.2886636000475846,
+  "raw_sha256": "7eb08ae80e6d2a7b24c8a6547940a934bc1ab38f5a5c412b5b88e2279ad0664c",
+  "raw_bytes": 55,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/promotion-repository-surface.log"
+}

@@ -97,9 +97,9 @@ workers:
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
     forbidden_files: []
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_sources: [README.md]
     required_outputs:
       - id: inspected-report
         path: .pf/artifacts/inspected-report.md

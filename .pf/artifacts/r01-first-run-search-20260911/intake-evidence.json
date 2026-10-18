@@ -1,0 +1,4 @@
+[
+  {"kind":"artifact","artifact_id":"run-record","path":".pf/artifacts/r01-first-run-search-20260911/intake.md","status":"ready"},
+  {"kind":"gate","gate_id":"run-has-context","status":"passed","summary":"Baseline failure and source contract boundaries recorded; current PF context is fresh and selected project resources are known."}
+]

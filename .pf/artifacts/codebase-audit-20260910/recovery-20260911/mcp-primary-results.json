@@ -1,0 +1,560 @@
+{
+  "lower-session": {
+    "checkin_exit": 0,
+    "response": [
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"active_agents\": [{\"agent_id\": \"fixture-agent\", \"last_seen_at\": \"2026-09-11T03:14:58Z\", \"role\": null, \"session_id\": \"lower-session\", \"status\": \"online\"}], \"blockers\": [], \"context_freshness\": {\"health\": \"pass\", \"policy_action\": \"continue\", \"status\": \"fresh\"}, \"execution_readiness\": {\"blockers\": [], \"missing_capabilities\": [], \"status\": \"ready\"}, \"kind\": \"pf.session_context\", \"missing_capabilities\": [], \"project\": {\"coordination_mode\": \"simple\", \"flow_root\": \".pf\", \"id\": \"project\"}, \"recent_activity\": [{\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_ee0e1077630541b996ddaea60745bef5\", \"event_type\": \"project.onboarding.completed\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"project.onboarding.completed\", \"time\": \"2026-09-11T03:14:57Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_e9f36d50fdd140fbb0da987fd2a6ac09\", \"event_type\": \"project.doctor.passed\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"project.doctor.passed\", \"time\": \"2026-09-11T03:14:57Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": \"first-assignment\", \"event_id\": \"evt_a55321f8220845238ef8eb9290948cce\", \"event_type\": \"assignment.created\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \".pf/assignments/first-assignment.yaml\", \"time\": \"2026-09-11T03:14:57Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_23ca28964dc54c77a76dd49c5bd6ed60\", \"event_type\": \"agent.start_prompt.generated\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"agent.start_prompt.generated\", \"time\": \"2026-09-11T03:14:56Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_308c217228a140a1974ae1d6a07f07cb\", \"event_type\": \"launcher.project_runtime.created\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"launcher.project_runtime.created\", \"time\": \"2026-09-11T03:14:56Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_c096e84bb28044a99bb25f390a1c119d\", \"event_type\": \"project.snapshot.refreshed\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"project.snapshot.refreshed\", \"time\": \"2026-09-11T03:14:56Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_b68437153cd641c0aa4dce9ed173ed08\", \"event_type\": \"project.platform.detected\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"project.platform.detected\", \"time\": \"2026-09-11T03:14:55Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_5a1a65732560448998d0c0c4554de3c2\", \"event_type\": \"project.flow_root.created\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"project.flow_root.created\", \"time\": \"2026-09-11T03:14:55Z\"}, {\"actor\": {\"id\": \"processforge-cli\", \"role\": \"orchestrator\", \"type\": \"agent\"}, \"assignment_id\": null, \"event_id\": \"evt_31533d1c8f364f00a14ec7d81ca6f719\", \"event_type\": \"project.onboarding.started\", \"process_id\": \"project-onboarding\", \"severity\": \"info\", \"stage_id\": null, \"subject\": \"project.onboarding.started\", \"time\": \"2026-09-11T03:14:55Z\"}], \"resource_readiness\": {\"blockers\": [], \"status\": \"fresh\"}, \"schema_version\": 1, \"search\": {\"generation\": \"36c432a1075ddaba\", \"stale\": false, \"status\": \"fresh\"}, \"session\": {\"agent_id\": \"fixture-agent\", \"id\": \"lower-session\", \"role\": null, \"status\": \"online\"}, \"work\": {\"process_id\": \"project-onboarding\", \"run_id\": \"project-onboarding-project\", \"stage_id\": \"\", \"stage_obligations\": {\"entry_gates\": [], \"evidence\": [], \"exit_gates\": [], \"freshness\": \"missing\", \"inputs\": [], \"outputs\": [], \"stage_id\": \"\"}, \"task_id\": \"first-assignment\", \"task_status\": \"open\", \"worker_status\": \"\"}}"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "Case-Session": {
+    "checkin_exit": 0,
+    "response": [
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"error\": {\"code\": \"unknown_session\", \"remediation\": {\"checks\": [\"Use the current session id recorded by Codex hook ingress.\", \"Verify the session project root matches the MCP request project_root.\"], \"kind\": \"ledger_session_binding_invalid\", \"summary\": \"The supplied session id is not bound to the requested project in Ledger.\"}}}"
+            }
+          ],
+          "isError": true
+        }
+      }
+    ]
+  },
+  "protocol": {
+    "notification": [
+      {
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "tools": [
+            {
+              "name": "pf.context",
+              "description": "Read Garage context for a ProcessForge project without requiring a Ledger session.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.project_state",
+              "description": "Read the current routed ProcessForge project state.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.project_initialization.status",
+              "description": "Read bounded project initialization status for a ProcessForge project.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.project_initialization.initialize",
+              "description": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "apply": {
+                    "type": "boolean"
+                  },
+                  "answers": {
+                    "type": "object"
+                  },
+                  "project_type": {
+                    "type": "string"
+                  },
+                  "coordination_mode": {
+                    "type": "string",
+                    "enum": [
+                      "inherit",
+                      "simple",
+                      "organized"
+                    ]
+                  },
+                  "platforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "specializations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "process": {
+                    "type": "string"
+                  },
+                  "force": {
+                    "type": "boolean"
+                  },
+                  "allow_missing_workplace": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.project_initialization.repair",
+              "description": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "apply": {
+                    "type": "boolean"
+                  },
+                  "repair_action": {
+                    "type": "string",
+                    "enum": [
+                      "refresh_context",
+                      "restore_deterministic_artifacts",
+                      "install_codex_hooks"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.work_state",
+              "description": "Compatibility alias for the current declarative work state.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.work.state",
+              "description": "Read the current declarative ProcessForge work state.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.work.start",
+              "description": "Start or continue governed ProcessForge work from a high-level objective.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "objective": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "process_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "objective"
+                ]
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.work.transition",
+              "description": "Advance governed work using a declared outcome and evidence.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "outcome"
+                ]
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.resolve",
+              "description": "Resolve a ProcessForge project or selected knowledge resource.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "resource_id": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.search",
+              "description": "Search only fresh snapshot-authorized local resources before using broader search.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "limitstart": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.workplace_state",
+              "description": "Read derived workplace ledger state.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.session_context",
+              "description": "Read a bounded current-context projection for the Ledger-bound session.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.session_chat",
+              "description": "Read paginated private transcript messages for the Ledger-bound session.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "before": {
+                    "type": "string"
+                  },
+                  "cursor": {
+                    "type": "string"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant",
+                        "system"
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "pf.session_activity",
+              "description": "Read bounded normalized activity facts for the Ledger-bound session.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "bad_version": [
+      {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "protocolVersion": "2024-11-05",
+          "serverInfo": {
+            "name": "processforge",
+            "version": "1.1.0"
+          },
+          "capabilities": {
+            "tools": {}
+          }
+        }
+      }
+    ],
+    "bad_arguments": [
+      {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"error\": {\"code\": \"missing_project_root\", \"remediation\": {\"checks\": [\"Call pf.context, pf.search, pf.resolve, or pf.work.start with project_root set to a valid ProcessForge project.\"], \"kind\": \"project_root_required\", \"summary\": \"Garage read-only tools can run without a Ledger session, but need project_root when no session is supplied.\"}}}"
+            }
+          ],
+          "isError": true
+        }
+      }
+    ],
+    "bad_params": [
+      {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"error\": {\"code\": \"missing_session\", \"remediation\": {\"checks\": [\"Use pf.context, pf.project_state, pf.work_state, pf.resolve, pf.search, or pf.work.start when the operation can stay in Garage mode.\", \"Ask the operator to verify the configured host session integration and Agent Ledger route when a Forge-only view is required.\", \"After the operator resolves host integration, retry from a fresh host session.\"], \"kind\": \"ledger_session_required\", \"manual_fallback\": \"Use session-start only for controlled local diagnostics; do not invent production session ids.\", \"operator_action\": \"verify_host_session_integration\", \"repair_actions\": [], \"summary\": \"This Forge-only MCP tool requires a real Ledger-bound host session id.\"}}}"
+            }
+          ],
+          "isError": true
+        }
+      }
+    ]
+  },
+  "seconds": 20.04
+}

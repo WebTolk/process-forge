@@ -1,0 +1,4 @@
+  File "D:\Dev\process-forge\tools\smoke_core_update_manifest.py", line 137
+    root = Path(raw)
+    ^^^^
+IndentationError: expected an indented block after 'with' statement on line 136

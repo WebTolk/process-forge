@@ -1,0 +1,60 @@
+schema_version: 1
+id: docs-fix-1-1-1-shell-20260907
+title: PF 1.1.1 documentation remediation D01-D08
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-09-07T13:04:15Z'
+updated_at: '2026-09-07T14:16:52Z'
+objective: PF 1.1.1 documentation remediation D01-D08
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: docs111-mechanical
+    assignment: .pf/assignments/docs111-mechanical.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: docs111-workflow
+    assignment: .pf/assignments/docs111-workflow.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: docs111-update
+    assignment: .pf/assignments/docs111-update.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: docs111-tests
+    assignment: .pf/assignments/docs111-tests.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: docs111-review
+    assignment: .pf/assignments/docs111-review.yaml
+    status: done
+    order: 5
+    blocking: true
+final_artifacts:
+  - .pf/runs/docs-fix-1-1-1-shell-20260907/summary.md
+  - .pf/handoffs/runs/docs-fix-1-1-1-shell-20260907-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3

@@ -1,0 +1,11 @@
+# Полная проверка простоя перед операторским перезапуском
+
+2026-10-17. Два штатных guarded server stop вернули HTTP409 runtime_busy_or_activity_unknown, до любых попыток apply. Рабочий сервер оставался ready/scheduler_alive, active_workers=0/pending_runtime_jobs=0. Эти верхние счётчики не выдавались за доказательство полноты.
+
+Прочитан native shutdown_workers: Budget(seconds=0.5) также ограничивает обход 512 entries / 128 files / 4MiB. Выполнен тот же native registered_projects + observe(workers), read-only, с конечным расширенным бюджетом: 100000 entries, 10000 files, 256MiB, 30s. Это отдельная диагностическая операция, без изменения production observer/Runtime settings. Полностью охвачены оба зарегистрированных проекта, running=0, issues=[], coverage=complete. Фактически прочитаны 2280 entries / 169 files / 370956 bytes за 0.324s. Следом default native shutdown_workers снова вернул partial/budget и unknown running, то есть короткий guard ограничен объёмом истории, а не наличием worker.
+
+Уточнение первоначального операционного плана: прямое поручение пользователя на перезапуск исполнено штатным мягким server stop --force после полной положительной проверки простоя и checkpoint точного владельца. Это явный обход неполного bounded observer, а не подмена unknown нулём. Native owner/token/ready lifecycle использован; чужие процессы и история не менялись. Команда stop exit0. Первый и единственный apply нового ZIP e332a74d после этого exit0; предыдущие apply не повторялись.
+
+Установка принята native status: version1.2.0, source8ea152b, 1308 managed files, incomplete_update=false. Новый server start выполнен с прежними --interval10.0 / --port0, exit0. Post-checkpoint подтверждает новый процесс/instance, ready/scheduler_alive, отсутствие workers/jobs и точное сохранение всех пяти защищённых файлов и revision конфигурации.
+
+Receipts: quiescence.json, server-stop.json, server-stop-retry.json, server-stop-confirmed-idle.json, core-update-apply-final.json, server-start.json, checkpoint-before.json, checkpoint-after.json. Полные operator logs/preimages остаются локально. Ограничение bounded shutdown guard на большой истории нужно учитывать отдельно перед публичной готовностью; увеличенный бюджет и новые product defaults в этой Work не внедрялись.

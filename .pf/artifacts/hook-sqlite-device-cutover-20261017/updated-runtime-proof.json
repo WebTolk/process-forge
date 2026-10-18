@@ -1,0 +1,51 @@
+{
+  "owner": {
+    "created_at": "2026-10-17T06:49:26Z",
+    "instance_id": "1c0b979a99bb4da095fa7e1510d0e141",
+    "pid": 9716
+  },
+  "service": {
+    "pid": 9716,
+    "instance_id": "1c0b979a99bb4da095fa7e1510d0e141",
+    "started_at": "2026-10-17T06:49:26Z",
+    "status": "ready",
+    "health": "degraded",
+    "endpoint": "http://127.0.0.1:55798",
+    "processforge_core_version": "1.2.0",
+    "last_scheduler_error": "D:\\Dev\\process-forge: project scheduler pass failed with status 1",
+    "scheduler": {
+      "jobs": {
+        "director": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:50:31Z",
+          "period_seconds": 10
+        },
+        "inspector": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:50:31Z",
+          "period_seconds": 5
+        },
+        "ledger": {
+          "last_result": "ok",
+          "last_run": "2026-10-17T06:50:31Z",
+          "period_seconds": 5
+        },
+        "metrics": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:50:26.883559+00:00",
+          "period_seconds": 10.0
+        },
+        "projection": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:50:31Z",
+          "period_seconds": 30
+        }
+      }
+    }
+  },
+  "readyz": {
+    "ready": true,
+    "status": "ready"
+  },
+  "installed_source_commit": "69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab"
+}

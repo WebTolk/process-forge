@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r03-updater-concurrency-20260911/task-iteration-log.md",
+        "status":  "ready",
+        "artifact_id":  "task-iteration-log",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "Disposable synchronized two-process race reproduced; supported-contract review and no-apply boundary are recorded.",
+        "gate_id":  "task-results-recorded",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

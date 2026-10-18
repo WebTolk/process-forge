@@ -1,0 +1,414 @@
+schema_version: 1
+id: t10-delivery-qualify-and-install-the-accepted-terminal-monitor-through-t
+title: 'T10 delivery: qualify and install the accepted terminal monitor through the stan'
+run_id: garage-t10-delivery-qualify-and-install-the-accepted-terminal-monitor-th
+process: software-feature-development
+status: done
+created_at: '2026-09-26T17:36:34Z'
+updated_at: '2026-09-26T17:55:08Z'
+objective: 'T10 delivery: qualify and install the accepted terminal monitor through the standard Core updater, preserve local configuration and evidence, and verify the installed package.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Evidence reviewed; continue the pinned process from this completed stage.
+  artifacts:
+    - .pf/artifacts/t10-installed-delivery-20260926/architecture.md
+    - .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+    - .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+    - .pf/artifacts/t10-installed-delivery-20260926/domain.md
+    - .pf/artifacts/t10-installed-delivery-20260926/evolution.md
+    - .pf/artifacts/t10-installed-delivery-20260926/implementation.md
+    - .pf/artifacts/t10-installed-delivery-20260926/investigation.md
+    - .pf/artifacts/t10-installed-delivery-20260926/orchestration.md
+    - .pf/artifacts/t10-installed-delivery-20260926/scope.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T17:54:30Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t10-installed-delivery-20260926/evolution.md
+      status: ready
+      recorded_at: '2026-09-26T17:55:00Z'
+      sha256: 'sha256:9aa03e3c01087c38ab1b8ab96a96f66d1b755ac17e72dd77ebec866d931f6334'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t10-installed-delivery-20260926/evolution.md
+      status: passed
+      recorded_at: '2026-09-26T17:55:00Z'
+      sha256: 'sha256:9aa03e3c01087c38ab1b8ab96a96f66d1b755ac17e72dd77ebec866d931f6334'
+  notes: Evidence reviewed; continue the pinned process from this completed stage.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-26T17:36:34Z'
+    completed_at: '2026-09-26T17:39:26Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t10-installed-delivery-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T17:39:16Z'
+        sha256: 'sha256:228d33565b3e187b781549d6a7a8a0522d7b6a19f377ce55571261dcf7c71e6f'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t10-installed-delivery-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T17:39:16Z'
+        sha256: 'sha256:228d33565b3e187b781549d6a7a8a0522d7b6a19f377ce55571261dcf7c71e6f'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t10-installed-delivery-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T17:39:16Z'
+        sha256: 'sha256:228d33565b3e187b781549d6a7a8a0522d7b6a19f377ce55571261dcf7c71e6f'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t10-installed-delivery-20260926/orchestration.md
+        status: passed
+        recorded_at: '2026-09-26T17:39:16Z'
+        sha256: 'sha256:228d33565b3e187b781549d6a7a8a0522d7b6a19f377ce55571261dcf7c71e6f'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-26T17:39:26Z'
+    completed_at: '2026-09-26T17:40:07Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t10-installed-delivery-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T17:39:59Z'
+        sha256: 'sha256:24d2a758175d6aef12f98024b7cf512e5411e5fdf8394842ed954e4d857682be'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t10-installed-delivery-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T17:39:59Z'
+        sha256: 'sha256:24d2a758175d6aef12f98024b7cf512e5411e5fdf8394842ed954e4d857682be'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t10-installed-delivery-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T17:39:59Z'
+        sha256: 'sha256:24d2a758175d6aef12f98024b7cf512e5411e5fdf8394842ed954e4d857682be'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t10-installed-delivery-20260926/scope.md
+        status: passed
+        recorded_at: '2026-09-26T17:39:59Z'
+        sha256: 'sha256:24d2a758175d6aef12f98024b7cf512e5411e5fdf8394842ed954e4d857682be'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-26T17:40:07Z'
+    completed_at: '2026-09-26T17:40:44Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t10-installed-delivery-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T17:40:34Z'
+        sha256: 'sha256:05873928dae8640d20380d7d52eea0831d101f2c9c7e622f20dbaadb93264d12'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t10-installed-delivery-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T17:40:34Z'
+        sha256: 'sha256:05873928dae8640d20380d7d52eea0831d101f2c9c7e622f20dbaadb93264d12'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t10-installed-delivery-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T17:40:34Z'
+        sha256: 'sha256:05873928dae8640d20380d7d52eea0831d101f2c9c7e622f20dbaadb93264d12'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t10-installed-delivery-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T17:40:34Z'
+        sha256: 'sha256:05873928dae8640d20380d7d52eea0831d101f2c9c7e622f20dbaadb93264d12'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-26T17:40:44Z'
+    completed_at: '2026-09-26T17:41:30Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t10-installed-delivery-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T17:41:19Z'
+        sha256: 'sha256:3a9724a3ca162e30b9fa615e5f9dab3ac41d34d01012caa074d8a7a0584713eb'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t10-installed-delivery-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T17:41:19Z'
+        sha256: 'sha256:3a9724a3ca162e30b9fa615e5f9dab3ac41d34d01012caa074d8a7a0584713eb'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t10-installed-delivery-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T17:41:19Z'
+        sha256: 'sha256:3a9724a3ca162e30b9fa615e5f9dab3ac41d34d01012caa074d8a7a0584713eb'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t10-installed-delivery-20260926/domain.md
+        status: passed
+        recorded_at: '2026-09-26T17:41:19Z'
+        sha256: 'sha256:3a9724a3ca162e30b9fa615e5f9dab3ac41d34d01012caa074d8a7a0584713eb'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-26T17:41:30Z'
+    completed_at: '2026-09-26T17:42:17Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t10-installed-delivery-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T17:42:06Z'
+        sha256: 'sha256:3b6fafd78d5c01721678c870781ad8fd6f0917314005556c0ff0bab535800065'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t10-installed-delivery-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T17:42:06Z'
+        sha256: 'sha256:3b6fafd78d5c01721678c870781ad8fd6f0917314005556c0ff0bab535800065'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t10-installed-delivery-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T17:42:06Z'
+        sha256: 'sha256:3b6fafd78d5c01721678c870781ad8fd6f0917314005556c0ff0bab535800065'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t10-installed-delivery-20260926/architecture.md
+        status: passed
+        recorded_at: '2026-09-26T17:42:06Z'
+        sha256: 'sha256:3b6fafd78d5c01721678c870781ad8fd6f0917314005556c0ff0bab535800065'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-26T17:42:17Z'
+    completed_at: '2026-09-26T17:47:59Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t10-installed-delivery-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T17:47:49Z'
+        sha256: 'sha256:b7bfb1b07d17de3e980d1a6a73bd0912d8692ff5cfe4a63a5598887d9186498a'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t10-installed-delivery-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T17:47:49Z'
+        sha256: 'sha256:b7bfb1b07d17de3e980d1a6a73bd0912d8692ff5cfe4a63a5598887d9186498a'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t10-installed-delivery-20260926/implementation.md
+        status: passed
+        recorded_at: '2026-09-26T17:47:49Z'
+        sha256: 'sha256:b7bfb1b07d17de3e980d1a6a73bd0912d8692ff5cfe4a63a5598887d9186498a'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-26T17:47:59Z'
+    completed_at: '2026-09-26T17:50:53Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T17:50:42Z'
+        sha256: 'sha256:617709cd84498f9e6d51fefc41d9754d1b3e3f3c02b6a7560f40f4a0b16c4f38'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T17:50:42Z'
+        sha256: 'sha256:617709cd84498f9e6d51fefc41d9754d1b3e3f3c02b6a7560f40f4a0b16c4f38'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T17:50:42Z'
+        sha256: 'sha256:617709cd84498f9e6d51fefc41d9754d1b3e3f3c02b6a7560f40f4a0b16c4f38'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T17:50:42Z'
+        sha256: 'sha256:617709cd84498f9e6d51fefc41d9754d1b3e3f3c02b6a7560f40f4a0b16c4f38'
+      -
+        kind: artifact
+        artifact_id: browser-verification-report
+        path: .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T17:50:42Z'
+        sha256: 'sha256:617709cd84498f9e6d51fefc41d9754d1b3e3f3c02b6a7560f40f4a0b16c4f38'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t10-installed-delivery-20260926/assurance.md
+        status: passed
+        recorded_at: '2026-09-26T17:50:42Z'
+        sha256: 'sha256:617709cd84498f9e6d51fefc41d9754d1b3e3f3c02b6a7560f40f4a0b16c4f38'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T17:50:53Z'
+    completed_at: '2026-09-26T17:54:30Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: release-notes
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+      -
+        kind: artifact
+        artifact_id: migration-notes
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+      -
+        kind: artifact
+        artifact_id: patch
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+      -
+        kind: artifact
+        artifact_id: delivery-plan
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: passed
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t10-installed-delivery-20260926/delivery.md
+        status: passed
+        recorded_at: '2026-09-26T17:54:20Z'
+        sha256: 'sha256:f4d03d5d3d03606b4b31551fa5b7b4292e34376a2e8b895ff9c5265a2820ea1c'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T17:54:30Z'
+    completed_at: '2026-09-26T17:55:08Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t10-installed-delivery-20260926/evolution.md
+        status: ready
+        recorded_at: '2026-09-26T17:55:00Z'
+        sha256: 'sha256:9aa03e3c01087c38ab1b8ab96a96f66d1b755ac17e72dd77ebec866d931f6334'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t10-installed-delivery-20260926/evolution.md
+        status: passed
+        recorded_at: '2026-09-26T17:55:00Z'
+        sha256: 'sha256:9aa03e3c01087c38ab1b8ab96a96f66d1b755ac17e72dd77ebec866d931f6334'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t10-delivery-qualify-and-install-the-accepted-terminal-monitor-through-t.capsule.yaml
+  assignment_capsule_checksum: 'sha256:e7792b615d3531be0a677e431ef155000c84426a8291f118f25b0fe224aa5464'

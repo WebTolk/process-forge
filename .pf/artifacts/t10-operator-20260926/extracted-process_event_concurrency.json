@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T19:04:38.907006+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-20260926\\extracted\\tools\\smoke_process_event_concurrency.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-20260926\\extracted",
+  "exit_code": 0,
+  "stdout": "PASS: concurrent unique/duplicate Unicode events, prefix preservation, durable append, hook boundary and explicit lock failure\n",
+  "stderr": ""
+}

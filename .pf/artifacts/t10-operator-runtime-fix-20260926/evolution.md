@@ -1,0 +1,5 @@
+# Evolution
+
+Completed local T10 operator slice and standard installed delivery, including preceding journal serialization fix. Distinguish registration, TTL presence, running records and actual process health; partial bounded observations must not become exact zero. Pause Runtime admission before guarded worker checks to prevent scheduler/request races. Native zero-time Windows handle observation avoids tasklist startup latency without relaxing network deadlines. Test timestamp precision must match serialized ISO precision.
+
+Retain source/archive/installed/connected-host evidence separately; preserve failed historical observations with corrections rather than rewriting immutable artifacts. Update remains manifest-owned, serialized and backed up. Next authorized responsibility is T07 engine I01 feasibility then versioned implementation/acceptance, following the existing specification and without silently claiming mediation of native Codex/CLI routes. No new global policy or external publication.

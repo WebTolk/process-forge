@@ -1,0 +1,33 @@
+{
+  "surface": "actual existing connected MCP after file install; loaded source requires independent process provenance",
+  "operations": [
+    {
+      "operation": "pf.context",
+      "elapsed_seconds": 14.254,
+      "status": "fresh",
+      "mode": "forge",
+      "policy_action": "continue"
+    },
+    {
+      "operation": "pf.work.state",
+      "elapsed_seconds": 0.045,
+      "context": "valid",
+      "readiness": "ready",
+      "stage": "release-delivery"
+    },
+    {
+      "operation": "pf.work.resolve",
+      "elapsed_seconds": 1.87,
+      "status": "ready",
+      "resource_status": "available"
+    },
+    {
+      "operation": "pf.session_chat",
+      "elapsed_seconds": 0.563,
+      "kind": "pf.session_chat",
+      "top_level_arrays": {
+        "messages": 1
+      }
+    }
+  ]
+}

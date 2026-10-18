@@ -1,0 +1,51 @@
+{
+  "observed_at": "2026-10-17T06:20:21.539137+00:00",
+  "lock": {
+    "created_at": "2026-10-17T06:18:26Z",
+    "instance_id": "7e99504388824711a0e0c38b5fa400cf",
+    "pid": 16976
+  },
+  "readiness": {
+    "ready": true,
+    "status": "ready"
+  },
+  "state": {
+    "status": "ready",
+    "health": "degraded",
+    "pid": 16976,
+    "started_at": "2026-10-17T06:18:26Z",
+    "instance_id": "7e99504388824711a0e0c38b5fa400cf",
+    "processforge_core_version": "1.2.0",
+    "scheduler": {
+      "jobs": {
+        "director": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:20:08Z",
+          "period_seconds": 10
+        },
+        "inspector": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:20:08Z",
+          "period_seconds": 5
+        },
+        "ledger": {
+          "last_result": "ok",
+          "last_run": "2026-10-17T06:20:08Z",
+          "period_seconds": 5
+        },
+        "metrics": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:20:17.062225+00:00",
+          "period_seconds": 10.0
+        },
+        "projection": {
+          "last_result": "failed",
+          "last_run": "2026-10-17T06:20:08Z",
+          "period_seconds": 30
+        }
+      }
+    },
+    "project_errors": null,
+    "last_scheduler_error": "D:\\Dev\\process-forge: project scheduler pass failed with status 1"
+  }
+}

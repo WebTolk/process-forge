@@ -2,9 +2,9 @@ schema_version: 1
 id: garage-rebuild-current-processforge-package-for-external-audit
 title: Rebuild current ProcessForge package for external audit
 process: task-batch-execution
-status: in_progress
+status: completed
 created_at: '2026-09-03T07:35:32Z'
-updated_at: '2026-09-03T07:35:32Z'
+updated_at: '2026-09-07T08:49:23Z'
 objective: Rebuild current ProcessForge package for external audit
 platform: ""
 selected_specializations:
@@ -16,15 +16,22 @@ tasks:
   -
     id: rebuild-current-processforge-package-for-external-audit
     assignment: .pf/assignments/rebuild-current-processforge-package-for-external-audit.yaml
-    status: in_progress
+    status: done
     order: 1
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/garage-rebuild-current-processforge-package-for-external-audit/summary.md
+  - .pf/handoffs/runs/garage-rebuild-current-processforge-package-for-external-audit-handoff.md
 events:
   emitted:
     - run.created
     - process.stage.started
+    - process.stage.completed
+    - process.stage.transitioned
+    - task.completed
+    - assignment.completed
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true
 process_execution:

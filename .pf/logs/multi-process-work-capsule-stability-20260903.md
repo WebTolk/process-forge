@@ -10,6 +10,18 @@ Risks: The generated work-start command is not yet capable of selecting an expli
 Next steps: Satisfy run-intake evidence, create bounded assignment-backed work items, then audit the listed Core/MCP/schema surfaces.
 Handoff: Not applicable.
 
+## 2026-09-07 12:44 - primary-agent
+
+Task: Recover the stale assurance completion state and finalize the governed multi-process Work Capsule run.
+Files changed: `.pf/assignments/multi-process-assurance-delivery.yaml`; `.pf/assignments/stabilize-processforge-1-1-0-multi-process-project-selection-and-work-ca.yaml`; the associated run record and task index; generated run summary and run handoff.
+Artifacts changed: `.pf/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and/summary.md` and `.pf/handoffs/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and-handoff.md`.
+Templates used: Pinned `task-batch-execution` process run-summary and handoff rules.
+Tools used: `task-complete`, `work-state`, `work-transition --evidence-file`, ProcessForge task/run doctors, and targeted source inspection.
+Decisions: Reconcile only the stale assurance task from its accepted evidence, then complete the parent through the declarative Work transition. Do not call `run-summary` and `run-complete` concurrently. The initial malformed evidence remains as non-satisfying historical attestation; the validated structured evidence follows it.
+Risks: The historical public 1.1.0 run-artifact-consistency release blocker remains outside this run. Full public-release requalification was not performed.
+Next steps: Begin a new governed Work only for an explicitly selected objective.
+Handoff: `.pf/handoffs/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and-handoff.md`.
+
 ## 2026-09-03 11:25 - primary-agent
 
 Task: Implement and assure multi-process Work Capsule selection and isolation.

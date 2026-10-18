@@ -1,0 +1,4 @@
+DISCOVERED [('C:\\Users\\musst\\AppData\\Local\\Temp\\pf-audit-search-z1onkm6r\\project\\secret.txt', 'secret.txt')]
+INDEXED {'status': 'fresh', 'indexed': 1, 'resources': 1, 'snapshot_checksum': 'audit', 'generation': '3dc58c0a1c84a896'}
+SEARCH_TOTAL 1
+RESULT_PATHS ['secret.txt']

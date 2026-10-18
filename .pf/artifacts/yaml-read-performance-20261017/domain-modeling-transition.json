@@ -1,0 +1,257 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "implementation",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "architecture",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "implementation-plan",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "decision-log",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "yaml-read-performance-20261017-fix-the-measured-repeated-growing-yaml-pa",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "architecture",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "implementation-plan",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "decision-log",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "architecture-plan-ready"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "architecture-plan"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:ae0e5ec515d7e3364d71e6a69b8645fb0cdeeaebc87d20aee8ffcb315dc91c20",
+    "id": "yaml-read-performance-20261017-fix-the-measured-repeated-growing-yaml-pa-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:cc71c939a513437a749b28505caea9f25d44f91cde5b4795bd0da8fc53f4ed25",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "architecture-plan",
+        "parameters": {},
+        "produced_artifacts": [
+          "architecture",
+          "implementation-plan",
+          "decision-log"
+        ],
+        "required_capabilities": [
+          "architecture"
+        ],
+        "required_inputs": [
+          "domain-rules"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact",
+      "write_product"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/yaml-read-performance-20261017/**",
+      ".pf/handoffs/yaml-read-performance-20261017.md",
+      ".pf/logs/yaml-read-performance-20261017.md",
+      ".pf/tmp/yaml-read-performance-20261017/**",
+      "CHANGELOG.md",
+      "checksums/processforge.sha256",
+      "docs/concepts/document-reads.md",
+      "docs/ru/concepts/document-reads.md",
+      "src/processforge_core/common/request_scope.py",
+      "src/processforge_core/documents/**",
+      "src/processforge_core/runtime/**",
+      "tools/pf_cli/application.py",
+      "tools/pf_runtime/host.py",
+      "tools/pf_runtime/service.py",
+      "tools/processforge.py",
+      "tools/smoke_long_lived_runtime.py",
+      "tools/smoke_request_scope.py",
+      "tools/smoke_runtime_*.py",
+      "tools/smoke_yaml*.py"
+    ],
+    "allowed_read_files": [
+      ".gitattributes",
+      ".gitignore",
+      ".pf/AGENTS.md",
+      ".pf/artifacts/**",
+      ".pf/assignments/**",
+      ".pf/contexts/**",
+      ".pf/handoffs/**",
+      ".pf/process-forge.yaml",
+      ".pf/runs/**",
+      ".pf/runtime/**",
+      ".pf/tmp/hook-sqlite-device-cutover-20261017/**",
+      ".pf/tmp/runtime-cpu*/**",
+      ".pf/tmp/yaml-read-performance-20261017/**",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "README.md",
+      "VERSION",
+      "bin/**",
+      "checksums/**",
+      "docs/**",
+      "packs/**",
+      "processes/**",
+      "pyproject.toml",
+      "requirements.txt",
+      "schemas/**",
+      "src/**",
+      "templates/**",
+      "tools/**",
+      "updates/**"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "domain-rules-captured",
+          "kind": "gate",
+          "path": ".pf/artifacts/yaml-read-performance-20261017/domain.md",
+          "recorded_at": "2026-10-17T07:23:51Z",
+          "sha256": "sha256:7ba281d39df28af528e584a224cca2eab1b7557c8677ee03cf1c40f5b821a420",
+          "status": "passed",
+          "summary": "Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut."
+        },
+        "id": "domain-rules-captured",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "architecture-plan-ready",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "architecture",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "implementation-plan",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "decision-log",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "architecture-plan-ready"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "architecture-plan"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "architecture-plan",
+  "obligations": [],
+  "previous_stage_id": "domain-modeling",
+  "process": {
+    "fingerprint": "sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "domain-rules",
+        "kind": "artifact",
+        "path": ".pf/artifacts/yaml-read-performance-20261017/domain.md",
+        "recorded_at": "2026-10-17T07:23:51Z",
+        "sha256": "sha256:7ba281d39df28af528e584a224cca2eab1b7557c8677ee03cf1c40f5b821a420",
+        "status": "ready"
+      },
+      "id": "domain-rules",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-yaml-read-performance-20261017-fix-the-measured-repeated-growing",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "architecture-plan",
+    "status": "in_progress",
+    "title": "Architecture Plan"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

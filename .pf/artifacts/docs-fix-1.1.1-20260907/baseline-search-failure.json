@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    ".pf/artifacts/docs-fix-1.1.1-20260907/check_baseline_search_failure.py"
+  ],
+  "started_at": "2026-09-07T14:13:13.870566+00:00",
+  "finished_at": "2026-09-07T14:14:46.345814+00:00",
+  "elapsed_seconds": 92.475,
+  "exit_code": 0,
+  "output": "Restored 933 tracked public entries from HEAD 1aecc18b6824204ca45ab30241b92d26e6d583a5; main worktree untouched\nTraceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\.pf\\tmp\\docs-baseline-search-s62ji4x1\\tools\\smoke_garage_no_hooks_sessionless.py\", line 94, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\.pf\\tmp\\docs-baseline-search-s62ji4x1\\tools\\smoke_garage_no_hooks_sessionless.py\", line 85, in main\n    raise AssertionError(search)\nAssertionError: {'degraded_reason': 'index_not_fresh', 'garage_readiness': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'index_generation': None, 'items': [], 'kind': 'pf.search', 'limit': 20, 'offset': 0, 'page': {'limit': 20, 'limitstart': 0, 'next_limitstart': None, 'offset': 0, 'returned': 0, 'total': 0}, 'query': 'GarageNoHooksNeedle', 'results': [], 'schema_version': 1, 'search': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'search_status': 'missing', 'total': 0}\n\nCONFIRMED: unchanged HEAD reproduces the same empty-corpus search failure; not a documentation-change regression\n"
+}

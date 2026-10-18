@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_work_evidence_freshness.py", line 250, in <module>
+  File "D:\Dev\process-forge\tools\smoke_work_evidence_freshness.py", line 242, in main
+    with patch.dict(PROCESS, {"stages": stages}), fixture() as (workplace, project, _started):
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\tools\smoke_work_evidence_freshness.py", line 200, in test_saved_gate_and_completion_freshness
+    gate_file.unlink()
+                ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_garage_mode_not_promoted_by_session.py", line 43, in call_mcp
+    raise AssertionError(text)
+AssertionError: {"error": {"code": "missing_session", "remediation": {"checks": ["Use pf.context, pf.project_state, pf.work_state, pf.resolve, pf.search, or pf.work.start when the operation can stay in Garage mode.", "Ask the operator to verify the configured host session integration and Agent Ledger route when a Forge-only view is required.", "After the operator resolves host integration, retry from a fresh host session."], "kind": "ledger_session_required", "manual_fallback": "Use session-start only for controlled local diagnostics; do not invent production session ids.", "operator_action": "verify_host_session_integration", "repair_actions": [], "summary": "This Forge-only MCP tool requires a real Ledger-bound host session id."}}}

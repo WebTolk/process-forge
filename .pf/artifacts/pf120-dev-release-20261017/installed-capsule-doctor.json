@@ -1,0 +1,9 @@
+{
+  "label": "installed-capsule-doctor",
+  "started_at": "2026-10-17T19:17:09.025091+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.8670185999944806,
+  "raw_sha256": "bbb0db0fdb13527898e10a7415bd8c547d23e4944dc7bc9329ff1ecc46d4757e",
+  "raw_bytes": 698,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-capsule-doctor.log"
+}

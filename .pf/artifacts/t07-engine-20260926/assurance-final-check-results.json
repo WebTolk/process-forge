@@ -1,0 +1,12 @@
+{
+  "passed": [
+    "checksums",
+    "public-cleanliness",
+    "schemas",
+    "smoke_egress_engine",
+    "smoke_egress_transport",
+    "smoke_egress_work",
+    "smoke_server_operator"
+  ],
+  "failed": []
+}

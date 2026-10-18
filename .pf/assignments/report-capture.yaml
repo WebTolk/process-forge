@@ -1,0 +1,107 @@
+schema_version: 1
+id: report-capture
+title: report-capture
+run_id: context-collection-shell-20260910
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T12:30:50Z'
+updated_at: '2026-09-11T03:30:52Z'
+objective: Diagnose the defect using .pf/artifacts/context-collection-20260910/report-capture-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/context-collection-20260910/report-capture/report.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/context-collection-20260910/report-capture-brief.md
+allowed_files:
+  - .pf/artifacts/context-collection-20260910/report-capture/**
+  - .pf/tmp/report-capture/**
+allowed_read_files:
+  - tools/processforge.py
+  - tools/codex_exec_worker.py
+  - tools/pf_runtime/**
+  - tools/smoke_*.py
+  - src/processforge_core/**
+  - docs/**
+  - schemas/**
+  - classifiers/**
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/core-f09-f12-20260910/**
+  - .pf/runtime/agent-runs/core-f09-f12-shell-20260910/**
+  - .pf/artifacts/context-collection-20260910/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/**
+  - src/**
+  - .pf/process-forge.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+ownership:
+  owner_id: report-capture
+  owner_label: worker-report-capture
+  role: analyst
+  writer: true
+  owned_files:
+    - .pf/artifacts/context-collection-20260910/report-capture/**
+    - .pf/tmp/report-capture/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/context-collection-20260910/report-capture/**
+    - .pf/tmp/report-capture/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: report-capture-report
+    path: .pf/artifacts/context-collection-20260910/report-capture/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: medium
+expected_report:
+  language: en
+  artifact: .pf/artifacts/context-collection-20260910/report-capture/report.md
+  format: concise_markdown
+  include:
+    - report-capture-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

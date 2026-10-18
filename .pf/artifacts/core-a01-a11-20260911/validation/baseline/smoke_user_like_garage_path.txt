@@ -1,0 +1,20 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_user_like_garage_path.py
+
+CWD:
+  D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_user_like_garage_path.py", line 61, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_user_like_garage_path.py", line 51, in main
+    raise AssertionError({"context": context, "search": search})
+AssertionError: {'context': {'context': {'policy_action': 'continue', 'recommended_action': 'continue', 'snapshot_id': 'ctx-20260911-100250-1e9238', 'status': 'fresh'}, 'derived_reports': {'reports': [{'path': '.pf/artifacts/project-classification-report.md', 'status': 'current'}, {'path': '.pf/artifacts/global-resource-matching-report.md', 'status': 'current'}, {'path': '.pf/artifacts/toolchain-detection-report.md', 'status': 'current'}, {'path': '.pf/artifacts/capability-provider-audit.md', 'status': 'missing'}, {'path': '.pf/artifacts/project-profile.md', 'status': 'current'}], 'snapshot_generated_at': '2026-09-11T10:02:49Z', 'status': 'missing'}, 'diagnostics': [{'code': 'search_corpus_empty', 'message': 'No authorized searchable documents are indexed.', 'severity': 'warn'}], 'kind': 'pf.context', 'mode': 'garage', 'process': {'allowed': [{'id': 'task-batch-execution', 'purpose': 'Default single-agent process for one primary agent session to execute tasks sequentially inside one project/run with repeated work, debug, fix, review, and handoff iterations.', 'title': 'Task Batch Execution'}], 'default': 'task-batch-execution', 'id': '', 'stage_count': 0}, 'project': {'id': 'project', 'root': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-user-like-k0p0sf58\\project'}, 'resources': {'authorized_knowledge_ids': ['project.project:project-profile', 'project.project:project-artifacts'], 'document_count': 0, 'reason': 'empty_corpus', 'resource_count': 0, 'search': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'search_status': 'empty', 'selection': {'available_count': 2, 'mode': 'legacy_narrow', 'preferred': [{'id': 'project.project:project-profile', 'kind': 'note_collection', 'reason': 'legacy_direct_package', 'version': ''}, {'id': 'project.project:project-artifacts', 'kind': 'reference', 'reason': 'legacy_direct_package', 'version': ''}], 'selected_count': 2, 'target_versions': []}}, 'schema_version': 1, 'session': {'status': 'absent'}, 'work': {'active_runs': [], 'active_work': [], 'current': {'action': 'start_recommended'}, 'governed': False, 'recommendation': 'start_work'}}, 'search': {'degraded_reason': 'index_not_fresh', 'garage_readiness': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'index_generation': None, 'items': [], 'kind': 'pf.search', 'limit': 20, 'offset': 0, 'page': {'limit': 20, 'limitstart': 0, 'next_limitstart': None, 'offset': 0, 'returned': 0, 'total': 0}, 'query': 'project-profile', 'results': [], 'schema_version': 1, 'search': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'search_status': 'missing', 'total': 0}}

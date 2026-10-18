@@ -1,0 +1,192 @@
+{
+  "started_at": "2026-09-26T16:28:50.133084+00:00",
+  "checks": [
+    {
+      "id": "smoke_runtime_monitor",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: allowlist, cached counts, unknown coverage, no writes\nPASS: freshness, malformed/oversize, PID failure, owner race\nPASS: shared ownership classification\nPASS: loopback-only HTTP, no redirects, slow response deadline\nPASS: terminal injection, cell widths, screen resize and cleared tails\nPASS: interactive exit and exception cleanup\nPASS: real CLI JSON/plain/non-TTY/offline, no files or tokens created\n",
+      "stderr": "",
+      "seconds": 13.541
+    },
+    {
+      "id": "smoke_runtime_singleton_orphan",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_singleton_orphan.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: Runtime singleton protects live orphans and concurrent startup\n",
+      "stderr": "",
+      "seconds": 1.252
+    },
+    {
+      "id": "smoke_runtime_status_version_truth",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_status_version_truth.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: runtime status separates installed PF from runtime instance\n",
+      "stderr": "",
+      "seconds": 2.674
+    },
+    {
+      "id": "smoke_runtime_scheduler_failure_isolation",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_scheduler_failure_isolation.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: real scheduler isolates malformed cache/missing assignment, recovers, and exposes dead threads\n",
+      "stderr": "",
+      "seconds": 1.776
+    },
+    {
+      "id": "smoke_runtime_no_domain_file_patterns",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_no_domain_file_patterns.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: smoke_runtime_no_domain_file_patterns\n",
+      "stderr": "",
+      "seconds": 0.722
+    },
+    {
+      "id": "smoke_docs_agent_no_manual_infra",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_agent_no_manual_infra.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: agent instructions use the high-level Garage path and prohibit manual infrastructure repair\n",
+      "stderr": "",
+      "seconds": 0.121
+    },
+    {
+      "id": "smoke_docs_mcp_host_owned_stdio",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_mcp_host_owned_stdio.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: docs describe MCP as a host-owned stdio process\n",
+      "stderr": "",
+      "seconds": 0.107
+    },
+    {
+      "id": "smoke_docs_codex_hooks_optional",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_codex_hooks_optional.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: docs consistently treat Codex hooks as optional host telemetry\n",
+      "stderr": "",
+      "seconds": 0.104
+    },
+    {
+      "id": "public-cleanliness",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": "",
+      "seconds": 5.171
+    },
+    {
+      "id": "checksums",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": "",
+      "seconds": 0.383
+    },
+    {
+      "id": "checkout-schemas-known-journal-failure",
+      "command": [
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py"
+      ],
+      "exit_code": 1,
+      "stdout": "FAIL: .pf\\runtime\\events\\events.ndjson:34212 invalid NDJSON: Extra data: line 1 column 24 (char 23)\n",
+      "stderr": "",
+      "seconds": 16.793
+    },
+    {
+      "id": "public-fixture-schemas",
+      "command": [
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t10-monitor-20260926\\public-fixture\\tools\\validate-process-forge-schemas.py",
+        "--root",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t10-monitor-20260926\\public-fixture"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": "",
+      "seconds": 1.59
+    },
+    {
+      "id": "public-fixture-checksums",
+      "command": [
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t10-monitor-20260926\\public-fixture\\tools\\validate-process-forge-checksums.py",
+        "--root",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t10-monitor-20260926\\public-fixture",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": "",
+      "seconds": 0.464
+    },
+    {
+      "id": "public-fixture-monitor",
+      "command": [
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t10-monitor-20260926\\public-fixture\\tools\\smoke_runtime_monitor.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: allowlist, cached counts, unknown coverage, no writes\nPASS: freshness, malformed/oversize, PID failure, owner race\nPASS: shared ownership classification\nPASS: loopback-only HTTP, no redirects, slow response deadline\nPASS: terminal injection, cell widths, screen resize and cleared tails\nPASS: interactive exit and exception cleanup\nPASS: real CLI JSON/plain/non-TTY/offline, no files or tokens created\n",
+      "stderr": "",
+      "seconds": 19.11
+    },
+    {
+      "id": "preservation",
+      "command": [
+        "D:\\Dev\\process-forge\\.pf\\artifacts\\t10-monitor-20260926\\preservation.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"status\": \"PASS\", \"baseline_files\": 3769, \"unexpected_changed\": [], \"unexpected_added\": [], \"allowed_changes\": [\"checksums/processforge.sha256\", \"docs/concepts/runtime-mcp.md\", \"docs/concepts/runtime-monitor.md\", \"docs/ru/concepts/runtime-mcp.md\", \"docs/ru/concepts/runtime-monitor.md\", \"tools/pf_runtime/monitor.py\", \"tools/pf_runtime/service.py\", \"tools/processforge.py\", \"tools/smoke_runtime_monitor.py\"]}\n",
+      "stderr": "",
+      "seconds": 1.676
+    }
+  ],
+  "ast_and_links": "PASS",
+  "preexisting_journal_finding": {
+    "path": ".pf/runtime/events/events.ndjson",
+    "line": 34212,
+    "sha256": "6f1fa1694252d1b08e1ac8351716ab6129f302a26135c6bd56d7b1466c088739",
+    "embedded_time": "2026-09-26T12:15:42",
+    "preserved": true
+  },
+  "public_fixture": {
+    "path": ".pf/tmp/t10-monitor-20260926/public-fixture",
+    "files": 991,
+    "kind": "non-release product validation input, not an installable release archive"
+  },
+  "diff_check": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "warning: in the working copy of '.pf/artifacts/project-context-refresh-report.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/command-history.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/process-execution-state.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/stage-obligations.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/contexts/project-context.snapshot.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/contexts/project-context.snapshot.yaml', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'checksums/processforge.sha256', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'docs/ru/concepts/context-capsule.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'schemas/assignment.schema.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'schemas/context-capsule.schema.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/processforge_core/process_execution.py', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tools/processforge.py', CRLF will be replaced by LF the next time Git touches it\n"
+  },
+  "source_hashes": {
+    "tools/pf_runtime/monitor.py": "2d74c81eb8e524b7dc6493fd456b90d262286dde18d68734d18690aec39e779f",
+    "tools/pf_runtime/service.py": "16fc587dc901545075b4a02b7fa870527fddba8a6fedf30b31789921861864ee",
+    "tools/processforge.py": "ad40115561ccf0a9b615e91a8d358c2e47d8a3a0cecc17780b504f9dcace8bae",
+    "tools/smoke_runtime_monitor.py": "e75c52ec0e8d86ba4cc5c29a17656ad5dae55af65c9fb3ead523d844c2fd159c",
+    "docs/concepts/runtime-monitor.md": "bc3f084a08357e736531017ad737a798117aa66f1b3f92b399e1fb5ff7e2c3f5",
+    "docs/ru/concepts/runtime-monitor.md": "e8dee9260aae40ce282066fba585931afb248b3faae5e16f534ad5e0af3c22ce",
+    "docs/concepts/runtime-mcp.md": "e242c4e86cae66e5e9dd84e0017012db7f89fe25671849b4c263c2b0db925962",
+    "docs/ru/concepts/runtime-mcp.md": "222dc64053da9d25adbad197afab516360a0bd24e72ddbd0ccce3743ee3cdd26",
+    "checksums/processforge.sha256": "82ca88cf65bb72dc06ae59f2a9fd354475485c6aac50845ab939797e83c3349b"
+  },
+  "finished_at": "2026-09-26T16:30:00.709630+00:00",
+  "status": "PASS_with_preexisting_live_journal_finding"
+}

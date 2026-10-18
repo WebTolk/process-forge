@@ -1,0 +1,208 @@
+schema_version: 1
+run:
+  id: core-f01-f02-shell-20260910
+  title: F01/F02 correctness remediation with bounded junior shell workers
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - design and disjoint ownership
+    - review durable worker evidence
+    - integration and final source validation
+    - governed closure
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 2
+workers:
+  -
+    id: f01-search
+    title: 'F01: project authorization on shared Workplace search'
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f01-f02-20260910/f01-search-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - src/processforge_core/garage.py
+      - tools/smoke_garage_cross_project_security.py
+      - tools/smoke_garage_no_hooks_sessionless.py
+      - tools/garage_search_smoke_support.py
+      - .pf/artifacts/core-f01-f02-20260910/f01-search/**
+      - .pf/tmp/core-f01-f02-20260910/f01-search/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - templates/**
+      - schemas/**
+      - requirements.txt
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f01-f02-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f01-f02-20260910/f01-search-brief.md
+    required_outputs:
+      -
+        id: f01-search-report
+        path: .pf/artifacts/core-f01-f02-20260910/f01-search/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f01-f02-20260910/f01-search/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: f02-update
+    title: 'F02: block unowned paths added by a Core archive'
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f01-f02-20260910/f02-update-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_manifest.py
+      - .pf/artifacts/core-f01-f02-20260910/f02-update/**
+      - .pf/tmp/core-f01-f02-20260910/f02-update/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - templates/**
+      - schemas/**
+      - requirements.txt
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f01-f02-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f01-f02-20260910/f02-update-brief.md
+    required_outputs:
+      -
+        id: f02-update-report
+        path: .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: f0102-assurance
+    title: Independent regression acceptance after implementation
+    role: reviewer
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f01-f02-20260910/f0102-assurance-brief.md
+    execution_mode: assurance
+    writer: false
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    allowed_files:
+      - .pf/artifacts/core-f01-f02-20260910/f0102-assurance/**
+      - .pf/tmp/core-f01-f02-20260910/f0102-assurance/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - templates/**
+      - schemas/**
+      - requirements.txt
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f01-f02-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f01-f02-20260910/f0102-assurance-brief.md
+    required_outputs:
+      -
+        id: f0102-assurance-report
+        path: .pf/artifacts/core-f01-f02-20260910/f0102-assurance/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f01-f02-20260910/f0102-assurance/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      - f01-search
+      - f02-update
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: f0102-review
+    title: Independent post-implementation code review
+    role: reviewer
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f01-f02-20260910/f0102-review-brief.md
+    execution_mode: assurance
+    writer: false
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - .pf/artifacts/core-f01-f02-20260910/f0102-review/**
+      - .pf/tmp/core-f01-f02-20260910/f0102-review/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - templates/**
+      - schemas/**
+      - requirements.txt
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f01-f02-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f01-f02-20260910/f0102-review-brief.md
+    required_outputs:
+      -
+        id: f0102-review-report
+        path: .pf/artifacts/core-f01-f02-20260910/f0102-review/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f01-f02-20260910/f0102-review/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      - f0102-assurance
+    allow_subagents: false
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/core-f01-f02-20260910/integration-report.md
+metadata:
+  carrier_run: garage-remediate-python-core-audit-f01-project-search-authorization-and
+  authorization: User explicitly requested junior PF shell workers; separate orchestration preserves carrier process pin. F01/F02 first bounded remediation batch; F03-F12 deferred.

@@ -1,0 +1,104 @@
+[
+  {
+    "probe": "undefined_presence",
+    "error": "NameError(\"name 'load_json' is not defined\")",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\.pf\\artifacts\\python-core-audit-20260908\\reproduce_fast.py\", line 25, in probe\n    result = fn(Path(raw))\n  File \"D:\\Dev\\process-forge\\.pf\\artifacts\\python-core-audit-20260908\\reproduce_fast.py\", line 35, in undefined_presence\n    return core.active_organized_project_sessions(root)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"D:\\Dev\\process-forge\\tools\\processforge.py\", line 3151, in active_organized_project_sessions\n    data = load_json(presence_path)\n           ^^^^^^^^^\nNameError: name 'load_json' is not defined\n"
+  },
+  {
+    "probe": "undefined_report",
+    "error": "NameError(\"name 'default_expected_report_artifact' is not defined\")",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\.pf\\artifacts\\python-core-audit-20260908\\reproduce_fast.py\", line 25, in probe\n    result = fn(Path(raw))\n  File \"D:\\Dev\\process-forge\\.pf\\artifacts\\python-core-audit-20260908\\reproduce_fast.py\", line 38, in undefined_report\n    return core.normalized_orchestrator_plan(root, {'run': {'id':'audit'}, 'workers':[{'id':'worker'}]})\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Dev\\process-forge\\tools\\processforge.py\", line 19885, in normalized_orchestrator_plan\n    \"expected_report_artifact\": str(worker.get(\"expected_report_artifact\") or default_expected_report_artifact(worker_id)),\n                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nNameError: name 'default_expected_report_artifact' is not defined\n"
+  },
+  {
+    "probe": "update_unowned_collision",
+    "result": {
+      "plan_status": "planned",
+      "blockers": [],
+      "apply_status": "applied",
+      "user_file_after": "NEW CORE PAYLOAD",
+      "backed_up": {}
+    }
+  },
+  {
+    "probe": "update_missing_unchanged",
+    "result": {
+      "missing_owned": [
+        "dir/c.txt"
+      ],
+      "unchanged": [
+        "dir/b.txt",
+        "dir/c.txt"
+      ],
+      "apply_status": "applied",
+      "required_file_exists": false,
+      "reported_version": "2.0.0"
+    }
+  },
+  {
+    "probe": "live_lock_reaped",
+    "result": {
+      "first_owner_pid": 19004,
+      "live_pid": 19004,
+      "second_writer_entered_while_first_held_lock": true
+    }
+  },
+  {
+    "probe": "symlink_search",
+    "result": {
+      "not_reproduced": "symlink creation unavailable",
+      "error": "[WinError 1314] Клиент не обладает требуемыми правами: 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-audit-rekc2pq9\\\\outside.md' -> 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-audit-rekc2pq9\\\\allowed\\\\linked.md'"
+    }
+  },
+  {
+    "probe": "overlapping_sources",
+    "result": {
+      "total": 2,
+      "returned": 1,
+      "page": {
+        "limit": 1,
+        "limitstart": 0,
+        "offset": 0,
+        "returned": 1,
+        "total": 2,
+        "next_limitstart": 1
+      },
+      "verified_status": "fresh"
+    }
+  },
+  {
+    "probe": "explicit_file_exclusion",
+    "result": {
+      "total": 1,
+      "results": [
+        {
+          "document_id": 1,
+          "resource_id": "docs",
+          "resource_type": "knowledge",
+          "title": "secret.md",
+          "provenance": {
+            "package_id": "",
+            "kind": "knowledge",
+            "snapshot_checksum": "excluded"
+          },
+          "canonical_path": "secret.md",
+          "relative_path": "secret.md",
+          "path_ref": "docs:secret.md",
+          "metadata": {
+            "mode": "fulltext",
+            "root_ref": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-audit-_o08fbin\\docs",
+            "version": ""
+          },
+          "match_reason": "content",
+          "match": {
+            "fields": [
+              "title",
+              "content"
+            ],
+            "rank": -1e-06,
+            "reason": "FTS5 title/content match"
+          }
+        }
+      ]
+    }
+  }
+]

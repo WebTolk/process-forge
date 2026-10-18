@@ -1,0 +1,27 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-record",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "execution-context-summary",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "lifecycle-mode-decision",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "context-ready",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/scope.md",
+    "status": "passed",
+    "summary": "Operator authorized staged execution; source context ready, separate T08 identity, bounded scope and installed-change approval boundary recorded."
+  }
+]

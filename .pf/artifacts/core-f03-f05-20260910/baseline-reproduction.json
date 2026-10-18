@@ -1,0 +1,17 @@
+{
+  "F03": {
+    "action": "stage_transitioned",
+    "stage": "verify"
+  },
+  "F04": {
+    "action": "stage_transitioned",
+    "stage": "build",
+    "exists": false
+  },
+  "F05": {
+    "action": "blocked",
+    "reason": "work_is_terminal",
+    "assignment": "done",
+    "run": "in_progress"
+  }
+}

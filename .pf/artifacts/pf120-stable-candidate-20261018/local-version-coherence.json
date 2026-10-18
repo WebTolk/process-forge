@@ -1,0 +1,56 @@
+{
+  "observed_at": "2026-10-18T04:51:45.935189+00:00",
+  "status": "passed",
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "archive_sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+  "cases": [
+    {
+      "layer": "source",
+      "case": "version",
+      "exit_code": 0,
+      "expected_output_verified": true,
+      "raw_sha256": "d15d44c078b653bb0eee800667e41882f6009330cae1ec4573a299f4c89d7d6e"
+    },
+    {
+      "layer": "source",
+      "case": "current",
+      "exit_code": 0,
+      "expected_output_verified": true,
+      "raw_sha256": "754f4f0366b4e1cb2884fda505427cb4e8a946b6a5a32b0940aa6c9206b85c64"
+    },
+    {
+      "layer": "source",
+      "case": "previous",
+      "exit_code": 0,
+      "expected_output_verified": true,
+      "raw_sha256": "8c10b51d2c290e63b70ca548e64a60db95154ca85914743f94a1a8738471eb25"
+    },
+    {
+      "layer": "archive",
+      "case": "version",
+      "exit_code": 0,
+      "expected_output_verified": true,
+      "raw_sha256": "d15d44c078b653bb0eee800667e41882f6009330cae1ec4573a299f4c89d7d6e"
+    },
+    {
+      "layer": "archive",
+      "case": "current",
+      "exit_code": 0,
+      "expected_output_verified": true,
+      "raw_sha256": "754f4f0366b4e1cb2884fda505427cb4e8a946b6a5a32b0940aa6c9206b85c64"
+    },
+    {
+      "layer": "archive",
+      "case": "previous",
+      "exit_code": 0,
+      "expected_output_verified": true,
+      "raw_sha256": "8c10b51d2c290e63b70ca548e64a60db95154ca85914743f94a1a8738471eb25"
+    }
+  ],
+  "count": 6,
+  "default_current_and_latest": "1.2.0",
+  "previous_110_update_available": true,
+  "migration_guidance_verified": true,
+  "method": "Native CLI against clean source and safely extracted canonical archive; no install/apply",
+  "device_untouched": true
+}

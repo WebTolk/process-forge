@@ -1,0 +1,395 @@
+{
+  "label": "before",
+  "scope": "standalone source tool_result with project-declared immutable distribution resources; no server started; cold means empty process parse cache, not cold disk",
+  "corpus_before": {
+    "files": 1529,
+    "sha256": "58a9e8ffbf1297fdef207eb3497d6c858f817586d2e18a144b9ccb1c63b15450"
+  },
+  "corpus_after": {
+    "files": 1529,
+    "sha256": "58a9e8ffbf1297fdef207eb3497d6c858f817586d2e18a144b9ccb1c63b15450"
+  },
+  "corpus_unchanged": true,
+  "samples": [
+    {
+      "pair": 1,
+      "kind": "cold",
+      "wall_seconds": 17.581384900026023,
+      "cpu_seconds": 15.640625,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 159506432,
+        "peak_working_set_bytes": 159506432,
+        "private_bytes": 148295680
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 1,
+      "kind": "warm",
+      "wall_seconds": 17.866783800011035,
+      "cpu_seconds": 17.03125,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 8,
+        "parses": 5402,
+        "evictions": 4534,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 2701,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160256000,
+        "peak_working_set_bytes": 160256000,
+        "private_bytes": 149540864
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 2,
+      "kind": "cold",
+      "wall_seconds": 15.461548899998888,
+      "cpu_seconds": 15.25,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160079872,
+        "peak_working_set_bytes": 160256000,
+        "private_bytes": 149540864
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 2,
+      "kind": "warm",
+      "wall_seconds": 16.108635700016748,
+      "cpu_seconds": 15.890625,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 8,
+        "parses": 5402,
+        "evictions": 4534,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 2701,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160145408,
+        "peak_working_set_bytes": 160272384,
+        "private_bytes": 149692416
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 3,
+      "kind": "cold",
+      "wall_seconds": 15.966656200005673,
+      "cpu_seconds": 15.75,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160030720,
+        "peak_working_set_bytes": 160272384,
+        "private_bytes": 149692416
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 3,
+      "kind": "warm",
+      "wall_seconds": 16.486553599999752,
+      "cpu_seconds": 16.234375,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 8,
+        "parses": 5402,
+        "evictions": 4534,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 2701,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160026624,
+        "peak_working_set_bytes": 160325632,
+        "private_bytes": 149692416
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 4,
+      "kind": "cold",
+      "wall_seconds": 15.737498599977698,
+      "cpu_seconds": 15.46875,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 159989760,
+        "peak_working_set_bytes": 160325632,
+        "private_bytes": 149692416
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 4,
+      "kind": "warm",
+      "wall_seconds": 16.105781200050842,
+      "cpu_seconds": 15.8125,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 8,
+        "parses": 5402,
+        "evictions": 4534,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 2701,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160206848,
+        "peak_working_set_bytes": 160985088,
+        "private_bytes": 150298624
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 5,
+      "kind": "cold",
+      "wall_seconds": 16.017849099996965,
+      "cpu_seconds": 15.703125,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 1833,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160288768,
+        "peak_working_set_bytes": 160985088,
+        "private_bytes": 150298624
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    },
+    {
+      "pair": 5,
+      "kind": "warm",
+      "wall_seconds": 16.44074200000614,
+      "cpu_seconds": 16.21875,
+      "calls": {
+        "YamlDocumentReader.load": 4170,
+        "WorkInventory.runs": 2
+      },
+      "request": {
+        "loads": 4284,
+        "parses": 2701,
+        "hits": 1583,
+        "entries": 665,
+        "bytes": 8388547
+      },
+      "shared_cache": {
+        "entries": 868,
+        "bytes": 67068397,
+        "hits": 8,
+        "parses": 5402,
+        "evictions": 4534,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2701,
+        "evictions": 2701,
+        "bypasses": 0
+      },
+      "memory": {
+        "working_set_bytes": 160116736,
+        "peak_working_set_bytes": 160985088,
+        "private_bytes": 150298624
+      },
+      "payload_sha256": "745405f038985cbec09f5b1f62f554886bbde4e7a1933f5d52a9ccf3535f80fb",
+      "current_action": "work_incomplete"
+    }
+  ]
+}

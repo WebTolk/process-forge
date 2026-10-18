@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-index",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f09-f12-20260910/orchestrator-plan.yaml"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-tasks",
+    "status": "passed",
+    "summary": "Bounded architecture and disjoint assignments documented; source context fresh."
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "worker-run",
+    "stop",
+    "--project-root",
+    ".",
+    "--task",
+    "f01-search"
+  ],
+  "started_at": "2026-09-10T05:05:47.043991+00:00",
+  "elapsed_seconds": 2.293,
+  "exit_code": 0,
+  "stdout": "stop-f01-attempt1.stdout.txt",
+  "stderr": "stop-f01-attempt1.stderr.txt"
+}

@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T20:37:06.865441+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_egress_engine.py",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"status\": \"passed\", \"checks\": 35, \"cases\": [\"A01 exact approved body\", \"A11 nonce and view replay\", \"A20 opaque metadata\", \"A02 credential replacement and sink absence\", \"A03 required meaning blocks\", \"A04 full binary encoding and secret-tail bounds\", \"A09 changed source blocks immutable view\", \"A09 actual Windows junction swap denied\", \"A10 current persistent deny before send\", \"A10 route drift after prepare\", \"A11 attempt binding expiry and restart tombstone\", \"A13 mandatory audit failure sends zero bytes\", \"A13 optional diagnostics failure independent\", \"A14 model text grants no authority\", \"A24 scope denial precedes read and redaction\", \"A25 required optional transformation truth table\", \"A19 new conservative derivative preserves original bytes\", \"A27 close ACL retention and permanent replay tombstone\", \"A26 qualification drift refuses capability\", \"A16 exception expiry after preparation revokes view\", \"A06 subsequent real broker resource read filtered\", \"A08 managed protocol rejects env home plugins children arbitrary network\", \"A21 Work effect grant required and Work deny dominates tool policy\", \"A07 all tool result and metadata fields filtered\", \"A21 effects exact arguments and literal placeholders\", \"A22 local credential separated and echo removed\", \"A22 transport credential only in explicit authentication header\", \"A12 ambiguous network consumes view and budget\", \"A07 optional final answer filtered and durably exported\", \"A12 actual process crash after send no retry refund\", \"A16 measured benign corpus exact scoped expiry exception\", \"A17 same local remote policy decisions\", \"A18 explicit recipient permissions no local isolation claim\", \"A15 nesting duplicate keys and classifier timeout\", \"A28 measured bounded corpus no SLA\"], \"measurements\": [{\"benign_samples\": 5, \"false_positives_before_exception\": 1, \"false_positives_after_valid_exception\": 0}, {\"bytes\": 1024, \"classification_ms\": 0.608, \"python_peak_bytes\": 2983}, {\"bytes\": 65536, \"classification_ms\": 24.593, \"python_peak_bytes\": 67495}, {\"bytes\": 1048576, \"classification_ms\": 547.311, \"python_peak_bytes\": 1050535}], \"boundary\": \"Windows managed HTTP/JSON route; no native executor isolation claim\"}\n",
+  "stderr": ""
+}

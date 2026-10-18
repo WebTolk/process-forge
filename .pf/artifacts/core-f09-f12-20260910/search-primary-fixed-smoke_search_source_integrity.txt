@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 143, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 139, in main
+    return check(Path(raw))
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 82, in check
+    result = build_index(root, snapshot)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 599, in build_index
+    resources = authorized_roots(project_root, snapshot)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 318, in authorized_roots
+    if identity in seen:
+                   ^^^^
+NameError: name 'seen' is not defined

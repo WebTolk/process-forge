@@ -1,0 +1,4 @@
+command: python tools/smoke_core_update_manifest.py
+exit: 1
+result: worker sandbox denied child creation and cleanup beneath the system TemporaryDirectory (WinError 5 / access denied).
+follow-up: rerun with TMP/TEMP directed to owned scratch and fixed-temp invocation shim; see smoke-attempt2.txt.

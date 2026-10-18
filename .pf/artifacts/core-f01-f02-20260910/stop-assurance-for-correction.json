@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "worker-run",
+    "stop",
+    "--project-root",
+    ".",
+    "--task",
+    "f0102-assurance"
+  ],
+  "started_at": "2026-09-10T05:17:40.559449+00:00",
+  "elapsed_seconds": 2.773,
+  "exit_code": 0,
+  "stdout": "stop-assurance-for-correction.stdout.txt",
+  "stderr": "stop-assurance-for-correction.stderr.txt"
+}

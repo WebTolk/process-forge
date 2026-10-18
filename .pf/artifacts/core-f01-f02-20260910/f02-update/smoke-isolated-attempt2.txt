@@ -1,0 +1,5 @@
+command: isolated-public copy, no .git/.pf; fixed-temp runner; python run_smoke_fixed_temp.py
+exit: 0
+SKIP: symlink fixture unavailable: [WinError 1314] (Windows symlink privilege unavailable)
+SKIP: broken-symlink fixture unavailable: [WinError 1314] (Windows symlink privilege unavailable)
+PASS: manifest-based core update smoke

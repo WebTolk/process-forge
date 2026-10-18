@@ -1,0 +1,7 @@
+{
+  "project_root": "D:\\Dev\\process-forge\\.pf\\tmp\\t06-host-acceptance-20260926\\project",
+  "core_constructor": "D:\\.agents\\processforge\\tools\\processforge.py",
+  "resource_id": "project.t06-host-fixture:guide",
+  "unselected_resource_id": "project.t06-host-fixture:unselected",
+  "objective": "T06 actual connected host isolated current contract acceptance"
+}

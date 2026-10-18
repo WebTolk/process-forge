@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"kind\": \"pf.resolve\", \"project\": {\"id\": \"process-forge\", \"root\": \"D:\\\\Dev\\\\process-forge\"}, \"resource\": {\"id\": \"docs.api.gitverse:root\", \"reason\": \"not_in_project_snapshot\", \"status\": \"denied\"}, \"schema_version\": 1}"
+    }
+  ]
+}

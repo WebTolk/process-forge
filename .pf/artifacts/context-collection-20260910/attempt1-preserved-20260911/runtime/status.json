@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "context-collection-shell-20260910",
+  "task_id": "report-capture",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.6-luna",
+  "status": "completed",
+  "pid": 15708,
+  "started_at": "2026-09-10T12:35:00Z",
+  "finished_at": "2026-09-10T12:41:47Z",
+  "exit_code": 0,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/report-capture.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/context-collection-shell-20260910/worker-prompts/report-capture.md",
+  "expected_report_path": ".pf/artifacts/context-collection-20260910/report-capture/report.md",
+  "stdout_path": ".pf/runtime/agent-runs/context-collection-shell-20260910/report-capture/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/context-collection-shell-20260910/report-capture/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/context-collection-shell-20260910/report-capture/heartbeat.json",
+  "last_heartbeat_at": "2026-09-10T12:41:47Z",
+  "failure_reason": null
+}

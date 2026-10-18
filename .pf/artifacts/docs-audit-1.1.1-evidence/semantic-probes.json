@@ -1,0 +1,79 @@
+{
+  "method": "Pure contract calls; mocked load_run and dry_run prevent writes; no Core archive opened or update applied.",
+  "assignment_front_matter": {
+    "normalized_outputs": [
+      {
+        "id": ".pf/artifacts/example-report.md",
+        "type": "unspecified",
+        "required": true
+      }
+    ],
+    "checks": [
+      {
+        "level": "FAIL",
+        "message": "required output has no path: pf-artifacts-example-report-md"
+      }
+    ]
+  },
+  "incomplete_batch": {
+    "error": "FAIL: blocking tasks are not done: task-002-tests"
+  },
+  "gate_vocabulary": {
+    "pass": {
+      "id": "audit-gate",
+      "phase": "exit",
+      "type": "checklist",
+      "blocking": true,
+      "required": true,
+      "satisfied": false,
+      "evidence": {}
+    },
+    "passed": {
+      "id": "audit-gate",
+      "phase": "exit",
+      "type": "checklist",
+      "blocking": true,
+      "required": true,
+      "satisfied": true,
+      "evidence": {
+        "kind": "gate",
+        "id": "audit-gate",
+        "status": "passed"
+      }
+    },
+    "approved": {
+      "id": "audit-gate",
+      "phase": "exit",
+      "type": "checklist",
+      "blocking": true,
+      "required": true,
+      "satisfied": true,
+      "evidence": {
+        "kind": "gate",
+        "id": "audit-gate",
+        "status": "approved"
+      }
+    },
+    "not_applicable": {
+      "id": "audit-gate",
+      "phase": "exit",
+      "type": "checklist",
+      "blocking": true,
+      "required": true,
+      "satisfied": true,
+      "evidence": {
+        "kind": "gate",
+        "id": "audit-gate",
+        "status": "not_applicable"
+      }
+    }
+  },
+  "update_without_workplace_root": {
+    "status": "not_requested",
+    "workplace_root": null,
+    "migration": null,
+    "operations": [],
+    "preserved": [],
+    "blockers": []
+  }
+}

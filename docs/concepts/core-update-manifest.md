@@ -39,6 +39,35 @@ python bin/pf.py core-update repair --core-root <core>
 
 `plan` is read-only. `apply` requires `--confirm`.
 
+## Compatible Workplace Migration
+
+An archive may carry a declarative Workplace migration under
+`updates/migrations/`. For an existing Workplace, include its root in the same
+Core-update transaction:
+
+```text
+python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip> --workplace-root <workplace>
+python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --workplace-root <workplace> --confirm
+```
+
+The plan lists only archive-declared operations. Apply is serial: it replaces
+the Core files and writes the Core manifest first, then applies the compatible
+Workplace migration. Project `.pf` changes are assessed and applied later,
+inside each project's own governed work. Concurrent independent Core or
+Workplace applies are unsupported.
+
+The 1.0.2-to-1.1.0 migration
+adds the built-in `codex-exec` driver and its registry entry only when missing;
+existing files and registry entries are preserved. It does not invoke
+`workplace-init`, which remains a first-time initialization command.
+
+Before a migration write, the updater copies the affected Workplace files into
+the Core update backup directory and records the operation in the update
+journal. When the post-Core Workplace migration cannot finish, the Core remains
+at its new manifest and `core-update repair` reports a manual-repair state with
+the backup location. A successful apply automatically runs the short
+`doctor-workplace` check and stores its result in `last-apply.json`.
+
 The updater computes:
 
 ```text

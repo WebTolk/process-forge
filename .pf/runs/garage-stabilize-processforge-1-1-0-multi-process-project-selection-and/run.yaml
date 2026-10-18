@@ -2,9 +2,9 @@ schema_version: 1
 id: garage-stabilize-processforge-1-1-0-multi-process-project-selection-and
 title: Stabilize ProcessForge 1.1.0 multi-process project selection and Work Capsule is
 process: task-batch-execution
-status: in_progress
+status: completed
 created_at: '2026-09-03T06:49:22Z'
-updated_at: '2026-09-03T09:42:07Z'
+updated_at: '2026-09-07T08:43:58Z'
 objective: Stabilize ProcessForge 1.1.0 multi-process project selection and Work Capsule isolation according to the supplied master prompt.
 platform: ""
 selected_specializations:
@@ -16,7 +16,7 @@ tasks:
   -
     id: stabilize-processforge-1-1-0-multi-process-project-selection-and-work-ca
     assignment: .pf/assignments/stabilize-processforge-1-1-0-multi-process-project-selection-and-work-ca.yaml
-    status: in_progress
+    status: done
     order: 1
     blocking: true
   -
@@ -40,7 +40,7 @@ tasks:
   -
     id: multi-process-assurance-delivery
     assignment: .pf/assignments/multi-process-assurance-delivery.yaml
-    status: in_progress
+    status: done
     order: 5
     blocking: true
   -
@@ -56,11 +56,18 @@ tasks:
     order: 7
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and/summary.md
+  - .pf/handoffs/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and-handoff.md
 events:
   emitted:
     - run.created
     - process.stage.started
+    - process.stage.completed
+    - process.stage.transitioned
+    - task.completed
+    - assignment.completed
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true
 process_execution:

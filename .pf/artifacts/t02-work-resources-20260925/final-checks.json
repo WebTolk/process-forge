@@ -1,0 +1,63 @@
+{
+  "started_at": "2026-09-25T20:40:55.959569+00:00",
+  "checks": [
+    {
+      "command": [
+        ".pf/artifacts/t02-work-resources-20260925/verify-delivery.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"binding_schema_equivalence\": \"PASS\", \"binding_required_fields_positive_negative\": \"PASS\", \"document_links_whitespace\": \"PASS\", \"documents\": 5, \"python_syntax\": \"PASS\", \"python_files\": 7}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".pf/artifacts/t02-work-resources-20260925/verify-main-legacy.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: actual legacy Work explicitly blocked; assignment/run/capsule/project snapshot unchanged\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": ""
+    }
+  ],
+  "source_sha256": {
+    "src/processforge_core/work_resources.py": "0b2c06866adf51778765e7b840c5c346ab6c5e74a386577fbd271964257cd9d2",
+    "src/processforge_core/work_resource_material.py": "459cbd9359389044133df9d851b4b3a49170c43438fd24584c8b89b50946d79d",
+    "src/processforge_core/local_resource_search.py": "039849b670e47436ea0ff680e3a822a5c2c1c4e63c56d3539121872eded39887",
+    "src/processforge_core/process_execution.py": "ce263e4461a97887ad6b0bb339138a7696437d819e5152e5ba0e09b7f002a617",
+    "src/processforge_core/garage.py": "aeb1768bc7ee02e7b2b559fd1d07dc9ea7b554ebdd29809718e86cc2037be517",
+    "tools/processforge.py": "c780c2d046cad8eaa11c1b6b85ebb24adb97e0e2d3a6209f501e3133f857dbe8",
+    "tools/pf_runtime/mcp_server.py": "38320b994b02eb0735712bdc0756f2e7f7e8893b0e348247676cace966f35ed7",
+    "tools/smoke_work_resource_binding.py": "296ae5b604ff4bae38370cf190ff7fb0213f45dbc0ff460e29800e532569b997",
+    "schemas/resource-bindings.schema.json": "26b1141a78fb064b7ebbfa22d4ba55bf4d15d4783058c14c0e9e00d0c0541db8",
+    "schemas/context-capsule.schema.json": "f5220c78340cf30b20197984f50b688bb367cc69c6193db63ba9bbf9f72da2df",
+    "schemas/process-definition.schema.json": "01ce88fdf297457adf0d122a168f73dc311d53144906134c90ebb2e3e11b7b1f",
+    "docs/concepts/work-resources.md": "df84874373809d57b272895eaf59e7d765942da8a05c71231c978ce092121eeb",
+    "docs/ru/concepts/work-resources.md": "d398c3cdcac0949821c3b6d074e2974f519f230e5862e6ddcf63846297b545f2"
+  },
+  "finished_at": "2026-09-25T20:41:18.390959+00:00"
+}

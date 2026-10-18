@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "worker-run",
+    "collect",
+    "--project-root",
+    ".",
+    "--task",
+    "f02-owned-ancestor"
+  ],
+  "started_at": "2026-09-10T05:23:52.480129+00:00",
+  "elapsed_seconds": 3.838,
+  "exit_code": 0,
+  "stdout": "collect-owned-ancestor.stdout.txt",
+  "stderr": "collect-owned-ancestor.stderr.txt"
+}

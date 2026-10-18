@@ -1,0 +1,16 @@
+{
+  "time_utc": "2026-09-26T08:39:40.514765+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "runtime",
+    "doctor",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace"
+  ],
+  "exit_code": 0,
+  "seconds": 4.837,
+  "stdout": "PASS: workplace runtime root exists\nPASS: runtime auth token exists\nPASS: runtime protocol version compatible\nPASS: runtime core version compatible\nPASS: singleton lock is not stale\nPASS: project handle cache readable\nPASS: Agent Ledger path accessible\nWARN: runtime health is degraded\n",
+  "stderr": ""
+}

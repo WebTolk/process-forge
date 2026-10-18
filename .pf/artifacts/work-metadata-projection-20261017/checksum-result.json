@@ -1,0 +1,20 @@
+{
+  "method": "native inventory from complete Git LF source plus owned overlays; private checkout state excluded",
+  "before_entries": 1306,
+  "after_entries": 1307,
+  "changed_paths": [
+    "docs/concepts/document-reads.md",
+    "docs/concepts/python-core-structure.md",
+    "docs/ru/concepts/document-reads.md",
+    "docs/ru/concepts/python-core-structure.md",
+    "src/processforge_core/composition.py",
+    "src/processforge_core/process_execution.py",
+    "src/processforge_core/work/inventory.py",
+    "src/processforge_core/work/metadata.py",
+    "src/processforge_core/work/record_catalog.py",
+    "src/processforge_core/work/records.py",
+    "tools/pf_runtime/mcp_server.py",
+    "tools/smoke_work_record_read_composition.py"
+  ],
+  "sha256": "a9850bd97b55dc048f2e248961d66a8fa67552cc3200bfd212db9fe718ab44ba"
+}

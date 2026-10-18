@@ -1,0 +1,51 @@
+{
+  "concurrency_records": 20,
+  "crash_recovery": {
+    "append_before_index": {
+      "historical_bytes_decoded": 584,
+      "historical_records_decoded": 1
+    },
+    "checkpoint": {
+      "kind": "raw-ingress-recovery-checkpoint",
+      "schema_version": 1,
+      "shards": {
+        "raw/v1/2026/08/15/12.ndjson": 2336
+      }
+    },
+    "partial_index_write": {
+      "historical_bytes_decoded": 2336,
+      "historical_records_decoded": 4
+    },
+    "shard": "12.ndjson"
+  },
+  "legacy_corruption": {
+    "corruption_error": "truncated raw journal record: 12.ndjson",
+    "legacy_bytes_decoded": 512,
+    "legacy_records_decoded": 1
+  },
+  "sessionless_100": {
+    "historical_bytes_decoded": 0,
+    "historical_records_decoded": 0,
+    "new_events": 100,
+    "stable_native_id": false
+  },
+  "sessionless_20": {
+    "historical_bytes_decoded": 0,
+    "historical_records_decoded": 0,
+    "new_events": 20,
+    "stable_native_id": false
+  },
+  "stable_100": {
+    "historical_bytes_decoded": 0,
+    "historical_records_decoded": 0,
+    "new_events": 100,
+    "stable_native_id": true
+  },
+  "stable_20": {
+    "historical_bytes_decoded": 0,
+    "historical_records_decoded": 0,
+    "new_events": 20,
+    "stable_native_id": true
+  }
+}
+PASS: raw ingress incremental recovery smoke

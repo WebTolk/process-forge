@@ -1,0 +1,16 @@
+[
+  {
+    "version": "baseline",
+    "plan": "planned",
+    "blockers": [],
+    "outcome": "applied",
+    "child_exists": true
+  },
+  {
+    "version": "current",
+    "plan": "planned",
+    "blockers": [],
+    "outcome": "applied",
+    "child_exists": true
+  }
+]

@@ -1,0 +1,94 @@
+{
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py",
+        "--root",
+        "D:\\Dev\\process-forge",
+        "--check"
+      ],
+      "elapsed_seconds": 0.401,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:00:20Z",
+      "label": "checksum",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:00:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_project_init_local_search_mcp.py"
+      ],
+      "elapsed_seconds": 29.539,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:00:50Z",
+      "label": "smoke_project_init_local_search_mcp",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:00:20Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_session_enhanced.py"
+      ],
+      "elapsed_seconds": 11.709,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:01:01Z",
+      "label": "smoke_garage_session_enhanced",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:00:50Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_garage_mode_not_promoted_by_session.py"
+      ],
+      "elapsed_seconds": 8.389,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:01:10Z",
+      "label": "smoke_garage_mode_not_promoted_by_session",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:01:01Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_governed_work_stage_resolution.py"
+      ],
+      "elapsed_seconds": 5.235,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T10:01:15Z",
+      "label": "smoke_governed_work_stage_resolution",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T10:01:10Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    }
+  ],
+  "elapsed_seconds": 55.274,
+  "finished_at": "2026-09-11T10:01:15Z",
+  "public": false,
+  "public_checks": [],
+  "result": "PASS",
+  "schema_version": 1,
+  "started_at": "2026-09-11T10:00:20Z"
+}

@@ -6,11 +6,13 @@
 
 ProcessForge — файловая среда для управляемой работы человека и ИИ-агентов над
 проектами. Начните с установки, затем создайте workplace, подготовьте общие
-ресурсы, подключите проект и передайте агенту `.pf/START_AGENT_HERE.md`.
+ресурсы, подключите проект и загрузите корневой `AGENTS.md`. В старом проекте
+без него явно прочитайте `.pf/AGENTS.md`.
 
 Верхний уровень модели: workplace - это машина, где работают человек и агенты;
 ProcessForge установлен один раз как инструмент; общие ресурсы живут в
-workplace; каждый репозиторий хранит только проектный слой `.pf/`.
+workplace; репозиторий хранит состояние процесса в `.pf/` и контракт входа
+в корневом `AGENTS.md`.
 
 Обязательный порядок инициализации: сначала workplace, затем ресурсы workplace,
 затем подключение проекта. Для настройки новой машины с участием человека по
@@ -21,7 +23,9 @@ workplace; каждый репозиторий хранит только про�
 
 - [Корневой README](../../README.ru.md)
 - [Промпты быстрого старта](../../QUICKSTART.ru.md)
+- [Требования и планирование памяти](requirements.md)
 - [Установка](getting-started/installation.md)
+- [Временные файлы и уведомления](temporary-files.md)
 - [Пошаговая настройка workplace](getting-started/guided-workplace-setup.md)
 - [Порядок инициализации](getting-started/initialization-order.md)
 - [Workplace vs project](concepts/workplace-vs-project.md)
@@ -31,6 +35,7 @@ workplace; каждый репозиторий хранит только про�
 
 ## Для ИИ-агентов
 
+- [Требования и необязательная инфраструктура](requirements.md)
 - [Командный справочник агента и промпты](getting-started/agent-prompts.md)
 - [Промпт агента для пошаговой настройки workplace](../../prompts/guided-workplace-setup-agent.md)
 - [Промпт агента для автоматической инициализации workplace](../../prompts/workplace-initialization-agent.md)
@@ -40,6 +45,7 @@ workplace; каждый репозиторий хранит только про�
 
 ## Начало работы
 
+- [Требования](requirements.md)
 - [Установка](getting-started/installation.md)
 - [Первый запуск](getting-started/first-run.md)
 - [Порядок инициализации](getting-started/initialization-order.md)
@@ -65,8 +71,15 @@ workplace; каждый репозиторий хранит только про�
 
 ## Концепции
 
+- [Вход агента и совместимость](concepts/agent-entry.md)
+- [Корень проектного процесса](concepts/project-flow-root.md)
+- [Вход в проект и запуск сессии](concepts/session-bootstrap.md)
+- [Глобальная секция агента](concepts/global-agent-section.md)
+
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Модель среды выполнения](concepts/runtime-model.md)
+- [Garage и управляемая Work](concepts/garage-core.md)
+- [Declarative process execution](concepts/declarative-process-execution.md)
 - [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Модель агентской сессии](concepts/agent-session-model.md)
 - [Режимы координации проекта](concepts/project-coordination-modes.md)
@@ -87,6 +100,21 @@ workplace; каждый репозиторий хранит только про�
 - [Hooks и events](concepts/hooks-events.md)
 - [Semantic parity](concepts/semantic-parity.md)
 
+Для повседневной работы начните с [Garage и управляемой Work](concepts/garage-core.md).
+После смены сессии используйте [продолжение выбранной Work](concepts/work-continuation.md).
+В [командном справочнике агента](getting-started/agent-prompts.md) есть путь
+через CLI для случая, когда MCP недоступен.
+
+## Справочник разработчика и сопровождающего
+
+Эти страницы объясняют реализацию и проверки; они не являются шагами установки:
+
+- [Архитектура Python Core](concepts/python-core-structure.md)
+- [Чтение документов и границы кэша](concepts/document-reads.md)
+- [Журналы SQLite и их перенос](concepts/hook-journal-sqlite.md)
+- [Доказательства аудита разработки](audits/canonical-work-selection-20261016.md)
+- [Проверки (EN)](../validation/validation.md)
+
 ## Порядок слоёв
 
 1. Устройство workplace: компьютер, ноутбук, сервер или узел выполнения.
@@ -105,6 +133,8 @@ Platform contracts являются композиционными манифе�
 
 ## Релизы
 
+- [Что меняется в 1.2.0](releases/1.2.0.md)
+- [Обновление и миграция](releases/1.2.0-migration.md)
 - [Публикация релиза](../maintainers/release-publishing.md)
 - [Initial release notes](releases/initial-release.md)
 - [Ограничения](known-limitations.md)

@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-result",
+    "status": "ready",
+    "path": ".pf\\artifacts\\python-core-audit-20260908\\report.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "all-blocking-tasks-completed",
+    "status": "passed",
+    "summary": "Analysis-only audit finished; 12 findings, reproducible evidence and remediation recommendations recorded; fixes are outside this assignment."
+  }
+]

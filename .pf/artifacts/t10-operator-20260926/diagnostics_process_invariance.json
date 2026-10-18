@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_diagnostics_process_invariance.py"
+  ],
+  "exit_code": 0,
+  "seconds": 177.164,
+  "stdout": "PASS: Work lifecycle invariant across diagnostic profiles {\"diagnostic\": 23, \"normal\": 18, \"off\": 0, \"quiet\": 0, \"trace\": 25}\n",
+  "stderr": ""
+}

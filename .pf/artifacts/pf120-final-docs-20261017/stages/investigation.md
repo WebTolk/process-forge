@@ -1,0 +1,4 @@
+# Проверенные источники
+Системная проверка обнаружила ложное отрицание межзапросного YAML cache в обоих notes. CHANGELOG относит4принятых пункта вUnreleased, VERSION остаётся1.2.0. SQLite migration, Garage hooks и operational health уже описаны в concepts, но пропущены notes/migration.
+Локальная документация: concepts/hook-journal-sqlite.md, document-reads.md, runtime-configuration.md, runtime-model.md и соответствующийRU hooks overview. Она описывает transactional local WAL, operation-local connections, controlled migrator preserving legacy inputs,64MiB estimated LRU retention и live authority checks, inherited Garage opt-in, historical task failures distinct from operational health, own failed staging cleanup.
+Доказательство исполняемого дерева: prior report/identity и full274/274 на d5947ea. Повтор весьнабор не добавляет сигнала для пяти текстовых файлов.

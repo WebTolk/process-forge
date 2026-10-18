@@ -1,0 +1,3 @@
+Command: python -m py_compile src/processforge_core/garage.py tools/garage_search_smoke_support.py tools/smoke_garage_cross_project_security.py tools/smoke_garage_no_hooks_sessionless.py
+Exit: 0
+Stdout/stderr: (empty)

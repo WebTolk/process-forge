@@ -1,0 +1,5 @@
+PLAN_STATUS planned
+MIGRATION_STATUS planned
+APPLY_EXCEPTION KeyError KeyError("There is no item named 'templates/missing.yaml' in the archive")
+IN_PROGRESS_EXISTS True
+IN_PROGRESS_STATUS applying

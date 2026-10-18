@@ -1,10 +1,10 @@
 schema_version: 1
-id: ctx-20260903-094409-7d8aa1
-generated_at: '2026-09-03T09:44:03Z'
+id: ctx-20260925-140110-0dbc7c
+generated_at: '2026-09-25T14:00:49Z'
 snapshot:
-  id: ctx-20260903-094409-7d8aa1
-  generated_at: '2026-09-03T09:44:03Z'
-  valid_until: '2026-09-10T09:44:03Z'
+  id: ctx-20260925-140110-0dbc7c
+  generated_at: '2026-09-25T14:00:49Z'
+  valid_until: '2026-10-02T14:00:49Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -90,7 +90,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: c1e19cb225376f80d79044da09d68d5043db8c1d9f2e0cd68066512a95014456
+      checksum: 57b456d34fa1e08c2e6142a4aa9870f01f8896e893e62891e2b9680472664b86
     -
       id: local_config
       path: .pf/process-forge.local.yaml
@@ -354,7 +354,7 @@ sources:
       kind: registry
       checksum: c20aab44c3aa379b4776a3e6cde74d2fae180c326335c3cca6cea8bf7449db61
 requirements_fingerprint:
-  process_forge_yaml: 'sha256:c1e19cb225376f80d79044da09d68d5043db8c1d9f2e0cd68066512a95014456'
+  process_forge_yaml: 'sha256:57b456d34fa1e08c2e6142a4aa9870f01f8896e893e62891e2b9680472664b86'
   process_forge_local_yaml: 'sha256:1a2991b658ac8d8ed5d52740fc63e50815736950dc380310a125de34231b532d'
 context_requirements:
   knowledge_packages:
@@ -486,7 +486,7 @@ resolved_context:
   conflicts:
     []
   status: resolved
-  process: ""
+  process: software-feature-development
   active_resource_profile:
     selected_platform:
       []
@@ -573,13 +573,151 @@ resolved_context:
     conflicts:
       []
   execution_route:
-    process: ""
+    process: software-feature-development
     stages:
-      []
+      -
+        id: orchestration
+        required_capabilities:
+          - process_coordination
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - context-ready
+      -
+        id: intake-scope
+        required_capabilities:
+          - process_coordination
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - scope-accepted
+      -
+        id: investigation
+        required_capabilities:
+          - repository_read
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - investigation-complete
+          - impact-understood
+      -
+        id: domain-modeling
+        required_capabilities:
+          - repository_read
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - domain-rules-captured
+      -
+        id: architecture-plan
+        required_capabilities:
+          - architecture
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - architecture-plan-ready
+      -
+        id: implementation
+        required_capabilities:
+          - repository_write
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - implementation-scope-respected
+      -
+        id: code-assurance
+        required_capabilities:
+          - review
+          - test_running
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - assurance-complete
+      -
+        id: release-delivery
+        required_capabilities:
+          - test_running
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - release-readiness-decided
+          - delivery-profile-run-or-skipped-with-reason
+      -
+        id: evolve
+        required_capabilities:
+          - review
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - evolution-captured
     required_capabilities:
-      []
+      - architecture
+      - process_coordination
+      - repository_read
+      - repository_write
+      - review
+      - test_running
     capability_requirements:
-      []
+      -
+        capability: repository_read
+        required_by: 'process:software-feature-development'
+      -
+        capability: repository_write
+        required_by: 'process:software-feature-development'
+      -
+        capability: test_running
+        required_by: 'process:software-feature-development'
+      -
+        capability: review
+        required_by: 'process:software-feature-development'
+      -
+        capability: process_coordination
+        required_by: 'software-feature-development:orchestration'
+      -
+        capability: process_coordination
+        required_by: 'software-feature-development:intake-scope'
+      -
+        capability: repository_read
+        required_by: 'software-feature-development:investigation'
+      -
+        capability: repository_read
+        required_by: 'software-feature-development:domain-modeling'
+      -
+        capability: architecture
+        required_by: 'software-feature-development:architecture-plan'
+      -
+        capability: repository_write
+        required_by: 'software-feature-development:implementation'
+      -
+        capability: review
+        required_by: 'software-feature-development:code-assurance'
+      -
+        capability: test_running
+        required_by: 'software-feature-development:code-assurance'
+      -
+        capability: test_running
+        required_by: 'software-feature-development:release-delivery'
+      -
+        capability: review
+        required_by: 'software-feature-development:evolve'
     required_artifacts:
       []
     required_evidence:
@@ -588,7 +726,202 @@ resolved_context:
       []
   capability_resolution:
     satisfied:
-      []
+      -
+        capability: repository_read
+        required_by: 'process:software-feature-development'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: repository_write
+        required_by: 'process:software-feature-development'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: test_running
+        required_by: 'process:software-feature-development'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: review
+        required_by: 'process:software-feature-development'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: process_coordination
+        required_by: 'software-feature-development:orchestration'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: process_coordination
+        required_by: 'software-feature-development:intake-scope'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: repository_read
+        required_by: 'software-feature-development:investigation'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: repository_read
+        required_by: 'software-feature-development:domain-modeling'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: architecture
+        required_by: 'software-feature-development:architecture-plan'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: repository_write
+        required_by: 'software-feature-development:implementation'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: review
+        required_by: 'software-feature-development:code-assurance'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: test_running
+        required_by: 'software-feature-development:code-assurance'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: test_running
+        required_by: 'software-feature-development:release-delivery'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: review
+        required_by: 'software-feature-development:evolve'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
     unsatisfied:
       []
 active_resource_profile:
@@ -677,13 +1010,151 @@ active_resource_profile:
   conflicts:
     []
 execution_route:
-  process: ""
+  process: software-feature-development
   stages:
-    []
+    -
+      id: orchestration
+      required_capabilities:
+        - process_coordination
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - context-ready
+    -
+      id: intake-scope
+      required_capabilities:
+        - process_coordination
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - scope-accepted
+    -
+      id: investigation
+      required_capabilities:
+        - repository_read
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - investigation-complete
+        - impact-understood
+    -
+      id: domain-modeling
+      required_capabilities:
+        - repository_read
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - domain-rules-captured
+    -
+      id: architecture-plan
+      required_capabilities:
+        - architecture
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - architecture-plan-ready
+    -
+      id: implementation
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - implementation-scope-respected
+    -
+      id: code-assurance
+      required_capabilities:
+        - review
+        - test_running
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - assurance-complete
+    -
+      id: release-delivery
+      required_capabilities:
+        - test_running
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - release-readiness-decided
+        - delivery-profile-run-or-skipped-with-reason
+    -
+      id: evolve
+      required_capabilities:
+        - review
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - evolution-captured
   required_capabilities:
-    []
+    - architecture
+    - process_coordination
+    - repository_read
+    - repository_write
+    - review
+    - test_running
   capability_requirements:
-    []
+    -
+      capability: repository_read
+      required_by: 'process:software-feature-development'
+    -
+      capability: repository_write
+      required_by: 'process:software-feature-development'
+    -
+      capability: test_running
+      required_by: 'process:software-feature-development'
+    -
+      capability: review
+      required_by: 'process:software-feature-development'
+    -
+      capability: process_coordination
+      required_by: 'software-feature-development:orchestration'
+    -
+      capability: process_coordination
+      required_by: 'software-feature-development:intake-scope'
+    -
+      capability: repository_read
+      required_by: 'software-feature-development:investigation'
+    -
+      capability: repository_read
+      required_by: 'software-feature-development:domain-modeling'
+    -
+      capability: architecture
+      required_by: 'software-feature-development:architecture-plan'
+    -
+      capability: repository_write
+      required_by: 'software-feature-development:implementation'
+    -
+      capability: review
+      required_by: 'software-feature-development:code-assurance'
+    -
+      capability: test_running
+      required_by: 'software-feature-development:code-assurance'
+    -
+      capability: test_running
+      required_by: 'software-feature-development:release-delivery'
+    -
+      capability: review
+      required_by: 'software-feature-development:evolve'
   required_artifacts:
     []
   required_evidence:
@@ -692,7 +1163,202 @@ execution_route:
     []
 capability_resolution:
   satisfied:
-    []
+    -
+      capability: repository_read
+      required_by: 'process:software-feature-development'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'process:software-feature-development'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: test_running
+      required_by: 'process:software-feature-development'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: review
+      required_by: 'process:software-feature-development'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: process_coordination
+      required_by: 'software-feature-development:orchestration'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: process_coordination
+      required_by: 'software-feature-development:intake-scope'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_read
+      required_by: 'software-feature-development:investigation'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_read
+      required_by: 'software-feature-development:domain-modeling'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: architecture
+      required_by: 'software-feature-development:architecture-plan'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'software-feature-development:implementation'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: review
+      required_by: 'software-feature-development:code-assurance'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: test_running
+      required_by: 'software-feature-development:code-assurance'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: test_running
+      required_by: 'software-feature-development:release-delivery'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: review
+      required_by: 'software-feature-development:evolve'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
   unsatisfied:
     []
 selected_specializations:
@@ -961,7 +1627,7 @@ resource_selection:
       status: selected
 freshness:
   status: fresh
-  checked_at: '2026-09-03T09:44:03Z'
+  checked_at: '2026-09-25T14:00:49Z'
   stale_reasons:
     []
   update_available:
@@ -1374,10 +2040,10 @@ processes:
       id: orchestrator-shell-agents-supervision
       path: ../processes/core/orchestrator-shell-agents-supervision.yaml
   selection:
-    default: task-batch-execution
+    default: software-feature-development
     allowed:
-      - task-batch-execution
-    source: fallback
+      - software-feature-development
+    source: legacy_process
 packages:
   selected:
     -

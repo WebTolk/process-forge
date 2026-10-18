@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T20:37:20.150554+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_egress_transport.py",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"status\": \"passed\", \"checks\": 8, \"cases\": [\"A08 no ambient TLS keylog home or trust-file configuration\", \"A26 actual certificate-verified TLS exact body capture\", \"A26 untrusted TLS certificate sends no application bytes\", \"A08 no ambient proxy or extra network recipient\", \"A15 A26 redirects streaming oversized duplicate and range responses refused\", \"A15 concurrent reservations never exceed persistent attempt budget\", \"A26 mutable transport config invalidates binding\", \"A26 trusted tool code drift invalidates session\"]}\n",
+  "stderr": ""
+}

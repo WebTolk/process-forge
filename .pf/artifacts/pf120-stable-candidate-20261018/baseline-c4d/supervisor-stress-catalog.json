@@ -1,0 +1,10 @@
+{
+  "label": "supervisor-stress-catalog",
+  "started_at": "2026-10-18T04:09:22.597702+00:00",
+  "finished_at": "2026-10-18T04:09:24.407951+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.8101793000241742,
+  "raw_sha256": "f5ae2b7fd10fcc0a08f477ac98d8e263d70b91d6fdffe9e01fe14a20a5e67381",
+  "raw_bytes": 2003,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/baseline-c4d/supervisor-stress-catalog.log"
+}

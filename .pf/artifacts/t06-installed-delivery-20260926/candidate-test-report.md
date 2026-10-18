@@ -1,0 +1,11 @@
+# Candidate assurance result
+
+PASS for bounded installed test-stand delivery, 2026-09-26. Final candidate commit `69110c50559d994d7a31e751b7cd7afc989698db`, tree `39d3afd1f7d465e99f20c2b45cb875b398158b49`, archive `delivery-package/processforge-1.1.0-t06-69110c50.zip`, SHA256 `73b588243ec8bd8ffb9d73ab4dabaa323f62c55f26709ef149f3ef6dd5c4c42e`.
+
+Initial extracted candidate passed 21/22 tests. Documentation CLI contract failed on syntax-only diagnostics examples; preserve the failure in extracted-features.json. The bounded correction is recorded in assurance-correction.md. The successor changed exactly two diagnostics documents and checksums/processforge.sha256; manifest comparison verifies identical names and all other payload bytes. Therefore the 21 successful feature/update/transport/driver/security checks remain applicable. The corrected extracted docs contract passes 620 executable CLI examples and 355 local links. All 22 selected checks now have valid passing evidence.
+
+Final release-pack and release-archive-test with extracted quick PASS. All 987 manifest-owned payload hashes and sizes verified. Clean candidate Git commit/tree and archive provenance agree; main branch HEAD unchanged. Quick includes syntax, schema, public cleanliness, checksum, bootstrap and central event/conversation/replay checks. Raw final evidence: candidate-corrected.json; original feature evidence: extracted-features.json; earlier archive evidence: archive-validation.json.
+
+Windows symlink privileges are unavailable in several isolated fixtures; those branches report SKIP explicitly. The added prepared recovery check uses a real Windows junction and passes containment/no-private-byte publication, actual process death and dead-owner exactly-once collection recovery, plus governed offline execution and source stdio transition. This is not a full public-release test-suite claim.
+
+Read-only initial plan has no conflicts: 33 added, 37 changed, 917 unchanged, zero removed/local modifications/missing-owned; Workplace migration not applicable. Runtime ready and idle; the pre-existing degraded scheduler warning refers to an unrelated missing plg-content-varreplace project manifest. Repeat the exact plan/idle check immediately before apply; installation and real-host acceptance are not claimed by this report.

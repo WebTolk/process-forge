@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T19:14:51.013595+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-runtime-fix-20260926\\extracted\\tools\\smoke_runtime_metrics.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-runtime-fix-20260926\\extracted",
+  "exit_code": 0,
+  "stdout": "PASS: metrics semantics, canonical dedup, bounds, privacy, schema and publisher/monitor\n",
+  "stderr": ""
+}

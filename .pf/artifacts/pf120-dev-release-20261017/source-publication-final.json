@@ -1,0 +1,7 @@
+{
+  "source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "origin_dev": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "gitverse_dev": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "full_sha_readback": "passed",
+  "fixture_contribution": "test-only; seven existing tests and native doctors passed; product bytes unchanged from 280e00d"
+}

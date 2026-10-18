@@ -1,0 +1,2 @@
+WROTE: .pf/runs/core-f03-f05-shell-20260910/summary.md
+WROTE: .pf/handoffs/runs/core-f03-f05-shell-20260910-handoff.md

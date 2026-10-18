@@ -1,0 +1,19 @@
+{
+  "status": "applied",
+  "version": "1.2.0",
+  "applied_at": "2026-10-17T19:15:29Z",
+  "update_id": "core-update-20261017T191529Z",
+  "counts": {
+    "added": 1,
+    "changed": 19,
+    "locally_modified": 1,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1288
+  },
+  "backup_retained": true,
+  "native_post_update_doctor_recorded": true,
+  "independent_workplace_doctor_exit_code": 0,
+  "native_apply_count_for_this_candidate": 1
+}

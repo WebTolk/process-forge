@@ -1,0 +1,48 @@
+{
+  "broken": false,
+  "broken_refs": [],
+  "check_update_candidates": "if_due",
+  "execution_readiness": {
+    "blockers": [],
+    "missing_capabilities": [],
+    "status": "ready"
+  },
+  "fresh": false,
+  "health": {
+    "status": "warn"
+  },
+  "policy": {
+    "action": "ask_operator"
+  },
+  "policy_action": "ask_operator",
+  "readiness": {
+    "context": {
+      "status": "fresh"
+    },
+    "execution": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "resources": {
+      "blockers": [],
+      "status": "fresh"
+    }
+  },
+  "recommended_action": "project-context-refresh",
+  "resource_readiness": {
+    "blockers": [],
+    "status": "fresh"
+  },
+  "session_start": false,
+  "snapshot_id": "ctx-20260910-170716-057454",
+  "snapshot_sha256": "sha256:8544ec8c2f809ee631da50b573a2b4a8bcd6a590a8d8a4c5cb7c179fe928a8a0",
+  "stale": true,
+  "stale_resources": [
+    {
+      "reason": "project classification changed"
+    }
+  ],
+  "status": "stale",
+  "updates_available": []
+}

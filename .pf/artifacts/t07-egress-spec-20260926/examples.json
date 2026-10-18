@@ -1,0 +1,142 @@
+{
+  "kind": "pf.egress.examples.proposal",
+  "schema_version": 1,
+  "design_only": true,
+  "notice": "Synthetic documentation examples, not installed schemas, live secrets or implementation results",
+  "examples": [
+    {
+      "id": "E01",
+      "scenario": "Initial optional contact field",
+      "input": {
+        "unit_id": "u1",
+        "classification": "restricted",
+        "tags": [
+          "personal_data"
+        ],
+        "required": false,
+        "text": "Contact: Example Person"
+      },
+      "trusted_policy": {
+        "recipient": "recipient-01",
+        "purpose": "summarize",
+        "transformation": "omit_personal_name"
+      },
+      "decision": {
+        "action": "redact",
+        "reason": "policy_transform",
+        "assurance": "payload_only"
+      },
+      "recipient_view": {
+        "kind": "pf.outbound-view.proposal",
+        "version": 1,
+        "attempt_alias": "attempt-opaque-01",
+        "units": [
+          {
+            "id": "u1",
+            "text": "Contact: [omitted]",
+            "transformed": true
+          }
+        ]
+      },
+      "local_only_fields": [
+        "context_checksum",
+        "source_digest",
+        "view_digest",
+        "policy_binding",
+        "handle_map"
+      ]
+    },
+    {
+      "id": "E02",
+      "scenario": "Required instruction cannot preserve meaning",
+      "input": {
+        "unit_id": "u2",
+        "classification": "restricted",
+        "required": true,
+        "text": "Perform the exact operation using a protected identifier"
+      },
+      "decision": {
+        "action": "block",
+        "reason": "required_semantics_lost",
+        "assurance": "none"
+      },
+      "recipient_view": null,
+      "local_only_fields": [
+        "reason_code",
+        "policy_binding"
+      ]
+    },
+    {
+      "id": "E03",
+      "scenario": "Local CLI with unqualified native file access",
+      "input": {
+        "requested_capability": "mediated_session",
+        "available_capability": "payload_only",
+        "recipient_location": "remote"
+      },
+      "decision": {
+        "action": "block",
+        "reason": "enforcement_unavailable",
+        "assurance": "none"
+      },
+      "recipient_view": null,
+      "local_only_fields": [
+        "adapter_version",
+        "capability_evidence"
+      ]
+    },
+    {
+      "id": "E04",
+      "scenario": "Declared public unit through qualified broker",
+      "input": {
+        "unit_id": "u4",
+        "classification": "public",
+        "required": true,
+        "text": "Synthetic public task"
+      },
+      "decision": {
+        "action": "allow",
+        "reason": "policy_allow",
+        "assurance": "mediated_session"
+      },
+      "recipient_view": {
+        "kind": "pf.outbound-view.proposal",
+        "version": 1,
+        "attempt_alias": "attempt-opaque-04",
+        "units": [
+          {
+            "id": "u4",
+            "text": "Synthetic public task",
+            "transformed": false
+          }
+        ]
+      },
+      "local_only_fields": [
+        "source_digest",
+        "view_digest",
+        "authorization_receipt",
+        "dispatch_nonce"
+      ]
+    },
+    {
+      "id": "E05",
+      "scenario": "Unknown attachment",
+      "input": {
+        "unit_id": "u5",
+        "classification": "unknown",
+        "format": "unsupported",
+        "required": true
+      },
+      "decision": {
+        "action": "block",
+        "reason": "unsupported_content",
+        "assurance": "none"
+      },
+      "recipient_view": null,
+      "local_only_fields": [
+        "reason_code",
+        "format_category"
+      ]
+    }
+  ]
+}

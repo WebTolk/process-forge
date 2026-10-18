@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\pf_runtime\raw_ingress_kernel.py", line 166, in __enter__
+    self._fd = os.open(str(self.path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+               ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: 'D:\\.agents\\processforge-workplace\\runtime\\agent-events\\indexes\\.ingress.lock'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Dev\process-forge/tools/codex_exec_worker.py", line 301, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge/tools/codex_exec_worker.py", line 289, in main
+    capture_worker_input(payload_text, output)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge/tools/codex_exec_worker.py", line 208, in capture_worker_input
+    result = host.ingest_event(envelope, workplace_root, core)
+  File "D:\Dev\process-forge\tools\pf_runtime\host.py", line 990, in ingest_event
+    receipt = RawIngressKernel(workplace_root).ingest(native)
+  File "D:\Dev\process-forge\tools\pf_runtime\raw_ingress_kernel.py", line 227, in ingest
+    with _ExclusiveFileLock(contained_path(self.root, "indexes", ".ingress.lock")):
+         ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\tools\pf_runtime\raw_ingress_kernel.py", line 171, in __enter__
+    raise RawIngressError(f"timed out waiting for raw ingress lock: {self.path.name}")
+pf_runtime.raw_ingress_kernel.RawIngressError: timed out waiting for raw ingress lock: .ingress.lock

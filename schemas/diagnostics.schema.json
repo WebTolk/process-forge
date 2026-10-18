@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/diagnostics.schema.json",
+  "title": "ProcessForge Optional Diagnostics Configuration",
+  "description": "Version 1 project diagnostic settings and identity-scoped overrides.",
+  "type": "object",
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "profile": { "$ref": "#/$defs/profile" },
+    "threshold": { "$ref": "#/$defs/severity" },
+    "components": { "$ref": "#/$defs/components" },
+    "sink": { "$ref": "#/$defs/sink" },
+    "expires_at": { "$ref": "#/$defs/expires_at" },
+    "sample_every": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "record_bytes": { "type": "integer", "minimum": 512, "maximum": 16384 },
+    "string_chars": { "type": "integer", "minimum": 1, "maximum": 2048 },
+    "depth": { "type": "integer", "minimum": 1, "maximum": 6 },
+    "items": { "type": "integer", "minimum": 1, "maximum": 32 },
+    "stack_frames": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "spans": { "type": "integer", "minimum": 1, "maximum": 32 },
+    "file_bytes": { "type": "integer", "minimum": 512, "maximum": 1048576 },
+    "quota_bytes": { "type": "integer", "minimum": 512, "maximum": 8388608 },
+    "files": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "retention_seconds": { "type": "integer", "minimum": 1, "maximum": 604800 },
+    "detail_records": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "locked": { "$ref": "#/$defs/locked" },
+    "work": {
+      "type": "object",
+      "description": "Per-run overrides keyed by exact run_id.",
+      "additionalProperties": { "$ref": "#/$defs/settings" }
+    },
+    "sessions": {
+      "type": "object",
+      "description": "Per-session overrides keyed by exact session_id.",
+      "additionalProperties": { "$ref": "#/$defs/settings" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "severity": {
+      "type": "string",
+      "enum": ["debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"]
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["quiet", "normal", "diagnostic", "trace", "off"]
+    },
+    "components": {
+      "type": "array",
+      "maxItems": 32,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$" }
+    },
+    "sink": { "type": "string", "enum": ["jsonl", "stderr", "both", "none"] },
+    "expires_at": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "locked": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["schema_version", "profile", "threshold", "components", "sink", "expires_at", "sample_every", "record_bytes", "string_chars", "depth", "items", "stack_frames", "spans", "file_bytes", "quota_bytes", "files", "retention_seconds", "detail_records"]
+      }
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": 1 },
+        "profile": { "$ref": "#/$defs/profile" },
+        "threshold": { "$ref": "#/$defs/severity" },
+        "components": { "$ref": "#/$defs/components" },
+        "sink": { "$ref": "#/$defs/sink" },
+        "expires_at": { "$ref": "#/$defs/expires_at" },
+        "sample_every": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "record_bytes": { "type": "integer", "minimum": 512, "maximum": 16384 },
+        "string_chars": { "type": "integer", "minimum": 1, "maximum": 2048 },
+        "depth": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "items": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "stack_frames": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "spans": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "file_bytes": { "type": "integer", "minimum": 512, "maximum": 1048576 },
+        "quota_bytes": { "type": "integer", "minimum": 512, "maximum": 8388608 },
+        "files": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "retention_seconds": { "type": "integer", "minimum": 1, "maximum": 604800 },
+        "detail_records": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "locked": { "$ref": "#/$defs/locked" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

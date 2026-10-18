@@ -1,0 +1,10 @@
+{
+  "test": "smoke_core_update_manifest.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 16.84,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_core_update_manifest.py"
+  ]
+}

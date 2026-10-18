@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "run-doctor",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-remediate-python-core-audit-f01-project-search-authorization-and"
+  ],
+  "started_at": "2026-09-10T05:43:00.803893+00:00",
+  "elapsed_seconds": 2.258,
+  "exit_code": 0,
+  "stdout": "final-carrier-doctor.stdout.txt",
+  "stderr": "final-carrier-doctor.stderr.txt"
+}

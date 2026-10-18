@@ -1,0 +1,9 @@
+{
+  "label": "server-start",
+  "started_at": "2026-10-17T19:15:48.122441+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.253208399983123,
+  "raw_sha256": "89645ff90e68c0dc6744430766df956a6d6821e082f0d62a492dcfe055edc5fa",
+  "raw_bytes": 86,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/server-start.log"
+}

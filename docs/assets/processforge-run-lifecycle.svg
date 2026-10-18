@@ -1,53 +1,69 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
-  <title id="title">Run task iteration lifecycle</title>
-  <desc id="desc">A flow diagram from process definition to run, task, iterations, summary, and handoff.</desc>
-  <style>
-    .bg { fill: #fbfbf8; }
-    .box { fill: #ffffff; stroke: #bac5c0; stroke-width: 2; rx: 12; }
-    .run { fill: #edf6ff; stroke: #6f94b8; }
-    .task { fill: #eff8f2; stroke: #6fa174; }
-    .iter { fill: #fff7e6; stroke: #b4934d; }
-    .done { fill: #f3eff8; stroke: #9070b5; }
-    .title { font: 700 24px Arial, sans-serif; fill: #1f2a24; }
-    .label { font: 700 17px Arial, sans-serif; fill: #1f2a24; }
-    .text { font: 14px Arial, sans-serif; fill: #33443a; }
-    .small { font: 12px Arial, sans-serif; fill: #526158; }
-    .arrow { fill: none; stroke: #526158; stroke-width: 2.4; marker-end: url(#arrow); }
-  </style>
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#526158"/>
-    </marker>
-  </defs>
-  <rect class="bg" width="960" height="420"/>
-  <text class="title" x="40" y="48">Process execution record</text>
-  <text class="small" x="40" y="74">A process definition becomes a run; the run contains tasks; each task records iterations and evidence.</text>
-  <rect class="box" x="40" y="145" width="165" height="115" rx="12"/>
-  <text class="label" x="62" y="184">Process</text>
-  <text class="text" x="62" y="214">stages</text>
-  <text class="text" x="62" y="238">gates</text>
-  <rect class="box run" x="250" y="125" width="165" height="155" rx="12"/>
-  <text class="label" x="272" y="164">Run</text>
-  <text class="text" x="272" y="194">objective</text>
-  <text class="text" x="272" y="218">task index</text>
-  <text class="text" x="272" y="242">final artifacts</text>
-  <rect class="box task" x="460" y="125" width="165" height="155" rx="12"/>
-  <text class="label" x="482" y="164">Task</text>
-  <text class="text" x="482" y="194">scope</text>
-  <text class="text" x="482" y="218">status</text>
-  <text class="text" x="482" y="242">assignment</text>
-  <rect class="box iter" x="670" y="90" width="210" height="220" rx="12"/>
-  <text class="label" x="692" y="129">Iterations</text>
-  <text class="text" x="692" y="159">work</text>
-  <text class="text" x="692" y="183">debug</text>
-  <text class="text" x="692" y="207">fix</text>
-  <text class="text" x="692" y="231">review</text>
-  <text class="text" x="692" y="255">handoff</text>
-  <rect class="box done" x="305" y="330" width="350" height="58" rx="12"/>
-  <text class="label" x="328" y="366">run-summary + handoff close the session</text>
-  <path class="arrow" d="M205 202 L250 202"/>
-  <path class="arrow" d="M415 202 L460 202"/>
-  <path class="arrow" d="M625 202 L670 202"/>
-  <path class="arrow" d="M775 310 C775 355, 705 360, 655 360"/>
-  <path class="arrow" d="M480 330 C460 305, 410 285, 345 280"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" role="img" aria-labelledby="title desc">
+<title id="title">Governed Work: context, exact identity, evidence and completion</title><desc id="desc">Read project context, start new Work or resume an exact continuation, then follow the pinned state, perform scoped work and submit evidence with a transition. Repeat until run_completed, which writes the Run summary and handoff. Manual batch commands and host session lifecycle are separate.</desc>
+<style>
+.bg { fill: #f7f9f7; }
+.card { fill: #fff; stroke: #aabbb1; stroke-width: 1.7; }
+.blue { fill: #edf5fd; stroke: #7498b9; }
+.green { fill: #edf7f0; stroke: #74a184; }
+.gold { fill: #fff7e8; stroke: #b69a61; }
+.purple { fill: #f3eef9; stroke: #9a81b6; }
+.title { font: 700 26px Arial, sans-serif; fill: #21352b; }
+.label { font: 700 19px Arial, sans-serif; fill: #21352b; }
+.text { font: 15px Arial, sans-serif; fill: #344b3e; }
+.small { font: 14px Arial, sans-serif; fill: #53695c; }
+.arrow { fill: none; stroke: #53695c; stroke-width: 2; marker-end: url(#arrow); }
+.loop { fill: none; stroke: #917640; stroke-width: 2; marker-end: url(#gold-arrow); }
+</style>
+<defs>
+<marker id="arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#53695c"/></marker>
+<marker id="gold-arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#917640"/></marker>
+</defs>
+<rect class="bg" width="1120" height="700"/>
+<text class="title" x="40" y="48">The ordinary governed Work cycle</text>
+<text class="small" x="40" y="78">The pinned process chooses stages. Humans and agents perform work, checks and semantic review.</text>
+<rect class="card blue" x="40" y="115" width="270" height="130" rx="12"/>
+<text class="label" x="60" y="149">1. pf.context</text>
+<text class="text" x="60" y="179">Verify current context and policy</text>
+<text class="text" x="60" y="204">pf.search / pf.resolve</text>
+<text class="small" x="60" y="231">Stop dependent work if blocked</text>
+<rect class="card blue" x="365" y="115" width="360" height="130" rx="12"/>
+<text class="label" x="385" y="149">2. pf.work.start</text>
+<text class="text" x="385" y="179">New objective; choose an offered process</text>
+<text class="text" x="385" y="204">Existing Work: continuation / resume</text>
+<text class="small" x="385" y="231">Keep returned Run / Assignment / context</text>
+<rect class="card purple" x="780" y="115" width="300" height="130" rx="12"/>
+<text class="label" x="800" y="149">Pinned execution contract</text>
+<text class="text" x="800" y="179">Process version and snapshot</text>
+<text class="text" x="800" y="204">Immutable capsule; bounded scope</text>
+<text class="small" x="800" y="231">Exact selectors on sessionless calls</text>
+<path class="arrow" d="M310 180 H365"/>
+<path class="arrow" d="M725 180 H780"/>
+<path class="arrow" d="M930 245 V265 H175 V330"/>
+<rect class="card green" x="40" y="330" width="270" height="140" rx="12"/>
+<text class="label" x="60" y="364">3. Current Work state</text>
+<text class="text" x="60" y="394">pf.work.state or returned state</text>
+<text class="text" x="60" y="419">Stage, obligations, gates, scope</text>
+<text class="small" x="60" y="446">Check identity and permissions</text>
+<rect class="card green" x="365" y="330" width="360" height="140" rx="12"/>
+<text class="label" x="385" y="364">4. Work and evidence</text>
+<text class="text" x="385" y="394">Read only authorized Work resources</text>
+<text class="text" x="385" y="419">Produce scoped artifacts; run real checks</text>
+<text class="small" x="385" y="446">pf.work.search / pf.work.resolve</text>
+<rect class="card gold" x="780" y="330" width="300" height="140" rx="12"/>
+<text class="label" x="800" y="364">5. pf.work.transition</text>
+<text class="text" x="800" y="394">Submit outcome and evidence</text>
+<text class="text" x="800" y="419">PF validates and routes the stage</text>
+<text class="small" x="800" y="446">Caller never supplies next_stage</text>
+<path class="arrow" d="M310 400 H365"/>
+<path class="arrow" d="M725 400 H780"/>
+<path class="loop" d="M930 330 V305 H195 V330"/>
+<text class="small" x="330" y="297">Continue with returned state; satisfy incomplete or rejected evidence</text>
+<rect class="card purple" x="365" y="540" width="715" height="100" rx="12"/>
+<text class="label" x="385" y="574">Final successful transition: action: run_completed</text>
+<text class="text" x="385" y="603">Assignment and Run complete; summary and handoff are written automatically.</text>
+<text class="small" x="385" y="625">No extra run-summary or run-complete command in this governed cycle.</text>
+<path class="arrow" d="M930 470 V540"/>
+<text class="small" x="40" y="582">Iterations record attempts.</text>
+<text class="small" x="40" y="606">They do not advance a stage.</text>
+<text class="small" x="40" y="678">Manual task-batch records are an advanced flow. Run completion does not close or restart a host session.</text>
 </svg>

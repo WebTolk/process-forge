@@ -67,8 +67,9 @@ index_state
 `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
 `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
 `documents_fts` хранит searchable fulltext fields. `index_state` хранит
-authorization state текущего project snapshot без дублирования documents под
-каждый проект.
+состояние каталога Workplace и области снапшотов проектов в общей DB. Снапшоты
+определяют разрешённые идентификаторы ресурсов для каждого поискового запроса;
+документы не дублируются для каждого проекта.
 
 ## CLI
 
@@ -80,18 +81,35 @@ python bin/pf.py search-index doctor --project-root <project> --workplace <workp
 python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
-`status` работает read-only. `status --verify-files` выполняет явную
-fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
-bounded maintenance unit для оператора и Runtime scheduling.
+Все команды требуют корень проекта и читают его контекстный снапшот. `status`
+работает без изменения индекса; `status --verify-files` проверяет отпечатки
+разрешённых файлов и сообщает состояние `stale`, если их содержимое изменилось.
+`refresh` индексирует ресурсы, разрешённые снапшотом, соблюдая `indexing.mode`.
+`rebuild` удаляет производную DB и строит её заново; `tick` выполняет один
+ограниченный проход для области снапшота проекта.
+
+`refresh`, `rebuild` и `tick` требуют состояния контекста `fresh` или
+`fresh_with_updates`; иначе они отказывают с кодом выхода 1. `status` и `doctor`
+доступны и при других состояниях контекста. `doctor` показывает свежесть
+контекста проекта как `PASS` для этих двух состояний и как `WARN` для остальных.
 
 ## Runtime И MCP
 
-Runtime maintenance должен периодически запускать `tick` для известных проектов
-со свежими snapshots. PF-owned resource mutations помечают существующий index
-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
-во время `tick`.
+Физический каталог Workplace читает конкретный Core-класс
+`WorkplaceSearchCatalogReader`. Он читает текущие реестры, зарегистрированные
+корни пакетов, knowledge packages активных официальных пакетов и шаблоны, затем
+разрешает ссылки на их пути. Каталог не зависит от project context, CLI, Runtime,
+Ledger или сессии. Обслуживание индекса и ограниченная поисковая проекция сессии
+обращаются к нему напрямую; исторические функции каталога в монолите делегируют
+ему работу. Каталог не даёт проекту права искать по произвольным ресурсам:
+авторизация и проверки свежести в проектных CLI/MCP сохраняются.
+
+Планировщик Runtime использует существующую операцию Core `maintenance_tick`
+для каталога Workplace отдельно от CLI-команд с областью проекта. Эта операция
+Core не обходит проекты и не требует запущенного Runtime, Ledger или активных
+сессий. Изменения ресурсов средствами PF помечают существующее состояние
+индекса как `stale`; внешние изменения файлов обнаруживаются проверкой
+отпечатков при обслуживании.
 
 `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
 или degraded, результат возвращает этот `search_status` и пустые matches до

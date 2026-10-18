@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.local_resource_search import maintenance_tick, search
+from processforge_core.resources.local_search import maintenance_tick, search
 import processforge as core
 from pf_runtime.session_read import session_context_payload
 
@@ -86,7 +86,7 @@ def assert_fts_lifecycle(project: Path) -> None:
     assert search(project, current_snapshot, query="lifecycle")["search_status"] == "fresh"
     stale_snapshot = {**current_snapshot, "snapshot": {"id": "stale"}}
     assert search(project, stale_snapshot, query="lifecycle")["search_status"] == "stale"
-    with patch("processforge_core.local_resource_search.sqlite3.connect", side_effect=sqlite3.OperationalError("fixture unavailable")):
+    with patch("processforge_core.resources.local_search.sqlite3.connect", side_effect=sqlite3.OperationalError("fixture unavailable")):
         unavailable = search(project, stale_snapshot, query="lifecycle")
         assert unavailable["search_status"] == "degraded", unavailable
 
@@ -135,7 +135,9 @@ def main() -> int:
         # Simulate a partial initialization: restore only a missing PF-owned
         # artifact and prove that a semantic user file stays untouched.
         start_here = project / ".pf" / "START_AGENT_HERE.md"
-        start_here.unlink()
+        assert not start_here.exists(), "new project created START"
+        report = project / ".pf" / "artifacts" / "project-onboarding-report.md"
+        report.unlink()
         semantic = project / ".pf" / "artifacts" / "user-semantic-note.md"
         semantic.write_text("preserve this user content", encoding="utf-8")
         repair_status = json.loads(cli("project-init-status", "--project-root", str(project), "--workplace", str(workplace), "--json").stdout)
@@ -144,7 +146,8 @@ def main() -> int:
             "project-init-repair", "--project-root", str(project), "--workplace", str(workplace),
             "--repair-action", "restore_deterministic_artifacts", "--apply",
         )
-        assert start_here.is_file()
+        assert report.is_file(), "repair did not restore the missing deterministic report"
+        assert not start_here.exists(), "repair recreated retired START"
         assert semantic.read_text(encoding="utf-8") == "preserve this user content"
         assert not list((project / ".pf").rglob("START_AGENT_HERE.md.candidate"))
         assert json.loads(cli("project-init-status", "--project-root", str(project), "--workplace", str(workplace), "--json").stdout)["state"] == "complete"

@@ -1,0 +1,9 @@
+{
+  "label": "final-task-doctor",
+  "started_at": "2026-10-17T19:35:29.415733+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.4698777999728918,
+  "raw_sha256": "3258196e847ac45343b686969b7005d691918e5c2b0852a2538fa6e57cfcbe07",
+  "raw_bytes": 712,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/final-task-doctor.log"
+}

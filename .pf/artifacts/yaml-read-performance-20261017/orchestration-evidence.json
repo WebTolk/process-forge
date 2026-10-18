@@ -1,0 +1,27 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-record",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/orchestration.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "execution-context-summary",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/orchestration.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "lifecycle-mode-decision",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/orchestration.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "context-ready",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/orchestration.md",
+    "status": "passed",
+    "summary": "Fresh exact implementation capsule, preserved freshness/mutation/contracts, bounded shared YAML and Runtime Run discovery scope with actual dev-device acceptance authorized."
+  }
+]

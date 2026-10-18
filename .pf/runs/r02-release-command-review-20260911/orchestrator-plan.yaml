@@ -1,0 +1,63 @@
+schema_version: 1
+run:
+  id: r02-release-command-review-20260911
+  title: R02 independent release command review
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: primary-orchestrator
+  responsibilities:
+    - candidate-validation
+    - integration
+    - review
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 1
+  model: gpt-5.6-luna
+workers:
+  -
+    id: r02-release-command-review
+    title: R02 independent release-command review
+    role: assurance-worker
+    process: task-batch-execution
+    objective: Read the bounded release command surfaces and write a concise report identifying the required source, archive, and extracted validation commands and any safety boundary. Do not run packaging or edit product files.
+    execution_mode: assurance
+    writer: true
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: low
+    allow_subagents: false
+    worker_may_rebuild_context: false
+    allowed_files:
+      - .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/**
+      - .pf/tmp/r02-release-command-review/**
+    allowed_read_files:
+      - .pf/AGENTS.md
+      - .pf/artifacts/r02-release-candidate-20260911/**
+      - tools/processforge.py
+      - tools/release_test.py
+      - VERSION
+      - checksums/**
+      - docs/**
+    forbidden_files:
+      - src/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/r02-release-candidate-20260911/intake.md
+      - .pf/artifacts/r02-release-candidate-20260911/plan.md
+    required_outputs:
+      -
+        id: r02-release-command-review-report
+        path: .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+integration:
+  required: true
+  role: primary-orchestrator
+  expected_output: .pf/artifacts/r02-release-candidate-20260911/integration-report.md
+allow_write_scope_overlap: false

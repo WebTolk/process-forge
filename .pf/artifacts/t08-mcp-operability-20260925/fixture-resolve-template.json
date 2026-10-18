@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"kind\": \"pf.resolve\", \"project\": {\"id\": \"t08-host-acceptance-20260925\", \"root\": \"D:\\\\Dev\\\\process-forge\\\\.pf\\\\tmp\\\\t08-host-acceptance-20260925\\\\project\"}, \"resource\": {\"application\": {\"kind\": \"template\", \"package_id\": \"agents-file-templates\"}, \"id\": \"php.class-doc-block\", \"reference\": {\"id\": \"php.class-doc-block\", \"registry\": \"templates\"}, \"registry_source\": \"project-context.snapshot\", \"resolution_status\": \"unresolved\", \"scope\": \"project_context\", \"status\": \"available\"}, \"schema_version\": 1}"
+    }
+  ]
+}

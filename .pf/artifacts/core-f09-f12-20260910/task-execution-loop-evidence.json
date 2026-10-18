@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-iteration-log",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f09-f12-20260910/iteration-record.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "task-results-recorded",
+    "status": "passed",
+    "summary": "Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed."
+  }
+]

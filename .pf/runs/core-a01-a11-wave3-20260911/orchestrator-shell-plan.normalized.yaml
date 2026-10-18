@@ -1,0 +1,127 @@
+schema_version: 1
+run:
+  id: core-a01-a11-wave3-20260911
+  title: A01-A11 remediation wave 3
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+  model: ""
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: a07-session
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - tools/processforge.py
+      - tools/pf_runtime/session_read.py
+      - tools/smoke_session_identity_roundtrip.py
+      - .pf/artifacts/core-a01-a11-20260911/a07-session/**
+      - .pf/tmp/a07-session/**
+    allowed_read_files:
+      - tools/processforge.py
+      - tools/pf_runtime/session_read.py
+      - tools/smoke_session_identity_roundtrip.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: a07-session-report
+        path: .pf/artifacts/core-a01-a11-20260911/a07-session/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a07-session/report.md
+    depends_on:
+      []
+  -
+    id: a11-hooks
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - tools/pf_runtime/codex_hooks.py
+      - tools/smoke_codex_lifecycle_identity.py
+      - .pf/artifacts/core-a01-a11-20260911/a11-hooks/**
+      - .pf/tmp/a11-hooks/**
+    allowed_read_files:
+      - tools/pf_runtime/codex_hooks.py
+      - tools/smoke_codex_lifecycle_identity.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/processforge.py
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: a11-hooks-report
+        path: .pf/artifacts/core-a01-a11-20260911/a11-hooks/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a11-hooks/report.md
+    depends_on:
+      []

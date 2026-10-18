@@ -1,0 +1,29 @@
+{
+  "observed_at": "2026-10-18T04:19:22.863284+00:00",
+  "status": "passed",
+  "version": "1.2.0",
+  "source": {
+    "commit": "c4d66496464179750aa0448d11e4d2e797c2d2ff",
+    "dirty": false,
+    "tree": "3f7a2eff97f9391efd71d548bcc841103d9baf53",
+    "vcs": "git"
+  },
+  "archive": "processforge-1.2.0.zip",
+  "archive_bytes": 2538276,
+  "archive_sha256": "4bcd22509ff15bd4c46febd078e3da596da0f0bf6a9eeb4104b2b75ce6aaaa12",
+  "sidecar": "processforge-1.2.0.manifest.json",
+  "sidecar_sha256": "37c7ff574819e56a673843052531c6838fc5a517ab3ec962fde3f5b1c2c22b62",
+  "entries": 1309,
+  "managed_files": 1308,
+  "all_sidecar_entry_hashes_verified": true,
+  "all_payload_bytes_equal_clean_source": true,
+  "accepted_dev_delta": [
+    "processforge-core.manifest.json"
+  ],
+  "all_non_generated_payload_bytes_equal_accepted_dev": true,
+  "core_manifest_file_inventory_equal_accepted_dev": true,
+  "private_or_derived_archive_entries": [],
+  "sidecar_outside_zip": true,
+  "source_date_epoch_is_commit_timestamp": true,
+  "full_source_and_consumer_qualification": "Required separately; this receipt is identity/parity only"
+}

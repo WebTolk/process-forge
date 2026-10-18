@@ -1,0 +1,162 @@
+{
+  "head": "1aecc18b6824204ca45ab30241b92d26e6d583a5",
+  "status": " M .pf/artifacts/project-context-refresh-report.md\n M .pf/artifacts/projections/command-history.md\n M .pf/artifacts/projections/process-execution-state.json\n M .pf/artifacts/projections/stage-obligations.json\n M .pf/contexts/project-context.snapshot.md\n M .pf/contexts/project-context.snapshot.yaml\n M README.md\n M README.ru.md\n M checksums/processforge.sha256\n M docs/concepts/assignment-front-matter.md\n M docs/concepts/declarative-process-execution.md\n M docs/concepts/runtime-mcp.md\n M docs/getting-started/agent-prompts.md\n M docs/getting-started/task-batch-workflow.md\n M docs/index.md\n M docs/ru/concepts/core-update-manifest.md\n M docs/ru/concepts/declarative-process-execution.md\n M docs/ru/concepts/resource-search-index.md\n M docs/ru/concepts/runtime-mcp.md\n M docs/ru/getting-started/agent-prompts.md\n M docs/ru/getting-started/task-batch-workflow.md\n M docs/ru/getting-started/update-system.md\n M docs/ru/index.md\n M docs/validation/validation.md\n M prompts/task-batch-execution-agent.md\n M tools/processforge.py\n M tools/smoke_context_freshness_vs_execution_readiness.py\n M tools/smoke_docs_agent_no_manual_infra.py\n M tools/smoke_doctor_gitignore_effective_protection.py\n M tools/smoke_process_run_task_batch.py\n?? .pf/artifacts/docs-audit-1.1.1-evidence/\n?? .pf/artifacts/docs-audit-1.1.1-iteration-20260907.md\n?? .pf/artifacts/docs-audit-1.1.1-plan-20260907.md\n?? .pf/artifacts/docs-audit-1.1.1-report-20260907.md\n?? .pf/artifacts/docs-fix-1.1.1-20260907/\n?? .pf/artifacts/python-core-audit-20260908/\n?? .pf/artifacts/required-output-checks-plan-20260907.md\n?? .pf/artifacts/required-output-checks-release-test-20260907.json\n?? .pf/artifacts/required-output-checks-release-test-20260907.md\n?? .pf/artifacts/required-output-checks-result-20260907.md\n?? .pf/assignments/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.yaml\n?? .pf/assignments/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.yaml\n?? .pf/assignments/docs111-mechanical.yaml\n?? .pf/assignments/docs111-review.yaml\n?? .pf/assignments/docs111-tests.yaml\n?? .pf/assignments/docs111-update.yaml\n?? .pf/assignments/docs111-workflow.yaml\n?? .pf/assignments/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.yaml\n?? .pf/assignments/plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using.yaml\n?? .pf/contexts/assignment-capsules/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.capsule.yaml\n?? .pf/contexts/assignment-capsules/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.capsule.yaml\n?? .pf/contexts/assignment-capsules/docs111-mechanical.capsule.yaml\n?? .pf/contexts/assignment-capsules/docs111-review.capsule.yaml\n?? .pf/contexts/assignment-capsules/docs111-tests.capsule.yaml\n?? .pf/contexts/assignment-capsules/docs111-update.capsule.yaml\n?? .pf/contexts/assignment-capsules/docs111-workflow.capsule.yaml\n?? .pf/contexts/assignment-capsules/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.capsule.yaml\n?? .pf/contexts/assignment-capsules/plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using.capsule.yaml\n?? .pf/contexts/project-context.snapshots/ctx-20260907-130537-9c47b7.yaml\n?? .pf/contexts/project-context.snapshots/ctx-20260908-074925-d05a67.yaml\n?? .pf/handoffs/docs-audit-1.1.1-20260907.md\n?? .pf/handoffs/docs-fix-1.1.1-20260907.md\n?? .pf/handoffs/required-output-checks-fix-20260907.md\n?? .pf/handoffs/runs/docs-fix-1-1-1-shell-20260907-handoff.md\n?? .pf/handoffs/runs/docs-fix-1-1-1-shell-20260907-orchestrator-handoff.md\n?? .pf/handoffs/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre-handoff.md\n?? .pf/handoffs/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir-handoff.md\n?? .pf/handoffs/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-handoff.md\n?? .pf/logs/docs-audit-1.1.1-20260907.md\n?? .pf/logs/docs-fix-1.1.1-orchestrator-20260907.md\n?? .pf/logs/python-core-audit-20260908.md\n?? .pf/logs/required-output-checks-fix-20260907.md\n?? .pf/reviews/docs-audit-1.1.1-review-20260907.md\n?? .pf/reviews/required-output-checks-review-20260907.md\n?? .pf/runs/docs-fix-1-1-1-shell-20260907/\n?? .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/\n?? .pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/\n?? .pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/\n?? .pf/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1/\n?? tools/smoke_docs_current_code_contract.py\n",
+  "sources": [
+    {
+      "path": "src/processforge_core/bootstrap.py",
+      "lines": 82,
+      "sha256": "375620d679cf4d04ec5f60f87fc80719a48f72a11d63f22c40d055a890a19d4b",
+      "functions": 5
+    },
+    {
+      "path": "src/processforge_core/core_update.py",
+      "lines": 610,
+      "sha256": "f35119443ffecb445fde9c16759d3804a0631623c740be6f1e13ee9c69b3a2be",
+      "functions": 32
+    },
+    {
+      "path": "src/processforge_core/garage.py",
+      "lines": 583,
+      "sha256": "92f76d4f3dffde263d6a3c6f8ef1f99dabd4b5b5b6c0cbb26efea8e04aac5e80",
+      "functions": 35
+    },
+    {
+      "path": "src/processforge_core/local_resource_search.py",
+      "lines": 843,
+      "sha256": "4cd6c10c675ef1c4042fa8ceed9f95cee7ffb83b1ae2c60c05a625e0678a25ae",
+      "functions": 40
+    },
+    {
+      "path": "src/processforge_core/process_execution.py",
+      "lines": 1113,
+      "sha256": "0df0c21af816949fa18e2de885f8e475c5b4107a62d1d7f9a453191715e53cce",
+      "functions": 63
+    },
+    {
+      "path": "src/processforge_core/project_initialization.py",
+      "lines": 183,
+      "sha256": "1398a08f29ddd322f9c5e4ccc2f0ab49cc2af57ccd25a34d32248238493666c0",
+      "functions": 10
+    },
+    {
+      "path": "src/processforge_core/__init__.py",
+      "lines": 5,
+      "sha256": "f10d44b8715a41c949c0776df11bd0c166dcfb4af8d8a9bce340f2f5e749d31f",
+      "functions": 0
+    },
+    {
+      "path": "src/processforge_core/common/ids.py",
+      "lines": 8,
+      "sha256": "fb02e074d92b1c7239dba3bebe3fe20d1a7e8f63506e9acab1fd509dcb08ce9a",
+      "functions": 1
+    },
+    {
+      "path": "src/processforge_core/common/paths.py",
+      "lines": 10,
+      "sha256": "82847d5b1ad6f157744c02a5f6d87d482544ecc12575662fa71aded2f7078862",
+      "functions": 1
+    },
+    {
+      "path": "src/processforge_core/common/yaml_io.py",
+      "lines": 81,
+      "sha256": "543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27",
+      "functions": 5
+    },
+    {
+      "path": "src/processforge_core/common/__init__.py",
+      "lines": 11,
+      "sha256": "d553b81a7da4b3f02101e0beefa9dfa787767ff774c0c86513d5d1ca28286909",
+      "functions": 0
+    },
+    {
+      "path": "src/processforge_core/process_catalog/models.py",
+      "lines": 28,
+      "sha256": "6a402ffb55914f53690be41619c9cf1bb312b4bf95b02526920cf8e39182b3a7",
+      "functions": 0
+    },
+    {
+      "path": "src/processforge_core/process_catalog/service.py",
+      "lines": 320,
+      "sha256": "8c6150e02e1fe6cc56969c874165b3f6c97f2e0efa779ab156fdb167366f491b",
+      "functions": 16
+    },
+    {
+      "path": "src/processforge_core/process_catalog/__init__.py",
+      "lines": 28,
+      "sha256": "b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8",
+      "functions": 0
+    },
+    {
+      "path": "tools/pf_runtime/codex_hooks.py",
+      "lines": 205,
+      "sha256": "f1c46392b093c17242605ee40387495f7d03006752ab2c115ddedddc593dc6ab",
+      "functions": 5
+    },
+    {
+      "path": "tools/pf_runtime/codex_integration.py",
+      "lines": 137,
+      "sha256": "15dbb7418d2ebfced8b9e7641c7a8106c68b1b817a4467dfffad01986274b1ea",
+      "functions": 8
+    },
+    {
+      "path": "tools/pf_runtime/codex_mcp.py",
+      "lines": 293,
+      "sha256": "9fc01f05c2fd365adfb4bb10479c45704ee570b4ae6e4331f637ded4fb2e564e",
+      "functions": 16
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "lines": 1332,
+      "sha256": "a1eb272d01c079489c03238dca7bbf613e4566f98b1c678f85210a0b2fc9e611",
+      "functions": 74
+    },
+    {
+      "path": "tools/pf_runtime/mcp_server.py",
+      "lines": 332,
+      "sha256": "9076266b915a3b92dce8c51cedf64a3ba7455971db08da28b21ec12d2dd24368",
+      "functions": 8
+    },
+    {
+      "path": "tools/pf_runtime/raw_ingress_kernel.py",
+      "lines": 442,
+      "sha256": "526150fb7ee93957b07990c1c17cddd53264d4a6f939fc8f4c226931d427bc2f",
+      "functions": 30
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "lines": 730,
+      "sha256": "2a87f3f3fb7aa4620886558a8442927485f4ec87af974f68af94948bc4404946",
+      "functions": 52
+    },
+    {
+      "path": "tools/pf_runtime/session_read.py",
+      "lines": 268,
+      "sha256": "277af88a255448a08cec44ccae48ad634d65d0a71965fbc9b5a1f84f2ff46f62",
+      "functions": 8
+    },
+    {
+      "path": "tools/pf_runtime/session_replay.py",
+      "lines": 255,
+      "sha256": "762bc9a0c8a53d107428bd8c5747e13ffbafb76ce31ef656dc5b1761a85da2e6",
+      "functions": 12
+    },
+    {
+      "path": "tools/pf_runtime/windows_autostart.py",
+      "lines": 353,
+      "sha256": "70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a",
+      "functions": 19
+    },
+    {
+      "path": "tools/pf_runtime/__init__.py",
+      "lines": 5,
+      "sha256": "4e7f11807891b6921ebdc8872e4b4075c89dece1ad237b4deda3a2a2aa416777",
+      "functions": 0
+    },
+    {
+      "path": "tools/processforge.py",
+      "lines": 27766,
+      "sha256": "b38a8290e89b9d7c68596eb57838d8de4f8f49f9bdc388ec6778116ac0393eb9",
+      "functions": 1020
+    }
+  ]
+}

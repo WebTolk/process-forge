@@ -1,0 +1,63 @@
+schema_version: 1
+run:
+  id: r02-release-command-review-20260911
+  title: R02 independent release command review
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 1
+  model: gpt-5.6-luna
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: r02-release-command-review
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: low
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/**
+      - .pf/tmp/r02-release-command-review/**
+    allowed_read_files:
+      - .pf/AGENTS.md
+      - .pf/artifacts/r02-release-candidate-20260911/**
+      - tools/processforge.py
+      - tools/release_test.py
+      - VERSION
+      - checksums/**
+      - docs/**
+    forbidden_files:
+      - src/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: r02-release-command-review-report
+        path: .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+    depends_on:
+      []

@@ -1,0 +1,209 @@
+schema_version: 1
+id: audit-python-core-mcp-and-background-hooks-with-bounded-junior-shell-wor
+title: Audit Python core MCP and background hooks with bounded junior shell workers and
+run_id: garage-audit-python-core-mcp-and-background-hooks-with-bounded-junior-sh
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T17:02:47Z'
+updated_at: '2026-09-11T03:40:24Z'
+objective: Audit Python core MCP and background hooks with bounded junior shell workers and isolate reproducible defects
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Audit complete. Handoff: separate A09 bootstrap parity repair, then priority containment/scheduler/singleton work; do not infer release readiness.'
+  artifacts:
+    - .pf/artifacts/codebase-audit-20260910/orchestrator-plan.yaml
+    - .pf/artifacts/codebase-audit-20260910/plan.md
+    - .pf/artifacts/codebase-audit-20260910/recovery-20260911/acceptance.md
+    - .pf/artifacts/codebase-audit-20260910/recovery-20260911/iteration-result.md
+    - .pf/artifacts/codebase-audit-20260910/report.md
+    - .pf/handoffs/codebase-audit-20260910.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-11T03:39:53Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      path: .pf/artifacts/codebase-audit-20260910/report.md
+      status: approved
+      recorded_at: '2026-09-11T03:40:18Z'
+      sha256: 'sha256:a78e421ff6654bfabdff1ab402307b570eb9dcb962b6215d2f5a22bfd2318338'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      path: .pf/handoffs/codebase-audit-20260910.md
+      status: ready
+      recorded_at: '2026-09-11T03:40:18Z'
+      sha256: 'sha256:2529bb06d73b3dd46fcd63921d2791fe8a29993d6a2382c1ecbcfc2c705ca1dc'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Final audit report, eleven isolated remediation tasks, reviewed original/accepted worker reports, independent proof, and remediation handoff exist. No product changes or infrastructure actions.
+      recorded_at: '2026-09-11T03:40:18Z'
+  notes: 'Audit complete. Handoff: separate A09 bootstrap parity repair, then priority containment/scheduler/singleton work; do not infer release readiness.'
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-10T17:02:47Z'
+    completed_at: '2026-09-10T17:04:55Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/artifacts/codebase-audit-20260910/plan.md
+        recorded_at: '2026-09-10T17:04:52Z'
+        sha256: 'sha256:6b530d4371be95e9bc51fc9992cd24a5d2a92501ff768f89aea2f993a11fa838'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Current source context fresh; current baseline recorded; three disjoint audit-only junior shell assignments specified.
+        recorded_at: '2026-09-10T17:04:52Z'
+    notes: Baseline recorded; handoff to three independent audit responsibilities.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-10T17:04:55Z'
+    completed_at: '2026-09-10T17:11:27Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/artifacts/codebase-audit-20260910/orchestrator-plan.yaml
+        recorded_at: '2026-09-10T17:11:18Z'
+        sha256: 'sha256:0329e56e218b2998aa42c387a0c1a0a8b93de519eb907eda2d0557b941a78e86'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Current source context fresh; current baseline recorded; three disjoint audit-only junior shell assignments specified.
+        recorded_at: '2026-09-10T17:11:18Z'
+    notes: Three disjoint shell audit assignments and immutable capsules passed doctors; launch authorized by user.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-10T17:11:27Z'
+    completed_at: '2026-09-11T03:38:23Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        path: .pf/artifacts/codebase-audit-20260910/recovery-20260911/iteration-result.md
+        status: ready
+        recorded_at: '2026-09-11T03:38:20Z'
+        sha256: 'sha256:887e9c82276a81d69ed5bd844fc0082edb19b9a50f34f424f38f3a230f3bae4e'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Three actual junior shell audits completed and normally collected; independent primary probes confirmed eleven defects and rejected H01; both worker runs completed.
+        recorded_at: '2026-09-11T03:38:20Z'
+    notes: 'Audit iterations complete. Handoff to result fixation: accepted report and isolated backlog are ready; no product modifications.'
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-11T03:38:23Z'
+    completed_at: '2026-09-11T03:38:55Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        path: .pf/artifacts/codebase-audit-20260910/report.md
+        status: ready
+        recorded_at: '2026-09-11T03:38:51Z'
+        sha256: 'sha256:a78e421ff6654bfabdff1ab402307b570eb9dcb962b6215d2f5a22bfd2318338'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: audit-core, audit-mcp and audit-hooks are done after normal PF collection; codebase-audit-shell-20260910 completed. Eleven remediation proposals are separate unstarted work, not unfinished audit tasks.
+        recorded_at: '2026-09-11T03:38:51Z'
+    notes: Results fixed in report and remediation backlog; primary evidence and reviewer qualifications preserved. Handoff to independent result assurance.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-11T03:38:55Z'
+    completed_at: '2026-09-11T03:39:53Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        path: .pf/artifacts/codebase-audit-20260910/recovery-20260911/acceptance.md
+        status: approved
+        recorded_at: '2026-09-11T03:39:47Z'
+        sha256: 'sha256:9ace820b39d28a0a2bac405b0231343b2ef267448e303073ca085e5e35d0095a'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Current source run-doctor and task-doctor passed for audit carrier and all three shell assignments; child run completed; independent evidence assertions and 651-file source preservation PASS. H01 excluded.
+        recorded_at: '2026-09-11T03:39:47Z'
+    notes: Primary review accepted verified findings with explicit fixture and attribution limits. Handoff to final summary and remediation owner.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-11T03:39:53Z'
+    completed_at: '2026-09-11T03:40:24Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        path: .pf/artifacts/codebase-audit-20260910/report.md
+        status: approved
+        recorded_at: '2026-09-11T03:40:18Z'
+        sha256: 'sha256:a78e421ff6654bfabdff1ab402307b570eb9dcb962b6215d2f5a22bfd2318338'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        path: .pf/handoffs/codebase-audit-20260910.md
+        status: ready
+        recorded_at: '2026-09-11T03:40:18Z'
+        sha256: 'sha256:2529bb06d73b3dd46fcd63921d2791fe8a29993d6a2382c1ecbcfc2c705ca1dc'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Final audit report, eleven isolated remediation tasks, reviewed original/accepted worker reports, independent proof, and remediation handoff exist. No product changes or infrastructure actions.
+        recorded_at: '2026-09-11T03:40:18Z'
+    notes: 'Audit complete. Handoff: separate A09 bootstrap parity repair, then priority containment/scheduler/singleton work; do not infer release readiness.'
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260910-123129-3fcf45
+  snapshot_checksum: 'sha256:5182961d816641cf069a82662c83101b4c5918784b153f5d3134b43b801ced9a'
+  assignment_capsule: .pf/contexts/assignment-capsules/audit-python-core-mcp-and-background-hooks-with-bounded-junior-shell-wor.capsule.yaml
+  assignment_capsule_checksum: 'sha256:4abe16f1fb96315d082f50cba8561a2a7b49ebc93fa907158e6159ef56630e8c'

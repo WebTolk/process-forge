@@ -1,0 +1,9 @@
+{
+  "label": "final-continuation-doctor-project",
+  "started_at": "2026-10-17T19:37:07.794582+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.8165422999882139,
+  "raw_sha256": "1b6983f1a3bce3290e09541fb0ee7fe22ebd47a10dbe75b174ac88970abba675",
+  "raw_bytes": 7243,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/final-continuation-doctor-project.log"
+}

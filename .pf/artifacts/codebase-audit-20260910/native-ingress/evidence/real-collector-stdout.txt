@@ -1,0 +1,261 @@
+{
+  "outside_exists": true,
+  "outside_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-real-collector-yyb9jn4g\\outside.md",
+  "path_report": {
+    "collect": {
+      "returncode": 1,
+      "stderr": "",
+      "stdout": "FAIL: collectible expected report was not captured as exactly one assistant transcript message\n"
+    },
+    "collector_report_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-real-collector-yyb9jn4g\\project\\.pf\\artifacts\\path-report.md",
+    "collector_report_resolves_inside_project": true,
+    "expected_report_helper": ".pf/artifacts/path-report.md",
+    "raw_worker_rows": [
+      {
+        "native_event_type": "WorkerExpectedReportCaptured",
+        "raw_event_id": "raw_4c85868a73b27d50e26655ef394cdc1c976aefd93842f93bbebcff7a74e50e17",
+        "raw_payload_report_content": "# Worker report\n\nSource: C:\\workspace\\src\\module.py\n",
+        "raw_shard": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-real-collector-yyb9jn4g\\workplace\\runtime\\agent-events\\raw\\v1\\2026\\09\\10\\18.ndjson"
+      }
+    ],
+    "retry": {
+      "returncode": 1,
+      "stderr": "",
+      "stdout": "FAIL: collectible expected report was not captured as exactly one assistant transcript message\n"
+    },
+    "task": {
+      "created_at": "2026-09-10T18:22:01Z",
+      "dependencies": {
+        "blocked_by": [],
+        "blocks": []
+      },
+      "expected_report": {
+        "artifact": ".pf/artifacts/path-report.md",
+        "format": "concise_markdown",
+        "include": [
+          "report"
+        ]
+      },
+      "id": "task-path",
+      "iterations": [],
+      "objective": "",
+      "order": 2,
+      "platform": "",
+      "process": "task-batch-execution",
+      "required_outputs": [
+        {
+          "id": "report",
+          "path": ".pf/artifacts/path-report.md",
+          "required": true,
+          "type": "markdown"
+        }
+      ],
+      "result": {
+        "artifacts": [],
+        "status": "pending",
+        "summary": ""
+      },
+      "run_id": "run-fixture",
+      "schema_version": 1,
+      "selected_specializations": [],
+      "status": "open",
+      "title": "Path report fixture",
+      "updated_at": "2026-09-10T18:22:01Z"
+    },
+    "task_after_collect": {
+      "created_at": "2026-09-10T18:22:01Z",
+      "dependencies": {
+        "blocked_by": [],
+        "blocks": []
+      },
+      "expected_report": {
+        "artifact": ".pf/artifacts/path-report.md",
+        "format": "concise_markdown",
+        "include": [
+          "report"
+        ]
+      },
+      "id": "task-path",
+      "iterations": [],
+      "objective": "",
+      "order": 2,
+      "platform": "",
+      "process": "task-batch-execution",
+      "required_outputs": [
+        {
+          "id": "report",
+          "path": ".pf/artifacts/path-report.md",
+          "required": true,
+          "type": "markdown"
+        }
+      ],
+      "result": {
+        "artifacts": [],
+        "status": "pending",
+        "summary": ""
+      },
+      "run_id": "run-fixture",
+      "schema_version": 1,
+      "selected_specializations": [],
+      "status": "open",
+      "title": "Path report fixture",
+      "updated_at": "2026-09-10T18:22:01Z"
+    },
+    "transcript_messages": [],
+    "transcript_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-real-collector-yyb9jn4g\\project\\.pf\\runtime\\chat\\transcripts\\pf-worker-run-fixture-task-path-attempt-1.ndjson"
+  },
+  "setup": [
+    {
+      "returncode": 0,
+      "stderr": "",
+      "stdout_tail": "-drivers/manual.yaml\nWRITTEN: runtime-drivers/generic-shell.yaml\nWRITTEN: runtime-drivers/codex-exec.yaml\nWRITTEN: runtime-drivers/test-echo-worker.yaml\nWRITTEN: runtime-drivers/test-shell-agent.yaml\n"
+    },
+    {
+      "returncode": 0,
+      "stderr": "",
+      "stdout_tail": "eration: 36c432a1075ddaba\n      document_count: 0\n      stale_resource_count: 0\n      failed_file_count: 0\n  report: runtime/search/latest-maintenance.yaml\ndoctor:\n  status: pass\nnext_action: continue"
+    },
+    {
+      "returncode": 0,
+      "stderr": "",
+      "stdout_tail": "WROTE: .pf/runs/run-fixture/run.yaml\n"
+    }
+  ],
+  "task_create_path": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "WROTE: .pf/assignments/task-path.yaml\n"
+  },
+  "task_create_traversal": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "WROTE: .pf/assignments/task-fixture.yaml\n"
+  },
+  "traversal": {
+    "collect": {
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "DONE: task-fixture\n"
+    },
+    "collector_report_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-real-collector-yyb9jn4g\\project\\..\\outside.md",
+    "collector_report_resolves_inside_project": false,
+    "expected_report_helper": "../outside.md",
+    "task": {
+      "created_at": "2026-09-10T18:21:57Z",
+      "dependencies": {
+        "blocked_by": [],
+        "blocks": []
+      },
+      "expected_report": {
+        "artifact": "../outside.md",
+        "format": "concise_markdown",
+        "include": [
+          "report"
+        ]
+      },
+      "id": "task-fixture",
+      "iterations": [],
+      "objective": "",
+      "order": 1,
+      "platform": "",
+      "process": "task-batch-execution",
+      "required_outputs": [
+        {
+          "id": "report",
+          "path": "../outside.md",
+          "required": true,
+          "type": "markdown"
+        }
+      ],
+      "result": {
+        "artifacts": [
+          "../outside.md"
+        ],
+        "status": "done",
+        "summary": "Collected worker run output from manual"
+      },
+      "run_id": "run-fixture",
+      "schema_version": 1,
+      "selected_specializations": [],
+      "status": "done",
+      "title": "Traversal report fixture",
+      "updated_at": "2026-09-10T18:22:03Z"
+    },
+    "task_after_collect": {
+      "created_at": "2026-09-10T18:21:57Z",
+      "dependencies": {
+        "blocked_by": [],
+        "blocks": []
+      },
+      "expected_report": {
+        "artifact": "../outside.md",
+        "format": "concise_markdown",
+        "include": [
+          "report"
+        ]
+      },
+      "id": "task-fixture",
+      "iterations": [],
+      "objective": "",
+      "order": 1,
+      "platform": "",
+      "process": "task-batch-execution",
+      "required_outputs": [
+        {
+          "id": "report",
+          "path": "../outside.md",
+          "required": true,
+          "type": "markdown"
+        }
+      ],
+      "result": {
+        "artifacts": [
+          "../outside.md"
+        ],
+        "status": "done",
+        "summary": "Collected worker run output from manual"
+      },
+      "run_id": "run-fixture",
+      "schema_version": 1,
+      "selected_specializations": [],
+      "status": "done",
+      "title": "Traversal report fixture",
+      "updated_at": "2026-09-10T18:22:03Z"
+    },
+    "transcript_messages": [
+      {
+        "assignment": {
+          "id": "task-fixture"
+        },
+        "message": {
+          "content": "# Outside fixture\nsecret-free external report\n",
+          "content_hash": "sha256:376a7cfef0cc9f92d73cf216cffede2c9cde50342550b11ebeeed258fb37add3",
+          "content_type": "text/markdown",
+          "redaction": "none",
+          "role": "assistant"
+        },
+        "message_id": "msg_8228400d84ae8c1ef1efcffe1fbde7bb",
+        "parent_message_id": null,
+        "participant": {
+          "id": "worker",
+          "role": "worker",
+          "type": "agent"
+        },
+        "process": {
+          "id": null,
+          "stage_id": null
+        },
+        "schema_version": 1,
+        "session_id": "pf-worker:run-fixture:task-fixture:attempt:1",
+        "source": {
+          "hook_event": null,
+          "kind": "pf_codex_exec_output",
+          "transcript_path": ".pf/runtime/chat/transcripts/pf-worker-run-fixture-task-fixture-attempt-1.ndjson"
+        },
+        "timestamp": "2026-09-10T18:22:03Z",
+        "turn_id": "worker-turn:run-fixture:task-fixture:attempt:1"
+      }
+    ],
+    "transcript_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-real-collector-yyb9jn4g\\project\\.pf\\runtime\\chat\\transcripts\\pf-worker-run-fixture-task-fixture-attempt-1.ndjson"
+  }
+}

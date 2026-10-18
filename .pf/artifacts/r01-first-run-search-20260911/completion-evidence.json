@@ -1,0 +1,20 @@
+[
+    {
+        "path":  ".pf/artifacts/r01-first-run-search-20260911/integration-report.md",
+        "status":  "ready",
+        "artifact_id":  "run-summary",
+        "kind":  "artifact"
+    },
+    {
+        "path":  ".pf/handoffs/r01-first-run-search-20260911.md",
+        "status":  "ready",
+        "artifact_id":  "run-handoff",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R01 conclusion, test/docs change, validation and cancelled-worker boundary recorded; source-only delivery ready for commit.",
+        "gate_id":  "run-summary-created",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

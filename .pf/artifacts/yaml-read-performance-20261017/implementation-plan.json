@@ -1,0 +1,6 @@
+{
+  "stage": "implementation",
+  "path": ".pf/artifacts/yaml-read-performance-20261017/implementation.md",
+  "summary": "Shared safe YAML parse reuse and small validated Run projection implemented; focused freshness and compatibility checks pass.",
+  "notes": "Source implementation complete. Proceed to primary source review and isolated qualification; installed Runtime delivery and CPU proof still required."
+}

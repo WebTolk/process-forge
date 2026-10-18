@@ -36,3 +36,10 @@ write-dependent action -> blocked
 `pf.search` по-прежнему fail-closed для stale resources, поврежденного snapshot,
 чужого project binding или stale/degraded search index. Разделение readiness не
 является bypass для resource authorization.
+
+Существующие execution и resource readiness projections вычисляет
+`processforge_core.project.readiness.ProjectContextReadinessPolicy`. Построитель
+snapshot прямо вызывает методы Core; policy не выполняет I/O и не предоставляет
+полномочий. Организация кода сохраняет описанные выше контракты freshness и
+readiness. Полный freshness checker и построение snapshot остаются отдельными
+областями дальнейшего переноса.

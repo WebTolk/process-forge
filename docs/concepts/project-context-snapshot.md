@@ -127,3 +127,18 @@ registries, active project classifiers and their observed result, process
 definitions, and selected platform contracts. Existing
 capsules remain pinned; new sessions should refresh or report stale context
 according to policy.
+
+## Concrete Source Reads
+
+Core `ProjectSnapshotSourcesReader` collects the existing ordered source
+fingerprints for both snapshot assembly and freshness checks. It reads current
+bytes on each operation, preserves missing records and private display refs,
+and retains existing duplicate records and extension filters. The local
+Workplace manifest reference retains its raw-text parsing contract. Active
+official packs use the shared `OfficialProcessPackReader` with the existing
+list-only registry selection.
+
+This reader supplies inputs; snapshot creation/persistence, resource generation
+checks, readiness and freshness policy retain their existing owners. It does
+not grant access, refresh contexts or change immutable capsules. The compatible
+CLI helpers delegate to Core without changing snapshot schemas or commands.

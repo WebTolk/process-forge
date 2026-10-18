@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T17:43:12.845008+00:00",
+  "argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

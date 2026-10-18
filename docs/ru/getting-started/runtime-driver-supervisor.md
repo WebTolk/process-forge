@@ -1,13 +1,17 @@
-# Runtime driver and execution inspector quickstart
+# Драйверы исполнителей и инспектор выполнения
 
-Используйте после `workplace-init` и `project-onboard`.
+Это необязательный сценарий оператора после `workplace-init` и
+`project-onboard`, при действительном контексте и разрешённом процессом запуске
+исполнителей. Для файловой работы Garage он не нужен. Используйте окружение
+из [инструкции установки](installation.md). `execution-inspector-run` —
+смысловой псевдоним ограниченного `supervisor run` ниже; выбирайте одну команду.
 
-`supervisor` - историческое техническое имя команды. В семантике ProcessForge
-этот цикл является Process Execution Inspector: он проверяет assigned task
-runtime state и не управляет agent attendance, не выдает leases, не
-маршрутизирует процессы и не финализирует handoffs.
+`supervisor` — историческое техническое имя инспектора выполнения. Он
+проверяет состояние назначенных задач и требуемые результаты. Учётом
+присутствия агентов, арендой, маршрутизацией и передачей работы управляют
+другие компоненты.
 
-Проверьте встроенные нейтральные driver-ы:
+Посмотрите и проверьте встроенные нейтральные драйверы:
 
 ```bash
 python .pf/runtime/bin/pf.py runtime-driver list --project-root .
@@ -16,28 +20,39 @@ python .pf/runtime/bin/pf.py runtime-driver validate --project-root . --driver t
 python .pf/runtime/bin/pf.py runtime-driver validate --project-root . --driver test-shell-agent
 ```
 
-Подготовьте ручной worker-run:
+Для уже существующего назначения можно подготовить ручной запуск.
+Вместо `<task-id>` укажите точный id задачи своего плана:
 
 ```bash
-python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task docs-worker --driver manual
-python .pf/runtime/bin/pf.py worker-run status --project-root . --task docs-worker
+python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task <task-id> --driver manual
+python .pf/runtime/bin/pf.py worker-run status --project-root . --task <task-id>
 ```
 
-Запустите supervised test plan из примера:
+Это отдельная демонстрация тестовых драйверов. Из корня дистрибутива
+создайте план, указав фактический путь подключённого проекта:
 
 ```bash
-python .pf/runtime/bin/pf.py orchestrator-plan create --project-root . --run supervised-run --title "Supervised run" --answers examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml --apply
+python bin/pf.py orchestrator-plan create --project-root <project-root> --run supervised-run --title "Supervised run" --answers examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml --apply
+```
+
+Затем из корня подключённого проекта:
+
+```bash
 python .pf/runtime/bin/pf.py orchestrator-plan apply --project-root . --run supervised-run --apply
 python .pf/runtime/bin/pf.py supervisor run --project-root . --run supervised-run --max-ticks 5 --interval 0
-python .pf/runtime/bin/pf.py execution-inspector-run --project-root . --run supervised-run --max-ticks 5 --interval 0
 python .pf/runtime/bin/pf.py run-status --project-root . --run supervised-run
 ```
 
-`test-echo-worker` и `test-shell-agent` предназначены для smoke tests и
-демонстраций. Реальный запуск worker-а остаётся явным opt-in через runtime
-driver manifest. Execution-inspector ticks запускают shell workers detached, на
-следующих tick-ах наблюдают process state и собирают required reports только
-после успешного завершения worker-а.
+`test-echo-worker` и `test-shell-agent` предназначены для проверок и
+демонстраций. Реальные исполнители запускаются только явно через манифест
+драйвера. Инспектор запускает отдельный процесс, наблюдает его на следующих
+тактах и собирает обязательные отчёты после успешного завершения.
+
+`supervisor run` выполняет ограниченное число тактов, затем ограниченный
+сбор уже запущенных исполнителей без запуска новых задач. `exit.json`
+фиксирует окончательный результат, `heartbeat.json` — ход работы,
+`status.json` — состояние, наблюдаемое инспектором. Сам отчёт не доказывает
+`exit_code=0`.
 
 Shell-launched proof worker создаёт `status.json`, `command.json`,
 `process.json`, `stdout.log`, `stderr.log`, `heartbeat.json`, `exit.json` и

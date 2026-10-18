@@ -1,0 +1,18 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "worker-run",
+    "collect",
+    "--project-root",
+    ".",
+    "--task",
+    "docs111-review",
+    "--apply"
+  ],
+  "started_at": "2026-09-07T13:57:54.753004+00:00",
+  "finished_at": "2026-09-07T13:57:55.878828+00:00",
+  "elapsed_seconds": 1.126,
+  "exit_code": 2,
+  "output": "usage: processforge.py [-h]\n                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...\nprocessforge.py: error: unrecognized arguments: --apply\n"
+}

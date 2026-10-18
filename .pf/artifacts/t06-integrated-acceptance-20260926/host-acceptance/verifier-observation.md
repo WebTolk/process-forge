@@ -1,0 +1,5 @@
+# Acceptance verifier correction
+
+The first verifier failed at `quiet emits no optional diagnostics for successful fixture operations`. Inspection found exactly one canonical warning, `work.resource_blocked`, for the intentionally denied resource; quiet search and incomplete transition emitted no optional records. This is correct documented quiet behavior (warning threshold). The assertion incorrectly required silence for a negative test. Corrected it to require this warning and no lower-level records. The off profile emitted zero records across all three calls. No product or recorded result was modified.
+
+The next assertion expected two transition events, omitting the final transition to completion. The actual journal contains exactly three distinct stage completions and three transition targets: build, verify, and the documented empty terminal target. The corrected verifier asserts those exact ordered values plus exactly one run.completed, rather than assuming a nonterminal event count. Raw events are preserved with the final result.

@@ -1,0 +1,9 @@
+{
+  "label": "core-update-apply-final",
+  "started_at": "2026-10-17T19:15:27.482764+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 3.499234899994917,
+  "raw_sha256": "b256838a108bbff6a705c3bb97bf7a7c13575976382241a841efdd320ad55da3",
+  "raw_bytes": 18038,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/core-update-apply-final.log"
+}

@@ -4,8 +4,8 @@
 
 **A platform-neutral, AI-provider-neutral framework for creating and running AI-assisted processes.**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-2F6FED?style=for-the-badge)](VERSION)
-[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![Latest release](https://img.shields.io/github/v/release/WebTolk/process-forge?sort=date&style=for-the-badge&color=2F6FED)](https://github.com/WebTolk/process-forge/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](docs/requirements.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![File First](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/concepts/runtime-model.md)
 [![Platform Neutral](https://img.shields.io/badge/core-platform--neutral-6A1B9A?style=for-the-badge)](docs/concepts/domain-neutral-core.md)
@@ -68,15 +68,26 @@ this mode.
 
 ## Quick Start
 
+### Check Your Environment
+
+Use Python 3.11+ and install the dependencies from `requirements.txt` in the
+Python environment your agent will use. See [requirements](docs/requirements.md)
+for Python modules, local storage, optional integrations and app-server memory
+planning. The [installation guide](docs/getting-started/installation.md) walks
+through setup and verification.
+
 ### Place ProcessForge
 
-Download the release archive, [dist/processforge.zip](dist/processforge.zip),
-and unpack it into a stable folder that your AI agents can access, for example
+Download the ZIP and its adjacent manifest from the
+[latest published release](https://github.com/WebTolk/process-forge/releases/latest),
+then unpack the ZIP into a stable folder that your AI agents can access, for example
 a shared agent tools folder. Use that folder as `<processforge-root>` in the
-prompts below.
+prompts below. Use the asset names shown on the release page; keep the manifest
+outside the ZIP for verification and updates.
 
 If you work from a source checkout, use the repository root as
-`<processforge-root>`.
+`<processforge-root>`. Local release builds write the archive to
+`dist/processforge.zip`; that build output is not included inside the archive.
 
 ### Start With An Agent Prompt
 
@@ -101,7 +112,7 @@ After the workplace is ready, connect a project:
 Connect this project to my existing ProcessForge workplace.
 
 Inspect the project first, choose a conservative project type, create the
-project-local .pf layer, read .pf/START_AGENT_HERE.md, inspect the current
+project-local .pf state and root AGENTS.md, read that entry contract, inspect the current
 context through ProcessForge, and summarize what ProcessForge now knows about
 the project.
 
@@ -109,10 +120,10 @@ Keep global resources in the workplace. Do not copy heavy documentation,
 source mirrors, toolchains, or the ProcessForge repository into this project.
 ```
 
-Inside an onboarded project, start each ProcessForge-backed session from
-`.pf/START_AGENT_HERE.md`. The normal agent path is `pf.context`, optional
-`pf.search`/`pf.resolve`, then `pf.work.start`; Runtime and host integration are
-operator concerns.
+Inside an onboarded project, start from root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). The normal path is `pf.context`, optional
+`pf.search`/`pf.resolve`, then `pf.work.start`; use its returned identities with
+`pf.work.state` and `pf.work.transition` until `run_completed`. Runtime and host
+integration are operator concerns. See [entry compatibility](docs/concepts/agent-entry.md).
 
 More starter prompts are in [QUICKSTART.md](QUICKSTART.md).
 
@@ -213,11 +224,17 @@ knowledge, and use it for <what we are doing>. Fill all required artifacts.
 Start a work session:
 
 ```text
-Start a ProcessForge run for this work.
+Use ProcessForge for this work.
 
-Read .pf/START_AGENT_HERE.md first. Create a run, split the work into explicit
-tasks, record work/debug/fix/review iterations, keep artifacts and handoffs in
-the project-local .pf folder, and finish with a run summary and doctor check.
+Read root AGENTS.md (or .pf/AGENTS.md in an unmigrated project), verify current
+context with pf.context. For new work, use pf.work.start with an explicit
+authorized scope_intent. To continue existing work, discover continuations,
+select exact Run, assignment and context identities, then pf.continuation.resume.
+Never infer the target from an objective or the newest assignment.
+Use the returned Run, assignment and capsule identities; inspect pf.work.state,
+record evidence through pf.work.transition, and continue until run_completed.
+Handle process_choice_required using the returned choices. Keep artifacts and
+handoffs within the assignment scope.
 ```
 
 ### Forge / Factory Mode
@@ -383,7 +400,7 @@ Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
 
 Install ProcessForge once as a tool, initialize a workplace, and add a short
 instruction to the agent configuration telling it where ProcessForge is
-installed and that project-specific instructions live in `.pf/START_AGENT_HERE.md`.
+installed. Project entry uses root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). A configuration pointer alone does not prove that the client loaded it.
 
 ## License
 

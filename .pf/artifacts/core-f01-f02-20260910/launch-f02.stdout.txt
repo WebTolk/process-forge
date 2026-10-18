@@ -1,0 +1,4 @@
+PRESENT: .pf/contexts/assignment-capsules/f02-update.capsule.yaml
+WROTE: .pf/runtime/agent-runs/core-f01-f02-shell-20260910/f02-update/workspace-access.json
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f02-update.md
+RUNNING: f02-update pid=17632

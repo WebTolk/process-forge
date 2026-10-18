@@ -1,0 +1,31 @@
+{
+  "status": "prepared_for_review_not_applied",
+  "source_commit": "c4d66496464179750aa0448d11e4d2e797c2d2ff",
+  "archive_sha256": "4bcd22509ff15bd4c46febd078e3da596da0f0bf6a9eeb4104b2b75ce6aaaa12",
+  "archive_bytes": 2538276,
+  "proposed_urls": [
+    "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.zip",
+    "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.manifest.json"
+  ],
+  "proposed_channel_version": "1.2.0",
+  "migration_required": true,
+  "metadata_followup_files": [
+    "checksums/processforge.sha256",
+    "release/1.2.0/processforge-1.2.0.manifest.json",
+    "release/updates/processforge-stable.json",
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ],
+  "checksum_entries_changed": [
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ],
+  "patch_sha256": "4bec6ba4b3a58dc2ea16e40de81125a375f085181bb0f19cb7667a0fc1e39829",
+  "active_channel_changed": false,
+  "source_candidate_changed": false,
+  "historical_110_metadata_preserved": true,
+  "confirmation": "Source/publication operations await the release decision; staged metadata must not be promoted before assets exist.",
+  "patch_file": "publication-metadata.patch.gz",
+  "patch_gzip_sha256": "c9ec1e970887e7127cc8a9a4b07ff6ce42e184024a67b633542a77279cda8f07",
+  "patch_storage": "Unchanged unified diff in gzip; readable final files are under publication/. Raw patch retained in own scratch."
+}

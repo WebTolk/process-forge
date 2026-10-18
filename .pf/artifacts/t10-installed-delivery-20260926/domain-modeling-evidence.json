@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "domain-notes",
+    "path": ".pf/artifacts/t10-installed-delivery-20260926/domain.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "domain-model",
+    "path": ".pf/artifacts/t10-installed-delivery-20260926/domain.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "domain-rules",
+    "path": ".pf/artifacts/t10-installed-delivery-20260926/domain.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "domain-rules-captured",
+    "path": ".pf/artifacts/t10-installed-delivery-20260926/domain.md",
+    "status": "passed"
+  }
+]

@@ -1,0 +1,2 @@
+# Primary acceptance of f12-ingress
+Worker execution completed exit 0; collection rejected transcript/report cardinality. Original report retained. Primary assumed source/test ownership, corrected Windows binary append and multi-shard corruption checks, added failure injection and executed both ingress smokes successfully; see ingress-primary-final-tests.json and integration-report.md. Complete the shell assignment by explicit primary acceptance, not by waiving output or rewriting a transcript.

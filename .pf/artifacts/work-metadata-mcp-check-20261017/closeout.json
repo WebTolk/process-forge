@@ -1,0 +1,16 @@
+{
+  "action": "run_completed",
+  "run": {
+    "id": "garage-work-metadata-mcp-check-20261017-adapt-one-existing-mcp-snapshot",
+    "status": "completed"
+  },
+  "assignment": {
+    "id": "work-metadata-mcp-check-20261017-adapt-one-existing-mcp-snapshot-composi",
+    "status": "done"
+  },
+  "context_validation": "valid",
+  "task_doctor_exit": 0,
+  "run_doctor_exit": 0,
+  "smoke_tests_passed": 8,
+  "main_implementation_included": false
+}

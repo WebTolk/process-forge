@@ -1,0 +1,11 @@
+# Domain notes, model and rules
+
+Existing records: Project, Run, Assignment, completion-intent journal, session binding, immutable context capsule. A metadata projection is a derived value, not a new lifecycle record or owner of authority. YAML remains authoritative. Session binding belongs to its current owner and is read at selection time.
+
+Model: project-bound WorkMetadataReadService produces one immutable WorkMetadataSnapshot for one explicit read pass. It contains ordered run metadata, ordered task references, assignment metadata by physical source path, source presence/error/content identity, and completion-journal presence. Process-local YamlParseCache already retains small selected field values by current content and safe parser policy. Final returned lists/maps remain independent for existing callers; cached objects cannot be mutated by consumers.
+
+Two consumers apply their existing policies: CurrentWorkService -> WorkProjectionPolicy, and WorkRecordCatalogService -> native WorkSelectionService. A valid pending completion is a derived, request-time native validation result, not a stored boolean that can become stale. Exact Work selection and state read the current full authoritative documents and all process/capsule/access/evidence dependencies as before.
+
+Rules: preserve inventory sort, task list order and duplicates; retain differences between missing/null/false/empty and existing str/or behavior; handle first-assignment, empty runs, missing assignments and invalid identifiers with each current policy. Never truncate candidates to active_work[:10], normalize activity into one boolean, or skip terminal runs before checking completion journals. Unknown fields remain in source documents and full readers. Native parser/fallback/error precedence stays unchanged.
+
+Freshness: each new read pass re-enumerates existing inventory and checks current source contents. Cached parsed values only save parsing. No permanent source text, full history, evidence, granted actions, validated capsule or complete pf.context response is retained in this projection. Within a read pass all consumers share the same observed metadata; no global atomic snapshot of arbitrary filesystem writers is promised. Read after a write starts a new pass. Domain rules captured.

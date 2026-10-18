@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "core-a01-a11-wave2-20260911",
+  "task_id": "a08-jsonrpc",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.6-luna",
+  "status": "failed",
+  "pid": 14460,
+  "started_at": "2026-09-11T06:49:24Z",
+  "finished_at": "2026-09-11T06:56:41Z",
+  "exit_code": 1,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/a08-jsonrpc.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/core-a01-a11-wave2-20260911/worker-prompts/a08-jsonrpc.md",
+  "expected_report_path": ".pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md",
+  "stdout_path": ".pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a08-jsonrpc/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a08-jsonrpc/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a08-jsonrpc/heartbeat.json",
+  "last_heartbeat_at": "2026-09-11T06:56:41Z",
+  "failure_reason": null
+}

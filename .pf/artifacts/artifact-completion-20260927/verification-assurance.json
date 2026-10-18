@@ -1,0 +1,28 @@
+{
+  "time": "2026-09-27T08:12:07.290168+00:00",
+  "status": "pass",
+  "artifact_count": 15,
+  "current_delivery_runs": 17,
+  "required_delivery_bindings": 340,
+  "protected_files": 661,
+  "tracked_public_files": 966,
+  "deferred_future_links": [
+    ".pf\\artifacts\\artifact-completion-20260927\\browser-verification-report.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\delivery-plan.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\delivery-report.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\evolution-report.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\instruction-update-proposal.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\knowledge-update-proposal.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\migration-notes.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\patch.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\release-notes.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\review-findings.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\test-cases.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\test-plan.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\test-report.md",
+    ".pf\\artifacts\\artifact-completion-20260927\\updated-rules-or-extensions.md",
+    ".pf\\handoffs\\artifact-completion-20260927.md"
+  ],
+  "preexisting_historical_hash_findings": 26,
+  "errors": []
+}

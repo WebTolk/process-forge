@@ -1,0 +1,23 @@
+{
+  "time": "2026-09-26T17:52:01.004735+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "runtime",
+    "start",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--port",
+    "0",
+    "--interval",
+    "2.0",
+    "--timeout",
+    "30",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\n  \"endpoint\": \"http://127.0.0.1:50249\",\n  \"pid\": 11612,\n  \"status\": \"started\"\n}\n",
+  "stderr": ""
+}

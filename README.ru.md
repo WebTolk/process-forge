@@ -4,8 +4,8 @@
 
 **Фреймворк для создания ИИ-процессов, независимый от конкретных платформ и поставщиков ИИ.**
 
-[![Версия](https://img.shields.io/badge/version-1.1.0-2F6FED?style=for-the-badge)](VERSION)
-[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![Последний релиз](https://img.shields.io/github/v/release/WebTolk/process-forge?sort=date&style=for-the-badge&color=2F6FED)](https://github.com/WebTolk/process-forge/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](docs/ru/requirements.md)
 [![Лицензия](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Файловый режим](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/ru/concepts/runtime-model.md)
 [![Независимость от платформ](https://img.shields.io/badge/core-platform--neutral-6A1B9A?style=for-the-badge)](docs/ru/concepts/domain-neutral-core.md)
@@ -15,12 +15,11 @@
 
 </div>
 
-ProcessForge - файловый фреймворк для создания, версионирования и выполнения
-ИИ-процессов. Он не зависит от конкретных платформ реализации и поставщиков ИИ
-(AI providers): предметные области, инструментальные цепочки (toolchains),
-пакеты знаний (knowledge packages), шаблоны, драйверы выполнения
-(runtime drivers) и платформенные контракты (platform contracts) подключаются
-через версионируемые файлы, а не зашиваются в ядро.
+ProcessForge — файловая среда для создания, версионирования и выполнения
+процессов с участием ИИ. Она не привязана к конкретной платформе или поставщику
+ИИ: предметные области, инструменты разработки, пакеты знаний, шаблоны,
+драйверы выполнения и платформенные контракты подключаются через
+версионируемые файлы.
 
 Этот README написан для человека. ИИ-агенты должны использовать командный
 справочник в
@@ -82,15 +81,26 @@ Runtime, host telemetry и worker orchestration подключаются для 
 
 ## Быстрый старт
 
+### Проверить окружение
+
+Используйте Python 3.11+ и установите зависимости из `requirements.txt` в то
+окружение Python, с которым будет работать агент. [Требования](docs/ru/requirements.md)
+описывают модули Python, локальное хранилище, необязательные интеграции и запас
+памяти для app-server. Порядок настройки и проверки приведён в
+[инструкции по установке](docs/ru/getting-started/installation.md).
+
 ### Разместить ProcessForge
 
-Скачайте релизный архив (release archive)
-[dist/processforge.zip](dist/processforge.zip) и распакуйте его в стабильную
-папку, доступную ИИ-агентам: например, в общую папку инструментов для агентов.
-Используйте эту папку как `<processforge-root>` в промптах ниже.
+Скачайте ZIP и соседний файл манифеста со страницы
+[последнего опубликованного релиза](https://github.com/WebTolk/process-forge/releases/latest).
+Распакуйте ZIP в постоянную папку, доступную ИИ-агентам: например, в общую
+папку инструментов. Используйте её как `<processforge-root>` в промптах ниже.
+Точные имена файлов смотрите на странице релиза; манифест храните рядом с ZIP
+для проверки архива и обновлений.
 
 Если вы работаете из рабочей копии исходного кода (source checkout), используйте
-корень репозитория как `<processforge-root>`.
+корень репозитория как `<processforge-root>`. Локальная релизная сборка создаёт
+`dist/processforge.zip`; этот результат сборки не входит внутрь самого архива.
 
 ### Стартовый промпт для агента
 
@@ -117,7 +127,7 @@ Runtime, host telemetry и worker orchestration подключаются для 
 Подключи этот проект к существующему рабочему месту ProcessForge (workplace).
 
 Сначала изучи проект, выбери консервативный тип проекта (project type), создай
-проектный слой .pf, прочитай .pf/START_AGENT_HERE.md, получи актуальный контекст
+проектное состояние .pf и корневой AGENTS.md, прочитай контракт входа, получи актуальный контекст
 через ProcessForge и кратко опиши, что ProcessForge теперь знает о проекте.
 
 Глобальные ресурсы держи в рабочем месте (workplace). Не копируй тяжёлую
@@ -125,8 +135,10 @@ Runtime, host telemetry и worker orchestration подключаются для 
 репозиторий ProcessForge внутрь проекта.
 ```
 
-Внутри подключённого проекта начинайте каждую ProcessForge-сессию с
-`.pf/START_AGENT_HERE.md`.
+Внутри подключённого проекта сначала прочитайте корневой `AGENTS.md` (в старом проекте без него — `.pf/AGENTS.md`).
+Затем используйте `pf.context`, при необходимости `pf.search`/`pf.resolve`,
+`pf.work.start` и возвращённые идентификаторы для `pf.work.state` и
+`pf.work.transition` до `run_completed`. См. [совместимость входа](docs/ru/concepts/agent-entry.md).
 
 Больше стартовых промптов: [QUICKSTART.ru.md](QUICKSTART.ru.md).
 
@@ -239,12 +251,16 @@ ProcessForge, тяжёлые зеркала документации, общие
 Начать рабочую сессию:
 
 ```text
-Начни запуск ProcessForge (run) для этой работы.
+Выполни работу через ProcessForge.
 
-Сначала прочитай .pf/START_AGENT_HERE.md. Создай run, разбей работу на явные
-задачи, фиксируй итерации работы, отладки, исправления и проверки
-(work/debug/fix/review), сохраняй артефакты и передачи в проектной папке .pf, а
-в конце сделай сводку запуска (run summary) и проверку (doctor check).
+Прочитай корневой AGENTS.md (в старом проекте без него — .pf/AGENTS.md),
+проверь контекст через pf.context. Для новой работы вызови pf.work.start с
+явным разрешённым scope_intent. Для продолжения найди continuation, выбери
+точные Run, assignment и context и вызови pf.continuation.resume. Не выбирай
+задачу по сходству цели или дате. Используй возвращённые Run, assignment и capsule, проверяй
+pf.work.state, передавай результаты через pf.work.transition до run_completed.
+При process_choice_required выбирай из предложенных процессов. Артефакты
+и передачи сохраняй в пределах области задачи.
 ```
 
 ### Режим Кузницы / Фабрики
@@ -417,7 +433,7 @@ ProcessForge сейчас поддерживает файловые сценар
 
 Установите ProcessForge один раз как инструмент, инициализируйте рабочее место
 и добавьте короткую инструкцию в конфигурацию агента: где установлен
-ProcessForge и что проектные инструкции находятся в `.pf/START_AGENT_HERE.md`.
+ProcessForge. Для входа используйте корневой `AGENTS.md` (в старом проекте без него — `.pf/AGENTS.md`). Одна ссылка в конфигурации не доказывает загрузку инструкций клиентом.
 
 ## Лицензия
 

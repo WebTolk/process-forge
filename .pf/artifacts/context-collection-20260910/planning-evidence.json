@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-index",
+    "status": "ready",
+    "path": ".pf/artifacts/context-collection-20260910/orchestrator-plan.yaml"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-tasks",
+    "status": "passed",
+    "summary": "Live source context fresh; concrete baseline and two disjoint diagnostic responsibilities documented."
+  }
+]

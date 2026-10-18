@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    ".pf/artifacts/docs-fix-1.1.1-20260907/check_frontmatter_runtime.py"
+  ],
+  "started_at": "2026-09-07T13:58:30.410530+00:00",
+  "finished_at": "2026-09-07T13:58:30.890269+00:00",
+  "elapsed_seconds": 0.48,
+  "exit_code": 0,
+  "output": "PASS: documented required output is missing before creation and PASS after creation; no path error\n"
+}

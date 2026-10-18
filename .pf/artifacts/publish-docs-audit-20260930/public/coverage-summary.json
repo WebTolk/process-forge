@@ -1,0 +1,17 @@
+{
+  "markdown_total": 427,
+  "markdown_in_scope": 415,
+  "markdown_lines": 21093,
+  "diagrams": 3,
+  "statuses": {
+    "reviewed_no_additional_contradiction_identified": 373,
+    "reviewed_historical_not_current_contract": 3,
+    "reviewed_with_findings": 42,
+    "excluded_scope": 12
+  },
+  "cli_examples": 809,
+  "local_links": 425,
+  "yaml_json_fences": 83,
+  "process_maps": 29,
+  "findings": 20
+}

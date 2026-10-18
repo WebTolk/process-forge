@@ -1,0 +1,65 @@
+schema_version: 1
+run:
+  id: r01-first-run-diagnosis-20260911
+  title: R01 first-run project-profile search diagnosis
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 1
+  model: gpt-5.6-luna
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: r01-contract-diagnosis
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/r01-first-run-search-20260911/r01-contract-diagnosis/**
+      - .pf/tmp/r01-contract-diagnosis/**
+    allowed_read_files:
+      - .pf/AGENTS.md
+      - .pf/artifacts/r01-first-run-search-20260911/**
+      - tools/smoke_user_like_garage_path.py
+      - tools/smoke_garage_no_hooks_sessionless.py
+      - tools/garage_search_smoke_support.py
+      - tools/processforge.py
+      - src/processforge_core/garage.py
+      - src/processforge_core/local_resource_search.py
+      - docs/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: r01-contract-diagnosis-report
+        path: .pf/artifacts/r01-first-run-search-20260911/r01-contract-diagnosis/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/r01-first-run-search-20260911/r01-contract-diagnosis/report.md
+    depends_on:
+      []

@@ -1,0 +1,80 @@
+[
+  {
+    "path": "docs/assets/processforge-architecture.svg",
+    "labels": [
+      "Workplace: one computer, laptop, server, or runner host",
+      "Humans and AI agents work here. ProcessForge is installed once; each project keeps only its local flow layer.",
+      "Global .agents area",
+      "ProcessForge tool root",
+      "bin/pf.py, docs, schemas",
+      "processes, templates, validation tools",
+      "Global machine content",
+      "knowledge packages, local docs roots",
+      "tools, MCP servers, templates",
+      "platform contracts and registries",
+      "Project 1 repository",
+      ".pf",
+      "context, selected resources, runs, tasks",
+      "artifacts, reviews, handoffs, private runtime files",
+      "Project 2 repository",
+      ".pf",
+      "project-local flow state and evidence",
+      "no copied ProcessForge core or heavy global docs",
+      "project-onboard selects resources",
+      "runtime launcher calls tool root",
+      "each project has its own .pf"
+    ]
+  },
+  {
+    "path": "docs/assets/processforge-authoring-parity.svg",
+    "labels": [
+      "Authoring parity: preserve process meaning",
+      "Backfill imports an existing process, regenerates a draft, and compares semantics rather than YAML byte order.",
+      "Source process",
+      "processes/*.yaml",
+      "stages, gates",
+      "run_model, events",
+      "Backfill files",
+      "answers.yaml",
+      "source.process.yaml",
+      "draft.process.yaml",
+      "semantic-map.yaml",
+      "unsupported-fields.yaml",
+      "Compare",
+      "meaning",
+      "not key order",
+      "PASS/WARN/FAIL",
+      "Reports",
+      "summary.yaml",
+      "index.md",
+      "diff.yaml",
+      "review.md",
+      "Missing stage, gate, artifact, or run_model is FAIL; unsupported custom fields are WARN."
+    ]
+  },
+  {
+    "path": "docs/assets/processforge-run-lifecycle.svg",
+    "labels": [
+      "Process execution record",
+      "A process definition becomes a run; the run contains tasks; each task records iterations and evidence.",
+      "Process",
+      "stages",
+      "gates",
+      "Run",
+      "objective",
+      "task index",
+      "final artifacts",
+      "Task",
+      "scope",
+      "status",
+      "assignment",
+      "Iterations",
+      "work",
+      "debug",
+      "fix",
+      "review",
+      "handoff",
+      "run-summary + handoff close the session"
+    ]
+  }
+]

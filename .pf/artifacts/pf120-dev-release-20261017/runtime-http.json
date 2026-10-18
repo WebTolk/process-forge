@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "readyz_status": 200,
+  "ready": true,
+  "unauthenticated_status": 401,
+  "invalid_token_status": 401,
+  "authenticated_status": 200,
+  "same_verified_instance": true,
+  "runtime_status": "ready",
+  "scheduler_alive": true,
+  "active_workers": 0,
+  "pending_runtime_jobs": 0,
+  "protocol_version": "pf-runtime-poc-1",
+  "core_version": "1.2.0"
+}

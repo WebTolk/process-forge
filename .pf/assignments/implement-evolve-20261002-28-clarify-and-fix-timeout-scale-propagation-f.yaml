@@ -1,0 +1,425 @@
+schema_version: 1
+id: implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f
+title: 'Implement evolve-20261002-28: clarify and fix timeout-scale propagation from rel'
+run_id: garage-implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propag
+process: software-feature-development
+status: done
+created_at: '2026-10-02T16:34:53Z'
+updated_at: '2026-10-02T16:54:37Z'
+objective: 'Implement evolve-20261002-28: clarify and fix timeout-scale propagation from release-archive-test into extracted release-test, with focused tests and EN/RU CLI/help documentation updates.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Evolution captured for timeout-scale validator and nested command argv propagation; separate general evolve-run will be scoped after run completion.
+  artifacts:
+    - .pf/artifacts/evolve/evolve-20261002-28/architecture.md
+    - .pf/artifacts/evolve/evolve-20261002-28/assurance.md
+    - .pf/artifacts/evolve/evolve-20261002-28/delivery.md
+    - .pf/artifacts/evolve/evolve-20261002-28/domain.md
+    - .pf/artifacts/evolve/evolve-20261002-28/evolution.md
+    - .pf/artifacts/evolve/evolve-20261002-28/implementation.md
+    - .pf/artifacts/evolve/evolve-20261002-28/intake-scope.md
+    - .pf/artifacts/evolve/evolve-20261002-28/investigation.md
+    - .pf/artifacts/evolve/evolve-20261002-28/orchestration.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-02T16:52:42Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/evolve/evolve-20261002-28/evolution.md
+      status: ready
+      recorded_at: '2026-10-02T16:54:26Z'
+      sha256: 'sha256:a14068a6f709dd0ac52a9cbe302e40776eb5527fd1550352e2e09e6892f6c31d'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/evolve/evolve-20261002-28/evolution.md
+      status: passed
+      recorded_at: '2026-10-02T16:54:26Z'
+      sha256: 'sha256:a14068a6f709dd0ac52a9cbe302e40776eb5527fd1550352e2e09e6892f6c31d'
+  notes: Evolution captured for timeout-scale validator and nested command argv propagation; separate general evolve-run will be scoped after run completion.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-02T16:34:53Z'
+    completed_at: '2026-10-02T16:38:22Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/evolve/evolve-20261002-28/orchestration.md
+        status: ready
+        recorded_at: '2026-10-02T16:38:11Z'
+        sha256: 'sha256:fdd8d7af4e59904a4f88173ea9cf93df5089c0b2f0918a341d25097abb765f5f'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/evolve/evolve-20261002-28/orchestration.md
+        status: ready
+        recorded_at: '2026-10-02T16:38:11Z'
+        sha256: 'sha256:fdd8d7af4e59904a4f88173ea9cf93df5089c0b2f0918a341d25097abb765f5f'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/evolve/evolve-20261002-28/orchestration.md
+        status: ready
+        recorded_at: '2026-10-02T16:38:11Z'
+        sha256: 'sha256:fdd8d7af4e59904a4f88173ea9cf93df5089c0b2f0918a341d25097abb765f5f'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/evolve/evolve-20261002-28/orchestration.md
+        status: passed
+        recorded_at: '2026-10-02T16:38:11Z'
+        sha256: 'sha256:fdd8d7af4e59904a4f88173ea9cf93df5089c0b2f0918a341d25097abb765f5f'
+    notes: Orchestration complete for evolve-20261002-28; pinned context ready and prior writer overlap resolved before product work.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-02T16:38:22Z'
+    completed_at: '2026-10-02T16:39:28Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/evolve/evolve-20261002-28/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-02T16:39:15Z'
+        sha256: 'sha256:43708cba73163875e0c740a2bc0c5738947a198ee818c1748a790c26b1643e08'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/evolve/evolve-20261002-28/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-02T16:39:15Z'
+        sha256: 'sha256:43708cba73163875e0c740a2bc0c5738947a198ee818c1748a790c26b1643e08'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/evolve/evolve-20261002-28/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-02T16:39:15Z'
+        sha256: 'sha256:43708cba73163875e0c740a2bc0c5738947a198ee818c1748a790c26b1643e08'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/evolve/evolve-20261002-28/intake-scope.md
+        status: passed
+        recorded_at: '2026-10-02T16:39:15Z'
+        sha256: 'sha256:43708cba73163875e0c740a2bc0c5738947a198ee818c1748a790c26b1643e08'
+    notes: 'Intake accepted: narrow timeout-scale propagation task with focused smoke/doc assurance only.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-02T16:39:28Z'
+    completed_at: '2026-10-02T16:46:45Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/evolve/evolve-20261002-28/investigation.md
+        status: ready
+        recorded_at: '2026-10-02T16:46:33Z'
+        sha256: 'sha256:506b1e132bf732f4c7a5020bf85a40362d724fe6cfde9db9e3e894bc67bed484'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/evolve/evolve-20261002-28/investigation.md
+        status: ready
+        recorded_at: '2026-10-02T16:46:33Z'
+        sha256: 'sha256:506b1e132bf732f4c7a5020bf85a40362d724fe6cfde9db9e3e894bc67bed484'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/evolve/evolve-20261002-28/investigation.md
+        status: passed
+        recorded_at: '2026-10-02T16:46:33Z'
+        sha256: 'sha256:506b1e132bf732f4c7a5020bf85a40362d724fe6cfde9db9e3e894bc67bed484'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/evolve/evolve-20261002-28/investigation.md
+        status: passed
+        recorded_at: '2026-10-02T16:46:33Z'
+        sha256: 'sha256:506b1e132bf732f4c7a5020bf85a40362d724fe6cfde9db9e3e894bc67bed484'
+    notes: 'Investigation complete: release-archive-test lacked nested timeout-scale argv and timeout-scale validation accepted zero/non-finite values.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-02T16:46:45Z'
+    completed_at: '2026-10-02T16:47:46Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/evolve/evolve-20261002-28/domain.md
+        status: ready
+        recorded_at: '2026-10-02T16:47:34Z'
+        sha256: 'sha256:a8a00304d82484c7c396780444a736b0c73f96fb4b2371fe59d27fe544871032'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/evolve/evolve-20261002-28/domain.md
+        status: ready
+        recorded_at: '2026-10-02T16:47:34Z'
+        sha256: 'sha256:a8a00304d82484c7c396780444a736b0c73f96fb4b2371fe59d27fe544871032'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/evolve/evolve-20261002-28/domain.md
+        status: ready
+        recorded_at: '2026-10-02T16:47:34Z'
+        sha256: 'sha256:a8a00304d82484c7c396780444a736b0c73f96fb4b2371fe59d27fe544871032'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/evolve/evolve-20261002-28/domain.md
+        status: passed
+        recorded_at: '2026-10-02T16:47:34Z'
+        sha256: 'sha256:a8a00304d82484c7c396780444a736b0c73f96fb4b2371fe59d27fe544871032'
+    notes: 'Domain rules captured: finite positive scale, nested release-test argv propagation, and separate outer watchdog scaling.'
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-02T16:47:46Z'
+    completed_at: '2026-10-02T16:48:48Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/evolve/evolve-20261002-28/architecture.md
+        status: ready
+        recorded_at: '2026-10-02T16:48:36Z'
+        sha256: 'sha256:bb9840610b7ed627dd28ac6f2223f61ed41cc8989b6a323936bbf005386e9544'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/evolve/evolve-20261002-28/architecture.md
+        status: ready
+        recorded_at: '2026-10-02T16:48:36Z'
+        sha256: 'sha256:bb9840610b7ed627dd28ac6f2223f61ed41cc8989b6a323936bbf005386e9544'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/evolve/evolve-20261002-28/architecture.md
+        status: ready
+        recorded_at: '2026-10-02T16:48:36Z'
+        sha256: 'sha256:bb9840610b7ed627dd28ac6f2223f61ed41cc8989b6a323936bbf005386e9544'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/evolve/evolve-20261002-28/architecture.md
+        status: passed
+        recorded_at: '2026-10-02T16:48:36Z'
+        sha256: 'sha256:bb9840610b7ed627dd28ac6f2223f61ed41cc8989b6a323936bbf005386e9544'
+    notes: 'Architecture ready: local CLI helper, nested argv propagation, focused smoke, and EN/RU docs.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-02T16:48:48Z'
+    completed_at: '2026-10-02T16:50:08Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/evolve/evolve-20261002-28/implementation.md
+        status: ready
+        recorded_at: '2026-10-02T16:49:58Z'
+        sha256: 'sha256:579ea0d6a6e4fb05940a42b5de7ac56b3cc1a966ab93c3994d741ea26c804c4e'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/evolve/evolve-20261002-28/implementation.md
+        status: ready
+        recorded_at: '2026-10-02T16:49:58Z'
+        sha256: 'sha256:579ea0d6a6e4fb05940a42b5de7ac56b3cc1a966ab93c3994d741ea26c804c4e'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/evolve/evolve-20261002-28/implementation.md
+        status: passed
+        recorded_at: '2026-10-02T16:49:58Z'
+        sha256: 'sha256:579ea0d6a6e4fb05940a42b5de7ac56b3cc1a966ab93c3994d741ea26c804c4e'
+    notes: 'Implementation complete: finite timeout-scale validation, nested release-test scale propagation, focused smoke, and EN/RU docs.'
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-02T16:50:08Z'
+    completed_at: '2026-10-02T16:51:43Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/evolve/evolve-20261002-28/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T16:51:34Z'
+        sha256: 'sha256:7df5cf4c98128824289f260b8ef83f459b672f3308c824f978f4a0e51235f216'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/evolve/evolve-20261002-28/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T16:51:34Z'
+        sha256: 'sha256:7df5cf4c98128824289f260b8ef83f459b672f3308c824f978f4a0e51235f216'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/evolve/evolve-20261002-28/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T16:51:34Z'
+        sha256: 'sha256:7df5cf4c98128824289f260b8ef83f459b672f3308c824f978f4a0e51235f216'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/evolve/evolve-20261002-28/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T16:51:34Z'
+        sha256: 'sha256:7df5cf4c98128824289f260b8ef83f459b672f3308c824f978f4a0e51235f216'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/evolve/evolve-20261002-28/assurance.md
+        status: passed
+        recorded_at: '2026-10-02T16:51:34Z'
+        sha256: 'sha256:7df5cf4c98128824289f260b8ef83f459b672f3308c824f978f4a0e51235f216'
+    notes: Assurance complete with focused smoke, compile, CLI validation, help, and scoped diff whitespace checks.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-02T16:51:43Z'
+    completed_at: '2026-10-02T16:52:42Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/evolve/evolve-20261002-28/delivery.md
+        status: ready
+        recorded_at: '2026-10-02T16:52:31Z'
+        sha256: 'sha256:af2042499e6cf4ede3d62cf918a453d8885e6b63c12115a59dc610e8842222e2'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/evolve/evolve-20261002-28/delivery.md
+        status: passed
+        recorded_at: '2026-10-02T16:52:31Z'
+        sha256: 'sha256:af2042499e6cf4ede3d62cf918a453d8885e6b63c12115a59dc610e8842222e2'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/evolve/evolve-20261002-28/delivery.md
+        status: passed
+        recorded_at: '2026-10-02T16:52:31Z'
+        sha256: 'sha256:af2042499e6cf4ede3d62cf918a453d8885e6b63c12115a59dc610e8842222e2'
+    notes: 'Release delivery skipped with reason: source-only scoped fix, no archive/install/publication requested.'
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-02T16:52:42Z'
+    completed_at: '2026-10-02T16:54:37Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/evolve/evolve-20261002-28/evolution.md
+        status: ready
+        recorded_at: '2026-10-02T16:54:26Z'
+        sha256: 'sha256:a14068a6f709dd0ac52a9cbe302e40776eb5527fd1550352e2e09e6892f6c31d'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/evolve/evolve-20261002-28/evolution.md
+        status: passed
+        recorded_at: '2026-10-02T16:54:26Z'
+        sha256: 'sha256:a14068a6f709dd0ac52a9cbe302e40776eb5527fd1550352e2e09e6892f6c31d'
+    notes: Evolution captured for timeout-scale validator and nested command argv propagation; separate general evolve-run will be scoped after run completion.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20261002-060156-86cbed
+  snapshot_checksum: 'sha256:c0cc71edb3f7ea9b97c2a2571d95b3c8ef7f67b188a476d7a29451193545c2a0'
+  assignment_capsule: .pf/contexts/assignment-capsules/implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f.capsule.yaml
+  assignment_capsule_checksum: 'sha256:34947a1a6bcf57281e148b84919fb916b5fdf68c516b88f33d09efc1431837af'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_read_files:
+  - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+  - .pf/artifacts/agent-entry-e09-20260929/evolution.md
+  - tools/processforge.py
+  - tools/**
+  - docs/**
+  - README*.md
+  - QUICKSTART*.md
+  - checksums/**
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_release_archive_timeout_scale.py
+  - docs/**
+  - README*.md
+  - QUICKSTART*.md
+  - checksums/**
+  - .pf/artifacts/evolve/evolve-20261002-28/**
+  - .pf/logs/evolve-20261002-28.md
+  - logs/evolve-20261002-28.md
+forbidden_files:
+  - .pf/contexts/**
+  - .pf/runtime/**
+  - .pf/processes/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/handoffs/**
+ownership:
+  owner_id: codex
+  role: implementation
+  writer: true
+required_sources:
+  - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+required_outputs:
+  -
+    id: implementation-report
+    path: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+    type: artifact
+    required: true
+expected_report:
+  artifact: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+  format: markdown
+  language: ru

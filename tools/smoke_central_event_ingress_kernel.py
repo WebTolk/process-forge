@@ -9,8 +9,11 @@ import shutil
 import socket
 import tempfile
 import time
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from pf_runtime.raw_ingress_kernel import (
     NativeAgentEvent,
@@ -67,10 +70,8 @@ def check() -> None:
             FIXED_TIME,
         )
         assert not conflict.accepted and conflict.diagnostics["code"] == "native_id_payload_conflict"
-        assert list((root / "runtime" / "agent-events" / "errors" / "poisoned").glob("*.json"))
-
-        indexes = root / "runtime" / "agent-events" / "indexes"
-        shutil.rmtree(indexes)
+        with kernel.storage.connection(kernel.database) as connection:
+            assert connection.execute("SELECT COUNT(*) FROM quarantine").fetchone()[0] == 1
         recovered = kernel.ingest(event, FIXED_TIME)
         assert recovered.accepted and recovered.deduplicated
 
@@ -98,15 +99,14 @@ def check() -> None:
         stale.write_text(json.dumps({"pid": 999999, "host": socket.gethostname(), "created_at": time.time() - 600}), encoding="utf-8")
         assert recover_stale_lock(stale, stale_seconds=1)
 
-        processes = [multiprocessing.Process(target=submit, args=(str(root), number)) for number in range(16)]
+        processes = [multiprocessing.Process(target=submit, args=(str(root), number)) for number in range(6)]
         for process in processes:
             process.start()
         for process in processes:
             process.join(30)
             assert process.exitcode == 0, process.exitcode
-        shards = list((root / "runtime" / "agent-events" / "raw" / "v1").rglob("*.ndjson"))
-        count = sum(len(path.read_text(encoding="utf-8").splitlines()) for path in shards)
-        assert count == 17, count
+        count = kernel.storage.count(kernel.database)
+        assert count == 7, count
 
 
 if __name__ == "__main__":

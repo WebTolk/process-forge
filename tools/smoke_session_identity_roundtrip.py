@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""Regression smoke for exact, opaque agent-session identity round trips."""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PF = ROOT / "tools" / "processforge.py"
+sys.path.insert(0, str(ROOT / "tools"))
+
+import processforge as core
+from pf_runtime.session_read import SessionReadError, session_chat_payload, session_context_payload
+
+
+def cli(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        [sys.executable, str(PF), *args],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        errors="strict",
+        capture_output=True,
+        timeout=120,
+    )
+    if result.returncode != expect:
+        raise AssertionError(f"expected {expect}, got {result.returncode}: {result.stdout}{result.stderr}")
+    return result
+
+
+def presence_payload(agent_id: str, session_id: str, project: Path) -> dict[str, object]:
+    now = core.now_utc()
+    return {
+        "schema_version": 1,
+        "agent_id": agent_id,
+        "session_id": session_id,
+        "status": "online",
+        "project_id": core.project_id(project),
+        "project_root": str(project),
+        "last_seen_at": now,
+        "heartbeat_ttl_seconds": 300,
+    }
+
+
+def check_core_presence(workplace: Path, root: Path) -> None:
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    reader = AgentPresenceReader(workplace)
+    expected = reader.find(session_id="Case-Session")
+    assert expected["session_id"] == "Case-Session"
+    assert not reader.find(agent_id="fixture-agent"), "ambiguous sessions must remain unselected"
+
+    def legacy_dependency(*_args, **_kwargs):
+        raise AssertionError("presence reader called a legacy read dependency")
+
+    original_json, original_paths = core.json_read, core.iter_agent_presence_paths
+    try:
+        core.json_read = core.iter_agent_presence_paths = legacy_dependency
+        assert core.find_agent_presence(workplace, session_id="Case-Session") == expected
+        assert core.iter_agent_presence(workplace) == reader.records()
+        assert core.read_agent_presence(workplace, "fixture-agent") == {}
+    finally:
+        core.json_read, core.iter_agent_presence_paths = original_json, original_paths
+
+    isolated = AgentPresenceReader(root / "reader-cases")
+    assert isolated.paths() == [] and isolated.records() == [] and isolated.find() == {}
+    payload = {"agent_id": "reader-agent", "session_id": "Opaque/Session", "project_id": "one", "future": {"tag": "alpha"}}
+    canonical = isolated.path("reader-agent", "Opaque/Session")
+    legacy = isolated.directory / "reader-agent" / "opaque-session.json"
+    legacy.parent.mkdir(parents=True)
+    legacy.write_text(json.dumps({**payload, "source": "legacy"}), encoding="utf-8")
+    canonical.write_text(json.dumps(payload), encoding="utf-8")
+    assert isolated.records() == [payload], "canonical data must win over legacy duplicate"
+    assert isolated.find(session_id="Opaque/Session", project_id="one") == payload
+    assert not isolated.find(session_id="opaque/session")
+    assert not isolated.find(project_id="other")
+    before = canonical.stat()
+    payload["future"]["tag"] = "omega"
+    canonical.write_text(json.dumps(payload), encoding="utf-8")
+    assert canonical.stat().st_size == before.st_size
+    os.utime(canonical, ns=(before.st_atime_ns, before.st_mtime_ns))
+    assert isolated.find(session_id="Opaque/Session")["future"]["tag"] == "omega"
+    assert reader.find(session_id="Case-Session") == expected, "workplaces must stay isolated"
+    canonical.unlink()
+    assert isolated.find(session_id="Opaque/Session")["source"] == "legacy"
+    legacy.unlink()
+    assert isolated.records() == []
+    for data, error in ((b"{", json.JSONDecodeError), (b"\xff", UnicodeDecodeError)):
+        canonical.write_bytes(data)
+        try:
+            isolated.records()
+        except error:
+            pass
+        else:
+            raise AssertionError("invalid presence data did not retain its read error")
+    canonical.unlink()
+
+    package = root / "copied-presence-package"
+    shutil.copytree(ROOT / "src/processforge_core", package / "processforge_core", ignore=shutil.ignore_patterns("__pycache__"))
+    source = """import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from processforge_core.agents.presence import AgentPresenceReader
+reader = AgentPresenceReader(Path(sys.argv[2]))
+assert reader.find(session_id='Case-Session')['session_id'] == 'Case-Session'
+assert len(reader.records()) >= 4
+assert not any(name == 'processforge' or name.startswith(('pf_cli', 'pf_runtime')) for name in sys.modules)
+print('PASS: copied Core presence reader without CLI or Host')
+"""
+    result = subprocess.run([sys.executable, "-I", "-B", "-c", source, str(package), str(workplace)],
+                            cwd=package, text=True, encoding="utf-8", capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    print(result.stdout.strip())
+
+
+def check_core_chat(workplace: Path, project: Path, root: Path) -> None:
+    from processforge_core.chat.transcripts import ChatTranscriptReader
+    from processforge_core.common.ndjson import NdjsonReader
+    from pf_runtime.host import _is_session_end_fallback_duplicate
+
+    reader = ChatTranscriptReader(project)
+    expected = reader.messages("Case-Session")
+    assert len(expected) == 1 and isinstance(reader.documents, NdjsonReader)
+
+    def legacy_dependency(*_args, **_kwargs):
+        raise AssertionError("chat reader called a legacy read dependency")
+
+    originals = {name: getattr(core, name) for name in
+                 ("iter_ndjson", "chat_transcript_path", "legacy_chat_transcript_path", "load_chat_messages")}
+    try:
+        for name in originals:
+            if name != "load_chat_messages":
+                setattr(core, name, legacy_dependency)
+        assert core.load_chat_messages(project, "Case-Session") == expected
+        core.load_chat_messages = legacy_dependency
+        chat = session_chat_payload(workplace, core, session_id="Case-Session")
+        assert chat["messages"] == core.chat_export_messages(expected, include_content=True)
+    finally:
+        for name, value in originals.items():
+            setattr(core, name, value)
+
+    for role, content, participant in (("user", "reader request", "user"), ("assistant", "reader answer", "codex")):
+        core.append_chat_message(project, session_id="Case-Session", participant_id=participant,
+                                 participant_role="worker", message_role=role, content=content, turn_id="reader-turn")
+    messages = reader.messages("Case-Session")
+    assert len(messages) == 3
+    latest = session_chat_payload(workplace, core, session_id="Case-Session", limit=1)
+    assert latest["messages"][0]["message_id"] == messages[-1]["message_id"]
+    assert latest["page"]["next_before"] == messages[-1]["message_id"]
+    previous = session_chat_payload(workplace, core, session_id="Case-Session", before=latest["page"]["next_before"], limit=1)
+    assert previous["messages"][0]["message_id"] == messages[-2]["message_id"]
+    filtered = session_chat_payload(workplace, core, session_id="Case-Session", roles=["user"])
+    assert [item["message_id"] for item in filtered["messages"]] == [messages[-2]["message_id"]]
+    for arguments, code in (({"limit": False, "roles": "bad"}, "invalid_limit"),
+                            ({"before": "a", "cursor": "b", "roles": "bad"}, "ambiguous_cursor"),
+                            ({"roles": "bad", "before": "unknown"}, "invalid_roles"),
+                            ({"before": "unknown"}, "invalid_cursor")):
+        try:
+            session_chat_payload(workplace, core, session_id="Case-Session", **arguments)
+        except SessionReadError as error:
+            assert error.code == code
+        else:
+            raise AssertionError("session chat did not retain its validation error")
+
+    envelope = {"provider": "codex", "adapter": "codex-hooks", "native_event_type": "SessionEnd", "source_session_id": "Case-Session"}
+    item = {"message_role": "assistant", "content": "reader answer", "turn_id": "reader-turn"}
+    core.load_chat_messages = legacy_dependency
+    try:
+        assert _is_session_end_fallback_duplicate(envelope, item, project)
+        assert not _is_session_end_fallback_duplicate(envelope, {**item, "content": "other answer"}, project)
+        assert not _is_session_end_fallback_duplicate({**envelope, "source_session_id": "case-session"}, item, project)
+        assert not _is_session_end_fallback_duplicate({**envelope, "native_event_type": "Stop"}, item, project)
+    finally:
+        core.load_chat_messages = originals["load_chat_messages"]
+
+    isolated = ChatTranscriptReader(root / "transcript-cases")
+    assert isolated.messages("Opaque/Session") == []
+    legacy, canonical = isolated.legacy_path("Opaque/Session"), isolated.path("Opaque/Session")
+    legacy.parent.mkdir(parents=True)
+    shared = {"session_id": "Opaque/Session", "message_id": "shared", "future": {"tag": "alpha"}}
+    legacy.write_text(json.dumps({**shared, "source": "legacy"}) + "\n", encoding="utf-8")
+    canonical.write_text("\ufeff\n{bad\n" + json.dumps(shared) + "\n" + json.dumps({**shared, "message_id": "unique"}) + "\n", encoding="utf-8")
+    rows = NdjsonReader().read(canonical)
+    assert [row[0] for row in rows] == [2, 3, 4] and rows[0][2] is not None
+    result = isolated.messages("Opaque/Session")
+    assert len(result) == 2 and result[0]["source"] == "legacy"
+    assert not isolated.messages("opaque/session")
+    stamp = canonical.stat()
+    canonical.write_bytes(canonical.read_bytes().replace(b"alpha", b"omega"))
+    os.utime(canonical, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    assert canonical.stat().st_size == stamp.st_size
+    assert isolated.messages("Opaque/Session")[1]["future"]["tag"] == "omega"
+    assert reader.messages("Case-Session") == messages
+    canonical.unlink()
+    assert isolated.messages("Opaque/Session") == [{**shared, "source": "legacy"}]
+    legacy.unlink()
+    assert isolated.messages("Opaque/Session") == []
+
+    package = root / "copied-presence-package"
+    source = """import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from processforge_core.chat.transcripts import ChatTranscriptReader
+from processforge_core.common.ndjson import NdjsonReader
+reader = ChatTranscriptReader(Path(sys.argv[2]))
+assert isinstance(reader.documents, NdjsonReader)
+assert len(reader.messages('Case-Session')) == 3
+assert not reader.messages('case-session')
+assert not any(name == 'processforge' or name.startswith(('pf_cli', 'pf_runtime')) for name in sys.modules)
+print('PASS: copied Core chat reader without CLI or Host')
+"""
+    result = subprocess.run([sys.executable, "-I", "-B", "-c", source, str(package), str(project)],
+                            cwd=package, text=True, encoding="utf-8", capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    print(result.stdout.strip())
+
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(prefix="pf-session-identity-") as raw:
+        root = Path(raw)
+        workplace = root / "workplace"
+        project = root / "project"
+        project.mkdir()
+        cli("workplace-init", "--workplace", str(workplace), "--apply")
+        cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
+
+        sessions = ["lower-session", "Case-Session", "slug/a", "slug-a"]
+        agent = "fixture-agent"
+        for session_id in sessions:
+            cli(
+                "agent-checkin",
+                "--workplace",
+                str(workplace),
+                "--project-root",
+                str(project),
+                "--agent",
+                agent,
+                "--session",
+                session_id,
+            )
+            core.append_chat_message(
+                project,
+                session_id=session_id,
+                participant_id="fixture-agent",
+                participant_role="worker",
+                message_role="assistant",
+                content=f"message for {session_id}",
+            )
+
+        paths = {core.agent_presence_path(workplace, agent, session_id) for session_id in sessions}
+        if len(paths) != len(sessions) or not all(path.is_file() for path in paths):
+            raise AssertionError("exact session identities did not receive distinct presence files")
+
+        for session_id in sessions:
+            presence = core.find_agent_presence(workplace, session_id=session_id)
+            if presence.get("session_id") != session_id:
+                raise AssertionError(f"presence lookup lost exact identity: {session_id!r}: {presence}")
+            context = session_context_payload(workplace, core, session_id=session_id)
+            if context["session"]["id"] != session_id:
+                raise AssertionError(f"session context lost exact identity: {session_id!r}")
+            chat = session_chat_payload(workplace, core, session_id=session_id)
+            messages = chat.get("messages") if isinstance(chat, dict) else None
+            if not isinstance(messages, list) or len(messages) != 1 or messages[0].get("session_id") != session_id:
+                raise AssertionError(f"session chat was not isolated: {session_id!r}: {json.dumps(chat)}")
+            request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {}}}
+            wire = subprocess.run([sys.executable, str(ROOT / "tools/pf_runtime/mcp_server.py"), "--workplace", str(workplace), "--session", session_id],
+                                  input=json.dumps(request)+"\n", text=True, capture_output=True, timeout=30)
+            assert wire.returncode == 0, wire.stderr
+            response = json.loads(wire.stdout)
+            assert not response["result"].get("isError"), response
+            native_context = json.loads(response["result"]["content"][0]["text"])
+            assert native_context["session"]["id"] == session_id, native_context
+
+        cli("agent-checkout", "--workplace", str(workplace), "--session", "slug/a")
+        if core.find_agent_presence(workplace, session_id="slug/a").get("status") != "checked_out":
+            raise AssertionError("checkout did not update the selected exact session")
+        if core.find_agent_presence(workplace, session_id="slug-a").get("status") != "online":
+            raise AssertionError("checkout of colliding slug session changed its sibling")
+
+        legacy = presence_payload("legacy-agent", "Legacy/Session", project)
+        legacy_path = core.workplace_agent_presence_dir(workplace) / "legacy-agent" / "legacy-session.json"
+        legacy_path.parent.mkdir(parents=True, exist_ok=True)
+        legacy_path.write_text(json.dumps(legacy), encoding="utf-8")
+        if core.find_agent_presence(workplace, session_id="Legacy/Session").get("session_id") != "Legacy/Session":
+            raise AssertionError("valid legacy mixed-case/session fixture was not readable")
+        cli("agent-heartbeat", "--workplace", str(workplace), "--session", "Legacy/Session")
+        assert core.find_agent_presence(workplace, session_id="Legacy/Session").get("status") == "online"
+        cli("agent-checkout", "--workplace", str(workplace), "--session", "Legacy/Session")
+        assert core.find_agent_presence(workplace, session_id="Legacy/Session").get("status") == "checked_out"
+        assert len([item for item in core.iter_agent_presence(workplace) if item.get("session_id") == "Legacy/Session"]) == 1
+        old_chat = core.legacy_chat_transcript_path(project, "Legacy/Session")
+        old_chat.parent.mkdir(parents=True, exist_ok=True)
+        old_record = {"message_id": "legacy-message", "session_id": "Legacy/Session", "message": {"role": "assistant", "content": "legacy content"}}
+        foreign_record = {"message_id": "foreign-message", "session_id": "legacy-session", "message": {"role": "assistant", "content": "foreign content"}}
+        old_chat.write_text(json.dumps(old_record)+"\n"+json.dumps(foreign_record)+"\n", encoding="utf-8")
+        core.append_chat_message(project, session_id="Legacy/Session", participant_id="fixture", participant_role="worker", message_role="assistant", content="new content")
+        history = core.load_chat_messages(project, "Legacy/Session")
+        assert [item["message"]["content"] for item in history] == ["legacy content", "new content"], history
+        core.append_chat_message(project, session_id="Legacy/Session", participant_id="fixture", participant_role="worker", message_role="assistant", content="legacy content", message_id="legacy-message")
+        assert len(core.load_chat_messages(project, "Legacy/Session")) == 2
+
+        forged = presence_payload("forged-agent", "other-session", project)
+        forged_path = core.workplace_agent_presence_dir(workplace) / "forged-agent" / "forged-session.json"
+        forged_path.parent.mkdir(parents=True, exist_ok=True)
+        forged_path.write_text(json.dumps(forged), encoding="utf-8")
+        if core.find_agent_presence(workplace, agent_id="forged-agent", session_id="forged-session"):
+            raise AssertionError("forged legacy metadata was accepted for the filename identity")
+        assert not core.find_agent_presence(workplace, agent_id="forged-agent", session_id="other-session")
+
+        check_core_presence(workplace, root)
+        check_core_chat(workplace, project, root)
+
+    print("PASS: exact opaque session identity round trip")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

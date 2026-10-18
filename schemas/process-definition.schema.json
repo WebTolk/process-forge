@@ -358,7 +358,8 @@
           "items": { "type": "object", "additionalProperties": true }
         },
         "gates": { "type": "array", "items": { "type": "string" } },
-        "handoff_required": { "type": "boolean", "deprecated": true }
+        "handoff_required": { "type": "boolean", "deprecated": true },
+        "resource_subset": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true, "description": "Omitted inherits pinned Work resources; empty grants none; entries must be pinned and currently authorized." }
       },
       "additionalProperties": true
     },

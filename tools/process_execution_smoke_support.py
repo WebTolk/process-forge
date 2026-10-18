@@ -125,8 +125,8 @@ def run(project: Path, started: dict[str, Any]) -> dict[str, Any]:
 
 
 def event_types(project: Path) -> list[str]:
-    path = project / ".pf" / "runtime" / "events" / "events.ndjson"
-    return [str(json.loads(line).get("event_type")) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    from smoke_hook_sqlite_support import events
+    return [str(row.get("event_type")) for row in events(project)]
 
 
 def scenario(name: str) -> None:

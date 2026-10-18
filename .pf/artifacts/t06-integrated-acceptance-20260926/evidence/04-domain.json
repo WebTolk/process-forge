@@ -1,0 +1,160 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "implementation",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "architecture",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "implementation-plan",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "decision-log",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "architecture",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "implementation-plan",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "decision-log",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "architecture-plan-ready"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "architecture-plan"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "evidence": [],
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "domain-rules-captured",
+          "kind": "gate",
+          "path": ".pf/artifacts/t06-integrated-acceptance-20260926/domain.md",
+          "recorded_at": "2026-09-26T08:05:01Z",
+          "sha256": "sha256:8f8154673601b96def6ad3bdbc0becfdb65458520fb7824a7f36d7dfae69c604",
+          "status": "passed"
+        },
+        "id": "domain-rules-captured",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "architecture-plan-ready",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "architecture",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "implementation-plan",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "decision-log",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "architecture-plan-ready"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "architecture-plan"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "architecture-plan",
+  "obligations": [],
+  "previous_stage_id": "domain-modeling",
+  "process": {
+    "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.1.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "domain-rules",
+        "kind": "artifact",
+        "path": ".pf/artifacts/t06-integrated-acceptance-20260926/domain.md",
+        "recorded_at": "2026-09-26T08:05:01Z",
+        "sha256": "sha256:8f8154673601b96def6ad3bdbc0becfdb65458520fb7824a7f36d7dfae69c604",
+        "status": "ready"
+      },
+      "id": "domain-rules",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "architecture-plan",
+    "status": "in_progress",
+    "title": "Architecture Plan"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

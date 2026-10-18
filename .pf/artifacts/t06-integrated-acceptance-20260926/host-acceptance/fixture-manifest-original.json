@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "project": {
+    "id": "t06-host-fixture",
+    "type": "generic"
+  },
+  "process_forge": {
+    "version": "1.1.0",
+    "mode": "file_only"
+  },
+  "workplace": {
+    "reference": "auto"
+  },
+  "process": "t06-host-fixture",
+  "processes": [
+    {
+      "id": "t06-host-fixture",
+      "path": "../processes/custom/t06-host-fixture.yaml"
+    }
+  ],
+  "packages": [
+    {
+      "id": "project.t06-host-fixture",
+      "path": "packages/project.t06-host-fixture.yaml"
+    }
+  ],
+  "knowledge_stack": [
+    {
+      "id": "project.t06-host-fixture",
+      "version": "1.0.0",
+      "source": "project"
+    }
+  ],
+  "context_requirements": {
+    "knowledge_packages": [
+      {
+        "id": "project.t06-host-fixture",
+        "constraint": "*",
+        "required": true
+      }
+    ],
+    "knowledge_resources": [
+      {
+        "id": "guide",
+        "constraint": "*",
+        "required": true
+      }
+    ]
+  }
+}

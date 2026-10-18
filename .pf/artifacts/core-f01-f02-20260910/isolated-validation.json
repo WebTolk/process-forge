@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "baseline": "1aecc18b6824204ca45ab30241b92d26e6d583a5",
+  "public_file_count": 948,
+  "results": [
+    {
+      "label": "portable-core-update",
+      "script": "smoke_core_update_manifest.py",
+      "expected": "pass",
+      "exit_code": 0,
+      "verified": true,
+      "elapsed_seconds": 15.074
+    },
+    {
+      "label": "portable-search-security",
+      "script": "smoke_garage_cross_project_security.py",
+      "expected": "pass",
+      "exit_code": 0,
+      "verified": true,
+      "elapsed_seconds": 90.244
+    },
+    {
+      "label": "baseline-core-update",
+      "script": "smoke_core_update_manifest.py",
+      "expected": "fail",
+      "exit_code": 1,
+      "verified": true,
+      "elapsed_seconds": 6.569
+    },
+    {
+      "label": "baseline-search-security",
+      "script": "smoke_garage_cross_project_security.py",
+      "expected": "fail",
+      "exit_code": 1,
+      "verified": true,
+      "elapsed_seconds": 36.627
+    }
+  ]
+}

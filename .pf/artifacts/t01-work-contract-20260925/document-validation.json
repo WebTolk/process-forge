@@ -1,0 +1,24 @@
+{
+  "time_utc": "2026-09-25T18:34:05.920791+00:00",
+  "document_checks": [
+    {
+      "path": "docs\\concepts\\work-execution-contract.md",
+      "missing_links": [],
+      "trailing_whitespace_lines": [],
+      "private_machine_paths": false
+    },
+    {
+      "path": ".pf\\adr\\work-execution-contract-20260925.md",
+      "missing_links": [],
+      "trailing_whitespace_lines": [],
+      "private_machine_paths": false
+    }
+  ],
+  "public_cleanliness": {
+    "exit_code": 0,
+    "stdout": "PASS: public cleanliness checks passed.\n",
+    "stderr": ""
+  },
+  "product_code_status": "",
+  "product_code_unchanged": true
+}

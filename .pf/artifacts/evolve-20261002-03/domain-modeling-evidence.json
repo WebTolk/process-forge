@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "domain-notes",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/domain-modeling.md",
+    "summary": "Separated resolved declarations, local search rows, Work material rows and immutable bindings."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "domain-model",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/domain-modeling.md",
+    "summary": "Defined policy precedence for explicit indexing, legacy index_policy, generated local-search indexing and pinned Work bindings."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "domain-rules",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/domain-modeling.md",
+    "summary": "Captured rules preserving full_text/fulltext aliases while keeping explicit metadata and none non-fulltext."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "domain-rules-captured",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/domain-modeling.md",
+    "summary": "Policy and impact rules are recorded for architecture and implementation."
+  }
+]

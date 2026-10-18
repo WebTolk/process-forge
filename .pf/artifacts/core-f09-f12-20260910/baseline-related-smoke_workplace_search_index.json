@@ -1,0 +1,10 @@
+{
+  "name": "smoke_workplace_search_index",
+  "root": "D:\\Dev\\process-forge",
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_workplace_search_index.py"
+  ],
+  "exit": 0,
+  "seconds": 14.77
+}

@@ -1,0 +1,7 @@
+{
+  "kind": "test_harness_preflight",
+  "exit_code": 1,
+  "reason": "smoke_runtime_ledger_hooks_mcp is supplemental and not in release_test_commands",
+  "tests_executed": 0,
+  "resolution": "Declare this isolated supplemental check explicitly with a 240-second timeout; retain registered commands/timeouts for the remaining integration subset."
+}

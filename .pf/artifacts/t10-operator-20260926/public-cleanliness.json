@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py"
+  ],
+  "exit_code": 0,
+  "seconds": 12.426,
+  "stdout": "PASS: public cleanliness checks passed.\n",
+  "stderr": ""
+}

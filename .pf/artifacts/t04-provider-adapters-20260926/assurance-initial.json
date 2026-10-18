@@ -1,0 +1,97 @@
+{
+  "started_at": "2026-09-26T04:36:50.079354+00:00",
+  "checks": [
+    {
+      "name": "smoke_central_event_ingress_kernel",
+      "exit_code": 0,
+      "stdout": "PASS: central event ingress raw kernel smoke\n",
+      "stderr": "",
+      "seconds": 3.177
+    },
+    {
+      "name": "smoke_central_event_replay",
+      "exit_code": 0,
+      "stdout": "PASS: central session replay smoke\n",
+      "stderr": "",
+      "seconds": 17.335
+    },
+    {
+      "name": "smoke_codex_lifecycle_identity",
+      "exit_code": 0,
+      "stdout": "PASS: Codex lifecycle event identity smoke\n",
+      "stderr": "",
+      "seconds": 17.527
+    },
+    {
+      "name": "smoke_central_event_ingress",
+      "exit_code": 0,
+      "stdout": "PASS: central raw-first ingress smoke\n",
+      "stderr": "",
+      "seconds": 40.499
+    },
+    {
+      "name": "smoke_authenticated_report_content",
+      "exit_code": 0,
+      "stdout": "PASS: authenticated path report collected exactly once; forged provenance/hash and secrets denied\n",
+      "stderr": "",
+      "seconds": 32.839
+    },
+    {
+      "name": "smoke_codex_exec_worker",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\tools\\smoke_codex_exec_worker.py\", line 241, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_codex_exec_worker.py\", line 137, in main\n    raise AssertionError(\n    ...<9 lines>...\n    )\nAssertionError: WROTE: .pf/contexts/assignment-capsules/codex-task.capsule.yaml\nFAIL: work_identity_incomplete; create_successor_work\n\nSTDOUT\n<not created>\nSTDERR\n<not created>\n",
+      "seconds": 4.513
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "exit_code": 0,
+      "stdout": "PASS: Codex worker sandbox and PF-first governance\n",
+      "stderr": "",
+      "seconds": 0.418
+    },
+    {
+      "name": "smoke_project_init_codex_integration",
+      "exit_code": 0,
+      "stdout": "PASS: project-init keeps Codex hooks optional and supports explicit operator installation\n",
+      "stderr": "",
+      "seconds": 16.077
+    },
+    {
+      "name": "smoke_expected_report_containment",
+      "exit_code": 0,
+      "stdout": "SKIP: symlink creation unavailable\nPASS: report traversal, absolute and symlink escapes rejected before reads; valid collection works\n",
+      "stderr": "",
+      "seconds": 34.826
+    },
+    {
+      "name": "smoke_mcp_codex_contract",
+      "exit_code": 0,
+      "stdout": "PASS: bounded Codex-compatible PF MCP contract\n",
+      "stderr": "",
+      "seconds": 7.076
+    },
+    {
+      "name": "smoke_runtime_ledger_hooks_mcp",
+      "exit_code": 0,
+      "stdout": "PASS: Runtime Ledger, Codex adapter, and MCP smoke\n",
+      "stderr": "",
+      "seconds": 33.162
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": "",
+      "seconds": 30.839
+    },
+    {
+      "name": "smoke_conversation_completeness",
+      "exit_code": 0,
+      "stdout": "PASS: conversation completeness smoke\n",
+      "stderr": "",
+      "seconds": 98.164
+    }
+  ],
+  "finished_at": "2026-09-26T04:38:45.588601+00:00"
+}

@@ -1,0 +1,414 @@
+schema_version: 1
+id: repair-the-project-event-journal-with-preserved-original-evidence-serial
+title: Repair the project event journal with preserved original evidence, serialize con
+run_id: garage-repair-the-project-event-journal-with-preserved-original-evidence
+process: software-feature-development
+status: done
+created_at: '2026-09-26T17:57:04Z'
+updated_at: '2026-09-26T18:18:38Z'
+objective: Repair the project event journal with preserved original evidence, serialize concurrent event appends, and verify that existing valid events and new concurrent writes are retained.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Evidence reviewed; continue the pinned process from this completed stage.
+  artifacts:
+    - .pf/artifacts/event-journal-repair-20260926/architecture.md
+    - .pf/artifacts/event-journal-repair-20260926/assurance.md
+    - .pf/artifacts/event-journal-repair-20260926/delivery.md
+    - .pf/artifacts/event-journal-repair-20260926/domain.md
+    - .pf/artifacts/event-journal-repair-20260926/evolution.md
+    - .pf/artifacts/event-journal-repair-20260926/implementation.md
+    - .pf/artifacts/event-journal-repair-20260926/investigation.md
+    - .pf/artifacts/event-journal-repair-20260926/orchestration.md
+    - .pf/artifacts/event-journal-repair-20260926/scope.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T18:18:14Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/event-journal-repair-20260926/evolution.md
+      status: ready
+      recorded_at: '2026-09-26T18:18:33Z'
+      sha256: 'sha256:9cd70b588dc18b5fc00eb68c661d2c3cf7a721218e0771ca1a1e1b2b4893fbca'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/event-journal-repair-20260926/evolution.md
+      status: passed
+      recorded_at: '2026-09-26T18:18:33Z'
+      sha256: 'sha256:9cd70b588dc18b5fc00eb68c661d2c3cf7a721218e0771ca1a1e1b2b4893fbca'
+  notes: Evidence reviewed; continue the pinned process from this completed stage.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-26T17:57:04Z'
+    completed_at: '2026-09-26T18:00:46Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/event-journal-repair-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T18:00:35Z'
+        sha256: 'sha256:ccccd0523dfecadaae0a42edb3ecdaf104e4b32cdcc6fa3f6547a10691e03725'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/event-journal-repair-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T18:00:35Z'
+        sha256: 'sha256:ccccd0523dfecadaae0a42edb3ecdaf104e4b32cdcc6fa3f6547a10691e03725'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/event-journal-repair-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T18:00:35Z'
+        sha256: 'sha256:ccccd0523dfecadaae0a42edb3ecdaf104e4b32cdcc6fa3f6547a10691e03725'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/event-journal-repair-20260926/orchestration.md
+        status: passed
+        recorded_at: '2026-09-26T18:00:35Z'
+        sha256: 'sha256:ccccd0523dfecadaae0a42edb3ecdaf104e4b32cdcc6fa3f6547a10691e03725'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-26T18:00:46Z'
+    completed_at: '2026-09-26T18:01:28Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/event-journal-repair-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T18:01:17Z'
+        sha256: 'sha256:bc7883c02252478dc2b0699d6fe92acb0644bcb35c6f9b1d37c0fb72241c5d88'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/event-journal-repair-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T18:01:17Z'
+        sha256: 'sha256:bc7883c02252478dc2b0699d6fe92acb0644bcb35c6f9b1d37c0fb72241c5d88'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/event-journal-repair-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T18:01:17Z'
+        sha256: 'sha256:bc7883c02252478dc2b0699d6fe92acb0644bcb35c6f9b1d37c0fb72241c5d88'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/event-journal-repair-20260926/scope.md
+        status: passed
+        recorded_at: '2026-09-26T18:01:17Z'
+        sha256: 'sha256:bc7883c02252478dc2b0699d6fe92acb0644bcb35c6f9b1d37c0fb72241c5d88'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-26T18:01:28Z'
+    completed_at: '2026-09-26T18:02:19Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/event-journal-repair-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T18:02:10Z'
+        sha256: 'sha256:066c6ef736979435a62b85a29283750229968c50163c810ccc3ecb3932219d4d'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/event-journal-repair-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T18:02:10Z'
+        sha256: 'sha256:066c6ef736979435a62b85a29283750229968c50163c810ccc3ecb3932219d4d'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/event-journal-repair-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T18:02:10Z'
+        sha256: 'sha256:066c6ef736979435a62b85a29283750229968c50163c810ccc3ecb3932219d4d'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/event-journal-repair-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T18:02:10Z'
+        sha256: 'sha256:066c6ef736979435a62b85a29283750229968c50163c810ccc3ecb3932219d4d'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-26T18:02:19Z'
+    completed_at: '2026-09-26T18:03:05Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/event-journal-repair-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T18:02:56Z'
+        sha256: 'sha256:23207d846455d22dc263d690a130a615ea9df091a2daad90c7dcb196f76c4012'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/event-journal-repair-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T18:02:56Z'
+        sha256: 'sha256:23207d846455d22dc263d690a130a615ea9df091a2daad90c7dcb196f76c4012'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/event-journal-repair-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T18:02:56Z'
+        sha256: 'sha256:23207d846455d22dc263d690a130a615ea9df091a2daad90c7dcb196f76c4012'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/event-journal-repair-20260926/domain.md
+        status: passed
+        recorded_at: '2026-09-26T18:02:56Z'
+        sha256: 'sha256:23207d846455d22dc263d690a130a615ea9df091a2daad90c7dcb196f76c4012'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-26T18:03:05Z'
+    completed_at: '2026-09-26T18:03:54Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/event-journal-repair-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T18:03:44Z'
+        sha256: 'sha256:48e31e6600d580a8324a28ed3921b34f52d2b56de6afa7b8b8e656ec086ababd'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/event-journal-repair-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T18:03:44Z'
+        sha256: 'sha256:48e31e6600d580a8324a28ed3921b34f52d2b56de6afa7b8b8e656ec086ababd'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/event-journal-repair-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T18:03:44Z'
+        sha256: 'sha256:48e31e6600d580a8324a28ed3921b34f52d2b56de6afa7b8b8e656ec086ababd'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/event-journal-repair-20260926/architecture.md
+        status: passed
+        recorded_at: '2026-09-26T18:03:44Z'
+        sha256: 'sha256:48e31e6600d580a8324a28ed3921b34f52d2b56de6afa7b8b8e656ec086ababd'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-26T18:03:54Z'
+    completed_at: '2026-09-26T18:11:41Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/event-journal-repair-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T18:11:30Z'
+        sha256: 'sha256:8948128899b3d771067d54796005cd00394617cb5b55fd4e1ade6fbf7283c31c'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/event-journal-repair-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T18:11:30Z'
+        sha256: 'sha256:8948128899b3d771067d54796005cd00394617cb5b55fd4e1ade6fbf7283c31c'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/event-journal-repair-20260926/implementation.md
+        status: passed
+        recorded_at: '2026-09-26T18:11:30Z'
+        sha256: 'sha256:8948128899b3d771067d54796005cd00394617cb5b55fd4e1ade6fbf7283c31c'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-26T18:11:41Z'
+    completed_at: '2026-09-26T18:13:34Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/event-journal-repair-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T18:13:23Z'
+        sha256: 'sha256:59a64a0ef00316d04c06eb34f1cbd9b83df6cfa4d7018bab358586aeb44ab8e4'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/event-journal-repair-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T18:13:23Z'
+        sha256: 'sha256:59a64a0ef00316d04c06eb34f1cbd9b83df6cfa4d7018bab358586aeb44ab8e4'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/event-journal-repair-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T18:13:23Z'
+        sha256: 'sha256:59a64a0ef00316d04c06eb34f1cbd9b83df6cfa4d7018bab358586aeb44ab8e4'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/event-journal-repair-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T18:13:23Z'
+        sha256: 'sha256:59a64a0ef00316d04c06eb34f1cbd9b83df6cfa4d7018bab358586aeb44ab8e4'
+      -
+        kind: artifact
+        artifact_id: browser-verification-report
+        path: .pf/artifacts/event-journal-repair-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T18:13:23Z'
+        sha256: 'sha256:59a64a0ef00316d04c06eb34f1cbd9b83df6cfa4d7018bab358586aeb44ab8e4'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/event-journal-repair-20260926/assurance.md
+        status: passed
+        recorded_at: '2026-09-26T18:13:23Z'
+        sha256: 'sha256:59a64a0ef00316d04c06eb34f1cbd9b83df6cfa4d7018bab358586aeb44ab8e4'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T18:13:34Z'
+    completed_at: '2026-09-26T18:18:14Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: release-notes
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+      -
+        kind: artifact
+        artifact_id: migration-notes
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+      -
+        kind: artifact
+        artifact_id: patch
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+      -
+        kind: artifact
+        artifact_id: delivery-plan
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: passed
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/event-journal-repair-20260926/delivery.md
+        status: passed
+        recorded_at: '2026-09-26T18:18:06Z'
+        sha256: 'sha256:a3ba01a62f99182928c3c418dcdcb5d8a7456938d90ba37df0e72844d14afc5f'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T18:18:14Z'
+    completed_at: '2026-09-26T18:18:38Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/event-journal-repair-20260926/evolution.md
+        status: ready
+        recorded_at: '2026-09-26T18:18:33Z'
+        sha256: 'sha256:9cd70b588dc18b5fc00eb68c661d2c3cf7a721218e0771ca1a1e1b2b4893fbca'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/event-journal-repair-20260926/evolution.md
+        status: passed
+        recorded_at: '2026-09-26T18:18:33Z'
+        sha256: 'sha256:9cd70b588dc18b5fc00eb68c661d2c3cf7a721218e0771ca1a1e1b2b4893fbca'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/repair-the-project-event-journal-with-preserved-original-evidence-serial.capsule.yaml
+  assignment_capsule_checksum: 'sha256:5016f5e22111a856d5c48409cd2bbe8d683b0f0f0bf1bd9f0769f38027967f5b'

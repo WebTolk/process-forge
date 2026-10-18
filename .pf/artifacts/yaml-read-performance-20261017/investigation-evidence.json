@@ -1,0 +1,28 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "investigation-report",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/investigation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "impact-analysis",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/investigation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "investigation-complete",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/investigation.md",
+    "status": "passed",
+    "summary": "Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "impact-understood",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/investigation.md",
+    "status": "passed",
+    "summary": "Measured unchanged570-Run corpus, common-reader audit and bounded content/policy cache with fresh reads, isolated data and tiny Run projection fixed before implementation; no cached authority or file-stat shortcut."
+  }
+]

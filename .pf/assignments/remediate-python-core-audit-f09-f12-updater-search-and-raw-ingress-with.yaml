@@ -1,0 +1,210 @@
+schema_version: 1
+id: remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with
+title: Remediate Python core audit F09-F12 updater search and raw ingress with junior P
+run_id: garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T11:26:04Z'
+updated_at: '2026-09-10T12:23:55Z'
+objective: Remediate Python core audit F09-F12 updater search and raw ingress with junior PF shell workers then publish dev and update installed Core
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: F09-F12 delivered to dev and installed with acceptance evidence; remaining MCP/collection/full-release boundaries documented.
+  artifacts:
+    - .pf/artifacts/core-f09-f12-20260910/integration-report.md
+    - .pf/artifacts/core-f09-f12-20260910/iteration-record.md
+    - .pf/artifacts/core-f09-f12-20260910/orchestrator-plan.yaml
+    - .pf/artifacts/core-f09-f12-20260910/plan.md
+    - .pf/artifacts/core-f09-f12-20260910/review-addendum.md
+    - .pf/artifacts/core-f09-f12-20260910/summary.md
+    - .pf/handoffs/core-f09-f12-20260910.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-10T12:23:34Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/core-f09-f12-20260910/summary.md
+      recorded_at: '2026-09-10T12:23:50Z'
+      sha256: 'sha256:9174a0a466ea3fa6a06955669573f4737672f78349cbc4bf82d18e0eecf0d49c'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/core-f09-f12-20260910.md
+      recorded_at: '2026-09-10T12:23:50Z'
+      sha256: 'sha256:8d1535d6099e6c2a039dd790d377a17e1f85cd82d20c58c2f0349ea1bbaf8c1a'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed.
+      recorded_at: '2026-09-10T12:23:50Z'
+  notes: F09-F12 delivered to dev and installed with acceptance evidence; remaining MCP/collection/full-release boundaries documented.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-10T11:26:04Z'
+    completed_at: '2026-09-10T11:32:18Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/artifacts/core-f09-f12-20260910/plan.md
+        recorded_at: '2026-09-10T11:32:09Z'
+        sha256: 'sha256:f25cc8bced3de1e0ef62d8c761a7862bdcf08ae6fa8afc3a7516d06d34ebe6c2'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Bounded architecture and disjoint assignments documented; source context fresh.
+        recorded_at: '2026-09-10T11:32:09Z'
+    notes: Architecture and authorized scope recorded; disjoint PF worker plan prepared.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-10T11:32:18Z'
+    completed_at: '2026-09-10T11:40:11Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/artifacts/core-f09-f12-20260910/orchestrator-plan.yaml
+        recorded_at: '2026-09-10T11:40:05Z'
+        sha256: 'sha256:b5366877a267613fd693570f3baf6128998c78821e26bba3ba2f36460a22e047'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Bounded architecture and disjoint assignments documented; source context fresh.
+        recorded_at: '2026-09-10T11:40:05Z'
+    notes: Four shell assignments materialized and doctors passed; baseline F09-F12 reproduced.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-10T11:40:11Z'
+    completed_at: '2026-09-10T12:22:43Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/artifacts/core-f09-f12-20260910/iteration-record.md
+        recorded_at: '2026-09-10T12:22:38Z'
+        sha256: 'sha256:5103f9120171012c6e5c5f2b118015cb25a99d14e6affaf69e975f07b0823a18'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed.
+        recorded_at: '2026-09-10T12:22:38Z'
+    notes: F09-F12 delivered to dev and installed with acceptance evidence; remaining MCP/collection/full-release boundaries documented.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-10T12:22:43Z'
+    completed_at: '2026-09-10T12:23:04Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/core-f09-f12-20260910/integration-report.md
+        recorded_at: '2026-09-10T12:23:00Z'
+        sha256: 'sha256:91fb61b999b573414ee701845c064f637526122c8fe2a2b3a5c2fdc313f78834'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed.
+        recorded_at: '2026-09-10T12:23:00Z'
+    notes: F09-F12 delivered to dev and installed with acceptance evidence; remaining MCP/collection/full-release boundaries documented.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-10T12:23:04Z'
+    completed_at: '2026-09-10T12:23:34Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/artifacts/core-f09-f12-20260910/review-addendum.md
+        recorded_at: '2026-09-10T12:23:28Z'
+        sha256: 'sha256:91fca1cab45b9f988428e4bdfc1e909419fae08ee4443f145a630e25acc3a1af'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed.
+        recorded_at: '2026-09-10T12:23:28Z'
+    notes: F09-F12 delivered to dev and installed with acceptance evidence; remaining MCP/collection/full-release boundaries documented.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-10T12:23:34Z'
+    completed_at: '2026-09-10T12:23:55Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/core-f09-f12-20260910/summary.md
+        recorded_at: '2026-09-10T12:23:50Z'
+        sha256: 'sha256:9174a0a466ea3fa6a06955669573f4737672f78349cbc4bf82d18e0eecf0d49c'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/core-f09-f12-20260910.md
+        recorded_at: '2026-09-10T12:23:50Z'
+        sha256: 'sha256:8d1535d6099e6c2a039dd790d377a17e1f85cd82d20c58c2f0349ea1bbaf8c1a'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed.
+        recorded_at: '2026-09-10T12:23:50Z'
+    notes: F09-F12 delivered to dev and installed with acceptance evidence; remaining MCP/collection/full-release boundaries documented.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260910-101335-c7d963
+  snapshot_checksum: 'sha256:f979878238a71fcb5ebd73f730f9a28fba321598191c6d6c0550d338bf2cd1e8'
+  assignment_capsule: .pf/contexts/assignment-capsules/remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with.capsule.yaml
+  assignment_capsule_checksum: 'sha256:adf12eeda8bcbba3b56a9ec7e6921f0fdc9978d80f4f5a46be058dafe3da1916'

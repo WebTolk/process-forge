@@ -1,0 +1,78 @@
+{
+  "calls": [
+    {
+      "call": 1,
+      "wall_seconds": 16.040936400007922,
+      "context_status": "fresh",
+      "cache_before": {
+        "entries": 0,
+        "bytes": 0,
+        "hits": 0,
+        "parses": 0,
+        "evictions": 0,
+        "bypasses": 0
+      },
+      "cache_after": {
+        "entries": 868,
+        "bytes": 67093037,
+        "hits": 4,
+        "parses": 2689,
+        "evictions": 1821,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2689,
+        "evictions": 1821,
+        "bypasses": 0
+      },
+      "request_scope": {
+        "loads": 4273,
+        "parses": 2689,
+        "hits": 1584,
+        "entries": 665,
+        "bytes": 8388547
+      }
+    },
+    {
+      "call": 2,
+      "wall_seconds": 16.430272500030696,
+      "context_status": "fresh",
+      "cache_before": {
+        "entries": 868,
+        "bytes": 67093037,
+        "hits": 4,
+        "parses": 2689,
+        "evictions": 1821,
+        "bypasses": 0
+      },
+      "cache_after": {
+        "entries": 868,
+        "bytes": 67093037,
+        "hits": 8,
+        "parses": 5378,
+        "evictions": 4510,
+        "bypasses": 0
+      },
+      "cache_delta": {
+        "hits": 4,
+        "parses": 2689,
+        "evictions": 2689,
+        "bypasses": 0
+      },
+      "request_scope": {
+        "loads": 4273,
+        "parses": 2689,
+        "hits": 1584,
+        "entries": 665,
+        "bytes": 8388547
+      }
+    }
+  ],
+  "limits": {
+    "shared_bytes": 67108864,
+    "shared_entries": 4096,
+    "request_bytes": 8388608,
+    "request_entries": 1024
+  }
+}

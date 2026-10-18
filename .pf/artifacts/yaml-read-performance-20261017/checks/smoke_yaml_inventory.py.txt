@@ -1,0 +1,16 @@
+test_absent_pyyaml_preserves_each_injected_fallback (__main__.YamlInventoryTests.test_absent_pyyaml_preserves_each_injected_fallback) ... ok
+test_catalog_precedence_strict_warnings_and_fresh_references (__main__.YamlInventoryTests.test_catalog_precedence_strict_warnings_and_fresh_references) ... ok
+test_completion_intent_keeps_terminal_work_active (__main__.YamlInventoryTests.test_completion_intent_keeps_terminal_work_active) ... ok
+test_core_and_catalog_share_parsing_not_mutable_results (__main__.YamlInventoryTests.test_core_and_catalog_share_parsing_not_mutable_results) ... ok
+test_file_read_errors_are_not_parser_errors (__main__.YamlInventoryTests.test_file_read_errors_are_not_parser_errors) ... ok
+test_garage_placeholder_rules_are_not_lifecycle_rules (__main__.YamlInventoryTests.test_garage_placeholder_rules_are_not_lifecycle_rules) ... ok
+test_legacy_aliases_duplicate_discovery_and_invalid_selectors (__main__.YamlInventoryTests.test_legacy_aliases_duplicate_discovery_and_invalid_selectors) ... ok
+test_lifecycle_retains_validation_and_historical_filtering (__main__.YamlInventoryTests.test_lifecycle_retains_validation_and_historical_filtering) ... ok
+test_missing_nonmapping_and_invalid_documents (__main__.YamlInventoryTests.test_missing_nonmapping_and_invalid_documents) ... ok
+test_new_ambiguity_and_mismatched_identity_are_not_hidden (__main__.YamlInventoryTests.test_new_ambiguity_and_mismatched_identity_are_not_hidden) ... ok
+test_same_metadata_changes_deletion_and_new_run_are_visible (__main__.YamlInventoryTests.test_same_metadata_changes_deletion_and_new_run_are_visible) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.159s
+
+OK

@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-import yaml
+from garage_search_smoke_support import register_fixture_resource, select_fixture_resource
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,39 +44,27 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[s
     return json.loads(text)
 
 
-def add_resource(project: Path) -> str:
-    knowledge_root = project / "knowledge"
-    knowledge_root.mkdir()
-    (knowledge_root / "session.md").write_text("GarageSessionNeedle proves stable authorization.", encoding="utf-8")
-    snapshot_path = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
-    snapshot = yaml.safe_load(snapshot_path.read_text(encoding="utf-8"))
-    resource = {
-        "id": "fixture.docs:session",
-        "resource_id": "fixture.docs:session",
-        "package_id": "fixture.docs",
-        "kind": "knowledge",
-        "content_roots": [str(knowledge_root)],
-        "indexing": {"enabled": True, "mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["*.md"], "exclude": []}]},
-    }
-    snapshot.setdefault("resolved", {}).setdefault("available_knowledge_resources", []).append(resource)
-    snapshot["local_search_resources"] = [resource]
-    snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
-    return resource["id"]
-
-
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-garage-session-") as raw:
         root = Path(raw)
         workplace = root / "workplace"
         project = root / "project"
         cli("workplace-init", "--workplace", str(workplace), "--apply")
+        resource_id = register_fixture_resource(
+            workplace, "fixture.docs", "session",
+            {"session.md": "GarageSessionNeedle proves stable authorization."},
+            title="Session authorization fixture",
+        )
         cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
-        resource_id = add_resource(project)
+        select_fixture_resource(project, workplace, "fixture.docs", "session")
         cli("agent-checkin", "--workplace", str(workplace), "--agent", "fixture-agent", "--session", "fixture-session", "--project-root", str(project))
 
         base = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "GarageSessionNeedle"})
         enhanced = call_mcp(workplace, "pf.search", {"project_root": str(project), "session_id": "fixture-session", "query": "GarageSessionNeedle"})
-        if base.get("total") != enhanced.get("total") or base.get("results", [{}])[0].get("resource_id") != resource_id:
+        if (base.get("total") != 1 or enhanced.get("total") != 1
+                or not base.get("results") or not enhanced.get("results")
+                or base["results"][0].get("resource_id") != resource_id
+                or enhanced["results"][0].get("resource_id") != resource_id):
             raise AssertionError({"base": base, "enhanced": enhanced})
         context = call_mcp(workplace, "pf.context", {"project_root": str(project), "session_id": "fixture-session"})
         if context.get("mode") != "garage" or context.get("session", {}).get("status") != "bound" or context.get("session", {}).get("id") != "fixture-session":

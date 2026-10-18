@@ -1,0 +1,18 @@
+{
+  "time": "2026-09-26T20:46:32.057389+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "egress",
+    "qualify",
+    "--project-root",
+    "D:\\Dev\\process-forge",
+    "--store-root",
+    "D:\\.agents\\processforge-workplace\\runtime\\egress\\.pf-egress-private"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"checks\": 53, \"implementation\": \"sha256:ceb81bbfa3220d8681cdb6b5c4ccbde145a86a51a49c317b2e3b7fb340806ec1\", \"status\": \"passed\"}\n",
+  "stderr": ""
+}

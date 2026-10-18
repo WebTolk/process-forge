@@ -1,0 +1,2977 @@
+[
+  {
+    "path": "QUICKSTART.md",
+    "line": 5,
+    "target": "docs/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "QUICKSTART.md",
+    "line": 225,
+    "target": "docs/concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "QUICKSTART.ru.md",
+    "line": 5,
+    "target": "docs/ru/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "QUICKSTART.ru.md",
+    "line": 257,
+    "target": "docs/ru/concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 14,
+    "target": "README.ru.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 25,
+    "target": "docs/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 28,
+    "target": "docs/assets/processforge-architecture.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 116,
+    "target": "docs/concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 118,
+    "target": "QUICKSTART.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 236,
+    "target": "docs/concepts/agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 297,
+    "target": "docs/concepts/director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 307,
+    "target": "QUICKSTART.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 308,
+    "target": "docs/getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 309,
+    "target": "docs/getting-started/guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 310,
+    "target": "docs/getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 311,
+    "target": "docs/concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 312,
+    "target": "docs/getting-started/resource-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 313,
+    "target": "docs/getting-started/project-onboarding.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 314,
+    "target": "docs/processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 318,
+    "target": "docs/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 319,
+    "target": "prompts/workplace-initialization-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 320,
+    "target": "prompts/guided-workplace-setup-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 321,
+    "target": "prompts/project-onboarding-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 322,
+    "target": "docs/release-checklist.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 326,
+    "target": "docs/index.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 327,
+    "target": "docs/getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 328,
+    "target": "docs/getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 329,
+    "target": "docs/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 330,
+    "target": "docs/processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 331,
+    "target": "docs/concepts/context-resolution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 332,
+    "target": "docs/concepts/cascade-merge.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 333,
+    "target": "docs/concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 334,
+    "target": "docs/concepts/runtime-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 335,
+    "target": "docs/concepts/runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 336,
+    "target": "docs/concepts/agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 337,
+    "target": "docs/concepts/project-coordination-modes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 338,
+    "target": "docs/concepts/process-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 339,
+    "target": "docs/concepts/agent-ledger.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 340,
+    "target": "docs/concepts/process-transitions.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 341,
+    "target": "docs/concepts/handoff-contracts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 342,
+    "target": "docs/concepts/agent-director.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 343,
+    "target": "docs/concepts/shell-agent-subagent-policy.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 344,
+    "target": "docs/concepts/platform-contracts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 345,
+    "target": "docs/concepts/platform-inheritance.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 346,
+    "target": "docs/concepts/knowledge-resource-navigation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 347,
+    "target": "docs/concepts/update-sites.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 348,
+    "target": "docs/concepts/update-lifecycle.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 349,
+    "target": "docs/getting-started/update-system.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 350,
+    "target": "docs/concepts/runs-tasks-iterations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 351,
+    "target": "docs/authoring/authoring-parity.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 352,
+    "target": "docs/known-limitations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 395,
+    "target": "LICENSE",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.md",
+    "line": 395,
+    "target": "NOTICE",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 14,
+    "target": "README.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 27,
+    "target": "docs/ru/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 30,
+    "target": "docs/assets/processforge-architecture.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 132,
+    "target": "docs/ru/concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 134,
+    "target": "QUICKSTART.ru.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 268,
+    "target": "docs/ru/concepts/agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 336,
+    "target": "docs/ru/concepts/director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 347,
+    "target": "QUICKSTART.ru.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 348,
+    "target": "docs/ru/getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 349,
+    "target": "docs/ru/getting-started/guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 350,
+    "target": "docs/ru/getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 351,
+    "target": "docs/ru/concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 352,
+    "target": "docs/getting-started/resource-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 353,
+    "target": "docs/ru/getting-started/project-onboarding.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 354,
+    "target": "docs/ru/processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 358,
+    "target": "docs/ru/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 359,
+    "target": "prompts/guided-workplace-setup-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 360,
+    "target": "prompts/workplace-initialization-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 361,
+    "target": "prompts/project-onboarding-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 362,
+    "target": "docs/release-checklist.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 366,
+    "target": "QUICKSTART.ru.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 367,
+    "target": "docs/ru/index.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 368,
+    "target": "docs/ru/getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 369,
+    "target": "docs/ru/getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 370,
+    "target": "docs/ru/getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 371,
+    "target": "docs/ru/processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 372,
+    "target": "docs/ru/concepts/context-resolution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 373,
+    "target": "docs/ru/concepts/cascade-merge.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 374,
+    "target": "docs/ru/concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 375,
+    "target": "docs/ru/concepts/runtime-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 376,
+    "target": "docs/ru/concepts/agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 377,
+    "target": "docs/ru/concepts/project-coordination-modes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 378,
+    "target": "docs/ru/concepts/platform-contracts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 379,
+    "target": "docs/ru/concepts/platform-inheritance.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 380,
+    "target": "docs/ru/concepts/knowledge-resource-navigation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 381,
+    "target": "docs/ru/concepts/update-sites.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 382,
+    "target": "docs/ru/concepts/update-lifecycle.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 383,
+    "target": "docs/ru/getting-started/update-system.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 384,
+    "target": "docs/ru/concepts/runs-tasks-iterations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 385,
+    "target": "docs/ru/authoring/authoring-parity.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 386,
+    "target": "docs/ru/known-limitations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 430,
+    "target": "LICENSE",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "README.ru.md",
+    "line": 430,
+    "target": "NOTICE",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/authoring/authoring-parity.md",
+    "line": 3,
+    "target": "../assets/processforge-authoring-parity.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-director.md",
+    "line": 26,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 15,
+    "target": "work-continuation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 208,
+    "target": "../../schemas/agent-entry-diagnostics.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 264,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 325,
+    "target": "../../schemas/agent-entry-adapters.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 366,
+    "target": "project-flow-root.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 367,
+    "target": "session-bootstrap.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 367,
+    "target": "global-agent-section.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-ledger.md",
+    "line": 23,
+    "target": "agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/agent-ledger.md",
+    "line": 24,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/context-capsule.md",
+    "line": 3,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/context-capsule.md",
+    "line": 21,
+    "target": "multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/declarative-process-execution.md",
+    "line": 86,
+    "target": "prepared-input.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/declarative-process-execution.md",
+    "line": 97,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/declarative-process-execution.md",
+    "line": 97,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/diagnostics.md",
+    "line": 7,
+    "target": "../../schemas/diagnostics.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/director-ledger-inspector-boundary.md",
+    "line": 11,
+    "target": "agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/garage-core.md",
+    "line": 133,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/garage-core.md",
+    "line": 139,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/garage-core.md",
+    "line": 140,
+    "target": "prepared-input.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/global-agent-section.md",
+    "line": 16,
+    "target": "session-bootstrap.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/global-agent-section.md",
+    "line": 30,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/handoff-contracts.md",
+    "line": 13,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/hooks-events.md",
+    "line": 34,
+    "target": "codex-session-read.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/linked-workplace-model.md",
+    "line": 21,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/multi-agent-file-flow.md",
+    "line": 6,
+    "target": "multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/prepared-input.md",
+    "line": 3,
+    "target": "egress-engine.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/prepared-input.md",
+    "line": 9,
+    "target": "../../schemas/prepared-input.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/prepared-input.md",
+    "line": 43,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/prepared-input.md",
+    "line": 43,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/prepared-input.md",
+    "line": 43,
+    "target": "context-capsule.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/prepared-input.md",
+    "line": 43,
+    "target": "runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/process-events.md",
+    "line": 15,
+    "target": "hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/process-supervisor.md",
+    "line": 13,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/processforge-events.md",
+    "line": 5,
+    "target": "process-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/processforge-events.md",
+    "line": 6,
+    "target": "hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/project-context-snapshot.md",
+    "line": 106,
+    "target": "project-context-lock-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/project-flow-root.md",
+    "line": 42,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/project-flow-root.md",
+    "line": 78,
+    "target": "agent-entry.md#compatibility-and-support-policy",
+    "exists": true,
+    "anchor": "compatibility-and-support-policy"
+  },
+  {
+    "path": "docs/concepts/project-init.md",
+    "line": 77,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/provider-adapters.md",
+    "line": 44,
+    "target": "work-execution-contract.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/provider-adapters.md",
+    "line": 44,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/provider-adapters.md",
+    "line": 44,
+    "target": "session-telemetry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runs-tasks-iterations.md",
+    "line": 3,
+    "target": "../assets/processforge-run-lifecycle.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-drivers.md",
+    "line": 53,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-drivers.md",
+    "line": 55,
+    "target": "prepared-input.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 4,
+    "target": "runtime-monitor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 7,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 10,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 40,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 103,
+    "target": "codex-session-read.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 104,
+    "target": "hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-mcp.md",
+    "line": 115,
+    "target": "runtime-monitor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "line": 3,
+    "target": "../assets/processforge-run-lifecycle.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "line": 40,
+    "target": "runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "line": 41,
+    "target": "process-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "line": 65,
+    "target": "../getting-started/runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "line": 96,
+    "target": "runtime-mcp.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-model.md",
+    "line": 97,
+    "target": "../getting-started/runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-monitor.md",
+    "line": 112,
+    "target": "runtime-mcp.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/runtime-monitor.md",
+    "line": 113,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/session-bootstrap.md",
+    "line": 26,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/session-bootstrap.md",
+    "line": 26,
+    "target": "global-agent-section.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/session-telemetry.md",
+    "line": 3,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-context.md",
+    "line": 3,
+    "target": "work-continuation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-context.md",
+    "line": 7,
+    "target": "work-execution-contract.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-context.md",
+    "line": 7,
+    "target": "context-capsule.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-context.md",
+    "line": 7,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-context.md",
+    "line": 14,
+    "target": "egress-engine.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 9,
+    "target": "declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 10,
+    "target": "context-capsule.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 10,
+    "target": "session-telemetry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 16,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 18,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 19,
+    "target": "provider-adapters.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 20,
+    "target": "prepared-input.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 21,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-resources.md",
+    "line": 100,
+    "target": "resource-search-index.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/work-resources.md",
+    "line": 101,
+    "target": "work-execution-contract.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/concepts/workplace-vs-project.md",
+    "line": 45,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started.md",
+    "line": 51,
+    "target": "concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/agent-prompts.md",
+    "line": 22,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/agent-prompts.md",
+    "line": 51,
+    "target": "../concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/agent-prompts.md",
+    "line": 52,
+    "target": "../concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/first-run.md",
+    "line": 43,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/first-run.md",
+    "line": 55,
+    "target": "initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/first-run.md",
+    "line": 57,
+    "target": "guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/initialization-order.md",
+    "line": 40,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/installation.md",
+    "line": 45,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/installation.md",
+    "line": 71,
+    "target": "runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/multi-agent-orchestration.md",
+    "line": 38,
+    "target": "runtime-driver-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/project-onboarding.md",
+    "line": 70,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/task-batch-workflow.md",
+    "line": 5,
+    "target": "../concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/task-batch-workflow.md",
+    "line": 6,
+    "target": "../concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/workplace-initialization.md",
+    "line": 5,
+    "target": "guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/getting-started/workplace-initialization.md",
+    "line": 55,
+    "target": "official-packs.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 3,
+    "target": "assets/processforge-architecture.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 16,
+    "target": "../README.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 17,
+    "target": "../QUICKSTART.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 18,
+    "target": "getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 19,
+    "target": "getting-started/guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 20,
+    "target": "getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 21,
+    "target": "concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 22,
+    "target": "getting-started/resource-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 23,
+    "target": "getting-started/project-onboarding.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 24,
+    "target": "processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 28,
+    "target": "getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 29,
+    "target": "../prompts/guided-workplace-setup-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 30,
+    "target": "../prompts/workplace-initialization-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 31,
+    "target": "../prompts/project-onboarding-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 32,
+    "target": "release-checklist.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 33,
+    "target": "validation/validation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 37,
+    "target": "getting-started/first-run.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 38,
+    "target": "getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 39,
+    "target": "getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 40,
+    "target": "getting-started/workplace-initialization.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 41,
+    "target": "getting-started/guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 42,
+    "target": "getting-started/project-onboarding.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 43,
+    "target": "getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 44,
+    "target": "getting-started/create-your-first-process.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 45,
+    "target": "getting-started/task-batch-workflow.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 46,
+    "target": "processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 47,
+    "target": "getting-started/multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 48,
+    "target": "getting-started/runtime-driver-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 49,
+    "target": "getting-started/runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 50,
+    "target": "getting-started.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 51,
+    "target": "ru/index.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 55,
+    "target": "authoring/reusable-template-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 56,
+    "target": "authoring/knowledge-package-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 57,
+    "target": "authoring/platform-contract-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 58,
+    "target": "concepts/knowledge-resource-navigation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 59,
+    "target": "authoring/process-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 60,
+    "target": "authoring/authoring-parity.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 61,
+    "target": "authoring/backfill-existing-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 62,
+    "target": "getting-started/resource-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 63,
+    "target": "authoring/task-batch-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 67,
+    "target": "concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 68,
+    "target": "concepts/project-flow-root.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 69,
+    "target": "concepts/session-bootstrap.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 70,
+    "target": "concepts/global-agent-section.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 72,
+    "target": "concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 73,
+    "target": "concepts/path-constants.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 74,
+    "target": "concepts/context-resolution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 75,
+    "target": "concepts/cascade-merge.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 76,
+    "target": "concepts/workplace-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 77,
+    "target": "concepts/package-roots.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 78,
+    "target": "concepts/project-context-snapshot.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 79,
+    "target": "concepts/project-snapshot.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 80,
+    "target": "concepts/processforge-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 81,
+    "target": "concepts/hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 82,
+    "target": "concepts/runtime-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 83,
+    "target": "concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 84,
+    "target": "concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 85,
+    "target": "concepts/runtime-mcp.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 86,
+    "target": "concepts/agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 87,
+    "target": "concepts/project-coordination-modes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 88,
+    "target": "concepts/runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 89,
+    "target": "concepts/process-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 90,
+    "target": "concepts/director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 91,
+    "target": "concepts/platform-inheritance.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 92,
+    "target": "concepts/process-definition-run-task-iteration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 93,
+    "target": "concepts/semantic-parity.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 94,
+    "target": "concepts/runs-tasks-iterations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 95,
+    "target": "concepts/multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 96,
+    "target": "known-limitations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 113,
+    "target": "release-checklist.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 114,
+    "target": "maintainers/release-publishing.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 115,
+    "target": "releases/initial-release.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/index.md",
+    "line": 116,
+    "target": "validation/validation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/releases/initial-release.md",
+    "line": 38,
+    "target": "../known-limitations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/authoring/authoring-parity.md",
+    "line": 3,
+    "target": "../../assets/processforge-authoring-parity.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-director.md",
+    "line": 31,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 14,
+    "target": "work-continuation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 182,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 230,
+    "target": "../../../schemas/agent-entry-diagnostics.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 330,
+    "target": "../../../schemas/agent-entry-adapters.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 372,
+    "target": "project-flow-root.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 372,
+    "target": "session-bootstrap.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 373,
+    "target": "global-agent-section.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-ledger.md",
+    "line": 23,
+    "target": "agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/agent-ledger.md",
+    "line": 24,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/cascade-merge.md",
+    "line": 106,
+    "target": "context-resolution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/cascade-merge.md",
+    "line": 107,
+    "target": "project-context-snapshot.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/context-capsule.md",
+    "line": 3,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/context-capsule.md",
+    "line": 11,
+    "target": "multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/context-resolution.md",
+    "line": 106,
+    "target": "cascade-merge.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/context-resolution.md",
+    "line": 107,
+    "target": "project-context-snapshot.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/context-resolution.md",
+    "line": 108,
+    "target": "project-context-lock-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/declarative-process-execution.md",
+    "line": 59,
+    "target": "../../concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/declarative-process-execution.md",
+    "line": 66,
+    "target": "prepared-input.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/declarative-process-execution.md",
+    "line": 77,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/declarative-process-execution.md",
+    "line": 77,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/diagnostics.md",
+    "line": 20,
+    "target": "../../../schemas/diagnostics.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/director-ledger-inspector-boundary.md",
+    "line": 11,
+    "target": "agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/egress-engine.md",
+    "line": 9,
+    "target": "../../concepts/egress-engine.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/global-agent-section.md",
+    "line": 16,
+    "target": "session-bootstrap.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/global-agent-section.md",
+    "line": 28,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/handoff-contracts.md",
+    "line": 13,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/hooks-events.md",
+    "line": 51,
+    "target": "../../concepts/codex-session-read.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/multi-agent-file-flow.md",
+    "line": 6,
+    "target": "multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/prepared-input.md",
+    "line": 3,
+    "target": "egress-engine.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/prepared-input.md",
+    "line": 9,
+    "target": "../../../schemas/prepared-input.schema.json",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/prepared-input.md",
+    "line": 43,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/prepared-input.md",
+    "line": 43,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/prepared-input.md",
+    "line": 43,
+    "target": "context-capsule.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/prepared-input.md",
+    "line": 43,
+    "target": "runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/process-events.md",
+    "line": 7,
+    "target": "hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/process-supervisor.md",
+    "line": 13,
+    "target": "director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/processforge-events.md",
+    "line": 3,
+    "target": "process-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/processforge-events.md",
+    "line": 3,
+    "target": "hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/project-flow-root.md",
+    "line": 33,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/project-flow-root.md",
+    "line": 52,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/provider-adapters.md",
+    "line": 44,
+    "target": "../../concepts/work-execution-contract.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/provider-adapters.md",
+    "line": 44,
+    "target": "../../concepts/work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/provider-adapters.md",
+    "line": 44,
+    "target": "../../concepts/session-telemetry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runs-tasks-iterations.md",
+    "line": 3,
+    "target": "../../assets/processforge-run-lifecycle.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-drivers.md",
+    "line": 48,
+    "target": "work-context.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-drivers.md",
+    "line": 50,
+    "target": "prepared-input.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 4,
+    "target": "runtime-monitor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 7,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 10,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 89,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 108,
+    "target": "../../concepts/codex-session-read.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 109,
+    "target": "hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-mcp.md",
+    "line": 120,
+    "target": "runtime-monitor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "line": 3,
+    "target": "../../assets/processforge-run-lifecycle.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "line": 40,
+    "target": "runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "line": 40,
+    "target": "process-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "line": 66,
+    "target": "../getting-started/runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "line": 97,
+    "target": "runtime-mcp.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-model.md",
+    "line": 98,
+    "target": "../getting-started/runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-monitor.md",
+    "line": 110,
+    "target": "runtime-mcp.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/runtime-monitor.md",
+    "line": 110,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/session-bootstrap.md",
+    "line": 27,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/session-bootstrap.md",
+    "line": 28,
+    "target": "global-agent-section.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/session-telemetry.md",
+    "line": 8,
+    "target": "diagnostics.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/session-telemetry.md",
+    "line": 11,
+    "target": "../../concepts/session-telemetry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-context.md",
+    "line": 3,
+    "target": "work-continuation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-context.md",
+    "line": 8,
+    "target": "egress-engine.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-context.md",
+    "line": 12,
+    "target": "../../concepts/work-execution-contract.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-context.md",
+    "line": 12,
+    "target": "context-capsule.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-context.md",
+    "line": 12,
+    "target": "work-resources.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-resources.md",
+    "line": 69,
+    "target": "resource-search-index.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/work-resources.md",
+    "line": 70,
+    "target": "../../concepts/work-execution-contract.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/concepts/workplace-vs-project.md",
+    "line": 36,
+    "target": "agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/agent-prompts.md",
+    "line": 22,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/agent-prompts.md",
+    "line": 54,
+    "target": "../concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/agent-prompts.md",
+    "line": 55,
+    "target": "../../concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/first-run.md",
+    "line": 7,
+    "target": "guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/first-run.md",
+    "line": 55,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/first-run.md",
+    "line": 65,
+    "target": "initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/initialization-order.md",
+    "line": 46,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/installation.md",
+    "line": 43,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/installation.md",
+    "line": 70,
+    "target": "runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/project-onboarding.md",
+    "line": 36,
+    "target": "../concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/task-batch-workflow.md",
+    "line": 6,
+    "target": "../../concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/task-batch-workflow.md",
+    "line": 7,
+    "target": "../concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/getting-started/workplace-initialization.md",
+    "line": 41,
+    "target": "official-packs.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 3,
+    "target": "../index.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 5,
+    "target": "../assets/processforge-architecture.svg",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 24,
+    "target": "../../README.ru.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 25,
+    "target": "../../QUICKSTART.ru.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 26,
+    "target": "getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 27,
+    "target": "getting-started/guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 28,
+    "target": "getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 29,
+    "target": "concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 30,
+    "target": "../getting-started/resource-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 31,
+    "target": "getting-started/project-onboarding.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 32,
+    "target": "processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 36,
+    "target": "getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 37,
+    "target": "../../prompts/guided-workplace-setup-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 38,
+    "target": "../../prompts/workplace-initialization-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 39,
+    "target": "../../prompts/project-onboarding-agent.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 40,
+    "target": "../release-checklist.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 41,
+    "target": "../validation/validation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 45,
+    "target": "getting-started/installation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 46,
+    "target": "getting-started/first-run.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 47,
+    "target": "getting-started/initialization-order.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 48,
+    "target": "getting-started/workplace-initialization.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 49,
+    "target": "getting-started/guided-workplace-setup.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 50,
+    "target": "getting-started/project-onboarding.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 51,
+    "target": "getting-started/agent-prompts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 52,
+    "target": "getting-started/create-your-first-process.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 53,
+    "target": "getting-started/task-batch-workflow.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 54,
+    "target": "processes/built-in-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 55,
+    "target": "getting-started/multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 56,
+    "target": "getting-started/runtime-driver-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 57,
+    "target": "getting-started/runtime-autostart.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 61,
+    "target": "authoring/reusable-template-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 62,
+    "target": "authoring/knowledge-package-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 63,
+    "target": "authoring/platform-contract-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 64,
+    "target": "authoring/process-authoring.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 65,
+    "target": "authoring/authoring-parity.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 66,
+    "target": "authoring/backfill-existing-processes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 70,
+    "target": "concepts/agent-entry.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 71,
+    "target": "concepts/project-flow-root.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 72,
+    "target": "concepts/session-bootstrap.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 73,
+    "target": "concepts/global-agent-section.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 75,
+    "target": "concepts/workplace-vs-project.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 76,
+    "target": "concepts/runtime-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 77,
+    "target": "../concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 78,
+    "target": "concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 79,
+    "target": "concepts/runtime-mcp.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 80,
+    "target": "concepts/agent-session-model.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 81,
+    "target": "concepts/project-coordination-modes.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 82,
+    "target": "concepts/runtime-drivers.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 83,
+    "target": "concepts/process-supervisor.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 84,
+    "target": "concepts/director-ledger-inspector-boundary.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 85,
+    "target": "concepts/context-resolution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 86,
+    "target": "concepts/cascade-merge.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 87,
+    "target": "concepts/path-constants.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 88,
+    "target": "concepts/package-roots.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 89,
+    "target": "concepts/project-snapshot.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 90,
+    "target": "concepts/runs-tasks-iterations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 91,
+    "target": "concepts/process-definition-run-task-iteration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 92,
+    "target": "concepts/multi-agent-orchestration.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 93,
+    "target": "concepts/platform-contracts.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 94,
+    "target": "concepts/platform-inheritance.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 95,
+    "target": "concepts/knowledge-resource-navigation.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 96,
+    "target": "concepts/hooks-events.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 97,
+    "target": "concepts/semantic-parity.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 117,
+    "target": "../maintainers/release-publishing.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 118,
+    "target": "releases/initial-release.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/index.md",
+    "line": 119,
+    "target": "known-limitations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "docs/ru/releases/initial-release.md",
+    "line": 39,
+    "target": "../known-limitations.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "prompts/task-batch-execution-agent.md",
+    "line": 27,
+    "target": "../docs/concepts/garage-core.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "prompts/task-batch-execution-agent.md",
+    "line": 28,
+    "target": "../docs/concepts/declarative-process-execution.md",
+    "exists": true,
+    "anchor": ""
+  },
+  {
+    "path": "prompts/task-batch-execution-agent.md",
+    "line": 38,
+    "target": "../docs/getting-started/task-batch-workflow.md",
+    "exists": true,
+    "anchor": ""
+  }
+]

@@ -1,0 +1,3 @@
+# Run Plan: hook-sqlite-migration-20261017: implement user-authorized project SQLite event a
+
+Objective: hook-sqlite-migration-20261017: implement user-authorized project SQLite event and raw-hook journals; device PFConfig defaults and project overrides for raw hook logging and current event recording with live reload; small temporary PF migrator. Remove full-history/all-assignment work from hook ingress, preserve adapter contracts and durable recovery. Source-only implementation and focused validation/commit/push. No Runtime/MCP/installed-Core lifecycle actions; PF 1.2.0 acceptance deferred.

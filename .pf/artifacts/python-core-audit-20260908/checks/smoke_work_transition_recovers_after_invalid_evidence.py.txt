@@ -1,0 +1,1 @@
+PASS: work transition recovers after invalid evidence

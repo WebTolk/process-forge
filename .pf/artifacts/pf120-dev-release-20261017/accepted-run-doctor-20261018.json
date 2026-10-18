@@ -1,0 +1,9 @@
+{
+  "label": "accepted-run-doctor-20261018",
+  "started_at": "2026-10-17T20:39:46.485813+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.7638051999965683,
+  "raw_sha256": "d1bc2013830ce678284f2c41c43f2bbf16b77f404216aaf5837e8613381146ce",
+  "raw_bytes": 1376,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/accepted-run-doctor-20261018.log"
+}

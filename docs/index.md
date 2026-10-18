@@ -4,7 +4,7 @@
 
 Start from the top-level operating model: ProcessForge is installed once as a
 tool, a workplace is the machine-level home for reusable resources, and each
-repository keeps only a project-local `.pf/` layer.
+repository keeps `.pf/` process state and a root `AGENTS.md` entry contract.
 
 The required initialization order is workplace first, workplace resources
 second, and project onboarding third. Use guided workplace setup by default for
@@ -15,6 +15,7 @@ provides explicit paths and choices.
 
 - [Top-level README](../README.md)
 - [Quickstart prompts](../QUICKSTART.md)
+- [Requirements and memory planning](requirements.md)
 - [Installation](getting-started/installation.md)
 - [Guided workplace setup](getting-started/guided-workplace-setup.md)
 - [Initialization order](getting-started/initialization-order.md)
@@ -25,6 +26,7 @@ provides explicit paths and choices.
 
 ## For AI Agents
 
+- [Requirements and optional infrastructure](requirements.md)
 - [Agent command runbook and prompts](getting-started/agent-prompts.md)
 - [Guided workplace setup agent prompt](../prompts/guided-workplace-setup-agent.md)
 - [Automatic workplace initialization agent prompt](../prompts/workplace-initialization-agent.md)
@@ -34,6 +36,7 @@ provides explicit paths and choices.
 
 ## Getting Started
 
+- [Requirements](requirements.md)
 - [First run](getting-started/first-run.md)
 - [Installation](getting-started/installation.md)
 - [Initialization order](getting-started/initialization-order.md)
@@ -64,6 +67,11 @@ provides explicit paths and choices.
 
 ## Concepts
 
+- [Agent entry and compatibility](concepts/agent-entry.md)
+- [Project flow root](concepts/project-flow-root.md)
+- [Session bootstrap](concepts/session-bootstrap.md)
+- [Global agent section](concepts/global-agent-section.md)
+
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Path constants](concepts/path-constants.md)
 - [Context resolution](concepts/context-resolution.md)
@@ -75,6 +83,8 @@ provides explicit paths and choices.
 - [Hooks and events](concepts/processforge-events.md)
 - [Hooks and events overview](concepts/hooks-events.md)
 - [Runtime model](concepts/runtime-model.md)
+- [Garage Core](concepts/garage-core.md)
+- [Declarative process execution](concepts/declarative-process-execution.md)
 - [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Agent session model](concepts/agent-session-model.md)
 - [Project coordination modes](concepts/project-coordination-modes.md)
@@ -87,6 +97,21 @@ provides explicit paths and choices.
 - [Runs, tasks, and iterations](concepts/runs-tasks-iterations.md)
 - [Multi-agent orchestration](concepts/multi-agent-orchestration.md)
 - [Known limitations](known-limitations.md)
+
+For everyday work, start with [Garage and governed Work](concepts/garage-core.md).
+Use [continuation](concepts/work-continuation.md) to resume a selected Work after a
+session change. The [agent runbook](getting-started/agent-prompts.md) includes
+the CLI path when MCP is unavailable.
+
+## Developer And Maintainer Reference
+
+These pages explain implementation and validation; they are not setup steps:
+
+- [Python Core architecture](concepts/python-core-structure.md)
+- [Document reads and cache boundaries](concepts/document-reads.md)
+- [SQLite journal storage and migration](concepts/hook-journal-sqlite.md)
+- [Development audit evidence](audits/canonical-work-selection-20261016.md)
+- [Validation](validation/validation.md)
 
 ## Layer Order
 
@@ -103,6 +128,8 @@ Process definitions remain platform-agnostic process mechanics.
 
 ## Release And Validation
 
+- [What changes in 1.2.0](releases/1.2.0.md)
+- [Upgrade and migration steps](releases/1.2.0-migration.md)
 - [Release checklist](release-checklist.md)
 - [Release publishing](maintainers/release-publishing.md)
 - [Initial release notes](releases/initial-release.md)

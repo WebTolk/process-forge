@@ -1,0 +1,363 @@
+[
+  {
+    "id": "D01",
+    "priority": "P1",
+    "title": "Handoff может завершиться без ожидаемых файлов",
+    "documents": [
+      "docs/concepts/handoff-contracts.md:7",
+      "docs/ru/concepts/handoff-contracts.md:7"
+    ],
+    "code": [
+      "tools/processforge.py:17816",
+      "tools/processforge.py:17834"
+    ],
+    "actual": "return проверяет только явно переданные --artifact; пустой список допустим. expected_results не сопоставляется с результатами. finalize допускает даже accepted/in_progress без return.",
+    "impact": "Документ обещает проверку полноты, которой нет; завершённый handoff нельзя считать доказательством получения ожидаемых результатов.",
+    "recommendation": "Описать проверку переданных файлов отдельно от полноты expected_results. Автоматическую проверку полноты реализовать отдельной задачей, если это требуемый контракт.",
+    "proof": "counterexamples.json:handoff_without_expected_output"
+  },
+  {
+    "id": "D02",
+    "priority": "P2",
+    "title": "Artifact area не заменяет разрешённую область записи",
+    "documents": [
+      "docs/concepts/multi-agent-orchestration.md:31",
+      "docs/ru/concepts/multi-agent-orchestration.md:31",
+      "docs/getting-started/multi-agent-orchestration.md:3"
+    ],
+    "code": [
+      "tools/processforge.py:20062",
+      "tools/processforge.py:18072",
+      "src/processforge_core/work_context.py:219",
+      "src/processforge_core/work_context.py:392"
+    ],
+    "actual": "Старый validator разрешает output в .pf/artifacts вне allowed_files, но execution_contract требует совпадения с allowlist. Default plan содержит .pf/artifacts/fixture-a/** и выход .pf/artifacts/fixture-a-report.md: validator PASS, право записи false.",
+    "impact": "Успешная проверка плана не доказывает готовность worker; штатная заготовка требует исправления scope до запуска.",
+    "recommendation": "Убрать исключение для artifact area, согласовать default plan, шаблоны и руководство с execution_contract; проверять готовность полного пути.",
+    "proof": "counterexamples.json:artifact_area_does_not_grant_write"
+  },
+  {
+    "id": "D03",
+    "priority": "P2",
+    "title": "Не все неподдерживаемые поля плана отклоняются",
+    "documents": [
+      "docs/concepts/multi-agent-orchestration.md:26",
+      "docs/ru/concepts/multi-agent-orchestration.md:26"
+    ],
+    "code": [
+      "tools/processforge.py:19980",
+      "tools/processforge.py:20082"
+    ],
+    "actual": "Allowlist применяется к отдельным уровням, а неизвестные поля run, orchestrator и integration остаются без ошибки. Внесение unsupported_behavior во все три объекта не даёт FAIL.",
+    "impact": "Опечатка или предполагаемая настройка могут молча не влиять на поведение вопреки обещанию документа.",
+    "recommendation": "Перечислить реально проверяемые уровни; остальные назвать metadata-only либо добавить рекурсивную валидацию.",
+    "proof": "counterexamples.json:unknown_nested_fields"
+  },
+  {
+    "id": "D04",
+    "priority": "P2",
+    "title": "Ограничения захвата ответов отстали от адаптера",
+    "documents": [
+      "docs/concepts/chat-relay.md:23",
+      "docs/ru/concepts/chat-relay.md:5",
+      "docs/concepts/agent-session-model.md:109",
+      "docs/ru/concepts/agent-session-model.md:134",
+      "docs/known-limitations.md:62"
+    ],
+    "code": [
+      "tools/pf_runtime/codex_hooks.py:123",
+      "tools/pf_runtime/codex_adapters.py:43",
+      "tools/pf_runtime/host.py:910"
+    ],
+    "actual": "Адаптер создаёт сообщения из last_assistant_message для Stop, SubagentStop и SessionEnd. Host допускает их после проверки provenance и project/session authorization. RU known-limitations уже описывает часть этого поведения правильно.",
+    "impact": "Утверждение, что автоматически фиксируется только пользовательский prompt, занижает фактический объём записи. Универсальный перехват всех ответов по-прежнему не заявляется.",
+    "recommendation": "Перечислить поддержанные финальные сообщения и условия допуска; сохранить ограничения streaming, отсутствующих полей и реальной регистрации hooks.",
+    "proof": "source"
+  },
+  {
+    "id": "D05",
+    "priority": "P2",
+    "title": "Документация указывает неверный fallback диагностики",
+    "documents": [
+      "docs/concepts/diagnostics.md:23",
+      "docs/ru/concepts/diagnostics.md:36"
+    ],
+    "code": [
+      "src/processforge_core/diagnostics.py:573"
+    ],
+    "actual": "При ошибке конфигурации действует off/none. Отдельно допускается фиксированное сообщение здоровья в stderr. На той же странице ниже это уже описано правильно.",
+    "impact": "Оператор ожидает работающий quiet/stderr collector, хотя необязательный сбор отключён.",
+    "recommendation": "Заменить раннее описание quiet/stderr на off/none плюс фиксированное уведомление, согласовать EN/RU.",
+    "proof": "source"
+  },
+  {
+    "id": "D06",
+    "priority": "P2",
+    "title": "Перечень текущих MCP tools неполон",
+    "documents": [
+      "docs/concepts/runtime-mcp.md:31",
+      "docs/ru/concepts/runtime-mcp.md:32"
+    ],
+    "code": [
+      "tools/pf_runtime/mcp_server.py:16"
+    ],
+    "actual": "В опубликованном TOOLS есть pf.continuation.create/status/resume и pf.work.cancel. Перечень, названный текущим source-контрактом, их не содержит.",
+    "impact": "Читатель получает устаревший путь продолжения и не видит штатную отмену Work.",
+    "recommendation": "Обновить каталог и связать continuation/cancel с точными selectors; генерировать перечень из TOOLS.",
+    "proof": "source"
+  },
+  {
+    "id": "D07",
+    "priority": "P1",
+    "title": "Semantic policy merge описан как более общий механизм, чем реализовано",
+    "documents": [
+      "docs/concepts/context-resolution.md:45",
+      "docs/ru/concepts/context-resolution.md:46",
+      "docs/concepts/instruction-conflicts.md:27",
+      "docs/concepts/cascade-merge.md:35",
+      "docs/ru/concepts/cascade-merge.md:37"
+    ],
+    "code": [
+      "tools/processforge.py:11622",
+      "tools/processforge.py:11732",
+      "tools/processforge.py:8774"
+    ],
+    "actual": "build_context_payload собирает источники, capabilities и несколько конкретных конфликтов, затем формирует фиксированные hard/locked/gate записи и пустые preferences. Общий классификатор произвольных инструкций, semantic merge и распознавание ослабления locked policies отсутствуют. Структурный merge parameters работает, но не выполняет эту смысловую задачу.",
+    "impact": "Обещание общего технического контроля hard/locked/gate создаёт ложную гарантию. Это не отменяет конкретных работающих проверок Work, ресурсов, diagnostics или egress.",
+    "recommendation": "Разделить реализованные проверки и нормативные обязанности агента. Неподдержанные semantic merge/approval назвать проектным замыслом либо реализовать отдельно.",
+    "proof": "source"
+  },
+  {
+    "id": "D08",
+    "priority": "P2",
+    "title": "Граница governed Work смешана с legacy handoff target Run",
+    "documents": [
+      "docs/concepts/process-transitions.md:9"
+    ],
+    "code": [
+      "tools/processforge.py:17799",
+      "src/processforge_core/process_execution.py:215"
+    ],
+    "actual": "handoff-start-target-run создаёт или повторно использует legacy Run через run-create; Assignment и immutable capsule этой командой не создаются. Новый governed Work создаётся отдельным Work API.",
+    "impact": "Читатель может принять появление target Run за готовый bounded Work с capsule.",
+    "recommendation": "Уточнить, что новый Run+capsule — контракт governed Work и отдельной операции старта; явно описать ограничение legacy handoff-start-target-run.",
+    "proof": "source"
+  },
+  {
+    "id": "D09",
+    "priority": "P1",
+    "title": "Документированы неработающие настройки chat_capture и hooks задания",
+    "documents": [
+      "docs/concepts/chat-relay.md:63",
+      "docs/concepts/assignment-front-matter.md:30",
+      "docs/concepts/assignment-front-matter.md:55",
+      "templates/assignment-front-matter-template.md:20"
+    ],
+    "code": [
+      "tools/processforge.py:11375",
+      "tools/processforge.py:11393",
+      "src/processforge_core/work_context.py:161"
+    ],
+    "actual": "Production-код не читает assignment chat_capture, max_message_chars, notify_wtaicc или emit_on_complete. append_chat_message применяет фиксированную redaction/длину; include_content передаётся реальным аргументом вызова, а не этим assignment-блоком.",
+    "impact": "Пользователь может полагаться на enabled:false, allow_private_paths:false или send_to_outbox как действующие средства управления приватностью. Наличие такого YAML их не включает.",
+    "recommendation": "Удалить рекомендации неподдержанных настроек или явно пометить их metadata-only/future. Описать фактические CLI/host настройки и фиксированные ограничения.",
+    "proof": "semantic-probes.json:production_literal_consumers; source trace"
+  },
+  {
+    "id": "D10",
+    "priority": "P2",
+    "title": "Known limitations отрицает уже реализованные leases и Codex driver",
+    "documents": [
+      "docs/known-limitations.md:14",
+      "docs/ru/known-limitations.md:14"
+    ],
+    "code": [
+      "tools/processforge.py:17523",
+      "tools/processforge.py:17902",
+      "templates/runtime-drivers/codex-exec.yaml:1",
+      "tools/codex_exec_worker.py:1"
+    ],
+    "actual": "Есть agent-lease-grant/release/revoke и Director scheduling с leases. Штатный codex-exec запускает реальную оболочку Codex; далее на странице он даже перечислен.",
+    "impact": "Неверно описаны доступные механизмы координации и исполнения.",
+    "recommendation": "Отделить существующую bounded lease-координацию от несуществующего распределённого scheduler и перечислить реальные поддержанные драйверы.",
+    "proof": "source"
+  },
+  {
+    "id": "D11",
+    "priority": "P2",
+    "title": "В authoring указан неверный ключ requires_capabilities",
+    "documents": [
+      "docs/authoring/process-authoring.md:177",
+      "docs/ru/authoring/process-authoring.md:121"
+    ],
+    "code": [
+      "schemas/process-definition.schema.json:124",
+      "schemas/process-definition.schema.json:286",
+      "src/processforge_core/work_context.py:550"
+    ],
+    "actual": "Код и схема используют required_capabilities. Ключ requires_capabilities из руководства не является полем требований stage.",
+    "impact": "Автор может записать требования в поле, которое не участвует в проверке capabilities.",
+    "recommendation": "Исправить обе страницы на required_capabilities и добавить проверку примера against schema/normalizer.",
+    "proof": "source"
+  },
+  {
+    "id": "D12",
+    "priority": "P2",
+    "title": "Gate не является единственной блокирующей поверхностью перехода",
+    "documents": [
+      "docs/authoring/process-authoring.md:42"
+    ],
+    "code": [
+      "src/processforge_core/process_execution.py:1110",
+      "src/processforge_core/process_execution.py:1136"
+    ],
+    "actual": "Помимо gates, _stage_requirements непосредственно возвращает required_input_missing, artifact_evidence_missing, required_evidence_missing и automation_not_ready. Связь obligation с gate не устраняет независимую проверку.",
+    "impact": "Обещание единственного blocker surface и отсутствия второго blocker list не соответствует устройству движка.",
+    "recommendation": "Описать все текущие условия перехода; либо изменить движок под заявленный единый gate-контракт в отдельной работе.",
+    "proof": "semantic-probes.json:non_gate_blockers"
+  },
+  {
+    "id": "D13",
+    "priority": "P2",
+    "title": "Карты инициализации пропускают search-index-maintenance",
+    "documents": [
+      "docs/processes/project-initialization.md:25",
+      "docs/processes/workplace-initialization.md:25",
+      "docs/processes/built-in-processes.md:72",
+      "docs/ru/processes/built-in-processes.md:76"
+    ],
+    "code": [
+      "processes/core/project-initialization.yaml:263",
+      "processes/core/workplace-initialization.yaml:329"
+    ],
+    "actual": "В обеих YAML definitions есть завершающий search-index-maintenance со своим артефактом и gate. Его нет в соответствующих списках стадий и сводной таблице EN/RU.",
+    "impact": "Человекочитаемая карта показывает неполный lifecycle.",
+    "recommendation": "Синхронизировать подробные страницы и таблицы с YAML; включить этот diff в docs-check.",
+    "proof": "process-documentation.json: two mismatches"
+  },
+  {
+    "id": "D14",
+    "priority": "P1",
+    "title": "Private runtime outputs названы публичными",
+    "documents": [
+      "docs/processes/process-supervisor.md:28"
+    ],
+    "code": [
+      ".processforge-releaseignore:7",
+      "tools/processforge.py:92"
+    ],
+    "actual": "Раздел Public Outputs перечисляет command/process/status, stdout/stderr и другие файлы .pf/runtime/agent-runs. Эта область является приватной и исключена из публичной поставки.",
+    "impact": "Такой заголовок может привести к публикации локальных путей, команд или содержимого worker output.",
+    "recommendation": "Назвать раздел Private runtime outputs; отдельно перечислить разрешённые санитизированные delivery artifacts.",
+    "proof": "source"
+  },
+  {
+    "id": "D15",
+    "priority": "P3",
+    "title": "Диаграмма приписывает summary завершение session",
+    "documents": [
+      "docs/assets/processforge-run-lifecycle.svg:47"
+    ],
+    "code": [
+      "tools/processforge.py:20843",
+      "tools/processforge.py:20871"
+    ],
+    "actual": "run-summary сохраняет summary/handoff и событие run.summary.created, но не переводит Run в completed и не делает session checkout. run-complete — отдельная операция; session-end относится к Ledger.",
+    "impact": "Смешиваются артефакт отчёта, завершение Run и завершение сессии.",
+    "recommendation": "Показать отдельные шаги summary, run-complete и при необходимости session-end; не называть summary закрытием session.",
+    "proof": "source"
+  },
+  {
+    "id": "D16",
+    "priority": "P2",
+    "title": "Evolve extraction представлено как автоматическое поведение",
+    "documents": [
+      "docs/concepts/evolve-mechanism.md:8",
+      "docs/concepts/evolve-mechanism.md:25",
+      "docs/ru/concepts/evolve-mechanism.md:9",
+      "docs/ru/concepts/evolve-mechanism.md:29"
+    ],
+    "code": [
+      "tools/processforge.py:16159",
+      "tools/processforge.py:16182",
+      "tools/processforge.py:16028"
+    ],
+    "actual": "evolve-run создаёт каталоги и отчёт с пустым candidates; добавляет только явно переданные candidate_file. Смысловое извлечение и выбор narrowest safe scope выполняет агент/автор кандидата, а не общий автоматический extractor или таймер end_of_run.",
+    "impact": "Наличие evolve.enabled и timing не гарантирует автоматическое создание осмысленных кандидатов.",
+    "recommendation": "Описать разделение: агент извлекает и оформляет кандидаты; CLI валидирует, сохраняет и перемещает явно переданные записи. Отдельно отметить декларативность timing/hooks.",
+    "proof": "source"
+  },
+  {
+    "id": "D17",
+    "priority": "P2",
+    "title": "Lifecycle modes и delivery_profile не являются машинными переключателями",
+    "documents": [
+      "docs/concepts/execution-context-package.md:3",
+      "docs/concepts/resource-management.md:9",
+      "packs/official/software-development/docs/processes/software-feature-development.md:17",
+      "examples/process-authoring/software-feature-development/README.md:12"
+    ],
+    "code": [
+      "packs/official/software-development/processes/software-feature-development.yaml:12",
+      "packs/official/software-development/processes/software-feature-development.yaml:62",
+      "src/processforge_core/process_execution.py:215",
+      "src/processforge_core/work_context.py:161"
+    ],
+    "actual": "lifecycle_modes и preferred_shape execution_profile живут в metadata процесса. В production нет потребителей lifecycle_mode, stage_decisions, execution_profile. Движок не выбирает сокращённый маршрут и не запускает delivery profile по этим полям; действует pinned stages и обычное evidence API.",
+    "impact": "Примеры выглядят как исполняемая конфигурация, хотя это соглашение агента. Нельзя считать выбор implementation_only разрешением автоматически пропустить стадии.",
+    "recommendation": "Явно назвать поля агентскими метаданными/соглашением и показать реальный путь not_applicable evidence. Не обещать загрузку/исполнение delivery profile без отдельного механизма.",
+    "proof": "semantic-probes.json:production_literal_consumers; process metadata"
+  },
+  {
+    "id": "D18",
+    "priority": "P2",
+    "title": "Onboarding prompt ошибочно обещает создание START",
+    "documents": [
+      "prompts/project-onboarding-agent.md:34"
+    ],
+    "code": [
+      "tools/processforge.py:5989",
+      "tools/processforge.py:5993",
+      "src/processforge_core/agent_start_prompt.py:108"
+    ],
+    "actual": "Initializer исключает .pf/START_AGENT_HERE.md даже из старого file map. Создание возможно только отдельным явным agent-start-prompt --apply. Пример minimal-project и project-init-proposal-template описывают это правильно.",
+    "impact": "Инструкция агенту расходится с фактическим onboarding и остальными актуальными страницами.",
+    "recommendation": "Исправить пункт 18: новый onboarding START не создаёт; preview и явное compatibility placement — отдельные действия.",
+    "proof": "source"
+  },
+  {
+    "id": "D19",
+    "priority": "P2",
+    "title": "Отсутствие promotion approval не всегда удерживает кандидат вне curated notes",
+    "documents": [
+      "docs/concepts/knowledge-hub.md:25",
+      "docs/ru/concepts/knowledge-hub.md:30",
+      "docs/ru/concepts/platform-inheritance.md:80"
+    ],
+    "code": [
+      "tools/processforge.py:15973",
+      "tools/processforge.py:16311"
+    ],
+    "actual": "candidate_ready_for_curated_package допускает parent_platform_rule и universal_rule независимо от promotion.status. Схемно валидный parent_platform_rule с proposed/unreviewed проходит текущую валидацию и попадает в candidate-notes.md, где назван Reviewed.",
+    "impact": "Документ обещает более строгий барьер curation, чем проверяет builder; название уровня не доказывает фактическое review.",
+    "recommendation": "Документировать явное исключение и ручную ответственность либо требовать approved promotion/review для всех широких правил.",
+    "proof": "semantic-probes.json:unapproved_parent_rule_curated"
+  },
+  {
+    "id": "D20",
+    "priority": "P2",
+    "title": "Tools README ошибочно обещает только стандартную библиотеку",
+    "documents": [
+      "tools/README.md:35"
+    ],
+    "code": [
+      "requirements.txt:1",
+      "src/processforge_core/work_context.py:18",
+      "src/processforge_core/continuation.py:12"
+    ],
+    "actual": "В requirements объявлен PyYAML>=6.0, а несколько основных сервисов импортируют yaml напрямую. Это внешняя зависимость.",
+    "impact": "Инструкция по зависимостям не соответствует запускаемому инструменту.",
+    "recommendation": "Указать Python stdlib плюс зависимости requirements.txt; согласовать с корневым README.",
+    "proof": "source"
+  }
+]

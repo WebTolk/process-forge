@@ -1,0 +1,13 @@
+test_cache_limits_and_large_document (__main__.RequestScopeTests.test_cache_limits_and_large_document) ... ok
+test_frozen_exception_identity_survives_context_and_trace (__main__.RequestScopeTests.test_frozen_exception_identity_survives_context_and_trace) ... ok
+test_independent_threads (__main__.RequestScopeTests.test_independent_threads) ... ok
+test_invalid_and_unsafe_yaml_are_not_cached (__main__.RequestScopeTests.test_invalid_and_unsafe_yaml_are_not_cached) ... ok
+test_nested_scopes_cleanup_and_decorator (__main__.RequestScopeTests.test_nested_scopes_cleanup_and_decorator) ... ok
+test_reuse_and_mutation_isolation (__main__.RequestScopeTests.test_reuse_and_mutation_isolation) ... ok
+test_safe_python_fallback_and_loader_identity (__main__.RequestScopeTests.test_safe_python_fallback_and_loader_identity) ... ok
+test_unchanged_metadata_does_not_hide_changes_or_deletion (__main__.RequestScopeTests.test_unchanged_metadata_does_not_hide_changes_or_deletion) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.033s
+
+OK

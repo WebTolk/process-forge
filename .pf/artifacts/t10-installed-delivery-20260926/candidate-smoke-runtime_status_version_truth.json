@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T17:44:45.994112+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate\\tools\\smoke_runtime_status_version_truth.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "PASS: runtime status separates installed PF from runtime instance\n",
+  "stderr": ""
+}

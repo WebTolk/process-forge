@@ -1,0 +1,18 @@
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: in_progress
+PASS: summary artifact not yet required: .pf/runs/garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0/summary.md
+PASS: task index status matches run: in_progress
+PASS: handoff artifact not yet required: .pf/handoffs/runs/garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0-handoff.md
+PASS: process exists: task-batch-execution
+PASS: .pf/runs/garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0/run.yaml has no private absolute paths
+PASS: task id unique: publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using
+PASS: task status valid for publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using: in_progress
+PASS: assignment exists for publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using: .pf/assignments/publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using.yaml
+PASS: publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using run_id matches run

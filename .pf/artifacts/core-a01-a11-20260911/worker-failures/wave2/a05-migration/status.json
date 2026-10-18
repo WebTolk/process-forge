@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "core-a01-a11-wave2-20260911",
+  "task_id": "a05-migration",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.6-luna",
+  "status": "failed",
+  "pid": 23032,
+  "started_at": "2026-09-11T06:49:14Z",
+  "finished_at": "2026-09-11T06:56:41Z",
+  "exit_code": 1,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/a05-migration.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/core-a01-a11-wave2-20260911/worker-prompts/a05-migration.md",
+  "expected_report_path": ".pf/artifacts/core-a01-a11-20260911/a05-migration/report.md",
+  "stdout_path": ".pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a05-migration/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a05-migration/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a05-migration/heartbeat.json",
+  "last_heartbeat_at": "2026-09-11T06:56:41Z",
+  "failure_reason": null
+}

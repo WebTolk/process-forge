@@ -1,0 +1,226 @@
+{
+  "action": "run_completed",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {
+        "artifact_id": "evolution-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md",
+        "recorded_at": "2026-10-17T06:57:14Z",
+        "sha256": "sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084",
+        "status": "ready"
+      },
+      "id": "evolution-report",
+      "kind": "artifact",
+      "satisfied": true
+    }
+  ],
+  "assignment": {
+    "id": "hook-sqlite-device-cutover-20261017-user-authorized-dev-release-and-devi",
+    "status": "done"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [],
+    "status": "complete"
+  },
+  "context": {
+    "checksum": "sha256:3374b1095c803bca8335e3dc96337211c716022965719d545541aaa3d9b96309",
+    "id": "hook-sqlite-device-cutover-20261017-user-authorized-dev-release-and-devi-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:d647643e97fc504f2cc7fa91ac7e4e32588d40841f4856e611e94498ccb03e16",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "evolve",
+        "parameters": {},
+        "produced_artifacts": [
+          "evolution-report",
+          "updated-rules-or-extensions",
+          "instruction-update-proposal",
+          "knowledge-update-proposal"
+        ],
+        "required_capabilities": [
+          "review"
+        ],
+        "required_inputs": [
+          "delivery-report"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [
+    {
+      "artifact_id": "evolution-report",
+      "kind": "artifact",
+      "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md",
+      "recorded_at": "2026-10-17T06:57:14Z",
+      "sha256": "sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084",
+      "status": "ready"
+    },
+    {
+      "gate_id": "evolution-captured",
+      "kind": "gate",
+      "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md",
+      "recorded_at": "2026-10-17T06:57:14Z",
+      "sha256": "sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084",
+      "status": "passed",
+      "summary": "User-requested dev update/migration/new Runtime sequence complete with exact evidence; CPU18.587% and actual host reconnect retained as separate outstanding work, no source edits or broad acceptance claimed."
+    }
+  ],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/hook-sqlite-device-cutover-20261017/**",
+      ".pf/handoffs/hook-sqlite-device-cutover-20261017.md",
+      ".pf/logs/hook-sqlite-device-cutover-20261017.md",
+      ".pf/tmp/hook-sqlite-device-cutover-20261017/**"
+    ],
+    "allowed_read_files": [
+      ".gitattributes",
+      ".gitignore",
+      ".pf/AGENTS.md",
+      ".pf/artifacts/hook-sqlite-device-cutover-20261017/**",
+      ".pf/artifacts/hook-sqlite-migration-20261017/**",
+      ".pf/artifacts/pf120-device-acceptance-20261016/**",
+      ".pf/artifacts/runtime-restart-cpu-20261017/**",
+      ".pf/assignments/**",
+      ".pf/contexts/**",
+      ".pf/handoffs/**",
+      ".pf/process-forge.yaml",
+      ".pf/runs/**",
+      ".pf/runtime/**",
+      ".pf/tmp/hook-sqlite-device-cutover-20261017/**",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "README.md",
+      "VERSION",
+      "bin/**",
+      "checksums/**",
+      "docs/**",
+      "pyproject.toml",
+      "schemas/**",
+      "src/**",
+      "templates/**",
+      "tools/**",
+      "updates/**"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "release-readiness-decided",
+          "kind": "gate",
+          "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md",
+          "recorded_at": "2026-10-17T06:57:10Z",
+          "sha256": "sha256:ec9add80e436f24ee8e3d201c219a57e35ae0e0ce5eeeb3baf01a1c07c4036c2",
+          "status": "passed",
+          "summary": "Actual dev artifact installed/migrated and updated Runtime qualified; focused dev delivery profile complete, broad/stable acceptance deferred, remaining CPU and actual MCP reconnect boundary stated. Preserve exact native apply and backup evidence."
+        },
+        "id": "release-readiness-decided",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "evolution-captured",
+          "kind": "gate",
+          "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/evolve.md",
+          "recorded_at": "2026-10-17T06:57:14Z",
+          "sha256": "sha256:dbe627a3357752f970d0479729063050c5b2f688dd4efbbac03f90c7fc4e2084",
+          "status": "passed",
+          "summary": "User-requested dev update/migration/new Runtime sequence complete with exact evidence; CPU18.587% and actual host reconnect retained as separate outstanding work, no source edits or broad acceptance claimed."
+        },
+        "id": "evolution-captured",
+        "phase": "exit",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [],
+  "kind": "pf.work.state",
+  "next": {
+    "available_processes": []
+  },
+  "next_stage_id": "",
+  "obligations": [],
+  "previous_stage_id": "evolve",
+  "process": {
+    "fingerprint": "sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "delivery-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/hook-sqlite-device-cutover-20261017/delivery.md",
+        "recorded_at": "2026-10-17T06:57:10Z",
+        "sha256": "sha256:ec9add80e436f24ee8e3d201c219a57e35ae0e0ce5eeeb3baf01a1c07c4036c2",
+        "status": "ready"
+      },
+      "id": "delivery-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-hook-sqlite-device-cutover-20261017-user-authorized-dev-release-a",
+    "status": "completed"
+  },
+  "schema_version": 1,
+  "session_continuity": {
+    "reason": "process_boundary",
+    "recommendation": "auto"
+  },
+  "stage": {
+    "id": "evolve",
+    "status": "completed",
+    "title": "Evolve"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

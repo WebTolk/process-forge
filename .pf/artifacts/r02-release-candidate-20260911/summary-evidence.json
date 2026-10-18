@@ -1,0 +1,20 @@
+[
+    {
+        "path":  ".pf/artifacts/r02-release-candidate-20260911/run-summary.md",
+        "status":  "ready",
+        "artifact_id":  "run-summary",
+        "kind":  "artifact"
+    },
+    {
+        "path":  ".pf\\handoffs\\r02-release-candidate-20260911.md",
+        "status":  "ready",
+        "artifact_id":  "run-handoff",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R02 summary and handoff record the technical archive PASS and explicit stale-dist public-release blocker.",
+        "gate_id":  "run-summary-created",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

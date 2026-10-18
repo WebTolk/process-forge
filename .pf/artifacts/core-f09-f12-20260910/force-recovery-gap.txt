@@ -1,0 +1,1 @@
+RawReceipt(raw_event_id='raw_e4ddcd4877ceb55fde69ad95d2b7e6d140b60c766408570eaa71e39a1fe3e602', accepted=True, deduplicated=True, raw_location='raw/v1/2026/08/15/12.ndjson:0', routing_status='duplicate_raw', normalized_event_ids=(), chat_message_ids=(), diagnostics={})

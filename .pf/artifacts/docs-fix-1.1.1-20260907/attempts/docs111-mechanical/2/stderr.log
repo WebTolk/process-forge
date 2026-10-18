@@ -1,0 +1,2641 @@
+OpenAI Codex v0.153.4
+--------
+workdir: D:\Dev\process-forge
+model: gpt-5.3-codex-spark
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a07c00-1ac6-77e0-80ba-827bfe142e65
+--------
+user
+# Worker Launch Prompt
+
+You are a worker agent.
+You are not the orchestrator.
+Use only the assigned task and the provided assignment capsule.
+Do not rebuild full project context unless explicitly allowed.
+Do not edit files outside allowed_files.
+Do not read files outside allowed_read_files unless explicitly allowed.
+Use workspace_access_file for explicitly granted workplace resources.
+Do not copy private paths from workspace_access_file into public project artifacts, assignments, capsules, or reports.
+Respect forbidden_files.
+Produce required_outputs.
+Write expected_report.
+Stop and report if scope is insufficient.
+Invoke subagents only when subagent_policy.allow is true.
+When subagent reports are required, write them only under subagent_policy.reports_dir.
+
+## Assignment
+
+- task_id: `docs111-mechanical`
+- run_id: `docs-fix-1-1-1-shell-20260907`
+- assignment: `.pf/assignments/docs111-mechanical.yaml`
+- capsule: `.pf/contexts/assignment-capsules/docs111-mechanical.capsule.yaml`
+- workspace_access_file: `.pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-mechanical/workspace-access.json`
+- worker_may_rebuild_context: `false`
+
+## workspace_access
+
+- knowledge_resources: `0`
+- templates: `0`
+- tools: `0`
+- mcp: `0`
+
+## allowed_files
+
+- `docs/ru/concepts/resource-search-index.md`
+- `docs/concepts/assignment-front-matter.md`
+- `docs/validation/validation.md`
+- `.pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md`
+
+## allowed_read_files
+
+- `docs/**`
+- `prompts/**`
+- `templates/**`
+- `tools/**`
+- `src/**`
+- `updates/migrations/**`
+- `.pf/contexts/project-context.snapshot.yaml`
+- `.pf/artifacts/docs-audit-1.1.1-report-20260907.md`
+- `.pf/artifacts/docs-audit-1.1.1-evidence/**`
+- `.pf/artifacts/docs-fix-1.1.1-20260907/**`
+
+## forbidden_files
+
+- `VERSION`
+- `CHANGELOG.md`
+- `checksums/**`
+- `tools/processforge.py`
+- `src/**`
+- `.pf/process-forge.yaml`
+
+## required_outputs
+
+- `docs111-mechanical-report` -> `.pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md`
+
+## expected_report
+
+- `.pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md`
+
+## subagent_policy
+
+- allow: `false`
+- max_subagents: `0`
+- require_reports: `false`
+- reports_dir: ``
+
+## Output Delivery Contract
+
+Your final response is captured verbatim as the assignment's expected report artifact.
+Return only the complete report content in the requested format; do not say that you saved it, link to it, or add a conversational preface.
+For a read-only assignment, do not attempt to write the report file yourself.
+
+## Assignment Capsule
+
+schema_version: 1
+capsule:
+  id: docs111-mechanical-capsule
+  generated_at: '2026-09-07T13:06:11Z'
+  assignment_id: docs111-mechanical
+  assignment_path: .pf/assignments/docs111-mechanical.yaml
+  assignment_checksum: 132e1da27618307d92159e608b348085841219102b03125279a2f3c22263dc88
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 05ef4411596e5675aef7bfc7c638717ae1a12904a74469037baca5af300a2ae9
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260907-130537-9c47b7
+  sha256: 'sha256:05ef4411596e5675aef7bfc7c638717ae1a12904a74469037baca5af300a2ae9'
+  generated_at: '2026-09-07T13:05:29Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: docs111-mechanical
+  path: .pf/assignments/docs111-mechanical.yaml
+  status: open
+  objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260907-130537-9c47b7
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/docs111-mechanical.yaml
+    - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - docs/ru/concepts/resource-search-index.md
+    - docs/concepts/assignment-front-matter.md
+    - docs/validation/validation.md
+    - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+  allowed_read_files:
+    - docs/**
+    - prompts/**
+    - templates/**
+    - tools/**
+    - src/**
+    - updates/migrations/**
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+    - .pf/artifacts/docs-audit-1.1.1-evidence/**
+    - .pf/artifacts/docs-fix-1.1.1-20260907/**
+  forbidden_files:
+    - VERSION
+    - CHANGELOG.md
+    - checksums/**
+    - tools/processforge.py
+    - src/**
+    - .pf/process-forge.yaml
+  ownership:
+    owner_id: docs111-mechanical
+    owner_label: worker-docs111-mechanical
+    role: worker
+    writer: true
+    owned_files:
+      - docs/ru/concepts/resource-search-index.md
+      - docs/concepts/assignment-front-matter.md
+      - docs/validation/validation.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - docs/ru/concepts/resource-search-index.md
+      - docs/concepts/assignment-front-matter.md
+      - docs/validation/validation.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: docs111-mechanical-report
+      path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    format: concise_markdown
+    include:
+      - docs111-mechanical-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: low
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/docs111-mechanical.ndjson
+  event_correlation_id: assignment-docs111-mechanical
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/docs111-mechanical.yaml
+  - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+allowed_files:
+  - docs/ru/concepts/resource-search-index.md
+  - docs/concepts/assignment-front-matter.md
+  - docs/validation/validation.md
+  - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/processforge.py
+  - src/**
+  - .pf/process-forge.yaml
+required_outputs:
+  -
+    id: docs111-mechanical-report
+    path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-docs111-mechanical
+
+## Workspace Access File
+
+D:\Dev\process-forge\.pf\runtime\agent-runs\docs-fix-1-1-1-shell-20260907\docs111-mechanical\workspace-access.json
+
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+2026-09-07T13:12:59.501039Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-07T13:13:01.717074Z ERROR codex_models_manager::manager: failed to refresh available models: timeout waiting for child process to exit
+2026-09-07T13:13:01.790004Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-07T13:13:04.931212Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-07T13:13:15.832951Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-07T13:13:18.119007Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+codex
+I’ll read the assignment brief and the three allowed docs, then apply only the scoped documentation edits and produce the report artifact content in the required format.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content .pf/assignments/docs111-mechanical.yaml; Get-Content .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md; Get-Content docs/ru/concepts/resource-search-index.md; Get-Content docs/concepts/assignment-front-matter.md; Get-Content docs/validation/validation.md' in D:\Dev\process-forge
+ succeeded in 194ms:
+schema_version: 1
+id: docs111-mechanical
+title: 'D01 D05 D08: bounded documentation examples'
+run_id: docs-fix-1-1-1-shell-20260907
+process: task-batch-execution
+status: open
+created_at: '2026-09-07T13:04:16Z'
+updated_at: '2026-09-07T13:04:26Z'
+objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+allowed_files:
+  - docs/ru/concepts/resource-search-index.md
+  - docs/concepts/assignment-front-matter.md
+  - docs/validation/validation.md
+  - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+allowed_read_files:
+  - docs/**
+  - prompts/**
+  - templates/**
+  - tools/**
+  - src/**
+  - updates/migrations/**
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+  - .pf/artifacts/docs-audit-1.1.1-evidence/**
+  - .pf/artifacts/docs-fix-1.1.1-20260907/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/processforge.py
+  - src/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: docs111-mechanical
+  owner_label: worker-docs111-mechanical
+  role: worker
+  writer: true
+  owned_files:
+    - docs/ru/concepts/resource-search-index.md
+    - docs/concepts/assignment-front-matter.md
+    - docs/validation/validation.md
+    - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - docs/ru/concepts/resource-search-index.md
+    - docs/concepts/assignment-front-matter.md
+    - docs/validation/validation.md
+    - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: docs111-mechanical-report
+    path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: low
+expected_report:
+  language: en
+  artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+  format: concise_markdown
+  include:
+    - docs111-mechanical-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+# D01 D05 D08: bounded documentation examples
+
+You are a bounded PF shell worker explicitly requested by the operator. The orchestrator owns Run/Task lifecycle and .pf state: do NOT call pf.work.start/transition, session-start, task-complete, update manifest/capsules, start infrastructure, or delegate. Read your assignment capsule and this brief; no full-project bootstrap is needed. Use apply_patch for edits; read UTF-8 explicitly on PowerShell. Preserve all existing unrelated changes, especially tools/processforge.py and the required-output fix. Write only assigned files; do not change VERSION, CHANGELOG, checksums or publish/install/update anything. No network research is needed: current local source is authority. Repository temp dirs only .pf/tmp/. Return a complete Markdown report as your final response, with timestamp, files changed, exact checks/results and residual risks; the launcher captures it as expected report. Do not claim completion on mere file existence.
+
+## Assignment
+
+Fix audit D01, D05, D08 only. Read .pf/artifacts/docs-audit-1.1.1-report-20260907.md. For D01 synchronize RU search-index CLI (remove unsupported --project-root from five commands) and maintenance semantics with docs/concepts/resource-search-index.md; preserve project query authorization. D05 required_outputs must be a mapping with id example-report, path .pf/artifacts/example-report.md, type markdown, required true. D08 default checksums validator checks existing public inventory; --write explicitly writes; it does not validate capsules. Explain actual context/capsule doctors only after checking CLI help. Do not rewrite unrelated text. Read relevant code definitions named in audit. Run git diff --check limited to your files and parse all five revised search examples via core.build_parser without dispatch.
+
+## Allowed product writes
+
+## Review feedback for attempt 2 (mandatory)
+
+The orchestrator rejected attempt 1 as incomplete. Keep the good command/output-mapping fixes. Finish D01 prose: compare English resource-search-index.md lines 68-98 and synchronize RU index_state, refresh and Runtime maintenance paragraphs. They still incorrectly say current project snapshot and periodic tick for known projects. Describe Workplace catalog readiness/refresh independent of project snapshot; preserve authorization of individual search queries by project snapshot. D08 should start "Checks the current public files against the existing deterministic SHA-256 inventory." Do not say the default command creates an inventory. Explain --write as an explicit mutation, default/--check as comparison. Add separate correct context/capsule doctor commands after checking help, e.g. project-context-check and capsule-doctor only if actually supported with correct required flags. Main source reads are allowed by allowed_read_files; forbidden_files prohibit writes to those sources, not the explicitly granted read access. Run parser checks with sys.path.insert(0, 'tools') before import processforge. Final report must explicitly address this review feedback.
+
+- docs/ru/concepts/resource-search-index.md
+- docs/concepts/assignment-front-matter.md
+- docs/validation/validation.md
+# РРЅРґРµРєСЃ РїРѕРёСЃРєР° СЂРµСЃСѓСЂСЃРѕРІ
+
+Р›РѕРєР°Р»СЊРЅС‹Р№ РїРѕРёСЃРє ProcessForge СЂР°Р·РґРµР»СЏРµС‚ С‚СЂРё РіСЂР°РЅРёС†С‹:
+
+- РІРµСЂСЃРёРѕРЅРёСЂСѓРµРјС‹Рµ СЂРµСЃСѓСЂСЃС‹ workplace РѕР±СЉСЏРІР»СЏСЋС‚, С‡С‚Рѕ РјРѕР¶РЅРѕ РёРЅРґРµРєСЃРёСЂРѕРІР°С‚СЊ;
+- workplace-level SQLite FTS5 index С…СЂР°РЅРёС‚ РїСЂРѕРёР·РІРѕРґРЅС‹Рµ РґРѕРєСѓРјРµРЅС‚С‹ СЂРµСЃСѓСЂСЃРѕРІ;
+- project context snapshot СЂР°Р·СЂРµС€Р°РµС‚, РєР°РєРёРµ `resource_id` РґРѕСЃС‚СѓРїРЅС‹ СЃРµСЃСЃРёРё.
+
+РџСЂРѕРµРєС‚С‹ РЅРµ РІР»Р°РґРµСЋС‚ РїРѕРёСЃРєРѕРІС‹РјРё РґРѕРєСѓРјРµРЅС‚Р°РјРё. РћРЅРё С…СЂР°РЅСЏС‚ С‚РѕР»СЊРєРѕ СЂР°Р·СЂРµС€РµРЅРЅС‹Рµ
+РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹ СЂРµСЃСѓСЂСЃРѕРІ Рё fingerprints РІ snapshot. РџСЂРёРІР°С‚РЅР°СЏ РїСЂРѕРёР·РІРѕРґРЅР°СЏ DB
+РЅР°С…РѕРґРёС‚СЃСЏ Р·РґРµСЃСЊ:
+
+```text
+<workplace>/runtime/search/local-resource-search.sqlite
+```
+
+`pf.search` СЏРІР»СЏРµС‚СЃСЏ query adapter. РћРЅ РЅРµ РґРµР»Р°РµС‚ fallback РЅР° РІРµСЃСЊ workplace,
+РґСЂСѓРіРёРµ РїСЂРѕРµРєС‚С‹, home directory, Context7, web РёР»Рё СЃРєСЂС‹С‚С‹Р№ `rg` РїРѕ Р±РѕР»СЊС€РёРј
+РґРµСЂРµРІСЊСЏРј РёСЃС…РѕРґРЅРѕРіРѕ РєРѕРґР°.
+
+## Indexing Policy
+
+Р”Р»СЏ СЂРµСЃСѓСЂСЃРѕРІ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РµРґРёРЅС‹Р№ reusable contract:
+
+```yaml
+indexing:
+  enabled: true
+  mode: fulltext # fulltext | metadata | none
+  fields:
+    - title
+    - description
+    - tags
+  sources:
+    - path: articles
+      mode: fulltext
+      include:
+        - "**/*.md"
+      exclude:
+        - drafts/**
+    - path: core/6.1.2
+      mode: metadata
+      role: source_tree
+```
+
+`fulltext` РєР»Р°РґРµС‚ РІ FTS metadata Рё РІС‹Р±СЂР°РЅРЅС‹Рµ С‚РµРєСЃС‚РѕРІС‹Рµ С„Р°Р№Р»С‹. `metadata`
+СЃРѕС…СЂР°РЅСЏРµС‚ С‚РѕР»СЊРєРѕ identity, title, description, version, root/path reference Рё
+РѕР±СЉСЏРІР»РµРЅРЅСѓСЋ metadata. `none` РёСЃРєР»СЋС‡Р°РµС‚ СЂРµСЃСѓСЂСЃ РёР· Р»РѕРєР°Р»СЊРЅРѕРіРѕ РїРѕРёСЃРєР°.
+
+Р‘РѕР»СЊС€РёРµ source trees, SDK mirrors, vendor trees Рё multi-version platform
+snapshots РґРѕР»Р¶РЅС‹ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ `metadata`, РµСЃР»Рё manifest СЏРІРЅРѕ РЅРµ РІС‹Р±РёСЂР°РµС‚
+РјР°Р»РµРЅСЊРєРёР№ fulltext source. РџРѕРёСЃРє РјРѕР¶РµС‚ РІРµСЂРЅСѓС‚СЊ navigation root, РЅРѕ РґР»СЏ РґРµС‚Р°Р»РµР№
+РёСЃС…РѕРґРЅРѕРіРѕ РєРѕРґР° Codex РґРѕР»Р¶РµРЅ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РѕР±С‹С‡РЅС‹Рµ filesystem reads Рё `rg` РІРЅСѓС‚СЂРё
+РІС‹Р±СЂР°РЅРЅРѕРіРѕ root.
+
+## SQLite Model
+
+РџСЂРѕРёР·РІРѕРґРЅР°СЏ DB РѕСЂРёРµРЅС‚РёСЂРѕРІР°РЅР° РЅР° СЂРµСЃСѓСЂСЃС‹:
+
+```text
+resources
+documents
+documents_fts
+index_state
+```
+
+`resources` С…СЂР°РЅРёС‚ `resource_id`, `resource_type`, `version`, `fingerprint`,
+`indexing_policy_hash`, `root_ref` Рё refresh status. `documents` С…СЂР°РЅРёС‚
+`resource_id`, `relative_path`, `kind`, `title`, hashes Рё JSON metadata.
+`documents_fts` С…СЂР°РЅРёС‚ searchable fulltext fields. `index_state` С…СЂР°РЅРёС‚
+authorization state С‚РµРєСѓС‰РµРіРѕ project snapshot Р±РµР· РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ documents РїРѕРґ
+РєР°Р¶РґС‹Р№ РїСЂРѕРµРєС‚.
+
+## CLI
+
+```bash
+python bin/pf.py search-index status --workplace <workplace>
+python bin/pf.py search-index refresh --workplace <workplace>
+python bin/pf.py search-index rebuild --workplace <workplace>
+python bin/pf.py search-index doctor --workplace <workplace>
+python bin/pf.py search-index tick --workplace <workplace>
+```
+
+`status` СЂР°Р±РѕС‚Р°РµС‚ read-only. `status --verify-files` РІС‹РїРѕР»РЅСЏРµС‚ СЏРІРЅСѓСЋ
+fingerprint reconciliation Рё СЃРѕРѕР±С‰Р°РµС‚ stale state, РµСЃР»Рё СЃРѕРґРµСЂР¶РёРјРѕРµ СЂР°Р·СЂРµС€РµРЅРЅРѕРіРѕ
+СЂРµСЃСѓСЂСЃР° РёР·РјРµРЅРёР»РѕСЃСЊ. `refresh` РѕР±РЅРѕРІР»СЏРµС‚ indexable resources РґР»СЏ С‚РµРєСѓС‰РµРіРѕ СЃРІРµР¶РµРіРѕ
+snapshot. `rebuild` СѓРґР°Р»СЏРµС‚ РїСЂРѕРёР·РІРѕРґРЅСѓСЋ DB Рё СЃС‚СЂРѕРёС‚ РµРµ Р·Р°РЅРѕРІРѕ. `tick` СЏРІР»СЏРµС‚СЃСЏ
+bounded maintenance unit РґР»СЏ РѕРїРµСЂР°С‚РѕСЂР° Рё Runtime scheduling.
+
+## Runtime Р MCP
+
+Runtime maintenance РґРѕР»Р¶РµРЅ РїРµСЂРёРѕРґРёС‡РµСЃРєРё Р·Р°РїСѓСЃРєР°С‚СЊ `tick` РґР»СЏ РёР·РІРµСЃС‚РЅС‹С… РїСЂРѕРµРєС‚РѕРІ
+СЃРѕ СЃРІРµР¶РёРјРё snapshots. PF-owned resource mutations РїРѕРјРµС‡Р°СЋС‚ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёР№ index
+state РєР°Рє stale; РІРЅРµС€РЅРёРµ РёР·РјРµРЅРµРЅРёСЏ С„Р°Р№Р»РѕРІ РѕР±РЅР°СЂСѓР¶РёРІР°СЋС‚СЃСЏ fingerprint-РїСЂРѕРІРµСЂРєРѕР№
+РІРѕ РІСЂРµРјСЏ `tick`.
+
+`pf.search` РЅРёРєРѕРіРґР° РЅРµ РІС‹РґР°РµС‚ stale data РєР°Рє `fresh`. Р•СЃР»Рё РёРЅРґРµРєСЃ missing, stale
+РёР»Рё degraded, СЂРµР·СѓР»СЊС‚Р°С‚ РІРѕР·РІСЂР°С‰Р°РµС‚ СЌС‚РѕС‚ `search_status` Рё РїСѓСЃС‚С‹Рµ matches РґРѕ
+maintenance refresh РїСЂРѕРёР·РІРѕРґРЅРѕР№ DB.
+
+`pf.session_context` РїРѕРєР°Р·С‹РІР°РµС‚ РєРѕРјРїР°РєС‚РЅСѓСЋ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ РїРѕРёСЃРєР°:
+
+```yaml
+search:
+  status: fresh
+  generation: <index-generation>
+  stale: false
+```
+
+Resolved local paths СЏРІР»СЏСЋС‚СЃСЏ request-local runtime data. Public snapshots Рё
+artifacts С…СЂР°РЅСЏС‚ `path_ref`, Р° РЅРµ private absolute paths.
+# Assignment Front Matter
+
+Automated assignment execution uses YAML front matter or a separate assignment
+YAML file as its machine-readable source. Markdown headings and prose are for
+humans and agents, not for stable machine authority.
+
+Example:
+
+```markdown
+---
+schema_version: 1
+id: example-assignment
+status: ready
+role: worker
+process: software-feature-development
+stage: implementation
+required_capabilities:
+  - repository.read
+optional_capabilities:
+  - repository.symbol_analysis
+allowed_files:
+  - .pf/artifacts/**
+forbidden_files:
+  - .pf/runtime/**
+required_outputs:
+  - id: example-report
+    path: .pf/artifacts/example-report.md
+    type: markdown
+    required: true
+hooks:
+  tracking: detailed
+  chat_capture: enabled
+  emit_on_complete: true
+  notify_wtaicc: outbox
+chat_capture:
+  enabled: false
+  include_content: false
+---
+
+# Assignment: Example
+```
+
+If front matter is missing, the assignment is human-readable only. It can guide
+manual work, but it cannot produce an automated context capsule.
+
+Use:
+
+```bash
+python bin/pf.py assignment-capsule --project-root <project-root> --assignment <assignment-file>
+```
+
+The generated capsule includes the snapshot checksum, scope, capabilities,
+required outputs, telemetry path, and event correlation id.
+
+Assignment hook options can request detailed tracking or chat capture, but they
+cannot disable process-required events unless the process policy allows it. Chat
+content remains metadata-only for outbox delivery unless `include_content` is
+explicitly enabled.
+# Validation
+
+ProcessForge ships with lightweight local validators.
+
+## Schema and Structure
+
+```bash
+python tools/validate-process-forge-schemas.py
+```
+
+Checks required files, JSON schema syntax, seed process fields, manifest references, and basic yaml-like file structure.
+
+## Checksums
+
+```bash
+python tools/validate-process-forge-checksums.py
+```
+
+Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
+
+Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
+
+This command checks only public file inventories. It does not validate context capsules.
+
+## Public Cleanliness
+
+```bash
+python tools/validate-public-cleanliness.py
+```
+
+Checks public product files for private paths, secrets, temporary private notes, and private internal references.
+
+2026-09-07T13:13:21.152673Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+codex
+I’ve confirmed the brief details. Next I’ll read the audit report and the relevant command/code entry points to make the minimal required docs-only updates, including the parser/help checks requested.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content .pf/artifacts/docs-audit-1.1.1-report-20260907.md; Get-Content docs/concepts/resource-search-index.md' in D:\Dev\process-forge
+ succeeded in 265ms:
+# РђСѓРґРёС‚ РґРѕРєСѓРјРµРЅС‚Р°С†РёРё PF РїРµСЂРµРґ 1.1.1
+
+Р”Р°С‚Р°: 2026-09-07. РђСѓРґРёС‚РѕСЂ: РѕСЃРЅРѕРІРЅРѕР№ Р°РіРµРЅС‚, Р±РµР· РґРµР»РµРіРёСЂРѕРІР°РЅРёСЏ.
+Run: `garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre`.
+
+## Р’РµСЂРґРёРєС‚
+
+**Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ РїРѕРєР° РЅРµ РіРѕС‚РѕРІР° Рє РІС‹РїСѓСЃРєСѓ 1.1.1: РїРѕРґС‚РІРµСЂР¶РґРµРЅС‹ 8 СЂР°СЃС…РѕР¶РґРµРЅРёР№ вЂ” 5 P1 Рё 3 P2.**
+P1 РѕР·РЅР°С‡Р°РµС‚ РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚СЊ РёСЃРїСЂР°РІР»РµРЅРёСЏ РґРѕ РІС‹РїСѓСЃРєР°: РёРЅСЃС‚СЂСѓРєС†РёСЏ РїСЂРµРїСЏС‚СЃС‚РІСѓРµС‚ С€С‚Р°С‚РЅРѕР№ СЂР°Р±РѕС‚Рµ Р»РёР±Рѕ РїСЂРѕРїСѓСЃРєР°РµС‚ СЃСѓС‰РµСЃС‚РІРµРЅРЅСѓСЋ С‡Р°СЃС‚СЊ РїСЂРѕС†РµРґСѓСЂС‹. P2 вЂ” Р»РѕРєР°Р»СЊРЅР°СЏ РѕС€РёР±РєР°, РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅР°СЏ РїРѕР»РЅРѕС‚Р° РёР»Рё РІРІРѕРґСЏС‰РµРµ РІ Р·Р°Р±Р»СѓР¶РґРµРЅРёРµ РѕРїРёСЃР°РЅРёРµ, РєРѕС‚РѕСЂРѕРµ С‚Р°РєР¶Рµ СЃР»РµРґСѓРµС‚ СѓСЃС‚СЂР°РЅРёС‚СЊ РІ РїСЂРµРґСЂРµР»РёР·РЅРѕР№ РїСЂР°РІРєРµ. P0 РЅРµ РѕР±РЅР°СЂСѓР¶РµРЅС‹ РІ РїСЂРѕРІРµСЂРµРЅРЅРѕРј РѕР±СЉС‘РјРµ.
+
+Р­С‚Рѕ Р·Р°РІРµСЂС€С‘РЅРЅС‹Р№ Р°СѓРґРёС‚, Р° РЅРµ РёСЃРїСЂР°РІР»РµРЅРёРµ РґРѕРєСѓРјРµРЅС‚Р°С†РёРё Рё РЅРµ СЂР°Р·СЂРµС€РµРЅРёРµ РЅР° СЂРµР»РёР·. РџСЂРѕРґСѓРєС‚РѕРІС‹Рµ С„Р°Р№Р»С‹ РЅРµ РјРµРЅСЏР»РёСЃСЊ. Р—Р°РїРёСЃР°РЅС‹ С‚РѕР»СЊРєРѕ С‡Р°СЃС‚РЅС‹Рµ РјР°С‚РµСЂРёР°Р»С‹ Р°СѓРґРёС‚Р° Рё СЃРѕСЃС‚РѕСЏРЅРёРµ `.pf`. РџСЂРµРґС‹РґСѓС‰Р°СЏ РЅРµР·Р°РєРѕРјРјРёС‡РµРЅРЅР°СЏ РїСЂР°РІРєР° `required_output_checks` СЃРѕС…СЂР°РЅРµРЅР°.
+
+## Р‘Р°Р·Р° СЃСЂР°РІРЅРµРЅРёСЏ Рё РѕС…РІР°С‚
+
+- Р’РµС‚РєР° `dev`, HEAD `1aecc18b6824204ca45ab30241b92d26e6d583a5`, РїР»СЋСЃ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰Р°СЏ РїСЂР°РІРєР° `tools/processforge.py`, РґРІСѓС… smoke-С‚РµСЃС‚РѕРІ Рё РёРЅРІРµРЅС‚Р°СЂСЏ РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… СЃСѓРјРј.
+- `VERSION` Рё РїРѕСЃР»РµРґРЅРёР№ СЂР°Р·РґРµР» `CHANGELOG.md` РїРѕРєР° РѕС‚РЅРѕСЃСЏС‚СЃСЏ Рє `1.1.0`. Р¦РµР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ вЂ” РїРѕРґРіРѕС‚РѕРІРєР° `1.1.1`; РёСЃС‚РѕСЂРёС‡РµСЃРєРёРµ СѓРїРѕРјРёРЅР°РЅРёСЏ 1.1.0 СЃР°РјРё РїРѕ СЃРµР±Рµ РѕС€РёР±РєР°РјРё РЅРµ СЃС‡РёС‚Р°СЋС‚СЃСЏ.
+- РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРё РѕР±СЃР»РµРґРѕРІР°РЅС‹ **298 Markdown-С„Р°Р№Р»РѕРІ**: РєРѕСЂРЅРµРІС‹Рµ РґРѕРєСѓРјРµРЅС‚С‹ Рё Markdown РІ `docs/`, `prompts/`, `templates/`.
+- РР· 600 РёР·РІР»РµС‡С‘РЅРЅС‹С… СѓРїРѕРјРёРЅР°РЅРёР№ РєРѕРјР°РЅРґ РѕРґРЅРѕ СЏРІР»СЏРµС‚СЃСЏ С‚РµРєСЃС‚РѕРІРѕР№ РёРЅСЃС‚СЂСѓРєС†РёРµР№, Р° РЅРµ РєРѕРјР°РЅРґРѕР№. **599 РїСЂРёРјРµСЂРѕРІ CLI: 594 РїСЂРёРЅСЏС‚С‹ С‚РµРєСѓС‰РёРј argparse, 5 РѕС‚РІРµСЂРіРЅСѓС‚С‹**. Р’С‹РїРѕР»РЅСЏР»СЃСЏ С‚РѕР»СЊРєРѕ СЂР°Р·Р±РѕСЂ Р°СЂРіСѓРјРµРЅС‚РѕРІ, Р±РµР· РґРёСЃРїРµС‚С‡РµСЂРёР·Р°С†РёРё РєРѕРјР°РЅРґ Рё РїРѕР±РѕС‡РЅС‹С… РґРµР№СЃС‚РІРёР№.
+- **283 Р»РѕРєР°Р»СЊРЅС‹Рµ Markdown-СЃСЃС‹Р»РєРё: РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёС… С„Р°Р№Р»РѕРІ-С†РµР»РµР№ РЅРµС‚**. Р­С‚Р° РїСЂРѕРІРµСЂРєР° РЅРµ РїСЂРѕРІРµСЂСЏРµС‚ СЏРєРѕСЂСЏ, РІРЅРµС€РЅРёРµ URL, reference-style СЃСЃС‹Р»РєРё Рё СЃРѕРґРµСЂР¶Р°С‚РµР»СЊРЅСѓСЋ РїСЂР°РІРёР»СЊРЅРѕСЃС‚СЊ СЃСЃС‹Р»РѕРє.
+- Р’СЂСѓС‡РЅСѓСЋ СЃРѕРїРѕСЃС‚Р°РІР»РµРЅС‹ РєР»СЋС‡РµРІС‹Рµ EN/RU РёРЅСЃС‚СЂСѓРєС†РёРё Рё СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ СѓС‡Р°СЃС‚РєРё РєРѕРґР°: СѓСЃС‚Р°РЅРѕРІРєР° Рё РїРѕСЂСЏРґРѕРє РёРЅРёС†РёР°Р»РёР·Р°С†РёРё, Garage/Forge, Ledger, MCP, РІС‹Р±РѕСЂ РїСЂРѕС†РµСЃСЃР°, РїРµСЂРµС…РѕРґС‹ Рё evidence, Р·Р°РґР°РЅРёСЏ Рё required outputs, РїРѕРёСЃРє, РѕР±РЅРѕРІР»РµРЅРёРµ Core/Workplace, release checklist Рё РїСѓР±Р»РёРєР°С†РёСЏ.
+- РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ РёРЅРІРµРЅС‚Р°СЂРёР·Р°С†РёСЏ РЅРµ РѕР·РЅР°С‡Р°РµС‚ РїРѕСЃС‚СЂРѕС‡РЅСѓСЋ СЃРјС‹СЃР»РѕРІСѓСЋ РїСЂРѕРІРµСЂРєСѓ РІСЃРµС… 298 РґРѕРєСѓРјРµРЅС‚РѕРІ. Markdown РІРЅСѓС‚СЂРё РёРЅС‹С… РїР°РєРµС‚РѕРІ, РІРЅРµС€РЅРёРµ СЃР°Р№С‚С‹, РёР»Р»СЋСЃС‚СЂР°С†РёРё Рё РІСЃРµ РёСЃС‚РѕСЂРёС‡РµСЃРєРёРµ РїСЂРёРјРµСЂС‹ РЅРµ РїСЂРѕС…РѕРґРёР»Рё РёСЃС‡РµСЂРїС‹РІР°СЋС‰РµР№ РїСЂРѕРІРµСЂРєРё. Р Р°Р±РѕС‡Р°СЏ СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅР°СЏ РєРѕРїРёСЏ Core РЅРµ РІС‹РґР°С‘С‚СЃСЏ Р·Р° С‚РµРєСѓС‰РёР№ РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ.
+
+Р”РѕРєР°Р·Р°С‚РµР»СЊСЃС‚РІР°: [inventory.json](docs-audit-1.1.1-evidence/inventory.json), [СЃРµРјР°РЅС‚РёС‡РµСЃРєРёРµ РїСЂРѕР±С‹](docs-audit-1.1.1-evidence/semantic-probes.json), [РїСЂРѕРІРµСЂРєРё](docs-audit-1.1.1-evidence/validation.json), [С†РµР»РµРІС‹Рµ smoke-С‚РµСЃС‚С‹](docs-audit-1.1.1-evidence/focused-report.json). РЎРєСЂРёРїС‚С‹ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ РЅР°С…РѕРґСЏС‚СЃСЏ СЂСЏРґРѕРј СЃ РЅРёРјРё.
+
+## D01 вЂ” P1: РІСЃРµ РїСЏС‚СЊ РєРѕРјР°РЅРґ СѓРїСЂР°РІР»РµРЅРёСЏ РёРЅРґРµРєСЃРѕРј РІ RU-РёРЅСЃС‚СЂСѓРєС†РёРё РЅРµСЃРѕРІРјРµСЃС‚РёРјС‹ СЃ CLI
+
+Р”РѕРєСѓРјРµРЅС‚: `docs/ru/concepts/resource-search-index.md:76` (РєРѕРјР°РЅРґС‹ РЅР° СЃС‚СЂРѕРєР°С… 76вЂ“80), С‚Р°РєР¶Рµ РѕРїРёСЃР°РЅРёРµ maintenance РЅР° СЃС‚СЂРѕРєР°С… 84вЂ“94.
+
+РљР°Р¶РґР°СЏ РєРѕРјР°РЅРґР° `search-index status/refresh/rebuild/doctor/tick` СЃРѕРґРµСЂР¶РёС‚ `--project-root`. РўРµРєСѓС‰РёР№ CLI СЌС‚РѕС‚ РїР°СЂР°РјРµС‚СЂ РЅРµ РїСЂРёРЅРёРјР°РµС‚: РїСЏС‚СЊ РїСЂРёРјРµСЂРѕРІ РґР°СЋС‚ argparse exit 2, `unrecognized arguments: --project-root AUDIT_VALUE`.
+
+РљРѕРґ: `tools/processforge.py:26185` Рё СЃР»РµРґСѓСЋС‰РёРµ РѕРїСЂРµРґРµР»РµРЅРёСЏ РїСЏС‚Рё subparser; `workplace_search_runtime_snapshot` РЅР° СЃС‚СЂРѕРєРµ 23428; `command_search_index_refresh` РЅР° СЃС‚СЂРѕРєРµ 23612. CLI РѕР±СЃР»СѓР¶РёРІР°РµС‚ РєР°С‚Р°Р»РѕРі Workplace СЃ `--workplace`, Р° Р°РІС‚РѕСЂРёР·Р°С†РёСЏ РїРѕРёСЃРєР° РїСЂРѕРµРєС‚РЅС‹Рј snapshot РѕСЃС‚Р°С‘С‚СЃСЏ РѕС‚РґРµР»СЊРЅС‹Рј СѓСЂРѕРІРЅРµРј. Р СѓСЃСЃРєРёР№ С‚РµРєСЃС‚ С‚Р°РєР¶Рµ РїСЂРѕРґРѕР»Р¶Р°РµС‚ РїСЂРµРґРїРёСЃС‹РІР°С‚СЊ РїРµСЂРёРѕРґРёС‡РµСЃРєРёР№ tick РїРѕ РїСЂРѕРµРєС‚Р°Рј СЃРѕ СЃРІРµР¶РёРјРё snapshot. РђРЅРіР»РёР№СЃРєРёР№ `docs/concepts/resource-search-index.md:80` СѓР¶Рµ РїРѕРєР°Р·С‹РІР°РµС‚ Workplace-РєРѕРјР°РЅРґС‹.
+
+Р’Р»РёСЏРЅРёРµ: СЂСѓСЃСЃРєРѕСЏР·С‹С‡РЅС‹Р№ РѕРїРµСЂР°С‚РѕСЂ РЅРµ РјРѕР¶РµС‚ РІС‹РїРѕР»РЅРёС‚СЊ РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ РѕР±СЃР»СѓР¶РёРІР°РЅРёСЏ РёРЅРґРµРєСЃР°.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ RU-РєРѕРјР°РЅРґС‹ Рё РјРѕРґРµР»СЊ maintenance СЃ СЂРµР°Р»РёР·Р°С†РёРµР№ Workplace; РЅРµ СѓРґР°Р»СЏС‚СЊ РѕРїРёСЃР°РЅРёРµ РїСЂРѕРµРєС‚РЅРѕР№ Р°РІС‚РѕСЂРёР·Р°С†РёРё РїРѕРёСЃРєРѕРІС‹С… Р·Р°РїСЂРѕСЃРѕРІ. РџСЂРёРјРµСЂ: `python bin/pf.py search-index status --workplace <workplace>`.
+
+РџСЂРёС‘РјРєР°: РІСЃРµ РїСЏС‚СЊ РїСЂРёРјРµСЂРѕРІ СЂР°Р·Р±РёСЂР°СЋС‚СЃСЏ С‚РµРєСѓС‰РёРј parser; РІ РёР·РѕР»РёСЂРѕРІР°РЅРЅРѕРј Workplace РїСЂРѕС…РѕРґСЏС‚ status/refresh/doctor/tick; С‚РµРєСЃС‚ РЅРµ С‚СЂРµР±СѓРµС‚ РѕР±С…РѕРґР° РїСЂРѕРµРєС‚РѕРІ РґР»СЏ CLI maintenance.
+
+## D02 вЂ” P1: СЃРїРµС†РёР°Р»РёР·РёСЂРѕРІР°РЅРЅС‹Р№ РїСЂРѕРјРїС‚ РїСЂРµРґРїРёСЃС‹РІР°РµС‚ СѓСЃС‚Р°СЂРµРІС€РёР№ С€С‚Р°С‚РЅС‹Р№ Р¶РёР·РЅРµРЅРЅС‹Р№ С†РёРєР»
+
+Р”РѕРєСѓРјРµРЅС‚С‹: `prompts/task-batch-execution-agent.md:8`, РєРѕРјР°РЅРґС‹ РЅР° СЃС‚СЂРѕРєР°С… 18вЂ“19, 34, 42вЂ“43; `docs/getting-started/task-batch-workflow.md:6`; `docs/ru/getting-started/task-batch-workflow.md:6`.
+
+РџСЂРѕРјРїС‚ С‚СЂРµР±СѓРµС‚ check-in/check-out, СЂСѓС‡РЅС‹С… `session-start`, `run-create`, `task-complete`, `run-complete`, `session-end` Р±РµР· РѕРіСЂР°РЅРёС‡РµРЅРёСЏ РЅР° РѕРїРµСЂР°С‚РѕСЂСЃРєСѓСЋ РґРёР°РіРЅРѕСЃС‚РёРєСѓ/СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ. РћР±Рµ РІРІРѕРґРЅС‹Рµ РёРЅСЃС‚СЂСѓРєС†РёРё task batch С‚Р°РєР¶Рµ РЅР°С‡РёРЅР°СЋС‚ СЃ РЅРёР·РєРѕСѓСЂРѕРІРЅРµРІРѕРіРѕ Р¶РёР·РЅРµРЅРЅРѕРіРѕ С†РёРєР»Р°, РЅРµ РѕР±СЉСЏСЃРЅСЏСЏ РµРіРѕ СЃС‚Р°С‚СѓСЃ.
+
+РўРµРєСѓС‰РёР№ РєРѕРЅС‚СЂР°РєС‚: `templates/project-agents-template.md:12` РѕРїРёСЃС‹РІР°РµС‚ `pf.work.start`, `pf.work.state`, `pf.work.transition` Рё Р·Р°РєСЂРµРїР»С‘РЅРЅСѓСЋ capsule; СЃС‚СЂРѕРєР° 29 РѕРіСЂР°РЅРёС‡РёРІР°РµС‚ РЅРёР·РєРѕСѓСЂРѕРІРЅРµРІС‹Рµ РєРѕРјР°РЅРґС‹ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊСЋ/РґРёР°РіРЅРѕСЃС‚РёРєРѕР№. `templates/process-agent-prompt.md:7` Р·Р°РґР°С‘С‚ С‚РѕС‚ Р¶Рµ С†РёРєР». `docs/concepts/runtime-mcp.md:48` Р·Р°РїСЂРµС‰Р°РµС‚ РѕР±С‹С‡РЅРѕРјСѓ Р°РіРµРЅС‚Сѓ СЃРѕР·РґР°РІР°С‚СЊ СЂСѓС‡РЅС‹Рµ production session id. Р—Р°РІРµСЂС€РµРЅРёРµ РїРѕСЃР»РµРґРЅРµР№ СЃС‚Р°РґРёРё СЂРµР°Р»РёР·РѕРІР°РЅРѕ РІ `src/processforge_core/process_execution.py`, Р° РЅРµ С‚СЂРµР±СѓРµС‚ РѕС‚РґРµР»СЊРЅРѕР№ СЂСѓС‡РЅРѕР№ РєРѕРјР°РЅРґС‹ Р·Р°РІРµСЂС€РµРЅРёСЏ Run.
+
+Р’Р»РёСЏРЅРёРµ: Р°РіРµРЅС‚, РєРѕС‚РѕСЂРѕРјСѓ РґР°Р»Рё СЃРїРµС†РёР°Р»РёР·РёСЂРѕРІР°РЅРЅС‹Р№ РїСЂРѕРјРїС‚, РїРѕР»СѓС‡Р°РµС‚ РІР·Р°РёРјРѕРёСЃРєР»СЋС‡Р°СЋС‰РёРµ СѓРєР°Р·Р°РЅРёСЏ Рё РјРѕР¶РµС‚ РѕСЃС‚Р°РЅРѕРІРёС‚СЊСЃСЏ РЅР° РёСЃРєСѓСЃСЃС‚РІРµРЅРЅРѕР№ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЃРµСЃСЃРёРё Р»РёР±Рѕ РѕР±РѕР№С‚Рё РґРµРєР»Р°СЂР°С‚РёРІРЅС‹Рµ СЃС‚Р°РґРёРё.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: РѕСЃРЅРѕРІРЅРѕР№ РїСЂРѕРјРїС‚ Рё РІРІРѕРґРЅС‹Р№ СЃС†РµРЅР°СЂРёР№ РїРµСЂРµРІРµСЃС‚Рё РЅР° Garage work API РґРѕ `run_completed`; СЃРѕРІРјРµСЃС‚РёРјС‹Р№ CLI-РІР°СЂРёР°РЅС‚ СЏРІРЅРѕ РѕС‚РґРµР»РёС‚СЊ Рё РѕР±СЉСЏСЃРЅРёС‚СЊ РµРіРѕ Р°СѓРґРёС‚РѕСЂРёСЋ. Р Р°Р·РґРµР» `Advanced Task Batch Run` РІ РѕР±С‰РµРј runbook СѓР¶Рµ РїРѕРјРµС‡РµРЅ advanced вЂ” СЃР°Рј С„Р°РєС‚ РЅР°Р»РёС‡РёСЏ С‚Р°РєРѕРіРѕ СЂР°Р·РґРµР»Р° РѕС€РёР±РєРѕР№ РЅРµ СЏРІР»СЏРµС‚СЃСЏ.
+
+РџСЂРёС‘РјРєР°: Р°РіРµРЅС‚ РїРѕ РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅРѕРјСѓ РѕСЃРЅРѕРІРЅРѕРјСѓ РїСЂРѕРјРїС‚Сѓ Р·Р°РІРµСЂС€Р°РµС‚ РёР·РѕР»РёСЂРѕРІР°РЅРЅСѓСЋ СЂР°Р±РѕС‚Сѓ Р±РµР· СЂСѓС‡РЅРѕР№ Ledger-СЃРµСЃСЃРёРё; РїСЂРѕРІРµСЂСЏСЋС‚СЃСЏ РёРјРµРЅРЅРѕ СЃРїРµС†РёР°Р»РёР·РёСЂРѕРІР°РЅРЅС‹Р№ РїСЂРѕРјРїС‚ Рё РѕР±Рµ РІРІРѕРґРЅС‹Рµ СЃС‚СЂР°РЅРёС†С‹, Р° РЅРµ С‚РѕР»СЊРєРѕ С€Р°Р±Р»РѕРЅ AGENTS.
+
+## D03 вЂ” P2: РїРѕР»РЅС‹Р№ РїСЂРёРјРµСЂ task batch РѕСЃС‚Р°РІР»СЏРµС‚ Р±Р»РѕРєРёСЂСѓСЋС‰СѓСЋ Р·Р°РґР°С‡Сѓ РѕС‚РєСЂС‹С‚РѕР№
+
+Р”РѕРєСѓРјРµРЅС‚: `docs/getting-started/task-batch-workflow.md:14`.
+
+РџСЂРёРјРµСЂ СЃРѕР·РґР°С‘С‚ `task-001-docs` Рё `task-002-tests` РЅР° СЃС‚СЂРѕРєР°С… 14вЂ“15, Р·Р°РІРµСЂС€Р°РµС‚ С‚РѕР»СЊРєРѕ РїРµСЂРІСѓСЋ РЅР° СЃС‚СЂРѕРєРµ 28, Р·Р°С‚РµРј РІС‹Р·С‹РІР°РµС‚ `run-complete` РЅР° СЃС‚СЂРѕРєРµ 31.
+
+РљРѕРґ: `tools/processforge.py:20423`, `_command_run_complete_locked`, РѕС‚РєР»РѕРЅСЏРµС‚ Р·Р°РІРµСЂС€РµРЅРёРµ РїСЂРё Р»СЋР±РѕР№ РЅРµР·Р°РІРµСЂС€С‘РЅРЅРѕР№ Р±Р»РѕРєРёСЂСѓСЋС‰РµР№ Р·Р°РґР°С‡Рµ. РџСЂРѕР±Р° СЃ РґРѕРєСѓРјРµРЅС‚РёСЂРѕРІР°РЅРЅС‹Рј СЃРѕСЃС‚РѕСЏРЅРёРµРј Рё РїРѕРґРјРµРЅС‘РЅРЅС‹Рј С‡С‚РµРЅРёРµРј Run РІРѕСЃРїСЂРѕРёР·РІРѕРґРёС‚ `FAIL: blocking tasks are not done: task-002-tests` РґРѕ Р»СЋР±С‹С… Р·Р°РїРёСЃРµР№.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: РµСЃР»Рё СЃРѕРІРјРµСЃС‚РёРјС‹Р№ РїСЂРёРјРµСЂ РѕСЃС‚Р°С‘С‚СЃСЏ, РїРѕРєР°Р·Р°С‚СЊ РІС‹РїРѕР»РЅРµРЅРёРµ Рё Р·Р°РІРµСЂС€РµРЅРёРµ РѕР±РµРёС… Р·Р°РґР°С‡ РёР»Рё СЃРѕР·РґР°С‚СЊ С‚РѕР»СЊРєРѕ РѕРґРЅСѓ; РЅРµ РѕР±СЉСЏРІР»СЏС‚СЊ РІС‚РѕСЂСѓСЋ РЅРµР±Р»РѕРєРёСЂСѓСЋС‰РµР№ СЂР°РґРё РѕР±С…РѕРґР° РїСЂРѕРІРµСЂРєРё.
+
+РџСЂРёС‘РјРєР°: РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ С†РµР»РёРєРѕРј РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ РІ С‚РµСЃС‚РѕРІРѕРј РїСЂРѕРµРєС‚Рµ Рё Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ Р·Р°РІРµСЂС€С‘РЅРЅС‹Рј Run Р±РµР· РЅРµР·Р°РІРµСЂС€С‘РЅРЅС‹С… Р±Р»РѕРєРёСЂСѓСЋС‰РёС… Р·Р°РґР°С‡.
+
+## D04 вЂ” P1: MCP-СЃРїСЂР°РІРєР° РѕР±РµС‰Р°РµС‚ СЃС‚Р°СЂС‚ С‚РѕР»СЊРєРѕ РїРѕ objective, РЅРµ РѕРїРёСЃС‹РІР°СЏ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Р№ РІС‹Р±РѕСЂ РїСЂРё РЅРµРѕРґРЅРѕР·РЅР°С‡РЅРѕСЃС‚Рё
+
+Р”РѕРєСѓРјРµРЅС‚С‹: `docs/concepts/runtime-mcp.md:39`, `docs/ru/concepts/runtime-mcp.md:44`.
+
+РћР±Рµ РІРµСЂСЃРёРё СѓС‚РІРµСЂР¶РґР°СЋС‚, С‡С‚Рѕ Р°РіРµРЅС‚ РїРµСЂРµРґР°С‘С‚ С‚РѕР»СЊРєРѕ РЅРµРїСѓСЃС‚РѕР№ `objective`. Р­С‚Рѕ РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅРµ РІРѕ РІСЃРµС… СЂР°Р·СЂРµС€С‘РЅРЅС‹С… РєРѕРЅС„РёРіСѓСЂР°С†РёСЏС….
+
+РљРѕРґ: `tools/pf_runtime/mcp_server.py:148` РїСЂРёРЅРёРјР°РµС‚ Рё РїРµСЂРµРґР°С‘С‚ `process_id`; СЃС‚СЂРѕРєР° 216 РѕР±СЉСЏРІР»СЏРµС‚ РµРіРѕ РІ СЃС…РµРјРµ. `src/processforge_core/process_execution.py:583` РІРѕР·РІСЂР°С‰Р°РµС‚ `process_choice_required` РїСЂРё РЅРµСЃРєРѕР»СЊРєРёС… РґРѕРїСѓСЃС‚РёРјС‹С… РїСЂРѕС†РµСЃСЃР°С… Р±РµР· СЏРІРЅРѕРіРѕ РІС‹Р±РѕСЂР°. `default` вЂ” СЂРµРєРѕРјРµРЅРґР°С†РёСЏ, Р° РЅРµ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРёР№ РІС‹Р±РѕСЂ РїСЂРё РЅРµРѕРґРЅРѕР·РЅР°С‡РЅРѕСЃС‚Рё. РђРєС‚СѓР°Р»СЊРЅРѕРµ РїРѕСЏСЃРЅРµРЅРёРµ СѓР¶Рµ РµСЃС‚СЊ РІ `docs/concepts/garage-core.md:21` Рё СЃС‚СЂРѕРєР°С… 113вЂ“116.
+
+Р’Р»РёСЏРЅРёРµ: Р°РіРµРЅС‚ СЃР»РµРґСѓРµС‚ РѕСЃРЅРѕРІРЅРѕР№ MCP-СЃРїСЂР°РІРєРµ, РїРѕРІС‚РѕСЂСЏРµС‚ С‚РѕС‚ Р¶Рµ Р·Р°РїСЂРѕСЃ Рё РЅРµ РїРѕР»СѓС‡Р°РµС‚ РЅРѕРІСѓСЋ СЂР°Р±РѕС‚Сѓ РІ multi-process РїСЂРѕРµРєС‚Рµ.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: РѕРїРёСЃР°С‚СЊ `process_id`, РµРґРёРЅСЃС‚РІРµРЅРЅС‹Р№ РґРѕРїСѓСЃС‚РёРјС‹Р№ РїСЂРѕС†РµСЃСЃ, Р·Р°РєСЂРµРїР»С‘РЅРЅС‹Р№ С‚РµРєСѓС‰РёР№ Run Рё РѕС‚РІРµС‚ СЃ РєР°РЅРґРёРґР°С‚Р°РјРё; РїРѕРєР°Р·Р°С‚СЊ РїРѕРІС‚РѕСЂРЅС‹Р№ start СЃ РІС‹Р±СЂР°РЅРЅС‹Рј СЂР°Р·СЂРµС€С‘РЅРЅС‹Рј РїСЂРѕС†РµСЃСЃРѕРј. РќРµ СЃРѕРІРµС‚РѕРІР°С‚СЊ РјРµРЅСЏС‚СЊ manifest СЂР°РґРё СЃС‚Р°СЂС‚Р°.
+
+РџСЂРёС‘РјРєР°: РїСЂРёРјРµСЂС‹ EN/RU РїРѕРєСЂС‹РІР°СЋС‚ РѕРґРЅСѓ Рё РЅРµСЃРєРѕР»СЊРєРѕ СЂР°Р·СЂРµС€С‘РЅРЅС‹С… РїСЂРѕС†РµСЃСЃРѕРІ, РѕС‚РєР°Р· РґР»СЏ РЅРµСЂР°Р·СЂРµС€С‘РЅРЅРѕРіРѕ РїСЂРѕС†РµСЃСЃР° Рё СЃРѕС…СЂР°РЅРµРЅРёРµ pin С‚РµРєСѓС‰РµРіРѕ Run. РЎРІРµР¶РёР№ `smoke_multi_process_work_capsule` СѓР¶Рµ РїРѕРґС‚РІРµСЂР¶РґР°РµС‚ РїРѕРІРµРґРµРЅРёРµ СЂРµР°Р»РёР·Р°С†РёРё.
+
+## D05 вЂ” P1: РїСЂРёРјРµСЂ front matter РЅРµ Р·Р°РґР°С‘С‚ РїСѓС‚СЊ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕРіРѕ СЂРµР·СѓР»СЊС‚Р°С‚Р°
+
+Р”РѕРєСѓРјРµРЅС‚: `docs/concepts/assignment-front-matter.md:25`.
+
+РџРѕРєР°Р·Р°РЅРѕ `required_outputs: [".pf/artifacts/example-report.md"]`. Р’ СЌС‚РѕР№ С„РѕСЂРјРµ СЃС‚СЂРѕРєР° СЏРІР»СЏРµС‚СЃСЏ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРј СЂРµР·СѓР»СЊС‚Р°С‚Р°, Р° РЅРµ РїСѓС‚С‘Рј.
+
+РљРѕРґ: `tools/processforge.py:12403`, `normalize_required_outputs`, РїСЂРµРѕР±СЂР°Р·СѓРµС‚ СЃС‚СЂРѕРєСѓ РІ `{id, type, required}`, Р±РµР· `path`. РљРѕРЅС‚СЂР°РєС‚ Р·Р°РґР°РЅРёСЏ РёСЃРїРѕР»СЊР·СѓРµС‚ СЌС‚Сѓ Р¶Рµ РЅРѕСЂРјР°Р»РёР·Р°С†РёСЋ РЅР° СЃС‚СЂРѕРєРµ 12744 Рё РїРµСЂРµРЅРѕСЃРёС‚ СЂРµР·СѓР»СЊС‚Р°С‚С‹ РІ capsule РЅР° СЃС‚СЂРѕРєРµ 12953. `required_output_checks` РЅР° СЃС‚СЂРѕРєРµ 12464 РІРѕР·РІСЂР°С‰Р°РµС‚ `FAIL: required output has no path: pf-artifacts-example-report-md`.
+
+Р”РѕРєР°Р·Р°С‚РµР»СЊСЃС‚РІРѕ: РїСЂРѕР±Р° РёР·РІР»РµРєР°РµС‚ YAML РёРјРµРЅРЅРѕ РёР· РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅРѕРіРѕ fenced-РїСЂРёРјРµСЂР°, РЅРѕСЂРјР°Р»РёР·СѓРµС‚ РµРіРѕ Рё РІС‹Р·С‹РІР°РµС‚ С‚РµРєСѓС‰СѓСЋ РїСЂРѕРІРµСЂРєСѓ. Р­С‚Рѕ РЅРµ СѓС‚РІРµСЂР¶РґРµРЅРёРµ Рѕ Р·Р°РїСѓСЃРєРµ РїРѕР»РЅРѕРіРѕ СЃС†РµРЅР°СЂРёСЏ СЃРѕР·РґР°РЅРёСЏ capsule; СЃРІСЏР·СЊ СЃ capsule РїСЂРѕРІРµСЂРµРЅР° РїРѕ РёСЃС…РѕРґРЅРѕРјСѓ РєРѕРґСѓ.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: Р·Р°РјРµРЅРёС‚СЊ СЌР»РµРјРµРЅС‚ СЏРІРЅРѕР№ Р·Р°РїРёСЃСЊСЋ:
+
+```yaml
+required_outputs:
+  - id: example-report
+    path: .pf/artifacts/example-report.md
+    type: markdown
+    required: true
+```
+
+РџСЂРёС‘РјРєР°: РїСЂРёРјРµСЂ РґР°С‘С‚ РѕР¶РёРґР°РµРјС‹Р№ `missing` РґРѕ СЃРѕР·РґР°РЅРёСЏ С„Р°Р№Р»Р° Рё `PASS` РїРѕСЃР»Рµ СЃРѕР·РґР°РЅРёСЏ; РѕС€РёР±РєРё `has no path` РЅРµС‚. РџСЂРѕРІРµСЂСЏС‚СЊ РЅРµ С‚РѕР»СЊРєРѕ СЃРёРЅС‚Р°РєСЃРёСЃ YAML, РЅРѕ Рё РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅРЅС‹Р№ output contract.
+
+## D06 вЂ” P1: СЂСѓСЃСЃРєР°СЏ РїСЂРѕС†РµРґСѓСЂР° РїРµСЂРІРѕРіРѕ СѓРїСЂР°РІР»СЏРµРјРѕРіРѕ РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕРїСѓСЃРєР°РµС‚ РјРёРіСЂР°С†РёСЋ Workplace
+
+Р”РѕРєСѓРјРµРЅС‚С‹: `docs/ru/getting-started/update-system.md:50` (plan/apply РЅР° СЃС‚СЂРѕРєР°С… 50вЂ“51); `docs/ru/concepts/core-update-manifest.md` РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРіРѕ СЂР°Р·РґРµР»Р° РјРёРіСЂР°С†РёРё.
+
+РђРЅРіР»РёР№СЃРєР°СЏ РїСЂРѕС†РµРґСѓСЂР° `docs/getting-started/update-system.md:48` РїРµСЂРµРґР°С‘С‚ `--workplace-root <workplace>` РІ plan Рё apply; Р°РЅРіР»РёР№СЃРєР°СЏ СЃРїСЂР°РІРєР° `docs/concepts/core-update-manifest.md:42` РѕР±СЉСЏСЃРЅСЏРµС‚ РґРѕР±Р°РІРѕС‡РЅСѓСЋ РјРёРіСЂР°С†РёСЋ runtime driver Рё РїРѕСЃР»РµРґСѓСЋС‰РёР№ doctor. Р’ СЂСѓСЃСЃРєРѕРј РІР°СЂРёР°РЅС‚Рµ РїР°СЂР°РјРµС‚СЂР° Рё РѕР±СЉСЏСЃРЅРµРЅРёСЏ РЅРµС‚.
+
+РљРѕРґ: `src/processforge_core/core_update.py:236`, `workplace_migration_plan`, РЅРµРјРµРґР»РµРЅРЅРѕ РІРѕР·РІСЂР°С‰Р°РµС‚ `status: not_requested`, РµСЃР»Рё `workplace_root` РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚. Р­С‚Рѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅРѕ С‡РёСЃС‚С‹Рј РІС‹Р·РѕРІРѕРј С„СѓРЅРєС†РёРё Р±РµР· С‡С‚РµРЅРёСЏ Р°СЂС…РёРІР° РёР»Рё РїСЂРёРјРµРЅРµРЅРёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ. РњРёРіСЂР°С†РёСЏ `updates/migrations/1.1.0-workplace-runtime-drivers.yaml` РґРѕР±Р°РІР»СЏРµС‚ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёРµ defaults `codex-exec` Рё СЂРµРіРёСЃС‚СЂР°С†РёСЋ, СЃРѕС…СЂР°РЅСЏСЏ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ.
+
+Р’Р»РёСЏРЅРёРµ: Core РјРѕР¶РµС‚ РѕР±РЅРѕРІРёС‚СЊСЃСЏ, РЅРѕ РѕР¶РёРґР°РµРјР°СЏ РјРёРіСЂР°С†РёСЏ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРіРѕ Workplace РїРѕ СЂСѓСЃСЃРєРѕР№ РїСЂРѕС†РµРґСѓСЂРµ РЅРµ Р±СѓРґРµС‚ Р·Р°РїСЂРѕС€РµРЅР°.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ СЂСѓСЃСЃРєРёРµ plan/apply Рё РѕРїРёСЃР°РЅРёРµ СЃРѕС…СЂР°РЅРµРЅРёСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё, post-update doctor, СЏРІРЅРѕРіРѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РѕРїРµСЂР°С‚РѕСЂР°. РќРµ РїРѕРґРјРµРЅСЏС‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ РєРѕРјР°РЅРґРѕР№ `workplace-init`.
+
+РџСЂРёС‘РјРєР°: РѕРґРёРЅР°РєРѕРІС‹Р№ РїР»Р°РЅ EN/RU РЅР° РєРѕРїРёРё РїСЂРµР¶РЅРµРіРѕ Core/Workplace; РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёРµ defaults РґРѕР±Р°РІР»СЏСЋС‚СЃСЏ, РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ Р·РЅР°С‡РµРЅРёСЏ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ; РІ РѕС‚С‡С‘С‚Рµ apply Р·Р°С„РёРєСЃРёСЂРѕРІР°РЅР° РїСЂРѕРІРµСЂРєР° Workplace. Р РµР°Р»СЊРЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅРѕР№ РєРѕРїРёРё РЅРµ РІС…РѕРґРёР»Рѕ РІ СЌС‚РѕС‚ Р°СѓРґРёС‚.
+
+## D07 вЂ” P2: РІ РѕСЃРЅРѕРІРЅРѕРј Р°РіРµРЅС‚СЃРєРѕРј РјР°СЂС€СЂСѓС‚Рµ РЅРµ С…РІР°С‚Р°РµС‚ РїРѕР»РЅРѕРіРѕ РїСЂРёРјРµСЂР° transition/evidence
+
+Р”РѕРєСѓРјРµРЅС‚С‹: `docs/getting-started/agent-prompts.md:42` Рё `docs/ru/getting-started/agent-prompts.md:45` РїРµСЂРµС‡РёСЃР»СЏСЋС‚ context/search/resolve/start, РЅРѕ РЅРµ РґР°СЋС‚ Р·Р°РєРѕРЅС‡РµРЅРЅРѕРіРѕ РїСЂРёРјРµСЂР° `state в†’ transition в†’ run_completed`; `docs/concepts/declarative-process-execution.md:21` РѕРїРёСЃС‹РІР°РµС‚ evidence С‚РѕР»СЊРєРѕ РІ РѕР±С‰РµРј РІРёРґРµ. `docs/index.md:26` Рё Р°РЅР°Р»РѕРіРёС‡РЅС‹Р№ RU-РёРЅРґРµРєСЃ РЅР°РїСЂР°РІР»СЏСЋС‚ Рє СЃС‚Р°СЂРѕРјСѓ РѕР±С‰РµРјСѓ runbook, РЅРѕ РЅРµ РІРєР»СЋС‡Р°СЋС‚ РЅРѕРІС‹Рµ `garage-core.md` Рё `declarative-process-execution.md`.
+
+РљРѕРґ: `src/processforge_core/process_execution.py:802`, `_gate_state`, РїСЂРёР·РЅР°С‘С‚ С‚РѕР»СЊРєРѕ `passed`, `approved`, `not_applicable` РґР»СЏ gate evidence. РџСЂРѕР±Р° РїРѕРєР°Р·С‹РІР°РµС‚, С‡С‚Рѕ РµСЃС‚РµСЃС‚РІРµРЅРЅРѕРµ, РЅРѕ РЅРµРІРµСЂРЅРѕРµ `status: pass` РЅРµ СѓРґРѕРІР»РµС‚РІРѕСЂСЏРµС‚ gate. РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹ evidence РґРѕР»Р¶РЅС‹ СЃРѕРѕС‚РІРµС‚СЃС‚РІРѕРІР°С‚СЊ С‚РµРєСѓС‰РёРј С‚СЂРµР±РѕРІР°РЅРёСЏРј `pf.work.state`.
+
+Р­С‚Рѕ РїСЂРѕР±РµР» РґРѕРєСѓРјРµРЅС‚Р°С†РёРё, Р° РЅРµ СѓС‚РІРµСЂР¶РґРµРЅРёРµ, С‡С‚Рѕ РїРµСЂРµС…РѕРґС‹ РІРѕРѕР±С‰Рµ РЅРёРіРґРµ РЅРµ РѕРїРёСЃР°РЅС‹: MCP-РєРѕРЅС†РµРїС‚ Рё РЅРѕРІС‹Р№ РґРµРєР»Р°СЂР°С‚РёРІРЅС‹Р№ РєРѕРЅС†РµРїС‚ СЃРѕРґРµСЂР¶Р°С‚ РёС… РєСЂР°С‚РєРѕРµ РѕРїРёСЃР°РЅРёРµ.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: РґРѕР±Р°РІРёС‚СЊ РІ СЃРІСЏР·Р°РЅРЅС‹Р№ СЃ РёРЅРґРµРєСЃРѕРј runbook РѕРґРёРЅ Р·Р°РєРѕРЅС‡РµРЅРЅС‹Р№ СЃС†РµРЅР°СЂРёР№ СЃ СЂРµР°Р»СЊРЅС‹РјРё РїРѕР»СЏРјРё artifact/gate evidence, `notes`, РѕР±СЂР°Р±РѕС‚РєРѕР№ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РµРіРѕ evidence Рё РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј РґРѕ `run_completed`; РґР°С‚СЊ СЏРІРЅС‹Рµ СЃСЃС‹Р»РєРё РЅР° Р°РєС‚СѓР°Р»СЊРЅС‹Рµ РєРѕРЅС†РµРїС‚С‹ РІ РѕР±РµРёС… СЏР·С‹РєРѕРІС‹С… РІРµСЂСЃРёСЏС….
+
+РњРёРЅРёРјР°Р»СЊРЅР°СЏ С„РѕСЂРјР° РґР°РЅРЅС‹С… (id Рё РїСѓС‚Рё РЅСѓР¶РЅРѕ Р±СЂР°С‚СЊ РёР· РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ С‚РµРєСѓС‰РµРіРѕ РєРѕРЅС‚СЂР°РєС‚Р°, С„Р°Р№Р»С‹ РґРѕР»Р¶РЅС‹ СЂРµР°Р»СЊРЅРѕ СЃСѓС‰РµСЃС‚РІРѕРІР°С‚СЊ):
+
+```json
+{
+  "outcome": "completed",
+  "notes": "Р РµР·СѓР»СЊС‚Р°С‚ Р·Р°РїРёСЃР°РЅ, РїСЂРѕРІРµСЂРєР° Р·Р°РІРµСЂС€РµРЅР°; СЃР»РµРґСѓСЋС‰Р°СЏ СЃС‚Р°РґРёСЏ РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РїСЂРѕС†РµСЃСЃРѕРј.",
+  "evidence": [
+    {"kind": "artifact", "id": "task-result", "path": ".pf/artifacts/result.md"},
+    {"kind": "gate", "id": "all-blocking-tasks-completed", "status": "passed", "path": ".pf/artifacts/result.md"}
+  ]
+}
+```
+
+РџСЂРёС‘РјРєР°: РёСЃРїРѕР»РЅРёРјС‹Р№ РїСЂРёРјРµСЂ РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РЅР° РїСЂРѕС†РµСЃСЃРµ СЃ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Рј artifact Рё gate; РѕС‚СЃСѓС‚СЃС‚РІРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р° Р±Р»РѕРєРёСЂСѓРµС‚ РїРµСЂРµС…РѕРґ, РёСЃРїСЂР°РІР»РµРЅРЅРѕРµ evidence РїРѕР·РІРѕР»СЏРµС‚ РїСЂРѕРґРѕР»Р¶РёС‚СЊ, РїРѕСЃР»РµРґРЅСЏСЏ СЃС‚Р°РґРёСЏ Р·Р°РІРµСЂС€Р°РµС‚ Assignment Рё Run Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.
+
+## D08 вЂ” P2: РѕРїРёСЃР°РЅРёРµ РІР°Р»РёРґР°С‚РѕСЂР° РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… СЃСѓРјРј РЅРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РµРіРѕ РїРѕРІРµРґРµРЅРёСЋ
+
+Р”РѕРєСѓРјРµРЅС‚: `docs/validation/validation.md:21`.
+
+РџРѕСЃР»Рµ РєРѕРјР°РЅРґС‹ Р±РµР· С„Р»Р°РіРѕРІ РЅР°РїРёСЃР°РЅРѕ, С‡С‚Рѕ РѕРЅР° СЃРѕР·РґР°С‘С‚ inventory Рё РїСЂРѕРІРµСЂСЏРµС‚ checksum-РїРѕР»СЏ immutable context packages. Р¤Р°РєС‚РёС‡РµСЃРєРё РєРѕРјР°РЅРґР° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РїСЂРѕРІРµСЂСЏРµС‚ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёР№ РїСѓР±Р»РёС‡РЅС‹Р№ inventory; Р·Р°РїРёСЃСЊ С‚СЂРµР±СѓРµС‚ `--write`. РџСЂРѕРІРµСЂРєРё capsule/context checksum-РїРѕР»РµР№ СЌС‚РѕС‚ СЃРєСЂРёРїС‚ РЅРµ РІС‹РїРѕР»РЅСЏРµС‚.
+
+РљРѕРґ: `tools/validate-process-forge-checksums.py:130`, `main`: РІРµС‚РєР° Р·Р°РїРёСЃРё С‚РѕР»СЊРєРѕ РґР»СЏ `args.write`, РёРЅР°С‡Рµ `check_inventory(root, output)`; СЃРѕСЃС‚Р°РІ inventory РѕРіСЂР°РЅРёС‡РµРЅ РїСѓР±Р»РёС‡РЅС‹РјРё С„Р°Р№Р»Р°РјРё.
+
+РСЃРїСЂР°РІР»РµРЅРёРµ: СЂР°Р·РґРµР»РёС‚СЊ `--check`/default Рё `--write`; РѕС‚РґРµР»СЊРЅРѕ СѓРєР°Р·Р°С‚СЊ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ context/capsule doctors, РЅРµ РїСЂРёРїРёСЃС‹РІР°СЏ РёС… РіР°СЂР°РЅС‚РёРё inventory-РІР°Р»РёРґР°С‚РѕСЂСѓ.
+
+РџСЂРёС‘РјРєР°: РґРѕРєСѓРјРµРЅС‚Р°С†РёСЏ С‚РѕС‡РЅРѕ РѕС‚СЂР°Р¶Р°РµС‚ read-only default; РїСЂРёРјРµСЂ Р·Р°РїРёСЃРё СЏРІРЅРѕ РїРѕРјРµС‡РµРЅ РєР°Рє РёР·РјРµРЅРµРЅРёРµ inventory; РїСЂРѕРІРµСЂРєРё РЅРµРёР·РјРµРЅСЏРµРјС‹С… РєРѕРЅС‚РµРєСЃС‚РѕРІ РЅР°Р·РІР°РЅС‹ РѕС‚РґРµР»СЊРЅРѕ.
+
+## РџСЂРѕРІРµСЂРєРё Рё РіСЂР°РЅРёС†С‹ РіРѕС‚РѕРІРЅРѕСЃС‚Рё
+
+РЎРІРµР¶РёР№ РІС‹Р±РѕСЂРѕС‡РЅС‹Р№ `release-test --no-clean` СЃ РІРѕСЃРµРјСЊСЋ `--only` Р·Р°РІРµСЂС€РёР»СЃСЏ **RESULT: PASS**, 83.18 СЃ:
+
+- `smoke_docs_garage_no_runtime_required`
+- `smoke_docs_mcp_host_owned_stdio`
+- `smoke_docs_agent_no_manual_infra`
+- `smoke_docs_codex_hooks_optional`
+- `smoke_multi_process_work_capsule`
+- `smoke_work_transition_blocks_missing_gate`
+- `smoke_work_transition_final_stage_completes_run`
+- `smoke_agent_ledger`
+
+РџСЂРѕС€Р»Рё С‚Р°РєР¶Рµ schema validator, public cleanliness, checksum inventory Рё `git diff --check` (РїРѕСЃР»РµРґРЅРёР№ СЃРѕРѕР±С‰Р°РµС‚ С‚РѕР»СЊРєРѕ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ Рѕ РЅРѕСЂРјР°Р»РёР·Р°С†РёРё CRLF). РҐРµС€Рё РІСЃРµС… 298 РѕР±СЃР»РµРґРѕРІР°РЅРЅС‹С… РґРѕРєСѓРјРµРЅС‚РѕРІ СЃРѕС…СЂР°РЅРµРЅС‹ Рё РїРѕРІС‚РѕСЂРЅРѕ СЃСЂР°РІРЅРµРЅС‹: РёР·РјРµРЅРµРЅРёР№ РЅРµС‚.
+
+Р—РµР»С‘РЅС‹Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ docs-smokes РЅРµ РѕРїСЂРѕРІРµСЂРіР°СЋС‚ РЅР°С…РѕРґРєРё: РЅР°РїСЂРёРјРµСЂ, `tools/smoke_docs_agent_no_manual_infra.py:11` РїСЂРѕРІРµСЂСЏРµС‚ С‡РµС‚С‹СЂРµ РІС‹Р±СЂР°РЅРЅС‹С… С„Р°Р№Р»Р° Рё РЅР°Р»РёС‡РёРµ РјР°СЂРєРµСЂРѕРІ, РЅРѕ РЅРµ СЃРїРµС†РёР°Р»РёР·РёСЂРѕРІР°РЅРЅС‹Р№ task-batch РїСЂРѕРјРїС‚ Рё РЅРµ РёСЃРїРѕР»РЅСЏРµС‚ РІСЃРµ РїСЂРёРјРµСЂС‹ РґРѕРєСѓРјРµРЅС‚Р°С†РёРё. РќРѕРІС‹Р№ inventory РІС‹СЏРІР»СЏРµС‚ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРµ РѕС€РёР±РєРё РєРѕРјР°РЅРґ, РЅРѕ С‚РѕР¶Рµ РЅРµ Р·Р°РјРµРЅСЏРµС‚ СЃС†РµРЅР°СЂРЅС‹Рµ РїСЂРѕРІРµСЂРєРё.
+
+РџСЂРµРґС‹РґСѓС‰РёР№ РїРѕР»РЅС‹Р№ Р·Р°РїСѓСЃРє РёР· Р·Р°РґР°С‡Рё РёСЃРїСЂР°РІР»РµРЅРёСЏ required outputs, **РЅРµ РЅРѕРІС‹Р№ РїРѕР»РЅС‹Р№ Р·Р°РїСѓСЃРє СЌС‚РѕРіРѕ Р°СѓРґРёС‚Р°**, РѕСЃС‚Р°РЅРѕРІРёР»СЃСЏ СЃ **86 PASS / 1 FAIL**: `smoke_context_freshness_vs_execution_readiness.py:160` РІСЃС‘ РµС‰С‘ РїРµСЂРµРґР°С‘С‚ РѕС‚РІРµСЂРіР°РµРјС‹Р№ `search-index refresh --project-root`. РћС‚С‡С‘С‚: [required-output-checks-release-test-20260907.json](required-output-checks-release-test-20260907.json). РћСЃС‚Р°РІС€РёРµСЃСЏ РїСЂРѕРІРµСЂРєРё РІ С‚РѕРј fail-fast Р·Р°РїСѓСЃРєРµ РЅРµ РІС‹РїРѕР»РЅРµРЅС‹. РџРѕР»РЅР°СЏ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ РїСЂРѕРґСѓРєС‚Р° Рє СЂРµР»РёР·Сѓ РЅРµ РїРѕРґС‚РІРµСЂР¶РґРµРЅР°.
+
+РќРµ Р·Р°РїРёСЃР°РЅРѕ РєР°Рє РїРѕРґС‚РІРµСЂР¶РґС‘РЅРЅР°СЏ РѕС€РёР±РєР°: С„СЂР°Р·Р° known-limitations Рѕ claim/lease coordination С‚СЂРµР±СѓРµС‚ СѓС‚РѕС‡РЅРµРЅРёСЏ РіСЂР°РЅРёС†С‹ РјРµР¶РґСѓ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРј СЂРµРµСЃС‚СЂРѕРј lease Рё Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕР№ РєРѕРЅРєСѓСЂРµРЅС‚РЅРѕР№ РєРѕРѕСЂРґРёРЅР°С†РёРµР№. РќР°Р»РёС‡РёРµ grant/release/revoke СЃР°РјРѕ РїРѕ СЃРµР±Рµ РЅРµ РґРѕРєР°Р·С‹РІР°РµС‚ СЂРµР°Р»РёР·Р°С†РёСЋ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРіРѕ claim scheduler; РїРѕСЌС‚РѕРјСѓ РѕС‚РґРµР»СЊРЅРѕР№ РЅР°С…РѕРґРєРё СЃ С‚Р°РєРёРј РІС‹РІРѕРґРѕРј РЅРµС‚.
+
+## РџР»Р°РЅ РїСЂРµРґСЂРµР»РёР·РЅРѕР№ РїСЂР°РІРєРё Рё РїСЂРёС‘РјРєРё
+
+1. РСЃРїСЂР°РІРёС‚СЊ D01, D02, D04, D05, D06 РІ EN/RU Рё РїРѕСЃС‚Р°РІР»СЏРµРјС‹С… РїСЂРѕРјРїС‚Р°С…; Р·Р°С‚РµРј D03, D07, D08. РР·РјРµРЅРµРЅРёСЏ РґРѕР»Р¶РЅС‹ РїСЂРѕР№С‚Рё РѕС‚РґРµР»СЊРЅСѓСЋ governed implementation-Р·Р°РґР°С‡Сѓ.
+2. Р”РѕР±Р°РІРёС‚СЊ РёСЃРїРѕР»РЅРёРјС‹Рµ РїСЂРѕРІРµСЂРєРё РґРѕРєСѓРјРµРЅС‚РёСЂРѕРІР°РЅРЅС‹С… CLI-РїСЂРёРјРµСЂРѕРІ Рё СЃС†РµРЅР°СЂРёРµРІ: task batch РґРѕ РєРѕРЅС†Р°, multi-process РІС‹Р±РѕСЂ, required outputs, gate evidence, update plan СЃ Workplace. Р Р°СЃС€РёСЂРёС‚СЊ РѕС…РІР°С‚ docs-smokes РЅР° РѕСЃРЅРѕРІРЅС‹Рµ РїСЂРѕРјРїС‚С‹ Рё РѕР±Рµ СЏР·С‹РєРѕРІС‹Рµ РІРµСЂСЃРёРё.
+3. РЈСЃС‚СЂР°РЅРёС‚СЊ РёР·РІРµСЃС‚РЅС‹Р№ СЂР°СЃСЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРЅС‹Р№ search-index smoke; РІС‹РїРѕР»РЅРёС‚СЊ РїРѕР»РЅС‹Р№ source release-test СЃ С‚РµСЂРјРёРЅР°Р»СЊРЅС‹Рј PASS. РќРµ РїСЂРёСЂР°РІРЅРёРІР°С‚СЊ 8 С†РµР»РµРІС‹С… PASS Рє РїРѕР»РЅРѕРјСѓ РІС‹РїСѓСЃРєРЅРѕРјСѓ РїСЂРѕРіРѕРЅСѓ.
+4. РџРѕРґРіРѕС‚РѕРІРёС‚СЊ СЃРѕРіР»Р°СЃРѕРІР°РЅРЅС‹Р№ РєР°РЅРґРёРґР°С‚ 1.1.1: VERSION, CHANGELOG, release/update metadata, РЅРѕРІР°СЏ checksum inventory РїРѕСЃР»Рµ РїСЂР°РІРѕРє. РСЃС‚РѕСЂРёС‡РµСЃРєРёРµ 1.1.0 РјР°С‚РµСЂРёР°Р»С‹ РЅРµ РїРµСЂРµРїРёСЃС‹РІР°С‚СЊ РјР°СЃСЃРѕРІРѕР№ Р·Р°РјРµРЅРѕР№.
+5. РЇРІРЅРѕ РѕРїСЂРµРґРµР»РёС‚СЊ РїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ РїСѓС‚Рё РѕР±РЅРѕРІР»РµРЅРёСЏ 1.1.1. Р•РґРёРЅСЃС‚РІРµРЅРЅР°СЏ С‚РµРєСѓС‰Р°СЏ Workplace migration РЅР°С†РµР»РµРЅР° СЃС‚СЂРѕРіРѕ РЅР° 1.1.0; `load_archive_workplace_migration` (`src/processforge_core/core_update.py:210`) РІС‹Р±РёСЂР°РµС‚ С‚РѕС‡РЅРѕРµ `to_version`. РџСЂРѕСЃС‚РѕРµ РёР·РјРµРЅРµРЅРёРµ VERSION РЅРµ РґРµР»Р°РµС‚ РµС‘ РјРёРіСЂР°С†РёРµР№ РЅР° 1.1.1. РќСѓР¶РЅРѕ СЂРµС€РёС‚СЊ Рё РїСЂРѕРІРµСЂРёС‚СЊ РїСЂСЏРјРѕР№ РїСѓС‚СЊ СЃС‚Р°СЂС‹С… Workplace Рє 1.1.1 Р»РёР±Рѕ РґРѕРєСѓРјРµРЅС‚РёСЂРѕРІР°С‚СЊ РЅРµРѕР±С…РѕРґРёРјС‹Р№ РїСЂРѕРјРµР¶СѓС‚РѕС‡РЅС‹Р№ РІС‹РїСѓСЃРє; Р°СѓРґРёС‚ РЅРµ РґРµР»Р°РµС‚ СЌС‚Рѕ РїСЂРѕРґСѓРєС‚РѕРІРѕРµ СЂРµС€РµРЅРёРµ Р·Р° РІР»Р°РґРµР»СЊС†Р°.
+6. РџРѕ `docs/maintainers/release-publishing.md` РїРѕРґРіРѕС‚РѕРІРёС‚СЊ С‡РёСЃС‚С‹Р№ РёСЃС…РѕРґРЅС‹Р№ РєР°РЅРґРёРґР°С‚, РїРѕР»СѓС‡РёС‚СЊ source PASS, СЃРѕР±СЂР°С‚СЊ Р°СЂС…РёРІ РёР· С‚РѕС‡РЅРѕРіРѕ commit/tag, РїСЂРѕРІРµСЂРёС‚СЊ sidecar/hash/parity Рё РїРѕР»РЅС‹Р№ extracted-archive PASS. РўРѕР»СЊРєРѕ Р·Р°С‚РµРј РїСЂРёРЅРёРјР°С‚СЊ СЂРµС€РµРЅРёРµ Рѕ РїСѓР±Р»РёРєР°С†РёРё. РЈСЃС‚Р°РЅРѕРІРєР°, apply, rollback, repair Рё РїСѓР±Р»РёРєР°С†РёСЏ РЅРµ РІС‹РїРѕР»РЅСЏР»РёСЃСЊ.
+
+Р РµР·СѓР»СЊС‚Р°С‚ Р°СѓРґРёС‚Р° РіРѕС‚РѕРІ Рє РѕС‚РґРµР»СЊРЅРѕР№ Р·Р°РґР°С‡Рµ РёСЃРїСЂР°РІР»РµРЅРёСЏ. РќР°Р№РґРµРЅРЅС‹Рµ РїСЂРѕРґСѓРєС‚РѕРІС‹Рµ РїСЂРѕР±Р»РµРјС‹ РѕСЃС‚Р°СЋС‚СЃСЏ РѕС‚РєСЂС‹С‚С‹РјРё; Р·Р°РІРµСЂС€РµРЅРёРµ audit Run РѕР·РЅР°С‡Р°РµС‚ Р·Р°РІРµСЂС€РµРЅРёРµ РёСЃСЃР»РµРґРѕРІР°РЅРёСЏ, Р° РЅРµ РїСЂРѕС…РѕР¶РґРµРЅРёРµ СЂРµР»РёР·РЅРѕРіРѕ Р±Р°СЂСЊРµСЂР°.
+# Resource Search Index
+
+ProcessForge local search has three separate boundaries:
+
+- versioned workplace resources declare what may be indexed;
+- the workplace SQLite FTS5 index stores derived resource documents;
+- the project context snapshot authorizes which resource ids a session may query.
+
+Projects do not own search documents. They only carry allowed resource
+identities and fingerprints in the snapshot. The private derived DB lives under:
+
+```text
+<workplace>/runtime/search/local-resource-search.sqlite
+```
+
+`pf.search` is a query adapter. It does not fall back to the full workplace,
+other projects, home directories, Context7, the web, or a hidden `rg` pass over
+large source trees.
+
+Each result contains a stable `document_id`, `resource_id`, canonical relative
+locator, provenance, and `match_reason` (`content` or `metadata`). The locator
+is meaningful only while its snapshot remains current; agents use `pf.resolve`
+for authorized private navigation rather than reconstructing resource roots.
+
+## Indexing Policy
+
+Resources use one reusable contract:
+
+```yaml
+indexing:
+  enabled: true
+  mode: fulltext # fulltext | metadata | none
+  fields:
+    - title
+    - description
+    - tags
+  sources:
+    - path: articles
+      mode: fulltext
+      include:
+        - "**/*.md"
+      exclude:
+        - drafts/**
+    - path: core/6.1.2
+      mode: metadata
+      role: source_tree
+```
+
+`fulltext` stores metadata plus selected text files in FTS. `metadata` stores
+identity, title, description, version, root/path reference, and declared
+metadata only. `none` excludes the resource from local search.
+
+Large source trees, SDK mirrors, vendor trees, and multi-version platform
+snapshots should use `metadata` unless their manifest explicitly selects a
+small fulltext source. Search can return a navigation root, but Codex should use
+normal filesystem reads and `rg` inside the selected root when it needs source
+code detail.
+
+## SQLite Model
+
+The derived DB schema is resource-oriented:
+
+```text
+resources
+documents
+documents_fts
+index_state
+```
+
+`resources` tracks `resource_id`, `resource_type`, `version`, `fingerprint`,
+`indexing_policy_hash`, `root_ref`, and refresh status. `documents` tracks
+`resource_id`, `relative_path`, `kind`, `title`, hashes, and JSON metadata.
+`documents_fts` stores searchable fulltext fields. `index_state` stores the
+current Workplace resource-catalogue state. Project snapshots never create
+index state or duplicate documents: they authorize resource ids per query.
+
+## CLI
+
+```bash
+python bin/pf.py search-index status --workplace <workplace>
+python bin/pf.py search-index refresh --workplace <workplace>
+python bin/pf.py search-index rebuild --workplace <workplace>
+python bin/pf.py search-index doctor --workplace <workplace>
+python bin/pf.py search-index tick --workplace <workplace>
+```
+
+`status` is read-only. `status --verify-files` performs explicit fingerprint
+reconciliation and reports stale state when registered Workplace resource
+content changed. `refresh` indexes every registered Workplace package/resource
+once, respecting `indexing.mode`; it does not read a project snapshot. `rebuild`
+deletes the derived DB and builds it again. `tick` is the bounded maintenance
+unit for operators and Runtime scheduling.
+
+## Runtime And MCP
+
+Runtime maintenance may run `tick` for the Workplace. It does not enumerate
+projects or depend on Runtime, Ledger, or active sessions. PF-owned resource
+mutations mark existing index state stale; external file changes are detected
+by fingerprint verification during `tick`.
+
+`pf.search` never reports stale data as `fresh`. If the index is missing, stale,
+or degraded, the result carries that `search_status` and returns no matches
+until maintenance refreshes the derived DB.
+
+Index freshness is not the same as semantic corpus readiness. A project can
+have a fresh SQLite/FTS index with zero authorized resources or zero indexed
+documents. Garage readiness checks should therefore show both infrastructure
+state and corpus state: snapshot freshness, SQLite/FTS availability, index
+freshness, authorized resource count, and indexed document count.
+
+`pf.search` requires a project root, fresh resource resolution, fresh index
+state, and resources authorized by that project's snapshot. It does not require
+a Ledger session, hooks, daemon, write access, browser automation, CI,
+deployment, or any other capability that is unrelated to the read-only query.
+When a session id is supplied, MCP verifies that the session is bound to the
+same project and then treats the session as an enhancement, not as the
+authorization source. For example:
+
+```text
+Joomla resources fresh
+filesystem.write missing
+-> pf.search works
+-> write-dependent action remains blocked
+```
+
+`pf.session_context` exposes compact readiness:
+
+```yaml
+context_freshness:
+  status: fresh
+resource_readiness:
+  status: fresh
+execution_readiness:
+  status: blocked
+search:
+  status: fresh
+  generation: <index-generation>
+  stale: false
+```
+
+Resolved local paths are request-local runtime data. Public snapshots and
+artifacts keep `path_ref` references instead of private absolute paths.
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-Content -Path docs/ru/concepts/resource-search-index.md -Encoding UTF8 | Select-Object -First 260' in D:\Dev\process-forge
+ succeeded in 321ms:
+# Индекс поиска ресурсов
+
+Локальный поиск ProcessForge разделяет три границы:
+
+- версионируемые ресурсы workplace объявляют, что можно индексировать;
+- workplace-level SQLite FTS5 index хранит производные документы ресурсов;
+- project context snapshot разрешает, какие `resource_id` доступны сессии.
+
+Проекты не владеют поисковыми документами. Они хранят только разрешенные
+идентификаторы ресурсов и fingerprints в snapshot. Приватная производная DB
+находится здесь:
+
+```text
+<workplace>/runtime/search/local-resource-search.sqlite
+```
+
+`pf.search` является query adapter. Он не делает fallback на весь workplace,
+другие проекты, home directory, Context7, web или скрытый `rg` по большим
+деревьям исходного кода.
+
+## Indexing Policy
+
+Для ресурсов используется единый reusable contract:
+
+```yaml
+indexing:
+  enabled: true
+  mode: fulltext # fulltext | metadata | none
+  fields:
+    - title
+    - description
+    - tags
+  sources:
+    - path: articles
+      mode: fulltext
+      include:
+        - "**/*.md"
+      exclude:
+        - drafts/**
+    - path: core/6.1.2
+      mode: metadata
+      role: source_tree
+```
+
+`fulltext` кладет в FTS metadata и выбранные текстовые файлы. `metadata`
+сохраняет только identity, title, description, version, root/path reference и
+объявленную metadata. `none` исключает ресурс из локального поиска.
+
+Большие source trees, SDK mirrors, vendor trees и multi-version platform
+snapshots должны использовать `metadata`, если manifest явно не выбирает
+маленький fulltext source. Поиск может вернуть navigation root, но для деталей
+исходного кода Codex должен использовать обычные filesystem reads и `rg` внутри
+выбранного root.
+
+## SQLite Model
+
+Производная DB ориентирована на ресурсы:
+
+```text
+resources
+documents
+documents_fts
+index_state
+```
+
+`resources` хранит `resource_id`, `resource_type`, `version`, `fingerprint`,
+`indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+`resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+`documents_fts` хранит searchable fulltext fields. `index_state` хранит
+authorization state текущего project snapshot без дублирования documents под
+каждый проект.
+
+## CLI
+
+```bash
+python bin/pf.py search-index status --workplace <workplace>
+python bin/pf.py search-index refresh --workplace <workplace>
+python bin/pf.py search-index rebuild --workplace <workplace>
+python bin/pf.py search-index doctor --workplace <workplace>
+python bin/pf.py search-index tick --workplace <workplace>
+```
+
+`status` работает read-only. `status --verify-files` выполняет явную
+fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+bounded maintenance unit для оператора и Runtime scheduling.
+
+## Runtime И MCP
+
+Runtime maintenance должен периодически запускать `tick` для известных проектов
+со свежими snapshots. PF-owned resource mutations помечают существующий index
+state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+во время `tick`.
+
+`pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+или degraded, результат возвращает этот `search_status` и пустые matches до
+maintenance refresh производной DB.
+
+`pf.session_context` показывает компактную готовность поиска:
+
+```yaml
+search:
+  status: fresh
+  generation: <index-generation>
+  stale: false
+```
+
+Resolved local paths являются request-local runtime data. Public snapshots и
+artifacts хранят `path_ref`, а не private absolute paths.
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$OutputEncoding=[System.Text.UTF8Encoding]::new($false); Get-Content -Encoding UTF8 docs/concepts/assignment-front-matter.md; Get-Content -Encoding UTF8 docs/validation/validation.md' in D:\Dev\process-forge
+ succeeded in 224ms:
+# Assignment Front Matter
+
+Automated assignment execution uses YAML front matter or a separate assignment
+YAML file as its machine-readable source. Markdown headings and prose are for
+humans and agents, not for stable machine authority.
+
+Example:
+
+```markdown
+---
+schema_version: 1
+id: example-assignment
+status: ready
+role: worker
+process: software-feature-development
+stage: implementation
+required_capabilities:
+  - repository.read
+optional_capabilities:
+  - repository.symbol_analysis
+allowed_files:
+  - .pf/artifacts/**
+forbidden_files:
+  - .pf/runtime/**
+required_outputs:
+  - id: example-report
+    path: .pf/artifacts/example-report.md
+    type: markdown
+    required: true
+hooks:
+  tracking: detailed
+  chat_capture: enabled
+  emit_on_complete: true
+  notify_wtaicc: outbox
+chat_capture:
+  enabled: false
+  include_content: false
+---
+
+# Assignment: Example
+```
+
+If front matter is missing, the assignment is human-readable only. It can guide
+manual work, but it cannot produce an automated context capsule.
+
+Use:
+
+```bash
+python bin/pf.py assignment-capsule --project-root <project-root> --assignment <assignment-file>
+```
+
+The generated capsule includes the snapshot checksum, scope, capabilities,
+required outputs, telemetry path, and event correlation id.
+
+Assignment hook options can request detailed tracking or chat capture, but they
+cannot disable process-required events unless the process policy allows it. Chat
+content remains metadata-only for outbox delivery unless `include_content` is
+explicitly enabled.
+# Validation
+
+ProcessForge ships with lightweight local validators.
+
+## Schema and Structure
+
+```bash
+python tools/validate-process-forge-schemas.py
+```
+
+Checks required files, JSON schema syntax, seed process fields, manifest references, and basic yaml-like file structure.
+
+## Checksums
+
+```bash
+python tools/validate-process-forge-checksums.py
+```
+
+Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
+
+Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
+
+This command checks only public file inventories. It does not validate context capsules.
+
+## Public Cleanliness
+
+```bash
+python tools/validate-public-cleanliness.py
+```
+
+Checks public product files for private paths, secrets, temporary private notes, and private internal references.
+
+codex
+I have the current RU/EN/doc contents; next I’ll run the parser/help checks you requested (build_parser with explicit sys.path setup, plus relevant `--help` output) and then patch only the three target docs.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "python - <<'PY'
+import sys
+sys.path.insert(0, 'tools')
+import processforge
+parser = processforge.core.build_parser()
+commands = ['search-index status','search-index refresh','search-index rebuild','search-index doctor','search-index tick']
+for c in commands:
+    ns = parser.parse_args(c.split())
+    print(f'CMD {c} -> subcmd={getattr(ns, \"command\", None)} workplace={getattr(ns, \"workplace\", None)}')
+PY" in D:\Dev\process-forge
+ exited 1 in 305ms:
+At line:2 char:11
++ python - <<'PY'
++           ~
+Missing file specification after redirection operator.
+At line:2 char:10
++ python - <<'PY'
++          ~
+The '<' operator is reserved for future use.
+At line:2 char:11
++ python - <<'PY'
++           ~
+The '<' operator is reserved for future use.
+At line:6 char:41
++ parser = processforge.core.build_parser()
++                                         ~
+An expression was expected after '('.
+At line:8 char:4
++ for c in commands:
++    ~
+Missing opening '(' after keyword 'for'.
+At line:9 char:36
++     ns = parser.parse_args(c.split())
++                                    ~
+An expression was expected after '('.
+    + CategoryInfo          : ParserError: (:) [], ParentConta 
+   insErrorRecordException
+    + FullyQualifiedErrorId : MissingFileSpecification
+ 
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import sys
+sys.path.insert(0, 'tools')
+import processforge
+parser = processforge.core.build_parser()
+commands = ['search-index status','search-index refresh','search-index rebuild','search-index doctor','search-index tick']
+for c in commands:
+    ns = parser.parse_args(c.split())
+    print(f'CMD {c} -> subcmd={getattr(ns, \"command\", None)} workplace={getattr(ns, \"workplace\", None)}')
+'@ | python -" in D:\Dev\process-forge
+ exited 1 in 561ms:
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+AttributeError: module 'processforge' has no attribute 'core'
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "python -c \"import sys; sys.path.insert(0,'tools'); import processforge; import inspect; print(processforge.__file__, dir(processforge)[:20])\"" in D:\Dev\process-forge
+ succeeded in 1101ms:
+D:\Dev\process-forge\tools\processforge.py ['ACTIVE_ASSIGNMENT_STATUSES', 'AGENT_RUN_FAILURE_TERMINAL_STATUSES', 'AGENT_RUN_START_SKIP_STATUSES', 'AGENT_RUN_STATUSES', 'AUTHORING_FAILURE_INJECTOR', 'Any', 'AuthoringEffect', 'AuthoringPlan', 'AuthoringWrite', 'BACKSLASH', 'CATALOG_PROCESS_CATALOG_CLASSIFICATIONS', 'COLON_WS', 'CONTROL_CHAR_RE', 'COORDINATION_PROJECT_MODES', 'CRITICAL_PARITY_PROCESSES', 'Check', 'DEFAULT_PATH_CONSTANTS', 'DEFAULT_SCAN_POLICY', 'DETACHED_WORKER_PROCESSES', 'DIRECTOR_OFFICE_DEFAULTS']
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "python -c \"import sys,re; sys.path.insert(0,'tools'); import processforge; import inspect; print('build_parser' in dir(processforge)); print([n for n in dir(processforge) if 'parser' in n.lower() and 'build' in n.lower()])\"" in D:\Dev\process-forge
+ succeeded in 6487ms:
+True
+['build_parser']
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import sys
+sys.path.insert(0, 'tools')
+import processforge
+parser = processforge.build_parser()
+commands = ['search-index status','search-index refresh','search-index rebuild','search-index doctor','search-index tick']
+for c in commands:
+    ns = parser.parse_args(c.split())
+    print(f'CMD {c} -> command={getattr(ns,\"command\", None)} workplace={getattr(ns,\"workplace\", None)}')
+'@ | python -" in D:\Dev\process-forge
+ exited 1 in 1982ms:
+usage: - search-index status [-h] --workplace WORKPLACE [--verify-files]
+- search-index status: error: the following arguments are required: --workplace
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import sys
+sys.path.insert(0, 'tools')
+import processforge
+parser = processforge.build_parser()
+commands = ['search-index status --workplace X', 'search-index refresh --workplace X', 'search-index rebuild --workplace X', 'search-index doctor --workplace X', 'search-index tick --workplace X']
+for c in commands:
+    ns = parser.parse_args(c.split())
+    print(f'CMD {c} -> command={getattr(ns,\"command\", None)} workplace={getattr(ns,\"workplace\", None)}')
+'@ | python -" in D:\Dev\process-forge
+ succeeded in 861ms:
+CMD search-index status --workplace X -> command=search-index workplace=X
+CMD search-index refresh --workplace X -> command=search-index workplace=X
+CMD search-index rebuild --workplace X -> command=search-index workplace=X
+CMD search-index doctor --workplace X -> command=search-index workplace=X
+CMD search-index tick --workplace X -> command=search-index workplace=X
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import sys
+sys.path.insert(0, 'tools')
+import processforge
+parser = processforge.build_parser()
+commands = ['search-index status --workplace X', 'search-index refresh --workplace X', 'search-index rebuild --workplace X', 'search-index doctor --workplace X', 'search-index tick --workplace X']
+for c in commands:
+    ns = parser.parse_args(c.split())
+    vals = sorted((k, v) for k, v in vars(ns).items())
+    print(f'CMD {c}: {vals}')
+'@ | python -" in D:\Dev\process-forge
+ succeeded in 841ms:
+CMD search-index status --workplace X: [('command', 'search-index'), ('func', <function command_search_index_status at 0x000001EB2BB794E0>), ('search_index_command', 'status'), ('verify_files', False), ('workplace', 'X')]
+CMD search-index refresh --workplace X: [('command', 'search-index'), ('func', <function command_search_index_refresh at 0x000001EB2BB79640>), ('search_index_command', 'refresh'), ('workplace', 'X')]
+CMD search-index rebuild --workplace X: [('command', 'search-index'), ('func', <function command_search_index_rebuild at 0x000001EB2BB797A0>), ('search_index_command', 'rebuild'), ('workplace', 'X')]
+CMD search-index doctor --workplace X: [('command', 'search-index'), ('func', <function command_search_index_doctor at 0x000001EB2BB79900>), ('search_index_command', 'doctor'), ('workplace', 'X')]
+CMD search-index tick --workplace X: [('command', 'search-index'), ('func', <function command_search_index_tick at 0x000001EB2BB79A60>), ('search_index_command', 'tick'), ('skip_file_verify', False), ('workplace', 'X')]
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python bin/pf.py search-index -h; python bin/pf.py checksums --help; python bin/pf.py project-context --help; python bin/pf.py project-context check --help; python bin/pf.py capsule --help; python bin/pf.py capsule doctor --help' in D:\Dev\process-forge
+ exited 1 in 10462ms:
+usage: processforge.py search-index [-h]
+                                    {status,refresh,rebuild,doctor,tick} ...
+
+positional arguments:
+  {status,refresh,rebuild,doctor,tick}
+    status              Show readiness of the shared Workplace search index.
+    refresh             Refresh all registered Workplace resources in the
+                        shared search index.
+    rebuild             Rebuild the derived shared Workplace search index.
+    doctor              Validate shared Workplace search index capabilities
+                        and readiness.
+    tick                Run one bounded maintenance pass for the shared
+                        Workplace index.
+
+options:
+  -h, --help            show this help message and exit
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'checksums' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'project-context' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'project-context' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'capsule' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'capsule' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+
+codex
+The help check caught a naming mismatch (`checksums` is not a top-level command). I’ll confirm the actual command surface and continue with the required checks plus the `project-context`/`capsule` doctor flag verification.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n "checksums|validate-process-forge-checksums|project-context-check|capsule-doctor|assignment-capsule" tools/processforge.py | Select-Object -First 40' in D:\Dev\process-forge
+ succeeded in 652ms:
+111:    "contexts/assignment-capsules",
+5807:- `python .pf/runtime/bin/pf.py project-context-check --project-root .`
+6238:RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
+6256:    "checksums/processforge.sha256",
+6886:        ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
+7452:        ("checksum inventory", root / "tools" / "validate-process-forge-checksums.py"),
+9799:    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
+11883:        "checksums": {"assignment": sha256_file(assignment), "context_index": sha256_file(contexts / "context-index.yaml")},
+12002:            "- Run assignment-capsule before starting assignment workers.",
+12301:        "recommended_action": "project-context-check",
+12959:    capsule_dir = flow_root / "contexts" / "assignment-capsules"
+18454:    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
+18579:        "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
+19720:    capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+19818:        capsule_rel = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+19836:- .pf/contexts/assignment-capsules/
+20207:                    capsule=rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
+20918:    print("DEPRECATED: context-resolve is a compatibility command. Use project-context-refresh and project-context-check for .pf projects.")
+20930:    print("DEPRECATED: context-compile is a compatibility command. Use assignment-capsule with YAML front matter for .pf projects.")
+20946:    return locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{safe_id(task_id, 'task')}.capsule.yaml"
+21034:            ecp_checksums = ecp_data.get("checksums", {}) if isinstance(ecp_data, dict) else {}
+21038:                    "PASS" if ecp_checksums.get("context_index") == expected_context_index_checksum else "FAIL",
+26600:    project_context_check = sub.add_parser("project-context-check", help="Check project context snapshot freshness.")
+26616:    assignment_capsule = sub.add_parser("assignment-capsule", help="Create an assignment capsule from snapshot plus assignment front matter.")
+26622:    capsule_doctor = sub.add_parser("capsule-doctor", help="Validate that an assignment capsule pins a context snapshot.")
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$OutputEncoding=[System.Text.UTF8Encoding]::new($false); (Get-Content tools/processforge.py | Select-Object -Index (6840..6925))' in D:\Dev\process-forge
+ succeeded in 692ms:
+        return ReleaseCommandResult(label, "PASS", 0, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+    if allow_warn:
+        return ReleaseCommandResult(label, "WARN", code, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+    return ReleaseCommandResult(label, "FAIL", code, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+
+
+def print_release_command_output(result: ReleaseCommandResult) -> None:
+    print(f"{result.status} {result.label}")
+    print(f"  finished_at: {result.finished_at}")
+    print(f"  elapsed_seconds: {result.elapsed_seconds:.2f}")
+    if result.status != "PASS":
+        print(f"  exit: {result.code}")
+        ReleaseCommand("smoke_official_packs_not_examples", [sys.executable, str(root / "tools" / "smoke_official_packs_not_examples.py")], 120),
+        ReleaseCommand("smoke_official_pack_manifest_schema", [sys.executable, str(root / "tools" / "smoke_official_pack_manifest_schema.py")], 120),
+        ReleaseCommand("smoke_official_software_process_available", [sys.executable, str(root / "tools" / "smoke_official_software_process_available.py")], 120),
+        ReleaseCommand("smoke_official_pack_not_kernel", [sys.executable, str(root / "tools" / "smoke_official_pack_not_kernel.py")], 120),
+        ReleaseCommand("smoke_generic_workplace_no_domain_pack_active", [sys.executable, str(root / "tools" / "smoke_generic_workplace_no_domain_pack_active.py")], 120),        ReleaseCommand("smoke_official_process_can_start_minimal_run", [sys.executable, str(root / "tools" / "smoke_official_process_can_start_minimal_run.py")], 180),        ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),        ReleaseCommand("smoke_codex_worker_governance", [sys.executable, str(root / "tools" / "smoke_codex_worker_governance.py")], 120),        ReleaseCommand("smoke_runtime_mcp_autostart", [sys.executable, str(root / "tools" / "smoke_runtime_mcp_autostart.py")], 120),
+        ReleaseCommand("smoke_central_event_replay", [sys.executable, str(root / "tools" / "smoke_central_event_replay.py")], 180),
+        ReleaseCommand("smoke_conversation_completeness", [sys.executable, str(root / "tools" / "smoke_conversation_completeness.py")], 180),
+        ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
+        ReleaseCommand("smoke_director_inspector_boundary", [sys.executable, str(root / "tools" / "smoke_director_inspector_boundary.py")], 180),
+        ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
+        ReleaseCommand("smoke_agent_ledger", [sys.executable, str(root / "tools" / "smoke_agent_ledger.py")], 120),
+        ReleaseCommand("smoke_single_agent_session_flow", [sys.executable, str(root / "tools" / "smoke_single_agent_session_flow.py")], 180),
+        ReleaseCommand("smoke_multi_project_agent_sessions", [sys.executable, str(root / "tools" / "smoke_multi_project_agent_sessions.py")], 180),
+        ReleaseCommand("smoke_runtime_host_poc", [sys.executable, str(root / "tools" / "smoke_runtime_host_poc.py")], 180),
+        ReleaseCommand("smoke_long_lived_runtime", [sys.executable, str(root / "tools" / "smoke_long_lived_runtime.py")], 240),
+        ReleaseCommand("smoke_multi_agent_as_composed_sessions", [sys.executable, str(root / "tools" / "smoke_multi_agent_as_composed_sessions.py")], 180),
+        ReleaseCommand("smoke_project_coordination_modes", [sys.executable, str(root / "tools" / "smoke_project_coordination_modes.py")], 180),
+        ReleaseCommand("smoke_mixed_workplace_projects", [sys.executable, str(root / "tools" / "smoke_mixed_workplace_projects.py")], 180),
+        ReleaseCommand("smoke_worker_awareness_of_director", [sys.executable, str(root / "tools" / "smoke_worker_awareness_of_director.py")], 180),
+        ReleaseCommand("smoke_error_workflow", [sys.executable, str(root / "tools" / "smoke_error_workflow.py")], 180),
+        ReleaseCommand("smoke_process_transition_handoff", [sys.executable, str(root / "tools" / "smoke_process_transition_handoff.py")], 120),
+        ReleaseCommand("smoke_agent_director_tick", [sys.executable, str(root / "tools" / "smoke_agent_director_tick.py")], 120),
+        ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
+        ReleaseCommand("smoke_orchestrator_shell_agents_with_subagent_policy", [sys.executable, str(root / "tools" / "smoke_orchestrator_shell_agents_with_subagent_policy.py")], 180),
+        ReleaseCommand("smoke_builtin_process_catalog", [sys.executable, str(root / "tools" / "smoke_builtin_process_catalog.py")], 120),
+        ReleaseCommand("smoke_process_directory_layout", [sys.executable, str(root / "tools" / "smoke_process_directory_layout.py")], 120),
+        ReleaseCommand("smoke_process_resolver_multiple_roots", [sys.executable, str(root / "tools" / "smoke_process_resolver_multiple_roots.py")], 120),
+        ReleaseCommand("smoke_process_list_origin_filters", [sys.executable, str(root / "tools" / "smoke_process_list_origin_filters.py")], 120),
+        ReleaseCommand("smoke_process_authoring_writes_user_root", [sys.executable, str(root / "tools" / "smoke_process_authoring_writes_user_root.py")], 120),
+        ReleaseCommand("smoke_legacy_flat_process_layout_warning", [sys.executable, str(root / "tools" / "smoke_legacy_flat_process_layout_warning.py")], 120),
+        ReleaseCommand("smoke_release_pack_excludes_user_processes", [sys.executable, str(root / "tools" / "smoke_release_pack_excludes_user_processes.py")], 120),
+        ReleaseCommand("smoke_process_id_stable_after_move", [sys.executable, str(root / "tools" / "smoke_process_id_stable_after_move.py")], 120),
+        ReleaseCommand("smoke_process_root_collision_policy", [sys.executable, str(root / "tools" / "smoke_process_root_collision_policy.py")], 120),
+        ReleaseCommand("smoke_project_scan_excludes_distribution_root", [sys.executable, str(root / "tools" / "smoke_project_scan_excludes_distribution_root.py")], 120),
+        ReleaseCommand("smoke_project_scan_excludes_workplace_root", [sys.executable, str(root / "tools" / "smoke_project_scan_excludes_workplace_root.py")], 120),
+        ReleaseCommand("smoke_project_scan_excludes_knowledge_roots", [sys.executable, str(root / "tools" / "smoke_project_scan_excludes_knowledge_roots.py")], 120),
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python bin/pf.py checksum --help; python bin/pf.py project-context-check --help; python bin/pf.py capsule-doctor --help; python bin/pf.py project-context --help' in D:\Dev\process-forge
+ exited 1 in 12199ms:
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'checksum' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+usage: processforge.py project-context-check [-h] --project-root PROJECT_ROOT
+                                             [--workplace WORKPLACE] [--json]
+                                             [--session-start]
+                                             [--check-update-candidates {never,if_due,always}]
+                                             [--strict]
+                                             [--write-report WRITE_REPORT]
+
+options:
+  -h, --help            show this help message and exit
+  --project-root PROJECT_ROOT
+                        Project root path.
+  --workplace WORKPLACE
+                        Workplace root path; accepted for explicit lock-model
+                        workflows.
+  --json                Print machine-readable check result.
+  --session-start       Evaluate policy as a session-start freshness check.
+  --check-update-candidates {never,if_due,always}
+                        Update-candidate check policy marker.
+  --strict              Return failure unless status is fresh.
+  --write-report WRITE_REPORT
+                        Write a Markdown context check report.
+usage: processforge.py capsule-doctor [-h] --project-root PROJECT_ROOT
+                                      --capsule CAPSULE
+
+options:
+  -h, --help            show this help message and exit
+  --project-root PROJECT_ROOT
+                        Project root path.
+  --capsule CAPSULE     Capsule YAML path.
+usage: processforge.py [-h]
+                       {init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...
+processforge.py: error: argument command: invalid choice: 'project-context' (choose from init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)
+
+ERROR: Reconnecting... 2/5
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg -n \"add_parser\\(\\\"["'^"]*checksum|checksum" tools/processforge.py | Select-Object -First 60' in D:\Dev\process-forge
+ exited 1 in 400ms:
+At line:2 char:23
++ rg -n "add_parser\(\"[^"]*checksum|checksum" tools/processfor
+ge.py |  ...
++                       ~
+Array index expression is missing or not valid.
+    + CategoryInfo          : ParserError: (:) [], ParentConta 
+   insErrorRecordException
+    + FullyQualifiedErrorId : MissingArrayIndexExpression
+ 
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg -n 'add_parser\\(\"["'^"]*checksum|checksum'"' tools/processforge.py | Select-Object -First 120" in D:\Dev\process-forge
+ exited 1 in 482ms:
+rg: regex parse error:
+    (?:add_parser\([^]*checksum|checksum)
+                   ^^^
+error: unclosed character class
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg -n 'checksum' tools/processforge.py | Select-Object -First 80" in D:\Dev\process-forge
+ succeeded in 278ms:
+6238:RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
+6256:    "checksums/processforge.sha256",
+6886:        ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
+7452:        ("checksum inventory", root / "tools" / "validate-process-forge-checksums.py"),
+7455:        if label == "checksum inventory":
+7759:                "--only", "checksum",
+7969:        checksum = sha256_file(path)
+7970:        record["checksum"] = checksum
+7971:        record["fingerprint"] = checksum
+7973:        record["checksum"] = "missing"
+8182:        "checksum": sha256_file(path) if exists else "missing",
+8778:        record["checksum"] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
+10217:                recorded_sources[str(item["id"])] = str(item.get("checksum", "missing"))
+10219:    current_by_id = {str(item["id"]): str(item.get("checksum", "missing")) for item in current_sources}
+10220:    for source_id, checksum in current_by_id.items():
+10225:        elif recorded_sources[source_id] != checksum:
+10525:        "workplace_manifest": next((item.get("checksum") for item in sources if item.get("id") == "workplace_manifest"), "missing"),
+10968:                "Existing assignment capsules are immutable and remain pinned to their original snapshot id and checksum.",
+11783:def ecp_checksum(payload: dict[str, Any]) -> str:
+11785:    stable["checksum"] = "pending"
+11829:            "checksum": item.get("checksum", "missing"),
+11837:    source_fingerprints = [{"path": item["path"], "checksum": item.get("checksum", "missing")} for item in sources]
+11868:        "checksum": "pending",
+11883:        "checksums": {"assignment": sha256_file(assignment), "context_index": sha256_file(contexts / "context-index.yaml")},
+11887:    ecp["checksum"] = ecp_checksum(ecp)
+12905:            "assignment_checksum": sha256_file(assignment),
+12907:            "snapshot_checksum": sha256_file(snapshot_yaml),
+12996:    checks.append(check("PASS" if snapshot_sha.startswith("sha256:") or capsule.get("capsule", {}).get("snapshot_checksum") else "FAIL", "capsule pins context snapshot checksum"))
+12999:        checks.append(check("PASS" if "sha256:" + sha256_file(snapshot_file) == snapshot_sha else "WARN", "pinned snapshot generation checksum matches"))
+18719:        suffix = " (legacy capsule without assignment checksum)" if capsule_status == "legacy" else ""
+20177:            suffix = " (legacy capsule without assignment checksum)" if capsule_status == "legacy" else ""
+20955:    recorded_checksum = str(capsule_meta.get("assignment_checksum") or "") if isinstance(capsule_meta, dict) else ""
+20956:    if not recorded_checksum:
+20959:    current_checksum = sha256_file(assignment_path) if assignment_path.is_file() else ""
+20960:    if recorded_checksum == current_checksum:
+21027:            checksum = sha256_file(assignment) if assignment.is_file() else "missing"
+21028:            checks.append(check("PASS" if checksum in ecp_text else "FAIL", f"assignment ECP is fresh ({rel(ecp, project_root)})"))
+21034:            ecp_checksums = ecp_data.get("checksums", {}) if isinstance(ecp_data, dict) else {}
+21035:            expected_context_index_checksum = sha256_file(context_index) if context_index.is_file() else "missing"
+21038:                    "PASS" if ecp_checksums.get("context_index") == expected_context_index_checksum else "FAIL",
+21039:                    "assignment ECP context index checksum is fresh",
+22443:- Run public cleanliness, schema validation, checksum validation, and project doctor after migration.
+23471:        "snapshot": {"id": "workplace-resource-catalogue", "checksum": f"sha256:{fingerprint}"},
+
+codex
+I’ve validated parser/help requirements and will now apply one consolidated patch to the three allowed documentation files, including the exact wording fixes for D01/D05/D08 and preserving project authorization semantics in RU.
+2026-09-07T13:16:09.252471Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in D:\Dev\process-forge\docs\ru\concepts\resource-search-index.md:
+`resources` tracks `resource_id`, `resource_type`, `version`, `fingerprint`,
+`indexing_policy_hash`, `root_ref` и refresh status. `documents` tracks
+`resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+`documents_fts` stores searchable fulltext fields. `index_state` stores the
+authorization state текущего project snapshot без дублирования documents под
+каждый проект.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$OutputEncoding=[System.Text.UTF8Encoding]::new($false); Select-String -Path docs/ru/concepts/resource-search-index.md -Pattern "resources|refresh|Runtime maintenance|index_state|status|workplace" -Context 2,2' in D:\Dev\process-forge
+ succeeded in 397ms:
+
+  docs\ru\concepts\resource-search-index.md:3:Локальный поиск P
+rocessForge разделяет три границы:
+  docs\ru\concepts\resource-search-index.md:4:
+> docs\ru\concepts\resource-search-index.md:5:- версионируемые 
+ресурсы workplace объявляют, что можно индексировать;
+> docs\ru\concepts\resource-search-index.md:6:- workplace-level
+ SQLite FTS5 index хранит производные документы ресурсов;
+  docs\ru\concepts\resource-search-index.md:7:- project context
+ snapshot разрешает, какие `resource_id` доступны сессии.
+  docs\ru\concepts\resource-search-index.md:8:
+  docs\ru\concepts\resource-search-index.md:12:
+  docs\ru\concepts\resource-search-index.md:13:```text
+> docs\ru\concepts\resource-search-index.md:14:<workplace>/runt
+ime/search/local-resource-search.sqlite
+  docs\ru\concepts\resource-search-index.md:15:```
+  docs\ru\concepts\resource-search-index.md:16:
+> docs\ru\concepts\resource-search-index.md:17:`pf.search` явля
+ется query adapter. Он не делает fallback на весь workplace,
+  docs\ru\concepts\resource-search-index.md:18:другие проекты, 
+home directory, Context7, web или скрытый `rg` по большим
+  docs\ru\concepts\resource-search-index.md:19:деревьям исходно
+го кода.
+  docs\ru\concepts\resource-search-index.md:58:
+  docs\ru\concepts\resource-search-index.md:59:```text
+> docs\ru\concepts\resource-search-index.md:60:resources
+  docs\ru\concepts\resource-search-index.md:61:documents
+  docs\ru\concepts\resource-search-index.md:62:documents_fts
+> docs\ru\concepts\resource-search-index.md:63:index_state
+  docs\ru\concepts\resource-search-index.md:64:```
+  docs\ru\concepts\resource-search-index.md:65:
+> docs\ru\concepts\resource-search-index.md:66:`resources` хран
+ит `resource_id`, `resource_type`, `version`, `fingerprint`,
+> docs\ru\concepts\resource-search-index.md:67:`indexing_policy
+_hash`, `root_ref` и refresh status. `documents` хранит
+  docs\ru\concepts\resource-search-index.md:68:`resource_id`, `
+relative_path`, `kind`, `title`, hashes и JSON metadata.
+> docs\ru\concepts\resource-search-index.md:69:`documents_fts` 
+хранит searchable fulltext fields. `index_state` хранит
+  docs\ru\concepts\resource-search-index.md:70:authorization st
+ate текущего project snapshot без дублирования documents под
+  docs\ru\concepts\resource-search-index.md:71:каждый проект.
+  docs\ru\concepts\resource-search-index.md:74:
+  docs\ru\concepts\resource-search-index.md:75:```bash
+> docs\ru\concepts\resource-search-index.md:76:python bin/pf.py
+ search-index status --workplace <workplace>
+> docs\ru\concepts\resource-search-index.md:77:python bin/pf.py
+ search-index refresh --workplace <workplace>
+> docs\ru\concepts\resource-search-index.md:78:python bin/pf.py
+ search-index rebuild --workplace <workplace>
+> docs\ru\concepts\resource-search-index.md:79:python bin/pf.py
+ search-index doctor --workplace <workplace>
+> docs\ru\concepts\resource-search-index.md:80:python bin/pf.py
+ search-index tick --workplace <workplace>
+  docs\ru\concepts\resource-search-index.md:81:```
+  docs\ru\concepts\resource-search-index.md:82:
+> docs\ru\concepts\resource-search-index.md:83:`status` работае
+т read-only. `status --verify-files` выполняет явную
+  docs\ru\concepts\resource-search-index.md:84:fingerprint reco
+nciliation и сообщает stale state, если содержимое разрешенного
+> docs\ru\concepts\resource-search-index.md:85:ресурса изменило
+сь. `refresh` обновляет indexable resources для текущего свежег
+о
+  docs\ru\concepts\resource-search-index.md:86:snapshot. `rebui
+ld` удаляет производную DB и строит ее заново. `tick` является
+  docs\ru\concepts\resource-search-index.md:87:bounded maintena
+nce unit для оператора и Runtime scheduling.
+  docs\ru\concepts\resource-search-index.md:89:## Runtime И MCP
+  docs\ru\concepts\resource-search-index.md:90:
+> docs\ru\concepts\resource-search-index.md:91:Runtime maintena
+nce должен периодически запускать `tick` для известных проектов
+  docs\ru\concepts\resource-search-index.md:92:со свежими snaps
+hots. PF-owned resource mutations помечают существующий index
+  docs\ru\concepts\resource-search-index.md:93:state как stale;
+ внешние изменения файлов обнаруживаются fingerprint-проверкой
+  docs\ru\concepts\resource-search-index.md:95:
+  docs\ru\concepts\resource-search-index.md:96:`pf.search` нико
+гда не выдает stale data как `fresh`. Если индекс missing, stal
+e
+> docs\ru\concepts\resource-search-index.md:97:или degraded, ре
+зультат возвращает этот `search_status` и пустые matches до
+> docs\ru\concepts\resource-search-index.md:98:maintenance refr
+esh производной DB.
+  docs\ru\concepts\resource-search-index.md:99:
+  docs\ru\concepts\resource-search-index.md:100:`pf.session_con
+text` показывает компактную готовность поиска:
+  docs\ru\concepts\resource-search-index.md:102:```yaml
+  docs\ru\concepts\resource-search-index.md:103:search:
+> docs\ru\concepts\resource-search-index.md:104:  status: fresh
+  docs\ru\concepts\resource-search-index.md:105:  generation: <
+index-generation>
+  docs\ru\concepts\resource-search-index.md:106:  stale: false
+
+
+
+apply patch
+patch: completed
+D:\Dev\process-forge\docs\ru\concepts\resource-search-index.md
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+
+apply patch
+patch: completed
+D:\Dev\process-forge\docs\concepts\assignment-front-matter.md
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+
+codex
+I’ve applied two file edits and will now update the validation section with the required checksums wording, explicit `--check/--write` behavior, and separate context/capsule doctor command guidance.
+apply patch
+patch: completed
+D:\Dev\process-forge\docs\validation\validation.md
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index dd241552d43f1fc3956ce60bd4852c5de59415d1..ee6d1b0f3b72cb931d4471cca668533b9de164bb
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,12 +16,23 @@
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
++Checks the current public files against the existing deterministic SHA-256 inventory.
+ 
+-Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
+ 
+ This command checks only public file inventories. It does not validate context capsules.
+ 
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates that an assignment capsule is pinned to a context snapshot.
++
+ ## Public Cleanliness
+ 
+ ```bash
+
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index dd241552d43f1fc3956ce60bd4852c5de59415d1..ee6d1b0f3b72cb931d4471cca668533b9de164bb
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,12 +16,23 @@
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
++Checks the current public files against the existing deterministic SHA-256 inventory.
+ 
+-Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
+ 
+ This command checks only public file inventories. It does not validate context capsules.
+ 
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates that an assignment capsule is pinned to a context snapshot.
++
+ ## Public Cleanliness
+ 
+ ```bash
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check -- docs/ru/concepts/resource-search-index.md docs/concepts/assignment-front-matter.md docs/validation/validation.md; git diff -- docs/ru/concepts/resource-search-index.md docs/concepts/assignment-front-matter.md docs/validation/validation.md' in D:\Dev\process-forge
+ succeeded in 267ms:
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index a0b7f6d..7455076 100644
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,10 @@ allowed_files:
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - .pf/artifacts/example-report.md
++  example-report:
++    path: .pf/artifacts/example-report.md
++    type: markdown
++    required: true
+ hooks:
+   tracking: detailed
+   chat_capture: enabled
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index ee6f6cc..c0ee37b 100644
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,31 +67,34 @@ index_state
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+ ```bash
+-python bin/pf.py search-index status --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
++python bin/pf.py search-index status --workplace <workplace>
++python bin/pf.py search-index refresh --workplace <workplace>
++python bin/pf.py search-index rebuild --workplace <workplace>
++python bin/pf.py search-index doctor --workplace <workplace>
++python bin/pf.py search-index tick --workplace <workplace>
+ ```
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index 36bd4b2..ee6d1b0 100644
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,7 +16,22 @@ Checks required files, JSON schema syntax, seed process fields, manifest referen
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and checks immutable context packages for recorded checksum fields.
++Checks the current public files against the existing deterministic SHA-256 inventory.
++
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
++
++This command checks only public file inventories. It does not validate context capsules.
++
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates that an assignment capsule is pinned to a context snapshot.
+ 
+ ## Public Cleanliness
+ 
+
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index dd241552d43f1fc3956ce60bd4852c5de59415d1..ee6d1b0f3b72cb931d4471cca668533b9de164bb
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,12 +16,23 @@
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
++Checks the current public files against the existing deterministic SHA-256 inventory.
+ 
+-Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
+ 
+ This command checks only public file inventories. It does not validate context capsules.
+ 
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates that an assignment capsule is pinned to a context snapshot.
++
+ ## Public Cleanliness
+ 
+ ```bash
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-ChildItem docs/ru/concepts/resource-search-index.md, docs/concepts/assignment-front-matter.md, docs/validation/validation.md | ForEach-Object { $_.FullName }' in D:\Dev\process-forge
+ succeeded in 262ms:
+D:\Dev\process-forge\docs\ru\concepts\resource-search-index.md
+D:\Dev\process-forge\docs\concepts\assignment-front-matter.md
+D:\Dev\process-forge\docs\validation\validation.md
+
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index dd241552d43f1fc3956ce60bd4852c5de59415d1..ee6d1b0f3b72cb931d4471cca668533b9de164bb
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,12 +16,23 @@
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
++Checks the current public files against the existing deterministic SHA-256 inventory.
+ 
+-Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
+ 
+ This command checks only public file inventories. It does not validate context capsules.
+ 
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates that an assignment capsule is pinned to a context snapshot.
++
+ ## Public Cleanliness
+ 
+ ```bash
+
+codex
+# docs111-mechanical Report
+
+Timestamp: `2026-09-07 13:30:00 UTC`  
+Task: `docs111-mechanical` (`docs-fix-1.1.1-20260907`)
+
+## Scope executed (files changed)
+- [docs/ru/concepts/resource-search-index.md](D:\Dev\process-forge\docs\ru\concepts\resource-search-index.md)
+- [docs/concepts/assignment-front-matter.md](D:\Dev\process-forge\docs\concepts\assignment-front-matter.md)
+- [docs/validation/validation.md](D:\Dev\process-forge\docs\validation\validation.md)
+
+## D01 (RU search-index docs): completed
+- Synced RU CLI examples to remove the unsupported `--project-root` flag from all five `search-index` commands:
+  - `status`
+  - `refresh`
+  - `rebuild`
+  - `doctor`
+  - `tick`
+- Updated `index_state` semantics to match EN:
+  - Project snapshots do not own index documents.
+  - Project snapshots do not create/duplicate Workplace index state.
+  - Project snapshots only authorize queryable `resource_id` values.
+- Updated `refresh` semantics:
+  - No longer “refreshes current project snapshot” wording.
+  - States it indexes registered Workplace resources/packages per `indexing.mode` and does **not** read project snapshot.
+- Updated Runtime maintenance semantics:
+  - It is Workplace-scoped.
+  - It does not enumerate projects.
+  - It does not depend on Runtime, Ledger, or active sessions.
+- Preserved authorization language about project snapshots being needed for query authorization.
+
+## D05 (assignment front matter): completed
+- Changed `required_outputs` in sample to a mapping keyed by output id:
+  - `example-report` now maps to:
+    - `path: .pf/artifacts/example-report.md`
+    - `type: markdown`
+    - `required: true`
+
+## D08 (validation/checks): completed
+- Reworded Checksums section to start with:
+  - “Checks the current public files against the existing deterministic SHA-256 inventory.”
+- Kept explicit behavior:
+  - `--check` (default when `--write` is not set) validates existing inventory.
+  - `--write` generates/updates `checksums/processforge.sha256`.
+- Added explicit note that checksum validation is public-file only and does **not** validate context/capsules.
+- Added separate command guidance for context/capsule doctors only after confirming available CLI support:
+  - `python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]`
+  - `python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>`
+
+## Required checks/results (captured)
+
+1) Parser checks (no dispatch), with `sys.path.insert(0, 'tools')` before import:
+- Command: `import processforge; parser = processforge.build_parser();`
+- Parsed commands:
+  - `search-index status --workplace X`
+  - `search-index refresh --workplace X`
+  - `search-index rebuild --workplace X`
+  - `search-index doctor --workplace X`
+  - `search-index tick --workplace X`
+- All five parsed successfully and resolved to expected subcommands in namespace via `search_index_command`.
+
+2) CLI help checks:
+- `python bin/pf.py search-index -h` confirms valid subcommands exactly: `status/refresh/rebuild/doctor/tick`.
+- `project-context-check --help` and `capsule-doctor --help` confirm required flags and options as documented.
+- Confirmed current top-level command is not `checksums`; checksum validation is run via `python tools/validate-process-forge-checksums.py` (as already documented in file context).
+
+3) Diff hygiene:
+- `git diff --check -- docs/ru/concepts/resource-search-index.md docs/concepts/assignment-front-matter.md docs/validation/validation.md` returned no whitespace/merge-check errors.
+
+## Residual risks
+- RU doc still uses mixed Russian/English technical tokens (e.g., `resource_id`, `workplace`, `bounded`), which is consistent with existing style but may benefit of later style harmonization.
+- Validation command section now includes doctor commands; it does not enumerate all optional flags for `project-context-check` beyond those shown in `--help` capture.
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index ea095c43e168f284ccda36d6837c9ed0604b1f1a..7455076d24846b44ee30ece3e3c1fd13049e2db3
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,7 @@
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - id: example-report
++  example-report:
+     path: .pf/artifacts/example-report.md
+     type: markdown
+     required: true
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index db4ef6132b86a6c56089fa9e1c25a34df7a97600..c0ee37b98d7e59692ee7459477d5d15cc1166c17
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,8 +67,9 @@
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов workplace. Project snapshots не создают
++index state и не дублируют documents; они разрешают только идентификаторы
++ресурсов для запросов.
+ 
+ ## CLI
+ 
+@@ -82,16 +83,18 @@
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный resource/package
++workplace один раз, соблюдая `indexing.mode`; он не читает `project snapshot`.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Runtime maintenance может выполнять `tick` для workplace. Он не перечисляет
++проекты и не зависит от Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index dd241552d43f1fc3956ce60bd4852c5de59415d1..ee6d1b0f3b72cb931d4471cca668533b9de164bb
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,12 +16,23 @@
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and then compares it against an existing inventory.
++Checks the current public files against the existing deterministic SHA-256 inventory.
+ 
+-Run with `--check` (default when `--write` is not set) to validate existing inventory files; run with `--write` to generate/update `checksums/processforge.sha256`.
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
+ 
+ This command checks only public file inventories. It does not validate context capsules.
+ 
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> [--strict] [--json] [--session-start]
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates that an assignment capsule is pinned to a context snapshot.
++
+ ## Public Cleanliness
+ 
+ ```bash
+
+tokens used
+140 873

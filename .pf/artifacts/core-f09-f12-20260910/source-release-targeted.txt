@@ -1,0 +1,41 @@
+ProcessForge release-test
+RUN smoke_core_update_missing_owned:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_core_update_missing_owned.py
+  started_at: 2026-09-10T12:01:38Z
+PASS smoke_core_update_missing_owned
+  finished_at: 2026-09-10T12:01:39Z
+  elapsed_seconds: 0.79
+RUN smoke_search_source_integrity:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_search_source_integrity.py
+  started_at: 2026-09-10T12:01:39Z
+PASS smoke_search_source_integrity
+  finished_at: 2026-09-10T12:01:40Z
+  elapsed_seconds: 0.90
+RUN smoke_raw_ingress_incremental_recovery:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_raw_ingress_incremental_recovery.py
+  started_at: 2026-09-10T12:01:40Z
+PASS smoke_raw_ingress_incremental_recovery
+  finished_at: 2026-09-10T12:01:59Z
+  elapsed_seconds: 18.74
+RUN schema validation:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-process-forge-schemas.py --root D:\Dev\process-forge
+  started_at: 2026-09-10T12:01:59Z
+PASS schema validation
+  finished_at: 2026-09-10T12:02:42Z
+  elapsed_seconds: 43.26
+RUN public cleanliness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-public-cleanliness.py --root D:\Dev\process-forge
+  started_at: 2026-09-10T12:02:42Z
+PASS public cleanliness
+  finished_at: 2026-09-10T12:02:51Z
+  elapsed_seconds: 9.20
+RUN checksum:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-process-forge-checksums.py --root D:\Dev\process-forge --check
+  started_at: 2026-09-10T12:02:51Z
+PASS checksum
+  finished_at: 2026-09-10T12:02:52Z
+  elapsed_seconds: 0.56
+REPORT: .pf/runtime/release-test/latest-report.json
+REPORT: .pf/runtime/release-test/latest-report.md
+ELAPSED: 73.45s
+RESULT: PASS

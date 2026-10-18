@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "worker-run",
+    "collect",
+    "--project-root",
+    ".",
+    "--task",
+    "f02-update"
+  ],
+  "started_at": "2026-09-10T05:13:55.425994+00:00",
+  "elapsed_seconds": 3.957,
+  "exit_code": 0,
+  "stdout": "collect-f02.stdout.txt",
+  "stderr": "collect-f02.stderr.txt"
+}

@@ -1,0 +1,15 @@
+# Installed SQLite dev cutover
+
+Dev archive: processforge-1.2.0-dev-20261017-sqlite-69c59ec.zip, 2506866 bytes, SHA256 6dbcfdb8090a1fb9f6761fef9d0973e3e17911d577314095c270a25bcc3745db. Clean source commit 69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab; 1300 ZIP entries, 1299 Core-owned files. Pack checks and quick extracted archive checks passed (archive-test.txt).
+
+Managed normal stop refused 409 runtime_busy_or_activity_unknown; operator-authorized managed --force stopped Runtime 16976. Verified obsolete synchronous stdio MCP 5284 was stopped (no Runtime OS kill). No MCP mutations occurred during the barrier. Windows read handles froze 333 legacy files against writes/deletion while a byte-preserving ZIP backup was made (439670216 bytes of input). Native Core apply ran once: core-update-20261017T064646Z, 10 added/60 changed/0 removed. Post-update native Workplace doctor passed; installed status has incomplete_update=false. Installed-byte-proof.json verifies 1298 exact files and the separately preserved private manifest configuration. All five private configuration preimages remained unchanged.
+
+The unchanged PF migrator imported staged first-seen equivalent legacy event inputs plus original shared raw shards into the actual project databases. ProcessForge: 86044 event IDs, 32089 raw IDs. Image plugin: 50902 event IDs, 1779 raw IDs. No invalid rows skipped. Original duplicate deliveries (including 12 with differing receipt time) remain in backups/originals and preparation receipts. Native ready barriers, counts and integrity passed for all four databases; backup ZIP integrity passed. No historical hook dispatch backlog was created.
+
+Updated Runtime PID 9716 / instance 1c0b979a99bb4da095fa7e1510d0e141 started at 2026-10-17T06:49:26Z from the updated installed distribution; readyz=true. Existing scheduler failure/degraded health remains a separate issue. Installed context check is fresh/ready with policy continue, same snapshot, no blockers.
+
+An actual authenticated Runtime hook and repeated identical input produced one normalized event admission/history row and one raw receipt/history row in the ProcessForge project, zero matching rows in the image-plugin project, no pending dispatch/raw input. Retry returned duplicate=true/deduplicated=true in 382.198 ms. See actual-hook-retry.json. Initial verification assertion used the adapter input ID instead of the returned PF normalized ID; corrected the assertion, no product fix or repeated migration.
+
+The connected host cannot reattach its killed stdio MCP through an exposed lifecycle API: pf.context now reports Transport closed. This obsolete writer remains stopped; all subsequent PF control uses the existing updated installed CLI with exact selectors, as allowed by the startup contract. Actual connected-MCP acceptance requires host reconnection; no standalone substitute is claimed. This does not prevent updated Runtime and SQLite CPU verification.
+
+Next assurance: settled CPU sample and final original-file hash stability, then delivery records and both-remote readback. No product files changed in this operator task.

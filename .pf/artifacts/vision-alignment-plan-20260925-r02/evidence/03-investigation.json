@@ -1,0 +1,28 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "investigation-report",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "impact-analysis",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "investigation-complete",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md",
+    "status": "passed",
+    "summary": "Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "impact-understood",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md",
+    "status": "passed",
+    "summary": "Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task."
+  }
+]

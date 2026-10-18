@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/delivery-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/delivery-report.md",
+    "status": "passed",
+    "summary": "Local installed delivery and real-host acceptance passed; prior manifest-based packaging/apply evidence retained, no repeated apply and no public release requested."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/delivery-report.md",
+    "status": "passed",
+    "summary": "Local installed delivery and real-host acceptance passed; prior manifest-based packaging/apply evidence retained, no repeated apply and no public release requested."
+  }
+]

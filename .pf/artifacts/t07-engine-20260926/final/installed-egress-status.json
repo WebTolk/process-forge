@@ -1,0 +1,18 @@
+{
+  "time": "2026-09-26T20:46:33.056785+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "egress",
+    "status",
+    "--project-root",
+    "D:\\Dev\\process-forge",
+    "--store-root",
+    "D:\\.agents\\processforge-workplace\\runtime\\egress\\.pf-egress-private"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"isolated_local\": \"unsupported\", \"native_routes\": \"unsupported\", \"status\": \"qualified\"}\n",
+  "stderr": ""
+}

@@ -1,0 +1,4 @@
+[
+  {"kind":"artifact","id":"task-iteration-log","path":".pf/artifacts/docs-fix-1.1.1-20260907/execution-record.md"},
+  {"kind":"gate","id":"task-results-recorded","status":"passed","path":".pf/artifacts/docs-fix-1.1.1-20260907/execution-record.md"}
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "name": "smoke_parameter_cascade_resolution",
+    "exit_code": 0,
+    "seconds": 2.17,
+    "stdout": "PASS: smoke_parameter_cascade_resolution\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_provider_adapter_admission",
+    "exit_code": 0,
+    "seconds": 6.78,
+    "stdout": "PASS: trusted custom provider start/message, duplicate replay repair/idempotence, untrusted identity/provenance denial, forged Codex identity replay denial, partial-native raw-only denial, native-ID quarantine, duplicate registry rejection, Host/kernel/replay sources unchanged\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_work_resource_binding",
+    "exit_code": 0,
+    "seconds": 134.75,
+    "stdout": "PASS: Work resource binding isolation/pinning/current access/metadata/fulltext/subsets/provenance; symlink=unsupported by host\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_core_update_manifest",
+    "exit_code": 0,
+    "seconds": 10.1,
+    "stdout": "SKIP: symlink fixture unavailable: Windows privilege not held (WinError 1314); local fixture paths omitted.\nSKIP: broken-symlink fixture unavailable: Windows privilege not held (WinError 1314); local fixture paths omitted.\nPASS: manifest-based core update smoke\n",
+    "stderr": ""
+  },
+  {
+    "name": "smoke_diagnostics",
+    "exit_code": 0,
+    "seconds": 24.48,
+    "stdout": "{\"result\": \"PASS\", \"checks\": [\"severity/profile/config\", \"privacy\", \"journal invariance\", \"sink failures\", \"parallel correlation\", \"hook protocol\", \"rotation/retention/export\", \"performance\"], \"metrics\": {\"disabled_100000_seconds_median\": 0.11856709996936843, \"memory_10000_seconds\": 0.5929136000340804, \"jsonl_10000_seconds\": 12.3266085999785, \"max_storage_bytes\": 16384, \"rotated_files\": 2, \"bundle_records\": 2}}\n",
+    "stderr": ""
+  }
+]

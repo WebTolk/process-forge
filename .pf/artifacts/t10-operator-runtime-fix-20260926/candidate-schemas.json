@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T19:11:46.570596+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-runtime-fix-20260926\\candidate\\tools\\validate-process-forge-schemas.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-runtime-fix-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+  "stderr": ""
+}

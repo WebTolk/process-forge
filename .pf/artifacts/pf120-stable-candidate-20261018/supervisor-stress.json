@@ -1,0 +1,24 @@
+{
+  "label": "supervisor-stress",
+  "invocation": [
+    "python",
+    "-u",
+    "-B",
+    ".pf/tmp/pf120-stable-candidate-20261018/source-r2/bin/pf.py",
+    "dev-test",
+    "--root",
+    ".pf/tmp/pf120-stable-candidate-20261018/source-r2",
+    "--suite",
+    "supervisor-stress",
+    "--timeout-scale",
+    "2"
+  ],
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "started_at": "2026-10-18T05:13:10.501200+00:00",
+  "finished_at": "2026-10-18T05:15:46.723000+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 156.22175779996905,
+  "raw_sha256": "6c2cf18f844cbc16bc0e3e1a17a83ab4b3c222049c75c6192f3ae24d99ff42bb",
+  "raw_bytes": 769,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/supervisor-stress.log"
+}

@@ -1,7 +1,13 @@
-schema_version: 1
+schema_version: 2
 id: continue-feature-development-after-decomposition
 agent_id: director-local
 previous_session_id: sess-001
+work:
+  project_id: example-project
+  run_id: feature-run-001
+  assignment_id: feature-task-001
+  context_id: feature-task-001-capsule
+  capsule_checksum: 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
 waiting_for:
   handoff_id: handoff-feature-x-to-decomposition
   expected_artifacts:

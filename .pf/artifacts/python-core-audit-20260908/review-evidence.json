@@ -1,0 +1,15 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-review",
+    "status": "ready",
+    "path": ".pf/reviews/python-core-audit-20260908.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-doctor-passed",
+    "status": "passed",
+    "path": ".pf\\artifacts\\python-core-audit-20260908\\run-doctor.txt",
+    "summary": "Scoped run-doctor and task-doctor both exit 0; evidence review passed."
+  }
+]

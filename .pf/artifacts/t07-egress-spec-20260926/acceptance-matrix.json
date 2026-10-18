@@ -1,0 +1,479 @@
+{
+  "kind": "pf.egress.acceptance-plan.proposal",
+  "schema_version": 1,
+  "design_only": true,
+  "scope": "Future implementation acceptance; no runtime outcomes asserted by T07",
+  "requirements": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09"
+  ],
+  "threats": [
+    "H01",
+    "H02",
+    "H03",
+    "H04",
+    "H05",
+    "H06",
+    "H07",
+    "H08",
+    "H09",
+    "H10",
+    "H11",
+    "H12",
+    "H13",
+    "H14"
+  ],
+  "cases": [
+    {
+      "id": "A01",
+      "requirements": [
+        "R01",
+        "R03"
+      ],
+      "threats": [
+        "H01"
+      ],
+      "scenario": "Public text with trusted declaration, no findings, allowed recipient/purpose",
+      "expected": "allow; exact approved bytes only",
+      "evidence": "Capture fake recipient bytes and decision; compare view digest",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A02",
+      "requirements": [
+        "R01",
+        "R03",
+        "R07"
+      ],
+      "threats": [
+        "H01",
+        "H09"
+      ],
+      "scenario": "Synthetic credential inside optional diagnostic field with approved redaction rule",
+      "expected": "redact; value absent in view/audit/errors; transformation recorded",
+      "evidence": "Canary absent from all sinks; independently inspect source unchanged and output digest",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A03",
+      "requirements": [
+        "R03",
+        "R07"
+      ],
+      "threats": [
+        "H10"
+      ],
+      "scenario": "Required task instruction loses required meaning after redaction",
+      "expected": "block required_semantics_lost; zero dispatch bytes",
+      "evidence": "Assert meaningful required-field contract and fake recipient receives nothing",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A04",
+      "requirements": [
+        "R01",
+        "R03"
+      ],
+      "threats": [
+        "H04",
+        "H08"
+      ],
+      "scenario": "Unknown binary or unsupported encoded unit, including safe prefix plus secret tail",
+      "expected": "block unsupported_content; never forward unscanned tail",
+      "evidence": "Probe strict route with bounded binary and oversize UTF-8 units",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A05",
+      "requirements": [
+        "R02",
+        "R04"
+      ],
+      "threats": [
+        "H02",
+        "H03"
+      ],
+      "scenario": "Strict session requested through payload_only or unqualified backend",
+      "expected": "block enforcement_unavailable before executor launch",
+      "evidence": "Launcher spy and independent backend capability registry",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A06",
+      "requirements": [
+        "R04",
+        "R03"
+      ],
+      "threats": [
+        "H02",
+        "H05"
+      ],
+      "scenario": "Initial prompt allowed; subsequent file read includes synthetic secret",
+      "expected": "redact or block under same policy; original raw file cannot reach recipient",
+      "evidence": "End-to-end broker read, captured tool return and negative direct-read probe",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A07",
+      "requirements": [
+        "R04",
+        "R03"
+      ],
+      "threats": [
+        "H04",
+        "H09"
+      ],
+      "scenario": "Tool stdout/stderr/exception/attachment contains personal data or credential",
+      "expected": "Classify all fields; redact only permitted transformation, otherwise block",
+      "evidence": "Capture model-visible result and diagnostic sinks; include non-content metadata",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A08",
+      "requirements": [
+        "R02",
+        "R04",
+        "R06"
+      ],
+      "threats": [
+        "H03"
+      ],
+      "scenario": "Executor tries home config, inherited env, plugin, child process and direct network bypass",
+      "expected": "Strict backend denies all listed bypasses; otherwise no mediated_session capability",
+      "evidence": "OS/backend integration traces for each channel, version-bound evidence",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A09",
+      "requirements": [
+        "R03",
+        "R04"
+      ],
+      "threats": [
+        "H05"
+      ],
+      "scenario": "Source, symlink or junction swapped after authorization or scan",
+      "expected": "No unauthorized bytes; validated immutable bytes only, or block source_changed",
+      "evidence": "Race injection and filesystem/reparse tests on selected target OS",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A10",
+      "requirements": [
+        "R03",
+        "R04",
+        "R06"
+      ],
+      "threats": [
+        "H05",
+        "H06"
+      ],
+      "scenario": "Current deny or endpoint route changes after view preparation",
+      "expected": "Block stale binding/revoked authorization before send; old token unusable",
+      "evidence": "Interleave policy revision and transport claim with controlled scheduler",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A11",
+      "requirements": [
+        "R03",
+        "R05"
+      ],
+      "threats": [
+        "H06"
+      ],
+      "scenario": "Replay token, cross-attempt/stage/recipient handle, expired token or restart",
+      "expected": "block invalid_binding; no duplicate dispatch authorization",
+      "evidence": "Persistent nonce/handle-store tests including crash recovery",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A12",
+      "requirements": [
+        "R03",
+        "R05"
+      ],
+      "threats": [
+        "H06",
+        "H11"
+      ],
+      "scenario": "Crash after possible send before final receipt; network returns ambiguous outcome",
+      "expected": "delivery_unknown; no automatic resend or budget refund",
+      "evidence": "Fault injection at dispatch boundaries and subsequent recovery inspection",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A13",
+      "requirements": [
+        "R05",
+        "R03"
+      ],
+      "threats": [
+        "H09",
+        "H11"
+      ],
+      "scenario": "Mandatory audit unavailable versus optional diagnostic sink unavailable",
+      "expected": "Mandatory failure blocks before send; optional failure preserves correct decision",
+      "evidence": "Disk-full/write-denied audit fixture and separately broken diagnostics sink",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A14",
+      "requirements": [
+        "R01",
+        "R03",
+        "R07"
+      ],
+      "threats": [
+        "H07"
+      ],
+      "scenario": "Input text asks to mark itself public, select detector or change recipient",
+      "expected": "No configuration change or new authority; normal data classification applies",
+      "evidence": "Diff effective config/intent and capture destination; injection fixture",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A15",
+      "requirements": [
+        "R04",
+        "R07"
+      ],
+      "threats": [
+        "H08"
+      ],
+      "scenario": "Oversize, nested JSON, detector timeout, read ranges designed to split forbidden whole",
+      "expected": "block on limits/unknown; classify entire source before approved range; no partial leakage",
+      "evidence": "Boundary values around sizes/depth/time, cumulative budget, concurrent reservations",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A16",
+      "requirements": [
+        "R01",
+        "R03",
+        "R07"
+      ],
+      "threats": [
+        "H10"
+      ],
+      "scenario": "Benign fixture resembles secret; exact scoped exception then changed bytes/expired exception",
+      "expected": "Allowed only when valid and true-secret/locked/scope denials absent",
+      "evidence": "Ground-truth benign corpus; exception specificity/expiry tests and false-positive measurement",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A17",
+      "requirements": [
+        "R02",
+        "R07"
+      ],
+      "threats": [
+        "H01"
+      ],
+      "scenario": "Identical data/grants/policy through local and remote fake recipients with same permissions",
+      "expected": "Equivalent disclosure decision and transformed content; route metadata may differ",
+      "evidence": "Provider-neutral golden corpus; normalize opaque IDs without hiding actual payload differences",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A18",
+      "requirements": [
+        "R02",
+        "R07"
+      ],
+      "threats": [
+        "H01",
+        "H03"
+      ],
+      "scenario": "Same restricted data but different explicit recipient permissions; local process uses remote endpoint",
+      "expected": "Decision follows actual recipient policy; local launch never implies isolated_local",
+      "evidence": "Registry/purpose matrix; independent transport capture",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A19",
+      "requirements": [
+        "R05",
+        "R09"
+      ],
+      "threats": [
+        "H12",
+        "H13"
+      ],
+      "scenario": "Legacy original with private-path metadata is exported",
+      "expected": "New sanitized derivative passes its own checks; original bytes/hash and original doctor FAIL unchanged",
+      "evidence": "Hash original before/after; compare original doctor reasons; inspect new export audience fields",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A20",
+      "requirements": [
+        "R05",
+        "R04"
+      ],
+      "threats": [
+        "H01",
+        "H09",
+        "H13"
+      ],
+      "scenario": "Project names/paths/raw hashes/work slugs appear in metadata, URLs or error text",
+      "expected": "Only policy-approved opaque aliases safe for recipient; no original map exported",
+      "evidence": "Metadata canaries across every outbound field; include short-value hash dictionary risk",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A21",
+      "requirements": [
+        "R03",
+        "R04"
+      ],
+      "threats": [
+        "H07",
+        "H10"
+      ],
+      "scenario": "Model returns a placeholder command requesting privileged tool effect",
+      "expected": "No automatic de-redaction and execution; effect authorization required independently",
+      "evidence": "Denied-effect fixture and allowed broker tool call with exact argument schema",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A22",
+      "requirements": [
+        "R02",
+        "R04"
+      ],
+      "threats": [
+        "H03",
+        "H14"
+      ],
+      "scenario": "Approved local tool needs credential while model requests value or tool echoes it",
+      "expected": "Credential stays in trusted local channel; model request blocked, response filtered",
+      "evidence": "Instrument model argv/env/payload and tool return; credential canary absence",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A23",
+      "requirements": [
+        "R06",
+        "R05"
+      ],
+      "threats": [
+        "H12"
+      ],
+      "scenario": "Old v1 Work runs unchanged; v1 asked to enforce egress; unsupported v2 reader",
+      "expected": "Legacy has no enforced claim; strict v1 blocks; old reader rejects v2; successor preserves predecessor",
+      "evidence": "Migration/compatibility corpus and original checksums",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A24",
+      "requirements": [
+        "R03",
+        "R04"
+      ],
+      "threats": [
+        "H02",
+        "H07"
+      ],
+      "scenario": "Out-of-scope source would become safe after redaction",
+      "expected": "Authorization denial wins before content disclosure; redaction grants no access",
+      "evidence": "Spy forbidden read/dispatch, compare unchanged scope intent",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A25",
+      "requirements": [
+        "R03",
+        "R05"
+      ],
+      "threats": [
+        "H10",
+        "H11"
+      ],
+      "scenario": "Optional denied unit with and without explicit omission rule",
+      "expected": "Only authorized omission allowed and recorded; required denied unit blocks envelope",
+      "evidence": "Required/optional truth table plus exact released envelope comparison",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A26",
+      "requirements": [
+        "R02",
+        "R06",
+        "R07"
+      ],
+      "threats": [
+        "H03",
+        "H06"
+      ],
+      "scenario": "Adapter/version/config changed after qualification or SDK adds extra text/telemetry",
+      "expected": "No silent reuse of capability; bytes not in approved view never sent",
+      "evidence": "Archive/install/connected route requalification and raw transport capture",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A27",
+      "requirements": [
+        "R05",
+        "R07"
+      ],
+      "threats": [
+        "H09",
+        "H13"
+      ],
+      "scenario": "View/map expires or attempt closes; audit retained under restricted ACL",
+      "expected": "Handles invalid immediately; no accessible raw leftovers via resource search/export; retention policy enforced",
+      "evidence": "ACL and lifecycle tests on qualified OS, crash leftovers and backup boundary documented",
+      "status": "not_run",
+      "phase": "future_implementation"
+    },
+    {
+      "id": "A28",
+      "requirements": [
+        "R08"
+      ],
+      "threats": [
+        "H03",
+        "H08"
+      ],
+      "scenario": "Backend feasibility fails or proposed size/time limits exceeded on measured corpus",
+      "expected": "No claimed strict capability/SLA; estimates revised in successor plan, no bypass release",
+      "evidence": "Feasibility report, latency/memory measurements and explicit unsupported delivery decision",
+      "status": "not_run",
+      "phase": "future_implementation"
+    }
+  ]
+}

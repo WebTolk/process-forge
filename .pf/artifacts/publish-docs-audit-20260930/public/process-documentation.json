@@ -1,0 +1,541 @@
+[
+  {
+    "path": "docs/processes/agent-director-supervision.md",
+    "source": "processes/core/agent-director-supervision.yaml",
+    "documented": [
+      "inspect",
+      "assign",
+      "wait-or-return"
+    ],
+    "actual": [
+      "inspect",
+      "assign",
+      "wait-or-return"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/context-resolution.md",
+    "source": "processes/core/context-resolution.yaml",
+    "documented": [
+      "source-discovery",
+      "rule-classification",
+      "cascade-merge",
+      "conflict-detection",
+      "context-index-generation",
+      "resolved-rules-generation",
+      "fingerprint-recording",
+      "ecp-capsule-generation"
+    ],
+    "actual": [
+      "source-discovery",
+      "rule-classification",
+      "cascade-merge",
+      "conflict-detection",
+      "context-index-generation",
+      "resolved-rules-generation",
+      "fingerprint-recording",
+      "ecp-capsule-generation"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/guided-workplace-setup.md",
+    "source": "processes/core/guided-workplace-setup.yaml",
+    "documented": [
+      "intake",
+      "dialogue",
+      "review",
+      "apply"
+    ],
+    "actual": [
+      "intake",
+      "dialogue",
+      "review",
+      "apply"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/knowledge-package-authoring.md",
+    "source": "processes/core/knowledge-package-authoring.yaml",
+    "documented": [
+      "intake",
+      "select-package-root",
+      "create-package-structure",
+      "write-package-manifest",
+      "create-resource-index",
+      "add-initial-resources",
+      "run-package-doctor",
+      "handoff"
+    ],
+    "actual": [
+      "intake",
+      "select-package-root",
+      "create-package-structure",
+      "write-package-manifest",
+      "create-resource-index",
+      "add-initial-resources",
+      "run-package-doctor",
+      "handoff"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/knowledge-package-improvement.md",
+    "source": "processes/core/knowledge-package-improvement.yaml",
+    "documented": [
+      "propose",
+      "assess",
+      "integrate"
+    ],
+    "actual": [
+      "propose",
+      "assess",
+      "integrate"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/knowledge-package-update.md",
+    "source": "processes/core/knowledge-package-update.yaml",
+    "documented": [
+      "current-package-inspection",
+      "change-proposal",
+      "resource-update"
+    ],
+    "actual": [
+      "current-package-inspection",
+      "change-proposal",
+      "resource-update"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/knowledge-resource-add.md",
+    "source": "processes/core/knowledge-resource-add.yaml",
+    "documented": [
+      "intake",
+      "target-resolution",
+      "package-index-update",
+      "validation"
+    ],
+    "actual": [
+      "intake",
+      "target-resolution",
+      "package-index-update",
+      "validation"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/mcp-register.md",
+    "source": "processes/core/mcp-register.yaml",
+    "documented": [
+      "intake",
+      "registry-update"
+    ],
+    "actual": [
+      "intake",
+      "registry-update"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/multi-agent-task-orchestration.md",
+    "source": "processes/core/multi-agent-task-orchestration.yaml",
+    "documented": [
+      "plan",
+      "assign",
+      "worker-execution",
+      "integration-review"
+    ],
+    "actual": [
+      "plan",
+      "assign",
+      "worker-execution",
+      "integration-review"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/platform-contract-authoring.md",
+    "source": "processes/core/platform-contract-authoring.yaml",
+    "documented": [
+      "intake",
+      "select-platform-root",
+      "create-platform-structure",
+      "write-platform-contract",
+      "link-capabilities",
+      "link-knowledge-packages",
+      "link-templates",
+      "link-tools-mcp",
+      "run-platform-doctor",
+      "handoff"
+    ],
+    "actual": [
+      "intake",
+      "select-platform-root",
+      "create-platform-structure",
+      "write-platform-contract",
+      "link-capabilities",
+      "link-knowledge-packages",
+      "link-templates",
+      "link-tools-mcp",
+      "run-platform-doctor",
+      "handoff"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/platform-contract-install.md",
+    "source": "processes/core/platform-contract-install.yaml",
+    "documented": [
+      "platform-definition",
+      "contract-creation"
+    ],
+    "actual": [
+      "platform-definition",
+      "contract-creation"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/process-authoring.md",
+    "source": "processes/core/process-authoring.yaml",
+    "documented": [
+      "intake",
+      "draft-process",
+      "logic-review",
+      "apply-process",
+      "process-doctor",
+      "handoff"
+    ],
+    "actual": [
+      "intake",
+      "draft-process",
+      "logic-review",
+      "apply-process",
+      "process-doctor",
+      "handoff"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/process-supervisor.md",
+    "source": "processes/core/process-supervisor.yaml",
+    "documented": [
+      "prepare",
+      "start",
+      "collect"
+    ],
+    "actual": [
+      "prepare",
+      "start",
+      "collect"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/process-version-upgrade.md",
+    "source": "processes/core/process-version-upgrade.yaml",
+    "documented": [
+      "compare",
+      "decide"
+    ],
+    "actual": [
+      "compare",
+      "decide"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/processforge-update-check.md",
+    "source": "processes/core/processforge-update-check.yaml",
+    "documented": [
+      "discover",
+      "assess"
+    ],
+    "actual": [
+      "discover",
+      "assess"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/project-initialization.md",
+    "source": "processes/core/project-initialization.yaml",
+    "documented": [
+      "intake",
+      "workplace-resolution",
+      "repository-scan",
+      "project-classification",
+      "global-resource-matching",
+      "project-specificity-extraction",
+      "proposal",
+      "review",
+      "apply",
+      "doctor"
+    ],
+    "actual": [
+      "intake",
+      "workplace-resolution",
+      "repository-scan",
+      "project-classification",
+      "global-resource-matching",
+      "project-specificity-extraction",
+      "proposal",
+      "review",
+      "apply",
+      "doctor",
+      "search-index-maintenance"
+    ],
+    "match": false
+  },
+  {
+    "path": "docs/processes/project-onboarding.md",
+    "source": "processes/core/project-onboarding.yaml",
+    "documented": [
+      "intake",
+      "create-project-flow",
+      "detect-project",
+      "snapshot",
+      "first-assignment",
+      "validate",
+      "handoff"
+    ],
+    "actual": [
+      "intake",
+      "create-project-flow",
+      "detect-project",
+      "snapshot",
+      "first-assignment",
+      "validate",
+      "handoff"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/reusable-template-authoring.md",
+    "source": "processes/core/reusable-template-authoring.yaml",
+    "documented": [
+      "intake",
+      "select-template-root",
+      "create-template-structure",
+      "write-manifest",
+      "write-example-files",
+      "register-template",
+      "run-template-doctor",
+      "handoff"
+    ],
+    "actual": [
+      "intake",
+      "select-template-root",
+      "create-template-structure",
+      "write-manifest",
+      "write-example-files",
+      "register-template",
+      "run-template-doctor",
+      "handoff"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/runtime-driver-registry.md",
+    "source": "processes/core/runtime-driver-registry.yaml",
+    "documented": [
+      "inventory",
+      "validate"
+    ],
+    "actual": [
+      "inventory",
+      "validate"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/session-bootstrap.md",
+    "source": "processes/core/session-bootstrap.yaml",
+    "documented": [
+      "intake",
+      "mode-detection",
+      "flow-location",
+      "workplace-resolution",
+      "context-freshness-check",
+      "status-scan",
+      "session-report"
+    ],
+    "actual": [
+      "intake",
+      "mode-detection",
+      "flow-location",
+      "workplace-resolution",
+      "context-freshness-check",
+      "status-scan",
+      "session-report"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/task-batch-execution.md",
+    "source": "processes/core/task-batch-execution.yaml",
+    "documented": [
+      "run-intake",
+      "task-planning",
+      "task-execution-loop",
+      "task-result-fixation",
+      "run-review",
+      "run-summary"
+    ],
+    "actual": [
+      "run-intake",
+      "task-planning",
+      "task-execution-loop",
+      "task-result-fixation",
+      "run-review",
+      "run-summary"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/template-add.md",
+    "source": "processes/core/template-add.yaml",
+    "documented": [
+      "intake",
+      "template-folder-creation"
+    ],
+    "actual": [
+      "intake",
+      "template-folder-creation"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/tool-register.md",
+    "source": "processes/core/tool-register.yaml",
+    "documented": [
+      "intake",
+      "registry-update"
+    ],
+    "actual": [
+      "intake",
+      "registry-update"
+    ],
+    "match": true
+  },
+  {
+    "path": "docs/processes/workplace-initialization.md",
+    "source": "processes/core/workplace-initialization.yaml",
+    "documented": [
+      "intake",
+      "device-discovery",
+      "terms-setup",
+      "registry-setup",
+      "tool-discovery",
+      "mcp-discovery",
+      "proposal",
+      "review",
+      "apply",
+      "doctor"
+    ],
+    "actual": [
+      "intake",
+      "device-discovery",
+      "terms-setup",
+      "registry-setup",
+      "tool-discovery",
+      "mcp-discovery",
+      "proposal",
+      "review",
+      "apply",
+      "doctor",
+      "search-index-maintenance"
+    ],
+    "match": false
+  },
+  {
+    "path": "packs/official/content-workflow/docs/processes/content-production.md",
+    "source": "packs/official/content-workflow/processes/content-production.yaml",
+    "documented": [
+      "brief",
+      "draft",
+      "editorial-review"
+    ],
+    "actual": [
+      "brief",
+      "draft",
+      "editorial-review"
+    ],
+    "match": true
+  },
+  {
+    "path": "packs/official/content-workflow/docs/processes/documentation-mirror-import.md",
+    "source": "packs/official/content-workflow/processes/documentation-mirror-import.yaml",
+    "documented": [
+      "intake",
+      "mirror-plan"
+    ],
+    "actual": [
+      "intake",
+      "mirror-plan"
+    ],
+    "match": true
+  },
+  {
+    "path": "packs/official/software-development/docs/processes/bug-fix.md",
+    "source": "packs/official/software-development/processes/bug-fix.yaml",
+    "documented": [
+      "reproduce",
+      "fix",
+      "verify"
+    ],
+    "actual": [
+      "reproduce",
+      "fix",
+      "verify"
+    ],
+    "match": true
+  },
+  {
+    "path": "packs/official/software-development/docs/processes/software-feature-development.md",
+    "source": "packs/official/software-development/processes/software-feature-development.yaml",
+    "documented": [
+      "orchestration",
+      "intake-scope",
+      "investigation",
+      "domain-modeling",
+      "architecture-plan",
+      "implementation",
+      "code-assurance",
+      "release-delivery",
+      "evolve"
+    ],
+    "actual": [
+      "orchestration",
+      "intake-scope",
+      "investigation",
+      "domain-modeling",
+      "architecture-plan",
+      "implementation",
+      "code-assurance",
+      "release-delivery",
+      "evolve"
+    ],
+    "match": true
+  },
+  {
+    "path": "packs/official/verification/docs/processes/testing.md",
+    "source": "packs/official/verification/processes/testing.yaml",
+    "documented": [
+      "plan",
+      "execute",
+      "report"
+    ],
+    "actual": [
+      "plan",
+      "execute",
+      "report"
+    ],
+    "match": true
+  }
+]

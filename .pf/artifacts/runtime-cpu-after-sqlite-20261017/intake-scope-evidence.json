@@ -1,0 +1,27 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "brief",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/plan.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "scope",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/plan.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "task-record",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/plan.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "scope-accepted",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/plan.md",
+    "status": "passed",
+    "summary": "Fresh exact valid/ready read-only diagnostic Work, current updated Runtime identity, prior verified external sampler and bounded no-install/no-restart scope fixed."
+  }
+]

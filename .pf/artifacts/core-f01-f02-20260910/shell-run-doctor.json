@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "run-doctor",
+    "--project-root",
+    ".",
+    "--run",
+    "core-f01-f02-shell-20260910"
+  ],
+  "started_at": "2026-09-10T05:36:29.351898+00:00",
+  "elapsed_seconds": 3.464,
+  "exit_code": 0,
+  "stdout": "shell-run-doctor.stdout.txt",
+  "stderr": "shell-run-doctor.stderr.txt"
+}

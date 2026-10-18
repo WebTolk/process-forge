@@ -1,0 +1,21 @@
+{
+  "label": "task-doctor",
+  "invocation": [
+    "python",
+    "-B",
+    ".pf/tmp/pf120-stable-candidate-20261018/source-r2/bin/pf.py",
+    "task-doctor",
+    "--project-root",
+    "{project_root}",
+    "--task",
+    "pf120-stable-candidate-preparation-20261018-continue-after-the-completed"
+  ],
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "started_at": "2026-10-18T05:44:03.708910+00:00",
+  "finished_at": "2026-10-18T05:44:05.942064+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.233081399986986,
+  "raw_sha256": "abbbc8e86183d945e3601e2ff47e7226b10c92c6a68b053469fcaf3b4b3d5237",
+  "raw_bytes": 768,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/task-doctor.log"
+}

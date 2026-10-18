@@ -1,0 +1,11 @@
+# T05 assurance review
+
+Final source verdict: no remaining concrete blocker identified. Independent source snapshots are review-initial.md and review-followup.md; behavioral evidence is separate and is not inferred from review.
+
+Resolved findings: preflight report size and UTF-8 before committing a receipt; preserve governed primary lifecycle while legacy task batches retain compatibility completion; reject every redirected private path component (including in-project Windows Junction); atomically publish immutable manifests/receipts/completion markers without overwrite; keep prepared Codex instructions independent of mutable prompt/capsule/workspace sidecars. Ready start consumes the saved attempt and requires explicit prepare for changed preferences or a previously blocked launch.
+
+Additional assurance corrections: require an explicitly declared expected report/write scope before worker preparation; deny requested resources without read action and denied nonknowledge registry status; use OS-guarded proven-dead-owner recovery for worker/collection locks; correct the new schema's T02 manifest digest format to sha256-prefixed values and remove UTF-8 BOM. No existing capsule was rewritten to satisfy these conditions.
+
+Reproduction evidence: developer-proof.json; recovery-proof.json proves genuine governed lifecycle preservation with declarations supplied before immutable capsule creation, ordinary undeclared-report denial, and actual child-process exit/recollection without duplicate events; private-path-proof.json proves in-project Windows Junction refusal without private bytes written. The standard focused smoke covers source/resource/schema/driver/output boundaries. Ordinary pf.work.start does not itself supply worker output scope; that is an explicit documented limitation, not a fabricated positive fixture claim.
+
+Boundaries: no OS sandbox/model-quality assertion, no installed-process/new-host qualification, no public release gate. Hard-link support is required for atomic exclusive publication; unsupported filesystems fail explicitly. Existing direct symlink tests report host privilege unavailability; Windows Junction coverage was actually exercised. T06 should promote actual crash/governed preservation proof into the standard integrated regression and repeat actual MCP acceptance.

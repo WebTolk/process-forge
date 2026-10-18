@@ -1,0 +1,10 @@
+{
+  "time_utc": "2026-09-26T08:25:09.777258+00:00",
+  "status": "local_source_pass_overall_assurance_incomplete",
+  "source_files_hashes_verified": 10,
+  "frozen_files_hashes_verified": 561,
+  "recorded_evidence_hashes_verified": 27,
+  "remaining_gate": "assurance-complete",
+  "reason": "updated installed and actual connected-host feature acceptance pending",
+  "handoff": ".pf/handoffs/t06-integrated-acceptance-20260926.md"
+}

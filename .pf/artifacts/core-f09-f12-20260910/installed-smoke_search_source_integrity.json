@@ -1,0 +1,10 @@
+{
+  "name": "smoke_search_source_integrity",
+  "root": "D:\\.agents\\processforge",
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\.agents\\processforge\\tools\\smoke_search_source_integrity.py"
+  ],
+  "exit": 0,
+  "seconds": 1.34
+}

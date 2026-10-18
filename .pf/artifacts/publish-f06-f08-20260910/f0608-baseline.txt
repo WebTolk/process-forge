@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0608-public-n5xt21ur\tools\smoke_cli_audit_f0608.py", line 306, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0608-public-n5xt21ur\tools\smoke_cli_audit_f0608.py", line 294, in main
+    smoke_live_old_lock_contention(raw)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0608-public-n5xt21ur\tools\smoke_cli_audit_f0608.py", line 105, in smoke_live_old_lock_contention
+    assert contender.returncode == 0, contender.stdout + contender.stderr
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpected acquisition
+

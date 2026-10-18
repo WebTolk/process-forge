@@ -141,7 +141,40 @@ def assert_runtime_ready(workplace: Path) -> dict[str, object]:
     return status
 
 
+def pid_liveness_checks() -> None:
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    import processforge as core
+
+    missing = "ИНФОРМАЦИЯ: Задачи, отвечающие заданным критериям, отсутствуют.\r\n".encode("cp866")
+    cases = [
+        (missing, False, "localized no-task message"),
+        ('"агент,служба.exe","4321","Console","1","7 000 K"\r\n'.encode("cp866"), True, "localized CSV image name"),
+        (b'"4321.exe","9321","Console","1","4321 K"\r\n', False, "PID text only in image and memory"),
+        (b'"agent.exe","14321","Console","1","70 K"\r\n', False, "PID substring"),
+        (b'"agent.exe","4321","Console","1","70 K"\r\n', True, "exact ASCII PID"),
+        (b"", False, "empty result"),
+    ]
+    with patch.object(core.os, "name", "nt"):
+        for output, expected, label in cases:
+            with patch.object(core.subprocess, "run", return_value=SimpleNamespace(stdout=output, returncode=0)) as probe:
+                if core.process_pid_running(4321) is not expected:
+                    raise AssertionError(f"PID liveness mismatch: {label}")
+                argv = probe.call_args.args[0]
+                if argv != ["tasklist", "/FI", "PID eq 4321", "/FO", "CSV", "/NH"]:
+                    raise AssertionError(f"PID filter missing: {argv}")
+                if probe.call_args.kwargs.get("text"):
+                    raise AssertionError("tasklist must not use the interpreter's locale decoder")
+    with patch.object(core.os, "name", "posix"):
+        for outcome, expected in ((None, True), (ProcessLookupError(), False), (PermissionError(), True)):
+            with patch.object(core.os, "kill", side_effect=outcome):
+                if core.process_pid_running(4321) is not expected:
+                    raise AssertionError("POSIX process probe behavior changed")
+    print("PASS: localized tasklist bytes and exact PID column; POSIX behavior preserved")
+
+
 def main() -> int:
+    pid_liveness_checks()
     # public-cleanliness: allow-private-path-fixture
     extended_drive = r"\\?\C:\fixture\runtime"
     # public-cleanliness: allow-private-path-fixture
@@ -306,16 +339,26 @@ def main() -> int:
             try:
                 (stale_root / "service.json").write_text(json.dumps({"schema_version": 1, "status": "ready", "health": "ready", "pid": pid_reused.pid, "endpoint": "http://127.0.0.1:9"}, indent=2) + "\n", encoding="utf-8")
                 (stale_root / "runtime.lock").write_text(json.dumps({"pid": pid_reused.pid}) + "\n", encoding="utf-8")
-                recovered = start_runtime(workplace)
-                runtime_started = True
-                if recovered.get("status") != "started":
-                    raise AssertionError(f"runtime did not recover PID-reuse-like stale state: {recovered}")
+                # A live PID with incomplete ownership metadata is not proof
+                # of stale state. Fail closed until that process is gone.
+                lock_before = (stale_root / "runtime.lock").read_bytes()
+                refused = pf("runtime", "start", "--workplace", str(workplace), "--json", expect=1)
+                if "orphaned" not in refused.stderr or pid_reused.poll() is not None:
+                    raise AssertionError(f"unverifiable live owner was not preserved: {refused}")
+                if (stale_root / "runtime.lock").read_bytes() != lock_before:
+                    raise AssertionError("unverifiable live owner lock was changed")
             finally:
                 pid_reused.terminate()
                 try:
                     pid_reused.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     pid_reused.kill()
+                    pid_reused.wait(timeout=5)
+
+            recovered = start_runtime(workplace)
+            runtime_started = True
+            if recovered.get("status") != "started":
+                raise AssertionError(f"runtime did not recover after unverifiable owner exited: {recovered}")
 
             pid = int(service_state(workplace)["pid"])
             kill_pid(pid)

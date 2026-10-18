@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/evolve-20261002-01/release-delivery.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/evolve-20261002-01/release-delivery.md",
+    "status": "passed"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/evolve-20261002-01/release-delivery.md",
+    "status": "passed"
+  }
+]

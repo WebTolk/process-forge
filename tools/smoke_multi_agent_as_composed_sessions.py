@@ -54,9 +54,9 @@ workers:
     execution_mode: docs_only
     writer: true
     allowed_files: [.pf/artifacts/docs-worker.md]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
     forbidden_files: []
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_sources: [README.md]
     required_outputs:
       - id: docs-report
         path: .pf/artifacts/docs-worker.md
@@ -71,9 +71,9 @@ workers:
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/test-worker.md]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
     forbidden_files: []
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_sources: [README.md]
     required_outputs:
       - id: test-report
         path: .pf/artifacts/test-worker.md

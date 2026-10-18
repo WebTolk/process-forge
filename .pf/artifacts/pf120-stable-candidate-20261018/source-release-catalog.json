@@ -1,0 +1,10 @@
+{
+  "label": "source-release-catalog",
+  "started_at": "2026-10-18T04:45:12.631046+00:00",
+  "finished_at": "2026-10-18T04:45:15.078743+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.4476332999765873,
+  "raw_sha256": "0524e7be3f7b0b45feb5f7d85dd3dd2266ae6bd0621feb4e8767661cc37d30b9",
+  "raw_bytes": 18119,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/source-release-catalog.log"
+}

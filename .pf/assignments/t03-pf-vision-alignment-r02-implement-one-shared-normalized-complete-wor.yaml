@@ -1,0 +1,393 @@
+schema_version: 1
+id: t03-pf-vision-alignment-r02-implement-one-shared-normalized-complete-wor
+title: 'T03 PF vision-alignment r02: implement one shared normalized complete Work execu'
+run_id: garage-t03-pf-vision-alignment-r02-implement-one-shared-normalized-compl
+process: software-feature-development
+status: done
+created_at: '2026-09-25T20:45:39Z'
+updated_at: '2026-09-26T03:48:59Z'
+objective: 'T03 PF vision-alignment r02: implement one shared normalized complete Work execution contract for governed and assignment capsule builders, preserving immutable intent, explicit scope/actions/sources/outputs/capabilities/resource grants and legacy successor policy; local source acceptance before automatic T04.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: T03 complete. Continue approved AFK sequence with a separate T04 Work.
+  artifacts:
+    - .pf/artifacts/t03-unified-context-20260926/architecture.md
+    - .pf/artifacts/t03-unified-context-20260926/delivery-report.md
+    - .pf/artifacts/t03-unified-context-20260926/domain.md
+    - .pf/artifacts/t03-unified-context-20260926/evolution-report.md
+    - .pf/artifacts/t03-unified-context-20260926/implementation.md
+    - .pf/artifacts/t03-unified-context-20260926/investigation.md
+    - .pf/artifacts/t03-unified-context-20260926/review-findings.md
+    - .pf/artifacts/t03-unified-context-20260926/scope.md
+    - .pf/artifacts/t03-unified-context-20260926/test-cases.md
+    - .pf/artifacts/t03-unified-context-20260926/test-plan.md
+    - .pf/artifacts/t03-unified-context-20260926/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T03:48:25Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t03-unified-context-20260926/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-26T03:48:52Z'
+      sha256: 'sha256:0fae51ad1ee3a6b5b66d8f1f10b57984be98a1084d133bf3234745b6e540a291'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t03-unified-context-20260926/evolution-report.md
+      status: passed
+      summary: T03 lessons, explicit migration and source/installed boundaries captured; T04 next.
+      recorded_at: '2026-09-26T03:48:52Z'
+      sha256: 'sha256:0fae51ad1ee3a6b5b66d8f1f10b57984be98a1084d133bf3234745b6e540a291'
+  notes: T03 complete. Continue approved AFK sequence with a separate T04 Work.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-25T20:45:39Z'
+    completed_at: '2026-09-25T20:46:50Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        recorded_at: '2026-09-25T20:46:45Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        recorded_at: '2026-09-25T20:46:45Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        recorded_at: '2026-09-25T20:46:45Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+      -
+        kind: gate
+        gate_id: context-ready
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        summary: Separate correct pinned Work; fresh context, immutable capsule and prior accepted T01/T02 inputs verified.
+        recorded_at: '2026-09-25T20:46:45Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+    notes: T03 execution context and local lifecycle accepted; move to intake using explicit scoped plan.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-25T20:46:50Z'
+    completed_at: '2026-09-25T20:47:26Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        recorded_at: '2026-09-25T20:47:18Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+      -
+        kind: artifact
+        artifact_id: scope
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        recorded_at: '2026-09-25T20:47:18Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+      -
+        kind: artifact
+        artifact_id: task-record
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        recorded_at: '2026-09-25T20:47:18Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/scope.md
+        summary: Bounded shared context extraction and explicit legacy semantics; no broad CLI/provider/installed changes.
+        recorded_at: '2026-09-25T20:47:18Z'
+        sha256: 'sha256:6da2f30efcf98bc08ef67008e380f3f2cbeec10a7aae980a4cd8c642ecbb3d1a'
+    notes: T03 scope accepted under approved r02 AFK plan; investigate two builders and consumers before design.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-25T20:47:26Z'
+    completed_at: '2026-09-25T20:52:46Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/investigation.md
+        recorded_at: '2026-09-25T20:52:38Z'
+        sha256: 'sha256:00b44b93d8ef9b6004ada5693db860cb298bfc72cb98c65a13406e56fe50627c'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/investigation.md
+        recorded_at: '2026-09-25T20:52:38Z'
+        sha256: 'sha256:00b44b93d8ef9b6004ada5693db860cb298bfc72cb98c65a13406e56fe50627c'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/investigation.md
+        summary: Exact before reproduction and bounded builder/consumer impact mapped; no product edits yet.
+        recorded_at: '2026-09-25T20:52:38Z'
+        sha256: 'sha256:00b44b93d8ef9b6004ada5693db860cb298bfc72cb98c65a13406e56fe50627c'
+      -
+        kind: gate
+        gate_id: impact-understood
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/investigation.md
+        summary: Exact before reproduction and bounded builder/consumer impact mapped; no product edits yet.
+        recorded_at: '2026-09-25T20:52:38Z'
+        sha256: 'sha256:00b44b93d8ef9b6004ada5693db860cb298bfc72cb98c65a13406e56fe50627c'
+    notes: Both-shape discrepancy, raw checksum lifecycle false-stale and force rewrite reproduced in disposable fixture; domain rules follow.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-25T20:52:46Z'
+    completed_at: '2026-09-25T20:53:48Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/domain.md
+        recorded_at: '2026-09-25T20:53:40Z'
+        sha256: 'sha256:33f344cee1357d62b64d68de10ed506a13ef52e611f50f6b5452b665b0744360'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/domain.md
+        recorded_at: '2026-09-25T20:53:40Z'
+        sha256: 'sha256:33f344cee1357d62b64d68de10ed506a13ef52e611f50f6b5452b665b0744360'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/domain.md
+        recorded_at: '2026-09-25T20:53:40Z'
+        sha256: 'sha256:33f344cee1357d62b64d68de10ed506a13ef52e611f50f6b5452b665b0744360'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/domain.md
+        summary: Immutable intent excludes lifecycle; explicit no-grant scopes, source hashes, capability blockers and successor-only context replacement defined.
+        recorded_at: '2026-09-25T20:53:40Z'
+        sha256: 'sha256:33f344cee1357d62b64d68de10ed506a13ef52e611f50f6b5452b665b0744360'
+    notes: T03 identity/intent/scope/source/legacy rules accepted; architecture specifies common builder and validation integration.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-25T20:53:48Z'
+    completed_at: '2026-09-25T20:56:05Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/architecture.md
+        recorded_at: '2026-09-25T20:56:01Z'
+        sha256: 'sha256:b4ba250e31100f4afa0240853ac2c7649a7ca8099324f6e8ebe7e1e6de3018fa'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/architecture.md
+        recorded_at: '2026-09-25T20:56:01Z'
+        sha256: 'sha256:b4ba250e31100f4afa0240853ac2c7649a7ca8099324f6e8ebe7e1e6de3018fa'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/architecture.md
+        recorded_at: '2026-09-25T20:56:01Z'
+        sha256: 'sha256:b4ba250e31100f4afa0240853ac2c7649a7ca8099324f6e8ebe7e1e6de3018fa'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/architecture.md
+        summary: Common module APIs, input budgets, compatibility, integration points and parity/negative acceptance specified.
+        recorded_at: '2026-09-25T20:56:01Z'
+        sha256: 'sha256:b4ba250e31100f4afa0240853ac2c7649a7ca8099324f6e8ebe7e1e6de3018fa'
+    notes: 'T03 architecture accepted: bounded common builder/validator, additive schema, immutable intent and successor-only replacement; implement before review.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-25T20:56:05Z'
+    completed_at: '2026-09-25T21:13:12Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/implementation.md
+        recorded_at: '2026-09-25T21:13:05Z'
+        sha256: 'sha256:a16eb29ce0fddd86f23a1e8cf61fb180e2c75a2a9620ef5747ac6fad937c5664'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        status: ready
+        path: .pf/artifacts/t03-unified-context-20260926/implementation.md
+        recorded_at: '2026-09-25T21:13:05Z'
+        sha256: 'sha256:a16eb29ce0fddd86f23a1e8cf61fb180e2c75a2a9620ef5747ac6fad937c5664'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        status: passed
+        path: .pf/artifacts/t03-unified-context-20260926/implementation.md
+        summary: Common module/two builders/focused validation/schema/docs implemented within scope; developer parity and compatibility probes PASS.
+        recorded_at: '2026-09-25T21:13:05Z'
+        sha256: 'sha256:a16eb29ce0fddd86f23a1e8cf61fb180e2c75a2a9620ef5747ac6fad937c5664'
+    notes: Shared complete contract integrated and actual-builder developer parity PASS; independent review and behavioral matrix follow.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-25T21:13:12Z'
+    completed_at: '2026-09-26T03:47:52Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t03-unified-context-20260926/review-findings.md
+        status: ready
+        recorded_at: '2026-09-26T03:47:45Z'
+        sha256: 'sha256:604cc260117bc095ae037886d3ce0f926ef1660960037b89bf1567ff7ea35319'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t03-unified-context-20260926/test-plan.md
+        status: ready
+        recorded_at: '2026-09-26T03:47:45Z'
+        sha256: 'sha256:4d84e3c865188ca8e2d9d460c69675996195abcf30dc4789b2b1f2c7d8709339'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t03-unified-context-20260926/test-cases.md
+        status: ready
+        recorded_at: '2026-09-26T03:47:45Z'
+        sha256: 'sha256:e6901a24c8c5bcc3d2ca59e35c5f1ac2fde94b8e467c283382a61b504dd937a7'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t03-unified-context-20260926/test-report.md
+        status: ready
+        recorded_at: '2026-09-26T03:47:45Z'
+        sha256: 'sha256:a866a24afbf6bf6e9961c7dcf88e6e89a46d0a3114b404ce3c438dd3d2b7cbf3'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t03-unified-context-20260926/test-report.md
+        status: passed
+        summary: 17 focused parity checks and 11 compatibility smokes pass; independent source review resolved; schema/public/checksum pass. Source acceptance only.
+        recorded_at: '2026-09-26T03:47:45Z'
+        sha256: 'sha256:a866a24afbf6bf6e9961c7dcf88e6e89a46d0a3114b404ce3c438dd3d2b7cbf3'
+    notes: T03 assurance accepted after repair and retest. Installed integration remains T06.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T03:47:52Z'
+    completed_at: '2026-09-26T03:48:25Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t03-unified-context-20260926/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-26T03:48:18Z'
+        sha256: 'sha256:612fccd7e3d54bfa3e6fc9e98b6078cfb8f80138871265c7a17f54aa46993ff0'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t03-unified-context-20260926/delivery-report.md
+        status: passed
+        summary: Local source delivery accepted; package/install/publish not_applicable, actual-host acceptance reserved for T06.
+        recorded_at: '2026-09-26T03:48:18Z'
+        sha256: 'sha256:612fccd7e3d54bfa3e6fc9e98b6078cfb8f80138871265c7a17f54aa46993ff0'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t03-unified-context-20260926/delivery-report.md
+        status: passed
+        summary: Local source delivery accepted; package/install/publish not_applicable, actual-host acceptance reserved for T06.
+        recorded_at: '2026-09-26T03:48:18Z'
+        sha256: 'sha256:612fccd7e3d54bfa3e6fc9e98b6078cfb8f80138871265c7a17f54aa46993ff0'
+    notes: T03 local source delivery only; no installation or publication.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T03:48:25Z'
+    completed_at: '2026-09-26T03:48:59Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t03-unified-context-20260926/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-26T03:48:52Z'
+        sha256: 'sha256:0fae51ad1ee3a6b5b66d8f1f10b57984be98a1084d133bf3234745b6e540a291'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t03-unified-context-20260926/evolution-report.md
+        status: passed
+        summary: T03 lessons, explicit migration and source/installed boundaries captured; T04 next.
+        recorded_at: '2026-09-26T03:48:52Z'
+        sha256: 'sha256:0fae51ad1ee3a6b5b66d8f1f10b57984be98a1084d133bf3234745b6e540a291'
+    notes: T03 complete. Continue approved AFK sequence with a separate T04 Work.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t03-pf-vision-alignment-r02-implement-one-shared-normalized-complete-wor.capsule.yaml
+  assignment_capsule_checksum: 'sha256:8ee0d2ac810317140423b23529603a42183f2c6be3649e8c94ee33544fdcea9a'

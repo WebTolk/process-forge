@@ -1,0 +1,7 @@
+{
+  "records": 7453,
+  "bytes": 51673894,
+  "invalid_records": [],
+  "shards_changed_during_read": [],
+  "result": "PASS"
+}

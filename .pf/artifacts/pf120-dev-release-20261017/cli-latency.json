@@ -1,0 +1,66 @@
+{
+  "observed_at": "2026-10-17T19:22:22.867187+00:00",
+  "source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "operations": [
+    {
+      "operation": "version",
+      "surface": "fresh installed CLI process",
+      "warmup_samples": 1,
+      "samples_seconds": [
+        0.7738228000234812,
+        0.7431675000116229,
+        0.7310441000154242,
+        0.802375600032974,
+        0.8886933000176214
+      ],
+      "median_seconds": 0.7738228000234812,
+      "minimum_seconds": 0.7310441000154242,
+      "maximum_seconds": 0.8886933000176214
+    },
+    {
+      "operation": "exact-work",
+      "surface": "fresh installed CLI process",
+      "warmup_samples": 1,
+      "samples_seconds": [
+        0.8318118000170216,
+        0.8347994000068866,
+        0.8301968000014313,
+        0.8162774000084028,
+        0.86137450003298
+      ],
+      "median_seconds": 0.8318118000170216,
+      "minimum_seconds": 0.8162774000084028,
+      "maximum_seconds": 0.86137450003298
+    },
+    {
+      "operation": "resource",
+      "surface": "fresh installed CLI process",
+      "warmup_samples": 1,
+      "samples_seconds": [
+        1.9663386000320315,
+        2.218059299979359,
+        1.9713614000356756,
+        1.9457369999727234,
+        1.9081854000105523
+      ],
+      "median_seconds": 1.9663386000320315,
+      "minimum_seconds": 1.9081854000105523,
+      "maximum_seconds": 2.218059299979359
+    },
+    {
+      "operation": "context-check",
+      "surface": "fresh installed CLI process",
+      "warmup_samples": 1,
+      "samples_seconds": [
+        1.6023331999895163,
+        1.6536930999718606,
+        1.906285699980799,
+        1.697261699999217,
+        1.6161601999774575
+      ],
+      "median_seconds": 1.6536930999718606,
+      "minimum_seconds": 1.6023331999895163,
+      "maximum_seconds": 1.906285699980799
+    }
+  ]
+}

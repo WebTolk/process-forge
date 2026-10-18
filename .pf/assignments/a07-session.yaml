@@ -1,0 +1,114 @@
+schema_version: 1
+id: a07-session
+title: a07-session
+run_id: core-a01-a11-wave3-20260911
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T08:13:22Z'
+updated_at: '2026-09-11T08:37:01Z'
+objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a07-session-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/core-a01-a11-20260911/a07-session/report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-a01-a11-20260911/a07-session-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - tools/processforge.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_session_identity_roundtrip.py
+  - .pf/artifacts/core-a01-a11-20260911/a07-session/**
+  - .pf/tmp/a07-session/**
+allowed_read_files:
+  - tools/processforge.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_session_identity_roundtrip.py
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/*smoke*.py
+  - tools/*helpers*.py
+  - docs/concepts/**
+  - .pf/artifacts/core-a01-a11-20260911/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/AGENTS.md
+  - .pf/contexts/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: a07-session
+  owner_label: worker-a07-session
+  role: worker
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/pf_runtime/session_read.py
+    - tools/smoke_session_identity_roundtrip.py
+    - .pf/artifacts/core-a01-a11-20260911/a07-session/**
+    - .pf/tmp/a07-session/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/pf_runtime/session_read.py
+    - tools/smoke_session_identity_roundtrip.py
+    - .pf/artifacts/core-a01-a11-20260911/a07-session/**
+    - .pf/tmp/a07-session/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: a07-session-report
+    path: .pf/artifacts/core-a01-a11-20260911/a07-session/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-a01-a11-20260911/a07-session/report.md
+  format: concise_markdown
+  include:
+    - a07-session-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

@@ -23,7 +23,10 @@ allowed_files:
 forbidden_files:
   - .pf/runtime/**
 required_outputs:
-  - .pf/artifacts/example-report.md
+  - id: example-report
+    path: .pf/artifacts/example-report.md
+    type: markdown
+    required: true
 hooks:
   tracking: detailed
   chat_capture: enabled

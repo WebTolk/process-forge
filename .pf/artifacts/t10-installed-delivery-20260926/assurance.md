@@ -1,0 +1,13 @@
+# Installed delivery assurance
+
+Result: PASS for the qualified candidate and standard updater plan. The candidate is 40c9894227738472976546849047550415099486, clean detached Git source. build.json is complete and records source/config/frozen-evidence preservation plus exact nine-path delta.
+
+Executed checks: candidate schema validation, checksum inventory, public cleanliness; smoke_runtime_monitor, runtime_singleton_orphan, runtime_status_version_truth, runtime_scheduler_failure_isolation, runtime_no_domain_file_patterns, docs_agent_no_manual_infra, docs_mcp_host_owned_stdio, docs_codex_hooks_optional. All exit 0; separate candidate-*.json files preserve exact commands/stdout/stderr. These checks verify monitor behavior, lifecycle truth and unchanged runtime/host boundaries.
+
+Official release-pack and release-archive-test --extracted-test quick PASS. Archive validation confirms clean Git provenance, safe paths, no forbidden entries, deterministic metadata, all 992 archive entries/hashes/sizes, exact source parity. Extracted release-test passes compilation, schemas, public cleanliness, checksum, core package bootstrap, central ingress, conversation completeness and central replay. Additional extracted monitor smoke PASS. All 991 owned payload hashes and sizes verified against generated Core manifest.
+
+Installed standard core-update plan: 4 added, 5 changed, 982 unchanged, 0 removed, locally modified, missing-owned or restored. No blockers; no Workplace migration or operations. Plan delta exactly equals declared scope. Activity observation records 37 historical worker-status files in the main project and none running across three registered roots. Final activity/identity check will repeat immediately before official stop/apply. Runtime /status has a timeout observation; absent fields are not treated as zero.
+
+Primary review: no additional product code changes beyond previously reviewed T10, exact source hash parity verified. Candidate and archive evidence is distinct from installation and real connected-host MCP acceptance. Existing unowned installed user files must remain intact. Old project event journal has one invalid record; this is not packaged and its original failing checkout-schema evidence is preserved. No waiver or global-green claim.
+
+Browser verification: not_applicable, because delivery changes no browser UI. Terminal tests are included in monitor smoke and prior frozen T10 actual Windows PTY evidence. POSIX native execution was not performed. Public publication: not_applicable, user requested installed local Core only. Release readiness: approved for the reviewed standard local update. See architecture.md/install.py for one-attempt procedure, backup verification and recovery boundary.

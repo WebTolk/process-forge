@@ -5,6 +5,11 @@ a `.pf` context. It lets an agent understand the project, search approved local
 knowledge, and resolve selected resources before any governed work, Runtime
 session, hook replay, chat transcript, Director, or multi-agent lease exists.
 
+Use Garage to establish what the project permits before changing it. Governed
+Work then records the selected process, scope, evidence and handoff so another
+human or agent can verify and continue the result. See the shared
+[requirements](../requirements.md) before setup.
+
 ## Levels
 
 Level 1, Garage essentials:
@@ -85,6 +90,16 @@ catalog from the selected resource set. Only selected resources are copied to
 to `pf.search`. A snapshot records `resource_selection` with the selection
 mode, target platform versions, counts, and selector provenance.
 
+The physical SQLite corpus is owned by the Workplace and is built only from
+registered Workplace packages and templates. A project-local package, including
+the generated `project-profile`, can be selected and resolved from that
+project's context without adding a document to the shared corpus. Consequently,
+a newly onboarded project with no selected registered Workplace document can
+report a fresh `empty` search state: `pf.search` returns no documents, while
+`pf.resolve` can still make its project profile available and `pf.work.start`
+can start work. Register a reusable resource at the Workplace when it must be
+searchable across the shared index.
+
 Use `context_requirements.resource_selection.platform_versions` for a
 data-driven platform target and explicit `knowledge_resources` selectors for
 an override. A selector may use `id`, `preferred_version`, and `constraint`.
@@ -98,16 +113,21 @@ metadata-only.
 
 The default agent path is:
 
-1. read `.pf/AGENTS.md`;
-2. call `pf.context` with `project_root`, or read the snapshot when MCP is
-   unavailable;
+1. read root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project);
+2. call `pf.context` with `project_root`; when MCP is unavailable, use the
+   existing CLI and check the snapshot with `project-context-check`. Stop
+   dependent work if context is missing, stale, invalid or blocked;
 3. use `pf.search` for authorized project knowledge, templates, process, and
    tool metadata;
 4. use `pf.resolve` before opening a resource root;
 5. perform local read-only analysis;
-6. call `pf.work.start` with the substantive objective;
-7. call `pf.work.state`, satisfy the current obligations, and call
-   `pf.work.transition` with outcome and evidence;
+6. for new work, call `pf.work.start` with the substantive objective. For existing
+   work, discover and resume an exact [continuation](work-continuation.md);
+7. retain the returned `run_id`, `assignment_id` and `context.id`. Without a bound
+   session, pass these exact selectors to every Work state/transition call.
+   Verify the Assignment and immutable capsule, including scope and permissions;
+   satisfy the current obligations and call `pf.work.transition` with outcome
+   and evidence. Use `pf.work.search`/`pf.work.resolve` for Work resources;
 8. repeat until `action: run_completed`.
 
 For a multi-process project, call `pf.work.start` with an offered `process_id`
@@ -117,3 +137,28 @@ Completion can contain a handoff, next-work recommendation and an advisory
 session-continuity recommendation. With no active Work, a fresh `pf.context`
 can expose the latest relevant compact handoff continuation. Garage never
 creates or restarts an external session, Runtime, MCP, or Ledger session.
+
+Manual `run-create`, `task-create` and `task-complete` belong to the advanced
+[task-batch workflow](../getting-started/task-batch-workflow.md). They are not
+additional steps in this governed Work cycle. Its final transition writes the
+Run summary and handoff automatically; completion does not close a host session.
+
+The optional app-server runs Runtime scheduling for a workplace. The MCP host
+starts and owns its separate stdio adapter. Neither a running app-server nor
+host hooks are prerequisites for file-only Garage work. See
+[Runtime model](runtime-model.md) for the ownership boundary.
+
+## Work resources and executor handoff
+
+Project navigation and [Work-scoped reads](work-resources.md) have different
+authority boundaries. `pf.work.search` and `pf.work.resolve` require the exact
+Run, Assignment and context id; their grants intersect pinned resources,
+current authorization and the current stage subset. A ready project index
+does not prove coverage of a particular Work.
+
+The shared [execution contract](work-context.md) records intent, scope, sources
+and outputs. A worker-ready assignment can produce [prepared input](prepared-input.md)
+for an executor that does not use MCP. Collection records attributable results;
+it does not advance the primary governed Work. After changing executor or
+connection, compare the returned identity with the durable handoff before
+continuing. These contracts do not depend on a particular model provider.

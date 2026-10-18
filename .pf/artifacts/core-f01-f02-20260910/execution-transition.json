@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-remediate-python-core-audit-f01-project-search-authorization-and",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    ".pf/artifacts/core-f01-f02-20260910/execution-evidence.json",
+    "--notes",
+    "All delegated implementation/correction/assurance/review tasks done, primary evidence fixed. Final full source suite still running; no release readiness claimed.",
+    "--json"
+  ],
+  "started_at": "2026-09-10T05:37:02.425959+00:00",
+  "elapsed_seconds": 18.336,
+  "exit_code": 0,
+  "stdout": "execution-transition.stdout.txt",
+  "stderr": "execution-transition.stderr.txt"
+}

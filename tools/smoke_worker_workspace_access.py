@@ -60,6 +60,8 @@ local:
         text = text.replace(old_ref, new_ref)
         package.write_text(text, encoding="utf-8")
         refresh(project)
+        require_ok(run_pf("run-create", "--project-root", str(project), "--id", "workspace-run", "--title", "Workspace fixture", "--process", "task-batch-execution", "--apply"))
+        require_ok(run_pf("task-create", "--project-root", str(project), "--run", "workspace-run", "--id", "workspace-task", "--title", "Workspace task", "--process", "task-batch-execution", "--apply"))
         write_yaml(
             project / ".pf" / "assignments" / "workspace-task.yaml",
             """
@@ -97,10 +99,10 @@ expected_report:
         access_path = project / ".pf" / "runtime" / "agent-runs" / "workspace-run" / "workspace-task" / "workspace-access.json"
         access = json.loads(access_path.read_text(encoding="utf-8"))
         grants = access["grants"]["knowledge_resources"]
-        if not grants or grants[0]["resolution"]["status"] != "resolved":
-            raise AssertionError("workspace access grant did not resolve shared docs")
-        if Path(grants[0]["resolution"]["path"]) != shared_docs:
-            raise AssertionError("workspace access grant resolved unexpected path")
+        if not grants or grants[0]["resolution"]["status"] != "metadata_only":
+            raise AssertionError("symbols resource must remain metadata-only")
+        if "path" in grants[0]["resolution"] or str(shared_docs) in json.dumps(grants):
+            raise AssertionError("metadata-only grant exposed an external body root")
         prompt = (project / ".pf" / "runs" / "workspace-run" / "worker-prompts" / "workspace-task.md").read_text(encoding="utf-8")
         if "workspace_access_file" not in prompt or "Do not copy private paths" not in prompt:
             raise AssertionError("worker prompt does not explain workspace access boundary")

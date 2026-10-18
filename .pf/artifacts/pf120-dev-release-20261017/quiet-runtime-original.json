@@ -1,0 +1,46 @@
+{
+  "condition": "No foreground PF commands or workers during three windows; normal scheduler and host hooks continue.",
+  "logical_processors": 4,
+  "windows": [
+    {
+      "window": 1,
+      "elapsed_seconds": 30.0189202,
+      "cpu_seconds": 4.96875,
+      "device_percent": 4.138015264119993,
+      "one_core_percent": 16.55206105647997,
+      "working_set_bytes": 180314112,
+      "peak_working_set_bytes": 185298944
+    },
+    {
+      "window": 2,
+      "elapsed_seconds": 30.005066199999998,
+      "cpu_seconds": 5.421875,
+      "device_percent": 4.517466287076547,
+      "one_core_percent": 18.06986514830619,
+      "working_set_bytes": 180314112,
+      "peak_working_set_bytes": 185298944
+    },
+    {
+      "window": 3,
+      "elapsed_seconds": 30.003439,
+      "cpu_seconds": 5.34375,
+      "device_percent": 4.452614581948422,
+      "one_core_percent": 17.81045832779369,
+      "working_set_bytes": 180314112,
+      "peak_working_set_bytes": 185298944
+    }
+  ],
+  "total_wall_seconds": 90.0274254,
+  "total_cpu_seconds": 15.734375,
+  "mean_device_percent": 4.3693653777149875,
+  "same_runtime_owner_throughout": true,
+  "measurement_status": "superseded: original window 3 excluded",
+  "valid_windows": [
+    1,
+    2
+  ],
+  "excluded_windows": [
+    3
+  ],
+  "exclusion_reason": "A foreground PF status command was issued before initial window 3 ended. The exclusion was declared before reading that window result."
+}

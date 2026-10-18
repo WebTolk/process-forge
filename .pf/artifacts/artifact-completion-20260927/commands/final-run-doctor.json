@@ -1,0 +1,16 @@
+{
+  "time": "2026-09-27T08:20:32.934942+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "run-doctor",
+    "--project-root",
+    "D:\\Dev\\process-forge",
+    "--run",
+    "garage-complete-all-required-pf-artifacts-for-the-current-processforge-t"
+  ],
+  "exit_code": 0,
+  "stdout": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: completed\nPASS: summary status matches run: completed\nPASS: task index status matches run: completed\nPASS: handoff status matches run: completed\nPASS: process exists: software-feature-development\nPASS: .pf/runs/garage-complete-all-required-pf-artifacts-for-the-current-processforge-t/run.yaml has no private absolute paths\nPASS: task id unique: complete-all-required-pf-artifacts-for-the-current-processforge-t01-t10\nPASS: task status valid for complete-all-required-pf-artifacts-for-the-current-processforge-t01-t10: done\nPASS: assignment exists for complete-all-required-pf-artifacts-for-the-current-processforge-t01-t10: .pf/assignments/complete-all-required-pf-artifacts-for-the-current-processforge-t01-t10.yaml\nPASS: complete-all-required-pf-artifacts-for-the-current-processforge-t01-t10 run_id matches run\nPASS: completed run has all blocking tasks done\nPASS: .pf/runs/garage-complete-all-required-pf-artifacts-for-the-current-processforge-t/summary.md exists\nPASS: .pf/handoffs/runs/garage-complete-all-required-pf-artifacts-for-the-current-processforge-t-handoff.md exists\n",
+  "stderr": ""
+}

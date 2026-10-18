@@ -1,0 +1,7 @@
+# Investigation and impact
+
+Read current AGENTS/manifest/snapshot, T10 completed handoff/architecture/assurance and T06 updater scripts/evidence. Installed core-update status: installed, 987 files, version 1.1.0, incomplete_update false. Prior delivery candidate 69110c50559d994d7a31e751b7cd7afc989698db. Main HEAD a180ad624442d4fbe8ac1710073ef7d4c44babc4 with prior dirty work preserved. Version strings cannot prove identity.
+
+Nine expected product changes: tools/pf_runtime/monitor.py, tools/pf_runtime/service.py, tools/processforge.py, tools/smoke_runtime_monitor.py, docs/concepts/runtime-monitor.md, docs/ru/concepts/runtime-monitor.md, docs/concepts/runtime-mcp.md, docs/ru/concepts/runtime-mcp.md, checksums/processforge.sha256. Prior T10 source assurance passed eight focused smokes plus public fixture schemas/checksums. Delivery will verify source hashes and rerun archive/extracted tests.
+
+Runtime observation: owner instance d4fdb1b8c94547af84020213fcea087c, PID 18160, ready but health degraded; missing manifest of separately registered plg-content-varreplace, not caused by monitor. /status timed out. Active-worker status must be established from reliable ownership records before restart, not inferred from missing fields. New package does not require Workplace migration. Updater preserves unknown files, blocks local modifications, writes backup before mutation and manifest last. No manual file replacement in installation.

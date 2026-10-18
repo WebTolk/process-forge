@@ -71,8 +71,9 @@ index_state
 `indexing_policy_hash`, `root_ref`, and refresh status. `documents` tracks
 `resource_id`, `relative_path`, `kind`, `title`, hashes, and JSON metadata.
 `documents_fts` stores searchable fulltext fields. `index_state` stores the
-current project snapshot authorization state without duplicating documents per
-project.
+Workplace catalogue state and project snapshot scopes in the same shared DB.
+Project snapshots authorize resource ids per query; documents are not duplicated
+for each project.
 
 ## CLI
 
@@ -84,17 +85,34 @@ python bin/pf.py search-index doctor --project-root <project> --workplace <workp
 python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
-`status` is read-only. `status --verify-files` performs explicit fingerprint
-reconciliation and reports stale state when authorized resource content changed.
-`refresh` updates indexable resources for the current fresh snapshot. `rebuild`
-deletes the derived DB and builds it again. `tick` is the bounded maintenance
-unit for operators and Runtime scheduling.
+Every command requires a project root and reads its context snapshot. `status`
+is read-only; `status --verify-files` checks authorized file fingerprints and
+reports stale state when their content changed. `refresh` indexes resources
+authorized by that snapshot, respecting `indexing.mode`. `rebuild` deletes the
+derived DB and builds it again; `tick` performs one bounded pass for the project
+snapshot scope.
+
+`refresh`, `rebuild`, and `tick` require context status `fresh` or
+`fresh_with_updates`; otherwise they refuse with exit code 1. `status` and
+`doctor` remain available for other context states. `doctor` reports project
+context freshness as `PASS` for these two states and `WARN` otherwise.
 
 ## Runtime And MCP
 
-Runtime maintenance should periodically run `tick` for known projects with
-fresh snapshots. PF-owned resource mutations mark existing index state stale;
-external file changes are detected by fingerprint verification during `tick`.
+The physical Workplace catalogue is read by the concrete Core
+`WorkplaceSearchCatalogReader`. It reads current registries, registered package
+roots, active official knowledge packages and templates, then resolves their
+path references. It requires no project context, CLI, Runtime, Ledger or session.
+Maintenance and bounded session search-status projection use this reader directly;
+the historical catalogue functions in the monolith delegate to it. This catalogue
+does not grant a project permission to query any resource: project-scoped CLI/MCP
+authorization and freshness checks still apply.
+
+Runtime scheduling uses the existing Core `maintenance_tick` operation for the
+Workplace catalogue, separately from the project-scoped CLI. This Core operation
+does not enumerate projects or require a running Runtime, Ledger, or active
+sessions. PF-owned resource mutations mark existing index state stale; external
+file changes are detected by fingerprint verification during maintenance.
 
 `pf.search` never reports stale data as `fresh`. If the index is missing, stale,
 or degraded, the result carries that `search_status` and returns no matches

@@ -1,0 +1,18 @@
+{
+  "time": "2026-09-26T20:45:10.017360+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "monitor",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--once",
+    "--ascii",
+    "--no-color"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "Runtime: READY | health: ready\nPF - ProcessForge Server monitor\nWorkplace: processforge-workplace | owner PID: 19204\nCLI: 1.1.0 | instance: 1.0.0-poc\nState: fresh | age: 9.9s | probe: ready\nScheduler (cached results; no thread-health claim):\n  director: not_started [unknown]\n  inspector: not_started [unknown]\n  ledger: not_started [unknown]\n  metrics: failed [fresh]\n  projection: not_started [unknown]\nRegistered projects: 3 | cached sessions: 96\nRegistry cache: fresh (registrations are not activity)\nActivity sample: 9.4s; partial counts are lower bounds\nSession presence: online=>=1, stale=>=40, offline=>=68 [partial]\nReported workers: running=>=0 [partial]\nWork records: in_progress=>=3, blocked=>=2 [partial]\nLeases: held=0, expired=4, inactive=0 [complete]\nWaiting for user/events/backlog/MCP/hooks: unknown (no aggregate coverage)\nQ / Esc / Ctrl+C: close monitor; server unchanged\n",
+  "stderr": ""
+}

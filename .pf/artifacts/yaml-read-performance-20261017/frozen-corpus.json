@@ -1,0 +1,2856 @@
+{
+  "files": [
+    {
+      "path": ".pf/runs/active-pf-work-audit-closure-20260822/run.yaml",
+      "bytes": 922,
+      "sha256": "f63829a037e285cb5619d9993265e1d69a99e358ba1a6d3f34719ebcc8eeaef4"
+    },
+    {
+      "path": ".pf/runs/agent-activity-automation-backlog-20261009/run.yaml",
+      "bytes": 1411,
+      "sha256": "4f95d36e327ba047cd66c5c0f19eb09d89ac3484e533a9646249c37a8710cc63"
+    },
+    {
+      "path": ".pf/runs/agent-communication-improvement-backlog-20261007/run.yaml",
+      "bytes": 1036,
+      "sha256": "92d53ba05e5c63842d6289b8c7e74a2c1b276a84100ce042851e31eb1a103c14"
+    },
+    {
+      "path": ".pf/runs/agent-entry-e01-e02-scoped-20260928/run.yaml",
+      "bytes": 873,
+      "sha256": "0a360b84119d1ab46af5a11ab28a4cc6f61eb5bc2a2b8982e8eb2b2d6abe7f4a"
+    },
+    {
+      "path": ".pf/runs/agent-reliability-20260813/run.yaml",
+      "bytes": 870,
+      "sha256": "d08ce47cbc9810ef16a87038d012d4c2c1cabc721eabecf5b95a9a86cbc3c570"
+    },
+    {
+      "path": ".pf/runs/audit-remediation-plan-20260814/run.yaml",
+      "bytes": 1282,
+      "sha256": "456433ca757be84f71cbe8bf7f8cfcfc283a1d5031ee679707cd46e4bf77ebe9"
+    },
+    {
+      "path": ".pf/runs/beta-release-qualification-20260822/run.yaml",
+      "bytes": 1193,
+      "sha256": "20f494f2d337fdb1adf13d93ca3b441ecc15dec548aca7647944bf95cae37877"
+    },
+    {
+      "path": ".pf/runs/central-agent-event-ingress-20260814/run.yaml",
+      "bytes": 12733,
+      "sha256": "d23752174c670473950114f2386f3ac1125f4db2b8e7bfd6a88847d7f18789db"
+    },
+    {
+      "path": ".pf/runs/codebase-audit-findings-validation-20260814/run.yaml",
+      "bytes": 932,
+      "sha256": "a71afa87f4bb4842427bc06c1e5e8c81c87a3d8b349ecd929f1dbd4bb22cada1"
+    },
+    {
+      "path": ".pf/runs/codebase-audit-shell-20260910/run.yaml",
+      "bytes": 1167,
+      "sha256": "c427b62a47c3e7ddf343ab44bedfb3c148ab82a84baef9964e85ed5de276ebb4"
+    },
+    {
+      "path": ".pf/runs/codebase-audit-spark-20260814/run.yaml",
+      "bytes": 1339,
+      "sha256": "a54c398d83b6a08ef92e01617cdc8a3859a988243e3bd3822dd2c3e000af26f7"
+    },
+    {
+      "path": ".pf/runs/codex-exit-contract-remediation-20260814/run.yaml",
+      "bytes": 859,
+      "sha256": "808b25523972c0d68350d5f3ea7d2c87e22e4b6530274c3cb274b92e92c55d90"
+    },
+    {
+      "path": ".pf/runs/codex-mcp-session-read-20260821/run.yaml",
+      "bytes": 904,
+      "sha256": "4ff4372b329b056afb876f1c32f3cb99e2ca4aff8ebc4815082e97eb4e3fac13"
+    },
+    {
+      "path": ".pf/runs/codex-message-capture-remediation-execution-20260822/run.yaml",
+      "bytes": 2100,
+      "sha256": "8544e4a620fb64b4e4c5c315ec149d43d810d43fce3aca3bdda338656c862ea8"
+    },
+    {
+      "path": ".pf/runs/codex-message-capture-remediation-implementation-20260822/run.yaml",
+      "bytes": 1360,
+      "sha256": "7feb30e22d662d38967de4c124047f22b3d7f156f966d9a29d11680e0ac49d17"
+    },
+    {
+      "path": ".pf/runs/codex-worker-output-contract-20260814/run.yaml",
+      "bytes": 935,
+      "sha256": "f9e13a9f6f35930e6e77b997e301e42c232a7c44c012139e35b02fd039bd4ada"
+    },
+    {
+      "path": ".pf/runs/codex-worker-output-parent-recovery-20260814/run.yaml",
+      "bytes": 972,
+      "sha256": "3e3d19c454f9a385b348913444ca3b75479a6b722cc4c3c1279d1dc0e2b84904"
+    },
+    {
+      "path": ".pf/runs/codex-worker-utf8-fix-20260814/run.yaml",
+      "bytes": 901,
+      "sha256": "3ca06a579f220fd58b05b0854eb78e4c1ee53afdde1d4b6d4a7bb2e7f6014cef"
+    },
+    {
+      "path": ".pf/runs/context-collection-shell-20260910/run.yaml",
+      "bytes": 1087,
+      "sha256": "0d24ed7ccd4ea58670e7d1328db361c1bd00ff385501dc378fd223095ca9f7e5"
+    },
+    {
+      "path": ".pf/runs/core-a01-a11-review-20260911/run.yaml",
+      "bytes": 1044,
+      "sha256": "6990ef9078709f6e9f9a88057e091bc0303d2c267597c004fb1524e3a112dcb4"
+    },
+    {
+      "path": ".pf/runs/core-a01-a11-wave1-20260911/run.yaml",
+      "bytes": 1147,
+      "sha256": "9eb9737414fdc1ae1dbf4ab1e07beee8671d514538c3d07dbaf54f77b1d06d7c"
+    },
+    {
+      "path": ".pf/runs/core-a01-a11-wave2-20260911/run.yaml",
+      "bytes": 1123,
+      "sha256": "94d5d91bf317ecde305784138278fbbaa56db76dd2bc1f18999c4fda61babeb2"
+    },
+    {
+      "path": ".pf/runs/core-a01-a11-wave3-20260911/run.yaml",
+      "bytes": 983,
+      "sha256": "e64c2389aa9d7707d987b9dad1f51ad272c586454c7163632b0a385772e3a21b"
+    },
+    {
+      "path": ".pf/runs/core-f01-f02-shell-20260910/run.yaml",
+      "bytes": 1469,
+      "sha256": "e19cb08c9d4bf4153635dae5a8039cd89461a79b7e03db0061782435127ad547"
+    },
+    {
+      "path": ".pf/runs/core-f03-f05-shell-20260910/run.yaml",
+      "bytes": 1337,
+      "sha256": "69b84b1ff3cfc8a585a9a001cb8c1e53f0e8dcbe47ab638bdaa0c565a0aac93c"
+    },
+    {
+      "path": ".pf/runs/core-f06-f08-shell-20260910/run.yaml",
+      "bytes": 1031,
+      "sha256": "97f6578826972635d311486a619bfa5c611c2260e41e35c9cfd8e7e287cee647"
+    },
+    {
+      "path": ".pf/runs/core-f09-f12-shell-20260910/run.yaml",
+      "bytes": 1303,
+      "sha256": "fdaa50ab112bc4e124bf04eb89437d194e324d9f7785cb7a17042d5b93f1e39c"
+    },
+    {
+      "path": ".pf/runs/core-updater-manifest-20260822/run.yaml",
+      "bytes": 939,
+      "sha256": "2551b491b0d325e12a1ba35e8da48b9aa7a786642af8578f80b727c5a3202b63"
+    },
+    {
+      "path": ".pf/runs/core-updater-manifest-current-state-audit-20260822/run.yaml",
+      "bytes": 1029,
+      "sha256": "aca5aa33bf415914549f00c808bbb9cdd014301b3a510e4985fb0aa00a75d6df"
+    },
+    {
+      "path": ".pf/runs/core-updater-manifest-implementation-20260822/run.yaml",
+      "bytes": 1011,
+      "sha256": "c590f550f0349fd17cfe035d054fb07aa5c267e2ddd205d0f69293f0ef63b834"
+    },
+    {
+      "path": ".pf/runs/core-updater-manifest-locking-20260822/run.yaml",
+      "bytes": 942,
+      "sha256": "e6f60067c7e1b8ce965fb0b7a03f7abc2c115e1cfba72a960072194235317365"
+    },
+    {
+      "path": ".pf/runs/declarative-process-execution-20260902/run.yaml",
+      "bytes": 940,
+      "sha256": "fc0dcf58c17062898b955ffa4e8174d43e9150cdd0dd152e63cd9d2490e07052"
+    },
+    {
+      "path": ".pf/runs/distribution-release-docs-sync-20260821/run.yaml",
+      "bytes": 1374,
+      "sha256": "c9b4eeb5f3543cb340fc26bb7f97f59819563238ecde1bc1fe066cc44fca93d4"
+    },
+    {
+      "path": ".pf/runs/docs-fix-1-1-1-shell-20260907/run.yaml",
+      "bytes": 1449,
+      "sha256": "7dd09667adf3a4b3056d4ed4a01364d16abf6fdfcc695f687713bc213d10f234"
+    },
+    {
+      "path": ".pf/runs/docs-workplace-audit-20260720/run.yaml",
+      "bytes": 982,
+      "sha256": "97db11681c80e5a3ed2c37b5051b00a0ae92ee8bb19afcb03ba92895d2c88286"
+    },
+    {
+      "path": ".pf/runs/domain-neutral-core-boundary-20260729/run.yaml",
+      "bytes": 972,
+      "sha256": "c0849ed15f0e55b99f1279c7028290678ff3ca471f8dd1c2029e71424ae97dca"
+    },
+    {
+      "path": ".pf/runs/evolve-remediation-20261002/run.yaml",
+      "bytes": 5723,
+      "sha256": "5e6395e2146c71abc8337e52ee3d3a1980a653f1432497c67a0aa577d48c54b3"
+    },
+    {
+      "path": ".pf/runs/file-flow-contract-fix-20260725/run.yaml",
+      "bytes": 1412,
+      "sha256": "9a557bef0901c72001c4be1630bd2dad90a8757ad9337432e641486e608620b1"
+    },
+    {
+      "path": ".pf/runs/final-garage-stabilization-20260824/run.yaml",
+      "bytes": 1156,
+      "sha256": "315053a851c52f4eab87bb66db04ad759ed0b03bf12da607da9595f0a669b671"
+    },
+    {
+      "path": ".pf/runs/freshness-execution-readiness-20260823/run.yaml",
+      "bytes": 991,
+      "sha256": "605af474f824e6d8af4d01f3d3e37eecf8a71acad3082d7100e533fd65d6dfa4"
+    },
+    {
+      "path": ".pf/runs/garage-additional-shared-cycle-4-task-10-of-exactly-three-new-source-tas/run.yaml",
+      "bytes": 34765,
+      "sha256": "28c170a7be0622540f6b15072b5a7ddf3cdc3361648d3b7d2faf1bc5b482aa6c"
+    },
+    {
+      "path": ".pf/runs/garage-additional-shared-cycle-4-task-11-of-exactly-three-new-source-tas/run.yaml",
+      "bytes": 34803,
+      "sha256": "a9d547fdcc4979642193f6a756904fdb6b7ac090c636c84e3d02dfb3a6cdeda6"
+    },
+    {
+      "path": ".pf/runs/garage-additional-shared-cycle-4-task-12-of-exactly-three-new-source-tas/run.yaml",
+      "bytes": 34847,
+      "sha256": "6e328599f318d4704e3141dcc363d2d69cdb7ce9c0ed51343562a382c796fd92"
+    },
+    {
+      "path": ".pf/runs/garage-align-source-delivery-of-the-existing-oop-read-refactors-with-the/run.yaml",
+      "bytes": 34680,
+      "sha256": "cf495b561881de4fc7c7092c083a33fdf762b492ac04ca76967c941f9ff145dc"
+    },
+    {
+      "path": ".pf/runs/garage-align-the-two-project-context-snapshot-templates-with-the-sqlite/run.yaml",
+      "bytes": 36994,
+      "sha256": "66c562be5ee06172caa2a1ca1557eb1ad3e675be8bc42886d4eae663600e06b1"
+    },
+    {
+      "path": ".pf/runs/garage-analyze-and-resolve-the-two-open-github-issues-for-processforge-s/run.yaml",
+      "bytes": 15594,
+      "sha256": "ca9b21dd0efbdaa08b96bfab0549c6af5ee127393bab83c480eb9898980daa31"
+    },
+    {
+      "path": ".pf/runs/garage-analyze-project-evolve-records-against-current-code-and-create-ev/run.yaml",
+      "bytes": 34882,
+      "sha256": "a6bd55b1b06b7f7a23908654c6c8f72a1f59ff3969bf230f0629b0e2db6da7fe"
+    },
+    {
+      "path": ".pf/runs/garage-artifact-only-overall-pf-oop-refactoring-progress-report-after-ex/run.yaml",
+      "bytes": 34672,
+      "sha256": "21fd96d4def2019f218c6c9422ca53e40f9d80b7243b8d61b28f4eebe97c5494"
+    },
+    {
+      "path": ".pf/runs/garage-audit-all-pf-documentation-against-current-code-at-25952e6-invent/run.yaml",
+      "bytes": 34525,
+      "sha256": "e4f130904e6e8bddf4a369e839c9b9bdbc240ecc1dcfe7ef9e897f6ba74292ef"
+    },
+    {
+      "path": ".pf/runs/garage-audit-completed-oop-refactoring-against-architectural-direction-a/run.yaml",
+      "bytes": 34578,
+      "sha256": "918e07b285c15ed7d545576a9119f43ed463e533a22e6d4de77a852bb43a0cef"
+    },
+    {
+      "path": ".pf/runs/garage-audit-current-codebase-against-revised-oop-architectural-plan-ass/run.yaml",
+      "bytes": 34508,
+      "sha256": "e2ebd00dcea39bd7ec668f524cbea1b0413e63765ff06874a1990646b4dad03e"
+    },
+    {
+      "path": ".pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/run.yaml",
+      "bytes": 15662,
+      "sha256": "101d38192dbe1516622be2de655fa42cd26426200eae3111fc55b063a87177d9"
+    },
+    {
+      "path": ".pf/runs/garage-audit-exact-completed-core-c01-through-core-c37-refactoring-evide/run.yaml",
+      "bytes": 34592,
+      "sha256": "d09568f7365e5258872de22b1bf253e466aefb43d5009a3a376020fff97f2034"
+    },
+    {
+      "path": ".pf/runs/garage-audit-existing-pf-codebase-and-compare-functional-legacy-with-app/run.yaml",
+      "bytes": 34786,
+      "sha256": "2501f1afa8d273f9e242d3e987f85904533325ac515ea4793eccba0cde10be6d"
+    },
+    {
+      "path": ".pf/runs/garage-audit-existing-processforge-logging-and-profiling-coverage-across/run.yaml",
+      "bytes": 34571,
+      "sha256": "d4f8f8c98575a0a8aa9c9cb4a9155f46b9b5687455da5656b27f6976594e30c4"
+    },
+    {
+      "path": ".pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/run.yaml",
+      "bytes": 15606,
+      "sha256": "0569e6e601cc58fdfbb36694e6101d5e52421a3dbec1921446c58a3aab2985de"
+    },
+    {
+      "path": ".pf/runs/garage-audit-python-core-mcp-and-background-hooks-with-bounded-junior-sh/run.yaml",
+      "bytes": 15572,
+      "sha256": "d5a914602bd61568b32a28669ae1e39786157042d57ef8ee8acaf2b870174624"
+    },
+    {
+      "path": ".pf/runs/garage-audit-the-original-oop-architecture-documents-against-the-explici/run.yaml",
+      "bytes": 34700,
+      "sha256": "d40962a2dce39300ccfd439b199242bf0c65c811e047bd615e15ca4f1c4d564d"
+    },
+    {
+      "path": ".pf/runs/garage-batch-primary-task-1-of-3-organize-the-existing-projectsnapshotre/run.yaml",
+      "bytes": 34655,
+      "sha256": "eaef8481a2a7f0f3bbab6f8ff104ab31f0fe5f9b26a03984455d570914ac7885"
+    },
+    {
+      "path": ".pf/runs/garage-carefully-clean-only-stale-derived-runtime-registration-cache-for/run.yaml",
+      "bytes": 34863,
+      "sha256": "f5b67f47f774cb5c3cb6948abbf84922073c732eb046b9bd30a5e973b7dca590"
+    },
+    {
+      "path": ".pf/runs/garage-clarify-agent-entry-file-and-aggregate-size-budgets-in-the-pf-arc/run.yaml",
+      "bytes": 34280,
+      "sha256": "d3aa082796245f99150e43bc44ee20a717328a9a552b1baea9afceab15e4d0d9"
+    },
+    {
+      "path": ".pf/runs/garage-cli-01-existing-invocation-boundary-oop-extraction-20261008/run.yaml",
+      "bytes": 34371,
+      "sha256": "6db37b86ac5e6799b100c4d71db2d3c9fb49fdc7edb2471d252ced0a7d18415c"
+    },
+    {
+      "path": ".pf/runs/garage-cli-01-independent-commit-and-own-contract-review-20261008/run.yaml",
+      "bytes": 34363,
+      "sha256": "429c73e3e109d7c551db641cdaf9abda344327576b5f7f595a0e5cfac4099b67"
+    },
+    {
+      "path": ".pf/runs/garage-cli-01-isolated-cli-contract-and-invocation-chain-investigation-2/run.yaml",
+      "bytes": 34454,
+      "sha256": "6f9041ea13c7d3cda0b1ce2f52d5829164038efac4f6574f6d38bcc1ebb8d480"
+    },
+    {
+      "path": ".pf/runs/garage-cli-01-targeted-dev-verification-and-careful-cli-architecture-pla/run.yaml",
+      "bytes": 34468,
+      "sha256": "af8e4ffdefd5045f147089eed96586629f1d28e495d3f6b5629c8d338b98eb1b"
+    },
+    {
+      "path": ".pf/runs/garage-cli-02-and-cli-03-independent-parser-review-20261008/run.yaml",
+      "bytes": 34315,
+      "sha256": "a63666d8f73d67b4fc30f776fe3a0de255cf5e88ad42fbb26e16cd4d3e9f2425"
+    },
+    {
+      "path": ".pf/runs/garage-cli-02-diagnostics-command-parser-registration-extraction-2026100/run.yaml",
+      "bytes": 34424,
+      "sha256": "13117b202ac263d0533cd28690b51157076776f4b8c441fe3decbc695fa2ede1"
+    },
+    {
+      "path": ".pf/runs/garage-cli-03-complete-canonical-command-parser-registration-extraction/run.yaml",
+      "bytes": 34453,
+      "sha256": "4286d2c174d0d7697e989f2b4db915f4ba31511351863b9a568c4083476bb7e3"
+    },
+    {
+      "path": ".pf/runs/garage-cli-04-to-cli-06-final-independent-review-20261008/run.yaml",
+      "bytes": 34299,
+      "sha256": "f4c2dd2d37d90bdd17afdbf85ec99d27e296ca887c2910b2266fd2d73668e5f6"
+    },
+    {
+      "path": ".pf/runs/garage-cli-04-work-and-agent-entry-command-adapters-20261008/run.yaml",
+      "bytes": 34323,
+      "sha256": "210bf1a1097857e7f8d4f4bb65d0f889e3cdc19511cb43dd2e8ae61708b24bd1"
+    },
+    {
+      "path": ".pf/runs/garage-cli-05-search-index-and-configuration-command-adapters-20261008/run.yaml",
+      "bytes": 34403,
+      "sha256": "859b179eaa04a1fe1cf285613b67c02ef7c219166d022dce24435fec4db57b36"
+    },
+    {
+      "path": ".pf/runs/garage-cli-06-restore-published-search-index-cli-contract-20261008/run.yaml",
+      "bytes": 34371,
+      "sha256": "aab392127ac55ef6ab1e32f66d26b1b36d2e7362162d73bddd5ea90a270f52c5"
+    },
+    {
+      "path": ".pf/runs/garage-cli-block-completion-architecture-and-bounded-task-plan-20261008/run.yaml",
+      "bytes": 34411,
+      "sha256": "01ab4863cf61700fb310a43114c301815144238568f3e3081cfffbe2ed7b511c"
+    },
+    {
+      "path": ".pf/runs/garage-cli-release-and-device-readiness-secondary-20261008/run.yaml",
+      "bytes": 34307,
+      "sha256": "8c382daccf17156505ddcc075f7e6668f2ca000f1b91efe2e030b9f3743ef6b0"
+    },
+    {
+      "path": ".pf/runs/garage-commit-and-push-all-completed-publication-ready-pf-changes-to-ori/run.yaml",
+      "bytes": 34509,
+      "sha256": "fed0fc82aa5afe9616bcd5f21e1ec9848dca6c8b99e7e2c0c3d7e5f52dbe6287"
+    },
+    {
+      "path": ".pf/runs/garage-commit-and-push-the-completed-qualified-pfconfig-yaml-crud-and-ru/run.yaml",
+      "bytes": 34904,
+      "sha256": "df7481fd081e5f6e0a1afaa541e3dabc460788c1a1565899836ebfb79db77b2b"
+    },
+    {
+      "path": ".pf/runs/garage-complete-all-required-pf-artifacts-for-the-current-processforge-t/run.yaml",
+      "bytes": 34439,
+      "sha256": "bffe068d9f36ab4dd8c0d34e11974619e74cc3ec5765c0c593ee014bd95a89c9"
+    },
+    {
+      "path": ".pf/runs/garage-complete-evolve-20261002-23-api-classification-for-python-oop-pre/run.yaml",
+      "bytes": 34538,
+      "sha256": "0c2036e0aaafedae0711d1c5c350cd68be3dc5570f9e9b0eae541150bca83648"
+    },
+    {
+      "path": ".pf/runs/garage-complete-evolve-20261002-25-legacy-facade-compatibility-and-decom/run.yaml",
+      "bytes": 34533,
+      "sha256": "e834a846fe049c90a575b9278d1b1d9b1fd7d4781846d0ad48d9a4a3555b2277"
+    },
+    {
+      "path": ".pf/runs/garage-complete-pinned-source-checker-successor-20261012-replacing-cance/run.yaml",
+      "bytes": 34687,
+      "sha256": "62b6a2f23c98107c83f563fec05ead4c359ad157b75be7dc42fb438f9c5820f8"
+    },
+    {
+      "path": ".pf/runs/garage-complete-pinned-source-presence-successor-20261012-replacing-canc/run.yaml",
+      "bytes": 34680,
+      "sha256": "268a25d1cabf862964271becd9337352ced968a551b222c8cb0bac5f6ce5fe12"
+    },
+    {
+      "path": ".pf/runs/garage-conditionally-qualify-and-update-this-device-s-installed-pf-core/run.yaml",
+      "bytes": 35013,
+      "sha256": "60305270de2fdfa889965d2a8f00aeca3be661144295519a4a99df8334d1b7b0"
+    },
+    {
+      "path": ".pf/runs/garage-continue-e10-execute-e10-on-this-windows-device-qualify-installed/run.yaml",
+      "bytes": 34061,
+      "sha256": "8ca87e0d8f2005a406ccf55fb5b3e6b5716a360e225179c6fadffdc2787ec86a"
+    },
+    {
+      "path": ".pf/runs/garage-continue-one-bounded-oop-02-resourcesearchservice-snapshot-depend/run.yaml",
+      "bytes": 34809,
+      "sha256": "f3262e145dd432fabd0e38bc52f10ab870043267656e89abac7f4e860120b4ed"
+    },
+    {
+      "path": ".pf/runs/garage-continue-pfconfig-yaml-crud-and-runtime-monitor-source-delivery-u/run.yaml",
+      "bytes": 34527,
+      "sha256": "7c9249e2335f72507f72021e155eed0ed310bcb125a6b046a84f466c5d6615e5"
+    },
+    {
+      "path": ".pf/runs/garage-core-c01-garage-mode-required-snapshot-port-no-legacy-core-field/run.yaml",
+      "bytes": 34461,
+      "sha256": "598466cb09bda77577e60a577c29f1115af7b5321c3ab8c21254bf6f230061f9"
+    },
+    {
+      "path": ".pf/runs/garage-core-c02-derived-reports-explicit-snapshot-and-flow-root-reads-20/run.yaml",
+      "bytes": 34455,
+      "sha256": "d0e3edc3cea6fc3552c0d49669d1d78688aac2cd2e1368395773c2d4b91aacb7"
+    },
+    {
+      "path": ".pf/runs/garage-core-c02-isolated-derived-reports-artifact-draft-20261008/run.yaml",
+      "bytes": 34355,
+      "sha256": "c1b366251b25dedfed4c2a842a24c5a2dc6eb3eb199e6d83171678bba95bc9d2"
+    },
+    {
+      "path": ".pf/runs/garage-core-c03-execution-project-reads-context-freshness-and-manifest-w/run.yaml",
+      "bytes": 34483,
+      "sha256": "417ab871c69f73703fe9bbdfa41959ee1b4858736ad675242e2d349ef28ae1a0"
+    },
+    {
+      "path": ".pf/runs/garage-core-c04-allowed-process-read-model-remove-core-dependency-from-p/run.yaml",
+      "bytes": 34480,
+      "sha256": "f7950a23ca7c9052349d38abd033aba470eacddadd4dc1ac3ec232ff8e2e37cd"
+    },
+    {
+      "path": ".pf/runs/garage-core-c05-exact-source-integration-independent-review-20261009/run.yaml",
+      "bytes": 34387,
+      "sha256": "812b26d56794c8849d9dddf796cb3c6a86e3a04751b05850b8a78e00e0e10a88"
+    },
+    {
+      "path": ".pf/runs/garage-core-c05-fresh-session-completed-boundary-read-model-with-narrow/run.yaml",
+      "bytes": 34483,
+      "sha256": "7a05e576ddbb1ca8d3114be50fda0dac93abd7ee5f9bf9ffc33dda7e2740eae6"
+    },
+    {
+      "path": ".pf/runs/garage-core-c05-isolated-fresh-session-boundary-artifact-draft-20261008/run.yaml",
+      "bytes": 34411,
+      "sha256": "eadfad13c3111dbfb4a600457268c6f86089b6c0b0e204d58f9ae90099db4969"
+    },
+    {
+      "path": ".pf/runs/garage-core-c06-work-document-publication-own-existing-atomic-text-yaml/run.yaml",
+      "bytes": 34475,
+      "sha256": "301f75241bed8086ba20952ae07aebd543d5e22394f54c9c5cf3d409777197bf"
+    },
+    {
+      "path": ".pf/runs/garage-core-c07-work-event-publication-exact-payload-and-diagnostics-thr/run.yaml",
+      "bytes": 34487,
+      "sha256": "f93e1dad6f64eb3aae0ddf7ecf7429b3e75d38882c5245c8df6366b816961337"
+    },
+    {
+      "path": ".pf/runs/garage-core-c08-immutable-assignment-capsule-publisher-with-explicit-exi/run.yaml",
+      "bytes": 34485,
+      "sha256": "a645d01ce687716bfdcbf855f84bbdf66afd72bcb388fe35be17704be83c31db"
+    },
+    {
+      "path": ".pf/runs/garage-core-c08-isolated-assignment-capsule-publication-artifact-draft-2/run.yaml",
+      "bytes": 34413,
+      "sha256": "651f30cf9bf327bb978cc4dddeb34267f6000ed4aee3431c87b6910291c732b6"
+    },
+    {
+      "path": ".pf/runs/garage-core-c09-project-context-application-service-composed-from-narrow/run.yaml",
+      "bytes": 34481,
+      "sha256": "f00d9b602351196ff90efeb0a877dd1ae9a196da06395ef28ce65c484371e9ff"
+    },
+    {
+      "path": ".pf/runs/garage-core-c10-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34913,
+      "sha256": "a8f500ddbbf3b06e67a880abcc235b5887692cc92e2b4b7de5e2df1f10058f81"
+    },
+    {
+      "path": ".pf/runs/garage-core-c10-refactor-existing-resourcesearchservice-with-narrow-type/run.yaml",
+      "bytes": 34510,
+      "sha256": "4acf01984c67b800c7c6bd86644c80c7419d8fc344694003459d898994646e38"
+    },
+    {
+      "path": ".pf/runs/garage-core-c11-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "22308f02c354a970173e96174970d932df9a5ba47821b4dfe7aa6ba56818bb3f"
+    },
+    {
+      "path": ".pf/runs/garage-core-c11-refactor-existing-resourceresolveservice-with-a-narrow-t/run.yaml",
+      "bytes": 34511,
+      "sha256": "663506a8dbba988cecf53477189c02cc5013f50bc717d091c52ce88233639ecf"
+    },
+    {
+      "path": ".pf/runs/garage-core-c12-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "77041415efbd9cf1dd3038a688b3d93f0dfe5bcbeb839e105de52b0cd8d50b0e"
+    },
+    {
+      "path": ".pf/runs/garage-core-c12-move-existing-contextreconciliationservice-into-project/run.yaml",
+      "bytes": 34528,
+      "sha256": "1456a8401eb5b32cefa4feae6eca3e640b0a4c01f2ee8581818db0cd39f4efa0"
+    },
+    {
+      "path": ".pf/runs/garage-core-c13-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "34463a656e3673ea5ec9930c5007f2f1aa63d99783c00472e2fe92d886e5c311"
+    },
+    {
+      "path": ".pf/runs/garage-core-c13-move-existing-governedworkbootstrapservice-into-work-pac/run.yaml",
+      "bytes": 34540,
+      "sha256": "13372cea2dc49ad59a5876d2706cdde8a1bc78d3526a7b1df08b9d99df83d9f9"
+    },
+    {
+      "path": ".pf/runs/garage-core-c14-extract-existing-currentwork-projection-classification-n/run.yaml",
+      "bytes": 34570,
+      "sha256": "cdc03da7a0e276a3c4267b371d4e181673acf985d032828d0f3d072d9dd17e29"
+    },
+    {
+      "path": ".pf/runs/garage-core-c14-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "6ffc99cb3647a64dd9f110452b7ac8d6d4d835f9fc2ceeaf4574699c5a696b1d"
+    },
+    {
+      "path": ".pf/runs/garage-core-c15-extract-existing-creation-scope-validation-and-assignmen/run.yaml",
+      "bytes": 34576,
+      "sha256": "64ba2d96ba93cf0ce4e6d405c66e07f120136e8793a13b00a335a533d38a255f"
+    },
+    {
+      "path": ".pf/runs/garage-core-c15-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "10b2f31f0d0cfc67289e8acd99cf955e5e26b8c585795124069d2b864db0fa08"
+    },
+    {
+      "path": ".pf/runs/garage-core-c16-extract-existing-run-and-assignment-start-document-const/run.yaml",
+      "bytes": 34574,
+      "sha256": "77ce81d3b851b9cfe836ad7ebc4cef745aacc0a1008ef9c0c893de655191fd07"
+    },
+    {
+      "path": ".pf/runs/garage-core-c16-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "cee377d1cb64ca6508cab2091a889a524e79c6987d7f990710a3dda1261d230f"
+    },
+    {
+      "path": ".pf/runs/garage-core-c17-extract-existing-ordered-work-start-publication-after-ca/run.yaml",
+      "bytes": 34577,
+      "sha256": "7627898e42d8094a45f4a1932bd101a5dd41a8971626831b78c210fa8a33eee3"
+    },
+    {
+      "path": ".pf/runs/garage-core-c17-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "4a3f8e57f641b4059524990076b36cc616407f684cf47c0425c86e624b909a72"
+    },
+    {
+      "path": ".pf/runs/garage-core-c18-extract-existing-bounded-continuation-record-load-and-re/run.yaml",
+      "bytes": 34558,
+      "sha256": "d2d66bca8bf345253a6d2f45ab7ef3e0a82839c5edd31f1a3da1ebd39fbd3295"
+    },
+    {
+      "path": ".pf/runs/garage-core-c18-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "a0d32c1c358707e8038033cdc2bd5f665e0e9f792f025f14703671caba8d24c2"
+    },
+    {
+      "path": ".pf/runs/garage-core-c19-extract-existing-continuation-version-binding-contract-p/run.yaml",
+      "bytes": 34586,
+      "sha256": "cd082b948ee5cc808aa33aa8fa6509c3624100406c55e37150a1e2c0362676ff"
+    },
+    {
+      "path": ".pf/runs/garage-core-c19-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "a2c9992f53ac89611e68c07b371d84efa9803602cdbce43d2a8197b907da4fb2"
+    },
+    {
+      "path": ".pf/runs/garage-core-c20-extract-existing-continuation-waiting-status-and-related/run.yaml",
+      "bytes": 34553,
+      "sha256": "212a18c5b40a40b02a5149d6b869831f14999e2b23361b0ce821a905687bc1a1"
+    },
+    {
+      "path": ".pf/runs/garage-core-c20-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "8446c3d2aa25538ffb1ea47373631ccdc2ea85e125ab6b202d7dee46904e5c21"
+    },
+    {
+      "path": ".pf/runs/garage-core-c21-extract-existing-workresource-context-reads-with-explici/run.yaml",
+      "bytes": 34574,
+      "sha256": "3cd476b11fdc8693542c4f8cecdf899300f3a8d48a440ab6bacfe24cea6e9819"
+    },
+    {
+      "path": ".pf/runs/garage-core-c21-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "c3bcec01895a36bfb9034669880c21325b954b87ab5aaedd4dac8c9a30767c46"
+    },
+    {
+      "path": ".pf/runs/garage-core-c22-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "7a63fca9c616afa2f6199f4fe7c19f4c8dc5ddf924743a94d13af9a6642795ed"
+    },
+    {
+      "path": ".pf/runs/garage-core-c22-move-existing-continuation-worker-and-lease-control-reco/run.yaml",
+      "bytes": 34558,
+      "sha256": "b90772a00097907b0d88709b5957dff9bf9a3e854da7fd81108f8abc21cbd49f"
+    },
+    {
+      "path": ".pf/runs/garage-core-c23-extract-existing-continuation-exact-work-binding-read-an/run.yaml",
+      "bytes": 34551,
+      "sha256": "9ad29c492c575be47059b7624f686e2212d38e34b4422a4c37b0123060adff1c"
+    },
+    {
+      "path": ".pf/runs/garage-core-c23-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "355c6469e707f13fd26fa7a1cf25974ec8882f648a19702332219a269f10bf6f"
+    },
+    {
+      "path": ".pf/runs/garage-core-c24-independent-read-only-semantic-review-20261009-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "1189e6e1f4f40d8662cb3ea390a25121f4ff902f663573ad2535ed43b29e0057"
+    },
+    {
+      "path": ".pf/runs/garage-core-c24-move-existing-ephemeral-sqlite-work-material-search-into/run.yaml",
+      "bytes": 34573,
+      "sha256": "b11175c4bcc2bb787e283c35a421210cef56d234019fc5bce355d85dc11a72fa"
+    },
+    {
+      "path": ".pf/runs/garage-core-c25-group-existing-shared-work-resource-declaration-rules-in/run.yaml",
+      "bytes": 34552,
+      "sha256": "4e25bdb026974005219be47d7d516fffacb3e398f5d2238c51a6afc84d4ff433"
+    },
+    {
+      "path": ".pf/runs/garage-core-c25-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "a59103b27d6ed1443e90cbe44e2feef3aaf79986c624c9c59911acd852b803d5"
+    },
+    {
+      "path": ".pf/runs/garage-core-c26-extract-existing-prepared-resource-pinned-and-current-sn/run.yaml",
+      "bytes": 34566,
+      "sha256": "69a9f64b1a954c667b43f9cb2576dc0592d91abf5737c11889c02437485afd81"
+    },
+    {
+      "path": ".pf/runs/garage-core-c26-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "1c557b0b2514a77e3a56e6166abcef745bf4038f44ea15258d9767f6a698a86a"
+    },
+    {
+      "path": ".pf/runs/garage-core-c27-group-existing-prepared-resource-row-matching-immutable/run.yaml",
+      "bytes": 34554,
+      "sha256": "af6c55b0ad04f8214d3c9779e3a25fe3b43aaaa502d848b30b12f5194ac259aa"
+    },
+    {
+      "path": ".pf/runs/garage-core-c27-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "8ff445ff1f1101fa3c2338032b384a0e7fa367dbcb696782e6511a8effb7c2e0"
+    },
+    {
+      "path": ".pf/runs/garage-core-c28-extract-existing-prepared-registry-resource-matching-rev/run.yaml",
+      "bytes": 34579,
+      "sha256": "ee16df9ee43ab5e402a3d7cd45972a5d98e201b481c15f2a89f0267918f0bac5"
+    },
+    {
+      "path": ".pf/runs/garage-core-c28-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "2b8933decef9b6e758f11c0587007bb369fbb71df010e0ef07edf5eb4f49afb3"
+    },
+    {
+      "path": ".pf/runs/garage-core-c29-extract-existing-prepared-knowledge-resource-material-ve/run.yaml",
+      "bytes": 34583,
+      "sha256": "15cb3746386a0b85ff6e493ee917b151276fe91802785fd944b5502905f5cac0"
+    },
+    {
+      "path": ".pf/runs/garage-core-c29-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "b1218091abe0a51885cde44b8887683164d57adc89552158b75e1ed19b018e53"
+    },
+    {
+      "path": ".pf/runs/garage-core-c30-extract-existing-initial-work-resource-material-binding/run.yaml",
+      "bytes": 34573,
+      "sha256": "e8782757ff6c3ba8826d0077ac367131c14ec19de1084515bd30564b42c9f6dd"
+    },
+    {
+      "path": ".pf/runs/garage-core-c30-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "3343f121c681482c8421612a8b012a5204582d46b5c5ce98f69419166c1558fc"
+    },
+    {
+      "path": ".pf/runs/garage-core-c31-correct-existing-ru-prepared-registry-resolver-keyword-d/run.yaml",
+      "bytes": 34565,
+      "sha256": "b51ba369490ac41e0fecda270e070e648161b27d2ddc7e511301c623c752bc6c"
+    },
+    {
+      "path": ".pf/runs/garage-core-c31-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "4f91d3e0047c068b9da1071678f5dd9378226ec17f384e357f8f380edb542a51"
+    },
+    {
+      "path": ".pf/runs/garage-core-c32-extract-existing-two-phase-work-resource-metadata-verifi/run.yaml",
+      "bytes": 34588,
+      "sha256": "423f78334212c84dc20e8a6dcf4d54ac5ddbc85d9f908af1a5cb2733f62aa64c"
+    },
+    {
+      "path": ".pf/runs/garage-core-c32-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "6bfd347f101256a94787bbffe7d65af948c3ff8c03d1ddb0265c12d356cf90f4"
+    },
+    {
+      "path": ".pf/runs/garage-core-c33-extract-existing-cancellation-journal-replay-into-a-narr/run.yaml",
+      "bytes": 34584,
+      "sha256": "8508dfd51d7b5d3c5d84533726485e4dfd0b053061259f1f127c52fa29969d05"
+    },
+    {
+      "path": ".pf/runs/garage-core-c33-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "e7b0af8af91a03192d7cffb46a6ad6f3f48ff9f506e3a7fd6026f9d46b05c8e4"
+    },
+    {
+      "path": ".pf/runs/garage-core-c34-extract-existing-continuation-create-and-resume-publicat/run.yaml",
+      "bytes": 34601,
+      "sha256": "dffd32702192c5582e0fd418d16740f860aeb823848773c1d5dd7654528a626c"
+    },
+    {
+      "path": ".pf/runs/garage-core-c34-independent-read-only-semantic-review-20261010-compare-e/run.yaml",
+      "bytes": 34464,
+      "sha256": "53701d15b131c1d5eeceb4a1be88bfc508ac36b71f542caff9f0e9e8263351fe"
+    },
+    {
+      "path": ".pf/runs/garage-core-c35-extract-existing-work-record-enumeration-and-active-hist/run.yaml",
+      "bytes": 34609,
+      "sha256": "3bae1164f25abf775d3f88237c5254dadc0f75fd309c16e688cfbabce273aeef"
+    },
+    {
+      "path": ".pf/runs/garage-core-c36-move-existing-full-work-state-response-projection-into-e/run.yaml",
+      "bytes": 34588,
+      "sha256": "47c58257d23966ddd56eb25b0405ffffc4ae4d6e0aa2e8f20cdb00030e6c3489"
+    },
+    {
+      "path": ".pf/runs/garage-core-c37-extract-existing-can-complete-and-complete-request-orche/run.yaml",
+      "bytes": 34616,
+      "sha256": "90ff3cdfe851632c9cb66c203f46acf426aa33a7b5f56b55e95f573afe0ca875"
+    },
+    {
+      "path": ".pf/runs/garage-core-first-cycle-c01-c02-c03-independent-source-review-20261009/run.yaml",
+      "bytes": 34403,
+      "sha256": "d31a97372b72771b01829fe5f090a5ddd600dadf96a06e519627019638932151"
+    },
+    {
+      "path": ".pf/runs/garage-core-simplification-20260824/run.yaml",
+      "bytes": 1339,
+      "sha256": "d725ed81459038f61be526651d95f46951e67b6fc91869f37219bffe396c7e0c"
+    },
+    {
+      "path": ".pf/runs/garage-correct-the-russian-agent-entry-diagnostic-schema-link-after-e05/run.yaml",
+      "bytes": 34300,
+      "sha256": "062eb961065263706ea8b2f19982889d1b190e11135a629112d1e062b0bf52f0"
+    },
+    {
+      "path": ".pf/runs/garage-create-planning-only-pf-backlog-tasks-from-the-completed-20261014/run.yaml",
+      "bytes": 34796,
+      "sha256": "41067d7b4b3cba2e9a8ffa900f0fccc63355f3029b173a34e8aec8dbc86a16e6"
+    },
+    {
+      "path": ".pf/runs/garage-define-pf-framework-domain-and-application-architecture-before-fu/run.yaml",
+      "bytes": 34798,
+      "sha256": "794669178748266944a59eab9822ecc89107fbdd1b65082a230ec597b7a2a186"
+    },
+    {
+      "path": ".pf/runs/garage-deliver-accepted-e01-e02-core-changes-to-the-operator-installatio/run.yaml",
+      "bytes": 34337,
+      "sha256": "01e3b8ce1fca565b10ba2bc7704756b61251e50197fcd8f00efe7d20e0534c80"
+    },
+    {
+      "path": ".pf/runs/garage-docs-readme-garage-audit-20261009-audit-public-readme-and-docs-ag/run.yaml",
+      "bytes": 34617,
+      "sha256": "8a92051a0c15a89d815feb8f7789171efc7809820b0dcf04ce105af81b223ec8"
+    },
+    {
+      "path": ".pf/runs/garage-e01-e02-source-implementation-with-approved-explicit-scope-after/run.yaml",
+      "bytes": 34304,
+      "sha256": "69ecbaf8d0b09f0f3754a3198b8fd6d3a2ff4bf8152c8e2bf1e6980675033bbe"
+    },
+    {
+      "path": ".pf/runs/garage-execute-e08-consolidated-agent-entry-source-acceptance-with-expli/run.yaml",
+      "bytes": 34341,
+      "sha256": "4b4c5f9a687f55aafe7cc1289a047b55dc947b244cfbbb714244eb52c0e6b877"
+    },
+    {
+      "path": ".pf/runs/garage-execute-e10-on-this-windows-device-qualify-installed-core-update/run.yaml",
+      "bytes": 34371,
+      "sha256": "f82c7a9476482fe9ae1a20ac40c06a43c75f72bfcd67feb39fe001567a7c0944"
+    },
+    {
+      "path": ".pf/runs/garage-extract-existing-evidence-collection-and-merge-rules-from-process/run.yaml",
+      "bytes": 34597,
+      "sha256": "dc9516e9c0b9dd37469d8fbcc2d669b0c9ddf21af8219b0548525f330fa1c8b0"
+    },
+    {
+      "path": ".pf/runs/garage-extract-existing-evidence-normalization-and-file-validation-into/run.yaml",
+      "bytes": 34521,
+      "sha256": "2765ee5317ce441bdcb8e17c5b77de39880f047d317c41d3a77bc57077734ae9"
+    },
+    {
+      "path": ".pf/runs/garage-extract-existing-stage-requirement-and-gate-readiness-rules-into/run.yaml",
+      "bytes": 34519,
+      "sha256": "ec5ac1fd09d95b262046f95379ed6e027ac159e99b668f4f0ba1a718daed631e"
+    },
+    {
+      "path": ".pf/runs/garage-finish-work-resume-01-entry-integration-and-pending-cancellation/run.yaml",
+      "bytes": 34310,
+      "sha256": "9b62a019007623b3a6c905cfb7382ab9ff8b33056a264fc77a903bfac068f4c8"
+    },
+    {
+      "path": ".pf/runs/garage-fix-confirmed-subprocess-output-loss-and-windows-timeout-cleanup/run.yaml",
+      "bytes": 34587,
+      "sha256": "5b064c61a1ecfe2fbad2c7bb202f8275ea81fad891456b42914cc3321de483fb"
+    },
+    {
+      "path": ".pf/runs/garage-fix-mcp-context-latency-by-pruning-classifier-inventory-before-tr/run.yaml",
+      "bytes": 34318,
+      "sha256": "930310547ad8022652716b2e0fd27a8076f652d5cf2fdf3923c4810f5bc127a1"
+    },
+    {
+      "path": ".pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/run.yaml",
+      "bytes": 15570,
+      "sha256": "cb7cd6828b83d2af7fa2f6f68981b69f96b38caa3c4803323840d3871af697f0"
+    },
+    {
+      "path": ".pf/runs/garage-full-current-pf-audit-independent-reviewer-20261014-review-frozen/run.yaml",
+      "bytes": 34768,
+      "sha256": "e67e0a11a83d92f0fa903857288038225527c55ef418d14bc6c95989a6a5bea9"
+    },
+    {
+      "path": ".pf/runs/garage-full-current-pf-audit-static-executor-20261014-independently-insp/run.yaml",
+      "bytes": 34475,
+      "sha256": "c8576015469949b79f4e88e3b79c029ccae980e18841bfe1258424b53e74f661"
+    },
+    {
+      "path": ".pf/runs/garage-full-current-pf-audit-static-executor-s2-20261014-fresh-disjoint/run.yaml",
+      "bytes": 34892,
+      "sha256": "3cea1c8064fb2b21ed5281e8f3332959995420584c0e19529b0e6ba88db8f7c8"
+    },
+    {
+      "path": ".pf/runs/garage-full-current-processforge-code-audit-20261014-concrete-oop-owners/run.yaml",
+      "bytes": 34965,
+      "sha256": "a8c16c274ea8d2f90fdcda3838049a18d8d1ea4f7cca8c19876663bd14d18d86"
+    },
+    {
+      "path": ".pf/runs/garage-full-read-only-pf-codebase-audit-and-clean-dev-archive-qualificat/run.yaml",
+      "bytes": 34775,
+      "sha256": "f963d445a3711137c2c55390abcc7e31a03835fd9fe2386b835e8b1c2567672f"
+    },
+    {
+      "path": ".pf/runs/garage-gitverse-webtolk-process-forge-github-mirror-20261009/run.yaml",
+      "bytes": 34323,
+      "sha256": "bbee148e1ee2af1d81ff2e944be1b5427bec917acbacb9b4f558fd728c524bde"
+    },
+    {
+      "path": ".pf/runs/garage-hook-sqlite-device-cutover-20261017-user-authorized-dev-release-a/run.yaml",
+      "bytes": 37437,
+      "sha256": "49245fca8ce613016dd89db82b34d928f9203ebc5a7bb177719b7789951ce495"
+    },
+    {
+      "path": ".pf/runs/garage-hook-sqlite-implementation-20261017-migrate-project-hook-event-jo/run.yaml",
+      "bytes": 37259,
+      "sha256": "95de4f9cd876def035e26242a7b6833b180b93e4b6a43b42c686bfb2a2b1d846"
+    },
+    {
+      "path": ".pf/runs/garage-hook-sqlite-migration-20261017-implement-user-authorized-project/run.yaml",
+      "bytes": 36920,
+      "sha256": "15e2b2c67e6ed0b85ddf04f98b42e72c757dd71901026751a796bf6cc3eadb3c"
+    },
+    {
+      "path": ".pf/runs/garage-implement-approved-workplace-yaml-configuration-and-pfconfig-crud/run.yaml",
+      "bytes": 34117,
+      "sha256": "08f41f6d8a1902d2673d5df49da88716a7e7352bca138f55ab46c508d1c20e7a"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e01-and-e02-of-the-approved-portable-agent-entry-plan-w/run.yaml",
+      "bytes": 34072,
+      "sha256": "28db5d8abc58d65c160af5ba712d64e974a3eb94b71355fcef89e3b773061a9a"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e03-agent-entry-onboarding-status-and-repair-using-the/run.yaml",
+      "bytes": 34321,
+      "sha256": "1d90f352e3acbe76526dcb3ca6e98b3a23bb2ad5cc8b88bd4b23bbaf361206e7"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e04-governed-agent-startup-prompts-resource-references/run.yaml",
+      "bytes": 34315,
+      "sha256": "f545dd9e9c50efb08b1a1aa0a66a5202022bca9b7be80d63b3b94f46c4b43a11"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e05-versioned-agent-entry-profiles-and-read-only-diagno/run.yaml",
+      "bytes": 34353,
+      "sha256": "8b2f0aca7eba679e0fd2bac01c0f7e1d2b4197ca86868f495628e8ed3bccb086"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e06-bounded-explicit-client-entry-adapters-and-record-t/run.yaml",
+      "bytes": 34327,
+      "sha256": "f2d445b9d4cfce0c81246674bff860a8c6d9c805bc20350d9332668bc3159b99"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e07-active-agent-entry-documentation-and-compatibility/run.yaml",
+      "bytes": 34311,
+      "sha256": "a289538fe3b9b23158c0a32ac0c947ebf7b8b42fb0ee628d681801691226fed9"
+    },
+    {
+      "path": ".pf/runs/garage-implement-e09-canonical-agent-entry-release-mapping-and-qualify-a/run.yaml",
+      "bytes": 34345,
+      "sha256": "7026259c9aef8f9d51eb55f7ac6ce467644ad6ce9d301d6ff3c179829f283498"
+    },
+    {
+      "path": ".pf/runs/garage-implement-evolve-20261002-01-preflight-execution-mode-and-effecti/run.yaml",
+      "bytes": 34497,
+      "sha256": "2b52e9bea22a9e5f557b6f5d8df959aeeae3716940433e3b9ddb79948fab7dff"
+    },
+    {
+      "path": ".pf/runs/garage-implement-evolve-20261002-02-pass-typed-scope-intent-through-mcp/run.yaml",
+      "bytes": 34463,
+      "sha256": "ca76ef34cad3d0db5732b195483c28bb838a78464f07c2353eb0f7271a58f44e"
+    },
+    {
+      "path": ".pf/runs/garage-implement-evolve-20261002-03-normalize-project-and-work-full-text/run.yaml",
+      "bytes": 34476,
+      "sha256": "461260d06a5ac6bed70f02a916028f74dd7bd03f50d5c622ee3b0025057af9b2"
+    },
+    {
+      "path": ".pf/runs/garage-implement-evolve-20261002-04-mcp-perf-02-with-measured-request-lo/run.yaml",
+      "bytes": 34566,
+      "sha256": "3ad0d30606fa2f3b068db2149fdbb925f90e86cb6cf844d3f82636fb4069f3cb"
+    },
+    {
+      "path": ".pf/runs/garage-implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propag/run.yaml",
+      "bytes": 34540,
+      "sha256": "7310e5de537946f7ba58a6909b1c1a7a1d49ff0c37791beb05eaaa634b73ad11"
+    },
+    {
+      "path": ".pf/runs/garage-implement-evolve-20261005-yaml-loading-refactor-with-measured-req/run.yaml",
+      "bytes": 34535,
+      "sha256": "25494df3973f9672dc5758e7193f6893267a346c5521049d9e47ffc7ab0e9515"
+    },
+    {
+      "path": ".pf/runs/garage-implement-one-bounded-oop-01-injectable-processdefinition-read-se/run.yaml",
+      "bytes": 34524,
+      "sha256": "a6168bbfee18f60c1e12dcc5342a9382f70c8aeaf4420435e2094154f881f960"
+    },
+    {
+      "path": ".pf/runs/garage-implement-one-bounded-oop-01-shared-core-composition-step-route-e/run.yaml",
+      "bytes": 34316,
+      "sha256": "4b698421150652d7d4167ae7231670031dbb7dd3f290fe1962e38348df9c123b"
+    },
+    {
+      "path": ".pf/runs/garage-implement-one-bounded-oop-02-injectable-projectcontextsnapshot-re/run.yaml",
+      "bytes": 34601,
+      "sha256": "c3590e0c931e4ac81f3b1aa412b82ccd65ceb9f86ff72fd59adcd030fd2af326"
+    },
+    {
+      "path": ".pf/runs/garage-implement-oop-01-explicit-live-work-record-read-dependency-for-sh/run.yaml",
+      "bytes": 34486,
+      "sha256": "2a8ecd6367d46c36eb90139179c7c13d8fd5de4fcf8745055dd4362a0d577d30"
+    },
+    {
+      "path": ".pf/runs/garage-implement-oop-01-first-executable-slice-typed-currentworkservice/run.yaml",
+      "bytes": 34571,
+      "sha256": "e74b20dfc9861d905784f66e6ad235a7b8c38e8b1ee5e1aed8fb3fae37c1033b"
+    },
+    {
+      "path": ".pf/runs/garage-implement-oop-01-injectable-work-context-read-service-preserving/run.yaml",
+      "bytes": 34466,
+      "sha256": "6d362b87173e71603faedae2de438ccc39ca7a6f4a59e3be1211c037d726db16"
+    },
+    {
+      "path": ".pf/runs/garage-implement-oop-01-shared-work-state-composition-and-pure-state-pol/run.yaml",
+      "bytes": 34568,
+      "sha256": "966d9bf2a8ea739bb08451e64228e8570ccc06bf5e5b3a4567b23dee19fec11c"
+    },
+    {
+      "path": ".pf/runs/garage-implement-platform-neutral-file-security-adapters-and-repair-e10/run.yaml",
+      "bytes": 34286,
+      "sha256": "55b3001645240aa9bd938b87b6ccc4cdbde80d96906da0bc0183e9d6667ddd53"
+    },
+    {
+      "path": ".pf/runs/garage-implement-the-t07-provider-neutral-egress-engine-qualify-a-bounde/run.yaml",
+      "bytes": 34515,
+      "sha256": "913be419b240657e9fa694b4df18ed27dbb0d4a31534d47a2abedffb3f119a75"
+    },
+    {
+      "path": ".pf/runs/garage-implement-work-resume-01-by-extending-continuation-and-adding-saf/run.yaml",
+      "bytes": 34326,
+      "sha256": "f7161239e83e606c15e62e5eea73353b18c9f58de9e2387ae7b00dcf14de03ed"
+    },
+    {
+      "path": ".pf/runs/garage-independent-broad-context-source-reader-review-20261012-on-baseli/run.yaml",
+      "bytes": 34647,
+      "sha256": "593a01eac37d7be9650a9b7996534becfe3f001f8582bf594155c0ecd3a31814"
+    },
+    {
+      "path": ".pf/runs/garage-independent-coherent-context-source-projection-review-20261012-on/run.yaml",
+      "bytes": 34671,
+      "sha256": "ce4e31845146d3c01ec09fb70a6aa58a0f297ce0dd14f30aa29e05422ccc1a70"
+    },
+    {
+      "path": ".pf/runs/garage-independent-oop-runtime-presence-source-review-20261012-of-comple/run.yaml",
+      "bytes": 34631,
+      "sha256": "d3463d347a4b98ac050e3e92a9f90253f39827f989bf62707264765f6bc75701"
+    },
+    {
+      "path": ".pf/runs/garage-independent-resolved-and-resource-version-comparison-review-20261/run.yaml",
+      "bytes": 34664,
+      "sha256": "a4d4f76ba6633199a8121766766f0f33700f245f64d3c6bdfdc713fcb7953fe1"
+    },
+    {
+      "path": ".pf/runs/garage-independent-review-20261007-of-completion-package-commit-6879039/run.yaml",
+      "bytes": 34498,
+      "sha256": "9f8447b64f2ba1643e251ce077676e6ae3a2e0b0c25f8c982306497001139ef0"
+    },
+    {
+      "path": ".pf/runs/garage-independent-source-comparison-review-20261012-baseline1596a95-aft/run.yaml",
+      "bytes": 34658,
+      "sha256": "7b40c9978147d47cdd3a97230827e737aedde7cfee5a5de9a805a3fcf0f2f557"
+    },
+    {
+      "path": ".pf/runs/garage-independent-source-only-review-of-primary-agent-process-catalog-r/run.yaml",
+      "bytes": 34580,
+      "sha256": "de334fc1c025e1bcac1ce54178479f3b9d79136d74fc786f6309968520225aa0"
+    },
+    {
+      "path": ".pf/runs/garage-independent-source-review-projectcontextreadinesspolicy-20261012/run.yaml",
+      "bytes": 34623,
+      "sha256": "6fb41e5587d821c7cfef0433e0fd77fe24abb0a3ab8db23aa62028af26198550"
+    },
+    {
+      "path": ".pf/runs/garage-independent-static-dev-readiness233f20e-archive-build-and-manifes/run.yaml",
+      "bytes": 34608,
+      "sha256": "f04f0caac8aeadac6983b28f7a7a18436cff51b8059f5b3fba5b59ef94c3388e"
+    },
+    {
+      "path": ".pf/runs/garage-independently-review-primary-additional-cycle-4-exact-source-task/run.yaml",
+      "bytes": 34641,
+      "sha256": "3c8ee68156bf3c872a554bcad54864482d31158ac735dd5423846c98877c3fa6"
+    },
+    {
+      "path": ".pf/runs/garage-independently-review-the-exact-primary-documents-package-delivery/run.yaml",
+      "bytes": 34605,
+      "sha256": "b879ad7da6d3257ec5befbf4bbd043972392a8865102f6b25ba9d88c1623ed16"
+    },
+    {
+      "path": ".pf/runs/garage-independently-review-the-exact-primary-evidence-package-delivery/run.yaml",
+      "bytes": 34528,
+      "sha256": "b90bd6d26e13d4868177550f09431ef2ec8a98c249c89160fd46395377a5a974"
+    },
+    {
+      "path": ".pf/runs/garage-independently-review-the-explicitly-assigned-primary-exact-code-d/run.yaml",
+      "bytes": 34749,
+      "sha256": "ed6c31e48bd74f3ce1e7f050a626ae83f5f2f17bd74980fc4a39f6df7dc6b7fe"
+    },
+    {
+      "path": ".pf/runs/garage-independently-review-the-secondary-delivered-shared-cycle-2-prepa/run.yaml",
+      "bytes": 34755,
+      "sha256": "ff76a5b43ce76bf4bc8c11af1c0e71034b04e303b2f2087930d1094d5bb68070"
+    },
+    {
+      "path": ".pf/runs/garage-install-the-explicitly-approved-verified-pfconfig-and-runtime-spl/run.yaml",
+      "bytes": 34839,
+      "sha256": "db3615d08f9959ef0d0f6514482bcfd2494f615cb90ced602a65399c941bf9fb"
+    },
+    {
+      "path": ".pf/runs/garage-investigate-and-resolve-r01-first-run-project-profile-search-cont/run.yaml",
+      "bytes": 15619,
+      "sha256": "eb381a55c9279f8107566e34aacaacca84e4fa98f0f644c9ae108b381a5c77a6"
+    },
+    {
+      "path": ".pf/runs/garage-investigate-r03-concurrent-independent-workplace-migration-apply/run.yaml",
+      "bytes": 15649,
+      "sha256": "48bb44948fb02c55710ffc06b552a2832e9586b6232ed9583709ac4b35c0dd93"
+    },
+    {
+      "path": ".pf/runs/garage-make-work-state-distinguish-blocked-work-from-incomplete-work-rej/run.yaml",
+      "bytes": 15449,
+      "sha256": "0f43bcbdb6f0e3dcce790f6d8c7b87286e7b5613b13f12d87eb2376fc239f098"
+    },
+    {
+      "path": ".pf/runs/garage-move-existing-agent-presence-read-and-exact-selection-algorithms/run.yaml",
+      "bytes": 34540,
+      "sha256": "b0e5a9f1b9327210de5d7ed67c27da1c3f23c96524aa18aa5052529799f8fa3c"
+    },
+    {
+      "path": ".pf/runs/garage-move-existing-chat-transcript-paths-and-message-reads-into-real-o/run.yaml",
+      "bytes": 34162,
+      "sha256": "3cf7b5f386fddf12086e8de0cd8baa02119687817a523639366a8c5756ca84cf"
+    },
+    {
+      "path": ".pf/runs/garage-move-existing-chat-transcript-reads-and-shared-ndjson-parsing-int/run.yaml",
+      "bytes": 34509,
+      "sha256": "1e3f3742fa2cb53ecd8316a05fab33dc439450f224a3d3e84aa82440172b05fe"
+    },
+    {
+      "path": ".pf/runs/garage-move-existing-project-snapshot-reads-and-shared-file-hashing-into/run.yaml",
+      "bytes": 34575,
+      "sha256": "8f96d5a3ca282d38123fa3b136acd9f63676f4e8aeedc9d8d5836c562ebd8a4d"
+    },
+    {
+      "path": ".pf/runs/garage-move-the-existing-automationreadinessservice-and-transitionreject/run.yaml",
+      "bytes": 34667,
+      "sha256": "a71e1b2a8715cb10876339ea207ccdb43c02c025a3be039db340dc415a7fe713"
+    },
+    {
+      "path": ".pf/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s/run.yaml",
+      "bytes": 15329,
+      "sha256": "280600be808128e57715496f38b7d9c2719e464d399408e2e2fd064dfab9c291"
+    },
+    {
+      "path": ".pf/runs/garage-normalize-the-existing-work-creation-execution-mode-contract-in-c/run.yaml",
+      "bytes": 34571,
+      "sha256": "c96cfb16366b2cc25c02a99a207f7d469cdd4976b4bde478fb2ae3e677be5c0b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-accepted-refactoring-progress-matrix-refresh-20261012-user-re/run.yaml",
+      "bytes": 34368,
+      "sha256": "918ecfaa1c8892762abad0580fda134dead0ed85588798a48cc2e2c87e8c2a06"
+    },
+    {
+      "path": ".pf/runs/garage-oop-actual-runtime-consumer-map-20261012-complete-body-successor/run.yaml",
+      "bytes": 34729,
+      "sha256": "58532eb98a053c3b88baac100e7a323bff8c53edbb20a896b8a71c99f006c127"
+    },
+    {
+      "path": ".pf/runs/garage-oop-actual-runtime-consumer-map-20261012-user-requested-continued/run.yaml",
+      "bytes": 34347,
+      "sha256": "802a43eff9ccbb7382d60ae2bce071a364bae9d8eb88bcbe43e83ad388f8dab7"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-batch-task-2-of-6-extract-existing-exact-work-selec/run.yaml",
+      "bytes": 34658,
+      "sha256": "3308d76e4ab5d35d9ba5ee23277fa44d04fff9ab7c47e40364cc9f07fd82cd48"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-batch-task-3-of-6-extract-existing-offered-process/run.yaml",
+      "bytes": 34724,
+      "sha256": "68fb1b8c64de2137ae2b116db8b9899582ca6e26a69adefc468e0a6afef9784b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-batch-task-4-of-6-extract-existing-live-snapshot-re/run.yaml",
+      "bytes": 34713,
+      "sha256": "613e27544bad59f5330e67562c863425bbfbcaa0659e41435be9961033bbaf06"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-batch-task-5-of-6-extract-existing-run-completion-b/run.yaml",
+      "bytes": 34720,
+      "sha256": "810cc3c87bdb69b26efdfddcc44d4d7c0e7c29805b450ac87efe2a58443fd380"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-batch-task-6-of-6-extract-existing-completion-inten/run.yaml",
+      "bytes": 34748,
+      "sha256": "93a5eb34914dff702678567b8efb6fd05ec316dcd12af37374215b27f5ee9577"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-second-batch-20261007-task-1-of-6-extract-existing/run.yaml",
+      "bytes": 34755,
+      "sha256": "f7bd7bf7a515ab12ba279e7fd1704dca3b6a1c9f4a9ba19e6805fe7b2d944cec"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-second-batch-20261007-task-2-of-6-extract-existing/run.yaml",
+      "bytes": 34747,
+      "sha256": "de094f027059dd1629da8daa72f5330e899eb9391ddadc3d705424b351528a12"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-second-batch-20261007-task-3-of-6-extract-existing/run.yaml",
+      "bytes": 34746,
+      "sha256": "97c1c5d1a5897ac38a5604cf8656f955629654e1f699966a8edbfdb5eea8a09c"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-second-batch-20261007-task-4-of-6-extract-existing/run.yaml",
+      "bytes": 34748,
+      "sha256": "8063569f11b9537904abebc1706a3a5165c279acad7ce751e5588c9618ceff1e"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-second-batch-20261007-task-5-of-6-extract-existing/run.yaml",
+      "bytes": 34748,
+      "sha256": "0d534036dc9ac2ae015ab2c92436784debc05eb8e1cb00370e311b6b484b4834"
+    },
+    {
+      "path": ".pf/runs/garage-oop-automatic-second-batch-20261007-task-6-of-6-extract-existing/run.yaml",
+      "bytes": 34764,
+      "sha256": "00a0c1c2f71ed5a5b02a70ad48ade48d49fac407f8060954359b10b2630db3a2"
+    },
+    {
+      "path": ".pf/runs/garage-oop-broad-context-sources-20261012-autonomous-pair-mode-continuat/run.yaml",
+      "bytes": 35128,
+      "sha256": "cc83860f3db3c2a530558ffaea0ea0edbc37994022d28d73fa7ddc501d20330c"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-dev-archive-executor20261015-private-completed96bf/run.yaml",
+      "bytes": 34717,
+      "sha256": "ed68b0db314886f69259e815ffe0a80e09692f72b55eabd4002c1b61c4f6a9c6"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-dev-archive-reviewer20261015-private-completed96bf/run.yaml",
+      "bytes": 34724,
+      "sha256": "4487b04ad19ef41af0a7e26f344bc741b26068f612cb380623aca44517e7b87b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-provider-registry-source-refactor-20261013-continu/run.yaml",
+      "bytes": 34460,
+      "sha256": "436e5b2878d65eb6720a993a74ddf54af6969fe1ef77509906703696e1384d25"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-records-source-executor-20261015-own-one-new-publi/run.yaml",
+      "bytes": 34730,
+      "sha256": "223a65eba25f86159c52b38aa680c6eeba9b008006c869b9ddb7d9320247561b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-records-source-reviewer-20261015-independent-priva/run.yaml",
+      "bytes": 34683,
+      "sha256": "b8ebb394909cf54911ebd93786af704961f26a5db956d5397c869aeb148fe90c"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-registry-and-strict-answers-20261013-source-succes/run.yaml",
+      "bytes": 34715,
+      "sha256": "4305a5527fb49505dc1365987561f42f62856e854875f684ffac1220a2791828"
+    },
+    {
+      "path": ".pf/runs/garage-oop-capability-registry-dynamic-core-consumers-20261013-migrate-e/run.yaml",
+      "bytes": 34733,
+      "sha256": "7c1ed0d3be41fc02b98e74ba0bdf92c22b1c0a032c1a5db2c3ab477183f641c5"
+    },
+    {
+      "path": ".pf/runs/garage-oop-catalog-20261011-real-default-process-definitions-and-catalog/run.yaml",
+      "bytes": 34411,
+      "sha256": "91a4aa9728c004de94018fc9e241d3b5b12c61b33a0acd4d90934f4efd8b2d35"
+    },
+    {
+      "path": ".pf/runs/garage-oop-catalog-source-acceptance-successor-20261012-complete-corpus/run.yaml",
+      "bytes": 34449,
+      "sha256": "4a03994b5f7284d60781adeecad4e6db3e7e44902c475799e7c3b9ce0b726a1d"
+    },
+    {
+      "path": ".pf/runs/garage-oop-catalog-successor-20261011-implement-real-core-catalog-and-de/run.yaml",
+      "bytes": 34672,
+      "sha256": "9c2c92229d3d94ea24c343d39272e49e4e06fbf7bf3c528e124b5709a2fb1299"
+    },
+    {
+      "path": ".pf/runs/garage-oop-concrete-workplace-catalog-independent-source-review-20261012/run.yaml",
+      "bytes": 34444,
+      "sha256": "30483ca1af5dd4c17633453d5d2fbda2bfc47ad773e2104d3607d5287d20df71"
+    },
+    {
+      "path": ".pf/runs/garage-oop-concrete-workplace-catalog-owner-20261011-real-core-ownership/run.yaml",
+      "bytes": 34787,
+      "sha256": "10ba841a5970eec67ad527dcf30c73218af2b285cf607ec4c8cd22a2b9f1db97"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-capability-records-20261015-move-existing-capability/run.yaml",
+      "bytes": 35228,
+      "sha256": "9f977f57be5b0e963d40c9938ebac5f6c61fcdec522f6d7bb7cf6125b37d78e4"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-metadata-consumers-20261014-replace-projectcontextser/run.yaml",
+      "bytes": 34891,
+      "sha256": "993a73351c1e5c89382841ed678abc8d8695917ab4edb046e45180b3f578b57e"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-metadata-consumers-independent-source-reviewer-202610/run.yaml",
+      "bytes": 34764,
+      "sha256": "f6f56f682e7612a6e81abddaa528ef0cfa860cc8193e9138b9070ed261d0dde0"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-metadata-consumers-regression-executor-20261014-own-e/run.yaml",
+      "bytes": 34738,
+      "sha256": "c5afea9401b6f6c1928432e90b08b6b3395d0cbc7fb0468bcef3c9b6c375163b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-resource-policy-20261013-source-continuation-after-ab/run.yaml",
+      "bytes": 35042,
+      "sha256": "671db76911a26f62d4ea1e716dcbcddca444b5f5f4f0aa556d2b3cad4dde7c93"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-rules-20261013-continue-delivered97a9f2f-with-primary/run.yaml",
+      "bytes": 35070,
+      "sha256": "20fb914b50e987163d58b8061c821059ab16ddf86dc72cb53fbfaf2333cb8896"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-snapshot-markdown-rendering-20261014-new-bounded-sour/run.yaml",
+      "bytes": 34910,
+      "sha256": "4d5a8c26612fd00f8550dd0cb213015927b7f21d982931dc890bfea81fa3bde8"
+    },
+    {
+      "path": ".pf/runs/garage-oop-context-source-projections-20261012-autonomous-pair-mode-cont/run.yaml",
+      "bytes": 34982,
+      "sha256": "ac8d8136dcc5e8b49792f551ebb1839f19a5036624103a58b21b2f3ba0aec9e8"
+    },
+    {
+      "path": ".pf/runs/garage-oop-current-checkpoint-matrix-20261012-with-fully-pinned-source-c/run.yaml",
+      "bytes": 34795,
+      "sha256": "13c3d600b20b19d70605e21a086d0b440e91707fc929440451ef01333897ea5d"
+    },
+    {
+      "path": ".pf/runs/garage-oop-dev-device-capability-records-checkpoint20261015-exact-clean/run.yaml",
+      "bytes": 34841,
+      "sha256": "401913ba8a934b834acb96de5d33f1077623855b0642ff73f0de1e89aa580496"
+    },
+    {
+      "path": ".pf/runs/garage-oop-dev-device-checkpoint-ba8c01f-20261011-user-requested-clean-d/run.yaml",
+      "bytes": 34469,
+      "sha256": "46b8ecf6029a2ff2a3f7a433e8da4db0e7b197e5e2ab3f8aac1c9e56e82c6eab"
+    },
+    {
+      "path": ".pf/runs/garage-oop-dev-device-context-metadata-checkpoint-20261015-exact-clean-a/run.yaml",
+      "bytes": 34499,
+      "sha256": "e06fa627f5ca79767ff5e8be9ad6b1ab871881a26fb0c6e4562be375120e5c58"
+    },
+    {
+      "path": ".pf/runs/garage-oop-dev-metadata-fixture-portability-successor-20261015-repair-on/run.yaml",
+      "bytes": 35020,
+      "sha256": "927d2f9bebaa2c7e4f4fd7ce84cacd8956ded50b92a21265941cb18d53658681"
+    },
+    {
+      "path": ".pf/runs/garage-oop-diagnostics-verification-20261011-temporarily-enable-real-log/run.yaml",
+      "bytes": 34408,
+      "sha256": "a88eb045867c3c86038cb9a0d4eb1b0f01935d9ff07c3c208454b806c63ddc69"
+    },
+    {
+      "path": ".pf/runs/garage-oop-diagnostics-verification-successor-20261011-temporarily-enabl/run.yaml",
+      "bytes": 34418,
+      "sha256": "cd63a893e378bf753fb9c5f8a1463d0bbceeb9ccb3d6393dae74257e03e8f231"
+    },
+    {
+      "path": ".pf/runs/garage-oop-existing-process-event-journal-ownership-design-20261012-comp/run.yaml",
+      "bytes": 34397,
+      "sha256": "669a43874532f7913f3eea0af92048a5e8832c6bf1356f2d70ff349ea4c916c4"
+    },
+    {
+      "path": ".pf/runs/garage-oop-existing-process-event-journal-ownership-design-20261012-user/run.yaml",
+      "bytes": 34375,
+      "sha256": "0ce2242ca3da6ff9afdfa8cd625e556f8bdf5aaa66d6344cb26342e9d1ddbec4"
+    },
+    {
+      "path": ".pf/runs/garage-oop-facade-and-epic-progress-audit-20261011-reconcile-current-own/run.yaml",
+      "bytes": 34405,
+      "sha256": "a12e3ebefc6988aa04de45d90393db1fb298f8b9d2fa49b1e0bec3346ba55930"
+    },
+    {
+      "path": ".pf/runs/garage-oop-independent-checkpoint-acceptance-20261011-review-completed-s/run.yaml",
+      "bytes": 34434,
+      "sha256": "9085afd4d1e8495f7077a3d671fa1225b38af346c0e6a57ca4855d6a55027dd7"
+    },
+    {
+      "path": ".pf/runs/garage-oop-journal-recovery-20261012-after-terminal-native-worker-crash/run.yaml",
+      "bytes": 34732,
+      "sha256": "46602e9b451a4e7d874e22452d7cc4fd688354c9ec233b7e91df34f6396259a4"
+    },
+    {
+      "path": ".pf/runs/garage-oop-matrix-20261011-remaining-real-core-ownership-and-architectur/run.yaml",
+      "bytes": 34415,
+      "sha256": "ffe3cb6c5580f300f501b272b17e389525f56694023e2d43cbee8ed27cc25323"
+    },
+    {
+      "path": ".pf/runs/garage-oop-matrix-final-20261011-final-architecture-matrix-of-finished-f/run.yaml",
+      "bytes": 34255,
+      "sha256": "ab720dcda122835ca5e8d32d3cb50740061843899cd4289fcde3d2fc67f4366c"
+    },
+    {
+      "path": ".pf/runs/garage-oop-matrix-qualified-20261011-final-architecture-matrix-of-finish/run.yaml",
+      "bytes": 34756,
+      "sha256": "b4827513193484ec87e9bb51ec34fd46ee4cf4729490778204333526ac4fe2a8"
+    },
+    {
+      "path": ".pf/runs/garage-oop-metadata-fixture-portability-and-exact-dev-archive-executor-2/run.yaml",
+      "bytes": 34714,
+      "sha256": "20c651d1139f74a786d3424ae0f7cf727bb3ce24fd719030916218361d5bf5d5"
+    },
+    {
+      "path": ".pf/runs/garage-oop-metadata-fixture-portability-and-exact-dev-archive-reviewer-2/run.yaml",
+      "bytes": 34714,
+      "sha256": "869207f3d80a5b01c9e72147d0b517c507571ab3789b1b3a276caed50634d01e"
+    },
+    {
+      "path": ".pf/runs/garage-oop-next-project-freshness-ownership-design-20261012-complete-bod/run.yaml",
+      "bytes": 34749,
+      "sha256": "041200c3eab9e47c4d71481cd85bb8aa2bf8ca0c5b6f12d5f4f5ea310c0f69ac"
+    },
+    {
+      "path": ".pf/runs/garage-oop-next-project-freshness-ownership-design-20261012-user-request/run.yaml",
+      "bytes": 34369,
+      "sha256": "db02677002d5e34090ddd15c36e7a611aa5ed8001269d6ba6ee7f4d839232bd2"
+    },
+    {
+      "path": ".pf/runs/garage-oop-nine-shared-refactoring-tasks-and-knowledge-library-future-pr/run.yaml",
+      "bytes": 34476,
+      "sha256": "b94c6dc4a4b513ec52fab1cfe4517ec4439dc7bae5f4cf14e4781e1a94b00989"
+    },
+    {
+      "path": ".pf/runs/garage-oop-parallel-primary-20261011-orchestrate-five-pf-codex-exec-shel/run.yaml",
+      "bytes": 35012,
+      "sha256": "f46638a1ed68383be2bd93ef90a98474f650e8b9ae892fe42df5d3bae1953434"
+    },
+    {
+      "path": ".pf/runs/garage-oop-prepared-resource-consumer-integration-20261011-remove-the-om/run.yaml",
+      "bytes": 34587,
+      "sha256": "60928010dd8d5a93c234e510b83f2e221868929158c6aa81f0bc3e4ad6ef72f9"
+    },
+    {
+      "path": ".pf/runs/garage-oop-primary-auxiliary-integration-20261011-migrate-the-additional/run.yaml",
+      "bytes": 34810,
+      "sha256": "263c96dd8062b0a4a3a35d3b9734dd1eed6ddf490f9c6417aaf589b9ec46f43b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-progress-matrix-recovery-20261012-after-terminal-native-worke/run.yaml",
+      "bytes": 34387,
+      "sha256": "508c769c1f37da027666e5e3d5c0f57acf703c91d8e0cdae537ca7cba24d9051"
+    },
+    {
+      "path": ".pf/runs/garage-oop-project-context-freshness-design-20261011-map-remaining-resou/run.yaml",
+      "bytes": 34417,
+      "sha256": "fc70cd603c03ff47cfdf48f7d07b3dc8cbd502a2a649ddf6ab24702c76043650"
+    },
+    {
+      "path": ".pf/runs/garage-oop-project-readiness-policy-20261012-concrete-core-ownership-of/run.yaml",
+      "bytes": 34874,
+      "sha256": "bc5a9666afb2b1cbe0c89d6801ab47ef0420a353f001294c38e8307ccfa47551"
+    },
+    {
+      "path": ".pf/runs/garage-oop-project-snapshot-source-independent-review-20261012-frozen-co/run.yaml",
+      "bytes": 34427,
+      "sha256": "af19fb5c91aaafb98a90d5088033d4e4befb20163ff3d10ac6c67e4ccbc39699"
+    },
+    {
+      "path": ".pf/runs/garage-oop-project-snapshot-sources-20261012-real-concrete-core-ownershi/run.yaml",
+      "bytes": 34698,
+      "sha256": "cb8fd38ddfd6b594f9752c770c60d5abd202a8542a424719b8cc6aa69b0c301e"
+    },
+    {
+      "path": ".pf/runs/garage-oop-resolved-comparison-20261012-autonomous-pair-mode-continuatio/run.yaml",
+      "bytes": 35027,
+      "sha256": "73e7957ed01c87fca26360fc2f84fde3cf3194577ab6df112de303bc91ead9b8"
+    },
+    {
+      "path": ".pf/runs/garage-oop-resources-20261011-concrete-core-resource-resolution-dependen/run.yaml",
+      "bytes": 34765,
+      "sha256": "d88045179f5a09bf129f142c4249c996288e19dc499fa9e7dfb779702e040be2"
+    },
+    {
+      "path": ".pf/runs/garage-oop-review-20261011-independently-verify-all-finished-worker-and/run.yaml",
+      "bytes": 34414,
+      "sha256": "624149e847a0e97dd29a1f9d739bf9acfa09553dc7d0db201b6effed1a82bc88"
+    },
+    {
+      "path": ".pf/runs/garage-oop-review-final-20261011-independent-review-of-all-finished-froz/run.yaml",
+      "bytes": 34271,
+      "sha256": "83e5190c85384d261e0dfaa49ce40c155df3acec2efa30917efa9d1d24c55fe7"
+    },
+    {
+      "path": ".pf/runs/garage-oop-review-qualified-20261011-independent-review-of-all-finished/run.yaml",
+      "bytes": 34771,
+      "sha256": "781e2352b8776eeb5772ebcd9e30637de7f94305401e194f1958dab2260c0886"
+    },
+    {
+      "path": ".pf/runs/garage-oop-runtime-presence-consumers-20261012-autonomous-continuation-m/run.yaml",
+      "bytes": 34819,
+      "sha256": "32dbf240a745eff387d6f6b3dc6459151bae6a78163f3adf8f1321829604e9fb"
+    },
+    {
+      "path": ".pf/runs/garage-oop-snapshot-renderer-source-s2-20261014-after-e744d35-and-reboot/run.yaml",
+      "bytes": 34919,
+      "sha256": "2ef20fc813a274cd25d64ea5c92ab01432e02a0e24c2ddac7fc809dc97d571e2"
+    },
+    {
+      "path": ".pf/runs/garage-oop-snapshot-reviewer-recovery-20261012-canonical-service-operati/run.yaml",
+      "bytes": 34771,
+      "sha256": "aac24127ca5e75e973fb96b65c440e17b1fdb44829beca8d053717ec1438b16b"
+    },
+    {
+      "path": ".pf/runs/garage-oop-source-comparison-20261012-autonomous-continuation-on-publish/run.yaml",
+      "bytes": 34895,
+      "sha256": "f4c6e6589d9ab9772bfcb5a34328be13a9606e2e85e1051ea1c85e1186641e80"
+    },
+    {
+      "path": ".pf/runs/garage-oop-summary-20261011-concrete-process-summary-reader-without-mono/run.yaml",
+      "bytes": 34772,
+      "sha256": "72184bc8050212467a60fb62f4a62c03032f2c22ee86ab83e3042e32053593a4"
+    },
+    {
+      "path": ".pf/runs/garage-oop-workplace-search-design-20261011-bounded-concrete-catalog-own/run.yaml",
+      "bytes": 34413,
+      "sha256": "01f7a6d82458f9797285c60a1588a4c5dbc32cdc020d124fb9d666dd6b7e94db"
+    },
+    {
+      "path": ".pf/runs/garage-oop-workplace-search-design-successor-20261011-bounded-concrete-c/run.yaml",
+      "bytes": 34428,
+      "sha256": "a52e7e269f38ad09cc139dea240b8ced6d60827e178561733de9010e0a08f644"
+    },
+    {
+      "path": ".pf/runs/garage-operator-authorized-restart-of-the-existing-pf-app-server-pf-runt/run.yaml",
+      "bytes": 37121,
+      "sha256": "ee93826b1db0a4d91ca6dc5104eb1e948bc89ba6fe2e249dbc2cc5e46fc7d24a"
+    },
+    {
+      "path": ".pf/runs/garage-orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-conte/run.yaml",
+      "bytes": 15581,
+      "sha256": "b72d23b426a338c81a20bdf1319bc1632e0a9d02eac5cde58f70bf0981b2d5d9"
+    },
+    {
+      "path": ".pf/runs/garage-organize-existing-agent-entry-modules-into-a-core-package-while-p/run.yaml",
+      "bytes": 34454,
+      "sha256": "ce0fcb30139e09b1d94f483f65399fb94ae57740137d2dc04c5d0609f7b618a7"
+    },
+    {
+      "path": ".pf/runs/garage-organize-existing-work-modules-into-the-work-package-and-establis/run.yaml",
+      "bytes": 34473,
+      "sha256": "032ca4d041f7e471e973f3ce5d3dbd4c06214ae9c4615a1c3dc9cd8d383fb6a4"
+    },
+    {
+      "path": ".pf/runs/garage-organize-the-existing-yaml-document-reader-into-the-cohesive-proc/run.yaml",
+      "bytes": 34645,
+      "sha256": "e439a42141462bfcfc303e8a133edb2ed17a68db2af2b95a0d8f4ce8edbf212c"
+    },
+    {
+      "path": ".pf/runs/garage-organize-the-six-existing-run-completion-modules-into-processforg/run.yaml",
+      "bytes": 34674,
+      "sha256": "66a6559d82fc750b124f82e839978045c788ac759d0a80f37f85dc15c213ede1"
+    },
+    {
+      "path": ".pf/runs/garage-organize-the-three-existing-evidence-collection-evidence-validati/run.yaml",
+      "bytes": 34666,
+      "sha256": "779b066a88d5d8929a805676f2b7ec7b086d46b4fd1a160af64d77a9a2d07035"
+    },
+    {
+      "path": ".pf/runs/garage-organize-the-three-existing-process-definition-read-process-selec/run.yaml",
+      "bytes": 34645,
+      "sha256": "c3ae85baaaa03b984d4b3a43bb35a88fe2f513c172d8860f20a0d68693319419"
+    },
+    {
+      "path": ".pf/runs/garage-perform-final-processforge-1-1-0-release-qualification-and-freeze/run.yaml",
+      "bytes": 15569,
+      "sha256": "47f67b76072fe7e8605f266a3cdb58bbdef34fa344fc306274e64bf95645f77d"
+    },
+    {
+      "path": ".pf/runs/garage-perform-the-explicitly-assigned-read-only-self-review-of-secondar/run.yaml",
+      "bytes": 34688,
+      "sha256": "de30964db758b999321e4bec513f8c30e35a81e83b1d3f0017280e192dfd9aad"
+    },
+    {
+      "path": ".pf/runs/garage-perform-the-explicitly-assigned-separate-read-only-self-review-of/run.yaml",
+      "bytes": 34664,
+      "sha256": "0cf9ce7f7a866f396a7b888e2714c83c91dcf9238b9dc6e0c77a5348313900ea"
+    },
+    {
+      "path": ".pf/runs/garage-pf-actions-release-20261015-expose-a-truthful-typed-map-of-existi/run.yaml",
+      "bytes": 37046,
+      "sha256": "907808a6b56b78b8edf7754b4eed7923533d6b3447132403e671438af0f630dc"
+    },
+    {
+      "path": ".pf/runs/garage-pf-audit-followups-documentation-executor-20261014-independently/run.yaml",
+      "bytes": 34679,
+      "sha256": "cd3a73249ededd1f28004408179b226ca0f6a884e51b40e3fdaf0c132989f03e"
+    },
+    {
+      "path": ".pf/runs/garage-pf-audit-followups-independent-documentation-reviewer-20261014-re/run.yaml",
+      "bytes": 34703,
+      "sha256": "a85d5d8d8392ef08c11cc1c2df4fe94347fa4c43e54fe63e6f984fbdc0295371"
+    },
+    {
+      "path": ".pf/runs/garage-pf-development-throughput-evolve-20261015-measured-retrospective/run.yaml",
+      "bytes": 35123,
+      "sha256": "1b439dbc45b686a6e856a0d7599138c64fcfcb850c98843732a8eb4b4ec420d7"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-capability-registry-executor-20261013-baseline1195be2-sol/run.yaml",
+      "bytes": 34333,
+      "sha256": "5af9b8927a74d2c4c1d303d810327c985b81e25c31c3a38098bc5efa412432b0"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-capability-registry-executor-successor-s2-20261013-baseli/run.yaml",
+      "bytes": 34707,
+      "sha256": "9093ac9f2b40ba628d53e3784386c3dbdeda8fb68d683c85904edf585b5a46b3"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-context-resource-snapshot-executor-20261013-baselineabccb/run.yaml",
+      "bytes": 34701,
+      "sha256": "a5dd3aced30bae613c5bfc9f9d9509d96f23b557ae24119a943333ab8f87692f"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-independent-capability-registry-and-strict-answers-review/run.yaml",
+      "bytes": 34724,
+      "sha256": "d5204d39c65a00aafdb5f0341d35a4204dd96da768b71ae072146e79828fdf13"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-independent-context-resource-policy-code-and-docs-reviewe/run.yaml",
+      "bytes": 34711,
+      "sha256": "e4bf2b06e2444f11fe754a75dc8bf7101ce8737e0539363fbca3b22e38028c58"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-independent-snapshot-renderer-code-and-en-ru-docs-reviewe/run.yaml",
+      "bytes": 34305,
+      "sha256": "17f869d04beae444448480ac2638cc78748c11afaad8adef102e396bd8b4ba52"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-shell-context-rule-executor-20261013-baseline97a9f2f-orig/run.yaml",
+      "bytes": 34683,
+      "sha256": "ea9644adf5bf2317a0ecaad2975b985d74bf936c04cef01b53fea10135b58c88"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-shell-independent-context-rule-source-reviewer-20261013-a/run.yaml",
+      "bytes": 34708,
+      "sha256": "b433fe73e46728417e9bf32126872a5371fb6f34400bd49461466a979ee8042c"
+    },
+    {
+      "path": ".pf/runs/garage-pf-long-snapshot-renderer-executor-20261014-exact-e744d35-body-ow/run.yaml",
+      "bytes": 34312,
+      "sha256": "a2b7899113201f7bdc08e7002407d0ba5884991605d4e7ed19a302bf18eba0cc"
+    },
+    {
+      "path": ".pf/runs/garage-pf-sfd-boundaries-20261015-publish-clarified-software-feature-dev/run.yaml",
+      "bytes": 34766,
+      "sha256": "a0a8c43f7a9d1eb97ba7c7295f17d5ab7526da94e9506112eec272040e53fd62"
+    },
+    {
+      "path": ".pf/runs/garage-pf-snapshot-renderer-executor-qualification-s2-20261014-new-artif/run.yaml",
+      "bytes": 34749,
+      "sha256": "3b8f0ca3a87f968c455e84764eb5d9c7fa53939c64b5651cd525a2232b6d0d7c"
+    },
+    {
+      "path": ".pf/runs/garage-pf-snapshot-renderer-independent-reviewer-s2-20261014-actual-comp/run.yaml",
+      "bytes": 34821,
+      "sha256": "5cb0f83fca36ce80da91bd9e22ce93a38a8cf29c137a5e28e4beb1fa19231051"
+    },
+    {
+      "path": ".pf/runs/garage-pf-throughput-evolve-executor20261015-private-independent-retrosp/run.yaml",
+      "bytes": 34662,
+      "sha256": "8a9831bf236dbd2575b732e88f306f0774bc13234b8beaf5021837c2244352f5"
+    },
+    {
+      "path": ".pf/runs/garage-pf-throughput-evolve-reviewer20261015-private-independent-retrosp/run.yaml",
+      "bytes": 34678,
+      "sha256": "c0826fc6f50df589cb9af217c48fb9852586c255c1797218e753dee291a8d34e"
+    },
+    {
+      "path": ".pf/runs/garage-pf-unicode-mcp-stdio-independent-source-reviewer-20261014-review/run.yaml",
+      "bytes": 34685,
+      "sha256": "4c13128d8e08147a86cd1721ddf1b6d7dafb0279678bc5349e9ceab91f9414e0"
+    },
+    {
+      "path": ".pf/runs/garage-pf-unicode-mcp-stdio-source-regression-executor-20261014-exact-pr/run.yaml",
+      "bytes": 34677,
+      "sha256": "2213a245accd548ec1345904733560bedb1d5a916d12950c58949b177880ade4"
+    },
+    {
+      "path": ".pf/runs/garage-pf-unicode-mcp-stdio-utf-8-source-remediation-20261014-execute-th/run.yaml",
+      "bytes": 35539,
+      "sha256": "2ee9791e7e136f6656fc67df647df55a7c46355fb5a514bcbd61685953f53d8d"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-bounded-catalog-investigator20261016-current-installed2d7-m/run.yaml",
+      "bytes": 36899,
+      "sha256": "c5d15432373e3bffc2dc64ca9b25f73d2a8e9531cb2d869a1c119a95b43e6749"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-bounded-journal-investigator20261016-current-installed2d7-m/run.yaml",
+      "bytes": 36899,
+      "sha256": "ec332e4f4ee60e1ee1ac67d2ba26c53b8fd4d6313f29f460891d26bb5731068d"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-canonical-exact-work-selection-20261016-implement-the-user/run.yaml",
+      "bytes": 36955,
+      "sha256": "d3c68b576754e43e9b6e9fa45c25b79f1f51ee487441c37d346a7d5269027cea"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-checkpoint-independent-reviewer20261016-frozen-private1-2in/run.yaml",
+      "bytes": 36932,
+      "sha256": "cf0a3372a3199e47173485dd2592aa746b434b1d66cbac9d24667d60a7ca4ec4"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-collect-independent-corrected-source-review2-20261016-bound/run.yaml",
+      "bytes": 36890,
+      "sha256": "62f17666ab2c2dcf3762c8dc2bace96380974c8c2952f4365828707b4e6bc67e"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-collect-independent-corrected-source-review3-20261016-bound/run.yaml",
+      "bytes": 36890,
+      "sha256": "dedd8bf90a6d25137d7f4e02538a840a201347aa41e99e5b58ba7e7c0e6582ad"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-collect-independent-frozen-source-review20261016-bounded-fa/run.yaml",
+      "bytes": 36885,
+      "sha256": "e9c5f073ce6afbe6f87e610d5470f68155e17dd00161126e2bceb6a1edfa5232"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-cumulative-fast-work-dev-delivery-20261016-complete-disjoin/run.yaml",
+      "bytes": 37041,
+      "sha256": "a034e23c5ffad95d6529597bcacd13df54ad185c5420f3bf978dbd644141d976"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-cumulative-journal-diagnostics-private-dev-delivery20261016/run.yaml",
+      "bytes": 36966,
+      "sha256": "d9f8265dca37c8286669045de7a959b05b6eed99a422c4e79ca29faafe54745e"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-cumulative-ordered-journal-replay-private-dev-delivery20261/run.yaml",
+      "bytes": 36943,
+      "sha256": "36084b235a536097e6e217e9147d8ab4c8c7219cebfdca0a4bd9d5fa46be4b5a"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-current-collection-request-scope-experiment20261016-existin/run.yaml",
+      "bytes": 36918,
+      "sha256": "bcb22a551da5f717e86fe73decc03e850411006937f663c6f3a5a8612675c0ee"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-current-supervisor-collection-census20261016-active-capture/run.yaml",
+      "bytes": 36922,
+      "sha256": "e05d021d45dbe6e06d5d5f51bac64a20fa7ed815328577765b4e2d68a44a1c50"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-decoder-prototype20261016-bounded-artifact-only-feasibility/run.yaml",
+      "bytes": 36899,
+      "sha256": "ea1b9d8851c865adc862c535a42a9b797e909a8ff224fa0ce40b35ad95063511"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-dev-device-scope-latency-20261015-qualify-exact-dev-archive/run.yaml",
+      "bytes": 37027,
+      "sha256": "52b5f50e7e9a295009dae9c25b0e97323df18221a5cb0d59694e27582feddd07"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-dev-peer-byte-checker-20261015-independently-verify-all-zip/run.yaml",
+      "bytes": 37344,
+      "sha256": "26542550d739a3767f2b3ac8e345f6ea4f2150f657d5114c9fd5833fad03d841"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-dev-peer-source-reviewer-20261015-independently-review-the/run.yaml",
+      "bytes": 37544,
+      "sha256": "bb3861baddde781ee1b43aa09ddd7e2884f096f5b198b6870b59a2e1ce0b9753"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-device-acceptance-20261016-user-authorized-native-updater-p/run.yaml",
+      "bytes": 37045,
+      "sha256": "09fb996d26636d6a4026e691b9f2b7a2f84b507a31c72523e8403879fde0957d"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-diagnostics-investigator-measured-remaining-cost20261016-bo/run.yaml",
+      "bytes": 36887,
+      "sha256": "7a9e8e52478b722a389901c40a06039634755950343f8a798a84c3127422e038"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-diagnostics-probe20261016-artifact-only-localization-of-slo/run.yaml",
+      "bytes": 36916,
+      "sha256": "795c43c73f419ba8cf9834f1f6c65f76b2ed6adec03447bdad44f0f9c18672de"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-final-performance-corrections-review20261016-journal-alloca/run.yaml",
+      "bytes": 36908,
+      "sha256": "b0d962b297388645d302c211cadcf5cefc002a0fe44bbff6de69a622a7408fa2"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-final-prepublication-delivery20261016-reviewed-stabilized-s/run.yaml",
+      "bytes": 36955,
+      "sha256": "eb96aa176b50d72a151a63bcd12a026bed05963621f9d375283e8c47a44c2c43"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-historical-observation-private-dev-delivery20261016-accepte/run.yaml",
+      "bytes": 36924,
+      "sha256": "01333ae348001c0ee5eb1f1b3221d4d39f428c25b534ce673efa281c0516ec72"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-http-framing-20261015-implement-pf-audit-03-as-a-bounded-su/run.yaml",
+      "bytes": 37135,
+      "sha256": "d94640c25651ff5c100eee7e41bae2394c542ec67eb90dc2c952cedf943f806f"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-http-native-reviewer-20261015-independently-review-the-comp/run.yaml",
+      "bytes": 36734,
+      "sha256": "d8ff23f26f1e632a4d754d3748cc0cfa7e9013d96538f9904ba736255c836c18"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-independent-historical-capture-observation-review20261016-f/run.yaml",
+      "bytes": 36913,
+      "sha256": "551c146962687b50d17db0bef3e49e60304f468a11fffcf1f33f14f7a545947c"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-independent-journal-source-review20261016-bounded-current-b/run.yaml",
+      "bytes": 36897,
+      "sha256": "fbf11d464c972498b0712d0d7d937cafe1a7e3373c94f4472a02ff983c0c7569"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-independent-ordered-journal-r1-r2-correction-review20261016/run.yaml",
+      "bytes": 36927,
+      "sha256": "138fdcb832b9b88c4a61c289c99399b406cad242072dbc2a14cef233040b91b8"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-independent-ordered-journal-r3-separator-correction-review2/run.yaml",
+      "bytes": 36912,
+      "sha256": "e73fc113678f8bb71ab18ada4e31b17412b5b5350128f71a08b1c46e9cb05ece"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-independent-ordered-journal-replay-review20261016-first-mat/run.yaml",
+      "bytes": 36920,
+      "sha256": "06e2f5ba6226ea5c032facd6ecb94d3a33ef7aeac8e712d5dbec680f58f4025c"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-independent-runtime-service-publication-review20261016-boun/run.yaml",
+      "bytes": 36909,
+      "sha256": "6bf54b58def4e454d386dc4147a2ca69a6ede133e20611b339fa8aa3c771ea34"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-installed-practical-worker20261016-one-short-native-worker/run.yaml",
+      "bytes": 37178,
+      "sha256": "7aeb37fc8416779dc4d4d25dab8ddaf3c9d3ae65ed24ad01361bfcd0e5eeb84b"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-installed-residual-investigation-20261015-localize-exact-se/run.yaml",
+      "bytes": 36959,
+      "sha256": "b1108f28c5927cc5fe0b1319e85f3934b7c389209865fe900c6ceb6b7292fc9d"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-intermediate-checkpoint-candidate20261016-accepted-refactor/run.yaml",
+      "bytes": 36948,
+      "sha256": "974901b6e925ff1b26feb069a281b8e956d2802fa0f2d27409c11a74d96f15d8"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-journal-independent-frozen-source-review20261016-bounded-fa/run.yaml",
+      "bytes": 36885,
+      "sha256": "77fcf3f6e408fcfbfd51175cad6b037703dc4343876a8485b89952d026e78ff4"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-journal-per-project-index20261016-measured-interleave-churn/run.yaml",
+      "bytes": 36884,
+      "sha256": "f531fdddaf23ec8c454366cc1d638a7b584d6eb54ed0ea46a6c33ca2c3a6ef4a"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-mcp-diagnostic-canonical-root-binding-20261016-prevent-opti/run.yaml",
+      "bytes": 36945,
+      "sha256": "be162f8c1d9c1b4602e1aa723af2e8ecb673b53dce51615c2963b5b82a5d147b"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-mcp-diagnostic-peer-source-reviewer-20261016-independently/run.yaml",
+      "bytes": 38163,
+      "sha256": "0759afbb956b0998a0f0ddd9c4dc1f2e86bfb77a67c748a4682aeac78ca551e3"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-narrow-jr02-policy-rework-review20261016-known-stdlib-parse/run.yaml",
+      "bytes": 36890,
+      "sha256": "9e642dfced9a051692a7b70ddcec1536ec35364a7fad6cc42e486381d970debf"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-narrow-r1-runtime-publication-smoke-correction-review202610/run.yaml",
+      "bytes": 36907,
+      "sha256": "8ab3578cea4255c36bfbcd3016062e6944f5f8535b7d5603aa28813af9056c3d"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-narrow-remaining-jr02-error-constructor-review20261016-unkn/run.yaml",
+      "bytes": 36888,
+      "sha256": "18dadf3a67dce64f80316905cab51f1ef30f4e38b491e472ab5f91a834c98b06"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-ordered-journal-error-row-replay20261016-current-byte-bound/run.yaml",
+      "bytes": 36917,
+      "sha256": "c352c5fd5009ad09a37a9809ec5e6f35d41e335cad0dd669a31749ac22cf0419"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-own-scratch-inventory20261016-user-requested-disk-recovery/run.yaml",
+      "bytes": 36903,
+      "sha256": "5fed488fe15087c798994a4ac9ca7d6d4ea8f3c4dc4ce980898fd0ccdd876ba5"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-prepared-resource-yaml-latency-20261015-reuse-the-existing/run.yaml",
+      "bytes": 36949,
+      "sha256": "da707670c562911802cad67b7c8737c7f67431963f4289135c2c05a2f1c6b46c"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-private-collect-journal-development-delivery20261016-accept/run.yaml",
+      "bytes": 36915,
+      "sha256": "dc8a598b632a08b918483ab6fed60ccdbbaba37cc7ce6397b3a07bdf8f742fb0"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-project-event-journal-latency-20261016-measured-core-append/run.yaml",
+      "bytes": 36927,
+      "sha256": "ef1fb7c7a7094650afa83d35842d8c2ef85f4e2aae014e302ce7b00fc857ee79"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-release-documentation-draft20261016-accepted-dev83-history/run.yaml",
+      "bytes": 36903,
+      "sha256": "ebefa1c6fac3a8504a267b1fa3ea1aed550c538afe5396a4cfd8657d467a23f9"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-remove-unused-tmp20261016-direct-cleanup-of-completed-work/run.yaml",
+      "bytes": 36888,
+      "sha256": "b10dd7a5204832b7f11de536b4f50c81c156abd53200b0560fed37e1420f6644"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-retire-qualified-current-release-scratch20261016-exact-repr/run.yaml",
+      "bytes": 36916,
+      "sha256": "4e31e65df94a067c28aa49f9717631f722c506c125e54d3bcc51fa45ea0ddb7e"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runs-investigator-measured-remaining-cost20261016-bounded-r/run.yaml",
+      "bytes": 36880,
+      "sha256": "1997624bfebee6dcc0b487d17d63dfc49ba4ba8ae4945c96679259301c46ab29"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-collection-cost-20261015-identify-exact-completed-a/run.yaml",
+      "bytes": 36619,
+      "sha256": "cc6b30e57005cbe9829f645432f09832d26100c76be52c01a9b85aa0a2158659"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-event-ingress-projection-cost-20261016-installed61/run.yaml",
+      "bytes": 37552,
+      "sha256": "d2d20deda6abda1813d114658eb8e49eb1161f6bc386b8209a0889cb7b4750db"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-operation-local-parsing20261016-measured-current-re/run.yaml",
+      "bytes": 36909,
+      "sha256": "fdbfaf35054558455b3dbfc671726bff0d93ff83f0006a5903cc579ffb2780ba"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-projection-dependency-closure20261016-installed75-c/run.yaml",
+      "bytes": 36932,
+      "sha256": "bfa949bd0f7d707b42df731fc71aa7cf098897c8bc4163a7f734a5a18adc71b1"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-register-20261015-independently-localize-pf-audit-0/run.yaml",
+      "bytes": 36778,
+      "sha256": "ab00c9c0f40ce6a759ef9d3c3c322baa97bd1c1bd7f10a4b8caad010d9d2f7d1"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-service-publication-correction20261016-measured-win/run.yaml",
+      "bytes": 36940,
+      "sha256": "4de3eee0b731472439ae9b0a51451500973a423429cf2878d59500e836544d37"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-v2-20261015-pf-audit-05-diagnostic-successor-with-e/run.yaml",
+      "bytes": 36748,
+      "sha256": "a0b4f7129e98ad03e809dab08b992a8966a89c01714161b3db3a0cf7db378534"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-runtime-yaml-policy-and-immutable-decode-qualification20261/run.yaml",
+      "bytes": 36931,
+      "sha256": "e1ba7e45dc936f150b31432fed269eca65d3fe915059ccdaaf7afa081146d46b"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-scope-latency-20261015-repair-measured-work-start-scope-ove/run.yaml",
+      "bytes": 37179,
+      "sha256": "3000896b7c6358e946a7f98ed1879c6c6898a7b1a7d3c8031aeb235d4597d722"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-stability-cli20261016-remove-measured-eager-egress-initiali/run.yaml",
+      "bytes": 36933,
+      "sha256": "b8cd2677aafca0a791d110fe6198c1bedcdc273b6a292f614a000254f64d5b75"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-stability-diagnostics20261016-correct-the-reproducible-diag/run.yaml",
+      "bytes": 36927,
+      "sha256": "77e8896fa0f7c70c4c89be01b83ecdbdfec45ba86c91fb5d78469119db4264b6"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-stability-reviewer-r2-20261016-final-independent-review-of/run.yaml",
+      "bytes": 36924,
+      "sha256": "cbfee5480781b239026d5cad62313a938391853964545e5eae7aff7387ab9d71"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-stability-reviewer-r3-20261016-verify-accepted-r2-01-repair/run.yaml",
+      "bytes": 36907,
+      "sha256": "f14502f9e9217762d8de09db96d8b530b921592882b234b4299c977ab487bca3"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-stability-reviewer-r4-20261016-final-portable-nonblocking-c/run.yaml",
+      "bytes": 36901,
+      "sha256": "e366c0c83c92c015623b9c008c459c736fc3a16d61898e8e030b15edcde8e847"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-stability-reviewer20261016-independently-review-frozen-mini/run.yaml",
+      "bytes": 36939,
+      "sha256": "5217a660b88ba39bd3af120c29f4ab3c1764296af605bfef074ae47688e28f90"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-supervisor-explicit-collect-recovery20261016-approved-stabl/run.yaml",
+      "bytes": 36903,
+      "sha256": "63df0e56a08a63d1dcc3bbd4cbb9ec946ee88ca9f6977306a9cf473ac5bf4c4f"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-supervisor-historical-observation20261016-user-approved-cap/run.yaml",
+      "bytes": 36903,
+      "sha256": "fa87b5817fb8aa98b24f8e4d5512514366dac15babb90c2509dcf0b1fe9daf6a"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-task-batch-20261015-independently-localize-pf-audit-06-usin/run.yaml",
+      "bytes": 36773,
+      "sha256": "26acc66f5a1b1e9ccc51abcf1f9c19a74d2c60076ea267071418ec90020c5e10"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-terminal-admission-20261015-implement-pf-audit-04-as-a-boun/run.yaml",
+      "bytes": 37181,
+      "sha256": "c66737d521368a13ea4a128881d943bedcd56777cd9b792abcfe79160bfc103a"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-user-approved-all-unneeded-tmp-retirement20261016-verified/run.yaml",
+      "bytes": 36924,
+      "sha256": "0996f3330bf2f5a4bce9197d8f02a5b0f5f9e756bd8bba518bcd60ff855c21c5"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-user-approved-remaining-tmp-retirement20261016-exact-loose/run.yaml",
+      "bytes": 36908,
+      "sha256": "dc910a77042631a3925294e781a88530cdd15d3cb3fd15c23432073bef8a0604"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-user-requested-release-scratch-cleanup20261016-bounded-qual/run.yaml",
+      "bytes": 36896,
+      "sha256": "358b72da53ad8cc6445527af524852cf53a166ef768fdbcabee13c05e1a7b92e"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-valid-history-journal-index-acceptance20261016-no-malformed/run.yaml",
+      "bytes": 36899,
+      "sha256": "7f2f9064e0ba16dc89ddca1d48cb297ff7ddc49660287379c8c2ede2150f1d34"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-windows-diagnostics-admission-fairness-correction20261016-p/run.yaml",
+      "bytes": 36943,
+      "sha256": "5b7d30fdc7eb5a379a6c18dbc1f28e621a517f802d9173122857915fecb8b91f"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-windows-diagnostics-lock-contention-20261016-original-gener/run.yaml",
+      "bytes": 37637,
+      "sha256": "d03eccf23636c1c2c2da8789cb5fc8466c67c5fd4238938216034a4a45c0e883"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-yaml-peer-catalog-investigator-20261015-investigate-remaini/run.yaml",
+      "bytes": 37731,
+      "sha256": "62adc72819b8045693295def99a9756d2791fd3c37a5bcf07a2d4afd26ba6043"
+    },
+    {
+      "path": ".pf/runs/garage-pf120-yaml-peer-source-reviewer-20261015-independently-review-the/run.yaml",
+      "bytes": 37643,
+      "sha256": "ed75567969b2b5b3a566b4791ae91b0ffcb70519e2e824ea1996d149c29d92eb"
+    },
+    {
+      "path": ".pf/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1/run.yaml",
+      "bytes": 15613,
+      "sha256": "f78c1b4310799cabed3ae5ad42197d6e2c8b9510994a0668210f73f302f29937"
+    },
+    {
+      "path": ".pf/runs/garage-plan-one-additional-shared-cycle-of-exactly-three-existing-pf-oop/run.yaml",
+      "bytes": 34870,
+      "sha256": "dc4b7293d79bfe1900b93c5a70d873c5c6d8f4cd9abbd3f63e87e8df3fc7dfd0"
+    },
+    {
+      "path": ".pf/runs/garage-plan-pf-portable-agent-entry-architecture-domains-migration-and-i/run.yaml",
+      "bytes": 34290,
+      "sha256": "10b4f923e27fb651241ef7c0991be70f264c9baf237c907bd4839e7fd22d2219"
+    },
+    {
+      "path": ".pf/runs/garage-plan-the-explicitly-assigned-core-update-relocation-from-core-upd/run.yaml",
+      "bytes": 34540,
+      "sha256": "40929d913c2f93a7c918450548587b7f5b87e029f691c4d823a690e8669b3220"
+    },
+    {
+      "path": ".pf/runs/garage-plan-the-explicitly-assigned-prepared-input-and-resources-package/run.yaml",
+      "bytes": 34531,
+      "sha256": "0eb1ecdeeb3af6f510fb126f7881f7f2c2d948c6accb39394a53a4db4e49db0e"
+    },
+    {
+      "path": ".pf/runs/garage-plan-the-explicitly-assigned-runtime-metrics-relocation-from-runt/run.yaml",
+      "bytes": 34550,
+      "sha256": "4083589d9eace7ec68ec2c508b34523dedd6e7676f72bec2c6abedbaad349090"
+    },
+    {
+      "path": ".pf/runs/garage-plan-the-next-bounded-core-oop-package-tasks-and-delegate-automat/run.yaml",
+      "bytes": 34588,
+      "sha256": "79d8da558c40fc31ac0bc44d1cb601e65af08e49962208bce76daabccd33d154"
+    },
+    {
+      "path": ".pf/runs/garage-prepare-and-qualify-a-bounded-pfconfig-yaml-crud-and-runtime-spla/run.yaml",
+      "bytes": 34728,
+      "sha256": "cd3f001ffae96aa4d9ea4e48964f4c97e851dad7114eed4d73bb95dd8e1a3437"
+    },
+    {
+      "path": ".pf/runs/garage-prepare-and-qualify-a-clean-local-update-archive-from-accepted-oo/run.yaml",
+      "bytes": 34772,
+      "sha256": "61f429f6e7af7eec60e65f3b1f44b80f03fd328f1aa2c447f2de77793e3469cc"
+    },
+    {
+      "path": ".pf/runs/garage-prepare-the-finite-oop-01-acceptance-matrix-against-the-original/run.yaml",
+      "bytes": 34576,
+      "sha256": "7f7b94c085687d003f317ec167db27bba7a93fb82702577a8fc3b396684d1ea1"
+    },
+    {
+      "path": ".pf/runs/garage-project-orientation-20261007-read-current-pf-tasks-and-evidence-c/run.yaml",
+      "bytes": 34167,
+      "sha256": "715687011040e059ca44884e15222215b306a7074cc89604bd421edbf3f25aee"
+    },
+    {
+      "path": ".pf/runs/garage-project-rules-persist-current-refactoring-only-development-and-pa/run.yaml",
+      "bytes": 34528,
+      "sha256": "1d831cf0e3704d83aaeb7aeb8eb23fcc1807e97051931a49833c56c7d2252f3d"
+    },
+    {
+      "path": ".pf/runs/garage-publish-completed-pf-documentation-and-semantic-code-audit-from-2/run.yaml",
+      "bytes": 34421,
+      "sha256": "dfcff6e45e0d0603177c27e9475031c7db7b7a373fc25cb25d5d6ff6b3ef2b83"
+    },
+    {
+      "path": ".pf/runs/garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0/run.yaml",
+      "bytes": 15603,
+      "sha256": "5223e9f240525dbefeb866770d09c4fe1f63f86d84cb46e0e4d7fdd7c9e9f697"
+    },
+    {
+      "path": ".pf/runs/garage-qualify-r02-clean-processforge-release-candidate-from-current-dev/run.yaml",
+      "bytes": 15632,
+      "sha256": "064641b9a0b21d4e45718d577a452babf2e99253312b707b067cc2acde44cb90"
+    },
+    {
+      "path": ".pf/runs/garage-qualify-the-clean-compatibility-preserving-development-archive-an/run.yaml",
+      "bytes": 34507,
+      "sha256": "c4ad681ecf53d36df1606da891f33c94483fc93aab6428b87d07c27f9f8f55b0"
+    },
+    {
+      "path": ".pf/runs/garage-qualify-the-fixed-clean-dev-archive-and-rehearse-the-existing-dev/run.yaml",
+      "bytes": 34562,
+      "sha256": "5412437d36a8a6f09dbb6231c6f06019a765ef0c1d891d0afc3db29115a31217"
+    },
+    {
+      "path": ".pf/runs/garage-qualify-the-native-development-archive-after-oop-refactoring-for/run.yaml",
+      "bytes": 34568,
+      "sha256": "6f3a013b38dbe1b229048846d8c4d87e153bbf54e9bacecd18edaa921f4ba0ce"
+    },
+    {
+      "path": ".pf/runs/garage-read-only-audit-current-processforge-documentation-against-actual/run.yaml",
+      "bytes": 34565,
+      "sha256": "a36bf22ce6b93bd1ae73b1d9db626a22118effcbb8475a2b5dd9bf7c42fdd525"
+    },
+    {
+      "path": ".pf/runs/garage-reassess-the-existing-pf-core-and-oop-refactoring-plan-as-a-behav/run.yaml",
+      "bytes": 34597,
+      "sha256": "fdedbeca0dea80f83d1b5a974684f75bee122c65d04bacfe728a50a0dfeb8d35"
+    },
+    {
+      "path": ".pf/runs/garage-rebuild-current-processforge-package-for-external-audit/run.yaml",
+      "bytes": 15412,
+      "sha256": "5a45e7bfc1495ab397306e39300bb3f6192395eed64405cbab2f32b26f14f017"
+    },
+    {
+      "path": ".pf/runs/garage-reconcile-evolve-backlog-accounting-20261005-for-completed-succes/run.yaml",
+      "bytes": 34536,
+      "sha256": "6e460e61674f172108d9a02c32ecb64d1851908b5fc605b48d8b61cb460c0f92"
+    },
+    {
+      "path": ".pf/runs/garage-reconcile-the-oop-01-acceptance-matrix-against-all-architectural/run.yaml",
+      "bytes": 34643,
+      "sha256": "0f40395e7f22972bbe9454340543284bb5e997947d6d96c95f0c23b78f207a6d"
+    },
+    {
+      "path": ".pf/runs/garage-record-the-explicit-user-directed-progressive-jpeg-oop-refactorin/run.yaml",
+      "bytes": 34709,
+      "sha256": "0b373b96a014b970124ad0e18b5509f2fe6898205dc60ac0c5b4efb4888aaac1"
+    },
+    {
+      "path": ".pf/runs/garage-record-the-operator-authorized-native-device-core-update-of-the-q/run.yaml",
+      "bytes": 34726,
+      "sha256": "430b32fd4694a6281a2f756326e3bbaab035807f207adef8eb28d21885f9c39d"
+    },
+    {
+      "path": ".pf/runs/garage-record-the-user-s-agreed-oop-refactoring-clarification-as-a-versi/run.yaml",
+      "bytes": 34694,
+      "sha256": "4a4b3a86b584f88f517b979c7d157adc37e4295952ab5c992d0241e1551679f2"
+    },
+    {
+      "path": ".pf/runs/garage-refactor-existing-work-transition-commit-publication-into-explici/run.yaml",
+      "bytes": 34656,
+      "sha256": "598e67003d19cb9985583765fa7f7a9f23e615d42af6374ec5fe42c9fce91a76"
+    },
+    {
+      "path": ".pf/runs/garage-refactor-garagemodeservice-snapshot-reads-as-task-3-of-3-sequenti/run.yaml",
+      "bytes": 34599,
+      "sha256": "a92269be64f9613ac3a88c23f25212f06fa1910990b0a57844742d3f9041c7a4"
+    },
+    {
+      "path": ".pf/runs/garage-refactor-one-existing-oop-02-garage-projectcontextsnapshot-read-r/run.yaml",
+      "bytes": 34765,
+      "sha256": "bdff14a652a457546185de36a24d5ded20da21bc200f96f1da942ca1019645a8"
+    },
+    {
+      "path": ".pf/runs/garage-refactor-resourceresolveservice-snapshot-reads-as-task-2-of-3-seq/run.yaml",
+      "bytes": 34863,
+      "sha256": "cc24e9dd76e79cddb9097b02d9ac2eb5ed2107840042f18aa44144702e242b48"
+    },
+    {
+      "path": ".pf/runs/garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo/run.yaml",
+      "bytes": 15596,
+      "sha256": "1de7bcc21368e9811137509b997153e5f0c2ac69473c0109e8ca53ce3bb58d1a"
+    },
+    {
+      "path": ".pf/runs/garage-remediate-python-core-audit-f01-project-search-authorization-and/run.yaml",
+      "bytes": 15676,
+      "sha256": "b6cc2e02ed6628c37d4534ee1ec006f849eac3b081c681bad0059d9d96c8483e"
+    },
+    {
+      "path": ".pf/runs/garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re/run.yaml",
+      "bytes": 15596,
+      "sha256": "a9ad5b4f9fc6fbea3dc6248311e0a3a191ce3269ee85f84a1e08feaf95f495eb"
+    },
+    {
+      "path": ".pf/runs/garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres/run.yaml",
+      "bytes": 15598,
+      "sha256": "1099650f11c1c7769aac39a71e91db686104929a963d429512e5d684624f4dfc"
+    },
+    {
+      "path": ".pf/runs/garage-remove-stale-tracked-dist-archives-because-github-releases-are-th/run.yaml",
+      "bytes": 15671,
+      "sha256": "b7d62900607361b010126fe6835ce24f93bd20f8a65e746b4d5ed4a7d4aa5d4e"
+    },
+    {
+      "path": ".pf/runs/garage-repair-e08-resource-selection-order-validation-and-precise-integr/run.yaml",
+      "bytes": 34356,
+      "sha256": "dee3b96e010a814d35e7273e6d169a76c6c654ee9585324b88259daf7f4e8301"
+    },
+    {
+      "path": ".pf/runs/garage-repair-e09-legacy-lock-regression-fixture-startup-race-with-expli/run.yaml",
+      "bytes": 34351,
+      "sha256": "bd7228cd4c630ad03db6e6573f030dc323a71a14cd4cc546963f867ee5799507"
+    },
+    {
+      "path": ".pf/runs/garage-repair-e09-native-orchestration-identity-and-advisory-overlap-con/run.yaml",
+      "bytes": 34375,
+      "sha256": "2cbe494cf73f244fd794a6a1b036505fbfaa3ef07ceacc8dbeca07ef58c5ac78"
+    },
+    {
+      "path": ".pf/runs/garage-repair-e09-portable-legacy-entry-ownership-fixture-and-add-determ/run.yaml",
+      "bytes": 34366,
+      "sha256": "98e8f2b228e927169f37741693070157591f290f131697c97e107b8fa2d64c84"
+    },
+    {
+      "path": ".pf/runs/garage-repair-e10-f01-windows-inherited-acl-migration-with-exact-securit/run.yaml",
+      "bytes": 33950,
+      "sha256": "1e38cad3064bf89b1e72b627a3098bfebac397fee00c1043df0a3fd5713c951a"
+    },
+    {
+      "path": ".pf/runs/garage-repair-the-project-event-journal-with-preserved-original-evidence/run.yaml",
+      "bytes": 34365,
+      "sha256": "21e529bb73d50910cd0c13396600e5d598dc8bf316eea1511ff26d424b55193e"
+    },
+    {
+      "path": ".pf/runs/garage-repair-the-six-supervisor-stress-test-fixtures-discovered-by-e09/run.yaml",
+      "bytes": 34378,
+      "sha256": "5503d38af59e745ef34c11e0650388221713292a4fe3473b77d19aaf061da511"
+    },
+    {
+      "path": ".pf/runs/garage-replace-existing-work-context-read-adapter-with-concrete-oop-core/run.yaml",
+      "bytes": 34517,
+      "sha256": "5e0ae8b09b9f8ef01d7c8bd90fb3efd5129be5aeac504275c850911575652917"
+    },
+    {
+      "path": ".pf/runs/garage-research-legacy-and-unused-processforge-mechanisms-and-agent-proj/run.yaml",
+      "bytes": 34505,
+      "sha256": "f80735e35480896a71dd4623ebfda921bb9e35f3db834a6710ccbc29dd771426"
+    },
+    {
+      "path": ".pf/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the/run.yaml",
+      "bytes": 15690,
+      "sha256": "64388efa78f3fd7a2e903e6e42583c58fbf791776288465019de463627890b02"
+    },
+    {
+      "path": ".pf/runs/garage-restore-pre-refactoring-lazy-project-context-access-in-existing-e/run.yaml",
+      "bytes": 34536,
+      "sha256": "fe46f179f52bd4d5a48ce5fdab4616a9d43d352a2a3a5223192adf820b1d14e2"
+    },
+    {
+      "path": ".pf/runs/garage-review-all-project-evolution-candidates-and-relevant-workplace-le/run.yaml",
+      "bytes": 34555,
+      "sha256": "323ea23a5fa2b1c381c9e64785d156d45fa26a4f67ec64c899fc922bc92b2b61"
+    },
+    {
+      "path": ".pf/runs/garage-review-and-deliver-the-pf-vision-alignment-work-plan-from-the-202/run.yaml",
+      "bytes": 34463,
+      "sha256": "fe9b62a52d9f81214ab5ab212decfd093fd51219df7a44692921a5e2aee05891"
+    },
+    {
+      "path": ".pf/runs/garage-revise-the-vision-alignment-plan-with-explicit-mcp-operability-ac/run.yaml",
+      "bytes": 34478,
+      "sha256": "0f7571bc5d5aa1a80ea1b94d70e6661f1531f4a99ad5ca48e8cff3496d30cfd6"
+    },
+    {
+      "path": ".pf/runs/garage-rewrite-work-readers-to-use-real-core-yaml-and-inventory-dependen/run.yaml",
+      "bytes": 34540,
+      "sha256": "3cc4a33bbbeb99218bd476fed1ea5c89c08281a1d206281f52292a6525c1b7c5"
+    },
+    {
+      "path": ".pf/runs/garage-runtime-cpu-after-sqlite-20261017-read-only-diagnosis-of-the-subs/run.yaml",
+      "bytes": 37330,
+      "sha256": "33c8044dd8d2e1145d074308f3dc041c2460de2d792cdcc7e3dfbafd10d305ff"
+    },
+    {
+      "path": ".pf/runs/garage-runtime-cpu-root-cause-20261017-diagnose-current-installed-proces/run.yaml",
+      "bytes": 37109,
+      "sha256": "3b5f22ff7d57976dcaa995b96a9950b4c1f671a9df363582c363ea8da27c4a6f"
+    },
+    {
+      "path": ".pf/runs/garage-separate-current-device-dev-checkpoint-20261014-after-accepted-sn/run.yaml",
+      "bytes": 34782,
+      "sha256": "334948191c51256bfe3687e624791793ff8b79dad7aff7b552ec00b1fefcb450"
+    },
+    {
+      "path": ".pf/runs/garage-serena-cache-recovery-20261012-user-authorized-project-local-sere/run.yaml",
+      "bytes": 34766,
+      "sha256": "8e77f8ea2dd6a3d0be8b0fe91c06e294e7ff10f67a87345072a37506123f987b"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-1-task-2-of-9-organize-the-existing-project-initiali/run.yaml",
+      "bytes": 34668,
+      "sha256": "73019319ece0478247507703a47ca28f2169b4a8eee2088a6089cabca449a48e"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-1-task-3-of-9-organize-the-existing-local-resource-s/run.yaml",
+      "bytes": 34672,
+      "sha256": "5a5e072249e40dc2dfa95193212816fe9543779e2ac35e327035061591afd9c2"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-2-task-4-of-9-move-the-existing-prepared-input-and-r/run.yaml",
+      "bytes": 34637,
+      "sha256": "5ab5e61bae1f1eb18cb702f1848e8af8f293de33e7ab8c04048d463c0ec79534"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-2-task-5-of-9-move-the-existing-core-update-implemen/run.yaml",
+      "bytes": 34611,
+      "sha256": "e3baf0fef4d6924a4b69bcc9d0eb01953d2ecd3be28d31c08bc259ee2dd3268f"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-2-task-6-of-9-move-the-existing-runtime-metrics-coll/run.yaml",
+      "bytes": 34632,
+      "sha256": "40680ad8aec7a6528c4422a723daa90f27de2ed50aafb529e1abe9fc394598d7"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-3-task-7-of-9-organize-the-existing-work-continuatio/run.yaml",
+      "bytes": 34695,
+      "sha256": "ec2b98ce8427d270c14aa46d4bf62de16cf5241587dd4a53f41cded74c649897"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-3-task-8-of-9-organize-the-existing-project-host-int/run.yaml",
+      "bytes": 34705,
+      "sha256": "3be6a979ba2d600906b07741821e3b14ac0571d9cb3f573cfa5a25d86347becb"
+    },
+    {
+      "path": ".pf/runs/garage-shared-cycle-3-task-9-of-9-organize-the-existing-shared-request-s/run.yaml",
+      "bytes": 34700,
+      "sha256": "fa5518ba37a75c800275ce853ad14070de334a5c43d68f59b6efd1bc36690d2d"
+    },
+    {
+      "path": ".pf/runs/garage-six-task-automatic-batch-task-1-of-6-extract-existing-automation/run.yaml",
+      "bytes": 34693,
+      "sha256": "8fe0a25c95bde60ab18df05ec57c9713d1c66a6991f17bd2e4820624f90ba7ec"
+    },
+    {
+      "path": ".pf/runs/garage-stabilization-after-new-project-20260824/run.yaml",
+      "bytes": 1227,
+      "sha256": "912e8d502b8dcab6607684fba49f41a4185fc29393f186a4beed832cea387943"
+    },
+    {
+      "path": ".pf/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and/run.yaml",
+      "bytes": 16425,
+      "sha256": "1b88324926d5b1e773e35713ad8e9c5427cb02adf214df8e31dc81ec4fccd8ac"
+    },
+    {
+      "path": ".pf/runs/garage-stabilize-the-existing-parallel-worker-start-contract-and-qualify/run.yaml",
+      "bytes": 34528,
+      "sha256": "a18db71550f33decb2f83bcff964b2d5672cf19aa20315eb4d1b7f781acf7440"
+    },
+    {
+      "path": ".pf/runs/garage-static-autonomous-oop-presence-cycle-role-oop-presence-checker-20/run.yaml",
+      "bytes": 34286,
+      "sha256": "d338c8b386738ad2151bce39b79f48eab671d39fa5f8cc892b1e092f8086635c"
+    },
+    {
+      "path": ".pf/runs/garage-static-autonomous-oop-presence-cycle-role-oop-presence-closure-20/run.yaml",
+      "bytes": 34287,
+      "sha256": "cd375bb110da4a393928205982642ccce214d557be821b50196f5ba520a51b28"
+    },
+    {
+      "path": ".pf/runs/garage-static-autonomous-oop-presence-cycle-role-oop-presence-fingerprin/run.yaml",
+      "bytes": 34299,
+      "sha256": "c7fca8d21bfccbaa72be638bc0d88c150080b843bf640dc7ba61250f190887ce"
+    },
+    {
+      "path": ".pf/runs/garage-static-autonomous-oop-presence-cycle-role-oop-presence-journal-20/run.yaml",
+      "bytes": 34644,
+      "sha256": "65f48d233494899a2365d30a28202bf61dc20b623ddd287170510bb4b3788874"
+    },
+    {
+      "path": ".pf/runs/garage-static-oop-presence-oop-presence-checker-20261012-successor-s2-20/run.yaml",
+      "bytes": 34722,
+      "sha256": "f94d66bc71b830cf45000ccf5f71e1845b9d6224a8ff7e4d6c00a7385a145657"
+    },
+    {
+      "path": ".pf/runs/garage-static-oop-presence-oop-presence-fingerprints-20261012-successor/run.yaml",
+      "bytes": 34732,
+      "sha256": "970007d85d1759f343739230cbfe77ed1a8bb320de1b8e1a7372a0ed81435903"
+    },
+    {
+      "path": ".pf/runs/garage-static-readiness-oop-cycle-role-oop-readiness-check-design-202610/run.yaml",
+      "bytes": 34280,
+      "sha256": "1155837b988b54ca32a56479f539bfa8d700cbdab7cbb3f96f6db35cedfbacfc"
+    },
+    {
+      "path": ".pf/runs/garage-static-readiness-oop-cycle-role-oop-readiness-closure-20261012-re/run.yaml",
+      "bytes": 34625,
+      "sha256": "1812c348989b9bd95e945bd31bdab1a99c57359c6f00e8d091dc24a2c535aed7"
+    },
+    {
+      "path": ".pf/runs/garage-static-readiness-oop-cycle-role-oop-readiness-journal-20261012-re/run.yaml",
+      "bytes": 34625,
+      "sha256": "b97061e015067f69e6f009343bc2e7538e14c60cacfeb4b5da326701c67a7f4b"
+    },
+    {
+      "path": ".pf/runs/garage-static-readiness-oop-cycle-role-oop-readiness-presence-20261012-r/run.yaml",
+      "bytes": 34270,
+      "sha256": "7df83153b08ce62d3e87d29cc70a336f54404eb9e5fb64f81d38a472da65439a"
+    },
+    {
+      "path": ".pf/runs/garage-static-source-comparison-cycle-checker-20261012-role-oop-presence/run.yaml",
+      "bytes": 34693,
+      "sha256": "fd7f0ab1cab36abd91b1407f738bef000c0adfd2c4715d26b0cdd710c5d2f2e5"
+    },
+    {
+      "path": ".pf/runs/garage-static-source-comparison-cycle-fingerprints-20261012-role-oop-pre/run.yaml",
+      "bytes": 34708,
+      "sha256": "c7a95c13ea9a244dedf4365e10eb871b9c1abbfaa07947202e75c5e174d76508"
+    },
+    {
+      "path": ".pf/runs/garage-stop-automatic-start-generation-and-restoration-for-new-projects/run.yaml",
+      "bytes": 34346,
+      "sha256": "7daae64e2935663c9deadd4ed434a080c5c1f8692e496ff0163411fadc19426c"
+    },
+    {
+      "path": ".pf/runs/garage-t01-pf-vision-alignment-r02-define-the-provider-neutral-work-exec/run.yaml",
+      "bytes": 34618,
+      "sha256": "63579ff5f48ebb020a42b6a0f133ac05ba99b0cf2c7d22da52475c6b32ff4151"
+    },
+    {
+      "path": ".pf/runs/garage-t02-pf-vision-alignment-r02-implement-explicit-work-context-resou/run.yaml",
+      "bytes": 34669,
+      "sha256": "9b5694ce2f0e973b2860ae4a4356b7fd5706da02fa9ac83e9633d905a468c6fe"
+    },
+    {
+      "path": ".pf/runs/garage-t03-pf-vision-alignment-r02-implement-one-shared-normalized-compl/run.yaml",
+      "bytes": 34500,
+      "sha256": "00fd578afac531233d1f40586a7980960766afc695339390cfea7880ab309e94"
+    },
+    {
+      "path": ".pf/runs/garage-t04-pf-vision-alignment-r02-implement-trusted-provider-adapters-a/run.yaml",
+      "bytes": 34546,
+      "sha256": "7812969ba5783ad54cbf51b3039a16a8cba64a487ae0c0ca50338c9980bfd280"
+    },
+    {
+      "path": ".pf/runs/garage-t05-pf-vision-alignment-r02-prepare-bounded-authorized-immutable/run.yaml",
+      "bytes": 34575,
+      "sha256": "bd09c46a8e9598320fc4bdc181c46f49b0108a057f8dfcb150cde5a36a6944f2"
+    },
+    {
+      "path": ".pf/runs/garage-t06-delivery-prerequisite-qualify-a-clean-isolated-candidate-cont/run.yaml",
+      "bytes": 34736,
+      "sha256": "3279e497203683f936e13eda8404b57b561eeacae420edb1c2b3d14feae6c68f"
+    },
+    {
+      "path": ".pf/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc/run.yaml",
+      "bytes": 34656,
+      "sha256": "2b90386c9d079a4f2d7e962c49ccf4306d1c11b17219a14c8e9fd70797c18a70"
+    },
+    {
+      "path": ".pf/runs/garage-t07-pf-vision-alignment-r02-specify-provider-neutral-local-filter/run.yaml",
+      "bytes": 34680,
+      "sha256": "02a8162b0c65d77e4bf96b59351ad1512247391b4eb321d521edde5d9a236e02"
+    },
+    {
+      "path": ".pf/runs/garage-t08-mcp-operability-reproduce-current-source-versus-installed-mcp/run.yaml",
+      "bytes": 34572,
+      "sha256": "0cedb23041dda01dd6f945be7e38cb6c0bbe35b67bd9f5a7a65759b9b7257f47"
+    },
+    {
+      "path": ".pf/runs/garage-t09-pf-vision-alignment-r02-implement-provider-neutral-optional-d/run.yaml",
+      "bytes": 34653,
+      "sha256": "59d880b1d4ec720f5ec404eadca1c5408b4b7ef86585454756f865851c4b2b7f"
+    },
+    {
+      "path": ".pf/runs/garage-t10-delivery-qualify-and-install-the-accepted-terminal-monitor-th/run.yaml",
+      "bytes": 34364,
+      "sha256": "7fb3f7bf9800b17782495324e03de65bf39eecbcbdc8ceb37a311680f92630d4"
+    },
+    {
+      "path": ".pf/runs/garage-t10-local-operator-completion-publish-bounded-authoritative-activ/run.yaml",
+      "bytes": 34429,
+      "sha256": "29ad0621354b2db750d7ce805cac6ba5ff0bf5c50946c42794c492143b5500bc"
+    },
+    {
+      "path": ".pf/runs/garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi/run.yaml",
+      "bytes": 34700,
+      "sha256": "df496282942e0769b3c453812b3de66846c8ebdcedfe51db22a65e18cf949ec4"
+    },
+    {
+      "path": ".pf/runs/garage-update-operator-installed-core-with-accepted-e05-e06-e07-and-star/run.yaml",
+      "bytes": 34357,
+      "sha256": "312e844c65a5d9bd86afd9d4fe41f116fa8f8312bd7ac903a8c0c95a8240bad9"
+    },
+    {
+      "path": ".pf/runs/garage-update-operator-installed-mcp-core-with-accepted-e03-e04-and-clas/run.yaml",
+      "bytes": 34359,
+      "sha256": "924888c6eaea36e2e31234505ccbda85398c9d36d2364f7a099d40eacc1d2d3d"
+    },
+    {
+      "path": ".pf/runs/garage-user-authorized-owned-pf-app-server-maintenance-readiness233f20e/run.yaml",
+      "bytes": 34753,
+      "sha256": "2f3d10a72286e422deb8ad4792c82ec843065e76e453e65601b8812774b0e5de"
+    },
+    {
+      "path": ".pf/runs/garage-user-periodic-dev-device-checkpoint-context-rules20261013-plannin/run.yaml",
+      "bytes": 34866,
+      "sha256": "4ca817d803d4d5795482d5dfa9833c947fb3ca2d18dc927a834474d31713be8e"
+    },
+    {
+      "path": ".pf/runs/garage-user-requested-periodic-dev-checkpoint-for-accepted-published-rea/run.yaml",
+      "bytes": 34412,
+      "sha256": "519f0c5e4178f0a392b0e177708647ec0a8979489e83644454ebf3ed671a558a"
+    },
+    {
+      "path": ".pf/runs/garage-verify-agent-instruction-file-discovery-and-prove-or-reject-the-p/run.yaml",
+      "bytes": 34562,
+      "sha256": "35038c9d0330239c2244577808e995a912b2260c767978824c024d2caad0fb12"
+    },
+    {
+      "path": ".pf/runs/garage-yaml-read-performance-20261017-fix-the-measured-repeated-growing/run.yaml",
+      "bytes": 37156,
+      "sha256": "2a0fcb3909590ac590a41a3e6fcbfc93fb277a62e756d947146838c03e7a1ea5"
+    },
+    {
+      "path": ".pf/runs/interrupted-session-code-audit-20260814/run.yaml",
+      "bytes": 669,
+      "sha256": "b4a3aed002c980ac88b07db69f04ec59582431c06fd6a33266bc7c6220df52d7"
+    },
+    {
+      "path": ".pf/runs/knowledge-library-reference-access-backlog-20261008/run.yaml",
+      "bytes": 1601,
+      "sha256": "856902f731c9a443d94216fb4de301ae0bb97267725e117161ae43fb6c694a65"
+    },
+    {
+      "path": ".pf/runs/ledger-hooks-mcp-next-stage-20260814/run.yaml",
+      "bytes": 506,
+      "sha256": "429c1ef7a53fd604f5d3b175140297d17242c8035ea015034d9bc62655154d42"
+    },
+    {
+      "path": ".pf/runs/ledger-hooks-mcp-next-stage-review-20260814/run.yaml",
+      "bytes": 872,
+      "sha256": "b11cea53558b052d674cf6df11e85ddf164277001b31c165a833cf409ed265c4"
+    },
+    {
+      "path": ".pf/runs/ledger-hooks-mcp-remediation-review-20260814/run.yaml",
+      "bytes": 884,
+      "sha256": "61a85002a10339aefc8bbddb8dd77d2c3ca00270332e4a1a135713c7ff4fe60b"
+    },
+    {
+      "path": ".pf/runs/manual-dev-package-update-20260814/run.yaml",
+      "bytes": 1066,
+      "sha256": "ff79d45d05b4301a3f1cd0c7503b731e108c20210e0f6be67d125d30cf7a4559"
+    },
+    {
+      "path": ".pf/runs/official-bundled-process-packs-20260730/run.yaml",
+      "bytes": 926,
+      "sha256": "c35364076782ee77d1d4cef7e499be38d030e48c92376687b693018f8b67e187"
+    },
+    {
+      "path": ".pf/runs/pf-1-0-version-update-20260720/run.yaml",
+      "bytes": 938,
+      "sha256": "e6eb0d55cd06734fa3aa390cdcf3eeab2320160c77474959b69f1dbfdaeac397"
+    },
+    {
+      "path": ".pf/runs/pf-audit-followups-backlog-20261014/run.yaml",
+      "bytes": 2974,
+      "sha256": "fe988ce1310b30ab338562aa891a1b79961fcedc931b4dcc44b10c8786476681"
+    },
+    {
+      "path": ".pf/runs/pf-entity-update-scope-20260720/run.yaml",
+      "bytes": 893,
+      "sha256": "ef66a434f6b1e79e63815327dd34bc26d9efe94af46d6de5a9b8bacd630ea4d2"
+    },
+    {
+      "path": ".pf/runs/pf-global-update-design-20260720/run.yaml",
+      "bytes": 948,
+      "sha256": "b797d002a9a34ee1fc3f1c33fb31cd1841285ac5ea98e43550ffdd2172eb2074"
+    },
+    {
+      "path": ".pf/runs/pf-machine-acceptance-20260829/run.yaml",
+      "bytes": 3773,
+      "sha256": "c2f0a9888e3abed25ac941b72b5b4f88cf600a0b2b3a0f27350bd75cb3dff672"
+    },
+    {
+      "path": ".pf/runs/pf-path-compatibility-backlog-20261014/run.yaml",
+      "bytes": 1481,
+      "sha256": "b83ac6185f4f85aa0376dd2effe9bc6d4f7d51276b85f72f2fc2f9a6fa392b21"
+    },
+    {
+      "path": ".pf/runs/pf-runtime-mcp-20260813/run.yaml",
+      "bytes": 862,
+      "sha256": "b93c3f2a412acafbb7123d9699caba1d022c3741ca38bb40390cf2255c49f3b5"
+    },
+    {
+      "path": ".pf/runs/pf-runtime-mcp-autostart-docs-20260829/run.yaml",
+      "bytes": 2877,
+      "sha256": "e4007050b713fbf1a6ca1ab5d9519b0a76527c14f73d4bacea33780db4a34397"
+    },
+    {
+      "path": ".pf/runs/pf-update-framework-audit-20260720/run.yaml",
+      "bytes": 864,
+      "sha256": "e20986bd350c59b4cece8709d7daf7b765d1fdef27f290cb8e50084f2500f41b"
+    },
+    {
+      "path": ".pf/runs/pf-update-framework-fixes-20260720/run.yaml",
+      "bytes": 878,
+      "sha256": "5a2221e22a757bc52ef36bf2a92adc47fb1830eaaf81a87c2d22db44b6531287"
+    },
+    {
+      "path": ".pf/runs/pf-update-framework-implementation-20260720/run.yaml",
+      "bytes": 1578,
+      "sha256": "239d666557a226df86a7bb28482ba1b41f51e21b642cb1f402ef83f4d2c0d8de"
+    },
+    {
+      "path": ".pf/runs/pf-update-implementation-spec-20260720/run.yaml",
+      "bytes": 998,
+      "sha256": "a5143251654f60586d3465807d1901fc821831bfe7aea8885c26b2f72365a5aa"
+    },
+    {
+      "path": ".pf/runs/pf-update-spec-reference-cleanup-20260720/run.yaml",
+      "bytes": 896,
+      "sha256": "7d58cd33390486afa8c7c6dbc90da33d4641ed2aee7b9064e40e668eab166c15"
+    },
+    {
+      "path": ".pf/runs/pf120-installed-systems-check-20261016/run.yaml",
+      "bytes": 1014,
+      "sha256": "629367fd1cc51e7b750c86b5bb4c46c35e7600f65c1b255f25abacea8ad7803e"
+    },
+    {
+      "path": ".pf/runs/post-runtime-supervisor-audit/run.yaml",
+      "bytes": 1232,
+      "sha256": "e3a2a54fdeb837e868d0ca8dcd4f79adaf177e5013467a9661de9cf03fb93322"
+    },
+    {
+      "path": ".pf/runs/pre-release-product-audit-20260730/run.yaml",
+      "bytes": 880,
+      "sha256": "e49550da74241356a6848db08a9876fd13f0c81070b6fcd1de7b3a060d065158"
+    },
+    {
+      "path": ".pf/runs/pre-release-remediation-20260730/run.yaml",
+      "bytes": 4551,
+      "sha256": "4b8e7f28c0c07883c373916c160dc5e37cb378a7116990248fa3c693f84d2ecc"
+    },
+    {
+      "path": ".pf/runs/prerelease-1-1-0-python-refactor-20260823/run.yaml",
+      "bytes": 1184,
+      "sha256": "c89063bc5cbbb4b06f1582f57a70299e42a24924cf9ea4de4a278cb2a0e73124"
+    },
+    {
+      "path": ".pf/runs/process-stage-contract-normalization-20260814/run.yaml",
+      "bytes": 1873,
+      "sha256": "27351320d9846084845d2d147a6e3689829964b1f08bd796b213bcb7adb7b996"
+    },
+    {
+      "path": ".pf/runs/processforge-1-1-0-final-release-20260831/run.yaml",
+      "bytes": 2234,
+      "sha256": "704e8acdf2b81c6f4fcb2d7a34d38e7622466b4364d7b5aeb65580090eb8608a"
+    },
+    {
+      "path": ".pf/runs/processforge-1-1-0-release-20260829/run.yaml",
+      "bytes": 1866,
+      "sha256": "bd987182316fb401830caf7efae7a6cfcc6cf9310e22c114f31e7d457c893aff"
+    },
+    {
+      "path": ".pf/runs/project-init-local-search-mcp-20260821/run.yaml",
+      "bytes": 14459,
+      "sha256": "4cf52ea77dcebd32606e65766a1d6328cdaf791c9354567fcedca5271725d0d6"
+    },
+    {
+      "path": ".pf/runs/python-core-refactor-phase-a-20260814/run.yaml",
+      "bytes": 4000,
+      "sha256": "a9986b70ea068c29bd7baf434e5920fd9ecd23870eaa13da50009a5a347012e1"
+    },
+    {
+      "path": ".pf/runs/python-core-refactor-phase-b-20260814/run.yaml",
+      "bytes": 2469,
+      "sha256": "b45e5df42c37db7a8da731dd2a310e3051e2e9c2911225f9c9014d6daf87129d"
+    },
+    {
+      "path": ".pf/runs/python-core-refactor-phase-c-20260814/run.yaml",
+      "bytes": 2413,
+      "sha256": "d0a84018200de93df40b62e7497996fe50377e3202b820e2f4bdd936bfd8dafa"
+    },
+    {
+      "path": ".pf/runs/python-core-refactor-phase-d-20260814/run.yaml",
+      "bytes": 2193,
+      "sha256": "5f2cd7991a62e814a196e72885ab955c5da054f6250a4c211b14da1c1ed5be98"
+    },
+    {
+      "path": ".pf/runs/python-core-refactor-phase-e-20260814/run.yaml",
+      "bytes": 2143,
+      "sha256": "bee16c836a60463944c503cb80b6e99c0cacb184988d4c99a9ce38931fddec47"
+    },
+    {
+      "path": ".pf/runs/r01-first-run-diagnosis-20260911/run.yaml",
+      "bytes": 771,
+      "sha256": "4905c08d0cbcb0fc153040593490a10073f3600574032092e41ab3a11dc04a2d"
+    },
+    {
+      "path": ".pf/runs/r02-release-command-review-20260911/run.yaml",
+      "bytes": 766,
+      "sha256": "d8bfd6b8cbfa46470dd60b24dec67205dbf775ce841dbdd13c42be3edf407f33"
+    },
+    {
+      "path": ".pf/runs/resource-indexing-release-boundary-20260822/run.yaml",
+      "bytes": 763,
+      "sha256": "c758a98ddc812f23afb9288165b39075c12abaef81a26e2da2b844ab4cb224ec"
+    },
+    {
+      "path": ".pf/runs/runtime-context-unblock-20260814/run.yaml",
+      "bytes": 1056,
+      "sha256": "6e2b885143c7a7f5b8764e0b863c7335effb760abc6fb1a0e4db8cede2523ae5"
+    },
+    {
+      "path": ".pf/runs/runtime-daemon-lifecycle-20260814/run.yaml",
+      "bytes": 1490,
+      "sha256": "c50f99e009f5ba906df85d179f094e1adda37cb229bf0bf7d4f210c67d4b7ce4"
+    },
+    {
+      "path": ".pf/runs/runtime-driver-supervisor-mvp/run.yaml",
+      "bytes": 1214,
+      "sha256": "1224183ab22f8bb744c2af05e2af074a20c06660f095815c07afdf88660033c9"
+    },
+    {
+      "path": ".pf/runs/runtime-final-independent-review-20260814/run.yaml",
+      "bytes": 937,
+      "sha256": "569cca92ce33449c70a20bc5cd12d30bf6b8e1f4ba7c60937dcc31efd662672e"
+    },
+    {
+      "path": ".pf/runs/runtime-general-line-20260814/run.yaml",
+      "bytes": 1018,
+      "sha256": "de7518c91ba9396c00cd2748c7e6f1daf4268e4b54cef2f90a4e87c99d99081f"
+    },
+    {
+      "path": ".pf/runs/runtime-lifecycle-clean-repro-20260814/run.yaml",
+      "bytes": 2013,
+      "sha256": "63e110942f2ef5ae8735bb3d78ccb016923ca58683de305eb29b8a1a0593f294"
+    },
+    {
+      "path": ".pf/runs/runtime-liveness-remediation-20260814/run.yaml",
+      "bytes": 944,
+      "sha256": "f5df60ba69450e8aee12a59751aebbd2c54741bedf63dc99ee8d1026ffadcbd1"
+    },
+    {
+      "path": ".pf/runs/runtime-review-triangulation-20260814/run.yaml",
+      "bytes": 909,
+      "sha256": "c39f92345607cbe4d6134721f7da522d2076dd88f4f45086624934f72dc9ece7"
+    },
+    {
+      "path": ".pf/runs/runtime-supervisor-audit-fix-shell-agents/run.yaml",
+      "bytes": 1069,
+      "sha256": "8ef5afda0bb8dbd74aae3484d9938c6e326e70e94e01a9c1b8f3a96d6d47cfd6"
+    },
+    {
+      "path": ".pf/runs/search-storage-adapters-backlog-20261008/run.yaml",
+      "bytes": 889,
+      "sha256": "6de6ba45205474870693720d42f89263a5914cd94a2e731c05613ae69f386bbb"
+    },
+    {
+      "path": ".pf/runs/shell-worker-spark-smoke-20260814/run.yaml",
+      "bytes": 743,
+      "sha256": "84961be665bc1e9563910e315a4c336fe8b4bec709956087f735393ade5534f2"
+    },
+    {
+      "path": ".pf/runs/stabilization-garage-forge-20260824/run.yaml",
+      "bytes": 1259,
+      "sha256": "b3e5ca0e88abaea84df85a4fa2a752cc8bd4270c2024040e9c5d6146d6cb3075"
+    },
+    {
+      "path": ".pf/runs/stable-mcp-resource-index-20260822/run.yaml",
+      "bytes": 955,
+      "sha256": "6e295e153d441d81a39719c0496bf0a584d0e448c49bd8bf3027b487658f544c"
+    },
+    {
+      "path": ".pf/runs/stable-mcp-resource-index-current-state-audit-20260822/run.yaml",
+      "bytes": 1062,
+      "sha256": "45a28cda6dfbb4279c2f5641007b0bccc08dc786c3c732e667f5d655b4f3baeb"
+    },
+    {
+      "path": ".pf/runs/stable-mcp-resource-index-implementation-20260822/run.yaml",
+      "bytes": 1039,
+      "sha256": "0cb3cc6e834a233d8929587d106ff238d34b21358ce724e35e3d8b5273261d98"
+    },
+    {
+      "path": ".pf/runs/stable-mcp-resource-index-maintenance-20260822/run.yaml",
+      "bytes": 999,
+      "sha256": "867531b6e8cc439fd87b69617b2c9b4dbef87265c59d4f0b9768fba7088eff12"
+    },
+    {
+      "path": ".pf/runs/stage-projectors-live-proof-20260814/run.yaml",
+      "bytes": 814,
+      "sha256": "999940c27b8115e2625c752f71ab1ec8760ab760ab159c7f0f3b4cd03a8da1f1"
+    },
+    {
+      "path": ".pf/runs/stage-projectors-next-audit-20260814/run.yaml",
+      "bytes": 1071,
+      "sha256": "61c387ae221f97a353e9458eab73797faee022919acde5e87bf315ef5a78aaa8"
+    },
+    {
+      "path": ".pf/runs/stage-projectors-next-implementation-20260814/run.yaml",
+      "bytes": 943,
+      "sha256": "7a8e89071e799db3a0652fa4ea4b1d29f011e3e579726159b963521a44315d4e"
+    },
+    {
+      "path": ".pf/runs/stage-projectors-next-review-20260814/run.yaml",
+      "bytes": 872,
+      "sha256": "be957a3f862f3882af3f668ff64097568a00903329ed524e8893806b2f2073da"
+    },
+    {
+      "path": ".pf/runs/stage-projectors-next-review-retry-20260814/run.yaml",
+      "bytes": 898,
+      "sha256": "eee62c98e19d6544e508b6debe3df898cd483fd5fb04375121019ef47629c671"
+    },
+    {
+      "path": ".pf/runs/stage-projectors-worker-driver-remediation-20260814/run.yaml",
+      "bytes": 915,
+      "sha256": "d699ae2f42cbb62704fb61ffb9a1df4f477d69b9dc5b84ec1b1e8417a8ff2d57"
+    },
+    {
+      "path": ".pf/runs/subagent-stabilization-audit/run.yaml",
+      "bytes": 811,
+      "sha256": "47f2464d799acc1323ed63a6884d037a04a22b5ea1114b0eb0f3571e24c4b6cc"
+    },
+    {
+      "path": ".pf/runs/verification-current-work-state-20260814/run.yaml",
+      "bytes": 2707,
+      "sha256": "00a2491c1570251a88a1da27cc52b4dadd7914a14b121ad176323fcb39a33472"
+    },
+    {
+      "path": ".pf/runs/worker-run-remediation-20260814/run.yaml",
+      "bytes": 1777,
+      "sha256": "92076e13e844c7ca8692acfd17192492f908b5cb9040cfa3d40b0579680daf88"
+    }
+  ],
+  "count": 570,
+  "bytes": 16065514
+}

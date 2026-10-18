@@ -1,0 +1,40 @@
+{
+  "observed_at": "2026-10-17T19:38:17.534958+00:00",
+  "version": "1.2.0",
+  "status": "dev_candidate_accepted; native run_completed",
+  "qualified_source_commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
+  "full_final_archive_consumer_suite": "passed",
+  "initial_source_checks": {
+    "passed": 273,
+    "failed": 1,
+    "failure_closed_by": "seven corrected existing tests and the full final archive suite"
+  },
+  "installed_native_checks_passed": 13,
+  "installed_managed_files": 1308,
+  "installed_exact_payload_files": 1307,
+  "private_configuration_preserved": true,
+  "sqlite_quick_checks_passed": 3,
+  "runtime_ready_after_restart": true,
+  "configuration": {
+    "raw_hooks": false,
+    "events": true
+  },
+  "independent_installed_mcp": "passed",
+  "independent_mcp_context_median_seconds": 1.849440100020729,
+  "runtime_device_cpu_percent": 4.395272085475778,
+  "runtime_working_set_mib": [
+    171.9609375,
+    171.9609375,
+    171.98828125
+  ],
+  "actual_connected_mcp_loaded_new_candidate": true,
+  "remaining_gate": "No functional dev-acceptance gate remains. Stable publication is a separate delivery.",
+  "operational_limitation": "Default bounded shutdown observer cannot cover the large worker history; native complete read-only proof preceded the explicit graceful operator override.",
+  "actual_host_acceptance_receipt": "actual-host-acceptance-20261018.json",
+  "actual_host_context_median_seconds": 2.021,
+  "actual_host_accepted_at": "2026-10-17T20:39:07.0415233Z",
+  "native_action": "run_completed",
+  "native_closeout_receipt": "closeout-20261018.json",
+  "delivery_readback_receipt": "delivery-publication-20261018.json"
+}

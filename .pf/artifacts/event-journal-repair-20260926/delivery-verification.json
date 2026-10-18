@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "repair": "applied",
+  "backup_sha256": "fd8f45e09f74fedb93e91004d6b27bf4cde03aed2d8c11ca4483d4f6c76d7ab6",
+  "changed_bytes": 24,
+  "all_original_valid_bytes_preserved": true,
+  "valid_records_after_audit": 35169,
+  "invalid_records_after": 0,
+  "audit_event_id": "evt_fd8f45e09f74fedb93e91004d6b27bf4",
+  "full_checkout_schemas": "PASS",
+  "unchanged_public_files": 987,
+  "protected_configuration_files": 44,
+  "prior_frozen_files": 499,
+  "capsule_unchanged": true,
+  "source_fix_installed": false,
+  "installation_boundary": "next standard combined Core update after remaining T10 work"
+}

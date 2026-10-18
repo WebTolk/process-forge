@@ -1,0 +1,4 @@
+[
+  {"kind":"artifact","artifact_id":"task-index","path":".pf/artifacts/core-a01-a11-20260911/wave1-plan.yaml","status":"ready"},
+  {"kind":"gate","gate_id":"run-has-tasks","status":"passed","summary":"Three disjoint Luna shell assignments materialized and started; subsequent waves defined in design.md."}
+]

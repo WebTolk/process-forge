@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "run-complete",
+    "--project-root",
+    ".",
+    "--run",
+    "docs-fix-1-1-1-shell-20260907",
+    "--apply"
+  ],
+  "started_at": "2026-09-07T14:16:51.865193+00:00",
+  "finished_at": "2026-09-07T14:16:52.721293+00:00",
+  "elapsed_seconds": 0.856,
+  "exit_code": 0,
+  "output": "COMPLETED: docs-fix-1-1-1-shell-20260907\n"
+}

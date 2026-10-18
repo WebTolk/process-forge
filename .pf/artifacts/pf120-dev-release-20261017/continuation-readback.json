@@ -1,0 +1,52 @@
+{
+  "created": {
+    "action": "created",
+    "continuation_id": "pf120-dev-mcp-reconnect-20261017",
+    "kind": "pf.continuation.create",
+    "schema_version": 2,
+    "stage": {
+      "id": "release-delivery",
+      "status": "in_progress",
+      "title": "Release Delivery"
+    },
+    "status": "ready",
+    "waiting": {
+      "handoff_ready": true,
+      "missing_expected_artifacts": [],
+      "status": "ready"
+    },
+    "work": {
+      "assignment_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu",
+      "capsule_checksum": "sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df",
+      "context_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule",
+      "project_id": "process-forge",
+      "run_id": "garage-pf120-dev-release-20261017-package-committed-work-metadata-projec"
+    }
+  },
+  "readback": {
+    "continuation_id": "pf120-dev-mcp-reconnect-20261017",
+    "schema_version": 2,
+    "status": "ready",
+    "waiting": {
+      "handoff_ready": true,
+      "missing_expected_artifacts": [],
+      "status": "ready"
+    },
+    "work": {
+      "assignment_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu",
+      "capsule_checksum": "sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df",
+      "context_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule",
+      "project_id": "process-forge",
+      "run_id": "garage-pf120-dev-release-20261017-package-committed-work-metadata-projec"
+    },
+    "work_readiness": "ready",
+    "work_action": "work_incomplete",
+    "stage": {
+      "id": "release-delivery",
+      "status": "in_progress",
+      "title": "Release Delivery"
+    },
+    "run_status": "in_progress",
+    "assignment_status": "in_progress"
+  }
+}

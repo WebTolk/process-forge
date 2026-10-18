@@ -1,0 +1,22 @@
+{
+  "label": "run-doctor",
+  "invocation": [
+    "python",
+    "-B",
+    ".pf/tmp/pf120-stable-candidate-20261018/source-r2/bin/pf.py",
+    "run-doctor",
+    "--project-root",
+    "{project_root}",
+    "--run",
+    "garage-pf120-stable-candidate-preparation-20261018-continue-after-the-co",
+    "--runtime-events"
+  ],
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "started_at": "2026-10-18T05:44:03.832809+00:00",
+  "finished_at": "2026-10-18T05:44:06.022891+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.1897103999508545,
+  "raw_sha256": "dd762672eabf347c24f3c697eb296f6616043c995594e4daf5e25c7418d2b975",
+  "raw_bytes": 1376,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/run-doctor.log"
+}

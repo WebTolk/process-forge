@@ -1,0 +1,14 @@
+{
+  "selectors": {
+    "run_id": "garage-pf-context-latency-diagnosis20261017-answer-the-user-s-question-a",
+    "assignment_id": "pf-context-latency-diagnosis20261017-answer-the-user-s-question-about-wh",
+    "context_id": "pf-context-latency-diagnosis20261017-answer-the-user-s-question-about-wh-capsule"
+  },
+  "capsule_checksum": "sha256:c50cc5f733fdc4c56411daa83b843754d2f18e0012e0adbb963b8855cf4faac9",
+  "action": "run_completed",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "validation": "valid",
+  "task_doctor_exit": 0,
+  "run_doctor_exit": 0
+}

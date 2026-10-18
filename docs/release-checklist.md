@@ -2,6 +2,16 @@
 
 Run these checks before publishing a ProcessForge release:
 
+Prepare a clean source candidate with explicit root `AGENTS.md` and hidden
+`.pf/AGENTS.md` projections containing the current versioned startup contract.
+The canonical source is `templates/agent-entry-contract.md` and its metadata;
+`templates/project-agents-template.md` is the verified extended projection.
+Review any entry migration before applying it to an existing project. Candidate
+preparation and project migration are separate from packing: `release-pack`
+does not generate instructions or substitute a hidden file for a missing root.
+The release gate rejects missing, stale, changed or inconsistent contracts.
+Regenerate the candidate's checksum inventory after preparing its final layout.
+
 ```bash
 python -m py_compile tools/processforge.py
 python tools/validate-process-forge-schemas.py --root .
@@ -24,13 +34,14 @@ python tools/smoke_error_workflow.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
 python bin/pf.py dev-test --root . --suite supervisor-stress
-python bin/pf.py release-pack --root . --output dist/processforge.zip
-python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full
+python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
+python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
 
 Release output must not include:
 
+- `.pf/tmp/`
 - `.pf/runtime/`
 - `.pf/artifacts/`
 - `.pf/reviews/`
@@ -47,3 +58,9 @@ Release output must not include:
 - hook outbox payloads
 - local transcripts
 - stale `dist/processforge-v*.zip` archives or matching stale manifests
+
+Use a writer-owned directory under `.pf/tmp/` for repository scratch. Record
+the actual source commit, version and final archive SHA-256 in qualification
+evidence. A later rebuild needs its own hash and applicable checks. See
+[release publishing](maintainers/release-publishing.md) for publication and
+mirrored-asset verification.

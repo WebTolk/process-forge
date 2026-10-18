@@ -1,0 +1,163 @@
+schema_version: 1
+id: hook-sqlite-migration-20261017-implement-user-authorized-project-sqlite
+title: 'hook-sqlite-migration-20261017: implement user-authorized project SQLite event a'
+run_id: garage-hook-sqlite-migration-20261017-implement-user-authorized-project
+process: software-feature-development
+status: cancelled
+created_at: '2026-10-17T05:00:20Z'
+updated_at: '2026-10-17T05:04:09Z'
+objective: 'hook-sqlite-migration-20261017: implement user-authorized project SQLite event and raw-hook journals; device PFConfig defaults and project overrides for raw hook logging and current event recording with live reload; small temporary PF migrator. Remove full-history/all-assignment work from hook ingress, preserve adapter contracts and durable recovery. Source-only implementation and focused validation/commit/push. No Runtime/MCP/installed-Core lifecycle actions; PF 1.2.0 acceptance deferred.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: cancelled
+  summary: Read-only inventory identified configuration CLI/parser and existing configuration tests/template outside initial ownership. Immutable capsule is preserved; exact predecessor handoff prepares a governed successor with the correct file scope. No product changes exist.
+  artifacts:
+    - .pf/handoffs/hook-sqlite-migration-20261017.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: intake-scope
+stage_status: in_progress
+stage_execution:
+  started_at: '2026-10-17T05:01:43Z'
+  evidence:
+    []
+  notes: ""
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-17T05:00:20Z'
+    completed_at: '2026-10-17T05:01:43Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T05:01:43Z'
+        sha256: 'sha256:3813e4a61068d1b3c87e6101df1b13e79e298fad46501b54085267ae8a50ba08'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T05:01:43Z'
+        sha256: 'sha256:3813e4a61068d1b3c87e6101df1b13e79e298fad46501b54085267ae8a50ba08'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T05:01:43Z'
+        sha256: 'sha256:3813e4a61068d1b3c87e6101df1b13e79e298fad46501b54085267ae8a50ba08'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/hook-sqlite-migration-20261017/stages/orchestration.md
+        status: passed
+        summary: Fresh context and exact valid/ready Work/capsule verified; explicit user scope and source-only orchestration recorded.
+        recorded_at: '2026-10-17T05:01:43Z'
+        sha256: 'sha256:3813e4a61068d1b3c87e6101df1b13e79e298fad46501b54085267ae8a50ba08'
+    notes: Orchestration complete; primary owns bounded journal/config/migrator scope. Read-only research evidence available. No subagents or infrastructure lifecycle actions. Continue intake.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.0
+  process_fingerprint: 'sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e'
+  snapshot_id: ctx-20261016-091113-310bed
+  snapshot_checksum: 'sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be'
+  assignment_capsule: .pf/contexts/assignment-capsules/hook-sqlite-migration-20261017-implement-user-authorized-project-sqlite.capsule.yaml
+  assignment_capsule_checksum: 'sha256:850c69cb2b015107927bb2a3db688625e166a284c1f8420a23a7b0de9b01f35d'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/artifacts/**
+  - .pf/adr/**
+  - .pf/handoffs/**
+  - .pf/logs/**
+  - .pf/runtime/**
+  - src/**
+  - tools/**
+  - bin/**
+  - docs/**
+  - schemas/**
+  - processes/**
+  - packs/**
+  - templates/**
+  - examples/**
+  - checksums/**
+  - requirements.txt
+  - package.json
+  - .gitignore
+  - .gitattributes
+  - .processforge-releaseignore
+allowed_files:
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/process_execution_smoke_support.py
+  - tools/validate-process-forge-schemas.py
+  - tools/migrate-hook-journals.py
+  - tools/smoke_hook_sqlite*.py
+  - tools/smoke_pfconfig*.py
+  - tools/smoke_process_event_concurrency.py
+  - tools/smoke_runtime*.py
+  - tools/smoke_central_event*.py
+  - tools/smoke_raw_ingress*.py
+  - tools/smoke_codex_lifecycle_identity.py
+  - tools/smoke_automation_readiness.py
+  - tools/smoke_conversation_completeness.py
+  - tools/smoke_first_run.py
+  - tools/smoke_diagnostics.py
+  - tools/smoke_process_run_task_batch.py
+  - tools/smoke_work_completion_recovery.py
+  - tools/smoke_remediation*.py
+  - tools/smoke_prepared_execution_context.py
+  - tools/smoke_provider_adapter_admission.py
+  - tools/smoke_long_lived_runtime.py
+  - bin/**
+  - docs/**
+  - schemas/**
+  - examples/**
+  - checksums/processforge.sha256
+  - .pf/artifacts/hook-sqlite-migration-20261017/**
+  - .pf/tmp/hook-sqlite-migration-20261017/**
+  - .pf/logs/hook-sqlite-migration-20261017.md
+  - .pf/handoffs/hook-sqlite-migration-20261017.md
+ownership:
+  owner_id: codex-hook-sqlite-migration-20261017
+  role: primary
+  writer: true
+expected_report:
+  artifact: .pf/artifacts/hook-sqlite-migration-20261017/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: hook-sqlite-migration-report
+    path: .pf/artifacts/hook-sqlite-migration-20261017/report.md
+    required: true
+    type: report

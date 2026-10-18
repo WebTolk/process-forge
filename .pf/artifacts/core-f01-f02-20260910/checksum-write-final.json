@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "tools/validate-process-forge-checksums.py",
+    "--root",
+    ".",
+    "--write"
+  ],
+  "started_at": "2026-09-10T05:24:27.295091+00:00",
+  "elapsed_seconds": 0.809,
+  "exit_code": 0,
+  "stdout": "checksum-write-final.stdout.txt",
+  "stderr": "checksum-write-final.stderr.txt"
+}

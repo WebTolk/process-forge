@@ -1,0 +1,210 @@
+schema_version: 1
+id: remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab
+title: 'Remediate Python core audit F03 F04 F05 evidence freshness and recoverable work '
+run_id: garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T06:44:18Z'
+updated_at: '2026-09-10T08:01:05Z'
+objective: Remediate Python core audit F03 F04 F05 evidence freshness and recoverable work completion using sequential junior PF shell workers
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: F03-F05 summary obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.
+  artifacts:
+    - .pf/artifacts/core-f03-f05-20260910/baseline.json
+    - .pf/artifacts/core-f03-f05-20260910/execution-record.md
+    - .pf/artifacts/core-f03-f05-20260910/final-review.md
+    - .pf/artifacts/core-f03-f05-20260910/integration-report.md
+    - .pf/artifacts/core-f03-f05-20260910/orchestrator-plan.yaml
+    - .pf/artifacts/core-f03-f05-20260910/summary.md
+    - .pf/handoffs/core-f03-f05-20260910.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-10T08:00:53Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/core-f03-f05-20260910/summary.md
+      recorded_at: '2026-09-10T08:01:02Z'
+      sha256: 'sha256:a5401ad34a1a3568255e9ea3e8501d1785241a782a92ef48396b3cce6d4c8dbe'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/core-f03-f05-20260910.md
+      recorded_at: '2026-09-10T08:01:02Z'
+      sha256: 'sha256:a7ad660686474d51dcd69fcbb2727c47d44feee965346a247f7da807152b1110'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Summary and next-remediation handoff preserve F06-F12 and the separate Runtime/release boundary.
+      recorded_at: '2026-09-10T08:01:02Z'
+  notes: F03-F05 summary obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-10T06:44:18Z'
+    completed_at: '2026-09-10T06:46:47Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/artifacts/core-f03-f05-20260910/baseline.json
+        recorded_at: '2026-09-10T06:46:44Z'
+        sha256: 'sha256:072d5b6e480a6031fe5d59732acccef3c747682ea470de5b1b0de14c5c0360e9'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Current source context fresh, carrier capsule read and accepted prior work preserved in baseline.
+        recorded_at: '2026-09-10T06:46:44Z'
+    notes: Baseline and immutable context inspected; sequential F03-F05 ownership and regression contract recorded.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-10T06:46:47Z'
+    completed_at: '2026-09-10T06:50:57Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/artifacts/core-f03-f05-20260910/orchestrator-plan.yaml
+        recorded_at: '2026-09-10T06:50:50Z'
+        sha256: 'sha256:1ad19424a77e2b9a2f0ea56d52081d53d2e81820948c4baf9dbf5b5575bc6c70'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Sequential scopes with explicit ownership and post-implementation independent validation.
+        recorded_at: '2026-09-10T06:50:50Z'
+    notes: Validated sequential shell tasks; F03-F04 source ownership transfers to F05 only after acceptance and collection; assurance and review afterward.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-10T06:50:57Z'
+    completed_at: '2026-09-10T08:00:26Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/artifacts/core-f03-f05-20260910/execution-record.md
+        recorded_at: '2026-09-10T08:00:20Z'
+        sha256: 'sha256:670ae239b52f0d6da1221b15b8bf79c0ac82883966107e13f3564f610771c71e'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Four shell assignments DONE; primary tests and independent assurance/review recorded.
+        recorded_at: '2026-09-10T08:00:20Z'
+    notes: F03-F05 execution obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-10T08:00:26Z'
+    completed_at: '2026-09-10T08:00:40Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/core-f03-f05-20260910/integration-report.md
+        recorded_at: '2026-09-10T08:00:37Z'
+        sha256: 'sha256:d51843fb92dde89d9bd380298b53af6a190858cdc5f1149a2eb52fbbb8e12d2c'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: All four delegated assignments DONE. F03-F05 accepted with genuine tests and independent review; release boundaries retained.
+        recorded_at: '2026-09-10T08:00:37Z'
+    notes: F03-F05 result obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-10T08:00:40Z'
+    completed_at: '2026-09-10T08:00:53Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/artifacts/core-f03-f05-20260910/final-review.md
+        recorded_at: '2026-09-10T08:00:49Z'
+        sha256: 'sha256:044cd81a3a36dfe05aee67db2ebf0db6104d72b6b2c4c63e9ca037a76b4ccfdc'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Shell and carrier run doctors exit 0; independent bounded reviews PASS.
+        recorded_at: '2026-09-10T08:00:49Z'
+    notes: F03-F05 review obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-10T08:00:53Z'
+    completed_at: '2026-09-10T08:01:05Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/core-f03-f05-20260910/summary.md
+        recorded_at: '2026-09-10T08:01:02Z'
+        sha256: 'sha256:a5401ad34a1a3568255e9ea3e8501d1785241a782a92ef48396b3cce6d4c8dbe'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/core-f03-f05-20260910.md
+        recorded_at: '2026-09-10T08:01:02Z'
+        sha256: 'sha256:a7ad660686474d51dcd69fcbb2727c47d44feee965346a247f7da807152b1110'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Summary and next-remediation handoff preserve F06-F12 and the separate Runtime/release boundary.
+        recorded_at: '2026-09-10T08:01:02Z'
+    notes: F03-F05 summary obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260910-044833-2182bf
+  snapshot_checksum: 'sha256:4395233497d2dafa27e3587546aab09754c21b31702391e4202b83d547d86ddb'
+  assignment_capsule: .pf/contexts/assignment-capsules/remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab.capsule.yaml
+  assignment_capsule_checksum: 'sha256:4cf8bde6404972c710540b6be78377555a04d802432dcaad72e8c7b3b92ed5e1'

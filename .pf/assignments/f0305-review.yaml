@@ -1,0 +1,101 @@
+schema_version: 1
+id: f0305-review
+title: Independent final code review
+run_id: core-f03-f05-shell-20260910
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T06:50:17Z'
+updated_at: '2026-09-10T07:59:01Z'
+objective: Execute bounded brief .pf/artifacts/core-f03-f05-20260910/f0305-review-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    - f0305-assurance
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-f03-f05-20260910/f0305-review-brief.md
+allowed_files:
+  - .pf/artifacts/core-f03-f05-20260910/f0305-review/**
+  - .pf/tmp/core-f03-f05-20260910/f0305-review/**
+allowed_read_files:
+  - src/**
+  - tools/**
+  - docs/**
+  - schemas/**
+  - processes/**
+  - templates/**
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+  - .pf/artifacts/core-f03-f05-20260910/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/processforge.py
+  - .pf/process-forge.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+ownership:
+  owner_id: f0305-review
+  owner_label: worker-f0305-review
+  role: reviewer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/core-f03-f05-20260910/f0305-review/**
+    - .pf/tmp/core-f03-f05-20260910/f0305-review/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: f0305-review-report
+    path: .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+  format: concise_markdown
+  include:
+    - f0305-review-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-summary",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f09-f12-20260910/summary.md"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "run-handoff",
+    "status": "ready",
+    "path": ".pf/handoffs/core-f09-f12-20260910.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-summary-created",
+    "status": "passed",
+    "summary": "Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed."
+  }
+]

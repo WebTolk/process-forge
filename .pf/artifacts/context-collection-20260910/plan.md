@@ -1,0 +1,4 @@
+# Context / collection orchestration
+Baseline source/dev/installed 901d055. Previous F09-F12 work completed and accepted. User explicitly requested PF shell workers.
+Two independent diagnostic writers own only private artifacts and temporary reproducers. Shared public CLI remains read-only until root causes and narrow fix proposals are integrated sequentially by primary. Context analyst compares source/installed freshness data without mutating live context; capture analyst reproduces expected-report ingress/cardinality without touching old transcripts. No infrastructure changes are assigned.
+Primary receives reports, runs real probes if worker sandbox blocks them, chooses non-overlapping implementation handoffs and accepts regression tests before eventual delivery. This run remains active while workers execute; launch acknowledgement is not task completion. Original reports/capsules, unrelated dirty PF state and installed user resources preserved.

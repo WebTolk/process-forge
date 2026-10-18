@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/delivery-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/delivery-report.md",
+    "status": "passed",
+    "summary": "Local plan is ready for operator review; no product release readiness is claimed."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/delivery-report.md",
+    "status": "not_applicable",
+    "reason": "Only local planning documents and operator-selected PF context were requested; no product release, archive, deployment or migration.",
+    "evidence": [
+      ".pf/artifacts/vision-alignment-plan-20260925/planning-scope.md",
+      ".pf/artifacts/vision-alignment-plan-20260925/test-report.md"
+    ]
+  }
+]

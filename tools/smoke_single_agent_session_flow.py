@@ -58,9 +58,12 @@ def main() -> int:
         session_id = str(checkin.get("session_id") or "")
         if not session_id.startswith("sess-primary-agent-"):
             raise AssertionError(f"session-start did not return generated session id: {session_id}")
-        presence = workplace / "runtime" / "agent-presence" / "primary-agent" / f"{session_id}.json"
-        if not presence.is_file():
-            raise AssertionError("session-safe presence file missing")
+        presence_records = [
+            read_json(path)
+            for path in (workplace / "runtime" / "agent-presence" / "primary-agent").glob("*.json")
+        ]
+        if len(presence_records) != 1 or presence_records[0].get("session_id") != session_id:
+            raise AssertionError("exact session presence record missing or duplicated")
         if read_json(project / ".pf" / "runtime" / "current-session.json").get("session_id") != session_id:
             raise AssertionError("project current-session reference missing")
         if "agent.checked_in" not in (workplace / "runtime" / "agent-ledger" / "sessions.ndjson").read_text(encoding="utf-8"):
@@ -80,6 +83,12 @@ def main() -> int:
         current = read_json(project / ".pf" / "runtime" / "current-session.json")
         if current.get("status") != "checked_out" or current.get("session_id") != session_id:
             raise AssertionError("project current-session was not checked out")
+        presence_records = [
+            read_json(path)
+            for path in (workplace / "runtime" / "agent-presence" / "primary-agent").glob("*.json")
+        ]
+        if len(presence_records) != 1 or presence_records[0].get("status") != "checked_out":
+            raise AssertionError("session presence was not checked out exactly once")
         ledger_text = (workplace / "runtime" / "agent-ledger" / "sessions.ndjson").read_text(encoding="utf-8")
         if "agent.checked_out" not in ledger_text:
             raise AssertionError("ledger checkout event missing")

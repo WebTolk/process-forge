@@ -1,0 +1,8 @@
+{
+  "label": "run-doctor",
+  "started_at": "2026-10-18T04:39:31.904814+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.2554631999810226,
+  "raw_sha256": "86df0b78d3c16b8f1179c635d31e93ef4672136827c6182f0cecae9da8902e84",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/run-doctor.log"
+}

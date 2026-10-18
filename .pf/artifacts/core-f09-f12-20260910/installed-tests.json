@@ -1,0 +1,52 @@
+[
+  {
+    "name": "smoke_core_update_missing_owned",
+    "root": "D:\\.agents\\processforge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\.agents\\processforge\\tools\\smoke_core_update_missing_owned.py"
+    ],
+    "exit": 0,
+    "seconds": 6.83
+  },
+  {
+    "name": "smoke_search_source_integrity",
+    "root": "D:\\.agents\\processforge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\.agents\\processforge\\tools\\smoke_search_source_integrity.py"
+    ],
+    "exit": 0,
+    "seconds": 1.34
+  },
+  {
+    "name": "smoke_raw_ingress_incremental_recovery",
+    "root": "D:\\.agents\\processforge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\.agents\\processforge\\tools\\smoke_raw_ingress_incremental_recovery.py"
+    ],
+    "exit": 0,
+    "seconds": 25.53
+  },
+  {
+    "name": "smoke_central_event_ingress_kernel",
+    "root": "D:\\.agents\\processforge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\.agents\\processforge\\tools\\smoke_central_event_ingress_kernel.py"
+    ],
+    "exit": 0,
+    "seconds": 22.45
+  },
+  {
+    "name": "smoke_workplace_search_index",
+    "root": "D:\\.agents\\processforge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\.agents\\processforge\\tools\\smoke_workplace_search_index.py"
+    ],
+    "exit": 0,
+    "seconds": 17.66
+  }
+]

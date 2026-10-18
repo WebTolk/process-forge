@@ -1,0 +1,8 @@
+{
+  "label": "release-check",
+  "started_at": "2026-10-18T04:37:18.364092+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 8.263539999956265,
+  "raw_sha256": "1fa731226ecf0d9c6c3215e5b06c2c65b5ff6ab5caaa7c1fb6a499e423904666",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/release-check.log"
+}

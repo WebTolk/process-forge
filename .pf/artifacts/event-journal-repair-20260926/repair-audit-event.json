@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "event_id": "evt_fd8f45e09f74fedb93e91004d6b27bf4",
+  "event_type": "journal.record.quarantined",
+  "source": "processforge.cli",
+  "subject": "journal.record.quarantined",
+  "time": "2026-09-26T18:15:06Z",
+  "correlation_id": "journal-repair-20260926",
+  "causation_id": null,
+  "project": {
+    "flow_root": ".pf",
+    "project_id": "process-forge"
+  },
+  "process": {
+    "id": null,
+    "version": null,
+    "stage_id": null,
+    "process_run_id": null
+  },
+  "assignment": {
+    "id": null,
+    "path": null
+  },
+  "actor": {
+    "type": "agent",
+    "id": "processforge-cli",
+    "role": "orchestrator"
+  },
+  "session": {
+    "id": null
+  },
+  "data": {
+    "repair_artifact": ".pf/artifacts/event-journal-repair-20260926/repair-result.json",
+    "original_sha256": "fd8f45e09f74fedb93e91004d6b27bf4cde03aed2d8c11ca4483d4f6c76d7ab6",
+    "fragment_sha256": "6f1fa1694252d1b08e1ac8351716ab6129f302a26135c6bd56d7b1466c088739",
+    "line": 34212,
+    "changed_bytes": 24,
+    "original_valid_bytes_preserved": true
+  },
+  "severity": "warn",
+  "privacy": "private"
+}

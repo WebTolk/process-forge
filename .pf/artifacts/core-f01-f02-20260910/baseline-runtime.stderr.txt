@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0102-baseline-runtime-5itq2wiz\public\tools\smoke_long_lived_runtime.py", line 358, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0102-baseline-runtime-5itq2wiz\public\tools\smoke_long_lived_runtime.py", line 179, in main
+    first = start_runtime(workplace)
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0102-baseline-runtime-5itq2wiz\public\tools\smoke_long_lived_runtime.py", line 130, in start_runtime
+    return json.loads(pf("runtime", "start", "--workplace", str(workplace), "--interval", "60", "--json").stdout)
+                      ~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-f0102-baseline-runtime-5itq2wiz\public\tools\smoke_long_lived_runtime.py", line 33, in pf
+    raise AssertionError(f"expected {expect}, got {result.returncode}: {' '.join(args)}\n{diagnostic_text(result)}")
+AssertionError: expected 0, got 1: runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-long-lived-runtime-qgx9knog\workplace --interval 60 --json
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\musst\AppData\Local\Temp\pf-f0102-baseline-runtime-5itq2wiz\public\tools\processforge.py runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-long-lived-runtime-qgx9knog\workplace --interval 60 --json
+
+CWD:
+  C:\Users\musst\AppData\Local\Temp\pf-f0102-baseline-runtime-5itq2wiz\public
+
+Timeout:
+  120s
+
+Exit code:
+  1
+
+STDERR tail:
+FAIL: runtime exited during startup with code 1
+

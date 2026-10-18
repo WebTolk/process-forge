@@ -1,0 +1,393 @@
+schema_version: 1
+id: t09-pf-vision-alignment-r02-implement-provider-neutral-optional-diagnost
+title: 'T09 PF vision alignment r02: implement provider-neutral optional diagnostic logg'
+run_id: garage-t09-pf-vision-alignment-r02-implement-provider-neutral-optional-d
+process: software-feature-development
+status: done
+created_at: '2026-09-25T18:41:18Z'
+updated_at: '2026-09-25T19:44:51Z'
+objective: 'T09 PF vision alignment r02: implement provider-neutral optional diagnostic logging with eight severities, profiles and bounded safe sinks/configuration/correlation/export; preserve mandatory journal and protocol stdout. Follow accepted T01 design, reproduce hook failure before repair, fix budgets before code, verify privacy/failure/performance and EN/RU runbooks. Authorized automatic plan continuation after accepted T01; no installed update or public release.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Complete T09 source slice. Preserve frozen artifacts/capsules and unrelated dirty work. Automatically begin separate T02 Work, retaining T06 actual-host qualification and known test reliability observation.
+  artifacts:
+    - .pf/artifacts/t09-diagnostics-20260925/architecture.md
+    - .pf/artifacts/t09-diagnostics-20260925/delivery-report.md
+    - .pf/artifacts/t09-diagnostics-20260925/domain.md
+    - .pf/artifacts/t09-diagnostics-20260925/evolution-report.md
+    - .pf/artifacts/t09-diagnostics-20260925/implementation.md
+    - .pf/artifacts/t09-diagnostics-20260925/investigation.md
+    - .pf/artifacts/t09-diagnostics-20260925/review-findings.md
+    - .pf/artifacts/t09-diagnostics-20260925/scope.md
+    - .pf/artifacts/t09-diagnostics-20260925/test-cases.md
+    - .pf/artifacts/t09-diagnostics-20260925/test-plan.md
+    - .pf/artifacts/t09-diagnostics-20260925/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-25T19:44:17Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t09-diagnostics-20260925/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-25T19:44:43Z'
+      sha256: 'sha256:6dd3fdb0cb1f905564da14c8641a479d8a3d72499de26a8b7e389fbb434edbd8'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t09-diagnostics-20260925/evolution-report.md
+      status: passed
+      summary: Optional/mandatory failure separation, bounded diagnostics and semantic lifecycle regression lessons captured. T02 is next under AFK authorization.
+      recorded_at: '2026-09-25T19:44:43Z'
+      sha256: 'sha256:6dd3fdb0cb1f905564da14c8641a479d8a3d72499de26a8b7e389fbb434edbd8'
+  notes: Complete T09 source slice. Preserve frozen artifacts/capsules and unrelated dirty work. Automatically begin separate T02 Work, retaining T06 actual-host qualification and known test reliability observation.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-25T18:41:18Z'
+    completed_at: '2026-09-25T18:42:42Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:42:37Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:42:37Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:42:37Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: passed
+        summary: Fresh context and T01 acceptance checked; code scope and no-install boundary established.
+        recorded_at: '2026-09-25T18:42:37Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+    notes: T09 separate Work, fresh immutable context and bounded feature scope established. Primary retains gates; newer operator instruction permits bounded junior tasks.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-25T18:42:42Z'
+    completed_at: '2026-09-25T18:43:23Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:43:17Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:43:17Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:43:17Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t09-diagnostics-20260925/scope.md
+        status: passed
+        summary: Acceptance and exact candidate paths documented; investigation before implementation.
+        recorded_at: '2026-09-25T18:43:17Z'
+        sha256: 'sha256:e8d11f32da81f2eab252549484dc1817b310d44725177b816d9bd16441693fd1'
+    notes: Accept complete T09 logger/config/sink/export scope from r02 and T01. Reproduce hook failure, map boundaries and define budgets before product edits.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-25T18:43:23Z'
+    completed_at: '2026-09-25T18:47:09Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t09-diagnostics-20260925/investigation.md
+        status: ready
+        recorded_at: '2026-09-25T18:47:01Z'
+        sha256: 'sha256:5758be36dc08cd772b700e3cc8cf1bbd94c00bccf725b9aa7bae55a80a48c88d'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t09-diagnostics-20260925/investigation.md
+        status: ready
+        recorded_at: '2026-09-25T18:47:01Z'
+        sha256: 'sha256:5758be36dc08cd772b700e3cc8cf1bbd94c00bccf725b9aa7bae55a80a48c88d'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t09-diagnostics-20260925/investigation.md
+        status: passed
+        summary: Before reproduction captured; source boundaries and compatibility/privacy/IO risks documented.
+        recorded_at: '2026-09-25T18:47:01Z'
+        sha256: 'sha256:5758be36dc08cd772b700e3cc8cf1bbd94c00bccf725b9aa7bae55a80a48c88d'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t09-diagnostics-20260925/investigation.md
+        status: passed
+        summary: Before reproduction captured; source boundaries and compatibility/privacy/IO risks documented.
+        recorded_at: '2026-09-25T18:47:01Z'
+        sha256: 'sha256:5758be36dc08cd772b700e3cc8cf1bbd94c00bccf725b9aa7bae55a80a48c88d'
+    notes: Reproduced hook failure stdout contamination before edits; mapped required journal versus optional diagnostics and bounded integration seams. Scope correction identifies actual worker adapter under tools/.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-25T18:47:09Z'
+    completed_at: '2026-09-25T18:48:02Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t09-diagnostics-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T18:47:57Z'
+        sha256: 'sha256:f4aa355c90fe4a977c9d77786d75ee4b5562fa83cb60b8624a3d0dc0180f1dbe'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t09-diagnostics-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T18:47:57Z'
+        sha256: 'sha256:f4aa355c90fe4a977c9d77786d75ee4b5562fa83cb60b8624a3d0dc0180f1dbe'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t09-diagnostics-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T18:47:57Z'
+        sha256: 'sha256:f4aa355c90fe4a977c9d77786d75ee4b5562fa83cb60b8624a3d0dc0180f1dbe'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t09-diagnostics-20260925/domain.md
+        status: passed
+        summary: Optional diagnostics, canonical severity/profile/config/correlation and bounded privacy/failure/export semantics defined independently of provider. Mandatory journal retains its own errors.
+        recorded_at: '2026-09-25T18:47:57Z'
+        sha256: 'sha256:f4aa355c90fe4a977c9d77786d75ee4b5562fa83cb60b8624a3d0dc0180f1dbe'
+    notes: Optional diagnostics, canonical severity/profile/config/correlation and bounded privacy/failure/export semantics defined independently of provider. Mandatory journal retains its own errors.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-25T18:48:02Z'
+    completed_at: '2026-09-25T18:48:28Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t09-diagnostics-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T18:48:18Z'
+        sha256: 'sha256:a0395d4ef1ecf9a4612845c1d68d4872ee1d5388b95a9275873ad2f42c95f2d3'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t09-diagnostics-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T18:48:18Z'
+        sha256: 'sha256:a0395d4ef1ecf9a4612845c1d68d4872ee1d5388b95a9275873ad2f42c95f2d3'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t09-diagnostics-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T18:48:18Z'
+        sha256: 'sha256:a0395d4ef1ecf9a4612845c1d68d4872ee1d5388b95a9275873ad2f42c95f2d3'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t09-diagnostics-20260925/architecture.md
+        status: passed
+        summary: Approve focused stdlib module/config/sink/export and boundary instrumentation; numeric storage, expiry, locking and performance budgets fixed before code. No installed update; tests and rollback defined.
+        recorded_at: '2026-09-25T18:48:18Z'
+        sha256: 'sha256:a0395d4ef1ecf9a4612845c1d68d4872ee1d5388b95a9275873ad2f42c95f2d3'
+    notes: Approve focused stdlib module/config/sink/export and boundary instrumentation; numeric storage, expiry, locking and performance budgets fixed before code. No installed update; tests and rollback defined.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-25T18:48:28Z'
+    completed_at: '2026-09-25T19:10:23Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t09-diagnostics-20260925/implementation.md
+        status: ready
+        recorded_at: '2026-09-25T19:10:18Z'
+        sha256: 'sha256:f4ac4008a008cdd0900bed4530436419d54925b886af3a79c5d3c01f7d2038e0'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t09-diagnostics-20260925/implementation.md
+        status: ready
+        recorded_at: '2026-09-25T19:10:18Z'
+        sha256: 'sha256:f4ac4008a008cdd0900bed4530436419d54925b886af3a79c5d3c01f7d2038e0'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t09-diagnostics-20260925/implementation.md
+        status: passed
+        summary: Only diagnostics module/schema/docs/tests and focused CLI/MCP/Host/hook/worker integration changed. Mandatory writers preserved; installation and unrelated state untouched.
+        recorded_at: '2026-09-25T19:10:18Z'
+        sha256: 'sha256:f4ac4008a008cdd0900bed4530436419d54925b886af3a79c5d3c01f7d2038e0'
+    notes: T09 feature implementation and developer regressions complete within scope. Numeric budgets met after bounded IO optimization; invalid config fails closed. Proceed to independent review and final assurance; no installed qualification claimed.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-25T19:10:23Z'
+    completed_at: '2026-09-25T19:43:43Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t09-diagnostics-20260925/review-findings.md
+        status: ready
+        recorded_at: '2026-09-25T19:43:38Z'
+        sha256: 'sha256:eeb67ea949e44a3db65d694494a895f82a36087ff169dc2d9e48effd53d227c2'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t09-diagnostics-20260925/test-plan.md
+        status: ready
+        recorded_at: '2026-09-25T19:43:38Z'
+        sha256: 'sha256:4f8b87907f68c00c44cbd3d01bd5679cb3f0121fb0cefcc386b1fe0deaa6afef'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t09-diagnostics-20260925/test-cases.md
+        status: ready
+        recorded_at: '2026-09-25T19:43:38Z'
+        sha256: 'sha256:a51cfe057862590f7d5fd5d9c3ea1cbd6eba2a298202cdcc5b6e5fdb59bd12d4'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t09-diagnostics-20260925/test-report.md
+        status: ready
+        recorded_at: '2026-09-25T19:43:38Z'
+        sha256: 'sha256:c762b12fbc4d78657612717abebe352430bdec7a82289f5be0928173e6a4f727'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t09-diagnostics-20260925/test-report.md
+        status: passed
+        summary: Fifteen source smokes have qualified PASS evidence; final schema/public/checksum/export checks PASS. Real five-profile Work lifecycle invariance verified. Independent findings resolved; known fixture startup observation retained for T06.
+        recorded_at: '2026-09-25T19:43:38Z'
+        sha256: 'sha256:c762b12fbc4d78657612717abebe352430bdec7a82289f5be0928173e6a4f727'
+    notes: Primary accepts T09 local source assurance. Installed/actual-host qualification remains T06; no publication or infrastructure change.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-25T19:43:43Z'
+    completed_at: '2026-09-25T19:44:17Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t09-diagnostics-20260925/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-25T19:44:09Z'
+        sha256: 'sha256:a0c5e846c0352e5c0b9d8151e3b56d35507572fc0fd851593183537e41e81770'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t09-diagnostics-20260925/delivery-report.md
+        status: passed
+        summary: Local source delivery accepted; package/publication/installed update skipped with explicit reason; integrated real-host qualification in T06.
+        recorded_at: '2026-09-25T19:44:09Z'
+        sha256: 'sha256:a0c5e846c0352e5c0b9d8151e3b56d35507572fc0fd851593183537e41e81770'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t09-diagnostics-20260925/delivery-report.md
+        status: passed
+        summary: Local source delivery accepted; package/publication/installed update skipped with explicit reason; integrated real-host qualification in T06.
+        recorded_at: '2026-09-25T19:44:09Z'
+        sha256: 'sha256:a0c5e846c0352e5c0b9d8151e3b56d35507572fc0fd851593183537e41e81770'
+    notes: T09 local source delivered with runbooks, regression registration, privacy/performance proof and exact installed/live boundary. Proceed to evolution.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-25T19:44:17Z'
+    completed_at: '2026-09-25T19:44:51Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t09-diagnostics-20260925/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-25T19:44:43Z'
+        sha256: 'sha256:6dd3fdb0cb1f905564da14c8641a479d8a3d72499de26a8b7e389fbb434edbd8'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t09-diagnostics-20260925/evolution-report.md
+        status: passed
+        summary: Optional/mandatory failure separation, bounded diagnostics and semantic lifecycle regression lessons captured. T02 is next under AFK authorization.
+        recorded_at: '2026-09-25T19:44:43Z'
+        sha256: 'sha256:6dd3fdb0cb1f905564da14c8641a479d8a3d72499de26a8b7e389fbb434edbd8'
+    notes: Complete T09 source slice. Preserve frozen artifacts/capsules and unrelated dirty work. Automatically begin separate T02 Work, retaining T06 actual-host qualification and known test reliability observation.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t09-pf-vision-alignment-r02-implement-provider-neutral-optional-diagnost.capsule.yaml
+  assignment_capsule_checksum: 'sha256:c647729dce53faada3a75b4df915522f772ec95a7657ffbc4a2dc3bf78f103f2'

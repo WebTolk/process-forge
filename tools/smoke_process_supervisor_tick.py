@@ -54,8 +54,8 @@ workers:
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
+    required_sources: [README.md]
     required_outputs:
       - id: failing-report
         path: .pf/artifacts/failing-report.md
@@ -84,6 +84,8 @@ def main() -> int:
         result = pf("supervisor", "tick", "--project-root", str(project), "--run", "tick-run", expect=1)
         if "failed=1" not in result.stdout:
             raise AssertionError("supervisor tick did not report one failed worker")
+        if "start readiness executable override required for {executable}" not in result.stdout:
+            raise AssertionError("supervisor failed before the intended generic-shell executable check: " + result.stdout)
         report = project / ".pf/runtime/supervisor/last-tick-report.md"
         if "- failed: `failing-worker`" not in report.read_text(encoding="utf-8"):
             raise AssertionError("supervisor tick report missing failed worker")

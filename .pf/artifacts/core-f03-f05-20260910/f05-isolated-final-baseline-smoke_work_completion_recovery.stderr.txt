@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "C:\Users\musst\AppData\Local\Temp\pf-evidence-public-vtbrknrw\public\tools\smoke_work_completion_recovery.py", line 158, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-evidence-public-vtbrknrw\public\tools\smoke_work_completion_recovery.py", line 153, in main
+    test_failure_matrix()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-evidence-public-vtbrknrw\public\tools\smoke_work_completion_recovery.py", line 118, in test_failure_matrix
+    require(result.get("action") == "run_completed" or (committed and result.get("reason") == "work_is_terminal"), result)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Temp\pf-evidence-public-vtbrknrw\public\tools\smoke_work_completion_recovery.py", line 15, in require
+    raise AssertionError(detail)
+AssertionError: {'schema_version': 1, 'kind': 'pf.work.execution', 'action': 'blocked', 'reason': 'work_is_terminal', 'run_id': 'garage-execute-declarative-smoke', 'assignment_id': 'execute-declarative-smoke', 'run_status': 'in_progress', 'assignment_status': 'done'}

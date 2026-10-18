@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "task-doctor",
+    "--project-root",
+    ".",
+    "--task",
+    "remediate-python-core-audit-f01-project-search-authorization-and-f02-uno"
+  ],
+  "started_at": "2026-09-10T05:43:03.357259+00:00",
+  "elapsed_seconds": 3.046,
+  "exit_code": 0,
+  "stdout": "final-task-doctor.stdout.txt",
+  "stderr": "final-task-doctor.stderr.txt"
+}

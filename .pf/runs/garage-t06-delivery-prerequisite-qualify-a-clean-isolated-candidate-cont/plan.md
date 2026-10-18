@@ -1,0 +1,3 @@
+# Run Plan: T06 delivery prerequisite: qualify a clean isolated candidate containing the rev
+
+Objective: T06 delivery prerequisite: qualify a clean isolated candidate containing the reviewed T01-T06 and T09 source changes, deliver it by manifest-based update to the installed ProcessForge Core test stand D:/.agents/processforge, preserve shared Workplace configuration and rollback evidence, run installed verification, and prepare real-host reconnect acceptance for the existing T06 Work. Current user continuation authorizes this bounded test-stand delivery; no public release, source-branch commit, unrelated project change or fabricated host session.

@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T20:17:00.447677+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_egress_transport.py",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\tools\\smoke_egress_transport.py\", line 173, in <module>\n    result = run_checks()\n  File \"D:\\Dev\\process-forge\\tools\\smoke_egress_transport.py\", line 130, in run_checks\n    tokens = [s.authorize(first), s.authorize(second)]\n                                  ~~~~~~~~~~~^^^^^^^^\n  File \"D:\\Dev\\process-forge\\src\\processforge_core\\egress\\engine.py\", line 26, in call\n    return operation(self, *args, **kwargs)\n  File \"D:\\Dev\\process-forge\\src\\processforge_core\\egress\\engine.py\", line 241, in authorize\n    raise EgressError(\"attempt_budget_exceeded\")\nprocessforge_core.egress.contracts.EgressError: attempt_budget_exceeded\n"
+}

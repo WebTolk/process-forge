@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/smoke_multi_process_work_capsule.py"
+  ],
+  "started_at": "2026-09-07T14:13:33.813759+00:00",
+  "finished_at": "2026-09-07T14:14:49.262075+00:00",
+  "elapsed_seconds": 75.448,
+  "exit_code": 0,
+  "output": "PASS: smoke_project_legacy_single_process_compatibility\nPASS: smoke_legacy_single_process_completion\nPASS: smoke_project_multiple_allowed_processes\nPASS: smoke_work_start_multiple_processes_requires_choice\nPASS: smoke_work_start_rejects_disallowed_process\nPASS: smoke_work_start_explicit_allowed_process\nPASS: smoke_active_work_has_single_process\nPASS: smoke_work_capsule_does_not_union_allowed_processes\nPASS: smoke_active_specializations_pinned_to_work\nPASS: smoke_process_transition_next_work_recommendation\nPASS: smoke_pf_context_exposes_fresh_session_continuation\nPASS: smoke_existing_work_start_contract_compatible\nPASS: smoke_multi_process_garage_sessionless\nPASS: smoke_multi_process_does_not_require_runtime\nPASS: smoke_consumed_handoff_not_reoffered\nPASS: smoke_work_start_single_process_auto_select\n"
+}

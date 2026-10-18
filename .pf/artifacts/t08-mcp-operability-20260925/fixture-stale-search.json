@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"error\": {\"code\": \"snapshot_not_fresh\"}}"
+    }
+  ],
+  "isError": true
+}

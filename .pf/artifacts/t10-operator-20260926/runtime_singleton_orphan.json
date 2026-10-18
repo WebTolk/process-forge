@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_runtime_singleton_orphan.py"
+  ],
+  "exit_code": 0,
+  "seconds": 17.297,
+  "stdout": "PASS: Runtime singleton protects live orphans and concurrent startup\n",
+  "stderr": ""
+}

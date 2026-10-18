@@ -1,0 +1,111 @@
+schema_version: 1
+id: a01-search
+title: a01-search
+run_id: core-a01-a11-wave1-20260911
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T06:26:00Z'
+updated_at: '2026-09-11T06:40:43Z'
+objective: Implement the bounded repair brief .pf/artifacts/core-a01-a11-20260911/a01-search-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/core-a01-a11-20260911/a01-search/report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-a01-a11-20260911/a01-search-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - src/processforge_core/local_resource_search.py
+  - tools/smoke_search_file_root_containment.py
+  - .pf/artifacts/core-a01-a11-20260911/a01-search/**
+  - .pf/tmp/a01-search/**
+allowed_read_files:
+  - src/processforge_core/local_resource_search.py
+  - tools/smoke_search_file_root_containment.py
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/*smoke*.py
+  - tools/*helpers*.py
+  - docs/concepts/**
+  - .pf/artifacts/core-a01-a11-20260911/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/AGENTS.md
+  - .pf/contexts/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: a01-search
+  owner_label: worker-a01-search
+  role: worker
+  writer: true
+  owned_files:
+    - src/processforge_core/local_resource_search.py
+    - tools/smoke_search_file_root_containment.py
+    - .pf/artifacts/core-a01-a11-20260911/a01-search/**
+    - .pf/tmp/a01-search/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/local_resource_search.py
+    - tools/smoke_search_file_root_containment.py
+    - .pf/artifacts/core-a01-a11-20260911/a01-search/**
+    - .pf/tmp/a01-search/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: a01-search-report
+    path: .pf/artifacts/core-a01-a11-20260911/a01-search/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-a01-a11-20260911/a01-search/report.md
+  format: concise_markdown
+  include:
+    - a01-search-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

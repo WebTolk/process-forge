@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T17:43:13.660726+00:00",
+  "argv": [
+    "git",
+    "rev-parse",
+    "HEAD^{tree}"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "6c79781f8c6d1d8925670bb6ffdc53321d523d0c\n",
+  "stderr": ""
+}

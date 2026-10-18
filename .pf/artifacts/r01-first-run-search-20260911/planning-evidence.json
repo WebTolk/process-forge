@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r01-first-run-search-20260911/plan.md",
+        "status":  "ready",
+        "artifact_id":  "task-index",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "One bounded diagnostic shell task materialized; primary owns the test/documentation correction after the worker cancellation.",
+        "gate_id":  "run-has-tasks",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

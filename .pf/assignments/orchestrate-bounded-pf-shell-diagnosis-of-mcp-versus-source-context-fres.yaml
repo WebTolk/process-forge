@@ -1,0 +1,208 @@
+schema_version: 1
+id: orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-context-fres
+title: Orchestrate bounded PF shell diagnosis of MCP versus source context freshness an
+run_id: garage-orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-conte
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T12:27:17Z'
+updated_at: '2026-09-11T03:43:02Z'
+objective: Orchestrate bounded PF shell diagnosis of MCP versus source context freshness and worker report collection cardinality
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Context/collection diagnosis complete. Handoff to separate A09 and A02/A06 remediation; no product repair, install or release claim.
+  artifacts:
+    - .pf/artifacts/context-collection-20260910/acceptance-20260911.md
+    - .pf/artifacts/context-collection-20260910/orchestrator-plan.yaml
+    - .pf/artifacts/context-collection-20260910/plan.md
+    - .pf/artifacts/context-collection-20260910/primary-recheck-20260911.md
+    - .pf/handoffs/context-collection-20260911.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-11T03:42:28Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      path: .pf/artifacts/context-collection-20260910/primary-recheck-20260911.md
+      status: approved
+      recorded_at: '2026-09-11T03:42:58Z'
+      sha256: 'sha256:e8a34734fec7499808af30430d0205c4d867621414bf2ddacfacfb8b319c1414'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      path: .pf/handoffs/context-collection-20260911.md
+      status: ready
+      recorded_at: '2026-09-11T03:42:58Z'
+      sha256: 'sha256:4852d8725039db99517c90bd968417db716a37dd903bc6db027e29c652afbde7'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Accepted precise classifier/collector diagnosis, corrected junior report, primary review, retained original evidence, isolated remediation references and handoff are complete.
+      recorded_at: '2026-09-11T03:42:58Z'
+  notes: Context/collection diagnosis complete. Handoff to separate A09 and A02/A06 remediation; no product repair, install or release claim.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-10T12:27:17Z'
+    completed_at: '2026-09-10T12:29:06Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/artifacts/context-collection-20260910/plan.md
+        recorded_at: '2026-09-10T12:29:01Z'
+        sha256: 'sha256:a4e1ea321c8a3a0fc1a58b6ddf4e9971c9326aab730f73526b3873d932048dfe'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Live source context fresh; concrete baseline and two disjoint diagnostic responsibilities documented.
+        recorded_at: '2026-09-10T12:29:01Z'
+    notes: Two bounded independent diagnostic briefs; sequential integration reserved for shared CLI.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-10T12:29:06Z'
+    completed_at: '2026-09-10T12:34:05Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/artifacts/context-collection-20260910/orchestrator-plan.yaml
+        recorded_at: '2026-09-10T12:33:58Z'
+        sha256: 'sha256:765ce1207d991d5de4c84da9aad7d9659fdfb2d72aa548389985551797c93b38'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Live source context fresh; concrete baseline and two disjoint diagnostic responsibilities documented.
+        recorded_at: '2026-09-10T12:33:58Z'
+    notes: Two planning-only shell assignments/capsules materialized and doctors passed; shared CLI remains read-only for workers.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-10T12:34:05Z'
+    completed_at: '2026-09-11T03:41:12Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        path: .pf/artifacts/context-collection-20260910/primary-recheck-20260911.md
+        status: ready
+        recorded_at: '2026-09-11T03:41:08Z'
+        sha256: 'sha256:e8a34734fec7499808af30430d0205c4d867621414bf2ddacfacfb8b319c1414'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Two diagnosis reports reviewed; exact classifier-path divergence and real collector provenance/dedup results independently established. Corrected report-capture junior attempt completed and collected; original evidence preserved.
+        recorded_at: '2026-09-11T03:41:08Z'
+    notes: Existing context/collection diagnosis complete; handoff to result fixation with primary corrections and reproduction evidence.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-11T03:41:12Z'
+    completed_at: '2026-09-11T03:41:45Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        path: .pf/artifacts/context-collection-20260910/acceptance-20260911.md
+        status: ready
+        recorded_at: '2026-09-11T03:41:40Z'
+        sha256: 'sha256:bc643a9c27997d3c7d4beaf7c4ebfdde4c92c78f6849e779192052ffbb406c42'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: context-origin and report-capture done; context-collection-shell-20260910 completed after normal collection and doctors. A09/A02/A06 are unstarted separate remediation proposals.
+        recorded_at: '2026-09-11T03:41:40Z'
+    notes: Verified diagnostic results fixed with explicit limitations; handoff to review.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-11T03:41:45Z'
+    completed_at: '2026-09-11T03:42:28Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        path: .pf/artifacts/context-collection-20260910/acceptance-20260911.md
+        status: approved
+        recorded_at: '2026-09-11T03:42:23Z'
+        sha256: 'sha256:bc643a9c27997d3c7d4beaf7c4ebfdde4c92c78f6849e779192052ffbb406c42'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Current run-doctor/task-doctor for diagnostic carrier and run-doctor for completed worker run passed. Corrected diagnosis independently verified with real fixtures; all limitations documented.
+        recorded_at: '2026-09-11T03:42:23Z'
+    notes: Diagnostic review accepted with documented wording corrections; handoff to final summary.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-11T03:42:28Z'
+    completed_at: '2026-09-11T03:43:02Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        path: .pf/artifacts/context-collection-20260910/primary-recheck-20260911.md
+        status: approved
+        recorded_at: '2026-09-11T03:42:58Z'
+        sha256: 'sha256:e8a34734fec7499808af30430d0205c4d867621414bf2ddacfacfb8b319c1414'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        path: .pf/handoffs/context-collection-20260911.md
+        status: ready
+        recorded_at: '2026-09-11T03:42:58Z'
+        sha256: 'sha256:4852d8725039db99517c90bd968417db716a37dd903bc6db027e29c652afbde7'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Accepted precise classifier/collector diagnosis, corrected junior report, primary review, retained original evidence, isolated remediation references and handoff are complete.
+        recorded_at: '2026-09-11T03:42:58Z'
+    notes: Context/collection diagnosis complete. Handoff to separate A09 and A02/A06 remediation; no product repair, install or release claim.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260910-113559-b35a98
+  snapshot_checksum: 'sha256:00d31281f327137bb5868b1cbc92a99a045b446e15c8cab7feca3cee8d1db0f2'
+  assignment_capsule: .pf/contexts/assignment-capsules/orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-context-fres.capsule.yaml
+  assignment_capsule_checksum: 'sha256:db801c55d335c932225d3eb1dc756fdf0e5310277aa1ffb97fe6e0f409f158a6'

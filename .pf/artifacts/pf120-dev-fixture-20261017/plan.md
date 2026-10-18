@@ -1,0 +1,7 @@
+# Поправка существующего constructor smoke для dev-релиза
+
+2026-10-17, primary/test-maintainer. Отдельная test-only Work; capsule a0309565011cc94c3854743c0c2936ed2b4d266336acbb6662f99cfc97c754f1, valid/ready. Один primary, без subagents. Разрешены только существующий tools/smoke_work_transition_commit_service.py, его checksum entry и собственные артефакты. Текущая release Work продолжает изолированный полный прогон исходного 280e00d; её immutable candidate не меняем.
+
+Наблюдение: test_facade_constructor_and_late_callback_override сравнивает полный список параметров ProcessExecutionService с прежними восемью. Одобренная проекция добавила необязательный keyword-only work_metadata=None; positional match args и прежние callbacks сохранены. Ошибка существующей фикстуры не означает успешную приёмку кандидата и блокирует его установку.
+
+План: сохранить строгую проверку всех прежних параметров, включить новое имя и явно проверить KEYWORD_ONLY/None; остальные шесть сценариев публикации, порядка ошибок, replay, immutable service и late callback не менять. Запустить существующий smoke полностью, проверить diff и единственную checksum replacement с LF. Primary review после правки. Закрыть native стадии/doctors и доставить отдельный commit в обе dev-ветки. Родитель соберёт новый архив и выполнит полный consumer suite. Product behavior/CLI/MCP/public schemas не меняются; новый отдельный тест не добавляется.

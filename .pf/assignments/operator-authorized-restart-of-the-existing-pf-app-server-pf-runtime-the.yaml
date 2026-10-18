@@ -1,0 +1,426 @@
+schema_version: 1
+id: operator-authorized-restart-of-the-existing-pf-app-server-pf-runtime-the
+title: Operator-authorized restart of the existing pf-app-server (PF Runtime), then mea
+run_id: garage-operator-authorized-restart-of-the-existing-pf-app-server-pf-runt
+process: software-feature-development
+status: done
+created_at: '2026-10-17T06:03:34Z'
+updated_at: '2026-10-17T06:22:51Z'
+objective: Operator-authorized restart of the existing pf-app-server (PF Runtime), then measure its CPU before and after restart. Use managed service lifecycle only; identify the exact owner and loaded installation. No Core installation/update, journal migration, host-hook/MCP restart, unrelated process termination, or general PF 1.2.0 acceptance.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Requested Runtime restarted through explicitly approved managed --force. PID 13540 -> 16976, readyz=true; CPU 21.8876% before/30 s ->20.7354% after/60 s, max26.9430%. Work complete; no further service action, Core update, migration, MCP restart or broad 1.2.0 acceptance. Retain own terminal records and publish without touching unrelated state.
+  artifacts:
+    - .pf/artifacts/runtime-restart-cpu-20261017/architecture-plan.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/assurance.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/delivery.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/domain-modeling.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/evolve.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/implementation.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/investigation.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/orchestration.md
+    - .pf/artifacts/runtime-restart-cpu-20261017/scope.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: false
+  operator_authorization: User explicitly requested managed pf-app-server restart and CPU measurement; no other infrastructure changes.
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-17T06:22:13Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/runtime-restart-cpu-20261017/evolve.md
+      status: ready
+      recorded_at: '2026-10-17T06:22:51Z'
+      sha256: 'sha256:1394fc914d865afc324d648904faed87a5c80278c2535991c481bd811dc64800'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/runtime-restart-cpu-20261017/evolve.md
+      status: passed
+      summary: Single approved Runtime restart and CPU measurement complete; sustained load/old installed code/degraded health and exact separate future update boundary retained.
+      recorded_at: '2026-10-17T06:22:51Z'
+      sha256: 'sha256:1394fc914d865afc324d648904faed87a5c80278c2535991c481bd811dc64800'
+  notes: Requested Runtime restarted through explicitly approved managed --force. PID 13540 -> 16976, readyz=true; CPU 21.8876% before/30 s ->20.7354% after/60 s, max26.9430%. Work complete; no further service action, Core update, migration, MCP restart or broad 1.2.0 acceptance. Retain own terminal records and publish without touching unrelated state.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-17T06:03:34Z'
+    completed_at: '2026-10-17T06:05:18Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/runtime-restart-cpu-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T06:05:17Z'
+        sha256: 'sha256:4f11497f001b1d3aed08299f86a0a4707e98e6de8b5f2b048eb5a960416b835e'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/runtime-restart-cpu-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T06:05:17Z'
+        sha256: 'sha256:4f11497f001b1d3aed08299f86a0a4707e98e6de8b5f2b048eb5a960416b835e'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/runtime-restart-cpu-20261017/orchestration.md
+        status: ready
+        recorded_at: '2026-10-17T06:05:17Z'
+        sha256: 'sha256:4f11497f001b1d3aed08299f86a0a4707e98e6de8b5f2b048eb5a960416b835e'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/runtime-restart-cpu-20261017/orchestration.md
+        status: passed
+        summary: Explicit bounded operator restart request, fresh context/valid exact capsule, verified owner, no product update/migration or MCP operations.
+        recorded_at: '2026-10-17T06:05:17Z'
+        sha256: 'sha256:4f11497f001b1d3aed08299f86a0a4707e98e6de8b5f2b048eb5a960416b835e'
+    notes: Operator-only plan and exact identity established. Baseline started; next scope/investigation checks must confirm guarded restart readiness. Explicit user request authorizes this Runtime lifecycle operation; product installation and migration remain outside scope.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-17T06:05:18Z'
+    completed_at: '2026-10-17T06:05:41Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/runtime-restart-cpu-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T06:05:41Z'
+        sha256: 'sha256:c2fb0ee36166469b22f6cbe4a2beddeea25bdd70bd9f39f38c07d16047eb15a0'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/runtime-restart-cpu-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T06:05:41Z'
+        sha256: 'sha256:c2fb0ee36166469b22f6cbe4a2beddeea25bdd70bd9f39f38c07d16047eb15a0'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/runtime-restart-cpu-20261017/scope.md
+        status: ready
+        recorded_at: '2026-10-17T06:05:41Z'
+        sha256: 'sha256:c2fb0ee36166469b22f6cbe4a2beddeea25bdd70bd9f39f38c07d16047eb15a0'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/runtime-restart-cpu-20261017/scope.md
+        status: passed
+        summary: Bounded managed Runtime restart and measured CPU; explicit operator authorization, private evidence only; no installed update, migration, actual MCP operation or force/OS-kill bypass.
+        recorded_at: '2026-10-17T06:05:41Z'
+        sha256: 'sha256:c2fb0ee36166469b22f6cbe4a2beddeea25bdd70bd9f39f38c07d16047eb15a0'
+    notes: Acceptance and scope fixed. Inspect current owner/guard and baseline before the managed restart. The new SQLite source is not installed, so do not attribute any restart-only change to the migration.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-17T06:05:41Z'
+    completed_at: '2026-10-17T06:06:23Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/runtime-restart-cpu-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:22Z'
+        sha256: 'sha256:1541f9e2c0379b898a407389e87667e6828fadfa02e3a810c62ef297d56ab2fe'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/runtime-restart-cpu-20261017/investigation.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:22Z'
+        sha256: 'sha256:1541f9e2c0379b898a407389e87667e6828fadfa02e3a810c62ef297d56ab2fe'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/runtime-restart-cpu-20261017/investigation.md
+        status: passed
+        summary: 'Actual runtime.lock owner PID 13540, launcher PID 9308, separate connected MCP PID 5284. Service ready with guarded_shutdown=1 and degraded health; cached coverage is partial. Installed VERSION 1.2.0 but journal/service hashes differ from current SQLite source. 30-second baseline (4 logical CPUs): owner 21.8876% average, 24.4085% median, 30.2675% maximum; launcher 0%, MCP 4.075'
+        recorded_at: '2026-10-17T06:06:22Z'
+        sha256: 'sha256:1541f9e2c0379b898a407389e87667e6828fadfa02e3a810c62ef297d56ab2fe'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/runtime-restart-cpu-20261017/investigation.md
+        status: passed
+        summary: 'Actual runtime.lock owner PID 13540, launcher PID 9308, separate connected MCP PID 5284. Service ready with guarded_shutdown=1 and degraded health; cached coverage is partial. Installed VERSION 1.2.0 but journal/service hashes differ from current SQLite source. 30-second baseline (4 logical CPUs): owner 21.8876% average, 24.4085% median, 30.2675% maximum; launcher 0%, MCP 4.075'
+        recorded_at: '2026-10-17T06:06:22Z'
+        sha256: 'sha256:1541f9e2c0379b898a407389e87667e6828fadfa02e3a810c62ef297d56ab2fe'
+    notes: 'Actual runtime.lock owner PID 13540, launcher PID 9308, separate connected MCP PID 5284. Service ready with guarded_shutdown=1 and degraded health; cached coverage is partial. Installed VERSION 1.2.0 but journal/service hashes differ from current SQLite source. 30-second baseline (4 logical CPUs): owner 21.8876% average, 24.4085% median, 30.2675% maximum; launcher 0%, MCP 4.0754% average during control requests. Baseline is an observed background window, not a synthetic controlled workload. Existing server restart uses authenticated expected-instance/idle guard; read current activity and use that exact operator command. No product writes or migration.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-17T06:06:23Z'
+    completed_at: '2026-10-17T06:06:27Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/runtime-restart-cpu-20261017/domain-modeling.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:27Z'
+        sha256: 'sha256:3ec05eedc45f11347bae5e9590ff8c664bd43cb766566857b44b09ae227a2c67'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/runtime-restart-cpu-20261017/domain-modeling.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:27Z'
+        sha256: 'sha256:3ec05eedc45f11347bae5e9590ff8c664bd43cb766566857b44b09ae227a2c67'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/runtime-restart-cpu-20261017/domain-modeling.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:27Z'
+        sha256: 'sha256:3ec05eedc45f11347bae5e9590ff8c664bd43cb766566857b44b09ae227a2c67'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/runtime-restart-cpu-20261017/domain-modeling.md
+        status: passed
+        summary: 'The Runtime owner is identified by instance_id + runtime.lock + PID/creation time and authenticated readiness, not process count. Parent launcher and actual MCP are separate processes. Device CPU equals delta process user+kernel CPU time / elapsed monotonic wall time / 4 logical CPUs. Startup is separated from settled observation. Guarded idle status is an execution condition; '
+        recorded_at: '2026-10-17T06:06:27Z'
+        sha256: 'sha256:3ec05eedc45f11347bae5e9590ff8c664bd43cb766566857b44b09ae227a2c67'
+    notes: The Runtime owner is identified by instance_id + runtime.lock + PID/creation time and authenticated readiness, not process count. Parent launcher and actual MCP are separate processes. Device CPU equals delta process user+kernel CPU time / elapsed monotonic wall time / 4 logical CPUs. Startup is separated from settled observation. Guarded idle status is an execution condition; unknown worker activity must not be silently changed to zero. Restart reloads installed code and does not install the SQLite source.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-17T06:06:27Z'
+    completed_at: '2026-10-17T06:06:34Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/runtime-restart-cpu-20261017/architecture-plan.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:34Z'
+        sha256: 'sha256:01b78ead9b41ca181fe5e86084f5d07f19fe809bd0cf3f7311a88ad361db7483'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/runtime-restart-cpu-20261017/architecture-plan.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:34Z'
+        sha256: 'sha256:01b78ead9b41ca181fe5e86084f5d07f19fe809bd0cf3f7311a88ad361db7483'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/runtime-restart-cpu-20261017/architecture-plan.md
+        status: ready
+        recorded_at: '2026-10-17T06:06:34Z'
+        sha256: 'sha256:01b78ead9b41ca181fe5e86084f5d07f19fe809bd0cf3f7311a88ad361db7483'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/runtime-restart-cpu-20261017/architecture-plan.md
+        status: passed
+        summary: 'Use installed bin/pf.py server restart --workplace D:/.agents/processforge-workplace --timeout 30 --json, preserving normal port/interval defaults as exposed by the existing CLI. Capture exact result, old PID exit and new runtime.lock owner/instance/readyz; do not use --force, OS-kill or manual lock cleanup. After readiness, sample a 30-second startup window and a 60-second set'
+        recorded_at: '2026-10-17T06:06:34Z'
+        sha256: 'sha256:01b78ead9b41ca181fe5e86084f5d07f19fe809bd0cf3f7311a88ad361db7483'
+    notes: 'Use installed bin/pf.py server restart --workplace D:/.agents/processforge-workplace --timeout 30 --json, preserving normal port/interval defaults as exposed by the existing CLI. Capture exact result, old PID exit and new runtime.lock owner/instance/readyz; do not use --force, OS-kill or manual lock cleanup. After readiness, sample a 30-second startup window and a 60-second settled window with pinned Windows process handles and raw interval data. Report an accurate guarded refusal if it cannot restart; do not hide degraded health or missing source deployment. Current user request authorizes only this managed Runtime lifecycle.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-17T06:06:34Z'
+    completed_at: '2026-10-17T06:21:19Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/runtime-restart-cpu-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T06:21:19Z'
+        sha256: 'sha256:237fb0f134f65bf96517d7b0a349badf6174519a73c7284eb277f09b5df8746d'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/runtime-restart-cpu-20261017/implementation.md
+        status: ready
+        recorded_at: '2026-10-17T06:21:19Z'
+        sha256: 'sha256:237fb0f134f65bf96517d7b0a349badf6174519a73c7284eb277f09b5df8746d'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/runtime-restart-cpu-20261017/implementation.md
+        status: passed
+        summary: User-approved managed Runtime restart and read-only CPU evidence only. Private records/scratch; no product update, migration, actual MCP restart, OS-kill or capsule change.
+        recorded_at: '2026-10-17T06:21:19Z'
+        sha256: 'sha256:237fb0f134f65bf96517d7b0a349badf6174519a73c7284eb277f09b5df8746d'
+    notes: Operator action executed after explicit user --force approval. Verify identities/readiness, the 30/30/60 second CPU windows and aggregate arithmetic. Actual old installed code/health caveats retained; no broader 1.2.0 acceptance claimed.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-17T06:21:19Z'
+    completed_at: '2026-10-17T06:22:08Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/runtime-restart-cpu-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:22:07Z'
+        sha256: 'sha256:c928504f762a8c4e541a1122f47e8d4c907997c239d7a040ff84206e52b6f9d9'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/runtime-restart-cpu-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:22:07Z'
+        sha256: 'sha256:c928504f762a8c4e541a1122f47e8d4c907997c239d7a040ff84206e52b6f9d9'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/runtime-restart-cpu-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:22:07Z'
+        sha256: 'sha256:c928504f762a8c4e541a1122f47e8d4c907997c239d7a040ff84206e52b6f9d9'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/runtime-restart-cpu-20261017/assurance.md
+        status: ready
+        recorded_at: '2026-10-17T06:22:07Z'
+        sha256: 'sha256:c928504f762a8c4e541a1122f47e8d4c907997c239d7a040ff84206e52b6f9d9'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/runtime-restart-cpu-20261017/assurance.md
+        status: passed
+        summary: Managed approved restart, owner replacement/readiness, pinned 30/30/60s CPU windows and normalized arithmetic verified. No product edits or broad acceptance; actual degraded health and old installed source reported.
+        recorded_at: '2026-10-17T06:22:07Z'
+        sha256: 'sha256:c928504f762a8c4e541a1122f47e8d4c907997c239d7a040ff84206e52b6f9d9'
+    notes: Operational objective verified. Before 21.8876%, settled 20.7354% total CPU; no meaningful removal of sustained load. New owner ready/degraded, actual MCP unchanged. Installed source still precedes SQLite fix; no Core update/migration or general 1.2.0 acceptance claimed.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-17T06:22:08Z'
+    completed_at: '2026-10-17T06:22:13Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/runtime-restart-cpu-20261017/delivery.md
+        status: ready
+        recorded_at: '2026-10-17T06:22:13Z'
+        sha256: 'sha256:135bf6c106e1014ff177dbd55dcf292ab2c1ffa3e9d0b0fefeda8aaa1a755d38'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/runtime-restart-cpu-20261017/delivery.md
+        status: passed
+        summary: Operator restart and CPU observation delivered; no software release, installed update or full 1.2.0/connected-host acceptance.
+        recorded_at: '2026-10-17T06:22:13Z'
+        sha256: 'sha256:135bf6c106e1014ff177dbd55dcf292ab2c1ffa3e9d0b0fefeda8aaa1a755d38'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/runtime-restart-cpu-20261017/delivery.md
+        status: passed
+        summary: 'Operational owner/readiness/CPU checks passed. Software build/archive/release profile skipped: artifact-only operator task with no product change.'
+        recorded_at: '2026-10-17T06:22:13Z'
+        sha256: 'sha256:135bf6c106e1014ff177dbd55dcf292ab2c1ffa3e9d0b0fefeda8aaa1a755d38'
+    notes: Requested single service restart and CPU measurement complete. Raw data and caveats retained. Finish evolution, then commit/publish only owned terminal records. Runtime ready/degraded; source SQLite deployment remains separate.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-17T06:22:13Z'
+    completed_at: '2026-10-17T06:22:51Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/runtime-restart-cpu-20261017/evolve.md
+        status: ready
+        recorded_at: '2026-10-17T06:22:51Z'
+        sha256: 'sha256:1394fc914d865afc324d648904faed87a5c80278c2535991c481bd811dc64800'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/runtime-restart-cpu-20261017/evolve.md
+        status: passed
+        summary: Single approved Runtime restart and CPU measurement complete; sustained load/old installed code/degraded health and exact separate future update boundary retained.
+        recorded_at: '2026-10-17T06:22:51Z'
+        sha256: 'sha256:1394fc914d865afc324d648904faed87a5c80278c2535991c481bd811dc64800'
+    notes: Requested Runtime restarted through explicitly approved managed --force. PID 13540 -> 16976, readyz=true; CPU 21.8876% before/30 s ->20.7354% after/60 s, max26.9430%. Work complete; no further service action, Core update, migration, MCP restart or broad 1.2.0 acceptance. Retain own terminal records and publish without touching unrelated state.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.0
+  process_fingerprint: 'sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e'
+  snapshot_id: ctx-20261016-091113-310bed
+  snapshot_checksum: 'sha256:0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be'
+  assignment_capsule: .pf/contexts/assignment-capsules/operator-authorized-restart-of-the-existing-pf-app-server-pf-runtime-the.capsule.yaml
+  assignment_capsule_checksum: 'sha256:36672fd9140733171ab72a9bfaecc10d9751cb1146b76387e3d9d4302fab86d5'
+allowed_actions:
+  - read
+  - write_artifact
+allowed_files:
+  - .pf/artifacts/runtime-restart-cpu-20261017/**
+  - .pf/tmp/runtime-restart-cpu-20261017/**
+  - .pf/logs/runtime-restart-cpu-20261017.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/artifacts/hook-sqlite-migration-20261017/**
+  - .pf/artifacts/runtime-cpu-root-cause-20261017/**
+  - tools/pf_runtime/**
+  - tools/pf_cli/parsers/runtime.py
+  - tools/pf_cli/parsers/server.py
+  - tools/smoke_server_operator.py
+  - docs/getting-started/runtime-autostart.md
+  - docs/concepts/runtime-model.md
+  - docs/concepts/runtime-monitor.md
+  - docs/authoring/workplace-configuration.md
+expected_report:
+  artifact: .pf/artifacts/runtime-restart-cpu-20261017/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/runtime-restart-cpu-20261017/report.md
+    type: markdown
+    required: true

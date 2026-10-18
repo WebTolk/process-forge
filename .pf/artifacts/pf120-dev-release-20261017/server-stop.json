@@ -1,0 +1,9 @@
+{
+  "label": "server-stop",
+  "started_at": "2026-10-17T19:12:31.713114+00:00",
+  "exit_code": 1,
+  "elapsed_seconds": 1.3890459000249393,
+  "raw_sha256": "bc4ca3c6d32f3285e969d0805a248155e8b0cd2652f4365880b3108520cc1dd5",
+  "raw_bytes": 86,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/server-stop.log"
+}

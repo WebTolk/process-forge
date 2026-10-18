@@ -1,0 +1,28 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "investigation-report",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "impact-analysis",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "investigation-complete",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/report.md",
+    "status": "passed",
+    "summary": "Current actual Runtime profile and byte/input provenance reviewed:1980 samples/0 errors, scheduler86.92%, ingress12.12%; Run YAML discovery and37.8MB Host JSON dominate. Read-only diagnosis complete; concrete separate repair boundary retained, no product or infrastructure actions."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "impact-understood",
+    "path": ".pf/artifacts/runtime-cpu-after-sqlite-20261017/report.md",
+    "status": "passed",
+    "summary": "Current actual Runtime profile and byte/input provenance reviewed:1980 samples/0 errors, scheduler86.92%, ingress12.12%; Run YAML discovery and37.8MB Host JSON dominate. Read-only diagnosis complete; concrete separate repair boundary retained, no product or infrastructure actions."
+  }
+]

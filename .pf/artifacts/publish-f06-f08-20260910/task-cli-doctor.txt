@@ -1,0 +1,15 @@
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: done
+PASS: referenced run exists: core-f06-f08-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f0608-cli.yaml has no private absolute paths
+PASS: completed task has result summary or artifact
+PASS: required output exists: .pf/artifacts/publish-f06-f08-20260910/f0608-cli/report.md
+PASS: expected report exists: .pf/artifacts/publish-f06-f08-20260910/f0608-cli/report.md

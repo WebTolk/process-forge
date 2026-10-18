@@ -1,0 +1,9 @@
+{
+  "label": "server-stop-confirmed-idle",
+  "started_at": "2026-10-17T19:15:24.742276+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.5612271999707446,
+  "raw_sha256": "df01943301a90f3142f37dd468b4d0e985dfb3402019e6df692215312cafbd77",
+  "raw_bytes": 18,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/server-stop-confirmed-idle.log"
+}

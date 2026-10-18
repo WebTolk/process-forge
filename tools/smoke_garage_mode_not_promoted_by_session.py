@@ -38,6 +38,8 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[s
     if result.returncode != 0:
         raise AssertionError(result.stderr)
     response = [json.loads(line) for line in result.stdout.splitlines() if line.strip()][-1]
+    if "error" in response:
+        raise AssertionError(response)
     text = response["result"]["content"][0]["text"]
     if response["result"].get("isError"):
         raise AssertionError(text)

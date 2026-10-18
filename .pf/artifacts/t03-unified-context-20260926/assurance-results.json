@@ -1,0 +1,83 @@
+{
+  "started_at": "2026-09-26T03:37:10.290559+00:00",
+  "checks": [
+    {
+      "name": "smoke_project_overrides_capsule_summary",
+      "exit_code": 0,
+      "stdout": "PASS: smoke_project_overrides_capsule_summary\n",
+      "stderr": "",
+      "seconds": 6.513
+    },
+    {
+      "name": "smoke_parameter_assignment_capsule",
+      "exit_code": 0,
+      "stdout": "PASS: smoke_parameter_assignment_capsule\n",
+      "stderr": "",
+      "seconds": 7.767
+    },
+    {
+      "name": "smoke_capsule_pins_context_snapshot",
+      "exit_code": 0,
+      "stdout": "PASS: capsule pins context snapshot smoke\n",
+      "stderr": "",
+      "seconds": 16.814
+    },
+    {
+      "name": "smoke_specialization_capsule_activation",
+      "exit_code": 0,
+      "stdout": "PASS: smoke_specialization_capsule_activation\n",
+      "stderr": "",
+      "seconds": 10.554
+    },
+    {
+      "name": "smoke_worker_workspace_access",
+      "exit_code": 0,
+      "stdout": "PASS: worker workspace access smoke\n",
+      "stderr": "",
+      "seconds": 21.862
+    },
+    {
+      "name": "smoke_work_transition_snapshot_pinned_process",
+      "exit_code": 0,
+      "stdout": "PASS: work transition uses pinned process\n",
+      "stderr": "",
+      "seconds": 22.492
+    },
+    {
+      "name": "smoke_work_transition_updates_assignment_stage",
+      "exit_code": 0,
+      "stdout": "PASS: work transition updates assignment stage\n",
+      "stderr": "",
+      "seconds": 28.298
+    },
+    {
+      "name": "smoke_multi_process_work_capsule",
+      "exit_code": 0,
+      "stdout": "PASS: smoke_project_legacy_single_process_compatibility\nPASS: smoke_legacy_single_process_completion\nPASS: smoke_project_multiple_allowed_processes\nPASS: smoke_work_start_multiple_processes_requires_choice\nPASS: smoke_work_start_rejects_disallowed_process\nPASS: smoke_work_start_explicit_allowed_process\nPASS: smoke_active_work_has_single_process\nPASS: smoke_work_capsule_does_not_union_allowed_processes\nPASS: smoke_active_specializations_pinned_to_work\nPASS: smoke_process_transition_next_work_recommendation\nPASS: smoke_pf_context_exposes_fresh_session_continuation\nPASS: smoke_existing_work_start_contract_compatible\nPASS: smoke_multi_process_garage_sessionless\nPASS: smoke_multi_process_does_not_require_runtime\nPASS: smoke_consumed_handoff_not_reoffered\nPASS: smoke_work_start_single_process_auto_select\n",
+      "stderr": "",
+      "seconds": 84.751
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "exit_code": 0,
+      "stdout": "PASS: Codex worker sandbox and PF-first governance\n",
+      "stderr": "",
+      "seconds": 0.801
+    },
+    {
+      "name": "smoke_worker_run_shell",
+      "exit_code": 0,
+      "stdout": "PASS: worker-run shell regressions smoke\n",
+      "stderr": "",
+      "seconds": 77.999
+    },
+    {
+      "name": "smoke_work_resource_binding",
+      "exit_code": 0,
+      "stdout": "PASS: Work resource binding isolation/pinning/current access/metadata/fulltext/subsets/provenance; symlink=unsupported by host\n",
+      "stderr": "",
+      "seconds": 148.276
+    }
+  ],
+  "finished_at": "2026-09-26T03:40:18.153937+00:00"
+}

@@ -1,8 +1,11 @@
 # Подключение проекта
 
-Project onboarding создаёт в проекте папку `.pf/`, связывает проект с
-workplace, добавляет launcher среды выполнения и формирует стартовые инструкции
-для агента.
+Project onboarding создаёт корневой `AGENTS.md`, скрытые `.pf/AGENTS.md`
+и `.pf/agent-entry.json`, состояние процесса в `.pf/`, связь с workplace и
+проектный launcher. Созданный `first-assignment.yaml` — заготовка совместимости,
+а не обязательная стадия работы. START больше не нужен и не создаётся.
+Существующие файлы сохраняются без изменений, в том числе при `--force`;
+статус, doctor и repair не требуют и не воссоздают START.
 
 Запускайте project onboarding только после того, как workplace существует и
 нужные общие ресурсы уже созданы, зарегистрированы или явно признаны
@@ -25,9 +28,12 @@ python bin/pf.py agent-start-prompt --project-root ../my-project
 
 Внутри подключенного проекта:
 
-Агент начинает с `.pf/START_AGENT_HERE.md` и использует `pf.context`, при
-необходимости `pf.search`, затем `pf.resolve` и `pf.work.start` для существенной
-работы. Generic onboarding не устанавливает host-specific Codex hooks и не
+Агент читает корневой `AGENTS.md` (в старом проекте без него — `.pf/AGENTS.md`), затем использует `pf.context`, при необходимости
+`pf.search`/`pf.resolve` и `pf.work.start`. Возвращённые Run/assignment/capsule
+используются в `pf.work.state` и `pf.work.transition` до `run_completed`;
+при `process_choice_required` выбирается предложенный процесс.
+`agent-start-prompt` только печатает подсказку, не меняя файлы. См.
+[политику входа](../concepts/agent-entry.md). Generic onboarding не устанавливает host-specific Codex hooks и не
 требует Runtime, MCP или manual Ledger session. Doctor и context refresh
 остаются operator/advanced diagnostics.
 

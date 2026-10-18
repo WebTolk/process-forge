@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "run": {
+    "id": "core-f06-f08-shell-20260910",
+    "title": "F06-F08 registry ownership and optional CLI paths",
+    "process": "multi-agent-task-orchestration"
+  },
+  "orchestrator": {
+    "role": "orchestrator",
+    "responsibilities": [
+      "architecture and sequential ownership",
+      "real regression acceptance",
+      "integration and governed closure"
+    ]
+  },
+  "runtime": {
+    "default_driver": "codex-exec",
+    "supervisor_profile": "default",
+    "start_policy": "manual",
+    "max_parallel_workers": 1
+  },
+  "workers": [
+    {
+      "id": "f0608-cli",
+      "title": "f0608-cli",
+      "role": "worker",
+      "process": "task-batch-execution",
+      "objective": "Execute bounded brief .pf\\artifacts\\publish-f06-f08-20260910/f0608-cli-brief.md",
+      "execution_mode": "implementation",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        "tools/processforge.py",
+        "tools/smoke_cli_audit_f0608.py",
+        ".pf\\artifacts\\publish-f06-f08-20260910/f0608-cli/**",
+        ".pf/tmp/f0608-cli/**"
+      ],
+      "allowed_read_files": [
+        "src/**",
+        "tools/**",
+        "docs/**",
+        "schemas/**",
+        "processes/**",
+        "templates/**",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**",
+        ".pf\\artifacts\\publish-f06-f08-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf\\artifacts\\publish-f06-f08-20260910/f0608-cli-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "f0608-cli-report",
+          "path": ".pf\\artifacts\\publish-f06-f08-20260910/f0608-cli/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf\\artifacts\\publish-f06-f08-20260910/f0608-cli/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "f0608-review",
+      "title": "f0608-review",
+      "role": "reviewer",
+      "process": "task-batch-execution",
+      "objective": "Execute bounded brief .pf\\artifacts\\publish-f06-f08-20260910/f0608-review-brief.md",
+      "execution_mode": "assurance",
+      "writer": false,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        ".pf\\artifacts\\publish-f06-f08-20260910/f0608-review/**",
+        ".pf/tmp/f0608-review/**"
+      ],
+      "allowed_read_files": [
+        "src/**",
+        "tools/**",
+        "docs/**",
+        "schemas/**",
+        "processes/**",
+        "templates/**",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**",
+        ".pf\\artifacts\\publish-f06-f08-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf\\artifacts\\publish-f06-f08-20260910/f0608-review-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "f0608-review-report",
+          "path": ".pf\\artifacts\\publish-f06-f08-20260910/f0608-review/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf\\artifacts\\publish-f06-f08-20260910/f0608-review/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [
+        "f0608-cli"
+      ],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    }
+  ],
+  "integration": {
+    "required": true,
+    "role": "orchestrator",
+    "expected_output": ".pf\\artifacts\\publish-f06-f08-20260910/integration-report.md"
+  },
+  "metadata": {
+    "carrier_run": "garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0",
+    "authorization": "User requests commit/push dev, continued remediation by junior PF shell workers, and installed Core update/test. Primary owns installed update and acceptance. One source writer."
+  }
+}

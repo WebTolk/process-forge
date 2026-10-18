@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-c",
+    "import sys; sys.path.insert(0, sys.argv[1]); from smoke_work_evidence_freshness import test_saved_file_changed_and_resubmitted; test_saved_file_changed_and_resubmitted()",
+    "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-evidence-public-4x44631r\\public\\tools"
+  ],
+  "cwd": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-evidence-public-4x44631r\\public",
+  "exit_code": 1,
+  "seconds": 16.44
+}

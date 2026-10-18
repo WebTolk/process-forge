@@ -1,0 +1,17 @@
+{
+  "time": "2026-09-26T20:45:09.063907+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "server",
+    "status",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"activity\": {\"backlog\": null, \"event_rate\": null, \"hooks\": null, \"leases\": null, \"mcp\": null, \"sessions\": null, \"work_waiting\": null, \"workers\": null}, \"cli_version\": \"1.1.0\", \"issues\": [], \"kind\": \"pf.runtime.monitor\", \"metrics\": {\"age_seconds\": 8.5, \"groups\": {\"leases\": {\"counts\": {\"expired\": 4, \"held\": 0, \"inactive\": 0}, \"coverage\": \"complete\", \"issues\": [], \"observed\": {\"expired\": 4, \"held\": 0, \"inactive\": 0}, \"source\": \"lease_records\"}, \"registrations\": {\"counts\": {\"projects\": 3, \"sessions\": 96}, \"coverage\": \"complete\", \"issues\": [], \"observed\": {\"projects\": 3, \"sessions\": 96}, \"source\": \"host_registration_cache\"}, \"sessions\": {\"counts\": {\"offline\": null, \"online\": null, \"stale\": null}, \"coverage\": \"partial\", \"issues\": [\"invalid\"], \"observed\": {\"offline\": 68, \"online\": 1, \"stale\": 40}, \"source\": \"agent_presence_ttl\"}, \"work\": {\"counts\": {\"blocked\": null, \"in_progress\": null}, \"coverage\": \"partial\", \"issues\": [\"budget\", \"coverage\"], \"observed\": {\"blocked\": 2, \"in_progress\": 3}, \"source\": \"run_records\"}, \"workers\": {\"counts\": {\"running\": null}, \"coverage\": \"partial\", \"issues\": [\"coverage\"], \"observed\": {\"running\": 0}, \"source\": \"worker_status_records\"}}}, \"observed_at\": \"2026-09-26T20:45:08.982035+00:00\", \"registrations\": {\"freshness\": {\"age_seconds\": 8.5, \"status\": \"fresh\"}, \"projects\": 3, \"sessions\": 96}, \"runtime\": {\"health\": \"ready\", \"instance_version\": \"1.0.0-poc\", \"lifecycle\": \"ready\", \"owner_alive\": true, \"owner_pid\": 19204, \"readiness\": \"ready\"}, \"scheduler\": {\"jobs\": [{\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"director\"}, {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"inspector\"}, {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"ledger\"}, {\"freshness\": {\"age_seconds\": 8.5, \"status\": \"fresh\"}, \"last_result\": \"failed\", \"name\": \"metrics\"}, {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"projection\"}], \"source\": \"cached_job_results\"}, \"schema_version\": 1, \"source\": \"bounded_local_state_and_loopback_readyz\", \"state_freshness\": {\"age_seconds\": 9.0, \"status\": \"fresh\"}, \"workplace\": \"processforge-workplace\"}\n",
+  "stderr": ""
+}

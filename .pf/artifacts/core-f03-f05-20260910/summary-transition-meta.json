@@ -1,0 +1,20 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\core-f03-f05-20260910\\summary-evidence.json",
+    "--notes",
+    "F03-F05 summary obligations satisfied with durable scoped evidence; F06-F12 and full release qualification remain separate.",
+    "--json"
+  ],
+  "exit_code": 0,
+  "seconds": 17.539
+}

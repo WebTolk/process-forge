@@ -47,9 +47,16 @@ def main() -> int:
         search = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "project-profile"})
         resolved = call_mcp(workplace, "pf.resolve", {"project_root": str(project), "resource_id": f"project.{project_id}:project-profile"})
         work = call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Perform task from task.md"})
-        if context.get("mode") != "garage" or search.get("total") != 1:
+        # A new project selects its generated profile for context/resolve, but
+        # the one physical search index is built only from registered Workplace
+        # resources. An empty fresh corpus is therefore a valid first-run
+        # Garage state and must not block starting governed work.
+        if (context.get("mode") != "garage"
+                or search.get("total") != 0
+                or search.get("search", {}).get("status") != "empty"):
             raise AssertionError({"context": context, "search": search})
-        if resolved.get("resource", {}).get("status") != "available":
+        if (resolved.get("resource", {}).get("status") != "available"
+                or resolved.get("resource", {}).get("scope") != "project_context"):
             raise AssertionError(resolved)
         if work.get("action") != "created_new":
             raise AssertionError(work)

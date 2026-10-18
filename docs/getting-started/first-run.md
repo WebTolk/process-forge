@@ -1,5 +1,10 @@
 # First Run
 
+First complete [installation](installation.md) and its
+[requirements/preflight](../requirements.md). Use the same Python environment
+for these commands and later project launchers. Garage work needs no Runtime,
+MCP, hooks or manual Ledger session.
+
 First run has two operational initialization processes:
 
 - `workplace-initialization`: prepares the local workplace, registries, packages, tools, and knowledge roots.
@@ -33,6 +38,14 @@ python bin/pf.py workplace-init --workplace ../pf-workplace --profile software-d
 python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
 python bin/pf.py agent-start-prompt --project-root ../my-project
 ```
+
+The project now has root `AGENTS.md`, hidden `.pf/AGENTS.md` and
+`.pf/agent-entry.json`. START is no longer needed or generated; existing START
+files stay untouched. `agent-start-prompt` only prints current guidance without
+writing files. Unmigrated projects explicitly
+use hidden entry. Ordinary work follows `pf.context`, `pf.work.start`,
+`pf.work.state` and `pf.work.transition` to `run_completed`, using returned
+Run/assignment/capsule identities. See [entry policy](../concepts/agent-entry.md).
 
 Inside `../my-project`, run ProcessForge through `pf` or the project-local runtime launcher:
 

@@ -1,0 +1,30 @@
+{
+  "status": "prepared_for_review_not_applied",
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "archive_sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+  "archive_bytes": 2538757,
+  "proposed_urls": [
+    "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.zip",
+    "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.manifest.json"
+  ],
+  "proposed_channel_version": "1.2.0",
+  "migration_required": true,
+  "metadata_followup_files": [
+    "checksums/processforge.sha256",
+    "release/1.2.0/processforge-1.2.0.manifest.json",
+    "release/updates/processforge-stable.json",
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ],
+  "checksum_entries_changed": [
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ],
+  "patch_sha256": "f476d027c86c72a4c94f419645d2c82ca13d484e201331121e24078ffdac71ad",
+  "patch_file": "publication-metadata.patch.gz",
+  "patch_gzip_sha256": "2ce219686330152fbfbf883801014b8e4dd96d5da4a96842d7ed1039b3e856ed",
+  "active_channel_changed": false,
+  "source_candidate_changed": false,
+  "historical_110_metadata_preserved": true,
+  "confirmation": "Source/publication operations await the release decision; staged metadata must not be promoted before assets exist."
+}

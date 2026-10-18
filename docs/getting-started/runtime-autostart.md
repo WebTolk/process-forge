@@ -11,11 +11,17 @@ ProcessForge has two different startup models:
 Garage does not require PF Runtime. Install Runtime autostart only for a Forge
 workplace whose coordination model requires the long-lived service. On Linux,
 Runtime may be started manually or by operator-managed background tooling;
-managed `systemd --user` installation is not provided in 1.1.0.
+managed `systemd --user` installation is not provided by the current CLI.
+The autostart backend reports `unsupported` outside Windows.
 
 Do not register `tools/pf_runtime/mcp_server.py` with Windows autostart. A
 detached stdio MCP process has no connected MCP client and cannot serve useful
 JSON-RPC traffic.
+
+These are operator setup and maintenance commands. An ordinary project agent
+must not install, start, restart or repair Runtime, MCP or hooks. Use the same
+Python environment as in [installation](installation.md), and budget optional
+processes separately as described in [requirements](../requirements.md).
 
 ## Manual Runtime Lifecycle
 
@@ -79,8 +85,9 @@ python bin/pf.py runtime status --workplace <workplace>
 python bin/pf.py runtime doctor --workplace <workplace>
 ```
 
-Moving Python or the ProcessForge installation changes the scheduled command and
-requires reinstalling the task.
+Moving Python, its virtual environment or the ProcessForge installation changes
+the scheduled command and requires reinstalling the task. Shell activation is
+not inherited by Task Scheduler; the configured interpreter must have PyYAML.
 
 ## Codex MCP Registration
 

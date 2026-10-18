@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "changed_files": [
+    "checksums/processforge.sha256",
+    "docs/concepts/session-telemetry.md",
+    "docs/ru/concepts/session-telemetry.md",
+    "tools/processforge.py",
+    "tools/smoke_process_event_concurrency.py"
+  ],
+  "unchanged_public_files": 987,
+  "source_sha256": {
+    "docs/concepts/session-telemetry.md": "11255366bf901afb2a3ca14021b741110b42e3d04a16acc912b190555475ffb0",
+    "docs/ru/concepts/session-telemetry.md": "014781f52fbe82f101f6bb027eedcea668380f91170ec1e18c3894522bac3898",
+    "tools/processforge.py": "b11077ff00e16b11db20cf38cae0ab2b1004f6f81ac3f3a8756adbc344de8d17",
+    "tools/smoke_process_event_concurrency.py": "d340b85c485f34fd18e11d5fb8114f50f515c21125d5bea12e7093a97231252a",
+    "checksums/processforge.sha256": "19a4b7679185d14e794102dd8bbfdee7318f9a06995eebd08189da64189c7912"
+  },
+  "checks": {
+    "central-replay": 0,
+    "stage-events": 0,
+    "fixture-schemas": 0,
+    "registry-lock": 0,
+    "checksums": 0,
+    "central-ingress": 0,
+    "public-cleanliness": 0
+  },
+  "concurrency_and_private_repair_tests": "previously executed PASS, see green-observation.md; same tested code retained",
+  "live_journal": "not yet repaired; expected single historical invalid fragment preserved",
+  "public_fixture": "durable non-release validation input; not an installable archive"
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/project-configuration.schema.json",
+  "title": "Project operational configuration overrides",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "garage_hooks": {"type": ["boolean", "null"], "default": null},
+        "temporary_files": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "mode": {"enum": ["notify", "off", null], "default": null},
+            "max_age_hours": {"type": ["number", "null"], "minimum": 1, "maximum": 87600, "default": null}
+          }
+        }
+      }
+    },
+    "logging": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "raw_hooks": {"type": ["boolean", "null"], "default": null},
+        "events": {"type": ["boolean", "null"], "default": null}
+      }
+    }
+  }
+}

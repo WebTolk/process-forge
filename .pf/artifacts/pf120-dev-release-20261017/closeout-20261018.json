@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-17T20:41:00.022676+00:00",
+  "native_action": "run_completed",
+  "run_id": "garage-pf120-dev-release-20261017-package-committed-work-metadata-projec",
+  "run_status": "completed",
+  "assignment_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu",
+  "assignment_status": "done",
+  "context_id": "pf120-dev-release-20261017-package-committed-work-metadata-projection-qu-capsule",
+  "capsule_checksum": "sha256:9b9b49dd8a156c764ef7517f8f96b5b3f164ae9ce3216cc94c3489c0beff46df",
+  "context_validation": "valid",
+  "execution_readiness": "ready",
+  "blockers": [],
+  "native_process": {
+    "fingerprint": "sha256:3de57fa4ba0bd7a2b7e34d9f94273fa856fbc5ac34d115a4d575c79ac0c78f6e",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.0"
+  },
+  "native_stages_completed_this_continuation": [
+    "release-delivery",
+    "evolve"
+  ],
+  "dev_candidate_accepted": true,
+  "qualified_product_source": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+  "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
+  "actual_connected_host_acceptance": "actual-host-acceptance-20261018.json",
+  "actual_host_context_median_seconds": 2.021,
+  "doctors": {
+    "task": {
+      "status": "passed",
+      "exit_code": 0,
+      "receipt": "accepted-task-doctor-20261018.json"
+    },
+    "run": {
+      "status": "passed",
+      "exit_code": 0,
+      "receipt": "accepted-run-doctor-20261018.json"
+    },
+    "continuation": {
+      "status": "passed",
+      "exit_code": 0,
+      "receipt": "accepted-continuation-doctor-20261018.json"
+    }
+  },
+  "review": "acceptance-review-20261018.md",
+  "historical_continuation": {
+    "id": "pf120-dev-mcp-reconnect-20261017",
+    "current_status": "blocked",
+    "reason": "work_is_terminal",
+    "meaning": "Expected after successful closeout; must not resume terminal Work."
+  },
+  "product_changes": false,
+  "apply_server_restart_context_refresh_repeated": false,
+  "stable_publication": "not performed; outside this dev-delivery Work",
+  "native_transition_evidence_sha256": "3b7c207e3efad5bc40e4f691db5d2d5fddfd2be39ce2efc2520933f07cdaf8f4",
+  "delivery_readback": "delivery-publication-20261018.json is recorded after the scoped commit and both remote readbacks."
+}

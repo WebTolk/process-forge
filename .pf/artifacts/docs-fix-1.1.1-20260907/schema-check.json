@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/validate-process-forge-schemas.py"
+  ],
+  "started_at": "2026-09-07T13:55:14.126509+00:00",
+  "finished_at": "2026-09-07T13:55:41.399682+00:00",
+  "elapsed_seconds": 27.273,
+  "exit_code": 0,
+  "output": "PASS: ProcessForge structure and JSON Schema validation passed.\n"
+}

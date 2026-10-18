@@ -1,0 +1,9 @@
+{
+  "candidate_removed": true,
+  "target_verified_inside_own_task": true,
+  "clean_worktree_verified": true,
+  "source_commit_retained": "25cf43b413f19cef1c0f4aa53ed66a5f535bd069",
+  "archive_retained": true,
+  "sidecar_retained": true,
+  "measurement_and_qualification_scripts_retained_as_evidence": true
+}

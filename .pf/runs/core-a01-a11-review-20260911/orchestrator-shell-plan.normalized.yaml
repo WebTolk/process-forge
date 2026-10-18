@@ -1,0 +1,129 @@
+schema_version: 1
+run:
+  id: core-a01-a11-review-20260911
+  title: Independent A01-A11 remediation review
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 2
+  model: ""
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: review-runtime-core
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/core-a01-a11-20260911/review-runtime-core/**
+      - .pf/tmp/review-runtime-core/**
+    allowed_read_files:
+      - src/processforge_core/local_resource_search.py
+      - src/processforge_core/core_update.py
+      - tools/pf_runtime/service.py
+      - tools/smoke_runtime_scheduler_failure_isolation.py
+      - tools/smoke_runtime_singleton_orphan.py
+      - tools/smoke_search_file_root_containment.py
+      - tools/smoke_core_update_migration_sources.py
+      - tools/smoke_long_lived_runtime.py
+      - tools/smoke_domain_neutral_core_helpers.py
+      - tools/processforge_subprocess.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/logs/core-a01-a11-20260911.md
+      - .pf/AGENTS.md
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: review-runtime-core-report
+        path: .pf/artifacts/core-a01-a11-20260911/review-runtime-core/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/review-runtime-core/report.md
+    depends_on:
+      []
+  -
+    id: review-mcp-reports
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+      - .pf/tmp/review-mcp-reports/**
+    allowed_read_files:
+      - tools/processforge.py
+      - tools/pf_runtime/host.py
+      - tools/pf_runtime/mcp_server.py
+      - tools/pf_runtime/session_read.py
+      - tools/pf_runtime/codex_hooks.py
+      - tools/smoke_expected_report_containment.py
+      - tools/smoke_authenticated_report_content.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - tools/smoke_classifier_distribution_parity.py
+      - tools/smoke_session_identity_roundtrip.py
+      - tools/smoke_codex_lifecycle_identity.py
+      - tools/smoke_domain_neutral_core_helpers.py
+      - tools/processforge_subprocess.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/logs/core-a01-a11-20260911.md
+      - .pf/AGENTS.md
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: review-mcp-reports-report
+        path: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+    depends_on:
+      []

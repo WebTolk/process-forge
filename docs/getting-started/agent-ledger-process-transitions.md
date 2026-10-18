@@ -1,42 +1,48 @@
 # Agent Ledger and Process Transitions
 
-Agent Ledger is CLI-managed attendance/session state, not a separate agent.
-For the default single-agent `1-1-1-1` flow, use session aliases and do not
-grant an explicit lease to yourself:
+Agent Ledger records attendance and sessions through the CLI; it is not a
+separate agent. It is optional for ordinary sessionless Garage work. Use these
+operator examples only when explicit session tracking or Director coordination
+is selected; a single-agent `1-1-1-1` session does not need a lease to itself.
+The commands below assume an onboarded project and an existing workplace:
 
 ```bash
-python bin/pf.py session-start --workplace <workplace> --project-root . --agent primary-agent --process task-batch-execution
-python bin/pf.py session-heartbeat --project-root .
-python bin/pf.py session-status --project-root . --json
-python bin/pf.py session-end --project-root .
+python .pf/runtime/bin/pf.py session-start --workplace <workplace> --project-root . --agent primary-agent --process task-batch-execution
+python .pf/runtime/bin/pf.py session-heartbeat --project-root .
+python .pf/runtime/bin/pf.py session-status --project-root . --json
+python .pf/runtime/bin/pf.py session-end --project-root .
 ```
 
-Create a workplace, register agents, and check availability:
+When the workplace is already initialized, register agents and check availability:
 
 ```bash
-python bin/pf.py workplace-init --workplace <workplace> --apply
-python bin/pf.py agent-register --workplace <workplace> --agent director-local --role director --role orchestrator
-python bin/pf.py agent-checkin --workplace <workplace> --agent director-local --role director --role orchestrator
-python bin/pf.py agent-availability --workplace <workplace> --role director --json
+python .pf/runtime/bin/pf.py agent-register --workplace <workplace> --agent director-local --role director --role orchestrator
+python .pf/runtime/bin/pf.py agent-checkin --workplace <workplace> --agent director-local --role director --role orchestrator
+python .pf/runtime/bin/pf.py agent-availability --workplace <workplace> --role director --json
 ```
 
 Create route and handoff packages in a project:
 
 ```bash
-python bin/pf.py process-route-list --project-root .
-python bin/pf.py handoff-create --project-root . --route <route-id> --from-run <run-id> --id <handoff-id> --apply
-python bin/pf.py handoff-status --project-root . --handoff <handoff-id> --workplace <workplace> --json
-python bin/pf.py agent-director-tick --workplace <workplace> --project-root .
+python .pf/runtime/bin/pf.py process-route-list --project-root .
+python .pf/runtime/bin/pf.py handoff-create --project-root . --route <route-id> --from-run <run-id> --id <handoff-id> --apply
+python .pf/runtime/bin/pf.py handoff-status --project-root . --handoff <handoff-id> --workplace <workplace> --json
+python .pf/runtime/bin/pf.py agent-director-tick --workplace <workplace> --project-root .
 ```
 
-For shell workers:
+For shell workers, prepare an answers file from the distribution example
+`examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml`.
+Pass its actual path; that example is not automatically copied into the project:
 
 ```bash
-python bin/pf.py orchestrator-shell-plan-create --project-root . --run orchestrated-work --title "Orchestrated work" --answers examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml --apply
-python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --model <model> --apply
+python .pf/runtime/bin/pf.py orchestrator-shell-plan-create --project-root . --run orchestrated-work --title "Orchestrated work" --answers <answers-file> --apply
+python .pf/runtime/bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --model <model> --apply
 ```
 
-Shell-agent plan fields are behavioral. `allow_write_scope_overlap: true` changes generated assignment and capsule overlap policy and supervisor scheduling for that plan. Subagent policy is copied into the capsule and enforced by `worker-run collect`.
+Shell-agent plan fields affect execution. `allow_write_scope_overlap: true`
+changes generated assignment/capsule overlap policy and inspector scheduling.
+Keep it disabled for ordinary independent writers. Subagent policy is copied
+into the capsule and enforced by `worker-run collect`.
 
 `--model` is optional. When present, it applies to all shell workers in the
 plan and is exposed through assignment/capsule metadata, `PF_AGENT_MODEL`, and

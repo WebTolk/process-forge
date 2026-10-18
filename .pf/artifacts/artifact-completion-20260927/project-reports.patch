@@ -1,0 +1,884 @@
+--- a/.pf/artifacts/README.md
++++ b/.pf/artifacts/README.md
+@@ -1,5 +1,47 @@
+-# Artifacts
++# ProcessForge project artifacts
+ 
+-Artifacts are durable outputs from assignments and stages.
++Start here for the current project knowledge and delivery evidence. Updated on
++2026-09-27 by the governed artifact-completion Work.
+ 
+-Use `templates/artifact-template.md` for new artifacts.
++## Current project knowledge
++
++- [Project profile](project-profile.md): purpose, layers and supported behavior.
++- [Repository map](repository-map.md): code, product data and private process state.
++- [Project conventions](project-conventions.md): ownership, evidence and delivery.
++- [Tools](toolchain-detection-report.md), [MCP](mcp-capability-report.md),
++  [templates](template-matching-report.md), [resource selection](global-resource-matching-report.md).
++
++## Required artifact completeness
++
++- [Complete artifact set for this Work](artifact-completion-20260927/README.md):
++  all 29 artifact definitions, with explicit applicability decisions.
++- [T01-T10 coverage matrix](artifact-completion-20260927/coverage.md):
++  340 mandatory artifact-ID bindings across 17 completed delivery works.
++- [Machine-readable evidence](artifact-completion-20260927/coverage.json):
++  exact assignment paths, hashes and historical reference findings.
++- [Verification](artifact-completion-20260927/test-report.md) and
++  [documentation handoff](../handoffs/artifact-completion-20260927.md).
++
++## Accepted implementation delivery
++
++[T07 final delivery](t07-engine-20260926/final/delivery.md) and
++[closeout](t07-engine-20260926/final/closeout.md) identify installed build
++`ddff5983`, the standard Core update, 1015 verified owned files and the recorded
++53-check installed qualification. [T10 closeout](t10-operator-runtime-fix-20260926/closeout.md)
++records completion of the local operator/monitor work. Full per-task evidence,
++including T01-T09, is linked from the coverage matrix.
++
++The qualified strict-egress route is managed HTTP/JSON on Windows. Native and
++isolated-local strict routes remain unsupported. Connected host MCP reload is
++not established by installed CLI tests. These boundaries are part of acceptance.
++
++## Historical material
++
++Older bootstrap reports, generated onboarding/classification reports, proposals,
++reviews and run summaries retain their original date and meaning. Root files
++such as `changed-files.md` and `consolidated-roadmap.md` describe bootstrap work;
++they are not current delivery summaries. Hash-recorded evidence and capsules
++must not be rewritten to make a new report appear complete.
++
++New artifacts follow [artifact-template](../../templates/artifact-template.md).
++Use current context/Work state for lifecycle truth; this index is navigation.
+--- a/.pf/artifacts/project-profile.md
++++ b/.pf/artifacts/project-profile.md
+@@ -1,80 +1,53 @@
+ # Project Profile
+ 
+-## Status
++## Status and purpose
+ 
+-observed
++Reviewed from project source and delivery evidence on 2026-09-27. ProcessForge
++is a file-first framework for defining, versioning and executing governed work.
++Assignments, immutable execution contexts, artifacts, gates and handoffs make
++work reproducible across executor providers. Runtime, MCP and provider adapters
++extend the file model; they are not prerequisites for Garage/file-only work.
+ 
+-## Project
++## Identity and implementation
+ 
+-- id: process-forge
+-- name: ProcessForge
+-- type: processforge-development
++- Project id: `process-forge`; manifest type: `processforge-development`.
++- Current classifier type: `software.python`; this describes the implementation,
++  not a mandatory platform overlay.
++- Product version: `1.1.0`. Exact accepted installed build: `ddff5983`.
++- Implementation: Python; process/package/config data: YAML and JSON; schemas:
++  JSON Schema; documentation: Markdown. Runtime dependency: `PyYAML>=6.0`.
++- Python 3.11+ is recommended by the project README. No platform or toolchain
++  overlay is selected in the current project context.
++- Default project process: `software-feature-development@1.1.0`.
+ 
+-## Purpose
++## Layers and present behavior
+ 
+-Unknown until reviewed.
++Core owns context/pinning, lifecycle, authorization, evidence and durable events.
++Official processes/packages are extension data under `packs/official/`.
++Workplace configuration is separate from project state. Provider adapters and
++MCP are integration boundaries. See [repository map](repository-map.md).
+ 
+-## Platforms
++The T01-T10 delivery includes Work contracts, authorized resource access,
++normalized context, provider adapters, prepared immutable input, integrated
++acceptance, optional diagnostics, a local monitor and the T07 egress engine.
++The qualified strict-egress route is managed HTTP/JSON on Windows. Native Codex,
++generic-shell and isolated-local strict egress remain unsupported. A prior
++installed-process test is not proof that a connected application MCP reloaded.
+ 
+-- None.
++## Ownership, privacy and work entry
+ 
+-## Languages
++Use `.pf/AGENTS.md`, current context and the selected assignment/capsule. One
++writer owns each file scope. Approved artifacts and recorded capsules are
++protected. Public distribution files must not contain machine paths or secrets;
++`.pf` evidence, Runtime state, private local configuration, archives and backups
++have separate delivery/privacy boundaries. Retain declared durable evidence.
+ 
+-- None.
++Start with the [artifact index](README.md), [conventions](project-conventions.md)
++and [verified delivery](t07-engine-20260926/final/closeout.md).
+ 
+-## Main Directories
++## Evidence
+ 
+-- .gitignore
+-- .pf
+-- .processforge-releaseignore
+-- .tmp
+-- CHANGELOG.md
+-- LICENSE
+-- NOTICE
+-- QUICKSTART.md
+-- QUICKSTART.ru.md
+-- README.md
+-- README.ru.md
+-- VERSION
+-- bin
+-- checksums
+-- dist
+-- docs
+-- examples
+-- logs
+-- packages
+-- packs
+-- policies
+-- processes
+-- prompts
+-- requirements.txt
+-- runtime
+-- schemas
+-- seeds
+-- src
+-- templates
+-- tools
+-- updates
+-- задания
+-
+-## Public Zones
+-
+-- .pf/process-forge.yaml
+-- .pf/hooks.yaml
+-- docs/
+-- root product assets
+-
+-## Private Zones
+-
+-- .pf/process-forge.local.yaml
+-- .pf/runtime/
+-- .pf/private-notes/
+-- .secrets/
+-
+-## Suggested Processes
+-
+-- project-initialization
+-
+-## Constraints
+-
+-- Keep local absolute paths out of public files.
++[Product README](../../README.md), [dependencies](../../requirements.txt),
++[project manifest](../process-forge.yaml),
++[delivery report](t07-engine-20260926/final/delivery.md),
++[current coverage](artifact-completion-20260927/coverage.md).
+--- a/.pf/artifacts/repository-map.md
++++ b/.pf/artifacts/repository-map.md
+@@ -1,352 +1,57 @@
+ # Repository Map
+ 
+-## Status
++Reviewed on 2026-09-27. This is a maintained responsibility map, not a recursive
++listing of historical temporary files. Paths below are relative to the repo.
+ 
+-observed
++## Runtime implementation
+ 
+-## Main Directories
++| Path | Responsibility |
++| --- | --- |
++| `bin/pf.py` | Public CLI launcher |
++| `tools/processforge.py` | Command registration and orchestration |
++| `src/processforge_core/bootstrap.py` | Core bootstrap |
++| `src/processforge_core/garage.py` | File-first Garage operations |
++| `src/processforge_core/process_execution.py` | Pinned process execution and transitions |
++| `src/processforge_core/work_context.py` | Work execution contexts/contracts |
++| `src/processforge_core/work_resources.py` | Work resource authorization |
++| `src/processforge_core/work_resource_material.py` | Bounded authorized material |
++| `src/processforge_core/prepared_input.py` | Prepared immutable executor input |
++| `src/processforge_core/egress/` | Policy, classification, views, storage, broker and transport |
++| `src/processforge_core/core_update.py` | Manifest-controlled Core updates |
++| `src/processforge_core/diagnostics.py` | Optional diagnostics |
++| `src/processforge_core/runtime_metrics.py` | Bounded local activity metrics |
++| `src/processforge_core/host_integration.py` | Host integration boundary |
++| `src/processforge_core/local_resource_search.py` | Local resource search |
++| `src/processforge_core/process_catalog/` | Process catalog |
++| `src/processforge_core/common/` | Shared Core helpers |
+ 
+-- .gitignore
+-- .pf
+-- .processforge-releaseignore
+-- .tmp
+-- CHANGELOG.md
+-- LICENSE
+-- NOTICE
+-- QUICKSTART.md
+-- QUICKSTART.ru.md
+-- README.md
+-- README.ru.md
+-- VERSION
+-- bin
+-- checksums
+-- dist
+-- docs
+-- examples
+-- logs
+-- packages
+-- packs
+-- policies
+-- processes
+-- prompts
+-- requirements.txt
+-- runtime
+-- schemas
+-- seeds
+-- src
+-- templates
+-- tools
+-- updates
+-- задания
++## Product data and validation
+ 
+-## Files
++| Path | Responsibility |
++| --- | --- |
++| `packs/official/` | Bundled domain processes and packages |
++| `processes/` | Core/custom process definitions and companions |
++| `packages/` | Knowledge/package manifests |
++| `schemas/` | JSON Schema contracts |
++| `templates/` | Assignment, artifact, review, handoff and other templates |
++| `docs/`, `docs/ru/` | English/Russian documentation |
++| `prompts/`, `examples/`, `seeds/` | Agent entry points and reusable examples |
++| `tools/smoke_*.py` | Behavioral smoke/regression checks |
++| `tools/validate-*.py` | Schemas, checksums and public-cleanliness checks |
++| `checksums/` | Public checksum inventory |
++| `dist/`, `updates/` | Distribution/update artifacts and metadata |
+ 
+-- .gitignore
+-- .pf/AGENTS.md
+-- .pf/adr/0001-processforge-product-boundary.md
+-- .pf/adr/0002-workplace-and-project-layer.md
+-- .pf/adr/0003-cascade-merge-model.md
+-- .pf/adr/0004-execution-context-package.md
+-- .pf/adr/0005-reusable-template-model.md
+-- .pf/adr/0006-process-evolution-model.md
+-- .pf/adr/0007-validation-strategy.md
+-- .pf/adr/0008-public-cleanliness-policy.md
+-- .pf/adr/README.md
+-- .pf/adr/agent-session-atomic-unit.md
+-- .pf/adr/config-driven-behavior-contract.md
+-- .pf/adr/director-ledger-inspector-boundary.md
+-- .pf/adr/file-flow-canonical-contract.md
+-- .pf/adr/pre-release-remediation-lifecycle-design-20260730.md
+-- .pf/adr/pre-release-remediation-no-compatibility-20260730.md
+-- .pf/adr/pre-release-remediation-provider-runtime-design-20260730.md
+-- .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+-- .pf/adr/pre-release-remediation-schema-authority-20260730.md
+-- .pf/adr/pre-release-remediation-transaction-design-20260730.md
+-- .pf/adr/public-core-and-dogfooding-boundary.md
+-- .pf/artifacts/README.md
+-- .pf/artifacts/agent-ledger-process-transitions-report.md
+-- .pf/artifacts/agent-reliability-20260813/audit-report.md
+-- .pf/artifacts/agent-session-model-report.md
+-- .pf/artifacts/audit-hypotheses-verification-report.md
+-- .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+-- .pf/artifacts/audits/post-runtime-supervisor/final-audit-report.md
+-- .pf/artifacts/audits/post-runtime-supervisor/release-tooling-worker.md
+-- .pf/artifacts/audits/post-runtime-supervisor/runtime-cli-worker.md
+-- .pf/artifacts/authoring-parity-backfill-audit-report.md
+-- .pf/artifacts/base-technologies-as-knowledge-packages-report.md
+-- .pf/artifacts/bilingual-documentation-report.md
+-- .pf/artifacts/bootstrap-scope.md
+-- .pf/artifacts/builtin-process-catalog-audit/inventory.yaml
+-- .pf/artifacts/builtin-process-catalog-audit/report.md
+-- .pf/artifacts/builtin-process-catalog-contract-report.md
+-- .pf/artifacts/builtin-process-catalog-doctor-report.json
+-- .pf/artifacts/central-agent-event-ingress-20260814/agent-event-capabilities-matrix.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-current-state-audit.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-plan.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/chat-capture-readiness-audit.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/chat-capture-slice-design.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/chat-model-inventory.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-correction.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-expanded-smoke-report-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-2-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-rereview-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-correction.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-rereview-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/conversation-telemetry-boundary-design.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/pause-checkpoint-20260815.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/provider-official-contracts-audit.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/replay-gap-audit.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-code-review.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-implementation-report.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-slice-design.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-smoke-correction-report.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-test-contract.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/session-replay-test-convention-audit.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/worker-event-id-correction-report-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/worker-lifecycle-reconciliation-report-20260820.md
+-- .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+-- .pf/artifacts/changed-files.md
+-- .pf/artifacts/codebase-audit-20260814/correct-worker-run-shell-smoke-report.md
+-- .pf/artifacts/codebase-audit-20260814/findings-validation.md
+-- .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+-- .pf/artifacts/codebase-audit-20260814/implementation-lifecycle-worker-report.md
+-- .pf/artifacts/codebase-audit-20260814/implementation-shell-regressions-worker-report.md
+-- .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+-- .pf/artifacts/codebase-audit-20260814/plan-driver-provenance-report.md
+-- .pf/artifacts/codebase-audit-20260814/plan-regression-interface-report.md
+-- .pf/artifacts/codebase-audit-20260814/process-contracts-report.md
+-- .pf/artifacts/codebase-audit-20260814/quality-public-surface-report.md
+-- .pf/artifacts/codebase-audit-20260814/remediation-implementation-report.md
+-- .pf/artifacts/codebase-audit-20260814/remediation-plan.md
+-- .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+-- .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+-- .pf/artifacts/codebase-audit-20260814/shell-workers-remediation-plan.md
+-- .pf/artifacts/codebase-audit-20260814/summary.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/codex-conversation-completeness-proof.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/codex-hook-installation-design.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/codex-hook-registration-and-conversation-audit.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/codex-pf-mcp-installation-design.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/final-validation.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/independent-architecture-review.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/independent-code-review.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/mcp-current-state-audit.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/mcp-implementation-report.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/mcp-security-review.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/mcp-session-binding-design.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/mcp-session-context-proof.md
+-- .pf/artifacts/codex-mcp-session-read-20260821/mcp-session-read-model-design.md
+-- .pf/artifacts/codex-worker-output-contract-20260814/output-contract-report.md
+-- .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+-- .pf/artifacts/codex-worker-utf8-fix-20260814/worker-utf8-fix-report.md
+-- .pf/artifacts/common-evolve-authoring-integration-report.md
+-- .pf/artifacts/config-behavior-audit/inventory.yaml
+-- .pf/artifacts/config-behavior-audit/report.md
+-- .pf/artifacts/config-behavior-stabilization-report.md
+-- .pf/artifacts/consolidated-roadmap.md
+-- .pf/artifacts/context-hardening-report.md
+-- .pf/artifacts/context-resolution-validation-report.md
+-- .pf/artifacts/core-boundary-scan-guards-report.md
+-- .pf/artifacts/core-file-model.md
+-- .pf/artifacts/director-inspector-boundary-audit/inventory.yaml
+-- .pf/artifacts/director-inspector-boundary-audit/report.md
+-- .pf/artifacts/director-inspector-boundary-report.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/documentation-update-report.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
+-- .pf/artifacts/distribution-release-docs-sync-20260821/release-gate-correction-report.md
+-- .pf/artifacts/docs-codebase-audit-2026-08-05.md
+-- .pf/artifacts/documentation-workplace-audit-20260720.md
+-- .pf/artifacts/domain-neutral-capability-resolution-report.md
+-- .pf/artifacts/domain-neutral-core-boundary-report.md
+-- .pf/artifacts/evolve-candidate-targeting-report.md
+-- .pf/artifacts/file-flow-agents/cli-lifecycle-agent-report.md
+-- .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+-- .pf/artifacts/file-flow-agents/runtime-hooks-agent-report.md
+-- .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+-- .pf/artifacts/file-flow-audit-report.md
+-- .pf/artifacts/file-flow-contract-fix-report.md
+-- .pf/artifacts/file-flow-fix-plan.md
+-- .pf/artifacts/final-pre-release-refinements-report.md
+-- .pf/artifacts/final-pre-release-two-task-summary.md
+-- .pf/artifacts/first-run-processes-report.md
+-- .pf/artifacts/first-run-python-cli-hardening-report.md
+-- .pf/artifacts/full-shell-agents-supervisor-test-report.md
+-- .pf/artifacts/global-update-entity-scope-addendum-20260720.md
+-- .pf/artifacts/global-update-source-design-subagent-report-20260720.md
+-- .pf/artifacts/guided-workplace-setup-multiagent-orchestration-report.md
+-- .pf/artifacts/heartbeat-contract-fix-report.md
+-- .pf/artifacts/init-implementation-report.md
+-- .pf/artifacts/initialization-docs-prompt-audit-20260724.md
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/baseline-audit.md
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/implementation-report.md
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/independent-review-waiver.md
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/live-hook-after.json
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/live-hook-worker.txt
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/live-validation.md
+-- .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/review-remediation.md
+-- .pf/artifacts/linked-workplace-resource-model-report.md
+-- .pf/artifacts/manual-dev-package-update-20260814/packaging-input-audit.md
+-- .pf/artifacts/manual-dev-package-update-20260814/release-src-packaging-audit.md
+-- .pf/artifacts/multiagent-assignment-contract-20260720.md
+-- .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+-- .pf/artifacts/multiagent-subagent-smoke-20260720.md
+-- .pf/artifacts/neutral-public-surface-cleanup-report.md
+-- .pf/artifacts/official-bundled-process-packs-report.md
+-- .pf/artifacts/package-roots-authoritative-report.md
+-- .pf/artifacts/parity/processes/authoring-parity-audit-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/bug-fix-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/content-production-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/context-resolution-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/documentation-mirror-import-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/guided-workplace-setup-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/knowledge-package-authoring-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/knowledge-package-improvement-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/knowledge-package-update-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/knowledge-resource-add-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/mcp-register-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/multi-agent-task-orchestration-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/platform-contract-authoring-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/platform-contract-install-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/process-authoring-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/process-supervisor-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/process-template-install-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/process-version-upgrade-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/processforge-update-check-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/project-initialization-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/project-onboarding-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/reusable-template-authoring-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/runtime-driver-registry-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/session-bootstrap-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/software-feature-development-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/summary.yaml
+-- .pf/artifacts/parity/processes/task-batch-execution-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/template-add-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/testing-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/tool-register-semantic-diff.yaml
+-- .pf/artifacts/parity/processes/workplace-initialization-semantic-diff.yaml
+-- .pf/artifacts/parity/summary.yaml
+-- .pf/artifacts/path-constants-resource-paths-report.md
+-- .pf/artifacts/pf-1-0-update-report-20260720.md
+-- .pf/artifacts/pf-layout-migration-proposal.md
+-- .pf/artifacts/pf-layout-snapshot-events-report.md
+-- .pf/artifacts/pf-long-lived-runtime-20260813/adapter-contract.md
+-- .pf/artifacts/pf-long-lived-runtime-20260813/report.md
+-- .pf/artifacts/pf-long-lived-runtime-20260813/self-hook-runtime-test.md
+-- .pf/artifacts/pf-migration-events-hooks-chat-report.md
+-- .pf/artifacts/pf-runtime-director-ledger-20260813/codex-events-reference.md
+-- .pf/artifacts/pf-runtime-director-ledger-20260813/codex-hooks.json
+-- .pf/artifacts/pf-runtime-director-ledger-20260813/poc-report.md
+-- .pf/artifacts/pf-runtime-mcp-20260813/architecture-report.md
+-- .pf/artifacts/platform-agnostic-flow-cleanup-report.md
+-- .pf/artifacts/platform-hardcode-cleanup-report.md
+-- .pf/artifacts/pre-release-product-audit-20260730.md
+-- .pf/artifacts/pre-release-remediation-agent-ledger.md
+-- .pf/artifacts/pre-release-remediation-agents/contract-architect.md
+-- .pf/artifacts/pre-release-remediation-agents/controlled-finish.md
+-- .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+-- .pf/artifacts/pre-release-remediation-agents/first-phases-final-reviewer.md
+-- .pf/artifacts/pre-release-remediation-agents/first-slice-reviewer.md
+-- .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+-- .pf/artifacts/pre-release-remediation-agents/integrated-reviewer.md
+-- .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+-- .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+-- .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+-- .pf/artifacts/pre-release-remediation-agents/provider-runtime-architect.md
+-- .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+-- .pf/artifacts/pre-release-remediation-agents/release-surface.md
+-- .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+-- .pf/artifacts/pre-release-remediation-agents/strict-contract-auditor.md
+-- .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+-- .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+-- .pf/artifacts/pre-release-remediation-agents/transaction-patch-scope-reviewer.md
+-- .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+-- .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+-- .pf/artifacts/pre-release-remediation-final-report-20260730.md
+-- .pf/artifacts/pre-release-remediation-plan-20260730.md
+-- .pf/artifacts/pre-release-remediation-report-20260730.md
+-- .pf/artifacts/pre-release-strict-contract-backlog-decision-20260730.md
+-- .pf/artifacts/process-authoring-mvp-report.md
+-- .pf/artifacts/process-directory-layout-split-report.md
+-- .pf/artifacts/process-run-task-batch-report.md
+-- .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+-- .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+-- .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-static-inventory.md
+-- .pf/artifacts/process-stage-contract-normalization-20260814/process-stage-contract-normalization-implementation.md
+-- .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+-- .pf/artifacts/process-tree-timeout-hardening-report.md
+-- .pf/artifacts/processforge-update-assessment.md
+-- .pf/artifacts/project-context-lock-model-report.md
+-- .pf/artifacts/project-context-refresh-report.md
+-- .pf/artifacts/project-coordination-modes-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/cli-integration-audit.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/cli-integration-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/codex-mcp-tool-visibility-audit.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/explicit-bindings-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/high-review-remediation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/lifecycle-remediation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/local-resource-search-design.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/mcp-patterns-for-processforge.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/orchestration-record.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/project-initialization-contract.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/project-initialization-current-state-audit-retry.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/project-initialization-current-state-audit.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/review-remediation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/runtime-primary-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/stdio-fixture-inventory.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/template-navigation-implementation-report.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/workplace-console-design.md
+-- .pf/artifacts/project-init-local-search-mcp-20260821/workplace-mcp-surface-audit.md
+-- .pf/artifacts/project-snapshot-refactor-report.md
+-- .pf/artifacts/projections/command-history.md
+-- .pf/artifacts/projections/stage-obligations.json
+-- .pf/artifacts/public-core-audit/inventory.md
+-- .pf/artifacts/public-core-audit/inventory.yaml
+-- .pf/artifacts/public-core-audit/migration-map.md
+-- .pf/artifacts/public-core-audit/report.md
+-- .pf/artifacts/python-core-refactor-phase-a-20260814/adapter-runtime-inventory.md
+-- .pf/artifacts/python-core-refactor-phase-a-20260814/architecture-reconciliation.md
++## Project-local process state
+ 
+-## Critical Files
++`.pf/AGENTS.md` and `.pf/process-forge.yaml` are the entry points. Assignments and
++runs live under `.pf/assignments/` and `.pf/runs/`. Immutable assignment capsules
++live under `.pf/contexts/assignment-capsules/`. Artifacts, reviews, ADRs, logs and
++handoffs have separate directories. `.pf/runtime/` contains derived operational
++state. Temporary work belongs under `.pf/tmp/`; declared durable evidence there
++is retained. No project-local `.agents` flow package was present at this review.
+ 
+-- .pf/process-forge.yaml
+-- .pf/process-forge.local.yaml
+-
+-## Review-Protected Zones
+-
+-- Existing brownfield files.
++Current navigation: [artifact index](README.md),
++[coverage matrix](artifact-completion-20260927/coverage.md),
++[egress design](../../docs/concepts/egress-engine.md),
++[Work context](../../docs/concepts/work-context.md),
++[Runtime monitor](../../docs/concepts/runtime-monitor.md).
+--- a/.pf/artifacts/project-conventions.md
++++ b/.pf/artifacts/project-conventions.md
+@@ -1,17 +1,58 @@
+ # Project Conventions
+ 
+-## Observed
++Confirmed from `.pf/AGENTS.md`, the pinned process, existing modules, templates
++and delivery evidence on 2026-09-27. These observations do not introduce a new
++global platform/toolchain policy.
+ 
+-- Existing file layout was scanned.
++## Work and ownership
+ 
+-## Confirmed
++Read current context before work. Start/resume the governed Work, read its
++assignment and immutable capsule, then use standard transitions with evidence.
++ProcessForge chooses stages. Do not hand-edit lifecycle YAML, rewrite capsules,
++silently skip optional stages or overwrite approved evidence. Keep unrelated
++dirty work intact. The current pinned process permits one primary agent and no
++subagents.
+ 
+-- None yet.
++## Names, code and data
+ 
+-## Unknown
++Use stable lowercase machine ids, consistent with existing process/artifact ids.
++Python modules/functions follow existing snake_case names; preserve established
++module boundaries and local style. Use UTF-8 text and explicit serialization.
++Schema, YAML/JSON configuration and Python validation must agree. Domain-specific
++rules belong in extension packages rather than hardcoded Core branches.
+ 
+-- Naming style.
+-- Coding style.
+-- Testing style.
+-- Documentation style.
+-- Packaging style.
++## Artifacts and review
++
++Use [artifact-template](../../templates/artifact-template.md),
++[review-template](../../templates/review-template.md) and
++[handoff-template](../../templates/handoff-template.md). Record objective,
++scope, inputs, changes, evidence, status and residual limits. Use append-only
++logs. Distinguish current knowledge from historical proof. A `path_hint` is not
++a mandatory filename. Do not mark a human approval when only self-review ran.
++On Windows use `work-transition --evidence-file` for structured evidence.
++Use UTF-8 file writes; the default PowerShell text-to-native pipe may be ASCII.
++
++## Verification and delivery
++
++Run checks relevant to the changed behavior. Existing Python checks live in
++`tools/smoke_*.py` and `tools/validate-*.py`. Public changes require the project
++schema/checksum/cleanliness gates; do not add unrelated test suites to a local
++documentation-only task. Record actual commands and results.
++
++Core delivery uses a qualified clean candidate, `release-pack`, consumer archive
++validation, then `core-update plan/apply/status` when installation is authorized.
++Preserve manifests and automatic backups. Source, archive, installed process and
++connected host/MCP acceptance are distinct. Do not reinstall for private `.pf`
++documentation changes. Runtime or host lifecycle actions require their own
++applicable authorization.
++
++## Documentation and privacy
++
++Public behavior docs have English/Russian counterparts where the project uses
++them. Keep public files free of secrets and machine-specific paths. Use local
++documentation first. Record unavailable checks honestly. Temporary directories
++belong under `.pf/tmp/`; protected historical evidence is never casual cleanup.
++
++Sources: [project instructions](../AGENTS.md),
++[pinned process source](../../packs/official/software-development/processes/software-feature-development.yaml),
++[delivery](t07-engine-20260926/final/delivery.md).
+--- a/.pf/artifacts/toolchain-detection-report.md
++++ b/.pf/artifacts/toolchain-detection-report.md
+@@ -1,25 +1,40 @@
+ # Toolchain Detection Report
+ 
+-## Found Project-Local Tools
++Observation date: 2026-09-27. No toolchain overlay is selected in the current
++context. Python is an observed implementation/runtime requirement, not an
++implicitly selected global contract.
+ 
+-None inferred from file names. Tool selection comes from loaded registries, platform contracts, and explicit project configuration.
++## Project tools
+ 
+-## Available Global Tools
++| Tool | Evidence and use |
++| --- | --- |
++| Python + PyYAML | `requirements.txt`; installed PF CLI and YAML inventory ran |
++| `bin/pf.py` | Standard CLI launcher; work state/transitions and diagnostics |
++| `tools/validate-process-forge-schemas.py` | Project schema validation |
++| `tools/validate-process-forge-checksums.py` | Public checksum inventory |
++| `tools/validate-public-cleanliness.py` | Public distribution privacy checks |
++| `tools/smoke_*.py` | Existing behavioral regression checks |
++| Git | Source identity, diff inspection and clean release candidate |
++| OpenSSL | T07 installed qualification uses TLS fixtures; prior delivery evidence |
+ 
+-- None.
++Python 3.11+ is recommended by the [product README](../../README.md).
++No PHP/frontend tooling is required by this documentation task.
+ 
+-## Missing Tools
++## Capability decisions
+ 
+-- None.
++The manifest requires repository_read, markdown_editing and schema_validation.
++It optionally declares repository_symbol_analysis, official_documentation_lookup
++and browser_verification. The pinned software process adds repository_write,
++test_running, review and stage-specific coordination/architecture roles.
+ 
+-## Required Capabilities
++Serena pattern search is available; Python symbol analysis is not configured.
++For this task, structured Python/PyYAML inventory and direct bounded file reads
++are the documented fallback. Native filesystem editing and the installed PF CLI
++work. No new global tool installation or capability waiver is needed.
+ 
+-- None.
++## Validation boundary
+ 
+-## Optional Capabilities
+-
+-- None.
+-
+-## Fallback Mapping
+-
+-- Missing required capabilities must be resolved before strict automation.
++This task runs artifact/reference/preservation checks and PF doctors. It does
++not repeat prior feature suites or claim browser/TLS testing occurred anew.
++See the [current test report](artifact-completion-20260927/test-report.md) and
++[prior installed acceptance](t07-engine-20260926/final/delivery.md).
+--- a/.pf/artifacts/mcp-capability-report.md
++++ b/.pf/artifacts/mcp-capability-report.md
+@@ -1,17 +1,21 @@
+ # MCP Capability Report
+ 
+-## Useful MCP
++Observed on 2026-09-27; registration, availability and operation success are
++different facts.
+ 
+-- None.
++| Provider/capability | Observation | Current decision |
++| --- | --- | --- |
++| ProcessForge `pf.context` | Tool exposed; call timed out after 60 seconds | Standard installed PF CLI fallback |
++| ProcessForge Work lifecycle | CLI work-start/work-state/work-transition operational | Continue governed file-first work |
++| Serena pattern search | Successfully read project instructions and reports | Use for bounded repository/document analysis |
++| Serena Python symbols | Active project has no configured language | Python/YAML inventory fallback; no symbol-analysis claim |
++| Browser verification | No web UI changed in this task | not_applicable |
+ 
+-## Matched MCP
++No MCP provider is made mandatory merely because it is installed. Current
++project context is fresh and execution-ready through the standard fallback.
++No Runtime/MCP/hook/Ledger start, restart, repair or configuration write is part
++of this artifact task. Connected host reload remains unverified.
+ 
+-- None.
+-
+-## Missing MCP
+-
+-- None.
+-
+-## Recommendations
+-
+-- Treat MCP providers as optional unless a process stage marks them required.
++Evidence: [task context](artifact-completion-20260927/execution-context-summary-r02.md),
++[verification report](artifact-completion-20260927/test-report.md),
++[earlier live check](../logs/delivery-recheck-20260927T0348Z.md).
+--- a/.pf/artifacts/template-matching-report.md
++++ b/.pf/artifacts/template-matching-report.md
+@@ -1,24 +1,29 @@
+ # Template Matching Report
+ 
+-## Matched Templates
++Reviewed on 2026-09-27 against the pinned software-feature-development process.
+ 
+-- template roots configured
++| Required template | Repository source | Application |
++| --- | --- | --- |
++| assignment-template | `templates/assignment-template.md` | Standard Work CLI generates assignment state |
++| artifact-template | `templates/artifact-template.md` | Metadata, summary, content and review in all 29 current artifacts |
++| review-template | `templates/review-template.md` | New artifact-completion review |
++| handoff-template | `templates/handoff-template.md` | New task completion handoff |
+ 
+-## Project Templates
++The flow manifest maps templates to the distribution `templates/` directory.
++The project `.pf/templates/` contains no local override files at this review.
++Project profile, conventions and map follow the corresponding template purpose,
++with actual source-backed content replacing generated detection placeholders.
+ 
+-- templates/
++Adaptation: body checksums in the new artifact bundle have explicit
++`content_section_utf8_lf` scope to avoid a recursive whole-file hash. PF records
++whole-file hashes separately when evidence is submitted. Self-review is labelled
++as such; no human approval is invented. Optional outputs state applicability and
++the reason instead of leaving template tokens or empty headings.
+ 
+-## Suggested Templates
++Do not use domain templates as a substitute for the pinned process. Global
++legacy development-flow skills, Joomla overlays and unrelated artifact-template
++creation workflows are not required here.
+ 
+-- assignment-template
+-- artifact-template
+-- review-template
+-- handoff-template
+-
+-## Templates Requiring Adaptation
+-
+-- Domain-specific templates need review before use.
+-
+-## Templates Not Safe To Use
+-
+-- Templates containing local absolute paths or credential values.
++Sources: [artifact template](../../templates/artifact-template.md),
++[process](../../packs/official/software-development/processes/software-feature-development.yaml),
++[current artifact index](artifact-completion-20260927/README.md).
+--- a/.pf/artifacts/global-resource-matching-report.md
++++ b/.pf/artifacts/global-resource-matching-report.md
+@@ -1,59 +1,38 @@
+-# Global Resource Matching Report
++# Resource Matching Report
+ 
+-## Matched Platforms
++Reviewed on 2026-09-27. This report describes declared and selected resources;
++it does not expand filesystem access or assert all global resources were loaded.
+ 
+-- None.
++## Selected Work resources
+ 
+-## Missing Required Platform Contracts
++| Resource id | Meaning | Selection |
++| --- | --- | --- |
++| `project.process-forge:project-profile` | Project profile note | Selected by the current capsule |
++| `project.process-forge:project-artifacts` | Project artifact reference collection | Selected by the current capsule |
+ 
+-- None.
++The project package declares these resources in
++[project.process-forge.yaml](../packages/project.process-forge.yaml). Profile
++loads when relevant with full-text indexing; artifact collection loads on demand
++with metadata indexing. Resource presence is not permission to publish its
++contents or bypass Work scope.
+ 
+-## Missing Required Platform Resources
++## Packages, platform and tools
+ 
+-- None.
++The manifest knowledge stack includes `processforge.core` from the distribution
++and `project.process-forge` from the project. The pinned software process requires
++`process-forge-core` and `processforge.official.software-development`.
++No platform/toolchain overlay or active specialization is selected. This does
++not imply Python is absent: it is the observed implementation language.
+ 
+-## Missing Recommended Platform Resources
++Required process templates are documented in the
++[template report](template-matching-report.md). Actual tools and MCP limitations
++are documented in the [tool report](toolchain-detection-report.md) and
++[MCP report](mcp-capability-report.md).
+ 
+-- None.
++## Readiness and limits
+ 
+-## Matched Packages
+-
+-- package roots configured
+-
+-## Matched Tools
+-
+-- None.
+-
+-## Matched MCP
+-
+-- None.
+-
+-## Matched Templates
+-
+-- template roots configured
+-
+-## Missing Required Capabilities
+-
+-- None.
+-
+-## Optional Missing Capabilities
+-
+-- None.
+-
+-## Capability Diagnostics
+-
+-- Missing required capabilities are registry declaration gaps, not proof that
+-  the active runtime lacks access.
+-- If runtime access was verified independently, record the evidence in
+-  `.pf/artifacts/capability-waivers.yaml` with `capability`, `status`,
+-  `reason`, and `evidence`.
+-- Prefer registering the real provider in the workplace registry when the
+-  capability should be reusable.
+-
+-## Conflicts
+-
+-- None.
+-
+-## Recommendations
+-
+-- Review missing required capabilities before using strict automated stages.
++Standard context check reported fresh resources and ready execution with no
++missing required capabilities. The connected MCP timed out; no waiver or global
++registration is inferred from that observation. Current Work uses installed CLI
++and directly verified local tools. Broader global docs/skills/platform roots are
++not imported into the project package by this task.

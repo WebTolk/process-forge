@@ -1,0 +1,5 @@
+[
+  {"kind":"artifact","artifact_id":"run-summary","status":"ready","path":".pf/artifacts/core-f01-f02-20260910/summary.md"},
+  {"kind":"artifact","artifact_id":"run-handoff","status":"ready","path":".pf/handoffs/core-f01-f02-20260910.md"},
+  {"kind":"gate","gate_id":"run-summary-created","status":"passed","summary":"Final summary and next-remediation handoff preserve F03-F12 and independently reproduced full-source Runtime startup blocker; no release claim."}
+]

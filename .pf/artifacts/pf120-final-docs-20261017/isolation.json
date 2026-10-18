@@ -1,0 +1,10 @@
+{
+  "stable_feed_sha256": "14cf734e41e175fc3fdd3d8a276296e96b090d983ea1de9f6e5892f44d9d14f0",
+  "stable_feed_unchanged": true,
+  "public_tag_exists": false,
+  "tag_readback": "",
+  "source_commit": "25cf43b413f19cef1c0f4aa53ed66a5f535bd069",
+  "product_logic_changed": false,
+  "device_update_performed": false,
+  "services_restarted": false
+}

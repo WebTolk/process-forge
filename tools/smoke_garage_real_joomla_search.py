@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from processforge_core.local_resource_search import maintenance_tick, search
+from processforge_core.resources.local_search import maintenance_tick, search
 
 
 def main() -> int:

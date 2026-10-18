@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"kind\": \"pf.resolve\", \"project\": {\"id\": \"t08-host-acceptance-20260925\", \"root\": \"D:\\\\Dev\\\\process-forge\\\\.pf\\\\tmp\\\\t08-host-acceptance-20260925\\\\project\"}, \"resource\": {\"application\": {\"kind\": \"documentation\", \"package_id\": \"docs.api.gitverse\"}, \"id\": \"docs.api.gitverse:root\", \"local_root\": \"D:\\\\.agents\\\\docs\\\\rest-api\\\\gitverse\", \"navigation\": \"private_runtime_authorized\", \"reference\": {\"id\": \"local-docs\", \"registry\": \"knowledge_roots\", \"relative_path\": \"rest-api/gitverse\"}, \"registry_source\": \"project-context.snapshot\", \"scope\": \"project_context\", \"status\": \"available\"}, \"schema_version\": 1}"
+    }
+  ]
+}

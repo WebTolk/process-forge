@@ -1,0 +1,218 @@
+schema_version: 1
+id: fix-required-output-checks-nameerror-per-process-forge-fix-required-outp
+title: Fix required_output_checks NameError per Р·Р°РґР°РЅРёСЏ/process-forge-fix-requir
+run_id: garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir
+process: task-batch-execution
+status: done
+created_at: '2026-09-07T12:08:29Z'
+updated_at: '2026-09-07T12:32:46Z'
+objective: 'Fix required_output_checks NameError per Р·Р°РґР°РЅРёСЏ/process-forge-fix-required-output-checks-master-prompt.md: reproduce missing-path failure, establish Git origin, apply minimal fix, add regression tests and validate task/run/hooks behavior; no release or installed Core changes.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Completed required_output_checks fix: reproduced NameError at baseline, traced insertion to 07b1fb68, removed nine unrelated hook/gitignore lines, added 18 direct cases and CLI rejection/waiver persistence coverage. Full task batch, hooks checks, checksum and diff checks PASS. Broad suite: 86 PASS / 1 pre-existing FAIL in smoke_context_freshness_vs_execution_readiness (unsupported search-index refresh --project-root), reproduced with exact HEAD parser; later checks not run. Result, review and handoff preserve this limitation. No release/version/installed Core changes.'
+  artifacts:
+    - .pf/artifacts/required-output-checks-plan-20260907.md
+    - .pf/artifacts/required-output-checks-result-20260907.md
+    - .pf/contexts/assignment-capsules/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.capsule.yaml
+    - .pf/handoffs/required-output-checks-fix-20260907.md
+    - .pf/logs/required-output-checks-fix-20260907.md
+    - .pf/reviews/required-output-checks-review-20260907.md
+    - .pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/run.yaml
+    - .pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/task-index.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-07T12:32:20Z'
+  evidence:
+    -
+      kind: artifact
+      id: run-summary
+      path: .pf/artifacts/required-output-checks-result-20260907.md
+      status: ready
+      recorded_at: '2026-09-07T12:32:44Z'
+      sha256: 'sha256:d0e11cce718cd853a40061f4c14da60bae2df28699a6d15a87b459a6317774e3'
+    -
+      kind: artifact
+      id: run-handoff
+      path: .pf/handoffs/required-output-checks-fix-20260907.md
+      status: ready
+      recorded_at: '2026-09-07T12:32:44Z'
+      sha256: 'sha256:a9f64c8e8dea8fbbcdadbedd472a76ba0dd35d7e45e705a49aa6bae005538a9e'
+    -
+      kind: gate
+      id: run-summary-created
+      status: passed
+      path: .pf/handoffs/required-output-checks-fix-20260907.md
+      recorded_at: '2026-09-07T12:32:44Z'
+      sha256: 'sha256:a9f64c8e8dea8fbbcdadbedd472a76ba0dd35d7e45e705a49aa6bae005538a9e'
+  notes: 'Completed required_output_checks fix: reproduced NameError at baseline, traced insertion to 07b1fb68, removed nine unrelated hook/gitignore lines, added 18 direct cases and CLI rejection/waiver persistence coverage. Full task batch, hooks checks, checksum and diff checks PASS. Broad suite: 86 PASS / 1 pre-existing FAIL in smoke_context_freshness_vs_execution_readiness (unsupported search-index refresh --project-root), reproduced with exact HEAD parser; later checks not run. Result, review and handoff preserve this limitation. No release/version/installed Core changes.'
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-07T12:08:29Z'
+    completed_at: '2026-09-07T12:10:43Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        id: run-record
+        path: .pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/run.yaml
+        status: ready
+        recorded_at: '2026-09-07T12:09:22Z'
+        sha256: 'sha256:9d131739a99d1d11a8b267936ae348fb21b8b008e89ae53868a9ec3b53267b41'
+      -
+        kind: gate
+        id: run-has-context
+        status: passed
+        path: .pf/contexts/assignment-capsules/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.capsule.yaml
+        recorded_at: '2026-09-07T12:10:41Z'
+        sha256: 'sha256:e68bb2b14869c3e396965e72fe168a8dc4a663dcb30a6e955430b6de15edf6bb'
+    notes: Dedicated run and capsule establish objective, baseline and public-safe project scope. Proceed to plan.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-07T12:10:43Z'
+    completed_at: '2026-09-07T12:11:22Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        id: task-index
+        path: .pf/artifacts/required-output-checks-plan-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:11:20Z'
+        sha256: 'sha256:d816eeef71074ab3d3b621cbd3e3e30428996dbd73993845e81645c3d7d534c7'
+      -
+        kind: gate
+        id: run-has-tasks
+        status: passed
+        path: .pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/task-index.md
+        recorded_at: '2026-09-07T12:11:20Z'
+        sha256: 'sha256:eddbdbf0007c0ed1b38fed074276a2456f2dbe8575e0fbb5514bf56eecec6785'
+    notes: Plan recorded with domain contract, minimal deletion, regression matrix, CLI persistence checks, verification and ownership. One assignment-backed task exists; implementation and review will be sequential.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-07T12:11:22Z'
+    completed_at: '2026-09-07T12:20:30Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        id: task-iteration-log
+        path: .pf/logs/required-output-checks-fix-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:20:26Z'
+        sha256: 'sha256:074d881eaa65b5accf0037b161c85bd585874493d72237bd221b893f9d2aa82d'
+      -
+        kind: gate
+        id: task-results-recorded
+        status: passed
+        path: .pf/artifacts/required-output-checks-result-20260907.md
+        recorded_at: '2026-09-07T12:20:26Z'
+        sha256: 'sha256:0e91dd1c02abb28779d853788770927e59eb337b0ca39651539fae3462db6ca7'
+    notes: Implementation and iterations recorded. Original NameError reproduced by new regression; nine-line deletion implemented; focused matrix, CLI persistence workflow, full task batch and hooks checks PASS. Result artifact records ongoing broad validation explicitly.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-07T12:20:30Z'
+    completed_at: '2026-09-07T12:31:17Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        id: task-result
+        path: .pf/artifacts/required-output-checks-result-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:31:13Z'
+        sha256: 'sha256:d0e11cce718cd853a40061f4c14da60bae2df28699a6d15a87b459a6317774e3'
+      -
+        kind: gate
+        id: all-blocking-tasks-completed
+        status: passed
+        path: .pf/artifacts/required-output-checks-result-20260907.md
+        recorded_at: '2026-09-07T12:31:13Z'
+        sha256: 'sha256:d0e11cce718cd853a40061f4c14da60bae2df28699a6d15a87b459a6317774e3'
+    notes: Implementation result complete with all required regression scenarios passing. No separate blocking implementation assignments remain; the current assignment carries the remaining review/summary stages and PF finalizes its lifecycle on the terminal transition. Broad suite limitation independently verified at HEAD and preserved in the result.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-07T12:31:17Z'
+    completed_at: '2026-09-07T12:32:20Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        id: run-review
+        path: .pf/reviews/required-output-checks-review-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:32:17Z'
+        sha256: 'sha256:e8d1ff7a5eb19c79cf4393815550e743cd9f552c15b17c31f4823e40a1eaae3c'
+      -
+        kind: gate
+        id: run-doctor-passed
+        status: passed
+        path: .pf/reviews/required-output-checks-review-20260907.md
+        recorded_at: '2026-09-07T12:32:17Z'
+        sha256: 'sha256:e8d1ff7a5eb19c79cf4393815550e743cd9f552c15b17c31f4823e40a1eaae3c'
+    notes: Sequential review accepts minimal fix and regression coverage. Governed run-doctor and task-doctor pass; checksums and diff checks pass. The unrelated baseline search-index argument failure limits broad-suite qualification and is documented in review and handoff.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-07T12:32:20Z'
+    completed_at: '2026-09-07T12:32:46Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        id: run-summary
+        path: .pf/artifacts/required-output-checks-result-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:32:44Z'
+        sha256: 'sha256:d0e11cce718cd853a40061f4c14da60bae2df28699a6d15a87b459a6317774e3'
+      -
+        kind: artifact
+        id: run-handoff
+        path: .pf/handoffs/required-output-checks-fix-20260907.md
+        status: ready
+        recorded_at: '2026-09-07T12:32:44Z'
+        sha256: 'sha256:a9f64c8e8dea8fbbcdadbedd472a76ba0dd35d7e45e705a49aa6bae005538a9e'
+      -
+        kind: gate
+        id: run-summary-created
+        status: passed
+        path: .pf/handoffs/required-output-checks-fix-20260907.md
+        recorded_at: '2026-09-07T12:32:44Z'
+        sha256: 'sha256:a9f64c8e8dea8fbbcdadbedd472a76ba0dd35d7e45e705a49aa6bae005538a9e'
+    notes: 'Completed required_output_checks fix: reproduced NameError at baseline, traced insertion to 07b1fb68, removed nine unrelated hook/gitignore lines, added 18 direct cases and CLI rejection/waiver persistence coverage. Full task batch, hooks checks, checksum and diff checks PASS. Broad suite: 86 PASS / 1 pre-existing FAIL in smoke_context_freshness_vs_execution_readiness (unsupported search-index refresh --project-root), reproduced with exact HEAD parser; later checks not run. Result, review and handoff preserve this limitation. No release/version/installed Core changes.'
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260907-094912-ae667f
+  snapshot_checksum: 'sha256:2751956d7d55c68afd582a55ac385080093f2a2243e3ad9b63163309fa2745cb'
+  assignment_capsule: .pf/contexts/assignment-capsules/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.capsule.yaml
+  assignment_capsule_checksum: 'sha256:e68bb2b14869c3e396965e72fe168a8dc4a663dcb30a6e955430b6de15edf6bb'

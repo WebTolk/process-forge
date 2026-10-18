@@ -1,0 +1,24 @@
+# T07: что уже делает PF и где требуется новый контракт
+
+Источник истины — текущие файлы checkout, проверенные на этой стадии. Позиции и SHA256 перечислены в source-map.json; исторические T05/T06 документы служат контекстом, а не заменяют код. Никаких проб с реальными секретами или отправкой данных не выполнялось.
+
+| Точка | Наблюдаемое поведение | Значение для T07 |
+|---|---|---|
+| src/processforge_core/prepared_input.py: semantic_input, build | Проверяет complete contract/read scope/source checksum; добавляет ограниченный текст или reference. Envelope содержит private project_root; input содержит objective, параметры и ссылки/идентификаторы | Разрешение читать и целостность не определяют разрешение раскрыть конкретному получателю. Нужна отдельная производная для передачи; исходный manifest нельзя править |
+| src/processforge_core/prepared_resources.py: authorize_resources | Сопоставляет запрошенные grants с контекстом и текущими ресурсами | Новый фильтр должен сужать эту авторизацию, а не заменять её или разрешать невыбранные источники |
+| tools/codex_exec_worker.py: prompt_payload, main | В prepared режиме сериализует весь prepared JSON в stdin; сохраняет точный private launch payload; не добавляет широкие --add-dir, но запускает в project root | Подготовленный объект содержит служебные данные. Отсутствие --add-dir не доказывает полное ограничение чтений/сети. Будущий remote route должен передавать отдельный approved envelope |
+| tools/prepared_executor.py: run_target | Проверяет manifest; запускает target с унаследованными потоками и предоставленным environment/cwd | Это lifecycle wrapper. В этой точке нет фильтра каждого будущего file/tool/network I/O |
+| templates/runtime-drivers/generic-shell.yaml; tools/processforge.py: materialize_worker_launch_environment | generic-shell объявляет inherit:true и allow_network:false; environment реально собирается из os.environ при inherit | allow_network — декларация драйвера, не доказанный сетевой запрет; переменные среды — самостоятельный канал передачи |
+| src/processforge_core/work_resources.py: WorkResourceService.read, _search | Проверяет pinned/current/stage intersection; resolve выдаёт private local_root/provenance; поиск возвращает метаданные совпавших документов без поля content | Нельзя объявлять существующий project/Work resolve готовым внешним broker API. Даже метаданные и путь могут быть чувствительны |
+| tools/processforge.py: redact_chat_content, chat_export_messages, command_chat_export | Regex-редактирование сохранённого чата; экспорт по умолчанию metadata_only, include_content включает уже сохранённое содержимое; создаёт outbox | Это конкретный chat export, а не общий контроль всех исходящих запросов, файлов и среды |
+| src/processforge_core/diagnostics.py: Sanitizer, export_bundle | Ограничивает/редактирует секретоподобные данные, при export заменяет абсолютные пути; создаёт локальный diagnostic bundle | Переиспользуемые примитивы ограничений возможны, но logger и optional sink не должны решать обязательное разрешение передачи |
+| tools/processforge.py: public_yaml_has_private_path, validate_run_consistency | Проверка public metadata обнаруживает локальный путь в старом delivery objective | После создания immutable intent его нельзя тихо исправить. Будущая export projection должна сохранить исходную историю и явно отличаться от оригинала |
+| docs/concepts/provider-adapters.md | Доверенные ingress adapters интерпретируют события; Host сохраняет общую авторизацию | Ingress и egress — разные направления. Новый outgoing adapter нельзя выбирать/усиливать из входного события |
+
+Обнаруженный разрыв — предмет T07 из плана, не регрессия T06: implemented scope/integrity/diagnostic contracts не обещают полного outbound privacy enforcement. Достаточно единственного обходного native file reader или унаследованного proxy/tool подключения, чтобы проверка начального промпта не покрывала сессию.
+
+Влияние предполагаемой реализации: новая нейтральная политика и её pin в successor context; подготовка производного recipient envelope; trusted transport/broker; адаптеры запуска; возврат/экспорт; схемы и тесты. Worker collection receipt, исходные snapshots/capsules, process stage selection и существующие ingress факты сохраняют свои полномочия. Нельзя подменить ими подтверждение фактически отправленных байтов.
+
+Ограничения исследования: не проверялась изоляция конкретных ОС/модельных CLI и не делались утверждения о сетевом поведении внешнего продукта. Она должна быть отдельной доказуемой capability и частью будущей интеграционной приёмки. Serena не имеет активного Python language backend; определения найдены и прочитаны точечно.
+
+Передача на domain: разделить право доступа, классификацию, получателя, трансформацию и обеспечение контроля. Ввести явные неизвестные/непроверенные состояния, неизменяемую исходную сущность и отдельную производную.

@@ -1,0 +1,36 @@
+{
+  "path": "docs/concepts/egress-engine.md",
+  "status": "passed",
+  "operations": [
+    {
+      "line": 102,
+      "parsed": {
+        "op": "read",
+        "handle": "opaque-handle"
+      }
+    },
+    {
+      "line": 103,
+      "parsed": {
+        "op": "tool",
+        "name": "text-stats",
+        "arguments": {
+          "text": "Literal text"
+        }
+      }
+    },
+    {
+      "line": 104,
+      "parsed": {
+        "op": "finish"
+      }
+    },
+    {
+      "line": 105,
+      "parsed": {
+        "op": "finish",
+        "text": "Result text, only when policy declares result"
+      }
+    }
+  ]
+}

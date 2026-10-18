@@ -37,6 +37,7 @@ def make_project(root: Path) -> Path:
     project.mkdir()
     (project / "README.md").write_text("# Full shell supervisor smoke\n", encoding="utf-8")
     pf("workplace-init", "--workplace", str(workplace), "--apply")
+    pf("pack-activate", "--id", "processforge.official.verification", "--workplace", str(workplace), "--apply")
     pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
     return project
 
@@ -120,6 +121,41 @@ runtime_drivers:
 """,
         encoding="utf-8",
     )
+    # Keep the probe worker alive until the test explicitly releases it. This
+    # proves non-blocking launch independently of CLI preparation time.
+    gate_worker = project / ".pf/runtime/test-agents/gated-shell-agent.py"
+    gate_worker.parent.mkdir(parents=True, exist_ok=True)
+    gate_worker.write_text(
+        """import os, runpy, sys, time
+from pathlib import Path
+agent = runpy.run_path(sys.argv[1])
+gate = Path(os.environ['PF_PROJECT_ROOT']) / '.pf/runtime/nonblocking.release'
+heartbeat = Path(sys.argv[sys.argv.index('--heartbeat') + 1])
+deadline = time.monotonic() + 45
+sequence = 0
+while not gate.exists():
+    if time.monotonic() >= deadline:
+        raise SystemExit('test did not release non-blocking worker')
+    sequence += 1
+    agent['write_heartbeat'](heartbeat, 'gate', sequence)
+    time.sleep(0.2)
+sys.argv = sys.argv[1:]
+raise SystemExit(agent['main']())
+""",
+        encoding="utf-8",
+    )
+    gate_driver = driver_dir / "gate-shell-agent.yaml"
+    write_driver(gate_driver, "gate-shell-agent", "success", 60)
+    gate_driver.write_text(
+        gate_driver.read_text(encoding="utf-8").replace(
+            '    - "{processforge_root}/tools/test_agents/pf_shell_agent.py"',
+            '    - "{project_root}/.pf/runtime/test-agents/gated-shell-agent.py"\n'
+            '    - "{processforge_root}/tools/test_agents/pf_shell_agent.py"',
+        ),
+        encoding="utf-8",
+    )
+    with registry.open("a", encoding="utf-8") as stream:
+        stream.write("  - id: gate-shell-agent\n    path: runtime-drivers/gate-shell-agent.yaml\n    status: available\n")
 
 
 def write_profile(path: Path, max_parallel: int) -> None:
@@ -147,8 +183,8 @@ def worker_block(task_id: str, driver: str, allowed: str, depends_on: str | None
     execution_mode: assurance
     writer: true
     allowed_files: [{allowed}]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
+    required_sources: [README.md]
     required_outputs:
       - id: {task_id}-report
         path: .pf/artifacts/{task_id}-report.md
@@ -206,10 +242,12 @@ def create_manual_task(project: Path, run_id: str, task_id: str, driver: str, al
         "testing",
         "--allowed-file",
         task_allowed,
+        "--allowed-file",
+        f".pf/artifacts/{task_id}-report.md",
         "--allowed-read-file",
-        ".pf/contexts/project-context.snapshot.yaml",
+        "README.md",
         "--required-source",
-        ".pf/contexts/project-context.snapshot.yaml",
+        "README.md",
         "--required-output",
         f"id={task_id}-report,path=.pf/artifacts/{task_id}-report.md,type=markdown,required=true",
         "--expected-report-artifact",
@@ -297,26 +335,27 @@ def main() -> int:
         write_plan(
             nonblocking_plan,
             "nonblocking-shell-run",
-            [worker_block("slow-probe-agent", "slow-shell-agent", ".pf/artifacts/slow-probe-agent-report.md")],
+            [worker_block("slow-probe-agent", "gate-shell-agent", ".pf/artifacts/slow-probe-agent-report.md")],
         )
         pf("orchestrator-plan", "validate", "--project-root", str(project), "--plan", str(nonblocking_plan))
         pf("orchestrator-plan", "apply", "--project-root", str(project), "--plan", str(nonblocking_plan), "--apply")
-        started = time.perf_counter()
-        first_tick = pf("supervisor", "tick", "--project-root", str(project), "--run", "nonblocking-shell-run", "--profile", str(profile))
-        elapsed = time.perf_counter() - started
-        if elapsed > 2.5:
-            raise AssertionError(f"supervisor tick blocked for {elapsed:.2f}s")
+        first_tick = pf("supervisor", "tick", "--project-root", str(project), "--run", "nonblocking-shell-run", "--profile", str(profile), timeout=20)
         if "started=1" not in first_tick.stdout:
             raise AssertionError("nonblocking supervisor tick did not start one worker")
         slow_state = state(project, "nonblocking-shell-run", "slow-probe-agent")
         if slow_state.get("status") != "running":
             raise AssertionError("slow worker was not left running after non-blocking tick")
+        if (project / ".pf/runtime/agent-runs/nonblocking-shell-run/slow-probe-agent/exit.json").exists():
+            raise AssertionError("probe worker exited before the caller released it")
+        if (project / ".pf/artifacts/slow-probe-agent-report.md").exists():
+            raise AssertionError("probe worker completed before supervisor returned")
         heartbeat_path = project / ".pf/runtime/agent-runs/nonblocking-shell-run/slow-probe-agent/heartbeat.json"
         heartbeat_before = wait_for_json(heartbeat_path)
         time.sleep(0.45)
         heartbeat_after = wait_for_json(heartbeat_path)
         if int(heartbeat_after.get("sequence", 0)) <= int(heartbeat_before.get("sequence", 0)):
             raise AssertionError("slow worker heartbeat did not advance while running")
+        (project / ".pf/runtime/nonblocking.release").write_text("release\n", encoding="utf-8")
         wait_for_done(project, "nonblocking-shell-run", 1, profile)
         assert_runtime_artifacts(project, "nonblocking-shell-run", "slow-probe-agent")
 

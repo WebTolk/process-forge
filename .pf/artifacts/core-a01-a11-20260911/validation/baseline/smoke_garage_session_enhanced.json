@@ -1,0 +1,10 @@
+{
+  "test": "smoke_garage_session_enhanced.py",
+  "mode": "baseline",
+  "returncode": 1,
+  "seconds": 11.44,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\core-a01-a11-baseline\\tools\\smoke_garage_session_enhanced.py"
+  ]
+}

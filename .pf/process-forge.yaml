@@ -17,6 +17,8 @@ project:
   type: processforge-development
   description: File-first process system for governed repeatable workflows.
 
+process: software-feature-development
+
 workplace:
   reference: auto
   required_capabilities:

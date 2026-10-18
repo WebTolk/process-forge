@@ -88,7 +88,8 @@ def validate_layout(validator: ModuleType, fixture: Path, *, root_agents: bool) 
     inventory = validator.build_inventory(fixture)
     paths = inventory_paths(inventory)
 
-    missing = sorted(EXPECTED_ROOT_PATHS - set(paths))
+    expected_paths = EXPECTED_ROOT_PATHS if root_agents else EXPECTED_ROOT_PATHS - {"AGENTS.md"}
+    missing = sorted(expected_paths - set(paths))
     if missing:
         fail(f"shipped root files missing from checksum inventory: {missing}")
     if "checksums/processforge.sha256" in paths:
@@ -102,10 +103,15 @@ def validate_layout(validator: ModuleType, fixture: Path, *, root_agents: bool) 
     if len(paths) != len(set(paths)):
         fail("checksum inventory contains duplicate archive paths")
 
-    agents_line = next(line for line in inventory.splitlines() if line.endswith("  AGENTS.md"))
-    expected_agents = fixture / ("AGENTS.md" if root_agents else ".pf/AGENTS.md")
-    if not agents_line.startswith(validator.sha256(expected_agents)):
-        fail("AGENTS.md checksum does not follow release-pack source precedence")
+    if root_agents:
+        agents_line = next(line for line in inventory.splitlines() if line.endswith("  AGENTS.md"))
+        if not agents_line.startswith(validator.sha256(fixture / "AGENTS.md")):
+            fail("AGENTS.md checksum does not cover the explicit source root file")
+    elif "AGENTS.md" in paths:
+        fail("hidden instructions were incorrectly aliased to the missing source root")
+    hidden_line = next(line for line in inventory.splitlines() if line.endswith("  .pf/AGENTS.md"))
+    if not hidden_line.startswith(validator.sha256(fixture / ".pf/AGENTS.md")):
+        fail("hidden instructions must retain their own checksum entry")
 
 
 def validate_stale_detection(validator: ModuleType, fixture: Path) -> None:
@@ -183,7 +189,7 @@ def main() -> int:
         validate_stale_detection(validator, temp_root / "stale-detection")
         validate_line_ending_canonicalization(validator, release, temp_root / "line-endings")
 
-    print("PASS: shipped checksum surface covers root aliases, public directories, and stale-file detection.")
+    print("PASS: shipped checksum surface covers explicit root files, public directories, and stale-file detection.")
     return 0
 
 

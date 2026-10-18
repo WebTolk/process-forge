@@ -1,0 +1,9 @@
+{
+  "label": "installed-driver-validation",
+  "started_at": "2026-10-17T19:17:14.513516+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.7627766999648884,
+  "raw_sha256": "76d80a66b86597f46c57283f5a44168acd10e5d76147ef25324bbb4d230a345d",
+  "raw_bytes": 452,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-driver-validation.log"
+}

@@ -3,20 +3,27 @@
 ProcessForge starts with files, not services. A project flow lives under `.pf/`.
 Python CLI is the canonical runtime.
 
+Check [requirements and memory planning](requirements.md) first. For human-led
+setup, use [guided workplace setup](getting-started/guided-workplace-setup.md);
+the direct commands below are for operators with explicit paths and choices.
+
 ## Garage and Forge
 
 | | Garage | Forge |
 |---|---|---|
 | Runtime daemon | Not required | Required when coordination uses it |
-| MCP | Host-owned stdio process | Host-owned stdio process |
+| MCP | Optional host-owned stdio process; CLI works without it | Host-owned stdio when selected |
 | Ledger session | Not needed for `pf.context/search/resolve/work.start` | Used for orchestration |
-| Hooks | Optional telemetry | Optional host-specific telemetry |
+| Hooks | Optional host telemetry | Forge admission checks; host telemetry when selected |
 | Director | No | Yes when required by coordination |
 | Runtime autostart | Not needed | Recommended/required |
 
 The normal project-agent path is `pf.context -> pf.search -> pf.resolve ->
 pf.work.start`. Current context outranks historical generated reports. Runtime,
 MCP, hook, Ledger, and index maintenance are operator/advanced paths.
+For existing Work, use [exact continuation](concepts/work-continuation.md).
+For selected Work resources, use `pf.work.search` and `pf.work.resolve` with
+the returned Run/assignment/context ids. Keep repository scratch in `.pf/tmp/`.
 
 ## Initialize A Workplace
 
@@ -35,11 +42,20 @@ python bin/pf.py doctor-project --project-root <project-root>
 python bin/pf.py agent-start-prompt --project-root <project-root>
 ```
 
-Project onboarding creates `.pf/AGENTS.md`, `.pf/START_AGENT_HERE.md`,
-`.pf/process-forge.yaml`, `.pf/process-forge.local.yaml`, `.pf/hooks.yaml`,
-`.pf/assignments/first-assignment.yaml`, `.pf/runtime/bin/pf.py`, context
-snapshot files, onboarding artifacts, and the project flow folders. It does not create root project
-`AGENTS.md` by default and does not recreate the workplace.
+Project onboarding creates root `AGENTS.md`, `.pf/AGENTS.md`,
+`.pf/agent-entry.json`, public/private manifests,
+hooks, a local launcher, context snapshots and onboarding artifacts.
+The generated `first-assignment.yaml` is a compatibility placeholder, not a
+required stage or the ordinary Work selection. The workplace is not recreated.
+START is no longer needed and is not generated; existing files are preserved.
+Its absence is normal for status, doctor and deterministic repair.
+
+Start from root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project).
+Verify `pf.context`, use relevant `pf.search`/`pf.resolve`, then `pf.work.start`.
+Use its returned Run/assignment/capsule with `pf.work.state` and
+`pf.work.transition` until `run_completed`; handle `process_choice_required`
+from the offered choices. `agent-start-prompt` only prints current guidance,
+without writing files. See [entry policy](concepts/agent-entry.md).
 
 Inside a linked project, run:
 
@@ -96,7 +112,7 @@ path, and event correlation id.
 Core commands emit events to:
 
 ```text
-.pf/runtime/events/events.ndjson
+.pf/runtime/events/events.sqlite3
 ```
 
 Hook matching can be tested without sending or writing payloads:

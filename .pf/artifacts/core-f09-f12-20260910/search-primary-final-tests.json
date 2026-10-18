@@ -1,0 +1,42 @@
+[
+  {
+    "name": "smoke_search_source_integrity",
+    "root": "D:\\Dev\\process-forge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_search_source_integrity.py"
+    ],
+    "exit": 0,
+    "seconds": 0.67
+  },
+  {
+    "name": "smoke_workplace_search_index",
+    "root": "D:\\Dev\\process-forge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_workplace_search_index.py"
+    ],
+    "exit": 0,
+    "seconds": 4.75
+  },
+  {
+    "name": "smoke_resource_indexing_policy_acceptance",
+    "root": "D:\\Dev\\process-forge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_resource_indexing_policy_acceptance.py"
+    ],
+    "exit": 0,
+    "seconds": 0.93
+  },
+  {
+    "name": "smoke_fulltext_article_indexing",
+    "root": "D:\\Dev\\process-forge",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_fulltext_article_indexing.py"
+    ],
+    "exit": 0,
+    "seconds": 0.36
+  }
+]

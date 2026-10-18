@@ -11,6 +11,11 @@ Workplace может поддерживать Director infrastructure, но эт
   cases, leases, handoffs и связанную координацию.
 - `inherit`: проект наследует `workplace.coordination.default_project_mode`.
 
+В гараже (`simple`) хуки по умолчанию возвращают пустой ответ без сбора данных.
+Параметр `runtime.garage_hooks` включает вахтёра; проект может переопределить
+настройку рабочего места. В кузне (`organized`) вахтёр работает всегда.
+Подробности: [настройка PFConfig](runtime-configuration.md).
+
 ## Capability workplace
 
 `workplace.yaml` хранит machine-level capability:

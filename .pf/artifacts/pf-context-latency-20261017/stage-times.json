@@ -1,0 +1,94 @@
+{
+  "bootstrap_seconds": 0.2581582999555394,
+  "installed_core_version": "1.2.0",
+  "scope": "separate read-only diagnostic process; exact installed tool_result path, no server/main started",
+  "warmup": {
+    "wall_seconds": 13.908130399999209,
+    "result": {
+      "kind": "pf.context",
+      "context": {
+        "snapshot_id": "ctx-20261016-091113-310bed",
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue"
+      },
+      "mode": "forge",
+      "current_action": "work_incomplete",
+      "current_validation": "valid"
+    }
+  },
+  "timed_call": {
+    "wall_seconds": 17.337337800010573,
+    "result": {
+      "kind": "pf.context",
+      "context": {
+        "snapshot_id": "ctx-20261016-091113-310bed",
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue"
+      },
+      "mode": "forge",
+      "current_action": "work_incomplete",
+      "current_validation": "valid"
+    }
+  },
+  "stages": {
+    "ProjectContextService.check": {
+      "calls": 1,
+      "wall_seconds": 0.9273106000036933,
+      "individual_seconds": [
+        0.9273106000036933
+      ]
+    },
+    "ProjectContextService.snapshot": {
+      "calls": 2,
+      "wall_seconds": 0.003334200009703636,
+      "individual_seconds": [
+        0.0016599000082351267,
+        0.0016743000014685094
+      ]
+    },
+    "ResourceSearchService.readiness": {
+      "calls": 1,
+      "wall_seconds": 0.3063916999963112,
+      "individual_seconds": [
+        0.3063916999963112
+      ]
+    },
+    "CurrentWorkService.items": {
+      "calls": 1,
+      "wall_seconds": 9.402060300053563,
+      "individual_seconds": [
+        9.402060300053563
+      ]
+    },
+    "CurrentWorkService.active_items": {
+      "calls": 1,
+      "wall_seconds": 9.40253289998509,
+      "individual_seconds": [
+        9.40253289998509
+      ]
+    },
+    "CurrentWorkService.summary": {
+      "calls": 1,
+      "wall_seconds": 9.402627700008452,
+      "individual_seconds": [
+        9.402627700008452
+      ]
+    },
+    "ProjectContextService.context": {
+      "calls": 1,
+      "wall_seconds": 10.669098099984694,
+      "individual_seconds": [
+        10.669098099984694
+      ]
+    },
+    "ProcessExecutionService.state": {
+      "calls": 1,
+      "wall_seconds": 6.631607600022107,
+      "individual_seconds": [
+        6.631607600022107
+      ]
+    }
+  }
+}

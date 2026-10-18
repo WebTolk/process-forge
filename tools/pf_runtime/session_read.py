@@ -47,7 +47,9 @@ def _authorized_project(
         raise SessionReadError("missing_session")
     # Read models must not mutate stale-presence status or emit Ledger expiry
     # events. A direct Core lookup is the authority for this access check.
-    presence = core.find_agent_presence(workplace_root, session_id=session_id)
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    presence = AgentPresenceReader(workplace_root).find(session_id=session_id)
     if not presence:
         raise SessionReadError("unknown_session")
     project_ref = str(presence.get("project_root") or "")
@@ -112,6 +114,8 @@ def session_context_payload(
     active = execution[0] if execution else {}
     context = core.project_context_check_result(project_root, explicit_workplace=str(workplace_root))
     project_id = core.project_id(project_root)
+    from processforge_core.agents.presence import AgentPresenceReader
+
     agents = [
         {
             "agent_id": item.get("agent_id"),
@@ -120,7 +124,7 @@ def session_context_payload(
             "status": item.get("status"),
             "last_seen_at": item.get("last_seen_at"),
         }
-        for item in core.iter_agent_presence(workplace_root)
+        for item in AgentPresenceReader(workplace_root).records()
         if str(item.get("project_id") or "") == project_id
     ]
     blockers = [
@@ -137,18 +141,13 @@ def session_context_payload(
     search_projection = {"status": "unavailable", "generation": None, "stale": True}
     if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
         try:
-            from processforge_core.garage import snapshot_with_resolved_search_roots
-            from processforge_core.local_resource_search import ResourceSearchIndex
+            from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
+            from processforge_core.resources.local_search import ResourceSearchIndex
 
-            snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
-            snapshot = core.load_yaml_document(snapshot_path)
-            runtime_snapshot = snapshot_with_resolved_search_roots(
-                project_root,
-                snapshot if isinstance(snapshot, dict) else {},
-                workplace_root,
-                core,
-            )
-            search_status = ResourceSearchIndex(project_root, runtime_snapshot, workplace_root).status()
+            # The shared Workplace index has no project-snapshot state.  The
+            # snapshot remains an authorization filter for pf.search only.
+            index_snapshot = WorkplaceSearchCatalogReader(workplace_root).runtime_snapshot()
+            search_status = ResourceSearchIndex(workplace_root, index_snapshot, workplace_root).status()
             search_projection = {
                 "status": search_status.get("status"),
                 "generation": search_status.get("generation"),
@@ -237,7 +236,9 @@ def session_chat_payload(
         role_filter = set(roles)
         if not role_filter.issubset({"user", "assistant", "system"}):
             raise SessionReadError("invalid_roles")
-    messages = core.load_chat_messages(project_root, session_id)
+    from processforge_core.chat.transcripts import ChatTranscriptReader
+
+    messages = ChatTranscriptReader(project_root).messages(session_id)
     if role_filter:
         messages = [item for item in messages if str((item.get("message") or {}).get("role") or "") in role_filter]
     end = len(messages)

@@ -1,0 +1,10 @@
+{
+  "name": "smoke_central_event_ingress_kernel",
+  "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0",
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0\\tools\\smoke_central_event_ingress_kernel.py"
+  ],
+  "exit": 0,
+  "seconds": 8.42
+}

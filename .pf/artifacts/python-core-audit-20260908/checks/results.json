@@ -1,0 +1,122 @@
+[
+  {
+    "check": "smoke_project_resource_narrowing_search.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_project_resource_narrowing_search.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.64,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_project_resource_narrowing_search.py.txt"
+  },
+  {
+    "check": "smoke_workplace_search_index.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_workplace_search_index.py"
+    ],
+    "exit_code": 0,
+    "seconds": 3.85,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_workplace_search_index.py.txt"
+  },
+  {
+    "check": "smoke_core_update_manifest.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_core_update_manifest.py"
+    ],
+    "exit_code": 0,
+    "seconds": 8.59,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_core_update_manifest.py.txt"
+  },
+  {
+    "check": "smoke_garage_cross_project_security.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_garage_cross_project_security.py"
+    ],
+    "exit_code": 0,
+    "seconds": 16.14,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_garage_cross_project_security.py.txt"
+  },
+  {
+    "check": "smoke_garage_no_hooks_sessionless.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_garage_no_hooks_sessionless.py"
+    ],
+    "exit_code": 1,
+    "seconds": 12.51,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_garage_no_hooks_sessionless.py.txt"
+  },
+  {
+    "check": "smoke_work_transition_recovers_after_invalid_evidence.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_work_transition_recovers_after_invalid_evidence.py"
+    ],
+    "exit_code": 0,
+    "seconds": 20.58,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_work_transition_recovers_after_invalid_evidence.py.txt"
+  },
+  {
+    "check": "smoke_work_transition_final_stage_completes_run.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_work_transition_final_stage_completes_run.py"
+    ],
+    "exit_code": 0,
+    "seconds": 23.12,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_work_transition_final_stage_completes_run.py.txt"
+  },
+  {
+    "check": "smoke_central_event_ingress_kernel.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_central_event_ingress_kernel.py"
+    ],
+    "exit_code": 0,
+    "seconds": 6.0,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_central_event_ingress_kernel.py.txt"
+  },
+  {
+    "check": "validate-process-forge-schemas.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py"
+    ],
+    "exit_code": 0,
+    "seconds": 26.33,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\validate-process-forge-schemas.py.txt"
+  },
+  {
+    "check": "validate-process-forge-checksums.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.68,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\validate-process-forge-checksums.py.txt"
+  },
+  {
+    "check": "validate-public-cleanliness.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py"
+    ],
+    "exit_code": 0,
+    "seconds": 6.87,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\validate-public-cleanliness.py.txt"
+  },
+  {
+    "check": "smoke_process_run_task_batch.py",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\Dev\\process-forge\\tools\\smoke_process_run_task_batch.py"
+    ],
+    "exit_code": 0,
+    "seconds": 95.82,
+    "output": ".pf\\artifacts\\python-core-audit-20260908\\checks\\smoke_process_run_task_batch.py.txt"
+  }
+]

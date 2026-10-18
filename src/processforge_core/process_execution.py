@@ -5,17 +5,80 @@ import copy
 import hashlib
 import json
 import re
-import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Callable, Iterator
+
+from .common.request_scope import safe_load, scoped_request
+from .common.yaml_io import _parse_simple_yaml
+from .documents.reader import YamlDocumentReader
+from .work.inventory import WorkInventory
+from .work.state import WorkStatePolicy
+from .work.start_documents import WorkStartDocumentBuilder
+from .evidence.collection import EvidenceCollectionPolicy
+
+if TYPE_CHECKING:
+    from .work.metadata import WorkMetadataReadPass
+    from .completion.request import WorkCompletionRequestService
+    from .work.record_catalog import WorkRecordCatalogService
+    from .work.events import WorkEventPublisher
+    from .work.publication import WorkDocumentPublisher
+    from .project.context_read import ExecutionProjectReadService
+    from .work.transition_commit import WorkTransitionCommitService
+    from .completion.intent_replay import CompletionIntentReplayService
+    from .completion.intent_read import CompletionIntentReadService
+    from .completion.intent_builder import CompletionIntentBuilder
+    from .completion.documents import CompletionDocumentService
+    from .work.boundary_advisory import WorkBoundaryAdvisoryService
+    from .work.transition_rejection import TransitionRejectionPolicy
+    from .completion.intent_validation import CompletionIntentValidationService
+    from .completion.policy import RunCompletionPolicy
+    from .process_catalog.pin import ProcessPinReadService
+    from .process_catalog.selection import ProcessSelectionService
+    from .work.selection import WorkSelectionService
+    from .work.automation_readiness import AutomationReadinessService
+    from .evidence.readiness import StageReadinessPolicy
+    from .evidence.validation import EvidenceValidationService
+    from .diagnostics import Logger
+    from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
 ACTIVE_ASSIGNMENT_STATUSES = {"draft", "ready", "open", "pending", "in_progress", "blocked", "debugging", "review", "ready_for_review"}
 TERMINAL_ASSIGNMENT_STATUSES = {"done", "completed", "cancelled", "failed"}
 TERMINAL_RUN_STATUSES = {"completed", "cancelled", "failed"}
+from .work.creation_scope import CreationScopeService
+
 SAFE_ID_RE = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
+
+
+def scope_handoff_predecessor(project: Path, metadata: dict[str, Any], core: Any) -> str:
+    """Recognize only the exact immutable predecessor of an explicit local handoff."""
+    import yaml
+    from .prepared.input import bounded_read
+    from .work.context import ContextContractError, portable_path
+    coordination = metadata.get("coordination_requirements") or {}
+    if not isinstance(coordination, dict):
+        return ""
+    prior = coordination.get("scope_predecessor")
+    handoff = coordination.get("scope_handoff")
+    if not prior or not handoff:
+        return ""
+    try:
+        CreationScopeService.validate({"schema_version": 1, "assignment": {}, "predecessor": prior,
+                               "predecessor_handoff": handoff["path"]})
+        source = bounded_read(core.assignment_capsule_path(project, prior["assignment_id"]))
+        note = bounded_read(project / portable_path(handoff["path"]))
+        identity = yaml.safe_load(source.decode("utf-8-sig"))["execution_contract"]["identity"]
+        if (isinstance(identity, dict) and "sha256:" + hashlib.sha256(source).hexdigest() == prior["capsule_checksum"]
+                and "sha256:" + hashlib.sha256(note).hexdigest() == handoff["checksum"]
+                and identity.get("project_id") == core.project_id(project)
+                and identity.get("run_id") == prior["run_id"]
+                and identity.get("assignment_id") == prior["assignment_id"]):
+            return prior["assignment_id"]
+    except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError, ContextContractError):
+        pass
+    return ""
 
 
 def _stable_ids(value: Any) -> list[str]:
@@ -122,15 +185,58 @@ class ProcessExecutionService:
     project_root: Path
     workplace_root: Path | None
     core: Any
+    observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
+    records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    definitions: ProcessDefinitionReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, kw_only=True, repr=False, compare=False)
 
-    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "") -> dict[str, Any]:
+    @scoped_request
+    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
         with self._start_lock():
-            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override)
+            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override, security=security, scope_intent=scope_intent)
 
-    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "") -> dict[str, Any]:
+    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
         objective = str(objective or "").strip()
         if not objective:
             return self._blocked("objective_required")
+        from .work.context import ContextContractError, assignment_intent, normalized_assignment_contract
+        if scope_intent is not None:
+            import yaml
+            try:
+                scope_intent = CreationScopeService.validate(scope_intent)
+                prior = scope_intent.get("predecessor")
+                if prior:
+                    from .prepared.input import bounded_read
+                    prior_path = self.core.assignment_capsule_path(self.project_root, prior["assignment_id"])
+                    raw = bounded_read(prior_path)
+                    identity = yaml.safe_load(raw.decode("utf-8-sig"))["execution_contract"]["identity"]
+                    if (not isinstance(identity, dict) or "sha256:" + hashlib.sha256(raw).hexdigest() != prior["capsule_checksum"]
+                            or identity.get("project_id") != self.core.project_id(self.project_root)
+                            or identity.get("run_id") != prior["run_id"]
+                            or identity.get("assignment_id") != prior["assignment_id"]):
+                        return self._blocked("predecessor_changed")
+                if scope_intent.get("predecessor_handoff"):
+                    from .prepared.input import bounded_read
+                    handoff = self.project_root / scope_intent["predecessor_handoff"]
+                    bounded_read(handoff)
+            except ContextContractError as exc:
+                return self._blocked(exc.code, **exc.details)
+            except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError):
+                return self._blocked("work_scope_invalid")
+        if security is not None:
+            from .egress.contracts import EgressError, security_intent, digest
+            try:
+                security = security_intent(security)
+                predecessor = security.get("predecessor")
+                if predecessor:
+                    previous_path = self.core.assignment_capsule_path(self.project_root, predecessor["assignment_id"])
+                    from .prepared.input import bounded_read
+                    if digest(bounded_read(previous_path)) != predecessor["capsule_checksum"]:
+                        return self._blocked("predecessor_changed")
+            except (EgressError, OSError, ValueError):
+                return self._blocked("egress_contract_invalid")
         check = self._context_check()
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             return self._blocked(
@@ -139,6 +245,21 @@ class ProcessExecutionService:
             )
         duplicate = self._find_by_objective(objective)
         if duplicate.get("active"):
+            if scope_intent is not None:
+                active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
+                try:
+                    desired = self._with_creation_scope(active, scope_intent)
+                    path = self._assignment_path(str(active["id"]))
+                    if assignment_intent(self.project_root, path, active, self.core) != assignment_intent(self.project_root, path, desired, self.core):
+                        return self._blocked("scope_intent_mismatch", remediation="create_successor_work_with_new_objective")
+                except ContextContractError as exc:
+                    return self._blocked(exc.code, **exc.details)
+            if security is not None:
+                active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
+                if (active.get("egress") != security["egress"]
+                        or sorted(active.get("allowed_read_files") or []) != security["allowed_read_files"]
+                        or active.get("egress_predecessor") != security.get("predecessor")):
+                    return self._blocked("security_intent_mismatch", remediation="create_successor_work_with_new_objective")
             state = self.state(
                 run_id=str(duplicate["active"].get("run_id") or ""),
                 assignment_id=str(duplicate["active"].get("assignment_id") or ""),
@@ -154,6 +275,7 @@ class ProcessExecutionService:
                 "stage": state.get("stage", {}).get("id"),
                 "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
                 "work_state": state,
+                "context": state.get("context", {}),
             }
         if duplicate.get("historical"):
             return self._blocked(
@@ -199,92 +321,100 @@ class ProcessExecutionService:
         active_specializations = specialization_selection["active"]
         selected_resource_ids = self._selected_resource_ids()
         pin = self._process_pin(process, definition.path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=selection["allowed"])
-        run = {
-            "schema_version": 1,
-            "id": run_id,
-            "title": objective[:80],
-            "process": selected_process,
-            "status": "in_progress",
-            "created_at": now,
-            "updated_at": now,
-            "objective": objective,
-            "platform": "",
-            "selected_specializations": active_specializations,
-            "scope": {"type": "project", "project_root": "."},
-            "tasks": [{"id": assignment_id, "assignment": f".pf/assignments/{assignment_id}.yaml", "status": "in_progress", "order": 1, "blocking": True}],
-            "final_artifacts": [],
-            "events": {"emitted": ["run.created", "process.stage.started"]},
-            "privacy": {"public_safe": True},
-            "process_execution": pin,
-        }
-        assignment = {
-            "schema_version": 1,
-            "id": assignment_id,
-            "title": objective[:80],
-            "run_id": run_id,
-            "process": selected_process,
-            "status": "in_progress",
-            "created_at": now,
-            "updated_at": now,
-            "objective": objective,
-            "platform": "",
-            "selected_specializations": active_specializations,
-            "order": 1,
-            "dependencies": {"blocked_by": [], "blocks": []},
-            "iterations": [],
-            "result": {"status": "pending", "summary": "", "artifacts": []},
-            "execution_mode": {"kind": "implementation", "code_changes_allowed": True, "artifact_changes_allowed": True, "requires_review": True},
-            "stage": stage_id,
-            "stage_status": "in_progress",
-            "stage_execution": {"started_at": now, "evidence": [], "notes": ""},
-            "stage_history": [],
-            "process_execution": {
-                "process_id": pin["process_id"],
-                "process_version": pin["process_version"],
-                "process_fingerprint": pin["process_fingerprint"],
-                "snapshot_id": pin["snapshot_id"],
-                "snapshot_checksum": pin["snapshot_checksum"],
-            },
-        }
+        run, assignment = WorkStartDocumentBuilder().build(
+            objective=objective, selected_process=selected_process, now=now,
+            run_id=run_id, assignment_id=assignment_id,
+            active_specializations=active_specializations, pin=pin, stage_id=stage_id,
+        )
         if session_id:
             assignment["session"] = {"status": "bound", "id": session_id}
-        capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
+        if security is not None:
+            if scope_intent is not None and "allowed_read_files" in scope_intent["assignment"]:
+                if sorted(scope_intent["assignment"]["allowed_read_files"]) != security["allowed_read_files"]:
+                    return self._blocked("scope_security_conflict")
+            assignment["egress"] = copy.deepcopy(security["egress"])
+            assignment["allowed_read_files"] = list(security["allowed_read_files"])
+            if security.get("predecessor"):
+                assignment["egress_predecessor"] = copy.deepcopy(security["predecessor"])
+        try:
+            if scope_intent is not None:
+                assignment = self._with_creation_scope(assignment, scope_intent)
+                normalized = normalized_assignment_contract(self.project_root, self._assignment_path(assignment_id), assignment, self.core)
+                requested = scope_intent["assignment"].get("allowed_actions", [])
+                if set(requested) - set(normalized["scope"]["allowed_actions"]):
+                    return self._blocked("work_scope_conflict")
+                overlap = self.core.validate_assignment_scope_overlaps(self.project_root, assignment, assignment_path=self._assignment_path(assignment_id))
+                if overlap["status"] != "pass":
+                    return self._blocked("write_scope_overlap", conflicts=overlap["conflicts"])
+                # Preflight readiness before the immutable capsule is published.
+                from .work.context import build_context_fields
+                snapshot = self._snapshot_reader().load()
+                fields = build_context_fields(self.project_root, self._assignment_path(assignment_id), assignment,
+                                              snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
+                if fields["execution_contract"]["readiness"]["status"] != "ready":
+                    return self._blocked("work_scope_not_ready", blockers=fields["execution_contract"]["readiness"]["blockers"])
+                from .work.permissions import permission_readiness
+                permissions = permission_readiness(fields["execution_contract"]["scope"],
+                                                   fields["execution_contract"]["assignment_intent"]["execution_mode"])
+                if permissions["status"] != "ready":
+                    return self._blocked("work_scope_not_ready", blockers=permissions["blockers"], execution_readiness=permissions)
+            capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
+        except ContextContractError as exc:
+            return self._blocked(exc.code, **exc.details)
         run["process_execution"]["assignment_capsule"] = capsule_path
         run["process_execution"]["assignment_capsule_checksum"] = capsule_checksum
         assignment["process_execution"]["assignment_capsule"] = capsule_path
         assignment["process_execution"]["assignment_capsule_checksum"] = capsule_checksum
 
-        run_path = self._run_path(run_id)
-        assignment_path = self._assignment_path(assignment_id)
-        self._atomic_yaml(run_path, run)
-        self._atomic_yaml(assignment_path, assignment)
-        self._atomic_text(run_path.parent / "plan.md", f"# Run Plan: {objective[:80]}\n\nObjective: {objective}\n")
-        self._write_task_index(run)
-        self._emit("run.created", run, assignment, stage_id, outcome="started")
-        self._emit("task.created", run, assignment, stage_id, outcome="started")
-        self._emit("assignment.created", run, assignment, stage_id, outcome="started")
-        self._emit("process.stage.started", run, assignment, stage_id, outcome="started", previous_stage_id="", next_stage_id=stage_id)
-        state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        self._write_projection(state)
-        return {
-            "schema_version": 1,
-            "kind": "pf.work.start",
-            "action": "created_new",
-            "project": state.get("project", {}),
-            "run_id": run_id,
-            "assignment_id": assignment_id,
-            "stage": stage_id,
-            "valid_stages": [str(item.get("id")) for item in stages],
-            "stage_selection": "preferred" if stage_override else "process_initial_stage",
-            "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
-            "obligations": state.get("obligations", []),
-            "gates": state.get("gates", {}),
-            "work_state": state,
-        }
+        from .composition import build_work_start_publication_service
 
-    def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        return build_work_start_publication_service(
+            run_path=lambda: self._run_path, assignment_path=lambda: self._assignment_path,
+            atomic_yaml=lambda: self._atomic_yaml, atomic_text=lambda: self._atomic_text,
+            write_task_index=lambda: self._write_task_index, emit=lambda: self._emit,
+            state=lambda: self.state, write_projection=lambda: self._write_projection,
+        ).publish(
+            run_id=run_id, assignment_id=assignment_id, run=run, assignment=assignment,
+            stage_id=stage_id, objective=objective, stages=stages,
+            stage_override=stage_override, session_id=session_id,
+        )
+
+    def _with_creation_scope(self, assignment: dict[str, Any], intent: dict[str, Any]) -> dict[str, Any]:
+        from .composition import build_creation_scope_service
+
+        return build_creation_scope_service(self.project_root, self.core).apply(assignment, intent)
+    def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
+        from . import diagnostics
+
+        logger = self.observer if self.observer is not None else diagnostics.current()
+        observation = diagnostics.operation(logger, "work", "work.state", run_id=None,
+                                            assignment_id=None, stage_id=None, session_id=session_id or None)
+        observation.__enter__()
+        try:
+            payload = self._state(run_id=run_id, assignment_id=assignment_id,
+                                  session_id=session_id, context_id=context_id)
+            diagnostics.emit("debug", "work.state.result", {"action": payload.get("action"), "reason": payload.get("reason")}, component="work")
+        except BaseException as exc:
+            try:
+                observation.__exit__(type(exc), exc, exc.__traceback__)
+            except BaseException:
+                # contextlib may rewrite a frozen exception's traceback after
+                # operation has already logged it and reset its context tokens.
+                pass
+            raise
+        else:
+            observation.__exit__(None, None, None)
+            return payload
+
+    @scoped_request
+    def _state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
+        try:
+            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        except ValueError as exc:
+            return self._blocked(str(exc))
         if not selected:
+            if run_id or assignment_id or context_id:
+                return self._blocked("work_not_found")
             return {
                 "schema_version": 1,
                 "kind": "pf.work.state",
@@ -292,9 +422,14 @@ class ProcessExecutionService:
                 "project": {"id": self.core.project_id(self.project_root)},
             }
         run, assignment = selected
+        if context_id and context_id != f"{assignment['id']}-capsule":
+            return self._blocked("work_context_mismatch")
         process, pin_status = self._effective_process(run)
+        from . import diagnostics
+        diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
         stage_id = str(assignment.get("stage") or "")
         stage = self._stage(process, stage_id)
+        diagnostics.annotate(stage_id=stage_id)
         current_evidence = self._current_evidence(assignment)
         accumulated_evidence = self._accumulated_evidence(assignment)
         required_inputs = [
@@ -317,58 +452,37 @@ class ProcessExecutionService:
         ]
         obligations = self._automation_states(process, stage, assignment)
         incomplete = self._stage_requirements(required_inputs, artifacts, required_evidence, entry_gates + exit_gates, obligations)
-        completion = stage.get("stage_completion") if isinstance(stage.get("stage_completion"), dict) else process.get("stage_completion") if isinstance(process.get("stage_completion"), dict) else {}
-        if completion.get("evidence_required") is True and not current_evidence:
-            incomplete.append({"code": "stage_evidence_required", "stage_id": stage_id})
-        stage_execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
-        if completion.get("handoff_note_required") is True and not str(stage_execution.get("notes") or "").strip():
-            incomplete.append({"code": "handoff_note_required", "stage_id": stage_id})
+        policy = WorkStatePolicy()
+        incomplete = policy.completion_requirements(process, stage, assignment, current_evidence, incomplete)
         try:
             outcomes = normalized_outcomes(process, stage_id)
         except ValueError as exc:
             outcomes = []
             incomplete.append({"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id})
-        stored_blockers = stage_execution.get("blockers") if isinstance(stage_execution.get("blockers"), list) else []
-        blockers = [copy.deepcopy(item) for item in stored_blockers if isinstance(item, dict)]
-        if str(assignment.get("stage_status") or "") == "blocked" and not blockers:
-            blockers.append({"code": "stage_marked_blocked", "stage_id": stage_id})
-        if str(run.get("status") or "") == "completed":
-            action = "run_completed"
-        elif blockers:
-            action = "work_blocked"
-        elif incomplete:
-            action = "work_incomplete"
-        else:
-            action = "work_ready"
-        return {
-            "schema_version": 1,
-            "kind": "pf.work.state",
-            "action": action,
-            "project": {"id": self.core.project_id(self.project_root)},
-            "process": {
-                "id": str(process.get("id") or run.get("process") or ""),
-                "version": str(process.get("version") or ""),
-                "fingerprint": str((run.get("process_execution") or {}).get("process_fingerprint") or canonical_fingerprint(process)),
-                "pin_status": pin_status,
-            },
-            "work": {
-                "active_specializations": _stable_ids(assignment.get("selected_specializations") or run.get("selected_specializations")),
-                "selected_resource_ids": _stable_ids((run.get("process_execution") or {}).get("selected_resource_ids")),
-            },
-            "run": {"id": str(run.get("id") or ""), "status": str(run.get("status") or "")},
-            "assignment": {"id": str(assignment.get("id") or ""), "status": str(assignment.get("status") or "")},
-            "stage": {"id": stage_id, "title": str(stage.get("title") or stage_id), "status": str(assignment.get("stage_status") or "in_progress")},
-            "required_inputs": required_inputs,
-            "required_evidence": required_evidence,
-            "obligations": obligations,
-            "artifacts": artifacts,
-            "gates": {"entry": entry_gates, "exit": exit_gates},
-            "allowed_outcomes": outcomes,
-            "blockers": blockers,
-            "incomplete": incomplete,
-            "completion": {"status": "complete" if not incomplete else "incomplete", "requirements": incomplete},
-            "evidence": current_evidence,
-        }
+        trace = diagnostics.span("work.state.validation")
+        trace.__enter__()
+        try:
+            contract_validation = self._contract_validation(assignment)
+        finally:
+            trace.__exit__(None, None, None)
+        decision = policy.decide(run, assignment, contract_validation, incomplete)
+        from .work.permissions import permission_readiness
+        from .work.context import ContextContractError
+        try:
+            normalized = self._context_reader().normalized_assignment(assignment)
+            permissions = permission_readiness(normalized['scope'], normalized['assignment']['execution_mode'])
+        except ContextContractError as exc:
+            permissions = {"status": "blocked", "blockers": [exc.code]}
+        return policy.project_state(
+            action=decision.action, permissions=permissions,
+            project_id=self.core.project_id(self.project_root),
+            run=run, assignment=assignment, process=process, pin_status=pin_status,
+            stage_id=stage_id, stage=stage, decision=decision, contract_validation=contract_validation,
+            required_inputs=required_inputs, required_evidence=required_evidence, obligations=obligations,
+            artifacts=artifacts, entry_gates=entry_gates, exit_gates=exit_gates, outcomes=outcomes,
+            incomplete=incomplete, current_evidence=current_evidence,
+            fingerprint=lambda value: canonical_fingerprint(value), stable_ids=lambda value: _stable_ids(value),
+        )
 
     def allowed_transitions(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
         state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
@@ -382,6 +496,7 @@ class ProcessExecutionService:
             "blockers": state.get("blockers", []),
         }
 
+    @scoped_request
     def transition(
         self,
         *,
@@ -391,16 +506,38 @@ class ProcessExecutionService:
         run_id: str = "",
         assignment_id: str = "",
         session_id: str = "",
+        context_id: str = "",
     ) -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        try:
+            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        except ValueError as exc:
+            return self._blocked(str(exc))
         if not selected:
             return self._blocked("active_work_not_found")
         run, assignment = selected
+        if context_id and context_id != f"{assignment['id']}-capsule":
+            return self._blocked("work_context_mismatch")
         if not isinstance(run.get("process_execution"), dict) or not isinstance(run["process_execution"].get("definition"), dict):
             return self._blocked("process_not_pinned", run_id=run.get("id"), assignment_id=assignment.get("id"))
         with self._run_lock(str(run.get("id") or "")):
             run = self._load_run(str(run.get("id") or ""))
             assignment = self._load_assignment(str(assignment.get("id") or ""))
+            for pending_cancel in self._run_path(str(run["id"])).parent.glob("cancellation-*.yaml"):
+                if not pending_cancel.with_suffix(".applied.json").is_file():
+                    return self._blocked("cancellation_recovery_pending")
+            contract_validation = self._contract_validation(assignment)
+            if contract_validation.get("status") == "blocked":
+                return self._blocked(contract_validation.get("reason") or "execution_contract_invalid", remediation="create_successor_work")
+            pending_intent, intent_error = self._load_completion_intent(run, assignment)
+            if pending_intent is not None:
+                return self._replay_completion_intent(pending_intent, session_id=session_id)
+            if intent_error:
+                return self._blocked(
+                    "completion_intent_invalid",
+                    run_id=run.get("id"),
+                    assignment_id=assignment.get("id"),
+                    detail=intent_error,
+                )
             if str(run.get("status") or "") in TERMINAL_RUN_STATUSES or str(assignment.get("status") or "") in TERMINAL_ASSIGNMENT_STATUSES:
                 return self._blocked("work_is_terminal", run_id=run.get("id"), assignment_id=assignment.get("id"), run_status=run.get("status"), assignment_status=assignment.get("status"))
             process, pin_status = self._effective_process(run)
@@ -483,468 +620,309 @@ class ProcessExecutionService:
                     self._write_projection(incomplete_state)
                     return {**incomplete_state, "action": "incomplete", "reason": "run_completion_incomplete", "incomplete": completion_blockers}
 
-            now = self.core.now_utc()
-            history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
-            history.append(
-                {
-                    "stage_id": stage_id,
-                    "status": "completed",
-                    "started_at": str(assignment["stage_execution"].get("started_at") or assignment.get("created_at") or ""),
-                    "completed_at": now,
-                    "outcome": outcome,
-                    "next_stage_id": next_stage_id,
-                    "evidence": list(assignment["stage_execution"].get("evidence") or []),
-                    "notes": str(notes or ""),
-                }
+            return self._work_transition_commit_service().commit(
+                run,
+                assignment,
+                process,
+                stage_id=stage_id,
+                next_stage_id=next_stage_id,
+                outcome=outcome,
+                notes=notes,
+                session_id=session_id,
             )
-            assignment["stage_history"] = history
-            previous_stage_id = stage_id
-            if next_stage_id:
-                assignment["stage"] = next_stage_id
-                assignment["stage_status"] = "in_progress"
-                assignment["stage_execution"] = {"started_at": now, "evidence": [], "notes": ""}
-                assignment["updated_at"] = now
-                run["updated_at"] = now
-                self._set_run_task_status(run, str(assignment["id"]), "in_progress")
-                self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
-                self._atomic_yaml(self._run_path(str(run["id"])), run)
-                self._write_task_index(run)
-                action = "stage_transitioned"
-            else:
-                self._complete_locked(run, assignment, process, outcome=outcome, notes=notes, completed_at=now)
-                action = "run_completed"
 
-            result_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
-            self._write_projection(result_state)
-            self._emit("process.stage.completed", run, assignment, previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            self._emit("process.stage.transitioned", run, assignment, next_stage_id or previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            if next_stage_id:
-                self._emit("process.stage.started", run, assignment, next_stage_id, outcome="started", previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            else:
-                self._emit("task.completed", run, assignment, previous_stage_id, outcome=outcome)
-                self._emit("assignment.completed", run, assignment, previous_stage_id, outcome=outcome)
-                self._emit("run.completed", run, assignment, previous_stage_id, outcome=outcome)
-                self._emit("run.summary.created", run, assignment, previous_stage_id, outcome=outcome)
-            result = {**result_state, "action": action, "previous_stage_id": previous_stage_id, "next_stage_id": next_stage_id}
-            if action == "run_completed":
-                result.update(self._next_work_advisory(process, run))
-            return result
+    def _work_transition_commit_service(self) -> WorkTransitionCommitService:
+        from .composition import build_work_transition_commit_service
+
+        return build_work_transition_commit_service(
+            now_utc=lambda: self.core.now_utc(),
+            set_run_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status),
+            assignment_path=lambda assignment_id: self._assignment_path(assignment_id),
+            run_path=lambda run_id: self._run_path(run_id),
+            atomic_yaml=lambda path, document: self._atomic_yaml(path, document),
+            write_task_index=lambda run: self._write_task_index(run),
+            build_completion_intent=lambda *args, **kwargs: self._build_completion_intent(*args, **kwargs),
+            completion_intent_path=lambda run_id: self._completion_intent_path(run_id),
+            atomic_text=lambda path, text: self._atomic_text(path, text),
+            replay_completion_intent=lambda intent, **kwargs: self._replay_completion_intent(intent, **kwargs),
+            state=lambda **selectors: self.state(**selectors),
+            write_projection=lambda state: self._write_projection(state),
+            emit=lambda *args, **kwargs: self._emit(*args, **kwargs),
+            next_work_advisory=lambda process, run: self._next_work_advisory(process, run),
+        )
 
     def can_complete(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        if not selected:
-            return {"can_complete": False, "blockers": [{"code": "active_work_not_found"}]}
-        run, assignment = selected
-        process, pin_status = self._effective_process(run)
-        stage_id = str(assignment.get("stage") or "")
-        outcomes = normalized_outcomes(process, stage_id)
-        final = any(not str(item.get("next_stage") or "") for item in outcomes)
-        state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
-        blockers = [*list(state.get("blockers") or []), *list(state.get("incomplete") or [])]
-        if pin_status != "pinned":
-            blockers.append({"code": "process_not_pinned"})
-        if not final:
-            blockers.append({"code": "not_final_stage", "stage_id": stage_id})
-        blockers.extend(self._run_completion_blockers(process, run, assignment))
-        return {"can_complete": not blockers, "blockers": blockers, "run": state.get("run"), "assignment": state.get("assignment"), "stage": state.get("stage")}
+        return self._completion_request_service().can_complete(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
 
     def complete(self, *, outcome: str = "completed", evidence: Any = None, notes: str = "", run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        readiness = self.can_complete(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        if readiness["blockers"] and not evidence:
-            return {"schema_version": 1, "kind": "pf.work.complete", "action": "blocked", **readiness}
-        return self.transition(outcome=outcome, evidence=evidence, notes=notes, run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        return self._completion_request_service().complete(outcome=outcome, evidence=evidence, notes=notes, run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+
+    def _execution_project_read_service(self) -> ExecutionProjectReadService:
+        from .composition import build_execution_project_read_service
+
+        return build_execution_project_read_service(
+            project_root=self.project_root,
+            workplace_root=self.workplace_root,
+            context_checker=lambda: self.core.project_context_check_result,
+            document_loader=lambda: self.core.load_yaml_document,
+            flow_root=lambda: self._flow_root(),
+        )
 
     def _context_check(self) -> dict[str, Any]:
-        explicit = ""
-        if self.workplace_root and (self.workplace_root / "workplace.yaml").is_file():
-            explicit = str(self.workplace_root)
-        return self.core.project_context_check_result(self.project_root, explicit_workplace=explicit or None)
+        return self._execution_project_read_service().context_check()
 
     def _manifest(self) -> dict[str, Any]:
-        return self.core.load_yaml_document(self._flow_root() / "process-forge.yaml")
+        return self._execution_project_read_service().manifest()
 
     def _project_process_selection(self) -> dict[str, Any]:
         return project_process_selection(self._manifest())
 
-    def _select_process(self, selection: dict[str, Any], requested: str) -> tuple[str, dict[str, Any]]:
-        allowed = _stable_ids(selection.get("allowed"))
-        if requested:
-            if requested not in allowed:
-                try:
-                    self.core.resolve_process_definition(self.project_root, requested)
-                except (OSError, SystemExit, ValueError):
-                    return "", self._blocked("process_not_found", process_id=requested)
-                return "", self._blocked("process_not_allowed", process_id=requested, allowed_processes=allowed)
-            return requested, {}
-        if len(allowed) == 1:
-            return allowed[0], {}
-        default = str(selection.get("default") or "").strip()
-        return "", self._blocked(
-            "process_choice_required",
-            action="process_choice_required",
-            default_process=default if default in allowed else "",
-            candidates=self._process_candidates(allowed, default=default),
+    def _process_selection_service(self) -> ProcessSelectionService:
+        from .composition import build_process_selection_service
+
+        return build_process_selection_service(
+            project_root=self.project_root, stable_ids=_stable_ids, resolve_definition=lambda root, process_id: self.core.resolve_process_definition(root, process_id), blocked=self._blocked, candidates=self._process_candidates
         )
 
+    def _select_process(self, selection: dict[str, Any], requested: str) -> tuple[str, dict[str, Any]]:
+        return self._process_selection_service().select(selection, requested)
+
     def _process_candidates(self, process_ids: list[str], *, default: str = "") -> list[dict[str, Any]]:
-        candidates: list[dict[str, Any]] = []
-        for process_id in process_ids:
-            try:
-                process = self.core.resolve_process_definition(self.project_root, process_id).process
-            except (OSError, SystemExit, ValueError):
-                candidates.append({"id": process_id, "title": process_id, "purpose": "Process definition unavailable.", "expected_result": "", "default": process_id == default})
-                continue
-            candidates.append(
-                {
-                    "id": str(process.get("id") or process_id),
-                    "title": str(process.get("name") or process_id),
-                    "purpose": str(process.get("purpose") or process.get("description") or ""),
-                    "expected_result": str(process.get("expected_result") or ""),
-                    "default": str(process.get("id") or process_id) == default,
-                }
-            )
-        return candidates
+        return self._process_selection_service().process_candidates(process_ids, default=default)
+
+    def _transition_rejection_policy(self) -> TransitionRejectionPolicy:
+        from .composition import build_transition_rejection_policy
+
+        return build_transition_rejection_policy(
+            state=lambda **selectors: self.state(**selectors)
+        )
 
     @staticmethod
     def _is_recoverable_transition_rejection(blocker: Any) -> bool:
-        if not isinstance(blocker, dict):
-            return False
-        return str(blocker.get("code") or "") in {
-            "invalid_evidence",
-            "not_applicable_evidence_incomplete",
-            "artifact_path_missing",
-            "outcome_not_allowed",
-            "invalid_process_definition",
-        }
+        from .work.transition_rejection import TransitionRejectionPolicy
+
+        return TransitionRejectionPolicy.is_recoverable(blocker)
 
     def _transition_rejected(self, *, run: dict[str, Any], assignment: dict[str, Any], session_id: str, reason: str, blockers: list[dict[str, Any]]) -> dict[str, Any]:
-        state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
-        return {**state, "action": "transition_rejected", "reason": reason, "blockers": blockers}
+        return self._transition_rejection_policy().rejected(run=run, assignment=assignment, session_id=session_id, reason=reason, blockers=blockers)
+
+    def _process_pin_read_service(self) -> ProcessPinReadService:
+        from .composition import build_process_pin_read_service
+
+        return build_process_pin_read_service(
+            project_root=self.project_root, flow_root=self._flow_root, snapshots=self._snapshot_reader, fingerprint=canonical_fingerprint, stable_ids=_stable_ids
+        )
 
     def _process_pin(self, process: dict[str, Any], source_path: Path, *, active_specializations: list[str], selected_resource_ids: list[str], allowed_processes: list[str]) -> dict[str, Any]:
-        snapshot_path = self._flow_root() / "contexts" / "project-context.snapshot.yaml"
-        snapshot = self.core.load_yaml_document(snapshot_path)
-        meta = snapshot.get("snapshot") if isinstance(snapshot.get("snapshot"), dict) else {}
-        snapshot_checksum = "sha256:" + self._sha256_file(snapshot_path) if snapshot_path.is_file() else ""
-        normalized = json.loads(json.dumps(process, ensure_ascii=False))
-        try:
-            process_source = source_path.resolve().relative_to(self.project_root.resolve()).as_posix()
-        except ValueError:
-            process_source = f"catalog:{normalized.get('id') or source_path.stem}"
-        return {
-            "process_id": str(normalized.get("id") or ""),
-            "process_version": str(normalized.get("version") or ""),
-            "process_fingerprint": canonical_fingerprint(normalized),
-            "process_source": process_source,
-            "snapshot_id": str(meta.get("id") or ""),
-            "snapshot_checksum": snapshot_checksum,
-            "definition": normalized,
-            "active_specializations": active_specializations,
-            "selected_resource_ids": selected_resource_ids,
-            "allowed_processes": allowed_processes,
-        }
+        return self._process_pin_read_service().pin(process, source_path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=allowed_processes)
 
     def _selected_resource_ids(self) -> list[str]:
-        snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
-        resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-        return _stable_ids(resolved.get("knowledge_resources"))
+        return self._process_pin_read_service().selected_resource_ids()
+
+    def _snapshot_reader(self) -> ProjectSnapshotReadPort:
+        if self.snapshots is not None:
+            return self.snapshots
+        from .composition import build_project_snapshot_read_service
+
+        return build_project_snapshot_read_service(self.project_root)
+
+    def _work_boundary_advisory_service(self) -> WorkBoundaryAdvisoryService:
+        from .composition import build_work_boundary_advisory_service
+
+        return build_work_boundary_advisory_service(
+            flow_root=lambda: self._flow_root(), stable_ids=_stable_ids, load_document=lambda path: self.core.load_yaml_document(path)
+        )
 
     def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
-        pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
-        current = str(run.get("process") or "")
-        available = [item for item in _stable_ids(pin.get("allowed_processes")) if item != current]
-        declared = process.get("process_transitions") if isinstance(process.get("process_transitions"), list) else []
-        routed = [str(item.get("to_process") or item.get("target_process") or "") for item in declared if isinstance(item, dict)]
-        route_path = self._flow_root() / "process-routes.yaml"
-        routes = self.core.load_yaml_document(route_path).get("routes", []) if route_path.exists() else []
-        routed.extend(
-            str(item.get("to_process") or item.get("target_process") or "")
-            for item in routes
-            if isinstance(item, dict) and str(item.get("from_process") or "") == current
-        )
-        recommended = next((item for item in routed if item in available), "")
-        next_work: dict[str, Any] = {"available_processes": available}
-        if recommended:
-            next_work["recommended_process"] = recommended
-        result: dict[str, Any] = {"next": next_work, "session_continuity": {"recommendation": "auto", "reason": "process_boundary"}}
-        handoff = next((str(path) for path in _stable_ids(run.get("final_artifacts")) if path.endswith("-handoff.md")), "")
-        if handoff:
-            result["handoff"] = {"path": handoff}
-        return result
+        return self._work_boundary_advisory_service().advisory(process, run)
 
     def _effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]:
-        pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
-        definition = pin.get("definition") if isinstance(pin.get("definition"), dict) else None
-        if definition is not None and str(pin.get("process_fingerprint") or "") == canonical_fingerprint(definition):
-            return copy.deepcopy(definition), "pinned"
-        if pin:
-            return copy.deepcopy(definition) if isinstance(definition, dict) else {"id": str(run.get("process") or ""), "stages": []}, "corrupt"
-        try:
-            resolved = self.core.resolve_process_definition(self.project_root, str(run.get("process") or ""))
-            return copy.deepcopy(resolved.process), "legacy_unpinned"
-        except (OSError, SystemExit, ValueError):
-            return {"id": str(run.get("process") or ""), "stages": []}, "missing"
+        return self._process_reader().effective_process(run)
+
+    def _process_reader(self) -> ProcessDefinitionReadPort:
+        if self.definitions is not None:
+            return self.definitions
+        from .composition import build_process_definition_read_service
+
+        return build_process_definition_read_service(self.project_root)
 
     def _stage(self, process: dict[str, Any], stage_id: str) -> dict[str, Any]:
         return next((stage for stage in executable_stages(process) if str(stage.get("id")) == stage_id), {"id": stage_id})
 
+    def _work_selection_service(self) -> WorkSelectionService:
+        from .composition import build_work_selection_service
+
+        return build_work_selection_service(
+            bound_selection=self._bound_work_selection, valid_selector=lambda value: bool(SAFE_ID_RE.fullmatch(value)), records=self._work_records, prefer=self._preferred_record, load_run=self._load_run, load_assignment=self._load_assignment
+        )
+
+    def _bound_work_selection(self, session_id: str) -> dict[str, Any] | None:
+        from .work.continuation import ContinuationService
+
+        return ContinuationService(self.project_root, self.workplace_root, self.core).selected(session_id)
+
     def _select_work(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> tuple[dict[str, Any], dict[str, Any]] | None:
-        records = self._work_records(include_historical=True)
-        if assignment_id:
-            record = next((item for item in records if item["assignment_id"] == assignment_id), None)
-        elif run_id:
-            candidates = [item for item in records if item["run_id"] == run_id]
-            record = self._preferred_record(candidates, session_id)
-        else:
-            active = [item for item in records if item["active"]]
-            record = self._preferred_record(active, session_id)
-        if not record:
-            return None
-        return self._load_run(record["run_id"]), self._load_assignment(record["assignment_id"])
+        return self._work_selection_service().select(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
 
     def _preferred_record(self, records: list[dict[str, Any]], session_id: str) -> dict[str, Any] | None:
-        if session_id:
-            bound = [item for item in records if item.get("session_id") == session_id]
-            if bound:
-                records = bound
-        return max(records, key=lambda item: (item.get("updated_at", ""), item.get("created_at", ""), item.get("assignment_id", ""))) if records else None
+        return self._work_selection_service().preferred_record(records, session_id)
+
+    def _work_record_catalog_service(self) -> WorkRecordCatalogService:
+        from .composition import build_work_record_catalog_service
+
+        return build_work_record_catalog_service(
+            record_reader=lambda: self.records, inventory_factory=lambda: WorkInventory,
+            flow_root=lambda: self._flow_root, document_loader=lambda: self._work_documents().load,
+            identifier_pattern=lambda: SAFE_ID_RE, intent_reader=lambda: self._load_completion_intent,
+            active_assignment_statuses=lambda: ACTIVE_ASSIGNMENT_STATUSES,
+            active_run_statuses=lambda: ACTIVE_RUN_STATUSES,
+            work_metadata=self.work_metadata,
+            intent_path=self._completion_intent_path,
+        )
 
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:
-        records: list[dict[str, Any]] = []
-        runs_root = self._flow_root() / "runs"
-        for path in sorted(runs_root.glob("*/run.yaml")) if runs_root.is_dir() else []:
-            run = self.core.load_yaml_document(path)
-            run_id = str(run.get("id") or path.parent.name)
-            if not SAFE_ID_RE.fullmatch(run_id):
-                continue
-            for entry in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-                if not isinstance(entry, dict) or not entry.get("id"):
-                    continue
-                entry_id = str(entry["id"])
-                if not SAFE_ID_RE.fullmatch(entry_id):
-                    continue
-                task = self.core.load_yaml_document(self._assignment_path(entry_id))
-                if not task:
-                    continue
-                task_id = str(task.get("id") or entry_id)
-                if not SAFE_ID_RE.fullmatch(task_id) or str(task.get("run_id") or run_id) != run_id:
-                    continue
-                status = str(task.get("status") or entry.get("status") or "")
-                active = status in ACTIVE_ASSIGNMENT_STATUSES and str(run.get("status") or "") in ACTIVE_RUN_STATUSES
-                if not active and not include_historical:
-                    continue
-                session = task.get("session") if isinstance(task.get("session"), dict) else {}
-                records.append(
-                    {
-                        "run_id": run_id,
-                        "assignment_id": task_id,
-                        "objective": str(task.get("objective") or run.get("objective") or ""),
-                        "status": status,
-                        "run_status": str(run.get("status") or ""),
-                        "stage": str(task.get("stage") or ""),
-                        "active": active,
-                        "session_id": str(session.get("id") or ""),
-                        "created_at": str(task.get("created_at") or run.get("created_at") or ""),
-                        "updated_at": str(task.get("updated_at") or run.get("updated_at") or ""),
-                    }
-                )
-        return records
+        return self._work_record_catalog_service().records(include_historical=include_historical)
 
     def _find_by_objective(self, objective: str) -> dict[str, Any]:
-        normalized = " ".join(objective.casefold().split())
-        matches = [item for item in self._work_records(include_historical=True) if " ".join(item["objective"].casefold().split()) == normalized]
-        active = self._preferred_record([item for item in matches if item["active"]], "")
-        historical = [item for item in matches if not item["active"]]
-        return {"active": active, "historical": historical}
+        return self._work_selection_service().find_by_objective(objective)
 
     def _current_evidence(self, assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
-        return [copy.deepcopy(item) for item in execution.get("evidence", []) if isinstance(item, dict)] if isinstance(execution.get("evidence"), list) else []
+        return EvidenceCollectionPolicy().current(assignment)
 
     def _accumulated_evidence(self, assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        evidence: list[dict[str, Any]] = []
-        history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
-        for record in history:
-            if isinstance(record, dict) and isinstance(record.get("evidence"), list):
-                evidence.extend(copy.deepcopy(item) for item in record["evidence"] if isinstance(item, dict))
-        evidence.extend(self._current_evidence(assignment))
-        return evidence
+        return EvidenceCollectionPolicy().accumulated(assignment, current=self._current_evidence)
+
+    def _stage_readiness_policy(self) -> StageReadinessPolicy:
+        from .composition import build_stage_readiness_policy
+
+        return build_stage_readiness_policy(
+            file_diagnostic=self._evidence_file_diagnostic,
+            string_list=self._string_list,
+            stage_definitions=executable_stages,
+            blocker_callback=self._requirement_blocker,
+        )
 
     def _required_artifact_ids(self, process: dict[str, Any], stage: dict[str, Any]) -> list[str]:
-        declared = self._string_list(stage.get("required_artifacts"))
-        if declared:
-            return declared
-        definitions = process.get("artifact_definitions") if isinstance(process.get("artifact_definitions"), list) else []
-        optional = {str(item.get("id")) for item in definitions if isinstance(item, dict) and item.get("required") is False}
-        consumed_inputs = {
-            artifact_id
-            for candidate in executable_stages(process)
-            for artifact_id in self._string_list(candidate.get("required_inputs"))
-        }
-        return [item for item in self._string_list(stage.get("produced_artifacts")) if item not in optional or item in consumed_inputs]
+        return self._stage_readiness_policy().required_artifact_ids(process, stage)
 
     def _requirement_state(self, kind: str, identifier: str, evidence: list[dict[str, Any]]) -> dict[str, Any]:
-        aliases = {"artifact": ("artifact_id", "id"), "input": ("input_id", "artifact_id", "id"), "evidence": ("evidence_id", "id")}
-        accepted_kinds = {"artifact": {"artifact"}, "input": {"input", "artifact"}, "evidence": {"evidence", "attestation"}}
-        statuses = {"ready", "present", "passed", "approved", "not_applicable"}
-        match = next(
-            (
-                item
-                for item in reversed(evidence)
-                if str(item.get("kind") or "") in accepted_kinds[kind]
-                and any(str(item.get(key) or "") == identifier for key in aliases[kind])
-                and str(item.get("status") or "") in statuses
-            ),
-            None,
-        )
-        return {"id": identifier, "kind": kind, "satisfied": match is not None, "evidence": match or {}}
+        return self._stage_readiness_policy().requirement(kind, identifier, evidence)
 
     def _gate_state(self, process: dict[str, Any], gate_id: str, evidence: list[dict[str, Any]], *, phase: str) -> dict[str, Any]:
-        definitions = process.get("gates") if isinstance(process.get("gates"), list) else []
-        definition = next((item for item in definitions if isinstance(item, dict) and str(item.get("id") or "") == gate_id), {})
-        match = next(
-            (
-                item
-                for item in reversed(evidence)
-                if str(item.get("kind") or "") == "gate"
-                and str(item.get("gate_id") or item.get("id") or "") == gate_id
-                and str(item.get("status") or "") in {"passed", "approved", "not_applicable"}
-            ),
-            None,
+        return self._stage_readiness_policy().gate(process, gate_id, evidence, phase=phase)
+
+    def _automation_readiness_service(self) -> AutomationReadinessService:
+        from .composition import build_automation_readiness_service
+
+        return build_automation_readiness_service(
+            project_root=self.project_root, has_output_checks=lambda: hasattr(self.core, 'required_output_checks'), output_checks=lambda root, assignment: self.core.required_output_checks(root, assignment), has_fingerprint=lambda: hasattr(self.core, 'task_verification_fingerprint'), fingerprint=lambda root, assignment: self.core.task_verification_fingerprint(root, assignment), has_event_paths=lambda: hasattr(self.core, 'event_runtime_paths'), event_paths=lambda root: self.core.event_runtime_paths(root), latest_event=self._latest_assignment_event
         )
-        return {
-            "id": gate_id,
-            "phase": phase,
-            "type": str(definition.get("type") or "checklist"),
-            "blocking": bool(definition.get("blocking", True)),
-            "required": bool(definition.get("required", True)),
-            "satisfied": match is not None,
-            "evidence": match or {},
-        }
 
     def _automation_states(self, process: dict[str, Any], stage: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        bindings = stage.get("automation_bindings") if isinstance(stage.get("automation_bindings"), list) else []
-        if not bindings and isinstance(stage.get("technical_obligations"), list):
-            bindings = stage["technical_obligations"]
-        states: list[dict[str, Any]] = []
-        for binding in bindings:
-            if not isinstance(binding, dict):
-                continue
-            projector = str(binding.get("projector") or "")
-            status = "unsupported"
-            details: dict[str, Any] = {}
-            if projector == "required-output-readiness" and hasattr(self.core, "required_output_checks"):
-                failures = [item.message for item in self.core.required_output_checks(self.project_root, assignment) if str(getattr(item, "level", "")) == "FAIL"]
-                status = "ready" if not failures else "blocked"
-                details["failures"] = failures
-            elif projector == "verification-state":
-                verification = binding.get("verification") if isinstance(binding.get("verification"), dict) else {}
-                passed_event = str(verification.get("passed_event") or "")
-                failed_event = str(verification.get("failed_event") or "")
-                event = self._latest_assignment_event(str(assignment.get("id") or ""), {passed_event, failed_event})
-                event_type = str(event.get("event_type") or "") if event else ""
-                status = "ready" if event_type == passed_event else ("blocked" if event_type == failed_event else "missing")
-                if status == "ready" and hasattr(self.core, "task_verification_fingerprint"):
-                    event_data = event.get("data") if isinstance(event.get("data"), dict) else {}
-                    if str(event_data.get("verification_fingerprint") or "") != self.core.task_verification_fingerprint(self.project_root, assignment):
-                        status = "stale"
-                details["event_type"] = event_type
-            states.append({"id": str(binding.get("id") or projector or "obligation"), "projector": projector, "gate": str(binding.get("gate") or ""), "status": status, **details})
-        return states
+        return self._automation_readiness_service().states(process, stage, assignment)
 
     def _stage_requirements(self, inputs: list[dict[str, Any]], artifacts: list[dict[str, Any]], required_evidence: list[dict[str, Any]], gates: list[dict[str, Any]], obligations: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        requirements: list[dict[str, Any]] = []
-        requirements.extend({"code": "required_input_missing", "input_id": item["id"]} for item in inputs if not item["satisfied"])
-        requirements.extend({"code": "artifact_evidence_missing", "artifact_id": item["id"]} for item in artifacts if not item["satisfied"])
-        requirements.extend({"code": "required_evidence_missing", "evidence_id": item["id"]} for item in required_evidence if not item["satisfied"])
-        requirements.extend({"code": "gate_evidence_missing", "gate_id": item["id"]} for item in gates if item["required"] and item["blocking"] and not item["satisfied"])
-        requirements.extend({"code": "automation_not_ready", "obligation_id": item["id"], "status": item["status"]} for item in obligations if item["status"] != "ready")
-        return requirements
+        return self._stage_readiness_policy().requirements(inputs, artifacts, required_evidence, gates, obligations)
+
+    def _requirement_blocker(self, code: str, identifier_key: str, requirement: dict[str, Any]) -> dict[str, Any]:
+        return self._stage_readiness_policy().blocker(code, identifier_key, requirement)
+
+    def _evidence_validator(self) -> EvidenceValidationService:
+        from .composition import build_evidence_validation_service
+
+        return build_evidence_validation_service(
+            lambda: self.project_root,
+            now_utc=lambda: self.core.now_utc(),
+            relative_path=lambda path: self.core.rel(path, self.project_root),
+            sha256_file=self._sha256_file,
+            path_resolver=self._safe_evidence_path,
+        )
 
     def _normalize_evidence(self, evidence: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        values = evidence if isinstance(evidence, list) else ([] if evidence is None or evidence == "" else [evidence])
-        normalized: list[dict[str, Any]] = []
-        blockers: list[dict[str, Any]] = []
-        now = self.core.now_utc()
-        for index, value in enumerate(values):
-            if isinstance(value, str):
-                item = {"kind": "attestation", "id": f"attestation-{index + 1}", "status": "ready", "summary": value}
-            elif isinstance(value, dict):
-                item = copy.deepcopy(value)
-            else:
-                blockers.append({"code": "invalid_evidence", "index": index})
-                continue
-            item.setdefault("kind", "attestation")
-            item.setdefault("status", "ready")
-            item["recorded_at"] = now
-            if str(item.get("status") or "") == "not_applicable":
-                reason = str(item.get("reason") or "").strip()
-                supporting = item.get("evidence")
-                if not reason or not isinstance(supporting, list) or not supporting:
-                    blockers.append({"code": "not_applicable_evidence_incomplete", "index": index})
-                    continue
-            path_value = str(item.get("path") or "").strip()
-            if path_value:
-                safe_path = self._safe_evidence_path(path_value)
-                if safe_path is None or not safe_path.is_file():
-                    blockers.append({"code": "artifact_path_missing", "index": index, "path": path_value})
-                    continue
-                else:
-                    item["path"] = self.core.rel(safe_path, self.project_root)
-                    item["sha256"] = "sha256:" + self._sha256_file(safe_path)
-            normalized.append(item)
-        return normalized, blockers
+        return self._evidence_validator().normalize(evidence)
 
     def _safe_evidence_path(self, value: str) -> Path | None:
-        path = Path(value)
-        if path.is_absolute():
-            return None
-        resolved = (self.project_root / path).resolve()
-        try:
-            resolved.relative_to(self.project_root.resolve())
-        except ValueError:
-            return None
-        return resolved
+        return self._evidence_validator().safe_path(value)
 
     def _merge_evidence(self, existing: Any, incoming: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        values = [copy.deepcopy(item) for item in existing if isinstance(item, dict)] if isinstance(existing, list) else []
-        for item in incoming:
-            marker = (str(item.get("kind") or ""), str(item.get("gate_id") or item.get("artifact_id") or item.get("input_id") or item.get("id") or ""))
-            values = [current for current in values if (str(current.get("kind") or ""), str(current.get("gate_id") or current.get("artifact_id") or current.get("input_id") or current.get("id") or "")) != marker]
-            values.append(item)
-        return values
+        return EvidenceCollectionPolicy().merge(existing, incoming, identity=self._evidence_merge_identity)
+
+    def _evidence_merge_identity(self, item: dict[str, Any]) -> tuple[str, str]:
+        return EvidenceCollectionPolicy().identity(item)
+
+    def _evidence_file_diagnostic(self, evidence: dict[str, Any] | None) -> dict[str, Any] | None:
+        return self._evidence_validator().diagnostic(evidence)
 
     def _latest_assignment_event(self, assignment_id: str, event_types: set[str]) -> dict[str, Any] | None:
-        if not event_types or not hasattr(self.core, "event_runtime_paths"):
-            return None
-        events_path, _outbox = self.core.event_runtime_paths(self.project_root)
-        if not events_path.is_file():
-            return None
-        for line in reversed(events_path.read_text(encoding="utf-8", errors="replace").splitlines()):
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            assignment = event.get("assignment") if isinstance(event.get("assignment"), dict) else {}
-            if str(event.get("event_type") or "") in event_types and (str(assignment.get("id") or "") == assignment_id or str(event.get("subject") or "") == assignment_id):
-                return event
-        return None
+        return self._automation_readiness_service().latest_assignment_event(assignment_id, event_types)
+
+    def _run_completion_policy(self) -> RunCompletionPolicy:
+        from .composition import build_run_completion_policy
+
+        return build_run_completion_policy(
+            accumulated_evidence=self._accumulated_evidence, string_list=self._string_list, gate_state=self._gate_state
+        )
 
     def _run_completion_blockers(self, process: dict[str, Any], run: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        completion = process.get("run_completion") if isinstance(process.get("run_completion"), dict) else {}
-        evidence = self._accumulated_evidence(assignment)
-        blockers: list[dict[str, Any]] = []
-        for gate_id in self._string_list(completion.get("gates")):
-            gate = self._gate_state(process, gate_id, evidence, phase="run_completion")
-            if gate["required"] and gate["blocking"] and not gate["satisfied"]:
-                blockers.append({"code": "run_completion_gate_missing", "gate_id": gate_id})
-        assignment_id = str(assignment.get("id") or "")
-        for task in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-            if not isinstance(task, dict) or str(task.get("id") or "") == assignment_id or task.get("blocking", True) is False:
-                continue
-            if str(task.get("status") or "") not in {"done", "completed", "cancelled"}:
-                blockers.append({"code": "blocking_assignment_incomplete", "assignment_id": str(task.get("id") or ""), "status": str(task.get("status") or "")})
-        return blockers
+        return self._run_completion_policy().blockers(process, run, assignment)
+
+    def _completion_intent_read_service(self) -> CompletionIntentReadService:
+        from .composition import build_completion_intent_read_service
+
+        return build_completion_intent_read_service(
+            run_path=lambda run_id: self._run_path(run_id), intent_path=lambda run_id: self._completion_intent_path(run_id), valid_id=lambda value: bool(SAFE_ID_RE.fullmatch(value)), load_document=lambda path: self.core.load_yaml_document(path), validate=lambda intent, run, assignment, path: self._validate_completion_intent(intent, run, assignment, path)
+        )
+
+    def _completion_intent_path(self, run_id: str) -> Path:
+        return self._completion_intent_read_service().path(run_id)
+
+    def _completion_intent_builder(self) -> CompletionIntentBuilder:
+        from .composition import build_completion_intent_builder
+
+        return build_completion_intent_builder(
+            project_root=self.project_root, accumulated_evidence=lambda assignment: self._accumulated_evidence(assignment), set_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status), run_path=lambda run_id: self._run_path(run_id), assignment_path=lambda assignment_id: self._assignment_path(assignment_id), flow_root=lambda: self._flow_root(), summary=lambda run, assignment: self._render_summary(run, assignment), has_task_index=lambda: hasattr(self.core, 'render_task_index'), task_index=lambda root, run: self.core.render_task_index(root, run), rel=lambda path, root: self.core.rel(path, root), intent_path=lambda run_id: self._completion_intent_path(run_id), project_id=lambda root: self.core.project_id(root), fingerprint=canonical_fingerprint
+        )
+
+    def _build_completion_intent(
+        self,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        process: dict[str, Any],
+        *,
+        outcome: str,
+        notes: str,
+        completed_at: str,
+    ) -> dict[str, Any]:
+        return self._completion_intent_builder().build(run, assignment, process, outcome=outcome, notes=notes, completed_at=completed_at)
+
+    def _load_completion_intent(self, run: dict[str, Any], assignment: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+        return self._completion_intent_read_service().load(run, assignment)
+
+    def _completion_intent_validation_service(self) -> CompletionIntentValidationService:
+        from .composition import build_completion_intent_validation_service
+
+        return build_completion_intent_validation_service(
+            project_root=self.project_root, fingerprint=canonical_fingerprint, terminal_assignment_statuses=lambda: TERMINAL_ASSIGNMENT_STATUSES, effective_process=self._effective_process, rel=lambda path, root: self.core.rel(path, root), run_path=self._run_path, assignment_path=self._assignment_path, flow_root=self._flow_root, has_project_id=lambda: hasattr(self.core, 'project_id'), project_id=lambda root: self.core.project_id(root)
+        )
+
+    def _validate_completion_intent(
+        self,
+        intent: Any,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        journal_path: Path,
+    ) -> str | None:
+        return self._completion_intent_validation_service().validate(intent, run, assignment, journal_path)
+
+    def _completion_intent_replay_service(self) -> CompletionIntentReplayService:
+        from .composition import build_completion_intent_replay_service
+
+        return build_completion_intent_replay_service(
+            assignment_path=lambda assignment_id: self._assignment_path(assignment_id), run_path=lambda run_id: self._run_path(run_id), flow_root=lambda: self._flow_root(), atomic_yaml=lambda path, document: self._atomic_yaml(path, document), atomic_text=lambda path, text: self._atomic_text(path, text), state=lambda **selectors: self.state(**selectors), write_projection=lambda state: self._write_projection(state), emit=lambda *args, **kwargs: self._emit(*args, **kwargs), intent_path=lambda run_id: self._completion_intent_path(run_id)
+        )
+
+    def _replay_completion_intent(self, intent: dict[str, Any], *, session_id: str = "", remove_intent: bool = True) -> dict[str, Any]:
+        return self._completion_intent_replay_service().replay(intent, session_id=session_id, remove_intent=remove_intent)
 
     def _complete_locked(self, run: dict[str, Any], assignment: dict[str, Any], process: dict[str, Any], *, outcome: str, notes: str, completed_at: str) -> None:
         run_id = str(run["id"])
@@ -972,34 +950,30 @@ class ProcessExecutionService:
         self._atomic_text(handoff_path, handoff)
         self._write_task_index(run)
 
+    def _completion_document_service(self) -> CompletionDocumentService:
+        from .composition import build_completion_document_service
+
+        return build_completion_document_service(
+            project_root=self.project_root, run_path=lambda run_id: self._run_path(run_id), has_task_index=lambda: hasattr(self.core, 'render_task_index'), task_index=lambda root, run: self.core.render_task_index(root, run), atomic_text=lambda path, text: self._atomic_text(path, text)
+        )
+
     def _render_summary(self, run: dict[str, Any], assignment: dict[str, Any]) -> str:
-        history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
-        lines = [f"# Run Summary: {run.get('title', run.get('id'))}", "", f"- run_id: `{run.get('id')}`", "- status: `completed`", f"- process: `{run.get('process')}`", "", "## Stage History", ""]
-        lines.extend(f"- `{item.get('stage_id')}`: `{item.get('status')}` (`{item.get('outcome')}`)" for item in history if isinstance(item, dict))
-        if not history:
-            lines.append("- No stage history recorded.")
-        return "\n".join(lines) + "\n"
+        return self._completion_document_service().summary(run, assignment)
+
+    def _contract_validation(self, assignment: dict[str, Any]) -> dict[str, Any]:
+        return self._context_reader().validation(assignment)
+
+    def _context_reader(self) -> WorkContextReadPort:
+        if self.context is not None:
+            return self.context
+        from .composition import build_work_context_read_service
+
+        return build_work_context_read_service(self.project_root)
 
     def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
-        path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
-        capsule = {
-            "schema_version": 1,
-            "capsule": {"id": f"{assignment['id']}-capsule", "generated_at": self.core.now_utc(), "assignment_id": assignment["id"], "assignment_path": f".pf/assignments/{assignment['id']}.yaml", "immutable": True, "worker_may_rebuild_context": False},
-            "context_snapshot": {"id": pin["snapshot_id"], "sha256": pin["snapshot_checksum"], "freshness_at_creation": "fresh"},
-            "context": {
-                "snapshot_id": pin["snapshot_id"],
-                "freshness": "fresh",
-                "required_sources": [],
-                "context_artifacts": [],
-                "selected_specializations": _stable_ids(assignment.get("selected_specializations")),
-                "applied_project_overrides": [],
-                "selected_resource_ids": _stable_ids(pin.get("selected_resource_ids")),
-            },
-            "assignment": {"id": assignment["id"], "run_id": run["id"], "objective": assignment["objective"], "stage": assignment["stage"]},
-            "process_execution": copy.deepcopy(pin),
-        }
-        self._atomic_yaml(path, capsule)
-        return self.core.rel(path, self.project_root), "sha256:" + self._sha256_file(path)
+        from .composition import build_assignment_capsule_publisher
+
+        return build_assignment_capsule_publisher(self, stable_ids=_stable_ids).publish(run, assignment, pin)
 
     def _write_projection(self, state: dict[str, Any]) -> None:
         path = self._flow_root() / "artifacts" / "projections" / "process-execution-state.json"
@@ -1007,38 +981,25 @@ class ProcessExecutionService:
         self._atomic_text(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
     def _write_task_index(self, run: dict[str, Any]) -> None:
-        path = self._run_path(str(run["id"])).parent / "task-index.md"
-        if hasattr(self.core, "render_task_index"):
-            text = self.core.render_task_index(self.project_root, run)
-        else:
-            lines = [f"# Task Index: {run['id']}", ""]
-            lines.extend(f"- `{item.get('id')}`: `{item.get('status')}`" for item in run.get("tasks", []) if isinstance(item, dict))
-            text = "\n".join(lines) + "\n"
-        self._atomic_text(path, text)
+        self._completion_document_service().write_task_index(run)
 
-    def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None) -> None:
-        if not hasattr(self.core, "emit_process_event"):
-            return
-        self.core.emit_process_event(
-            self.project_root,
-            event_type,
-            process_id=str(run.get("process") or ""),
-            process_version=str((run.get("process_execution") or {}).get("process_version") or ""),
-            stage=stage_id,
-            subject=str(assignment.get("id") or run.get("id") or event_type),
-            assignment_id_value=str(assignment.get("id") or ""),
-            assignment_path=f".pf/assignments/{assignment.get('id')}.yaml" if assignment.get("id") else None,
-            payload={
-                "run_id": str(run.get("id") or ""),
-                "assignment_id": str(assignment.get("id") or ""),
-                "process_id": str(run.get("process") or ""),
-                "stage_id": stage_id,
-                "previous_stage_id": previous_stage_id,
-                "next_stage_id": next_stage_id,
-                "outcome": outcome,
-                "blockers": blockers or [],
-            },
-            correlation_id=f"run-{run.get('id')}",
+    def _work_event_publisher(self) -> WorkEventPublisher:
+        from .composition import build_work_event_publisher
+
+        return build_work_event_publisher(
+            project_root=self.project_root,
+            has_emitter=lambda: hasattr(self.core, "emit_process_event"),
+            emitter=lambda: self.core.emit_process_event,
+        )
+
+    def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None, event_id: str | None = None) -> None:
+        self._work_event_publisher().publish(
+            event_type, run, assignment, stage_id,
+            outcome=outcome,
+            previous_stage_id=previous_stage_id,
+            next_stage_id=next_stage_id,
+            blockers=blockers,
+            event_id=event_id,
         )
 
     @contextlib.contextmanager
@@ -1058,25 +1019,34 @@ class ProcessExecutionService:
             yield
 
     def _set_run_task_status(self, run: dict[str, Any], assignment_id: str, status: str) -> None:
-        tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
-        for item in tasks:
-            if isinstance(item, dict) and str(item.get("id") or "") == assignment_id:
-                item["status"] = status
+        self._run_completion_policy().set_task_status(run, assignment_id, status)
+
+    def _work_document_publisher(self) -> WorkDocumentPublisher:
+        from .composition import build_work_document_publisher
+
+        return build_work_document_publisher(
+            text_writer=lambda: self._atomic_text,
+            yaml_formatter=lambda: self.core.dump_yaml,
+        )
 
     def _atomic_yaml(self, path: Path, value: dict[str, Any]) -> None:
-        self._atomic_text(path, self.core.dump_yaml(value).rstrip() + "\n")
+        self._work_document_publisher().write_yaml(path, value)
 
     def _atomic_text(self, path: Path, content: str) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-        temporary.write_text(content, encoding="utf-8")
-        temporary.replace(path)
+        self._work_document_publisher().write_text(path, content)
+
+    def _work_documents(self) -> YamlDocumentReader:
+        return YamlDocumentReader(_parse_simple_yaml)
 
     def _load_run(self, run_id: str) -> dict[str, Any]:
-        return self.core.load_yaml_document(self._run_path(run_id))
+        if self.records is not None:
+            return self.records.load_run(self._validated_id(run_id, "run"))
+        return self._work_documents().load(self._run_path(run_id))
 
     def _load_assignment(self, assignment_id: str) -> dict[str, Any]:
-        return self.core.load_yaml_document(self._assignment_path(assignment_id))
+        if self.records is not None:
+            return self.records.load_assignment(self._validated_id(assignment_id, "assignment"))
+        return self._work_documents().load(self._assignment_path(assignment_id))
 
     def _run_path(self, run_id: str) -> Path:
         return self._flow_root() / "runs" / self._validated_id(run_id, "run") / "run.yaml"
@@ -1091,7 +1061,7 @@ class ProcessExecutionService:
         return identifier
 
     def _flow_root(self) -> Path:
-        return self.core.locate_flow_root(self.project_root)
+        return self.project_root / ".pf"
 
     def _unique_id(self, root: Path, seed: str) -> str:
         base = "-".join(str(seed or "work").lower().split())[:72].strip("-") or "work"
@@ -1111,3 +1081,15 @@ class ProcessExecutionService:
 
     def _blocked(self, reason: str, *, action: str = "blocked", **extra: Any) -> dict[str, Any]:
         return {"schema_version": 1, "kind": "pf.work.execution", "action": action, "reason": reason, **extra}
+
+
+    def _completion_request_service(self) -> WorkCompletionRequestService:
+        from .composition import build_work_completion_request_service
+
+        return build_work_completion_request_service(
+            work_selector=lambda: self._select_work, blocked_result=lambda: self._blocked,
+            process_reader=lambda: self._effective_process, outcomes_reader=lambda: normalized_outcomes,
+            state_reader=lambda: self.state, run_blockers=lambda: self._run_completion_blockers,
+            intent_reader=lambda: self._load_completion_intent, completion_readiness=lambda: self.can_complete,
+            transition=lambda: self.transition,
+        )

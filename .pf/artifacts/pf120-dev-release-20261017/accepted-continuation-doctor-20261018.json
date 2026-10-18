@@ -1,0 +1,9 @@
+{
+  "label": "accepted-continuation-doctor-20261018",
+  "started_at": "2026-10-17T20:39:46.496381+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.357674999977462,
+  "raw_sha256": "1b6983f1a3bce3290e09541fb0ee7fe22ebd47a10dbe75b174ac88970abba675",
+  "raw_bytes": 7243,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/accepted-continuation-doctor-20261018.log"
+}

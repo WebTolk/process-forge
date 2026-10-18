@@ -1,0 +1,6 @@
+{
+  "stage": "code-assurance",
+  "path": ".pf/artifacts/yaml-read-performance-20261017/code-assurance.md",
+  "summary": "Primary source review,14 focused smoke programs, frozen corpus parity and isolated syntax/schema/public/checksum/diff gates pass.",
+  "notes": "Source qualification complete; proceed to scoped publication, exact dev archive qualification and actual installed Runtime CPU verification."
+}

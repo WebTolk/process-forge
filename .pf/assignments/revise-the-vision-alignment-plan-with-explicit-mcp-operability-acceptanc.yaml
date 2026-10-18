@@ -1,0 +1,390 @@
+schema_version: 1
+id: revise-the-vision-alignment-plan-with-explicit-mcp-operability-acceptanc
+title: Revise the vision-alignment plan with explicit MCP operability acceptance and PS
+run_id: garage-revise-the-vision-alignment-plan-with-explicit-mcp-operability-ac
+process: software-feature-development
+status: done
+created_at: '2026-09-25T13:45:19Z'
+updated_at: '2026-09-25T13:59:52Z'
+objective: Revise the vision-alignment plan with explicit MCP operability acceptance and PSR-3-inspired diagnostic verbosity and logging tasks; documentation-only revision, preserve previous plan evidence, no runtime repair or product implementation in this Work.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Plan revision complete. Subsequent pf-server naming, monitor and always-on Garage discussion captured as proposed T10; not implemented or silently added to existing acceptance graph. Product MCP repair/logging remain future tasks.
+  artifacts:
+    - .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+    - .pf/artifacts/vision-alignment-plan-20260925-r02/change-record.md
+    - .pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md
+    - .pf/artifacts/vision-alignment-plan-20260925-r02/evolution.md
+    - .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-25T13:57:43Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/vision-alignment-plan-20260925-r02/evolution.md
+      status: ready
+      recorded_at: '2026-09-25T13:59:45Z'
+      sha256: 'sha256:8dd8180324f98a8e1f5fa72895662f64fb560779b545efd96fe2db808a9e97a0'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/vision-alignment-plan-20260925-r02/evolution.md
+      status: passed
+      summary: Captured operator pf-server proposal with evidence and tradeoffs, preserving core independence and no implementation claim.
+      recorded_at: '2026-09-25T13:59:45Z'
+      sha256: 'sha256:8dd8180324f98a8e1f5fa72895662f64fb560779b545efd96fe2db808a9e97a0'
+  notes: Plan revision complete. Subsequent pf-server naming, monitor and always-on Garage discussion captured as proposed T10; not implemented or silently added to existing acceptance graph. Product MCP repair/logging remain future tasks.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-25T13:45:19Z'
+    completed_at: '2026-09-25T13:48:22Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:19Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:19Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:19Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: passed
+        summary: Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task.
+        recorded_at: '2026-09-25T13:48:19Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+    notes: 'Bounded plan revision: MCP live acceptance, diagnostic levels and profiles, immutable previous evidence; reviewed applicable document sections.'
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-25T13:48:22Z'
+    completed_at: '2026-09-25T13:48:38Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:35Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:35Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:35Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: passed
+        summary: Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task.
+        recorded_at: '2026-09-25T13:48:35Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+    notes: 'Bounded plan revision: MCP live acceptance, diagnostic levels and profiles, immutable previous evidence; reviewed applicable document sections.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-25T13:48:38Z'
+    completed_at: '2026-09-25T13:49:02Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:57Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:48:57Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: passed
+        summary: Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task.
+        recorded_at: '2026-09-25T13:48:57Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: passed
+        summary: Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task.
+        recorded_at: '2026-09-25T13:48:57Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+    notes: 'Bounded plan revision: MCP live acceptance, diagnostic levels and profiles, immutable previous evidence; reviewed applicable document sections.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-25T13:49:02Z'
+    completed_at: '2026-09-25T13:49:19Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:49:16Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:49:16Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:49:16Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: passed
+        summary: Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task.
+        recorded_at: '2026-09-25T13:49:16Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+    notes: 'Bounded plan revision: MCP live acceptance, diagnostic levels and profiles, immutable previous evidence; reviewed applicable document sections.'
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-25T13:49:19Z'
+    completed_at: '2026-09-25T13:49:37Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:49:33Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:49:33Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: ready
+        recorded_at: '2026-09-25T13:49:33Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+        status: passed
+        summary: Reviewed corresponding scope, source investigation and document-design sections; product repair is a future task.
+        recorded_at: '2026-09-25T13:49:33Z'
+        sha256: 'sha256:cdd31cb184cf204f89555678172e1823f575a4bddccaa6aeaff6d4393926c620'
+    notes: 'Bounded plan revision: MCP live acceptance, diagnostic levels and profiles, immutable previous evidence; reviewed applicable document sections.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-25T13:49:37Z'
+    completed_at: '2026-09-25T13:52:00Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/change-record.md
+        status: ready
+        recorded_at: '2026-09-25T13:51:56Z'
+        sha256: 'sha256:73d64ff7cd99df25381db67a5a1cdaa74743b706672231c4551d9bd9cd6a81b7'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/change-record.md
+        status: ready
+        recorded_at: '2026-09-25T13:51:56Z'
+        sha256: 'sha256:73d64ff7cd99df25381db67a5a1cdaa74743b706672231c4551d9bd9cd6a81b7'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/change-record.md
+        status: passed
+        summary: Only new revision documents and PF-generated state; historical evidence and product implementation preserved.
+        recorded_at: '2026-09-25T13:51:56Z'
+        sha256: 'sha256:73d64ff7cd99df25381db67a5a1cdaa74743b706672231c4551d9bd9cd6a81b7'
+    notes: 'Implemented document revision r02: MCP repair and diagnostics tasks, changed T01/T06 acceptance, explicit dependency graph. No product implementation or infrastructure repair.'
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-25T13:52:00Z'
+    completed_at: '2026-09-25T13:56:19Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+        status: ready
+        recorded_at: '2026-09-25T13:56:15Z'
+        sha256: 'sha256:5436ed28f04819f45041ab291290b4b23dbf6e8d6d0e63a5d9ac58a6054623e8'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+        status: ready
+        recorded_at: '2026-09-25T13:56:15Z'
+        sha256: 'sha256:5436ed28f04819f45041ab291290b4b23dbf6e8d6d0e63a5d9ac58a6054623e8'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+        status: ready
+        recorded_at: '2026-09-25T13:56:15Z'
+        sha256: 'sha256:5436ed28f04819f45041ab291290b4b23dbf6e8d6d0e63a5d9ac58a6054623e8'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+        status: ready
+        recorded_at: '2026-09-25T13:56:15Z'
+        sha256: 'sha256:5436ed28f04819f45041ab291290b4b23dbf6e8d6d0e63a5d9ac58a6054623e8'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+        status: passed
+        summary: Document validator and primary semantic review passed; no runtime repair or product behavior is claimed.
+        recorded_at: '2026-09-25T13:56:15Z'
+        sha256: 'sha256:5436ed28f04819f45041ab291290b4b23dbf6e8d6d0e63a5d9ac58a6054623e8'
+    notes: Plan revision checks and self-review passed, including historical hashes and protocol stdout boundaries. New operator pf-server discussion is a future evolution candidate, not an implemented feature.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-25T13:56:19Z'
+    completed_at: '2026-09-25T13:57:43Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md
+        status: ready
+        recorded_at: '2026-09-25T13:57:36Z'
+        sha256: 'sha256:5e5ce397c41a549def6aaaf3166dcb8f3a65f7dacb7e9292f3f63b94376a8399'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md
+        status: passed
+        summary: Local plan revision ready; MCP repair and logging implementation remain future tasks.
+        recorded_at: '2026-09-25T13:57:36Z'
+        sha256: 'sha256:5e5ce397c41a549def6aaaf3166dcb8f3a65f7dacb7e9292f3f63b94376a8399'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md
+        status: not_applicable
+        reason: Documentation-only revision; no product deployment or release requested in this Work.
+        evidence:
+          - .pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md
+          - .pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md
+        recorded_at: '2026-09-25T13:57:36Z'
+        sha256: 'sha256:5e5ce397c41a549def6aaaf3166dcb8f3a65f7dacb7e9292f3f63b94376a8399'
+    notes: Delivered local plan revision with explicit product-release non-applicability. Capture subsequent pf-server operator proposals in evolve without implementing infrastructure or rewriting prior evidence.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-25T13:57:43Z'
+    completed_at: '2026-09-25T13:59:52Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/evolution.md
+        status: ready
+        recorded_at: '2026-09-25T13:59:45Z'
+        sha256: 'sha256:8dd8180324f98a8e1f5fa72895662f64fb560779b545efd96fe2db808a9e97a0'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/vision-alignment-plan-20260925-r02/evolution.md
+        status: passed
+        summary: Captured operator pf-server proposal with evidence and tradeoffs, preserving core independence and no implementation claim.
+        recorded_at: '2026-09-25T13:59:45Z'
+        sha256: 'sha256:8dd8180324f98a8e1f5fa72895662f64fb560779b545efd96fe2db808a9e97a0'
+    notes: Plan revision complete. Subsequent pf-server naming, monitor and always-on Garage discussion captured as proposed T10; not implemented or silently added to existing acceptance graph. Product MCP repair/logging remain future tasks.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-134006-95c757
+  snapshot_checksum: 'sha256:daeb17f41ab00ea9812d36e73c433d33325348160c1efcb8c1f85449dea30932'
+  assignment_capsule: .pf/contexts/assignment-capsules/revise-the-vision-alignment-plan-with-explicit-mcp-operability-acceptanc.capsule.yaml
+  assignment_capsule_checksum: 'sha256:5790fb6a6f35f29f9f834a5055667cd748919027b4b300c52c75071a8ffacf3a'

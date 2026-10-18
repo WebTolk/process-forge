@@ -1,0 +1,17 @@
+{
+  "sha": "8f00ca1711f1d7ad276da61a9fcbec907da0cd36",
+  "paths": [
+    "CHANGELOG.md",
+    "docs/concepts/document-reads.md",
+    "docs/ru/concepts/document-reads.md",
+    "src/processforge_core/common/request_scope.py",
+    "src/processforge_core/documents/parse_cache.py",
+    "src/processforge_core/documents/reader.py",
+    "src/processforge_core/runtime/metrics.py",
+    "tools/processforge.py",
+    "tools/smoke_request_scope.py",
+    "tools/smoke_yaml_parse_cache.py",
+    "checksums/processforge.sha256"
+  ],
+  "clean_candidate_exact_tree": true
+}

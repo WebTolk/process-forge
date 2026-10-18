@@ -1,0 +1,8 @@
+{
+  "label": "task-doctor",
+  "started_at": "2026-10-18T04:39:31.904723+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.2119258000166155,
+  "raw_sha256": "3ac2727bbfa7e7cc706f36ff3c5998a0bce55cd171ea0ec2fcee8df089abaf96",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/task-doctor.log"
+}

@@ -1,0 +1,12 @@
+{
+  "pid": 9716,
+  "instance_id": "1c0b979a99bb4da095fa7e1510d0e141",
+  "started_at": "2026-10-17T06:49:26Z",
+  "readyz": {
+    "ready": true,
+    "status": "ready"
+  },
+  "health": "degraded",
+  "last_scheduler_error": "D:\\Dev\\process-forge: project scheduler pass failed with status 1",
+  "old_connected_mcp_stopped": true
+}

@@ -1,0 +1,3 @@
+# Installed acceptance correction assurance
+
+Root cause and bounded architecture correction: ../t10-operator-20260926/live-acceptance-correction.md. Exact six-file scope preserved; all other source hashes match previously qualified a5eeac53. New real observation-thread regression publishes while ordinary routing is held blocked. Metrics, guarded server, monitor, scheduler isolation, Core boundary, checksum/cleanliness/diff checks pass. Previous 18 source checks remain evidence for unchanged behavior, including five-profile process invariance and concurrent journal append. Candidate/archive and installed acceptance must still pass before completing the existing Work.

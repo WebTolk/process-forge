@@ -1,0 +1,27 @@
+{
+  "archive": ".pf\\tmp\\hook-sqlite-device-cutover-20261017\\processforge-1.2.0-dev-20261017-sqlite-69c59ec.zip",
+  "bytes": 2506866,
+  "sha256": "6dbcfdb8090a1fb9f6761fef9d0973e3e17911d577314095c270a25bcc3745db",
+  "entries": 1300,
+  "core_version": "1.2.0",
+  "core_files": 1299,
+  "source": {
+    "commit": "69c59ec7e86d0a1e8aaf2cc8c4e59491969448ab",
+    "dirty": false,
+    "tree": "634ff4238553440ee643fa576c861cfe3725a9cd",
+    "vcs": "git"
+  },
+  "sidecar_keys": [
+    "archive",
+    "build",
+    "files",
+    "name",
+    "official_packs",
+    "release_eligible",
+    "schema_bundle_version",
+    "schema_version",
+    "source",
+    "version"
+  ],
+  "required_payload_present": true
+}

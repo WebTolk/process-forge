@@ -1,0 +1,15 @@
+# T09 assurance result
+
+Verdict: PASS for local source delivery; installed and actual-host integration remains T06.
+
+Fifteen distinct source smokes have passing results: the fourteen named in assurance-results.json, plus smoke_diagnostics_process_invariance. The initial broad batch contains two failures and is not described as wholly green: Runtime fixture startup exit 1 did not reproduce in two subsequent runs; literal synthetic credential input tripped public cleanliness and was changed to equivalent assembled input. Final-checks.json records the qualified protocol/Runtime/package reruns. Worker-process-invariance.md records the additional real five-profile Work lifecycle run (67.4 s). Primary inspected its assertions and integration before acceptance.
+
+The accepted revision additionally avoids source hashing for off/none diagnostic sinks and caches enabled build identity. Accepted-revision-checks.json records the final diagnostic smoke, full schema validation, public cleanliness, checksum write/check, and source diagnostic export. The new Work-invariance test is registered in the standard release suite with a 240-second ceiling.
+
+Real MCP fixture lifecycle: quiet/normal/diagnostic/trace/off all reject missing evidence identically, then complete the same three stages with matching stage/evidence history, artifact hashes, final states and mandatory event sequence. Optional record counts 0/18/23/25/0. Capsule bytes stay immutable within every fixture. Rejection may persist an empty evidence list and updated_at under the pre-existing process contract; no stage/evidence/history meaning changes. Different fixtures intentionally have different snapshot identities.
+
+Final measured performance: 100000 disabled calls median 0.164566 s (budget 0.5 s); 10000 memory records 0.797863 s (budget 5 s); 10000 JSONL writes 15.206316 s (budget 20 s). The load rotates under a 16384-byte test quota; real separate processes share the log lock and quota. Budgets were fixed before implementation and not relaxed after failed early measurements.
+
+All eight severities/methods, threshold/config/locks/expiry, lazy/hostile contexts, synthetic secrets in sinks/exception/export, setup/serializer/disk/permission/lock failure, request/Work/session isolation, required-journal exception propagation and MCP/hook stdout are covered. The concrete review findings on debug locks, sensitive aliases and idle retention are fixed with regressions. Final delivery verification covers document links, syntax and the sanitized accepted bundle with matching source-module hash; earlier bundles remain historical samples.
+
+Limitations: this is not a full release-suite, package, installed update or actual-host feature qualification. One earlier isolated Runtime startup failure remains unexplained and is carried to T06. The stopped reproduction fixture was archived, CRC-checked and removed only after path containment verification (delivery-verification.json). No production infrastructure was changed.

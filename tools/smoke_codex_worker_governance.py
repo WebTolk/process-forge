@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Smoke test assignment-derived Codex sandbox and PF-first worker prompts."""
+"""Smoke test assignment-derived Codex sandbox and prepared worker prompts."""
 
 from __future__ import annotations
 
 import json
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import processforge as pf
-from codex_exec_worker import codex_config_args, managed_hook_trust_args
+from codex_exec_worker import codex_config_args, managed_hook_trust_args, prompt_payload
 
 
 def task(*, writer: bool, code: bool, artifacts: bool) -> dict[str, object]:
@@ -83,17 +84,38 @@ def main() -> int:
         if readonly_command["command"]["environment"].get("PF_CODEX_SANDBOX") != "read-only":
             raise AssertionError(readonly_command)
 
-        prompt = pf.render_worker_launch_prompt(project, "governed-worker")
-        required = ["`pf.context`", "`pf.work.start`", "`pf.resolve`", "`pf.search`", "Do not silently fall back"]
-        missing = [item for item in required if item not in prompt]
-        if missing:
-            raise AssertionError({"missing": missing, "prompt": prompt})
+        for selected in (writable, readonly):
+            for prepared in (None, {"path": ".pf/prepared/fixture.json", "checksum": "sha256:fixture"}):
+                with patch.object(pf, "load_task", return_value=selected):
+                    prompt = pf.render_worker_launch_prompt(project, "governed-worker", prepared_input=prepared)
+                required = ["PF_PREPARED_INPUT_FILE", "PF_PREPARED_INPUT_SHA256", "Do not bootstrap ProcessForge",
+                            "No ProcessForge MCP connection is required", "supplied output delivery contract",
+                            "return only its complete content", "For a read-only assignment, do not write the report file yourself",
+                            "External resource bodies require explicit grants in the prepared input",
+                            "metadata and pointers do not grant permission", "Do not read an extra mutable workspace_access_file",
+                            "- workspace_access_file:", "## workspace_access", "## expected_report"]
+                missing = [item for item in required if item not in prompt]
+                if missing:
+                    raise AssertionError({"missing": missing, "prompt": prompt})
+                for forbidden in ("`pf.work.start`", "`pf.context`", "Use workspace_access_file for", "Write expected_report."):
+                    assert forbidden not in prompt, forbidden
+                assert ("not launch-ready" in prompt) == (prepared is None)
+
+        # Prepared Codex uses the fixed wrapper without reading mutable prompt,
+        # capsule or workspace-access files, and captures only the final answer.
+        prepared = {"kind": "pf.prepared-input", "input": {"marker": "immutable"}}
+        with patch("codex_exec_worker.read_text", side_effect=AssertionError("mutable body read")):
+            fixed_prompt = prompt_payload(project / "prompt.md", project / "capsule.yaml", project / "access.json", prepared)
+        assert "Your final response is captured verbatim" in fixed_prompt
+        assert "For a read-only assignment, do not attempt to write the report file yourself" in fixed_prompt
+        assert "## Workspace Access File" not in fixed_prompt
+        assert json.loads(fixed_prompt.split("## Prepared Execution Input\n\n", 1)[1]) == prepared
 
         template = pf.load_yaml_document(pf.ROOT / "templates" / "runtime-drivers" / "codex-exec.yaml")
         if template.get("environment", {}).get("variables", {}).get("PF_CODEX_SANDBOX") != "{agent_sandbox}":
             raise AssertionError(template)
         json.dumps(command)
-    print("PASS: Codex worker sandbox and PF-first governance")
+    print("PASS: Codex worker sandbox and prepared input governance")
     return 0
 
 

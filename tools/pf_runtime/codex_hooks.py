@@ -60,10 +60,16 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
     data = {key: payload[key] for key in ("turn_id", "tool_name", "tool_use_id", "model", "permission_mode", "reason") if payload.get(key) not in (None, "")}
     if hook == "PostToolUse" and tool_name and tool_name != "Bash":
         event_type = "agent.tool.completed"
+    event_id = f"codex:{hook}:{session_id}:{payload.get('turn_id', '')}:{payload.get('tool_use_id', '')}"
+    # Keep the historical startup ID stable while separating later lifecycle
+    # facts. Hook input has no documented stable occurrence ID; identical
+    # resume deliveries remain indistinguishable and therefore idempotent.
+    if hook == "SessionStart" and source != "startup":
+        event_id += f":{source}"
     return {
         "schema_version": 1,
         "event_type": event_type,
-        "event_id": f"codex:{hook}:{session_id}:{payload.get('turn_id', '')}:{payload.get('tool_use_id', '')}",
+        "event_id": event_id,
         "project_root": cwd,
         "session_id": session_id,
         "agent_id": "codex",
@@ -140,14 +146,14 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
-    envelope = native_envelope(payload)
-    if not envelope:
+    project_ref = str(payload.get("cwd") or "")
+    if not project_ref:
         return {"status": "ignored"}
     runtime = runtime_bootstrap()
     core = runtime.core
     host = runtime.host
     service = runtime.service
-    project_root = Path(str(envelope["source_project_ref"])).expanduser()
+    project_root = Path(project_ref).expanduser()
     try:
         core.require_flow_root(project_root)
     except SystemExit:
@@ -158,8 +164,15 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
     # unavailable daemon must not fail or delay the Codex turn, so fall back to
     # the durable Host/Core path that was used before the daemon was started.
     workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+    _configuration, collect = host.hook_configuration(project_root, workplace_root, core)
+    if not collect:
+        return host.ignored_hook()
+    envelope = native_envelope(payload)
+    if not envelope:
+        return {"status": "ignored"}
     try:
-        with contextlib.redirect_stdout(io.StringIO()):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
             exit_code = service.runtime_request(
                 argparse.Namespace(workplace=str(workplace_root), json=True),
                 core,
@@ -167,19 +180,40 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 envelope,
             )
         if exit_code == 0:
+            body = json.loads(output.getvalue()) if output.getvalue().strip() else {}
+            if isinstance(body, dict) and body.get("routing_status") in {"ignored", "denied"}:
+                return {**body, "status": "ignored", "transport": "runtime"}
             return {"status": "delivered", "transport": "runtime"}
     except (OSError, SystemExit, ValueError):
         pass
 
     with contextlib.redirect_stdout(io.StringIO()):
         result = host.ingest_event(envelope, None, core)
+    if result.get("routing_status") in {"ignored", "denied"}:
+        return {**result, "status": "ignored", "transport": "ledger-fallback"}
     return {"status": "delivered", "transport": "ledger-fallback", **result}
 
 
 def main() -> int:
+    src_root = str(Path(__file__).resolve().parents[2] / "src")
+    if src_root not in sys.path:
+        sys.path.insert(0, src_root)
+    from processforge_core import diagnostics
+    hook = ""
+    debug = os.environ.get("PF_CODEX_HOOK_DEBUG") == "1"
+    options = diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
+    logger = diagnostics.for_project(Path.cwd(), invocation=options)
+    if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+        logger = diagnostics.for_stderr(options)
     try:
         payload = json.load(sys.stdin)
-        result = dispatch(payload if isinstance(payload, dict) else {})
+        hook = str(payload.get("hook_event_name") or "") if isinstance(payload, dict) else ""
+        if isinstance(payload, dict) and isinstance(payload.get("cwd"), str):
+            logger = diagnostics.for_project(Path(payload["cwd"]), session_id=payload.get("session_id"), invocation=options)
+            if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+                logger = diagnostics.for_stderr(options)
+        with diagnostics.operation(logger, "hooks", "hook.dispatch", session_id=payload.get("session_id") if isinstance(payload, dict) else None, build=diagnostics.identity_for(logger, __file__)):
+            result = dispatch(payload if isinstance(payload, dict) else {})
         # Stop and SubagentStop require a JSON result on stdout.  An empty
         # object is a neutral protocol response: this observer never blocks,
         # rewrites, or continues a Codex session.
@@ -192,12 +226,12 @@ def main() -> int:
             # identifier.  It lets the current Codex turn call session MCP
             # tools without searching private PF state or guessing a path.
             print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project."}}, ensure_ascii=False))
-        if os.environ.get("PF_CODEX_HOOK_DEBUG") == "1":
-            # Never append diagnostic output to Codex hook protocol stdout.
-            print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
+        logger.debug("hook.result", {"status": result.get("status"), "transport": result.get("transport"), "reason": result.get("reason"),
+                                     "normalized_event_count": len(result.get("normalized_event_ids") or [])}, component="hooks", code="hook.result")
     except Exception as exc:  # hooks are observation, never a Codex failure point
-        if os.environ.get("PF_CODEX_HOOK_DEBUG") == "1":
-            print(json.dumps({"status": "ignored", "reason": type(exc).__name__}, ensure_ascii=False))
+        if hook in {"Stop", "SubagentStop"}:
+            print("{}")
+        logger.error("hook.ignored", {"exception": exc}, component="hooks", code="hook.ignored")
     return 0
 
 

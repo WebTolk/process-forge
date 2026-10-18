@@ -1,0 +1,38 @@
+{
+  "observed_at": "2026-10-18T04:51:35.329534+00:00",
+  "status": "passed",
+  "cases": [
+    {
+      "case": "extra-version",
+      "expected_rejection_verified": true
+    },
+    {
+      "case": "prerelease",
+      "expected_rejection_verified": true
+    },
+    {
+      "case": "yanked",
+      "expected_rejection_verified": true
+    },
+    {
+      "case": "wrong-channel",
+      "expected_rejection_verified": true
+    },
+    {
+      "case": "mutable-url",
+      "expected_rejection_verified": true
+    },
+    {
+      "case": "wrong-sha",
+      "expected_rejection_verified": true
+    },
+    {
+      "case": "wrong-size",
+      "expected_rejection_verified": true
+    }
+  ],
+  "count": 7,
+  "method": "Existing proposed metadata smoke against isolated malformed documents",
+  "live_product_or_channel_modified": false,
+  "purpose": "Verify rejection remains meaningful after removing the obsolete literal1.2.0 blacklist"
+}

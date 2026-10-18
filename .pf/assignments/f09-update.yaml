@@ -1,0 +1,106 @@
+schema_version: 1
+id: f09-update
+title: f09-update
+run_id: core-f09-f12-shell-20260910
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T11:33:43Z'
+updated_at: '2026-09-10T11:50:20Z'
+objective: Execute bounded brief .pf/artifacts/core-f09-f12-20260910/f09-update-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-f09-f12-20260910/f09-update-brief.md
+allowed_files:
+  - src/processforge_core/core_update.py
+  - tools/smoke_core_update_missing_owned.py
+  - .pf/artifacts/core-f09-f12-20260910/f09-update/**
+  - .pf/tmp/f09-update/**
+allowed_read_files:
+  - src/processforge_core/core_update.py
+  - src/processforge_core/local_resource_search.py
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - tools/smoke_*.py
+  - docs/**
+  - .pf/artifacts/python-core-audit-20260908/**
+  - .pf/artifacts/core-f09-f12-20260910/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/processforge.py
+  - .pf/process-forge.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+ownership:
+  owner_id: f09-update
+  owner_label: worker-f09-update
+  role: worker
+  writer: true
+  owned_files:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_missing_owned.py
+    - .pf/artifacts/core-f09-f12-20260910/f09-update/**
+    - .pf/tmp/f09-update/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_missing_owned.py
+    - .pf/artifacts/core-f09-f12-20260910/f09-update/**
+    - .pf/tmp/f09-update/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: f09-update-report
+    path: .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: medium
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+  format: concise_markdown
+  include:
+    - f09-update-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

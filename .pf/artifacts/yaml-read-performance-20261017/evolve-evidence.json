@@ -1,0 +1,15 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/evolution-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/evolution-report.md",
+    "status": "passed",
+    "summary": "Delivered YAML parsing improvement, user-confirmed RAM-cache behavior, measured Host JSON residual and precise continuation boundaries recorded."
+  }
+]

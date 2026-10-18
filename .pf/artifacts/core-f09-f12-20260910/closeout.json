@@ -1,0 +1,17 @@
+{
+  "runs": {
+    "garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres": "completed",
+    "core-f09-f12-shell-20260910": "completed"
+  },
+  "assignments": {
+    "remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with": "done",
+    "f09-update": "done",
+    "f1011-search": "done",
+    "f12-ingress": "done",
+    "f0912-review": "done"
+  },
+  "carrier_action": "run_completed",
+  "worker_executions": "all four completed exit 0",
+  "collection": "f09 collected; search/ingress/review cardinality rejected, explicit primary acceptance used",
+  "final_state": "final-state.json"
+}

@@ -1,0 +1,139 @@
+{
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_agent_ledger.py"
+      ],
+      "elapsed_seconds": 10.845,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:47:30Z",
+      "label": "smoke_agent_ledger",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:47:19Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_garage_no_runtime_required.py"
+      ],
+      "elapsed_seconds": 0.231,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:47:30Z",
+      "label": "smoke_docs_garage_no_runtime_required",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:47:30Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_mcp_host_owned_stdio.py"
+      ],
+      "elapsed_seconds": 0.182,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:47:30Z",
+      "label": "smoke_docs_mcp_host_owned_stdio",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:47:30Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_agent_no_manual_infra.py"
+      ],
+      "elapsed_seconds": 0.134,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:47:30Z",
+      "label": "smoke_docs_agent_no_manual_infra",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:47:30Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_docs_codex_hooks_optional.py"
+      ],
+      "elapsed_seconds": 0.119,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:47:31Z",
+      "label": "smoke_docs_codex_hooks_optional",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:47:30Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_multi_process_work_capsule.py"
+      ],
+      "elapsed_seconds": 47.16,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:48:18Z",
+      "label": "smoke_multi_process_work_capsule",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:47:31Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_blocks_missing_gate.py"
+      ],
+      "elapsed_seconds": 10.817,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:48:29Z",
+      "label": "smoke_work_transition_blocks_missing_gate",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:48:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_transition_final_stage_completes_run.py"
+      ],
+      "elapsed_seconds": 13.694,
+      "exit_code": 0,
+      "finished_at": "2026-09-07T12:48:42Z",
+      "label": "smoke_work_transition_final_stage_completes_run",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-07T12:48:29Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    }
+  ],
+  "elapsed_seconds": 83.183,
+  "finished_at": "2026-09-07T12:48:42Z",
+  "public": false,
+  "public_checks": [],
+  "result": "PASS",
+  "schema_version": 1,
+  "started_at": "2026-09-07T12:47:19Z"
+}

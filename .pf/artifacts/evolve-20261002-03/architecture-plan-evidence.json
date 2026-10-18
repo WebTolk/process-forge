@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "architecture",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/architecture-plan.md",
+    "summary": "Use grant_rows plus existing material descriptor/capture path as the Work materialization enforcement point."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "implementation-plan",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/architecture-plan.md",
+    "summary": "Patch Work row policy precedence, accept full_text legacy spelling, add smoke coverage, and update docs."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "decision-log",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/architecture-plan.md",
+    "summary": "Preserve local-search grant membership, resolved policy precedence, and the current write-scope boundary around tools/processforge.py."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "architecture-plan-ready",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/architecture-plan.md",
+    "summary": "Architecture, implementation and verification plan are ready for the implementation stage."
+  }
+]

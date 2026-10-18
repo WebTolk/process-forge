@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "schema_equivalence": "PASS",
+  "complete_contract_positive": "PASS",
+  "required_field_negatives": 18,
+  "unknown_version_and_missing_source_hash": "PASS",
+  "docs": 5,
+  "python_files": 8
+}

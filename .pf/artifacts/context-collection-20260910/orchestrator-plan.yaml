@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "run": {
+    "id": "context-collection-shell-20260910",
+    "title": "Diagnose context origin mismatch and worker report collection",
+    "process": "multi-agent-task-orchestration"
+  },
+  "orchestrator": {
+    "role": "orchestrator",
+    "responsibilities": [
+      "architecture and sequential ownership",
+      "real regression acceptance",
+      "integration and governed closure"
+    ]
+  },
+  "runtime": {
+    "default_driver": "codex-exec",
+    "supervisor_profile": "default",
+    "start_policy": "manual",
+    "max_parallel_workers": 2
+  },
+  "workers": [
+    {
+      "id": "context-origin",
+      "title": "context-origin",
+      "role": "analyst",
+      "process": "task-batch-execution",
+      "objective": "Diagnose the defect using .pf/artifacts/context-collection-20260910/context-origin-brief.md",
+      "execution_mode": "planning_only",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "medium",
+      "allowed_files": [
+        ".pf/artifacts/context-collection-20260910/context-origin/**",
+        ".pf/tmp/context-origin/**"
+      ],
+      "allowed_read_files": [
+        "tools/processforge.py",
+        "tools/codex_exec_worker.py",
+        "tools/pf_runtime/**",
+        "tools/smoke_*.py",
+        "src/processforge_core/**",
+        "docs/**",
+        "schemas/**",
+        "classifiers/**",
+        ".pf/process-forge.yaml",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/core-f09-f12-20260910/**",
+        ".pf/runtime/agent-runs/core-f09-f12-shell-20260910/**",
+        ".pf/artifacts/context-collection-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        "tools/**",
+        "src/**",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf/artifacts/context-collection-20260910/context-origin-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "context-origin-report",
+          "path": ".pf/artifacts/context-collection-20260910/context-origin/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/context-collection-20260910/context-origin/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "report-capture",
+      "title": "report-capture",
+      "role": "analyst",
+      "process": "task-batch-execution",
+      "objective": "Diagnose the defect using .pf/artifacts/context-collection-20260910/report-capture-brief.md",
+      "execution_mode": "planning_only",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "medium",
+      "allowed_files": [
+        ".pf/artifacts/context-collection-20260910/report-capture/**",
+        ".pf/tmp/report-capture/**"
+      ],
+      "allowed_read_files": [
+        "tools/processforge.py",
+        "tools/codex_exec_worker.py",
+        "tools/pf_runtime/**",
+        "tools/smoke_*.py",
+        "src/processforge_core/**",
+        "docs/**",
+        "schemas/**",
+        "classifiers/**",
+        ".pf/process-forge.yaml",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/core-f09-f12-20260910/**",
+        ".pf/runtime/agent-runs/core-f09-f12-shell-20260910/**",
+        ".pf/artifacts/context-collection-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        "tools/**",
+        "src/**",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf/artifacts/context-collection-20260910/report-capture-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "report-capture-report",
+          "path": ".pf/artifacts/context-collection-20260910/report-capture/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/context-collection-20260910/report-capture/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    }
+  ],
+  "integration": {
+    "required": true,
+    "role": "orchestrator",
+    "expected_output": ".pf/artifacts/context-collection-20260910/integration-report.md"
+  },
+  "metadata": {
+    "carrier_run": "garage-orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-conte",
+    "authorization": "User explicitly requested launch PF shell workers for next work; diagnostic assignments precede sequential shared-file implementation."
+  }
+}

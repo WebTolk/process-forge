@@ -1,0 +1,2 @@
+# Independent F06-F08 review
+After implementation and primary checks, review diff against 5c95391, audit findings and acceptance evidence. Write only your report. Examine lock ownership/races/dead-owner recovery and backwards compatibility of public CLI default/JSON behavior. Check tests reproduce original defects and exercise real public paths. Cite concrete defects or bounded PASS, distinguish tests you run from supplied evidence. No source edits, infrastructure operations or subagents.

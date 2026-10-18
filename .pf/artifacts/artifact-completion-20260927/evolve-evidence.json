@@ -1,0 +1,32 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "path": ".pf/artifacts/artifact-completion-20260927/evolution-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "updated-rules-or-extensions",
+    "path": ".pf/artifacts/artifact-completion-20260927/updated-rules-or-extensions.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "instruction-update-proposal",
+    "path": ".pf/artifacts/artifact-completion-20260927/instruction-update-proposal.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "knowledge-update-proposal",
+    "path": ".pf/artifacts/artifact-completion-20260927/knowledge-update-proposal.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "path": ".pf/artifacts/artifact-completion-20260927/evolution-report.md",
+    "status": "passed"
+  }
+]

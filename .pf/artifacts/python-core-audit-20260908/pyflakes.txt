@@ -1,0 +1,31 @@
+src\processforge_core\garage.py:6:1: 'hashlib' imported but unused
+tools\codex_exec_worker.py:12:1: 'sys' imported but unused
+tools\processforge.py:2067:14: f-string is missing placeholders
+tools\processforge.py:2684:14: f-string is missing placeholders
+tools\processforge.py:3151:16: undefined name 'load_json'
+tools\processforge.py:6580:13: local variable 'lower' is assigned to but never used
+tools\processforge.py:10342:5: local variable 'detected_data' is assigned to but never used
+tools\processforge.py:10964:17: f-string is missing placeholders
+tools\processforge.py:13807:1: redefinition of unused 'as_list' from line 12347
+tools\processforge.py:14187:9: import 'field' from line 27 shadowed by loop variable
+tools\processforge.py:14515:13: import 'field' from line 27 shadowed by loop variable
+tools\processforge.py:14924:29: f-string is missing placeholders
+tools\processforge.py:14934:29: f-string is missing placeholders
+tools\processforge.py:14996:5: local variable 'process_id' is assigned to but never used
+tools\processforge.py:15151:13: import 'field' from line 27 shadowed by loop variable
+tools\processforge.py:19885:91: undefined name 'default_expected_report_artifact'
+tools\processforge.py:21666:9: import 'field' from line 27 shadowed by loop variable
+tools\processforge.py:22478:15: f-string is missing placeholders
+tools\processforge.py:22998:1: redefinition of unused 'sha256_file' from line 7925
+tools\processforge.py:24865:87: f-string is missing placeholders
+tools\processforge_subprocess.py:9:1: 'sys' imported but unused
+tools\smoke_capsule_pins_context_snapshot.py:23:9: local variable 'capsule_a' is assigned to but never used
+tools\smoke_codex_exec_worker.py:14:1: 'context_lock_smoke_helpers.require_ok' imported but unused
+tools\smoke_core_has_no_domain_knowledge_seeds.py:4:1: 'pathlib.Path' imported but unused
+tools\smoke_multi_process_work_capsule.py:16:1: 'processforge_core.process_execution.project_process_selection' imported but unused
+tools\smoke_stage_projectors.py:7:1: 'subprocess' imported but unused
+tools\smoke_worker_run_shell.py:249:5: local variable 'collect' is assigned to but never used
+tools\smoke_worker_run_shell.py:282:5: local variable 'first' is assigned to but never used
+tools\pf_runtime\mcp_server.py:255:5: 'pf_runtime.session_read' imported but unused
+tools\test_agents\pf_shell_agent.py:62:21: f-string is missing placeholders
+tools\test_workers\echo_worker.py:44:17: f-string is missing placeholders

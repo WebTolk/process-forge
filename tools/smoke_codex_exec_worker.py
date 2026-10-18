@@ -97,6 +97,8 @@ local:
         new_ref = "\n".join(["path_ref:", "      registry: knowledge_roots", "      id: shared-docs", "      relative_path: joomla-core/5.4.5"])
         package.write_text(package.read_text(encoding="utf-8").replace(old_ref, new_ref), encoding="utf-8")
         refresh(project)
+        require_ok(run_pf("run-create", "--project-root", str(project), "--id", "codex-run", "--title", "Codex fixture", "--process", "task-batch-execution", "--apply"))
+        require_ok(run_pf("task-create", "--project-root", str(project), "--run", "codex-run", "--id", "codex-task", "--title", "Codex task", "--process", "task-batch-execution", "--apply"))
         write_yaml(
             project / ".pf" / "assignments" / "codex-task.yaml",
             f"""
@@ -149,13 +151,12 @@ expected_report:
             os.environ["PATH"] = env_path
         report = json.loads((project / ".pf" / "artifacts" / "codex-exec-report.json").read_text(encoding="utf-8"))
         argv = report["argv"]
-        if "--add-dir" not in argv:
-            raise AssertionError("codex-exec did not pass workspace grants as --add-dir")
-        add_dir = Path(argv[argv.index("--add-dir") + 1])
-        if add_dir != shared_docs:
-            raise AssertionError("codex-exec --add-dir does not match resolved shared docs")
-        if "workspace_access_file" not in report["stdin"]:
-            raise AssertionError("codex-exec prompt payload missing workspace access reference")
+        if "--add-dir" in argv:
+            raise AssertionError("prepared references must not become whole external directory grants")
+        if '"kind": "pf.prepared-input"' not in report["stdin"]:
+            raise AssertionError("codex-exec did not deliver the prepared execution input")
+        if "immutable prepared input" not in report["stdin"] or "## Workspace Access File" in report["stdin"]:
+            raise AssertionError("codex-exec must use immutable input, without a mutable sidecar instruction")
         if "Проверка кириллицы" not in report["stdin"]:
             raise AssertionError("codex-exec did not provide a UTF-8-decodable non-ASCII prompt payload")
         if "Your final response is captured verbatim" not in report["stdin"]:

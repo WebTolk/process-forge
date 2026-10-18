@@ -1,0 +1,109 @@
+schema_version: 1
+id: review-mcp-reports
+title: review-mcp-reports
+run_id: core-a01-a11-review-20260911
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T08:29:35Z'
+updated_at: '2026-09-11T09:11:42Z'
+objective: Independent review per .pf/artifacts/core-a01-a11-20260911/review-mcp-reports-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+  - .pf/tmp/review-mcp-reports/**
+allowed_read_files:
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/smoke_expected_report_containment.py
+  - tools/smoke_authenticated_report_content.py
+  - tools/smoke_mcp_jsonrpc_validation.py
+  - tools/smoke_classifier_distribution_parity.py
+  - tools/smoke_session_identity_roundtrip.py
+  - tools/smoke_codex_lifecycle_identity.py
+  - tools/smoke_domain_neutral_core_helpers.py
+  - tools/processforge_subprocess.py
+  - docs/concepts/**
+  - .pf/artifacts/core-a01-a11-20260911/**
+  - .pf/logs/core-a01-a11-20260911.md
+  - .pf/AGENTS.md
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: review-mcp-reports
+  owner_label: worker-review-mcp-reports
+  role: reviewer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+    - .pf/tmp/review-mcp-reports/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: review-mcp-reports-report
+    path: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+  format: concise_markdown
+  include:
+    - review-mcp-reports-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

@@ -20,7 +20,10 @@ def main() -> int:
         try:
             call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Invalid stage path", "preferred_stage": "not-a-stage"})
         except AssertionError as exc:
-            if "invalid_arguments" not in str(exc):
+            response = exc.args[0]
+            if not isinstance(response, dict) or response.get("error", {}).get("code") != -32602:
+                raise
+            if "result" in response:
                 raise
         else:
             raise AssertionError("public pf.work.start accepted preferred_stage")

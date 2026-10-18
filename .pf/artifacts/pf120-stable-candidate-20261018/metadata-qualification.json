@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-10-18T04:53:37.859588+00:00",
+  "status": "passed",
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "archive_sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+  "proposed_feed_sha256": "d688bdf60746d52f94192a4a1746e2132e0aaf2f69b3e2aca070f7b522d7bb8b",
+  "positive_native_checks": [
+    {
+      "label": "proposed-manifest-schema",
+      "exit_code": 0,
+      "receipt": "proposed-manifest-schema.json"
+    },
+    {
+      "label": "promotion-checksum",
+      "exit_code": 0,
+      "receipt": "promotion-checksum.json"
+    },
+    {
+      "label": "promotion-repository-surface",
+      "exit_code": 0,
+      "receipt": "promotion-repository-surface.json"
+    },
+    {
+      "label": "promotion-stable-links",
+      "exit_code": 0,
+      "receipt": "promotion-stable-links.json"
+    },
+    {
+      "label": "promotion-sidecar-outside",
+      "exit_code": 0,
+      "receipt": "promotion-sidecar-outside.json"
+    },
+    {
+      "label": "promotion-source-binding",
+      "exit_code": 0,
+      "receipt": "promotion-source-binding.json"
+    }
+  ],
+  "negative_cases": 7,
+  "prior_client_exact_artifact_discovery_and_confirmation_guards": "passed",
+  "source_and_archive_local_version_coherence_cases": 6,
+  "patch_apply_check": "passed",
+  "preview_whitespace_check": "passed",
+  "patch_sha256": "f476d027c86c72a4c94f419645d2c82ca13d484e201331121e24078ffdac71ad",
+  "patch_gzip_sha256": "2ce219686330152fbfbf883801014b8e4dd96d5da4a96842d7ed1039b3e856ed",
+  "actual_public_tag_assets_and_https_readback": "pending explicit publication approval",
+  "live_product_channel_or_device_modified": false
+}

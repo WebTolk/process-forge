@@ -1,0 +1,9 @@
+{
+  "label": "installed-monitor",
+  "started_at": "2026-10-17T19:17:02.548604+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.9410390999983065,
+  "raw_sha256": "c6b910cd25b4b96aee2257541ba0a03cb63e80abaf236ebc60e88d0499ae2714",
+  "raw_bytes": 2325,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-monitor.log"
+}

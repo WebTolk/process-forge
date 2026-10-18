@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T17:44:33.265829+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate\\tools\\smoke_runtime_monitor.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "PASS: allowlist, cached counts, unknown coverage, no writes\nPASS: freshness, malformed/oversize, PID failure, owner race\nPASS: shared ownership classification\nPASS: loopback-only HTTP, no redirects, slow response deadline\nPASS: terminal injection, cell widths, screen resize and cleared tails\nPASS: interactive exit and exception cleanup\nPASS: real CLI JSON/plain/non-TTY/offline, no files or tokens created\n",
+  "stderr": ""
+}

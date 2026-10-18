@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "run": {
+    "id": "core-f03-f05-shell-20260910",
+    "title": "F03-F05 evidence integrity and recoverable terminal transition",
+    "process": "multi-agent-task-orchestration"
+  },
+  "orchestrator": {
+    "role": "orchestrator",
+    "responsibilities": [
+      "architecture and sequential ownership",
+      "real regression acceptance",
+      "integration and governed closure"
+    ]
+  },
+  "runtime": {
+    "default_driver": "codex-exec",
+    "supervisor_profile": "default",
+    "start_policy": "manual",
+    "max_parallel_workers": 1
+  },
+  "workers": [
+    {
+      "id": "f0304-evidence",
+      "title": "F03/F04: latest applicable evidence and file freshness",
+      "role": "worker",
+      "process": "task-batch-execution",
+      "objective": "Execute bounded brief .pf/artifacts/core-f03-f05-20260910/f0304-evidence-brief.md",
+      "execution_mode": "implementation",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        "src/processforge_core/process_execution.py",
+        "tools/smoke_work_evidence_freshness.py",
+        ".pf/artifacts/core-f03-f05-20260910/f0304-evidence/**",
+        ".pf/tmp/core-f03-f05-20260910/f0304-evidence/**"
+      ],
+      "allowed_read_files": [
+        "src/**",
+        "tools/**",
+        "docs/**",
+        "schemas/**",
+        "processes/**",
+        "templates/**",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**",
+        ".pf/artifacts/core-f03-f05-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        "tools/processforge.py",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-f03-f05-20260910/f0304-evidence-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "f0304-evidence-report",
+          "path": ".pf/artifacts/core-f03-f05-20260910/f0304-evidence/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-f03-f05-20260910/f0304-evidence/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "f05-completion",
+      "title": "F05: recoverable terminal completion",
+      "role": "worker",
+      "process": "task-batch-execution",
+      "objective": "Execute bounded brief .pf/artifacts/core-f03-f05-20260910/f05-completion-brief.md",
+      "execution_mode": "implementation",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        "src/processforge_core/process_execution.py",
+        "tools/smoke_work_completion_recovery.py",
+        ".pf/artifacts/core-f03-f05-20260910/f05-completion/**",
+        ".pf/tmp/core-f03-f05-20260910/f05-completion/**"
+      ],
+      "allowed_read_files": [
+        "src/**",
+        "tools/**",
+        "docs/**",
+        "schemas/**",
+        "processes/**",
+        "templates/**",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**",
+        ".pf/artifacts/core-f03-f05-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        "tools/processforge.py",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-f03-f05-20260910/f05-completion-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "f05-completion-report",
+          "path": ".pf/artifacts/core-f03-f05-20260910/f05-completion/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-f03-f05-20260910/f05-completion/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [
+        "f0304-evidence"
+      ],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "f0305-assurance",
+      "title": "Independent assurance of F03-F05",
+      "role": "reviewer",
+      "process": "task-batch-execution",
+      "objective": "Execute bounded brief .pf/artifacts/core-f03-f05-20260910/f0305-assurance-brief.md",
+      "execution_mode": "assurance",
+      "writer": false,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        ".pf/artifacts/core-f03-f05-20260910/f0305-assurance/**",
+        ".pf/tmp/core-f03-f05-20260910/f0305-assurance/**"
+      ],
+      "allowed_read_files": [
+        "src/**",
+        "tools/**",
+        "docs/**",
+        "schemas/**",
+        "processes/**",
+        "templates/**",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**",
+        ".pf/artifacts/core-f03-f05-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        "tools/processforge.py",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-f03-f05-20260910/f0305-assurance-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "f0305-assurance-report",
+          "path": ".pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [
+        "f05-completion"
+      ],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "f0305-review",
+      "title": "Independent final code review",
+      "role": "reviewer",
+      "process": "task-batch-execution",
+      "objective": "Execute bounded brief .pf/artifacts/core-f03-f05-20260910/f0305-review-brief.md",
+      "execution_mode": "assurance",
+      "writer": false,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        ".pf/artifacts/core-f03-f05-20260910/f0305-review/**",
+        ".pf/tmp/core-f03-f05-20260910/f0305-review/**"
+      ],
+      "allowed_read_files": [
+        "src/**",
+        "tools/**",
+        "docs/**",
+        "schemas/**",
+        "processes/**",
+        "templates/**",
+        ".pf/contexts/project-context.snapshot.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**",
+        ".pf/artifacts/core-f03-f05-20260910/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        "tools/processforge.py",
+        ".pf/process-forge.yaml",
+        ".pf/artifacts/python-core-audit-20260908/**"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-f03-f05-20260910/f0305-review-brief.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "f0305-review-report",
+          "path": ".pf/artifacts/core-f03-f05-20260910/f0305-review/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-f03-f05-20260910/f0305-review/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [
+        "f0305-assurance"
+      ],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    }
+  ],
+  "integration": {
+    "required": true,
+    "role": "orchestrator",
+    "expected_output": ".pf/artifacts/core-f03-f05-20260910/integration-report.md"
+  },
+  "metadata": {
+    "carrier_run": "garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re",
+    "authorization": "User explicitly requests next F03-F05 batch using junior PF shell workers. Sequential dependency transfers the shared source scope; no parallel writers."
+  }
+}

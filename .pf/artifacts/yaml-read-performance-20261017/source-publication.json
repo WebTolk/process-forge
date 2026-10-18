@@ -1,0 +1,9 @@
+{
+  "sha": "8f00ca1711f1d7ad276da61a9fcbec907da0cd36",
+  "readback": {
+    "origin": "8f00ca1711f1d7ad276da61a9fcbec907da0cd36",
+    "gitverse": "8f00ca1711f1d7ad276da61a9fcbec907da0cd36"
+  },
+  "all_equal": true,
+  "gitverse_auth": "token via child environment; no browser"
+}

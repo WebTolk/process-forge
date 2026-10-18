@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "run-doctor",
+    "--project-root",
+    ".",
+    "--run",
+    "docs-fix-1-1-1-shell-20260907"
+  ],
+  "started_at": "2026-09-07T14:16:24.225491+00:00",
+  "finished_at": "2026-09-07T14:16:25.516196+00:00",
+  "elapsed_seconds": 1.291,
+  "exit_code": 0,
+  "output": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: in_progress\nPASS: summary status matches run: in_progress\nPASS: task index status matches run: in_progress\nPASS: handoff status matches run: in_progress\nPASS: process exists: multi-agent-task-orchestration\nPASS: .pf/runs/docs-fix-1-1-1-shell-20260907/run.yaml has no private absolute paths\nPASS: task id unique: docs111-mechanical\nPASS: task status valid for docs111-mechanical: done\nPASS: assignment exists for docs111-mechanical: .pf/assignments/docs111-mechanical.yaml\nPASS: docs111-mechanical run_id matches run\nPASS: task id unique: docs111-workflow\nPASS: task status valid for docs111-workflow: done\nPASS: assignment exists for docs111-workflow: .pf/assignments/docs111-workflow.yaml\nPASS: docs111-workflow run_id matches run\nPASS: task id unique: docs111-update\nPASS: task status valid for docs111-update: done\nPASS: assignment exists for docs111-update: .pf/assignments/docs111-update.yaml\nPASS: docs111-update run_id matches run\nPASS: task id unique: docs111-tests\nPASS: task status valid for docs111-tests: done\nPASS: assignment exists for docs111-tests: .pf/assignments/docs111-tests.yaml\nPASS: docs111-tests run_id matches run\nPASS: task id unique: docs111-review\nPASS: task status valid for docs111-review: done\nPASS: assignment exists for docs111-review: .pf/assignments/docs111-review.yaml\nPASS: docs111-review run_id matches run\n"
+}

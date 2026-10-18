@@ -53,3 +53,10 @@ Refresh with:
 ```bash
 python bin/pf.py project-context-refresh --project-root <project-root>
 ```
+
+The existing execution and resource readiness projections are computed by
+`processforge_core.project.readiness.ProjectContextReadinessPolicy`. Snapshot
+assembly calls the Core methods directly; the policy performs no I/O and grants
+no access. This organization preserves the freshness and readiness contracts
+above. The full freshness checker and snapshot assembly remain separate migration
+work.

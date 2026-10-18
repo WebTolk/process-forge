@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.local_resource_search import LocalSearchError, maintenance_tick, search
+from processforge_core.resources.local_search import LocalSearchError, maintenance_tick, search
 import processforge as core
 
 
@@ -22,7 +22,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as raw:
         project = Path(raw)
         allowed = project / "allowed"
-        allowed.mkdir()
+        allowed.mkdir(parents=True)
         (allowed / "guide.md").write_text("ProcessForge snapshot authorized local search", encoding="utf-8")
         outside = project / "outside.md"
         outside.write_text("forbidden-secret-token", encoding="utf-8")
@@ -53,8 +53,8 @@ def main() -> int:
         workplace, first, second = root / "workplace", root / "first", root / "second"
         first.mkdir()
         second.mkdir()
-        allowed = first / "allowed"
-        allowed.mkdir()
+        allowed = workplace / "packages" / "fixture" / "guide"
+        allowed.mkdir(parents=True)
         (allowed / "guide.md").write_text("MCP snapshot authorized search", encoding="utf-8")
         external_docs = root / "external-docs"
         external_docs.mkdir()
@@ -69,6 +69,23 @@ def main() -> int:
         knowledge_roots = yaml.safe_load(knowledge_roots_path.read_text(encoding="utf-8"))
         knowledge_roots["knowledge_roots"].append({"id": "external-docs", "path": str(external_docs), "scope": "workplace", "status": "available"})
         knowledge_roots_path.write_text(yaml.safe_dump(knowledge_roots, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        fixture_package = workplace / "packages" / "fixture"
+        fixture_package.mkdir(parents=True, exist_ok=True)
+        (fixture_package / "package.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "schema_version": 1,
+                    "id": "fixture",
+                    "resources": [
+                        {"id": "guide", "kind": "documentation", "path": "guide", "indexing": {"mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md"]}]}},
+                        {"id": "external", "kind": "documentation", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}, "indexing": {"mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md"]}]}},
+                    ],
+                },
+                allow_unicode=True,
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
         cli("template-create", "--workplace", str(workplace), "--id", "joomla-plugin-manifest", "--title", "Joomla Plugin Manifest", "--apply")
         registry_path = workplace / "registries" / "templates.yaml"
         registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
@@ -88,9 +105,9 @@ def main() -> int:
         assert str(workplace) not in snapshot_path.read_text(encoding="utf-8")
         assert all(not set(item).intersection({"content_roots", "local_path", "resolved_path"}) for item in snapshot["local_search_resources"] if isinstance(item, dict))
         snapshot["local_search_resources"].extend([
-            {"id": "allowed", "package_id": "self", "kind": "knowledge", "path_ref": {"package": "self", "relative_path": "allowed"}},
+            {"id": "fixture:guide", "package_id": "fixture", "kind": "knowledge", "path_ref": {"package": "fixture", "relative_path": "guide"}},
             {"id": "escaped", "package_id": "self", "kind": "knowledge", "path_ref": {"package": "self", "relative_path": "../outside.md"}},
-            {"id": "external", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}},
+            {"id": "fixture:external", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}},
             {"id": "external-escaped", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}},
         ])
         snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
@@ -98,8 +115,12 @@ def main() -> int:
         assert external_resolution == {"status": "resolved", "path": str(external_docs)}
         escaped_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}, workplace_manifest=workplace / "workplace.yaml")
         assert escaped_resolution["status"] == "unresolved"
+        context = json.loads(cli("project-context-check", "--project-root", str(first), "--workplace", str(workplace), "--json"))
+        assert context["status"] in {"fresh", "fresh_with_updates"}, context
+        # Establish this project snapshot scope before asserting its index readiness.
+        cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
         status_output = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace))
-        assert "STATUS: stale" in status_output
+        assert "STATUS: fresh" in status_output
         assert (workplace / "runtime" / "search" / "latest-maintenance.yaml").is_file()
         refresh_output = cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
         assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
@@ -136,7 +157,7 @@ def main() -> int:
         first_match = search_result["results"][0]
         assert first_match["canonical_path"] == "guide.md"
         assert first_match["relative_path"] == "guide.md"
-        assert first_match["path_ref"] == "allowed:guide.md"
+        assert first_match["path_ref"] == "fixture:guide:guide.md"
         assert str(allowed) not in first_match["canonical_path"]
         assert str(allowed) not in first_match["path_ref"]
         assert str(allowed) not in json.dumps(first_match["provenance"], ensure_ascii=False)
@@ -157,8 +178,9 @@ def main() -> int:
         repair_result = json.loads(responses[8]["result"]["content"][0]["text"])
         assert repair_result["action"] == "repair" and repair_result["applied"] is True
         assert repair_result["result"]["doctor"]["status"] == "pass"
-        assert responses[9]["result"]["isError"] is True
-        assert json.loads(responses[9]["result"]["content"][0]["text"])["error"]["code"] == "invalid_arguments"
+        # answers_path is not an advertised argument: reject before dispatch.
+        assert responses[9]["error"]["code"] == -32602, responses[9]
+        assert "result" not in responses[9]
         template_result = json.loads(responses[10]["result"]["content"][0]["text"])
         assert template_result["results"][0]["provenance"]["kind"] == "template"
         assert Path(template_result["results"][0]["local_path"]).is_file()

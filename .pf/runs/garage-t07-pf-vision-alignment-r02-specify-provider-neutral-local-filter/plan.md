@@ -1,0 +1,3 @@
+# Run Plan: T07 PF vision alignment r02: specify provider-neutral local filtering of outgoin
+
+Objective: T07 PF vision alignment r02: specify provider-neutral local filtering of outgoing executor data, including data classes, recipient trust, allow/redact/block policy, initial payload and subsequent file/tool reads, immutable evidence and sanitized export; produce domain notes, threat model, architecture decision, acceptance matrix and a separately estimated implementation plan. Design-only: no privacy engine implementation, model integration, infrastructure changes, T10/UI or public release.

@@ -1,0 +1,583 @@
+[
+  {
+    "path": "docs/authoring/knowledge-package-authoring.md",
+    "line": 51,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/knowledge-package-authoring.md",
+    "line": 63,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/knowledge-package-authoring.md",
+    "line": 74,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/process-authoring.md",
+    "line": 73,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/process-authoring.md",
+    "line": 104,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/process-authoring.md",
+    "line": 152,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/update-sites-for-packages.md",
+    "line": 7,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/workplace-configuration.md",
+    "line": 65,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/authoring/workplace-configuration.md",
+    "line": 81,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/agent-entry.md",
+    "line": 105,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "list"
+  },
+  {
+    "path": "docs/concepts/capability-resolution.md",
+    "line": 45,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/cascade-merge.md",
+    "line": 70,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/cascade-merge.md",
+    "line": 83,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/chat-relay.md",
+    "line": 65,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/context-freshness.md",
+    "line": 21,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/declarative-process-execution.md",
+    "line": 40,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/declarative-process-execution.md",
+    "line": 55,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/diagnostics.md",
+    "line": 9,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/egress-engine.md",
+    "line": 95,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/egress-engine.md",
+    "line": 101,
+    "language": "json",
+    "syntax": "needs_review",
+    "error": "Extra data: line 2 column 1 (char 39)"
+  },
+  {
+    "path": "docs/concepts/knowledge-resource-navigation.md",
+    "line": 10,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/knowledge-resources.md",
+    "line": 62,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/path-constants.md",
+    "line": 7,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/path-constants.md",
+    "line": 21,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/platform-contracts.md",
+    "line": 61,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/platform-inheritance.md",
+    "line": 9,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/platform-inheritance.md",
+    "line": 24,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/project-classifiers.md",
+    "line": 12,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/project-coordination-modes.md",
+    "line": 17,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/project-coordination-modes.md",
+    "line": 41,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/project-coordination-modes.md",
+    "line": 81,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/project-scan-boundaries.md",
+    "line": 22,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/resource-privacy.md",
+    "line": 7,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/resource-privacy.md",
+    "line": 16,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/resource-search-index.md",
+    "line": 29,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/resource-search-index.md",
+    "line": 128,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/runs-tasks-iterations.md",
+    "line": 39,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/runtime-drivers.md",
+    "line": 115,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/update-sites.md",
+    "line": 9,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/work-execution-contract.md",
+    "line": 49,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/work-resources.md",
+    "line": 71,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/concepts/wtaicc-future-compatibility.md",
+    "line": 12,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/getting-started/multi-agent-orchestration.md",
+    "line": 30,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/getting-started/workplace-initialization.md",
+    "line": 60,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/authoring/knowledge-package-authoring.md",
+    "line": 53,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/authoring/knowledge-package-authoring.md",
+    "line": 67,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/authoring/knowledge-package-authoring.md",
+    "line": 78,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/authoring/process-authoring.md",
+    "line": 55,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/authoring/process-authoring.md",
+    "line": 91,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/authoring/process-authoring.md",
+    "line": 103,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/agent-entry.md",
+    "line": 113,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "list"
+  },
+  {
+    "path": "docs/ru/concepts/cascade-merge.md",
+    "line": 72,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/cascade-merge.md",
+    "line": 85,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/context-freshness-readiness.md",
+    "line": 12,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/declarative-process-execution.md",
+    "line": 35,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/diagnostics.md",
+    "line": 22,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/knowledge-resource-navigation.md",
+    "line": 10,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/platform-contracts.md",
+    "line": 59,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/platform-inheritance.md",
+    "line": 10,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/platform-inheritance.md",
+    "line": 25,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/project-coordination-modes.md",
+    "line": 18,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/project-coordination-modes.md",
+    "line": 42,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/project-coordination-modes.md",
+    "line": 83,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/resource-search-index.md",
+    "line": 25,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/resource-search-index.md",
+    "line": 105,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/runtime-drivers.md",
+    "line": 115,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/update-sites.md",
+    "line": 12,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/concepts/work-resources.md",
+    "line": 80,
+    "language": "json",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "docs/ru/getting-started/workplace-initialization.md",
+    "line": 58,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/api-platforms/example-provider/README.md",
+    "line": 12,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/evolve-targeting/content-style-narrow-vs-global/README.md",
+    "line": 8,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/evolve-targeting/content-style-narrow-vs-global/README.md",
+    "line": 24,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/evolve-targeting/generic-platform-child-parent/README.md",
+    "line": 8,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/evolve-targeting/joomla-joomshopping-split-candidates/README.md",
+    "line": 17,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/evolve-targeting/joomla-joomshopping-split-candidates/README.md",
+    "line": 48,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/knowledge-packages/base-technologies/README.md",
+    "line": 25,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/platform-inheritance/example-child/README.md",
+    "line": 7,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/platform-inheritance/example-parent/README.md",
+    "line": 6,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/process-authoring/software-feature-development/README.md",
+    "line": 15,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "examples/process-authoring/software-feature-development/README.md",
+    "line": 35,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "packs/official/software-development/docs/processes/software-feature-development.md",
+    "line": 54,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "packs/official/software-development/docs/ru/processes/software-feature-development.md",
+    "line": 18,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  },
+  {
+    "path": "packs/official/software-development/prompts/software-feature-development-agent.md",
+    "line": 53,
+    "language": "yaml",
+    "syntax": "valid",
+    "root_type": "dict"
+  }
+]

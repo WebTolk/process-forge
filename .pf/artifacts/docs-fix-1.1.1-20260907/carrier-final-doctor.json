@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "run-doctor",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1"
+  ],
+  "started_at": "2026-09-07T14:19:07.030614+00:00",
+  "finished_at": "2026-09-07T14:19:08.401907+00:00",
+  "elapsed_seconds": 1.371,
+  "exit_code": 0,
+  "output": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: completed\nPASS: summary status matches run: completed\nPASS: task index status matches run: completed\nPASS: handoff status matches run: completed\nPASS: process exists: task-batch-execution\nPASS: .pf/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1/run.yaml has no private absolute paths\nPASS: task id unique: plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using\nPASS: task status valid for plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using: done\nPASS: assignment exists for plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using: .pf/assignments/plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using.yaml\nPASS: plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using run_id matches run\nPASS: completed run has all blocking tasks done\nPASS: .pf/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1/summary.md exists\nPASS: .pf/handoffs/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-handoff.md exists\n"
+}

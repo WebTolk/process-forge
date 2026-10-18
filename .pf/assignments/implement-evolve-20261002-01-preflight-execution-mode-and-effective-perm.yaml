@@ -1,0 +1,436 @@
+schema_version: 1
+id: implement-evolve-20261002-01-preflight-execution-mode-and-effective-perm
+title: 'Implement evolve-20261002-01: preflight execution mode and effective permissions'
+run_id: garage-implement-evolve-20261002-01-preflight-execution-mode-and-effecti
+process: software-feature-development
+status: done
+created_at: '2026-10-02T11:46:50Z'
+updated_at: '2026-10-02T12:06:49Z'
+objective: 'Implement evolve-20261002-01: preflight execution mode and effective permissions before publishing Work'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Evolution captured and handoff recorded. Task complete; pausing after report per operator instruction.
+  artifacts:
+    - .pf/artifacts/evolve-20261002-01/architecture.md
+    - .pf/artifacts/evolve-20261002-01/assurance.md
+    - .pf/artifacts/evolve-20261002-01/domain.md
+    - .pf/artifacts/evolve-20261002-01/evolution.md
+    - .pf/artifacts/evolve-20261002-01/implementation.md
+    - .pf/artifacts/evolve-20261002-01/intake-scope.md
+    - .pf/artifacts/evolve-20261002-01/investigation.md
+    - .pf/artifacts/evolve-20261002-01/orchestration.md
+    - .pf/artifacts/evolve-20261002-01/release-delivery.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-02T12:05:33Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/evolve-20261002-01/evolution.md
+      status: ready
+      recorded_at: '2026-10-02T12:06:38Z'
+      sha256: 'sha256:35e55f7d8a310aaef203b2cc9abc57cf6dc80ffdbe6633f7a1b6ebc6c469cb9d'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/evolve-20261002-01/evolution.md
+      status: passed
+      recorded_at: '2026-10-02T12:06:38Z'
+      sha256: 'sha256:35e55f7d8a310aaef203b2cc9abc57cf6dc80ffdbe6633f7a1b6ebc6c469cb9d'
+  notes: Evolution captured and handoff recorded. Task complete; pausing after report per operator instruction.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-02T11:46:50Z'
+    completed_at: '2026-10-02T11:50:37Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/evolve-20261002-01/orchestration.md
+        status: ready
+        recorded_at: '2026-10-02T11:50:26Z'
+        sha256: 'sha256:8a19a6589ab0939f96d1e7db263de9be38f1902e8aa586f09791c3c73b292b8d'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/evolve-20261002-01/orchestration.md
+        status: ready
+        recorded_at: '2026-10-02T11:50:26Z'
+        sha256: 'sha256:8a19a6589ab0939f96d1e7db263de9be38f1902e8aa586f09791c3c73b292b8d'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/evolve-20261002-01/orchestration.md
+        status: ready
+        recorded_at: '2026-10-02T11:50:26Z'
+        sha256: 'sha256:8a19a6589ab0939f96d1e7db263de9be38f1902e8aa586f09791c3c73b292b8d'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/evolve-20261002-01/orchestration.md
+        status: passed
+        recorded_at: '2026-10-02T11:50:26Z'
+        sha256: 'sha256:8a19a6589ab0939f96d1e7db263de9be38f1902e8aa586f09791c3c73b292b8d'
+    notes: 'Orchestration complete: scoped successor Work ready; Python docs resolved through PF; implementation scope narrowed around active writer overlap.'
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-02T11:50:37Z'
+    completed_at: '2026-10-02T11:51:41Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/evolve-20261002-01/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-02T11:51:30Z'
+        sha256: 'sha256:8d80437b3086f87a170af006a8bb76731c72e80f24880c653c0a0923a877298a'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/evolve-20261002-01/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-02T11:51:30Z'
+        sha256: 'sha256:8d80437b3086f87a170af006a8bb76731c72e80f24880c653c0a0923a877298a'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/evolve-20261002-01/intake-scope.md
+        status: ready
+        recorded_at: '2026-10-02T11:51:30Z'
+        sha256: 'sha256:8d80437b3086f87a170af006a8bb76731c72e80f24880c653c0a0923a877298a'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/evolve-20261002-01/intake-scope.md
+        status: passed
+        recorded_at: '2026-10-02T11:51:30Z'
+        sha256: 'sha256:8d80437b3086f87a170af006a8bb76731c72e80f24880c653c0a0923a877298a'
+    notes: 'Intake complete: scope accepted with product writes limited to Core preflight, continuation readiness, targeted smoke and docs.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-02T11:51:41Z'
+    completed_at: '2026-10-02T11:58:24Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/evolve-20261002-01/investigation.md
+        status: ready
+        recorded_at: '2026-10-02T11:58:12Z'
+        sha256: 'sha256:e651d8f9115c1fe17ecf0b19052d80c2e1986997a798b2e1b84f65fc66329140'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/evolve-20261002-01/investigation.md
+        status: ready
+        recorded_at: '2026-10-02T11:58:12Z'
+        sha256: 'sha256:e651d8f9115c1fe17ecf0b19052d80c2e1986997a798b2e1b84f65fc66329140'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/evolve-20261002-01/investigation.md
+        status: passed
+        recorded_at: '2026-10-02T11:58:12Z'
+        sha256: 'sha256:e651d8f9115c1fe17ecf0b19052d80c2e1986997a798b2e1b84f65fc66329140'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/evolve-20261002-01/investigation.md
+        status: passed
+        recorded_at: '2026-10-02T11:58:12Z'
+        sha256: 'sha256:e651d8f9115c1fe17ecf0b19052d80c2e1986997a798b2e1b84f65fc66329140'
+    notes: 'Investigation complete: missing pre-publication permission_readiness confirmed and fixed in scoped Work creation path; impact bounded.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-02T11:58:24Z'
+    completed_at: '2026-10-02T11:59:26Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/evolve-20261002-01/domain.md
+        status: ready
+        recorded_at: '2026-10-02T11:59:13Z'
+        sha256: 'sha256:7838cbe2d0f2e8d993d0475a6ef748ce3fa5b48ca51456babfb0d5856ca1d0d8'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/evolve-20261002-01/domain.md
+        status: ready
+        recorded_at: '2026-10-02T11:59:13Z'
+        sha256: 'sha256:7838cbe2d0f2e8d993d0475a6ef748ce3fa5b48ca51456babfb0d5856ca1d0d8'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/evolve-20261002-01/domain.md
+        status: ready
+        recorded_at: '2026-10-02T11:59:13Z'
+        sha256: 'sha256:7838cbe2d0f2e8d993d0475a6ef748ce3fa5b48ca51456babfb0d5856ca1d0d8'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/evolve-20261002-01/domain.md
+        status: passed
+        recorded_at: '2026-10-02T11:59:13Z'
+        sha256: 'sha256:7838cbe2d0f2e8d993d0475a6ef748ce3fa5b48ca51456babfb0d5856ca1d0d8'
+    notes: 'Domain modeling complete: explicit scope intent, normalized mode, effective permissions and durable publication boundary captured.'
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-02T11:59:26Z'
+    completed_at: '2026-10-02T12:00:28Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/evolve-20261002-01/architecture.md
+        status: ready
+        recorded_at: '2026-10-02T12:00:17Z'
+        sha256: 'sha256:df2743a25b1677c7cc7fb0377396f1fbfe1c46edcc46e326e2e847103f27b728'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/evolve-20261002-01/architecture.md
+        status: ready
+        recorded_at: '2026-10-02T12:00:17Z'
+        sha256: 'sha256:df2743a25b1677c7cc7fb0377396f1fbfe1c46edcc46e326e2e847103f27b728'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/evolve-20261002-01/architecture.md
+        status: ready
+        recorded_at: '2026-10-02T12:00:17Z'
+        sha256: 'sha256:df2743a25b1677c7cc7fb0377396f1fbfe1c46edcc46e326e2e847103f27b728'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/evolve-20261002-01/architecture.md
+        status: passed
+        recorded_at: '2026-10-02T12:00:17Z'
+        sha256: 'sha256:df2743a25b1677c7cc7fb0377396f1fbfe1c46edcc46e326e2e847103f27b728'
+    notes: 'Architecture ready: shared Core preflight uses existing permission_readiness before any durable Work records are published.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-02T12:00:28Z'
+    completed_at: '2026-10-02T12:01:45Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/evolve-20261002-01/implementation.md
+        status: ready
+        recorded_at: '2026-10-02T12:01:35Z'
+        sha256: 'sha256:5d7ae78487d3fae51961cf113f41bc736688318e9d517a2eb7d9c336adfdfd8b'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/evolve-20261002-01/implementation.md
+        status: ready
+        recorded_at: '2026-10-02T12:01:35Z'
+        sha256: 'sha256:5d7ae78487d3fae51961cf113f41bc736688318e9d517a2eb7d9c336adfdfd8b'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/evolve-20261002-01/implementation.md
+        status: passed
+        recorded_at: '2026-10-02T12:01:35Z'
+        sha256: 'sha256:5d7ae78487d3fae51961cf113f41bc736688318e9d517a2eb7d9c336adfdfd8b'
+    notes: 'Implementation complete: Core pre-publication permission readiness check, targeted smoke coverage, and EN/RU docs updated within scoped grants.'
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-02T12:01:45Z'
+    completed_at: '2026-10-02T12:04:34Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/evolve-20261002-01/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T12:04:22Z'
+        sha256: 'sha256:de2779887818245e18cd32df9276f05df0d40a61e6642c5516a6b9e5bd99e26d'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/evolve-20261002-01/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T12:04:22Z'
+        sha256: 'sha256:de2779887818245e18cd32df9276f05df0d40a61e6642c5516a6b9e5bd99e26d'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/evolve-20261002-01/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T12:04:22Z'
+        sha256: 'sha256:de2779887818245e18cd32df9276f05df0d40a61e6642c5516a6b9e5bd99e26d'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/evolve-20261002-01/assurance.md
+        status: ready
+        recorded_at: '2026-10-02T12:04:22Z'
+        sha256: 'sha256:de2779887818245e18cd32df9276f05df0d40a61e6642c5516a6b9e5bd99e26d'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/evolve-20261002-01/assurance.md
+        status: passed
+        recorded_at: '2026-10-02T12:04:22Z'
+        sha256: 'sha256:de2779887818245e18cd32df9276f05df0d40a61e6642c5516a6b9e5bd99e26d'
+    notes: 'Code assurance complete: focused compile, scope smoke, execution integrity smoke and diff check passed.'
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-02T12:04:34Z'
+    completed_at: '2026-10-02T12:05:33Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/evolve-20261002-01/release-delivery.md
+        status: ready
+        recorded_at: '2026-10-02T12:05:22Z'
+        sha256: 'sha256:5dbfa543aecb088319322b7e6c8d1f88109f055bd9b2dc461d1f3f4ae52fc4fc'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/evolve-20261002-01/release-delivery.md
+        status: passed
+        recorded_at: '2026-10-02T12:05:22Z'
+        sha256: 'sha256:5dbfa543aecb088319322b7e6c8d1f88109f055bd9b2dc461d1f3f4ae52fc4fc'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/evolve-20261002-01/release-delivery.md
+        status: passed
+        recorded_at: '2026-10-02T12:05:22Z'
+        sha256: 'sha256:5dbfa543aecb088319322b7e6c8d1f88109f055bd9b2dc461d1f3f4ae52fc4fc'
+    notes: 'Release delivery completed as skipped with reason: source-only scoped fix, no package/install/host delivery authorized.'
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-02T12:05:33Z'
+    completed_at: '2026-10-02T12:06:49Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/evolve-20261002-01/evolution.md
+        status: ready
+        recorded_at: '2026-10-02T12:06:38Z'
+        sha256: 'sha256:35e55f7d8a310aaef203b2cc9abc57cf6dc80ffdbe6633f7a1b6ebc6c469cb9d'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/evolve-20261002-01/evolution.md
+        status: passed
+        recorded_at: '2026-10-02T12:06:38Z'
+        sha256: 'sha256:35e55f7d8a310aaef203b2cc9abc57cf6dc80ffdbe6633f7a1b6ebc6c469cb9d'
+    notes: Evolution captured and handoff recorded. Task complete; pausing after report per operator instruction.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20261002-060156-86cbed
+  snapshot_checksum: 'sha256:c0cc71edb3f7ea9b97c2a2571d95b3c8ef7f67b188a476d7a29451193545c2a0'
+  assignment_capsule: .pf/contexts/assignment-capsules/implement-evolve-20261002-01-preflight-execution-mode-and-effective-perm.capsule.yaml
+  assignment_capsule_checksum: 'sha256:c08da50de4bb98717fb4eb98f16d219ada930682b2fe82bb344518f74c9bb2ce'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_files:
+  - src/processforge_core/process_execution.py
+  - src/processforge_core/continuation.py
+  - tools/smoke_work_start_scope.py
+  - docs/concepts/work-context.md
+  - docs/ru/concepts/work-context.md
+  - .pf/artifacts/evolve-20261002-01/**
+  - .pf/logs/evolve-20261002-01.md
+  - .pf/reviews/evolve-20261002-01.md
+  - .pf/handoffs/evolve-20261002-01.md
+allowed_read_files:
+  - src/**
+  - tools/**
+  - bin/**
+  - templates/**
+  - schemas/**
+  - docs/**
+  - packs/**
+  - checksums/**
+  - processes/**
+  - packages/**
+  - policies/**
+  - seeds/**
+  - examples/**
+  - prompts/**
+  - updates/**
+  - README*.md
+  - QUICKSTART*.md
+  - VERSION
+  - .pf/**
+  - AGENTS.md
+required_sources:
+  - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-01.md
+  - .pf/artifacts/evolve-review-20261002/kc-evolve-analysis-mode-preflight-20261002.yaml
+  - .pf/artifacts/evolve/knowledge-candidates/kc-work-continuation-20260930.yaml
+  - .pf/artifacts/evolve/knowledge-candidates/kc-native-work-cancellation-20260930.yaml
+  - .pf/artifacts/agent-entry-acl-platform-20260930/evolve.md
+  - .pf/artifacts/agent-entry-acl-repair-20260930/evolve-cancellation.md
+  - .pf/artifacts/evolve/evolution-report.md
+  - .pf/artifacts/t10-installed-delivery-20260926/evolution.md
+required_outputs:
+  -
+    id: delivery-report
+    path: .pf/artifacts/evolve-20261002-01/report.md
+    type: markdown
+    required: true
+expected_report:
+  artifact: .pf/artifacts/evolve-20261002-01/report.md
+  format: concise_markdown
+ownership:
+  owner_id: codex
+  role: primary
+  writer: true

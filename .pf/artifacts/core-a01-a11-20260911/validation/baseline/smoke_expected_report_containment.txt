@@ -1,0 +1,25 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_expected_report_containment.py
+
+CWD:
+  D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDOUT tail:
+SKIP: symlink creation unavailable
+
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_expected_report_containment.py", line 65, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_expected_report_containment.py", line 43, in main
+    assert core.task_output_path(project, {"path": report_rel}) is None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

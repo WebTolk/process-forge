@@ -1,0 +1,10 @@
+{
+  "test": "smoke_mcp_codex_contract.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 10.82,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_mcp_codex_contract.py"
+  ]
+}

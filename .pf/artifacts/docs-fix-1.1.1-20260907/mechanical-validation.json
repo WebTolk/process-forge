@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python",
+    "-c",
+    "import sys,re,yaml; from pathlib import Path; sys.path.insert(0,'tools'); import processforge as c; t=Path('docs/concepts/assignment-front-matter.md').read_text(encoding='utf-8'); m=yaml.safe_load(re.search(r'`markdown\\s*---\\s*\\n(.*?)\\n---',t,re.S).group(1)); o=c.normalize_required_outputs(m['required_outputs']); assert len(o)==1 and o[0]['id']=='example-report' and o[0]['path']=='.pf/artifacts/example-report.md',o; p=c.build_parser(); p.parse_args(['project-context-check','--project-root','.','--json']); p.parse_args(['capsule-doctor','--project-root','.','--capsule','capsule.yaml']); print('PASS: output contract and doctor CLI examples')"
+  ],
+  "started_at": "2026-09-07T13:19:03.396199+00:00",
+  "finished_at": "2026-09-07T13:19:03.844279+00:00",
+  "elapsed_seconds": 0.448,
+  "exit_code": 0,
+  "output": "PASS: output contract and doctor CLI examples\n"
+}

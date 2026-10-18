@@ -1,0 +1,9 @@
+{
+  "label": "source-final-checksum",
+  "started_at": "2026-10-17T18:27:56.271519+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.6468835999839939,
+  "raw_sha256": "3de22b720cb66cb7a18225ff56f193b04d1768ef93d84ade54309630668e1564",
+  "raw_bytes": 35,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/source-final-checksum.log"
+}

@@ -1,0 +1,3 @@
+PASS: MCP missing-session diagnostics are actionable
+
+STDERR:

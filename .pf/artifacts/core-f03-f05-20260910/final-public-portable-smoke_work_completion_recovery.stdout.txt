@@ -1,0 +1,20 @@
+PASS: before run
+PASS: after run
+PASS: before intent
+PASS: after intent
+PASS: before assignment
+PASS: after assignment
+PASS: before summary
+PASS: after summary
+PASS: before handoff
+PASS: after handoff
+PASS: before index
+PASS: after index
+PASS: before projection
+PASS: after projection
+PASS: before event
+PASS: after event
+PASS: before cleanup
+PASS: after cleanup
+PASS: malformed journals rejected without writes
+PASS: recoverable terminal completion

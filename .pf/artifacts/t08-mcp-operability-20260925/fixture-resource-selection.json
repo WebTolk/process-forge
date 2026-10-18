@@ -1,0 +1,57 @@
+{
+  "reason": "Existing php.class-doc-block template registry target is unresolved; no shared registry repair in T08. Use existing indexed docs.api.gitverse:root metadata.",
+  "selected": [
+    {
+      "id": "docs.api.gitverse:root",
+      "resource_id": "docs.api.gitverse:root",
+      "package_id": "docs.api.gitverse",
+      "kind": "documentation",
+      "title": "API Documentation: gitverse",
+      "description": "Root directory for docs.api.gitverse.",
+      "version": "",
+      "fingerprint": {
+        "type": "resource_record_sha256",
+        "value": "sha256:ce3699ef5ea242c0315703fe5f67d3cb99d6c4f6bcbcfb005a36b72c46ebae20"
+      },
+      "path_ref": {
+        "registry": "knowledge_roots",
+        "id": "local-docs",
+        "relative_path": "rest-api/gitverse"
+      },
+      "status": "available",
+      "load_policy": "snapshot_authorized",
+      "indexing": {
+        "enabled": true,
+        "mode": "metadata",
+        "fields": [
+          "title",
+          "description",
+          "version",
+          "path"
+        ],
+        "sources": [
+          {
+            "path": ".",
+            "mode": "metadata",
+            "role": "documentation"
+          }
+        ]
+      }
+    }
+  ],
+  "snapshot": {
+    "id": "ctx-20260925-180409-cb5137",
+    "generated_at": "2026-09-25T18:04:05Z",
+    "valid_until": "2026-10-02T18:04:05Z",
+    "refresh_policy": {
+      "max_age_days": 7,
+      "refresh_when_sources_change": true,
+      "refresh_when_workplace_changes": true,
+      "refresh_when_package_versions_change": true,
+      "refresh_when_required_tools_change": true
+    },
+    "health": {
+      "status": "pass"
+    }
+  }
+}

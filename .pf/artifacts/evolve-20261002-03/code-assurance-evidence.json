@@ -1,0 +1,37 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "review-findings",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/code-assurance.md",
+    "summary": "No blocking findings in the scoped diff; out-of-scope producer and installation boundaries recorded."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-plan",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/code-assurance.md",
+    "summary": "Plan covered compile, Work binding smoke, indexing-policy smoke and diff whitespace check."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-cases",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/code-assurance.md",
+    "summary": "Test cases include legacy full_text/fulltext Work binding flow and explicit metadata regression behavior."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-report",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/code-assurance.md",
+    "summary": "py_compile, smoke_work_resource_binding, smoke_resource_indexing_policy_acceptance and git diff --check passed."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "assurance-complete",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/code-assurance.md",
+    "summary": "Scoped checks passed and residual delivery boundaries are documented."
+  }
+]

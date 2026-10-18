@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-17T20:41:41.309432+00:00",
+  "status": "passed",
+  "scope": "Current Work public evidence and handoff only",
+  "files_checked": 13,
+  "private_absolute_paths": 0,
+  "credential_material": 0,
+  "changed_json_valid": true,
+  "native_stage_evidence_hashes_preserved": true,
+  "git_diff_check": "passed",
+  "product_payload_changed": false,
+  "private_raw_proof_retained_outside_commit": true
+}

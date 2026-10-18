@@ -1,0 +1,11 @@
+# Architecture / implementation plan
+
+Refines the pinned proposal without changing its boundaries. Add a small WorkMetadataReadPass in work/metadata.py, backed by WorkInventory path enumeration and existing YamlDocumentReader.load_fields. Capture document facts lazily to preserve exception/read ordering; retain private copies during this explicit pass. Reuse existing parser-policy/content-addressed bounded cache, no new persistent store. CurrentWorkService uses a fresh default pass per call, or the explicitly shared pass provider.
+
+Give native catalog an optional deferred metadata dependency; injected record ports keep full behavior. Native factory defaults build a fresh metadata pass per catalog operation. pf.context composition supplies one lazy pass to both services after the existing project/session routing guards. Keep full selected readers untouched. When completion journal exists, reacquire complete current Run/Assignment and use the existing validator. Continue calling current intent callback; do not cache success or infer pending from terminal status.
+
+Implementation sequence: inventory path seam -> Work metadata pass -> summary/catalog dependency -> composition/ProcessExecutionService/MCP -> existing targeted tests plus necessary metadata regression scenarios -> five cold/warm timing/cache/CPU/memory observations and full payload/record parity -> EN/RU document and ownership notes -> exact checksum update. All code remains in owned file scope.
+
+Sources read: pinned architecture/plan/review and clarification/refactoring-plan; source Work services/publisher/intent validator; document-reads contract; PF-resolved local Python dataclasses (frozen/kw_only/defensive ownership) and Python practices PEP20. No platform or language toolchain overlay is selected by the current project context. Existing Python smoke launchers define targeted assurance.
+
+Acceptance and known limits: current file reads, mutable result independence, different activity rules and incomplete YAML preserved; one inventory enumeration in pf.context, no full historical body scan; unchanged original parser fallback/errors/limits, cold full parsing still costs work. Scope excludes installation, runtime/host proof and public release. Architecture-plan-ready passed.

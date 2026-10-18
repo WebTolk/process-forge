@@ -1,0 +1,185 @@
+schema_version: 1
+run:
+  id: core-a01-a11-wave2-20260911
+  title: A01-A11 remediation wave 2
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+  model: ""
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: a0206-reports
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - tools/processforge.py
+      - tools/pf_runtime/host.py
+      - tools/smoke_expected_report_containment.py
+      - tools/smoke_authenticated_report_content.py
+      - .pf/artifacts/core-a01-a11-20260911/a0206-reports/**
+      - .pf/tmp/a0206-reports/**
+    allowed_read_files:
+      - tools/processforge.py
+      - tools/pf_runtime/host.py
+      - tools/smoke_expected_report_containment.py
+      - tools/smoke_authenticated_report_content.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: a0206-reports-report
+        path: .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+    depends_on:
+      []
+  -
+    id: a05-migration
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_migration_sources.py
+      - .pf/artifacts/core-a01-a11-20260911/a05-migration/**
+      - .pf/tmp/a05-migration/**
+    allowed_read_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_migration_sources.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/processforge.py
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: a05-migration-report
+        path: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+    depends_on:
+      []
+  -
+    id: a08-jsonrpc
+    order: 3
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - tools/pf_runtime/mcp_server.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**
+      - .pf/tmp/a08-jsonrpc/**
+    allowed_read_files:
+      - tools/pf_runtime/mcp_server.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/processforge.py
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: a08-jsonrpc-report
+        path: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+    depends_on:
+      []

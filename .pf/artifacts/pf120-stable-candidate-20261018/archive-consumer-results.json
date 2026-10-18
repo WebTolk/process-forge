@@ -1,0 +1,27 @@
+{
+  "observed_at": "2026-10-18T05:41:27.924047+00:00",
+  "status": "passed",
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "archive_sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+  "profile": {
+    "native_command": "release-archive-test",
+    "extracted_test": "full",
+    "timeout_scale": 2,
+    "only": [],
+    "skip": [],
+    "native_inner_profile": "release-test --public --timeout-scale 2"
+  },
+  "native_outer_exit_code": 0,
+  "required_native_pass_labels": [
+    "PASS bin/pf.py --help",
+    "PASS tools/processforge.py --help",
+    "PASS release-test extracted archive"
+  ],
+  "elapsed_seconds": 1499.6846872000024,
+  "started_at": "2026-10-18T05:16:03.604806+00:00",
+  "finished_at": "2026-10-18T05:41:03.289529+00:00",
+  "source_stress_consumer_executed_sequentially": true,
+  "native_raw_sha256": "0c2255ac4667f9d52e63741ec3a9aed0c8f1ed519ab4097186102592013d3fd6",
+  "receipt": "archive-public-full.json",
+  "boundary": "Native outer full consumer success. Native CLI suppresses successful inner stdout and deletes its temporary tree; no retained inner per-case matrix or new installed/connected-host acceptance is claimed."
+}

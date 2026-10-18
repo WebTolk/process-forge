@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_fulltext_article_indexing.py", line 61, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_fulltext_article_indexing.py", line 43, in main
+    before = search(project, snapshot, query="UniqueGarageNeedle42")
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 784, in search
+    resource_ids = indexable_resource_ids(authorized_roots(project_root, snapshot))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 318, in authorized_roots
+    if identity in seen:
+                   ^^^^
+NameError: name 'seen' is not defined

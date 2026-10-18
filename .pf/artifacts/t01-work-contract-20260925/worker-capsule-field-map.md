@@ -1,0 +1,21 @@
+# Capsule field map: process execution vs assignment CLI
+
+This is a source-backed description of the two builders, not a design review. “Execution builder” means `ProcessExecutionService._write_capsule`; “assignment builder” means `command_assignment_capsule` using `normalized_assignment_contract`.
+
+| Field group | Execution builder | Assignment builder | Observed parity |
+|---|---|---|---|
+| Identity | `src/processforge_core/process_execution.py:1319-1331`: capsule id, assignment id/path; assignment id, run id, objective, stage; `process_execution` copied from pin. | `tools/processforge.py:12815-12822,12986-13004,13019`: capsule id, assignment id/path, assignment checksum; assignment id/path/status/objective/execution_mode; snapshot identity/checksum. No explicit run id or stage emitted by this builder. | Assignment identity and objective overlap; execution path adds run/stage, CLI path adds status/execution mode. |
+| Checksum / snapshot | `process_execution.py:1320-1331`: context snapshot id/checksum and full pin copied under `process_execution`; capsule block itself has no assignment checksum or snapshot path/checksum. | `processforge.py:12989-13004`: assignment checksum, snapshot path/checksum, plus context snapshot id/hash/freshness. | Partial: CLI explicitly checksums assignment and snapshot; execution path carries snapshot checksum through pin/context snapshot, but no assignment checksum. |
+| Scope | No scope block in `process_execution.py:1317-1332`. | Normalized at `processforge.py:12809-12814,12824-12830`, serialized at `13029`; includes allowed files, read files, forbidden files, ownership, non-overlap. | CLI only. |
+| Sources / context artifacts | `process_execution.py:1321-1329`: context required_sources and context_artifacts are empty arrays. | `processforge.py:12805-12808,12823`: derives required sources (snapshot, assignment, metadata) and normalized context artifacts; emitted at `13020-13028`. | Shape overlaps, content differs: execution path hard-codes empty lists; CLI derives them. |
+| Outputs | No outputs block in `process_execution.py:1317-1332`. | `processforge.py:12831-12834`, emitted `13030`: required outputs and expected report. | CLI only. |
+| Workspace access | No workspace_access block in `process_execution.py:1317-1332`. | `processforge.py:12835,12842-12881`, emitted `13031`; normalized groups include knowledge_resources, templates, tools, mcp. | CLI only. |
+| Capabilities | No capability block in `process_execution.py:1317-1332`. | Required/optional records resolved at `processforge.py:12958-12966`, emitted `13036,13042-13043`. | CLI only. |
+| Parameters | No resolved-parameters block in `process_execution.py:1317-1332`; copied process pin is its only additional payload. | Assignment parameters resolved at `processforge.py:12985`; emitted with summary at `13007-13012`, parameter source ids in context at `13027`. | CLI only. |
+| Process | `process_execution.py:1331` copies `pin` as `process_execution`. | No `process_execution` block in the emitted object `processforge.py:12986-13046`. | Execution path only; CLI capsule includes project/resource summaries instead (`13005-13018`). |
+| Model / reasoning | No agent model or reasoning fields in `process_execution.py:1317-1332`. | Normalized at `processforge.py:12836-12838`, emitted at `13032-13034`; also includes subagent policy. | CLI only. |
+| Stage | Assignment stage is explicit at `process_execution.py:1330`; pin is also copied at `1331`. | `normalized_assignment_contract`’s assignment object (`processforge.py:12815-12822`) has no stage field; emitted assignment is that contract at `13019`. | Execution path only explicitly emits stage. |
+
+The common schema, `schemas/context-capsule.schema.json:6-26,48-99,135`, requires only top-level schema_version/capsule/assignment/context and permits additional properties. It describes optional scope, outputs, capabilities, sources, actions and telemetry, but does not require either builder to emit those groups. Thus the schema allows both observed shapes; it does not establish field parity.
+
+Boundary: this map compares the named construction code only. It does not infer downstream consumers, whether one builder supersedes the other, or a desired migration/API.

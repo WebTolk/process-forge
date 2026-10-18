@@ -1,0 +1,15 @@
+{
+  "governed_has_scope": false,
+  "command_has_scope": true,
+  "governed_required_sources": [],
+  "command_required_sources": [
+    ".pf/contexts/project-context.snapshot.yaml",
+    ".pf/assignments/execute-declarative-smoke.yaml",
+    "input.md"
+  ],
+  "governed_has_process": true,
+  "command_has_process": false,
+  "before_lifecycle_status": "fresh",
+  "after_lifecycle_status": "stale",
+  "governed_capsule_was_replaced_by_force": true
+}

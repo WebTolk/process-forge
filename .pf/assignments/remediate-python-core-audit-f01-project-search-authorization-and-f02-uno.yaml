@@ -1,0 +1,210 @@
+schema_version: 1
+id: remediate-python-core-audit-f01-project-search-authorization-and-f02-uno
+title: Remediate Python-core audit F01 project search authorization and F02 unowned Cor
+run_id: garage-remediate-python-core-audit-f01-project-search-authorization-and
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T04:43:41Z'
+updated_at: '2026-09-10T05:42:43Z'
+objective: Remediate Python-core audit F01 project search authorization and F02 unowned Core update collisions using bounded junior PF shell workers, targeted regressions and independent acceptance; preserve existing dirty work
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Accepted bounded F01/F02 shell remediation delivered with final evidence and handoff; F03-F12 and baseline Runtime source blocker remain explicit separate work.
+  artifacts:
+    - .pf/artifacts/core-f01-f02-20260910/execution-record.md
+    - .pf/artifacts/core-f01-f02-20260910/final-review.md
+    - .pf/artifacts/core-f01-f02-20260910/integration-report.md
+    - .pf/artifacts/core-f01-f02-20260910/orchestrator-plan.yaml
+    - .pf/artifacts/core-f01-f02-20260910/summary.md
+    - .pf/handoffs/core-f01-f02-20260910.md
+    - .pf/runs/garage-remediate-python-core-audit-f01-project-search-authorization-and/run.yaml
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-10T05:42:24Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/core-f01-f02-20260910/summary.md
+      recorded_at: '2026-09-10T05:42:39Z'
+      sha256: 'sha256:5896e4d70514f7db61aec745a126cdb0f59e4db3e173986fd6da178d80eb9eff'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/core-f01-f02-20260910.md
+      recorded_at: '2026-09-10T05:42:39Z'
+      sha256: 'sha256:8827b21bab41f80aa54289b8c10b6df511ab3381f1d120a63f482179bd83a0c6'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Final summary and next-remediation handoff preserve F03-F12 and independently reproduced full-source Runtime startup blocker; no release claim.
+      recorded_at: '2026-09-10T05:42:39Z'
+  notes: Accepted bounded F01/F02 shell remediation delivered with final evidence and handoff; F03-F12 and baseline Runtime source blocker remain explicit separate work.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-10T04:43:41Z'
+    completed_at: '2026-09-10T04:45:55Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/runs/garage-remediate-python-core-audit-f01-project-search-authorization-and/run.yaml
+        recorded_at: '2026-09-10T04:45:50Z'
+        sha256: 'sha256:15e34acf407679ccf471f01d8f13285b6849168782fbc9636c1cfae973353041'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Fresh context, immutable carrier capsule read, existing dirty source baseline and bounded remediation plan recorded.
+        recorded_at: '2026-09-10T04:45:50Z'
+    notes: Intake complete; user-authorized junior shell orchestration planned in separate run, source baseline preserved.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-10T04:45:55Z'
+    completed_at: '2026-09-10T04:52:30Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        path: .pf/artifacts/core-f01-f02-20260910/orchestrator-plan.yaml
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        recorded_at: '2026-09-10T04:52:23Z'
+        sha256: 'sha256:d092d02f4dee51838c1e810ba06ca2c6e3856e8e9be37246e9cefafd87634901'
+      -
+        gate_id: run-has-tasks
+        summary: Validated specialized shell plan defines two disjoint implementation tasks and dependent assurance/review with explicit acceptance.
+        kind: gate
+        status: passed
+        recorded_at: '2026-09-10T04:52:23Z'
+    notes: Validated shell orchestration materialized with four assignments and immutable capsules; implementation scope handed to two disjoint junior workers.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-10T04:52:30Z'
+    completed_at: '2026-09-10T05:37:14Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/artifacts/core-f01-f02-20260910/execution-record.md
+        recorded_at: '2026-09-10T05:37:08Z'
+        sha256: 'sha256:99a7084ca6a5d47be03680589e9309c86937c09cc948b75f10856bfba12d6790'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Five bounded shell assignments collected DONE; actual primary tests and independent reviews recorded. Full source suite remains a final acceptance obligation.
+        recorded_at: '2026-09-10T05:37:08Z'
+    notes: All delegated implementation/correction/assurance/review tasks done, primary evidence fixed. Final full source suite still running; no release readiness claimed.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-10T05:37:14Z'
+    completed_at: '2026-09-10T05:41:49Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/core-f01-f02-20260910/integration-report.md
+        recorded_at: '2026-09-10T05:41:45Z'
+        sha256: 'sha256:50dbda23702bc43cc7b1458b5af2a45dd7c999da9c6411c0ce7242742b515b78'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: All five delegated tasks done and shell run completed. F01/F02 accepted with independent review and genuine tests; full-source Runtime failure reproduced on baseline and explicitly retained as a release boundary.
+        recorded_at: '2026-09-10T05:41:45Z'
+    notes: F01/F02 final result accepted, five shell tasks complete; full-source 45 PASS and 1 baseline-reproduced Runtime failure recorded as separate release boundary.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-10T05:41:49Z'
+    completed_at: '2026-09-10T05:42:24Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/artifacts/core-f01-f02-20260910/final-review.md
+        recorded_at: '2026-09-10T05:42:18Z'
+        sha256: 'sha256:b5a0f33dbbfc0eab3200bf922e429db2239f978fe1da81f881dd54cba3f259da'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Scoped carrier and shell run-doctors passed; independent review has no actionable finding in accepted F01/F02 scope. Broader source failure remains documented, not waived as release qualification.
+        recorded_at: '2026-09-10T05:42:18Z'
+    notes: Independent reviewer PASS, primary adjudication accepted and scoped run-doctors PASS; documented source qualification failure not hidden.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-10T05:42:24Z'
+    completed_at: '2026-09-10T05:42:43Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/core-f01-f02-20260910/summary.md
+        recorded_at: '2026-09-10T05:42:39Z'
+        sha256: 'sha256:5896e4d70514f7db61aec745a126cdb0f59e4db3e173986fd6da178d80eb9eff'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/core-f01-f02-20260910.md
+        recorded_at: '2026-09-10T05:42:39Z'
+        sha256: 'sha256:8827b21bab41f80aa54289b8c10b6df511ab3381f1d120a63f482179bd83a0c6'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Final summary and next-remediation handoff preserve F03-F12 and independently reproduced full-source Runtime startup blocker; no release claim.
+        recorded_at: '2026-09-10T05:42:39Z'
+    notes: Accepted bounded F01/F02 shell remediation delivered with final evidence and handoff; F03-F12 and baseline Runtime source blocker remain explicit separate work.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260908-074925-d05a67
+  snapshot_checksum: 'sha256:4a2672ff22eb5067fcd66558bbc572342d8d36e21b50377abb89c267000047e8'
+  assignment_capsule: .pf/contexts/assignment-capsules/remediate-python-core-audit-f01-project-search-authorization-and-f02-uno.capsule.yaml
+  assignment_capsule_checksum: 'sha256:e7003cc7a060faba1f5b2d6de799e43de58e1e1f0f8c8099336f67c9f408759a'

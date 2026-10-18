@@ -1,0 +1,20 @@
+{
+  "time": "2026-09-27T08:13:13.410507+00:00",
+  "argv": [
+    "git",
+    "diff",
+    "--check",
+    "--",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\README.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\project-profile.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\repository-map.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\project-conventions.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\toolchain-detection-report.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\mcp-capability-report.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\template-matching-report.md",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\global-resource-matching-report.md"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

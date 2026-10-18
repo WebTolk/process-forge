@@ -1,0 +1,46 @@
+{
+  "orphan_takeover": {
+    "lifecycle_before": "orphaned",
+    "old_pid_alive": true,
+    "acquire_returned": 13796,
+    "lock_owner_after": "new-owner",
+    "limitation": "Real live PID and files; fixture represents damaged ownership metadata, no second daemon started."
+  },
+  "cache_read_failure": {
+    "scheduler_alive": false,
+    "escaped": [
+      {
+        "type": "JSONDecodeError",
+        "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+      }
+    ],
+    "last_scheduler_error": null
+  },
+  "session_start_resume": {
+    "captures": [
+      {
+        "source": "startup",
+        "derived_event_type": "agent.session.started",
+        "derived_event_id": "codex:SessionStart:fixture-session::",
+        "raw_event_id": "raw_70156dddec612827cdae945c46f0049e8068ec0e6bdb7e2614482a6278c0ff28",
+        "duplicate": false,
+        "normalized_event_ids": [
+          "evt_b57b9bf082259a490b861e4fad3cfe6d"
+        ]
+      },
+      {
+        "source": "resume",
+        "derived_event_type": "agent.session.resumed",
+        "derived_event_id": "codex:SessionStart:fixture-session::",
+        "raw_event_id": "raw_835093af78cce71989bfbb5d066bf76636de96117abd236ca49d4cba07d76e75",
+        "duplicate": true,
+        "normalized_event_ids": [
+          "evt_b57b9bf082259a490b861e4fad3cfe6d"
+        ]
+      }
+    ],
+    "stored_lifecycle_types": [
+      "agent.session.started"
+    ]
+  }
+}

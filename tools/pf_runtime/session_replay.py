@@ -15,7 +15,7 @@ from typing import Any, Iterable, Mapping
 
 from .codex_hooks import native_envelope, normalized_event
 from .host import _conversation_messages, _ingest_derived_event, event_exists, resolve_project, stable_event_id
-from .raw_ingress_kernel import RawIngressKernel, atomic_write_json, contained_path
+from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, atomic_write_json, contained_path, raw_event_id as native_raw_event_id, raw_payload_hash
 
 PROCESSOR_ID = "processforge.session-replay.codex-hooks"
 PROCESSOR_VERSION = "1"
@@ -39,14 +39,15 @@ def replay_session_raw_records(
     if limit is not None and limit <= 0:
         raise ValueError("limit must be positive")
 
-    root = RawIngressKernel(workplace_root).root
     project_root = resolve_project(project_ref, core)
+    kernel = RawIngressKernel(workplace_root, flow_root=core.locate_flow_root(project_root))
+    root = kernel.root
     counts = _empty_counts()
     records: list[dict[str, Any]] = []
     errors: list[dict[str, Any]] = []
     processed = 0
 
-    for item in _iter_raw_records(root):
+    for item in _iter_raw_records(root, session_id=session_id, provider=provider, adapter=adapter):
         if item.get("malformed"):
             counts["failed"] += 1
             errors.append({"status": "failed", "code": "malformed_json", "raw_location": item["raw_location"]})
@@ -72,6 +73,8 @@ def replay_session_raw_records(
             errors.append(status)
             return _result("failed", counts, records, errors)
 
+        kernel.finish(raw_event_id, status)
+
         records.append(status)
         _write_checkpoint(
             root,
@@ -91,28 +94,15 @@ def replay_session_raw_records(
     return _result("ok", counts, records, errors)
 
 
-def checkpoint_path(workplace_root: Path, session_id: str) -> Path:
-    root = RawIngressKernel(workplace_root).root
+def checkpoint_path(workplace_root: Path, session_id: str, *, flow_root: Path | None = None) -> Path:
+    root = RawIngressKernel(workplace_root, flow_root=flow_root).root
     return contained_path(root, "checkpoints", "session-replay", f"{_safe_session_id(session_id)}.json")
 
 
-def _iter_raw_records(root: Path) -> Iterable[dict[str, Any]]:
-    raw_root = contained_path(root, "raw", "v1")
-    if not raw_root.is_dir():
-        return
-    for shard in sorted(raw_root.rglob("*.ndjson")):
-        offset = 0
-        with shard.open("rb") as handle:
-            for line in handle:
-                raw_location = f"{shard.relative_to(root).as_posix()}:{offset}"
-                try:
-                    record = json.loads(line.decode("utf-8"))
-                except (UnicodeDecodeError, json.JSONDecodeError):
-                    yield {"malformed": True, "raw_location": raw_location}
-                    return
-                if isinstance(record, dict):
-                    yield {"record": record, "raw_location": raw_location}
-                offset += len(line)
+def _iter_raw_records(root: Path, **filters) -> Iterable[dict[str, Any]]:
+    from processforge_core.raw_hook_journal import RawHookJournal
+
+    yield from RawHookJournal().records(contained_path(root, "hooks.sqlite3"), **filters)
 
 
 def _candidate(record: Mapping[str, Any], *, session_id: str, provider: str, adapter: str) -> bool:
@@ -144,6 +134,16 @@ def _process_record(
     if envelope is None:
         counts["unsupported_mapping"] += 1
         return _record_status("unsupported_mapping", raw_location, raw_event_id)
+    # A raw receipt is not adapter admission. Reconstruct canonical provider
+    # identity and compare its digest before replay can create any effect.
+    canonical = NativeAgentEvent(**{key: envelope[key] for key in (
+        "provider", "adapter", "native_event_type", "raw_payload", "payload_version",
+        "native_event_id", "native_id_scope", "native_event_id_stable", "source_session_id", "source_project_ref")})
+    if (native_raw_event_id(canonical) != raw_event_id
+            or record.get("raw_payload_hash") != raw_payload_hash(raw_payload)
+            or any(record.get(key) != envelope.get(key) for key in ("source_session_id", "native_event_id", "native_event_type", "payload_version"))):
+        counts["denied"] += 1
+        return _record_status("denied", raw_location, raw_event_id, code="provenance_rejected")
     chat_message_ids, conversation_diagnostics = _conversation_messages(
         envelope,
         SimpleNamespace(raw_event_id=raw_event_id),

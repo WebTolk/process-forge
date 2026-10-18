@@ -1,0 +1,33 @@
+schema_version: 1
+id: r02-release-command-review-20260911
+title: R02 independent release command review
+process: multi-agent-task-orchestration
+status: in_progress
+created_at: '2026-09-11T11:55:21Z'
+updated_at: '2026-09-11T12:02:53Z'
+objective: R02 independent release command review
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: r02-release-command-review
+    assignment: .pf/assignments/r02-release-command-review.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 1

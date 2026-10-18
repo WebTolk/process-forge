@@ -1,0 +1,69 @@
+{
+  "started_at": "2026-09-25T20:17:22.945643+00:00",
+  "checks": [
+    {
+      "name": "smoke_project_resource_narrowing_search",
+      "exit_code": 0,
+      "stdout": "PASS: project resource narrowing and search acceptance\n",
+      "stderr": "",
+      "seconds": 0.723
+    },
+    {
+      "name": "smoke_resource_indexing_policy_acceptance",
+      "exit_code": 0,
+      "stdout": "PASS: resource indexing policy acceptance smoke\n",
+      "stderr": "",
+      "seconds": 0.874
+    },
+    {
+      "name": "smoke_workplace_search_index",
+      "exit_code": 0,
+      "stdout": "PASS: workplace-wide local resource index smoke\n",
+      "stderr": "",
+      "seconds": 4.869
+    },
+    {
+      "name": "smoke_multi_process_work_capsule",
+      "exit_code": 0,
+      "stdout": "PASS: smoke_project_legacy_single_process_compatibility\nPASS: smoke_legacy_single_process_completion\nPASS: smoke_project_multiple_allowed_processes\nPASS: smoke_work_start_multiple_processes_requires_choice\nPASS: smoke_work_start_rejects_disallowed_process\nPASS: smoke_work_start_explicit_allowed_process\nPASS: smoke_active_work_has_single_process\nPASS: smoke_work_capsule_does_not_union_allowed_processes\nPASS: smoke_active_specializations_pinned_to_work\nPASS: smoke_process_transition_next_work_recommendation\nPASS: smoke_pf_context_exposes_fresh_session_continuation\nPASS: smoke_existing_work_start_contract_compatible\nPASS: smoke_multi_process_garage_sessionless\nPASS: smoke_multi_process_does_not_require_runtime\nPASS: smoke_consumed_handoff_not_reoffered\nPASS: smoke_work_start_single_process_auto_select\n",
+      "stderr": "",
+      "seconds": 93.689
+    },
+    {
+      "name": "smoke_work_transition_snapshot_pinned_process",
+      "exit_code": 0,
+      "stdout": "PASS: work transition uses pinned process\n",
+      "stderr": "",
+      "seconds": 23.258
+    },
+    {
+      "name": "smoke_garage_no_hooks_sessionless",
+      "exit_code": 0,
+      "stdout": "PASS: Garage context/search/resolve work without hooks, session, or daemon\n",
+      "stderr": "",
+      "seconds": 31.263
+    },
+    {
+      "name": "smoke_mcp_jsonrpc_validation",
+      "exit_code": 0,
+      "stdout": "PASS: native MCP validates JSON-RPC and tool arguments; notifications stay silent\n",
+      "stderr": "",
+      "seconds": 2.237
+    },
+    {
+      "name": "smoke_mcp_missing_session_diagnostics",
+      "exit_code": 0,
+      "stdout": "PASS: MCP missing-session diagnostics are actionable\n",
+      "stderr": "",
+      "seconds": 0.317
+    },
+    {
+      "name": "smoke_project_init_local_search_mcp",
+      "exit_code": 0,
+      "stdout": "PASS: snapshot-authorized SQLite FTS5 search smoke\n",
+      "stderr": "",
+      "seconds": 46.377
+    }
+  ],
+  "finished_at": "2026-09-25T20:20:46.558911+00:00"
+}

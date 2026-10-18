@@ -9,19 +9,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-import yaml
-
-
 ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "tools" / "processforge.py"
 MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+sys.path.insert(0, str(ROOT / "tools"))
 
-
-def cli(*args: str) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run([sys.executable, str(PF), *args], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=120)
-    if result.returncode != 0:
-        raise AssertionError(result.stdout + result.stderr)
-    return result
+from garage_search_smoke_support import empty_fixture_authorization, register_fixture_resource, run_cli, select_fixture_resource
 
 
 def call_mcp(workplace: Path, name: str, arguments: dict[str, object], *, expect_error: bool = False) -> dict[str, object]:
@@ -48,48 +41,61 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object], *, expect
     return json.loads(text)
 
 
-def add_resource(project: Path, resource_id: str, needle: str) -> None:
-    knowledge_root = project / "knowledge"
-    knowledge_root.mkdir()
-    (knowledge_root / "doc.md").write_text(needle, encoding="utf-8")
-    snapshot_path = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
-    snapshot = yaml.safe_load(snapshot_path.read_text(encoding="utf-8"))
-    resource = {
-        "id": resource_id,
-        "resource_id": resource_id,
-        "package_id": "fixture.docs",
-        "kind": "knowledge",
-        "content_roots": [str(knowledge_root)],
-        "indexing": {"enabled": True, "mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["*.md"], "exclude": []}]},
-    }
-    snapshot.setdefault("resolved", {}).setdefault("available_knowledge_resources", []).append(resource)
-    snapshot["local_search_resources"] = [resource]
-    snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
-
-
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-garage-security-") as raw:
+    with tempfile.TemporaryDirectory(prefix="pf-garage-cross-project-") as raw:
         root = Path(raw)
         workplace = root / "workplace"
         project_a = root / "project-a"
         project_b = root / "project-b"
-        cli("workplace-init", "--workplace", str(workplace), "--apply")
-        cli("project-onboard", "--project-root", str(project_a), "--workplace", str(workplace), "--type", "generic", "--apply")
-        cli("project-onboard", "--project-root", str(project_b), "--workplace", str(workplace), "--type", "generic", "--apply")
-        add_resource(project_a, "fixture.docs:a", "ProjectANeedle")
-        add_resource(project_b, "fixture.docs:b", "ProjectBNeedle")
-        cli("agent-checkin", "--workplace", str(workplace), "--agent", "fixture-agent", "--session", "session-a", "--project-root", str(project_a))
+        run_cli("workplace-init", "--workplace", str(workplace), "--apply")
+        resource_a = register_fixture_resource(
+            workplace,
+            "fixture.search-a",
+            "a",
+            {"one.md": "SharedGarageNeedle ProjectANeedle", "two.md": "SharedGarageNeedle ProjectASecondNeedle"},
+            title="Fixture A",
+        )
+        resource_b = register_fixture_resource(
+            workplace,
+            "fixture.search-b",
+            "b",
+            {"one.md": "SharedGarageNeedle ProjectBNeedle", "two.md": "SharedGarageNeedle ProjectBSecondNeedle"},
+            title="Fixture B",
+        )
+        run_cli("project-onboard", "--project-root", str(project_a), "--workplace", str(workplace), "--type", "generic", "--apply")
+        run_cli("project-onboard", "--project-root", str(project_b), "--workplace", str(workplace), "--type", "generic", "--apply")
+        select_fixture_resource(project_a, workplace, "fixture.search-a", "a")
+        select_fixture_resource(project_b, workplace, "fixture.search-b", "b")
 
+        positive_b = call_mcp(workplace, "pf.search", {"project_root": str(project_b), "query": "ProjectBNeedle"})
+        if positive_b.get("total") != 1 or positive_b.get("results", [{}])[0].get("resource_id") != resource_b:
+            raise AssertionError(positive_b)
+        shared_page_0 = call_mcp(workplace, "pf.search", {"project_root": str(project_a), "query": "SharedGarageNeedle", "limit": 1, "offset": 0})
+        shared_page_1 = call_mcp(workplace, "pf.search", {"project_root": str(project_a), "query": "SharedGarageNeedle", "limit": 1, "offset": 1})
+        if shared_page_0.get("total") != 2 or len(shared_page_0.get("results", [])) != 1 or len(shared_page_1.get("results", [])) != 1:
+            raise AssertionError({"page0": shared_page_0, "page1": shared_page_1})
+        if any(item.get("resource_id") != resource_a for item in shared_page_0.get("results", []) + shared_page_1.get("results", [])):
+            raise AssertionError({"page0": shared_page_0, "page1": shared_page_1})
         search_a_for_b = call_mcp(workplace, "pf.search", {"project_root": str(project_a), "query": "ProjectBNeedle"})
-        if search_a_for_b.get("total") != 0:
+        if search_a_for_b.get("total") != 0 or search_a_for_b.get("results") != []:
             raise AssertionError(search_a_for_b)
-        denied = call_mcp(workplace, "pf.resolve", {"project_root": str(project_a), "resource_id": "fixture.docs:b"})
+        positive_b_after_a = call_mcp(workplace, "pf.search", {"project_root": str(project_b), "query": "ProjectBNeedle"})
+        if positive_b_after_a.get("total") != 1 or positive_b_after_a.get("results", [{}])[0].get("resource_id") != resource_b:
+            raise AssertionError(positive_b_after_a)
+        empty_project = root / "project-empty"
+        run_cli("project-onboard", "--project-root", str(empty_project), "--workplace", str(workplace), "--type", "generic", "--apply")
+        empty_fixture_authorization(empty_project, workplace)
+        empty = call_mcp(workplace, "pf.search", {"project_root": str(empty_project), "query": "SharedGarageNeedle"})
+        if empty.get("total") != 0 or empty.get("results") != []:
+            raise AssertionError(empty)
+        denied = call_mcp(workplace, "pf.resolve", {"project_root": str(project_a), "resource_id": resource_b})
         if denied.get("resource", {}).get("status") != "denied":
             raise AssertionError(denied)
+        run_cli("agent-checkin", "--workplace", str(workplace), "--agent", "fixture-agent", "--session", "session-a", "--project-root", str(project_a))
         mismatch = call_mcp(workplace, "pf.search", {"project_root": str(project_b), "session_id": "session-a", "query": "ProjectBNeedle"}, expect_error=True)
         if mismatch.get("error", {}).get("code") != "session_project_mismatch":
             raise AssertionError(mismatch)
-    print("PASS: Garage resource authorization is snapshot-bound across projects")
+        print("PASS: Garage resource authorization is snapshot-bound across projects")
     return 0
 
 

@@ -1,0 +1,10 @@
+{
+  "core_root": "D:\\.agents\\processforge",
+  "file_count": 928,
+  "incomplete_update": false,
+  "kind": "processforge.core_update.status",
+  "manifest": "D:\\.agents\\processforge\\processforge-core.manifest.json",
+  "schema_version": 1,
+  "status": "installed",
+  "version": "1.1.0"
+}

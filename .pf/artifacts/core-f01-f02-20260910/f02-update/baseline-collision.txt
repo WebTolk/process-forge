@@ -1,0 +1,27 @@
+command: python .pf/artifacts/core-f01-f02-20260910/f02-update/baseline_collision_repro.py <precreated-owned-scratch>
+exit: 0
+{
+  "baseline": {
+    "apply_error": null,
+    "apply_status": "applied",
+    "backed_up": {},
+    "blockers": [],
+    "plan_status": "planned",
+    "user_payload_after": "NEW CORE PAYLOAD"
+  },
+  "baseline_revision": "1aecc18b6824204ca45ab30241b92d26e6d583a5",
+  "repaired": {
+    "apply_error": "plan_blocked",
+    "apply_status": null,
+    "backed_up": null,
+    "blockers": [
+      {
+        "code": "unowned_path_collision",
+        "conflict_path": "user-note.txt",
+        "path": "user-note.txt"
+      }
+    ],
+    "plan_status": "blocked",
+    "user_payload_after": "USER OWNED DATA"
+  }
+}

@@ -1,0 +1,53 @@
+schema_version: 1
+kind: remediation_followup_backlog
+source_run: garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo
+audited_scope: A01-A11 completed
+items:
+  - id: R01
+    title: Resolve first-run project-profile search contract
+    status: reproduced_baseline_failure
+    priority: P2
+    complexity: M
+    files:
+      - tools/smoke_user_like_garage_path.py
+      - src/processforge_core/garage.py
+      - src/processforge_core/local_resource_search.py
+      - tools/pf_runtime/session_read.py
+      - tools/processforge.py
+    evidence:
+      - .pf/artifacts/core-a01-a11-20260911/validation/baseline/smoke_user_like_garage_path.txt
+      - .pf/artifacts/core-a01-a11-20260911/source-full-report-remainder.json
+    next_action: Reconcile the expected automatic project-profile search with the Workplace registration and index contract before choosing a production repair or fixture correction.
+    acceptance:
+      - Reproduce the current empty_corpus failure on a disposable newly onboarded project.
+      - Establish whether automatic project-profile indexing is part of the current product contract.
+      - Preserve authorization and verify the intended first-run context/search/resolve/work sequence.
+      - Do not weaken the assertion merely to make the suite green.
+  - id: R02
+    title: Qualify a clean release candidate when release delivery is requested
+    status: outside_source_remediation_scope
+    priority: release_gate
+    complexity: M
+    files:
+      - tools/smoke_release_manifest_provenance_contract.py
+    evidence:
+      - .pf/artifacts/core-a01-a11-20260911/source-full-report-remainder.json
+    next_action: Use an isolated clean candidate and source/archive/extracted validation without disturbing unrelated dirty work.
+    acceptance:
+      - Clean candidate provenance test passes without bypassing the clean-source gate.
+      - Source, archive and extracted test results are recorded separately.
+      - Publication and installed application remain separately scoped actions.
+  - id: R03
+    title: Assess concurrent independent Workplace migration apply
+    status: unverified_review_note
+    priority: investigation
+    complexity: M
+    files:
+      - src/processforge_core/core_update.py
+    evidence:
+      - .pf/artifacts/core-a01-a11-20260911/review-runtime-core/report.md
+      - .pf/artifacts/core-a01-a11-20260911/review-followup-design.md
+    next_action: Determine the supported updater concurrency contract, then reproduce a race if concurrency is intended to be supported.
+    acceptance:
+      - Do not classify the note as a confirmed regression without reproduction.
+      - Preserve existing files and avoid duplicate registration under the established supported contract.

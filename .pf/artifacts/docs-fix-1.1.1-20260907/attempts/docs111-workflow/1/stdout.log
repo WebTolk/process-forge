@@ -1,0 +1,32 @@
+**Timestamp**
+- 2026-09-07
+
+**Files Changed**
+- `docs/concepts/declarative-process-execution.md`
+- `docs/concepts/runtime-mcp.md`
+- `docs/getting-started/task-batch-workflow.md`
+- `docs/getting-started/agent-prompts.md`
+- `docs/index.md`
+- `prompts/task-batch-execution-agent.md`
+- `docs/ru/concepts/runtime-mcp.md`
+- `docs/ru/getting-started/task-batch-workflow.md`
+- `docs/ru/getting-started/agent-prompts.md`
+- `docs/ru/index.md`
+
+**What Changed**
+- Updated declarative process execution guidance to use the current governed loop, including `process_choice_required`, `run_completed`, and a concrete transition/evidence example with artifact and gate evidence.
+- Clarified `runtime-mcp` so `pf.work.start` can accept `process_id` and must handle ambiguous process selection explicitly.
+- Reworked the task-batch workflow docs to make the CLI sequence a compatibility-oriented example and to complete all blocking tasks before `run-complete`.
+- Updated agent prompt docs to direct ordinary work through `pf.context -> pf.work.start -> pf.work.state -> pf.work.transition` and point to the current concept pages.
+- Marked the dedicated task-batch agent prompt as a compatibility path and removed the impression that low-level session/run/task commands are the default workflow.
+- Added new concept links in both indexes for `Garage Core` and `Declarative process execution`.
+- Mirrored the affected changes in the Russian docs, including the new workflow language and navigation links.
+
+**Checks**
+- `git diff --check -- docs/concepts/declarative-process-execution.md docs/concepts/runtime-mcp.md docs/getting-started/task-batch-workflow.md docs/getting-started/agent-prompts.md docs/index.md prompts/task-batch-execution-agent.md docs/ru/concepts/runtime-mcp.md docs/ru/getting-started/task-batch-workflow.md docs/ru/getting-started/agent-prompts.md docs/ru/index.md` passed.
+- `git diff --check` on the whole worktree reported only pre-existing CRLF warnings in unrelated files; no errors in the assigned docs.
+- No runtime or release tests were run, since this was a documentation-only assignment.
+
+**Residual Risks**
+- The worktree already contains unrelated modified files, so global `git diff --check` warnings are not attributable to this task.
+- The Russian prompt page was rewritten for clarity and consistency; it should be reviewed once in-render if exact editorial tone matters.

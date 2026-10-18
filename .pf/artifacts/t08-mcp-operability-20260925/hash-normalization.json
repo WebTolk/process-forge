@@ -1,0 +1,20 @@
+[
+    {
+        "Path":  "D:\\dev\\process-forge\\tools\\processforge.py",
+        "RawHash":  "107786AC30026F3F60F1726BA841AAECE5563D165E536A885351AC13B2A3F670",
+        "LFHash":  "d3c100062981a351706c09f0808138edb6fe2ae7050a67a73fdbc306cb9a90be",
+        "CRLF":  true
+    },
+    {
+        "Path":  "D:\\dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\processforge.py",
+        "RawHash":  "D3C100062981A351706C09F0808138EDB6FE2AE7050A67A73FDBC306CB9A90BE",
+        "LFHash":  "d3c100062981a351706c09f0808138edb6fe2ae7050a67a73fdbc306cb9a90be",
+        "CRLF":  false
+    },
+    {
+        "Path":  "D:\\.agents\\processforge\\tools\\processforge.py",
+        "RawHash":  "D3C100062981A351706C09F0808138EDB6FE2AE7050A67A73FDBC306CB9A90BE",
+        "LFHash":  "d3c100062981a351706c09f0808138edb6fe2ae7050a67a73fdbc306cb9a90be",
+        "CRLF":  false
+    }
+]

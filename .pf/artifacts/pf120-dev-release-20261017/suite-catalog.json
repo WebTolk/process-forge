@@ -1,0 +1,9 @@
+{
+  "label": "suite-catalog",
+  "started_at": "2026-10-17T18:21:08.697680+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.118860799993854,
+  "raw_sha256": "0524e7be3f7b0b45feb5f7d85dd3dd2266ae6bd0621feb4e8767661cc37d30b9",
+  "raw_bytes": 18119,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/suite-catalog.log"
+}

@@ -1,0 +1,802 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.dev/schemas/agent-entry-diagnostics.schema.json",
+  "title": "Versioned entry profile registry, caller observations and read-only diagnostics",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/registry"
+    },
+    {
+      "$ref": "#/$defs/observations"
+    },
+    {
+      "$ref": "#/$defs/report"
+    }
+  ],
+  "$defs": {
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reasons"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "verified",
+            "conditional",
+            "unverified",
+            "blocked",
+            "not_applicable"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "[a-z0-9_]+"
+          },
+          "maxItems": 64
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "surface",
+        "route",
+        "client_revision",
+        "selector",
+        "unit",
+        "scope",
+        "accounting_phase",
+        "overflow",
+        "default_limit",
+        "default_file_limit",
+        "prerequisites",
+        "proof_refs",
+        "input_deduplication"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "P-[A-Z0-9-]{1,40}"
+        },
+        "version": {
+          "const": "1.0.0"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string"
+        },
+        "client_revision": {
+          "type": "string"
+        },
+        "selector": {
+          "enum": [
+            "codex",
+            "observed"
+          ]
+        },
+        "unit": {
+          "enum": [
+            "utf8_bytes",
+            "utf16_code_units",
+            "unknown"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "chain",
+            "file_and_chain"
+          ]
+        },
+        "accounting_phase": {
+          "enum": [
+            "codex_read",
+            "expanded_render",
+            "bootstrap_render",
+            "unknown"
+          ]
+        },
+        "overflow": {
+          "enum": [
+            "truncate",
+            "warn",
+            "unknown"
+          ]
+        },
+        "default_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "default_file_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "[a-z0-9_]+"
+          },
+          "maxItems": 64
+        },
+        "proof_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "level",
+              "reference"
+            ],
+            "properties": {
+              "level": {
+                "enum": [
+                  "D",
+                  "S"
+                ]
+              },
+              "reference": {
+                "type": "string",
+                "pattern": "(?:https://[A-Za-z0-9./_#-]{1,512}|docs/concepts/agent-entry.md#[a-z-]+)"
+              }
+            }
+          },
+          "maxItems": 8
+        },
+        "input_deduplication": {
+          "enum": [
+            "same_path",
+            "none"
+          ]
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "registry_version",
+        "profiles"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "pf.agent-entry.profiles"
+        },
+        "registry_version": {
+          "const": "1.0.0"
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profile"
+          },
+          "maxItems": 32
+        }
+      }
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "profile_version": {
+          "type": "string",
+          "pattern": "[A-Za-z0-9.-]{1,80}"
+        },
+        "client_revision": {
+          "type": "string",
+          "pattern": "[A-Za-z0-9.-]{1,80}"
+        },
+        "settings_source": {
+          "enum": [
+            "explicit",
+            "default",
+            "unknown"
+          ]
+        },
+        "injection": {
+          "enum": [
+            "enabled",
+            "disabled",
+            "unknown"
+          ]
+        },
+        "accounting_phase": {
+          "enum": [
+            "raw_concat",
+            "expanded_render",
+            "unknown"
+          ]
+        },
+        "context_mode": {
+          "enum": [
+            "full",
+            "lightweight",
+            "unknown"
+          ]
+        },
+        "limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "file_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "mcp": {
+              "enum": [
+                "available",
+                "unavailable",
+                "unknown"
+              ]
+            },
+            "cli": {
+              "enum": [
+                "available",
+                "unavailable",
+                "unknown"
+              ]
+            },
+            "status": {
+              "enum": [
+                "fresh",
+                "stale",
+                "broken",
+                "unknown"
+              ]
+            },
+            "policy_action": {
+              "enum": [
+                "continue",
+                "block",
+                "unknown"
+              ]
+            },
+            "identity": {
+              "enum": [
+                "matched",
+                "mismatch",
+                "unknown"
+              ]
+            },
+            "required_resources": {
+              "enum": [
+                "available",
+                "denied",
+                "unknown"
+              ]
+            },
+            "health": {
+              "enum": [
+                "ok",
+                "warn",
+                "blocked",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "trusted": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "boundary_complete": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "single_environment": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "workspace_matches": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "explicit_read": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "root_markers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "(?!\\.{1,2}$)(?!.*[. ]$)[^/:\\\\\\x00-\\x1f]+"
+          },
+          "maxItems": 16
+        },
+        "fallback_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "(?!\\.{1,2}$)(?!.*[. ]$)[^/:\\\\\\x00-\\x1f]+"
+          },
+          "maxItems": 16
+        },
+        "selection": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "(?!/)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[. ](?:/|$))[^:\\\\\\x00-\\x1f]+"
+          },
+          "maxItems": 64
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "raw_bytes",
+        "k_start",
+        "k_end",
+        "k_raw_sha256",
+        "k_normalized_sha256",
+        "status",
+        "reason"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "(?!/)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[. ](?:/|$))[^:\\\\\\x00-\\x1f]+"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "[0-9a-f]{64}"
+        },
+        "raw_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "k_start": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "k_end": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "k_raw_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "[0-9a-f]{64}"
+        },
+        "k_normalized_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "[0-9a-f]{64}"
+        },
+        "status": {
+          "enum": [
+            "verified",
+            "blocked"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "pattern": "[a-z0-9_]+"
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "raw_size",
+        "native_size",
+        "used_before_k",
+        "k_start",
+        "k_end",
+        "remaining",
+        "contract_complete",
+        "required_instructions_complete"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "(?!/)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[. ](?:/|$))[^:\\\\\\x00-\\x1f]+"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "[0-9a-f]{64}"
+        },
+        "raw_size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "native_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "used_before_k": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "k_start": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "k_end": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "remaining": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "contract_complete": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "required_instructions_complete": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "unit",
+        "scope",
+        "accounting_phase",
+        "effective_limit",
+        "file_limit",
+        "value_source",
+        "overflow_behavior",
+        "selected_inputs",
+        "raw_size",
+        "expanded_size",
+        "native_total",
+        "status",
+        "contract_complete",
+        "required_instructions_complete",
+        "evidence_level",
+        "basis",
+        "warnings",
+        "rendered_lower_bound",
+        "file_limit_source"
+      ],
+      "properties": {
+        "profile": {
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "utf8_bytes",
+            "utf16_code_units",
+            "unknown"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "chain",
+            "file_and_chain"
+          ]
+        },
+        "accounting_phase": {
+          "enum": [
+            "codex_read",
+            "expanded_render",
+            "bootstrap_render",
+            "unknown"
+          ]
+        },
+        "effective_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "file_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "value_source": {
+          "enum": [
+            "explicit",
+            "default",
+            "unknown"
+          ]
+        },
+        "overflow_behavior": {
+          "enum": [
+            "truncate",
+            "warn",
+            "unknown"
+          ]
+        },
+        "selected_inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/input"
+          },
+          "maxItems": 64
+        },
+        "raw_size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expanded_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "native_total": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "accounted",
+            "budget_unverified"
+          ]
+        },
+        "contract_complete": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "required_instructions_complete": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "evidence_level": {
+          "enum": [
+            "D",
+            "S"
+          ]
+        },
+        "basis": {
+          "const": "conditional_source_model"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "[a-z0-9_]+"
+          },
+          "maxItems": 64
+        },
+        "rendered_lower_bound": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "file_limit_source": {
+          "enum": [
+            "explicit",
+            "default",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "profile",
+        "contract",
+        "files",
+        "budget_observations",
+        "blockers",
+        "verdicts"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "pf.agent-entry.diagnostics"
+        },
+        "profile": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contract": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "sha256",
+                "canonical_bytes"
+              ],
+              "properties": {
+                "version": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "[0-9a-f]{64}"
+                },
+                "canonical_bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          },
+          "maxItems": 2
+        },
+        "budget_observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/budget"
+          },
+          "maxItems": 1
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "[a-z0-9_]+"
+          },
+          "maxItems": 64
+        },
+        "verdicts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file_consistency",
+            "discovery",
+            "delivery",
+            "behavior",
+            "enforcement",
+            "runtime_context"
+          ],
+          "properties": {
+            "file_consistency": {
+              "$ref": "#/$defs/verdict"
+            },
+            "discovery": {
+              "$ref": "#/$defs/verdict"
+            },
+            "delivery": {
+              "$ref": "#/$defs/verdict"
+            },
+            "behavior": {
+              "$ref": "#/$defs/verdict"
+            },
+            "enforcement": {
+              "$ref": "#/$defs/verdict"
+            },
+            "runtime_context": {
+              "$ref": "#/$defs/verdict"
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object"
+}

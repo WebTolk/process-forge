@@ -1,0 +1,9 @@
+{
+  "status": "pass",
+  "confirmed_findings": 12,
+  "p1": 5,
+  "p2": 7,
+  "inventoried_source_files_unchanged": 26,
+  "symlink_probe_excluded": true,
+  "scope": "audit accuracy and preservation; product defects remain open"
+}

@@ -1,0 +1,31 @@
+{
+  "phase": "after",
+  "observed_at": "2026-10-17T19:15:53.647997+00:00",
+  "installed_version": "1.2.0",
+  "installed_files": 1308,
+  "incomplete_update": false,
+  "source": {
+    "commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+    "dirty": false,
+    "tree": "16f63bae232fd161a5f721428bb1cc1096bf6d7d",
+    "vcs": "git"
+  },
+  "runtime_status": "ready",
+  "scheduler_alive": true,
+  "active_workers": 0,
+  "pending_runtime_jobs": 0,
+  "logging": {
+    "events": true,
+    "raw_hooks": false
+  },
+  "configuration_revision": "sha256:8eb64975e50035d2e3e5a3e636e03eaaeb067ff8fabf91822443d7f1c4d786ad",
+  "preserved_file_sha256": {
+    "device_configuration": "8eb64975e50035d2e3e5a3e636e03eaaeb067ff8fabf91822443d7f1c4d786ad",
+    "workplace_manifest": "77bf5e402a982f8ec34ca4ac5b9b1dd8c8b9c24fd7cd9c1a8aac397e223f10c7",
+    "installed_project_configuration": "0c37a442f1824b7dbe94e807067467ab06fb40e127e3381b9df64d6a04f7c3dc",
+    "source_project_configuration": "8af0246dfd42d5312baf6de63a1511f87ea852d90ae27f167b62e39b274a8f2f",
+    "project_context_snapshot": "0905ce36c7168b29d1424c91d4753ff9d86887ddf6230e7b43fc1b50489019be"
+  },
+  "all_protected_files_unchanged": true,
+  "new_runtime_process_and_instance": true
+}

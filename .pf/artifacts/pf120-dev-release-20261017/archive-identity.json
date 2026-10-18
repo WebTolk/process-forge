@@ -1,0 +1,16 @@
+{
+  "source": {
+    "commit": "280e00d9520e8aff7ac49f8173a940cf130b9ff4",
+    "dirty": false,
+    "tree": "cf21afe8ea4a02678f2d0df52a4fbb85909e4bf6",
+    "vcs": "git"
+  },
+  "version": "1.2.0",
+  "archive": "processforge-1.2.0-dev-20261017-metadata.zip",
+  "archive_bytes": 2538231,
+  "archive_sha256": "999667c53b51743d8e4b982ad12215de7149342ff8c6b5917fe0f008d2656184",
+  "sidecar_sha256": "820d6b45f779c29f140ff8d7fde2d1a270bf32c4fd5e7b3b030207735c9ed1c1",
+  "entries": 1309,
+  "metadata_sha256": "38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e",
+  "managed_files": 1308
+}

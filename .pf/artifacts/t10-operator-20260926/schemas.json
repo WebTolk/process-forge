@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py"
+  ],
+  "exit_code": 0,
+  "seconds": 80.355,
+  "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+  "stderr": ""
+}

@@ -1,0 +1,390 @@
+schema_version: 1
+capsule:
+  id: audit-core-capsule
+  generated_at: '2026-09-11T03:11:00Z'
+  assignment_id: audit-core
+  assignment_path: .pf/assignments/audit-core.yaml
+  assignment_checksum: 034d22f109df2123e46d8361dd7f6872e6c0009b9bd2b8b69e5f48a0a2ff30b3
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 8544ec8c2f809ee631da50b573a2b4a8bcd6a590a8d8a4c5cb7c179fe928a8a0
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260910-170716-057454
+  sha256: 'sha256:8544ec8c2f809ee631da50b573a2b4a8bcd6a590a8d8a4c5cb7c179fe928a8a0'
+  generated_at: '2026-09-10T17:06:58Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: audit-core
+  path: .pf/assignments/audit-core.yaml
+  status: failed
+  objective: Read .pf/artifacts/codebase-audit-20260910/audit-core-brief.md and execute bounded audit with reproducible evidence.
+  execution_mode:
+    kind: planning_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260910-170716-057454
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/audit-core.yaml
+    - .pf/artifacts/codebase-audit-20260910/audit-core-brief.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/codebase-audit-20260910/audit-core/**
+    - .pf/tmp/audit-core/**
+  allowed_read_files:
+    - src/**
+    - tools/**
+    - docs/**
+    - schemas/**
+    - processes/**
+    - policies/**
+    - requirements.txt
+    - VERSION
+    - .pf/AGENTS.md
+    - .pf/process-forge.yaml
+    - .pf/artifacts/**
+    - .pf/handoffs/**
+    - .pf/contexts/**
+    - .pf/runtime/agent-runs/**
+  forbidden_files:
+    - src/**
+    - tools/**
+    - docs/**
+    - schemas/**
+    - processes/**
+    - policies/**
+    - VERSION
+    - CHANGELOG.md
+    - checksums/**
+    - .pf/process-forge.yaml
+  ownership:
+    owner_id: audit-core
+    owner_label: worker-audit-core
+    role: analyst
+    writer: true
+    owned_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-core/**
+      - .pf/tmp/audit-core/**
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/codebase-audit-20260910/audit-core/**
+      - .pf/tmp/audit-core/**
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: audit-core-report
+      path: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+    format: concise_markdown
+    include:
+      - audit-core-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: medium
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/audit-core.ndjson
+  event_correlation_id: assignment-audit-core
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/audit-core.yaml
+  - .pf/artifacts/codebase-audit-20260910/audit-core-brief.md
+allowed_files:
+  - .pf/artifacts/codebase-audit-20260910/audit-core/**
+  - .pf/tmp/audit-core/**
+forbidden_files:
+  - src/**
+  - tools/**
+  - docs/**
+  - schemas/**
+  - processes/**
+  - policies/**
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/process-forge.yaml
+required_outputs:
+  -
+    id: audit-core-report
+    path: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-audit-core

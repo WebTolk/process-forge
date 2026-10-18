@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/smoke_docs_agent_no_manual_infra.py"
+  ],
+  "started_at": "2026-09-07T13:52:15.667919+00:00",
+  "finished_at": "2026-09-07T13:52:15.765075+00:00",
+  "elapsed_seconds": 0.097,
+  "exit_code": 0,
+  "output": "PASS: agent instructions use the high-level Garage path and prohibit manual infrastructure repair\n"
+}

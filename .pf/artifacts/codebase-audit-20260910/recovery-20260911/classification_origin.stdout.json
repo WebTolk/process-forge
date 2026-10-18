@@ -1,0 +1,67 @@
+{
+  "source": {
+    "core_root": "D:\\Dev\\process-forge",
+    "classification": {
+      "status": "classified",
+      "project_types": [
+        "software.python"
+      ],
+      "platforms": [],
+      "tags": [
+        "software"
+      ],
+      "confidence": "high",
+      "loaded_classifiers": [
+        "processforge.official.software-web.classifier"
+      ],
+      "matched_rules": [
+        {
+          "classifier": "processforge.official.software-web.classifier",
+          "rule": "processforge.official.rule.python-marker",
+          "confidence": "high",
+          "source": "packs/official/software-development/project-classifiers/software-web.yaml"
+        }
+      ],
+      "inactive_classifier_hints": []
+    },
+    "classifiers": [
+      {
+        "path": "D:\\Dev\\process-forge\\packs\\official\\software-development\\project-classifiers\\software-web.yaml",
+        "sha256": "04e718bcfcee1e51f1dd2c86b692422b437ab6340d3096f407bcfedd8fa85848"
+      }
+    ]
+  },
+  "installed": {
+    "core_root": "D:\\.agents\\processforge",
+    "classification": {
+      "status": "classified",
+      "project_types": [
+        "software.python"
+      ],
+      "platforms": [],
+      "tags": [
+        "software"
+      ],
+      "confidence": "high",
+      "loaded_classifiers": [
+        "processforge.official.software-web.classifier"
+      ],
+      "matched_rules": [
+        {
+          "classifier": "processforge.official.software-web.classifier",
+          "rule": "processforge.official.rule.python-marker",
+          "confidence": "high",
+          "source": "software-web.yaml"
+        }
+      ],
+      "inactive_classifier_hints": []
+    },
+    "classifiers": [
+      {
+        "path": "D:\\.agents\\processforge\\packs\\official\\software-development\\project-classifiers\\software-web.yaml",
+        "sha256": "04e718bcfcee1e51f1dd2c86b692422b437ab6340d3096f407bcfedd8fa85848"
+      }
+    ]
+  },
+  "classification_equal": false
+}

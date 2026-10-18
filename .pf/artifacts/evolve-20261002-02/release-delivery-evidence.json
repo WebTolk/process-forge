@@ -1,0 +1,52 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "release-notes",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "not_applicable",
+    "reason": "No release package was created for this task.",
+    "evidence": [
+      "Source-level assurance passed."
+    ]
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "migration-notes",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "not_applicable",
+    "reason": "No migration is required.",
+    "evidence": [
+      "MCP schema and server routing only."
+    ]
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "patch",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-plan",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "passed"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/evolve-20261002-02/release-delivery.md",
+    "status": "passed"
+  }
+]

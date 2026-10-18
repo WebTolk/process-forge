@@ -16,6 +16,12 @@ Session presence records include `agent_id`, `session_id`, `project_root`
 reference, optional `project_id`, `process_id`, optional `run_id`, `roles`,
 `started_at`, `last_seen_at`, optional `finished_at`, and `status`.
 
+`session_id` is an exact opaque value: case and punctuation are significant.
+Presence and transcript filenames use a digest of that value. Legacy records
+remain readable by exact metadata identity; newer presence records take
+precedence without duplicating a session. Chat reads retain legacy history when
+new messages are appended, and never mix sessions with colliding old filenames.
+
 ## Execution Modes
 
 `single_agent`: one primary agent sequentially executes a process in one

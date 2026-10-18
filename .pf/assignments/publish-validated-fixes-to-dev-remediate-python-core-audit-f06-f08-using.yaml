@@ -1,0 +1,210 @@
+schema_version: 1
+id: publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using
+title: Publish validated fixes to dev, remediate Python core audit F06-F08 using PF she
+run_id: garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0
+process: task-batch-execution
+status: done
+created_at: '2026-09-10T10:10:34Z'
+updated_at: '2026-09-10T11:03:11Z'
+objective: Publish validated fixes to dev, remediate Python core audit F06-F08 using PF shell workers, update installed Core and verify local operation
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Accepted publication/remediation and installed verification; remaining audit/release boundaries recorded in handoff.
+  artifacts:
+    - .pf/artifacts/publish-f06-f08-20260910/integration-report.md
+    - .pf/artifacts/publish-f06-f08-20260910/iteration-record.md
+    - .pf/artifacts/publish-f06-f08-20260910/orchestrator-plan.yaml
+    - .pf/artifacts/publish-f06-f08-20260910/plan.md
+    - .pf/artifacts/publish-f06-f08-20260910/review-addendum.md
+    - .pf/artifacts/publish-f06-f08-20260910/summary.md
+    - .pf/handoffs/publish-f06-f08-20260910.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-10T11:02:45Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/publish-f06-f08-20260910/summary.md
+      recorded_at: '2026-09-10T11:03:06Z'
+      sha256: 'sha256:d4f18d3604be1026a9db07cb43d8a295670b4d74aff430c1d95c3f406aa014d9'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/publish-f06-f08-20260910.md
+      recorded_at: '2026-09-10T11:03:06Z'
+      sha256: 'sha256:fdf43548d3f9408790f2b54239536e8f95d6a043d05e3473c3c630fdc6da05df'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass.
+      recorded_at: '2026-09-10T11:03:06Z'
+  notes: Accepted publication/remediation and installed verification; remaining audit/release boundaries recorded in handoff.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-10T10:10:34Z'
+    completed_at: '2026-09-10T10:12:58Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/artifacts/publish-f06-f08-20260910/plan.md
+        recorded_at: '2026-09-10T10:12:53Z'
+        sha256: 'sha256:4da42945b436352592540d6a9c0595ef143ebfd62d673320e562a5592dcdd43f'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Source CLI context fresh; immutable capsule inspected, source published and remote equal.
+        recorded_at: '2026-09-10T10:12:53Z'
+    notes: Published validated source; scope and one-writer plan recorded.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-10T10:12:58Z'
+    completed_at: '2026-09-10T10:16:31Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/artifacts/publish-f06-f08-20260910/orchestrator-plan.yaml
+        recorded_at: '2026-09-10T10:16:25Z'
+        sha256: 'sha256:5b9cdf283355de9eac8c946c7fe0d703e1ed56de42bc56d6144f163b5db87736'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Two PF shell assignments and immutable capsules materialized, one source writer then independent review; primary owns acceptance and installed update.
+        recorded_at: '2026-09-10T10:16:25Z'
+    notes: One CLI writer followed by independent review; primary handles verified update.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-10T10:16:31Z'
+    completed_at: '2026-09-10T11:01:39Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/artifacts/publish-f06-f08-20260910/iteration-record.md
+        recorded_at: '2026-09-10T11:01:34Z'
+        sha256: 'sha256:d64f4485bbf3bf34fcffd6074e7a9a1fae610200f073a93a2c3e3811ea90289d'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass.
+        recorded_at: '2026-09-10T11:01:34Z'
+    notes: Accepted publication/remediation and installed verification; remaining audit/release boundaries recorded in handoff.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-10T11:01:39Z'
+    completed_at: '2026-09-10T11:02:08Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/publish-f06-f08-20260910/integration-report.md
+        recorded_at: '2026-09-10T11:02:00Z'
+        sha256: 'sha256:2c1d203bb9f9ff638d9b93557b555cca6beb645040fa44adb40f415717e3e4b8'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass.
+        recorded_at: '2026-09-10T11:02:00Z'
+    notes: Accepted publication/remediation and installed verification; remaining audit/release boundaries recorded in handoff.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-10T11:02:08Z'
+    completed_at: '2026-09-10T11:02:45Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/artifacts/publish-f06-f08-20260910/review-addendum.md
+        recorded_at: '2026-09-10T11:02:40Z'
+        sha256: 'sha256:f3a516cc57e7977527b250c9e644a00098c87eb74bbe870ff26017db8041f061'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass.
+        recorded_at: '2026-09-10T11:02:40Z'
+    notes: Accepted publication/remediation and installed verification; remaining audit/release boundaries recorded in handoff.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-10T11:02:45Z'
+    completed_at: '2026-09-10T11:03:11Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/publish-f06-f08-20260910/summary.md
+        recorded_at: '2026-09-10T11:03:06Z'
+        sha256: 'sha256:d4f18d3604be1026a9db07cb43d8a295670b4d74aff430c1d95c3f406aa014d9'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/publish-f06-f08-20260910.md
+        recorded_at: '2026-09-10T11:03:06Z'
+        sha256: 'sha256:fdf43548d3f9408790f2b54239536e8f95d6a043d05e3473c3c630fdc6da05df'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass.
+        recorded_at: '2026-09-10T11:03:06Z'
+    notes: Accepted publication/remediation and installed verification; remaining audit/release boundaries recorded in handoff.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260910-065103-8ec72e
+  snapshot_checksum: 'sha256:cc1177bb10cd6c828740997502aaa82c7fc16f09702386a02455db06618ba179'
+  assignment_capsule: .pf/contexts/assignment-capsules/publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using.capsule.yaml
+  assignment_capsule_checksum: 'sha256:0a74d5691823ac092f3ff3bf1dd040e43081da4c81fe4a45b12c3a526241d79a'

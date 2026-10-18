@@ -1,0 +1,39 @@
+{
+  "provider": "codex",
+  "adapter": "codex-hooks",
+  "native_event_type": "PostToolUse",
+  "native_event_id": null,
+  "native_id_scope": "session",
+  "native_event_id_stable": false,
+  "source_session_id": "01a14800-674f-7a63-887e-729bb6b60d28",
+  "source_project_ref": "D:\\dev\\process-forge",
+  "payload_version": "codex-hooks.v1",
+  "raw_payload": {
+    "hook_event_name": "PostToolUse",
+    "cwd": "D:\\dev\\process-forge",
+    "session_id": "01a14800-674f-7a63-887e-729bb6b60d28",
+    "turn_id": "pf-sqlite-cutover-20261017",
+    "tool_use_id": "pf-cutover-check-78a9c724e49640c5bc6ea1145335cd82",
+    "tool_name": "PFDeviceCutoverCheck",
+    "reason": "operator SQLite cutover verification"
+  },
+  "derived_event": {
+    "schema_version": 1,
+    "event_type": "agent.tool.completed",
+    "event_id": "codex:PostToolUse:01a14800-674f-7a63-887e-729bb6b60d28:pf-sqlite-cutover-20261017:pf-cutover-check-78a9c724e49640c5bc6ea1145335cd82",
+    "project_root": "D:\\dev\\process-forge",
+    "session_id": "01a14800-674f-7a63-887e-729bb6b60d28",
+    "agent_id": "codex",
+    "source": {
+      "adapter": "codex-hooks",
+      "agent": "codex",
+      "session_id": "01a14800-674f-7a63-887e-729bb6b60d28"
+    },
+    "payload": {
+      "turn_id": "pf-sqlite-cutover-20261017",
+      "tool_name": "PFDeviceCutoverCheck",
+      "tool_use_id": "pf-cutover-check-78a9c724e49640c5bc6ea1145335cd82",
+      "reason": "operator SQLite cutover verification"
+    }
+  }
+}

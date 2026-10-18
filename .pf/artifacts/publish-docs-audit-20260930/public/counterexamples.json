@@ -1,0 +1,135 @@
+{
+  "default_orchestrator_validation": [
+    {
+      "level": "PASS",
+      "message": "run.id present"
+    },
+    {
+      "level": "PASS",
+      "message": "run.title present"
+    },
+    {
+      "level": "PASS",
+      "message": "run process is multi-agent-task-orchestration"
+    },
+    {
+      "level": "PASS",
+      "message": "workers present"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime.default_driver registered: manual"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime.start_policy valid: manual"
+    },
+    {
+      "level": "PASS",
+      "message": "worker id unique: fixture-worker-a"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a writer has allowed_files"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a runtime_driver registered: manual"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a has bounded read/context scope"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a forbidden_files do not overlap allowed_files"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a subagent allow flag valid"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a required output has path"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a required output inside allowed or artifact area: .pf/artifacts/fixture-a-report.md"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-a worker_may_rebuild_context false by default"
+    },
+    {
+      "level": "PASS",
+      "message": "worker id unique: fixture-worker-b"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b writer has allowed_files"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b runtime_driver registered: manual"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b dependency exists: fixture-worker-a"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b has bounded read/context scope"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b forbidden_files do not overlap allowed_files"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b subagent allow flag valid"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b required output has path"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b required output inside allowed or artifact area: .pf/artifacts/fixture-b-report.md"
+    },
+    {
+      "level": "PASS",
+      "message": "fixture-worker-b worker_may_rebuild_context false by default"
+    },
+    {
+      "level": "PASS",
+      "message": "integration expected_output present"
+    }
+  ],
+  "artifact_area_does_not_grant_write": {
+    "allowed_files": [
+      ".pf/artifacts/fixture-a/**"
+    ],
+    "output": ".pf/artifacts/fixture-a-report.md",
+    "can_write": false
+  },
+  "unknown_nested_fields": {
+    "injected": [
+      "run.unsupported_behavior",
+      "integration.unsupported_behavior",
+      "orchestrator.unsupported_behavior"
+    ],
+    "failures": []
+  },
+  "handoff_without_expected_output": {
+    "return_exit": 0,
+    "finalize_exit": 0,
+    "expected_exists": false,
+    "status": "finalized",
+    "stdout": "RETURNED: example\nFINALIZED: example\n"
+  },
+  "structural_smoke": {
+    "exit_code": 0,
+    "stdout": "PASS: public docs match the current PF contract (660 CLI examples, 425 local links checked)",
+    "command": "python -B tools/smoke_docs_current_code_contract.py"
+  }
+}

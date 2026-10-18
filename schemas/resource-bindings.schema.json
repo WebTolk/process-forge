@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/resource-bindings.schema.json",
+  "title": "Immutable Work Resource Bindings",
+  "type": "object",
+  "required": ["schema_version", "resources", "status"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["available", "unavailable"]},
+    "reason": {"type": "string"},
+    "limits": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}},
+    "resources": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/resource"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "file": {
+      "type": "object", "required": ["relative_path", "size", "sha256"],
+      "properties": {"relative_path": {"type": "string", "minLength": 1}, "size": {"type": "integer", "minimum": 0}, "sha256": {"$ref": "#/$defs/digest"}},
+      "additionalProperties": false
+    },
+    "resource": {
+      "type": "object", "required": ["id", "status"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["available", "unavailable"]},
+        "reason": {"type": "string", "minLength": 1},
+        "generation": {"type": "string", "minLength": 1},
+        "material_kind": {"enum": ["metadata", "fulltext", "none"]},
+        "metadata_fingerprint": {"$ref": "#/$defs/digest"},
+        "material_fingerprint": {"$ref": "#/$defs/digest"},
+        "reference": {"type": "object"},
+        "indexing": {"type": "object"},
+        "manifest": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/file"}}
+      },
+      "oneOf": [
+        {"properties": {"status": {"const": "available"}}, "required": ["generation", "material_kind", "metadata_fingerprint", "material_fingerprint", "reference", "indexing", "manifest"]},
+        {"properties": {"status": {"const": "unavailable"}}, "required": ["reason"]}
+      ],
+      "additionalProperties": false
+    }
+  }
+}

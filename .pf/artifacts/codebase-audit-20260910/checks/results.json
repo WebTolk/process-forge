@@ -1,0 +1,37 @@
+[
+  {
+    "test": "smoke_mcp_codex_contract.py",
+    "exit": 0,
+    "seconds": 18.08,
+    "tail": "PASS: bounded Codex-compatible PF MCP contract\n"
+  },
+  {
+    "test": "smoke_mcp_missing_session_diagnostics.py",
+    "exit": 0,
+    "seconds": 0.55,
+    "tail": "PASS: MCP missing-session diagnostics are actionable\n"
+  },
+  {
+    "test": "smoke_work_evidence_freshness.py",
+    "exit": "timeout",
+    "seconds": 240.11
+  },
+  {
+    "test": "smoke_raw_ingress_incremental_recovery.py",
+    "exit": 0,
+    "seconds": 19.95,
+    "tail": "coded\": 584,\n      \"historical_records_decoded\": 1\n    },\n    \"checkpoint\": {\n      \"kind\": \"raw-ingress-recovery-checkpoint\",\n      \"schema_version\": 1,\n      \"shards\": {\n        \"raw/v1/2026/08/15/12.ndjson\": 2336\n      }\n    },\n    \"partial_index_write\": {\n      \"historical_bytes_decoded\": 2336,\n      \"historical_records_decoded\": 4\n    },\n    \"shard\": \"12.ndjson\"\n  },\n  \"fault_boundaries\": \"PASS: raw index, native index, checkpoint, unrelated next event, native conflict\",\n  \"legacy_corruption\": {\n    \"corruption_error\": \"truncated raw journal record: 12.ndjson\",\n    \"legacy_bytes_decoded\": 512,\n    \"legacy_records_decoded\": 1\n  },\n  \"sessionless_100\": {\n    \"historical_bytes_decoded\": 0,\n    \"historical_records_decoded\": 0,\n    \"new_events\": 100,\n    \"stable_native_id\": false\n  },\n  \"sessionless_20\": {\n    \"historical_bytes_decoded\": 0,\n    \"historical_records_decoded\": 0,\n    \"new_events\": 20,\n    \"stable_native_id\": false\n  },\n  \"shard_damage\": \"PASS: missing, truncated, all missing, invalid identity, invalid JSON, missing with bad index\",\n  \"stable_100\": {\n    \"historical_bytes_decoded\": 0,\n    \"historical_records_decoded\": 0,\n    \"new_events\": 100,\n    \"stable_native_id\": true\n  },\n  \"stable_20\": {\n    \"historical_bytes_decoded\": 0,\n    \"historical_records_decoded\": 0,\n    \"new_events\": 20,\n    \"stable_native_id\": true\n  }\n}\nPASS: raw ingress incremental recovery smoke\n"
+  },
+  {
+    "test": "smoke_runtime_ledger_hooks_mcp.py",
+    "exit": 0,
+    "seconds": 51.1,
+    "tail": "PASS: Runtime Ledger, Codex adapter, and MCP smoke\n"
+  },
+  {
+    "test": "smoke_central_event_ingress_kernel.py",
+    "exit": 0,
+    "seconds": 10.83,
+    "tail": "PASS: central event ingress raw kernel smoke\n"
+  }
+]

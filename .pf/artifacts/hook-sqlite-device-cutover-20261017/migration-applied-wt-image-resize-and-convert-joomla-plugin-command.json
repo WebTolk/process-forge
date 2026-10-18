@@ -1,0 +1,19 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\hook-sqlite-device-cutover-20261017\\migrate_device.py",
+    "--project-root",
+    "D:\\dev\\wt-image-resize-and-convert-joomla-plugin",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--backup",
+    "--apply",
+    "--report",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\hook-sqlite-device-cutover-20261017\\migration-applied-wt-image-resize-and-convert-joomla-plugin.json"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 42.319,
+  "stdout": "{\"events_rows\": 50902, \"raw_rows\": 1779, \"other_project_raw\": 32240, \"invalid\": 0, \"blocked\": false, \"diagnostics\": [], \"unique_events\": 50902, \"unique_raw\": 1779, \"applied\": true, \"status\": \"ready\", \"stored_counts\": {\"events\": 50902, \"raw\": 1779}}\n",
+  "stderr": ""
+}

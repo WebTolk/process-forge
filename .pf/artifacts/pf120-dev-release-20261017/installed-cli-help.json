@@ -1,0 +1,9 @@
+{
+  "label": "installed-cli-help",
+  "started_at": "2026-10-17T19:16:57.518371+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.2697635000222363,
+  "raw_sha256": "7d9c273aea184b67e0745a6bd97db2e8f49e02ac69fd06b137acb0c36af2e2ce",
+  "raw_bytes": 25995,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-cli-help.log"
+}

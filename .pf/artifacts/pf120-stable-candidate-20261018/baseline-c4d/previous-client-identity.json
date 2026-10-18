@@ -1,0 +1,10 @@
+{
+  "version": "1.1.0",
+  "origin": "Current public v1.1.0 GitHub Release assets",
+  "archive_sha256": "7682c20c5838574ccf51746161604e9dc29feb46ef938b9a623e927461c19977",
+  "archive_bytes": 1396175,
+  "sidecar_sha256": "f4bd473268e5a56091f8d1d710e6286e4feb24d53657ced1587f6bb57db1dfb2",
+  "all_sidecar_entries_verified": 933,
+  "historical_repository_sidecar_comparison": "Not required; explicit earlier republish waiver preserved",
+  "purpose": "Isolated previous-client discovery and no-confirmation refusal only; no device installation"
+}

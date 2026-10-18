@@ -1,0 +1,35 @@
+{
+  "time_utc": "2026-09-25T18:16:10.107381+00:00",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "completed_stages": 9,
+  "registered_artifact_hashes_verified": {
+    ".pf/artifacts/t08-mcp-operability-20260925/scope.md": "sha256:9dd0d89736457da4903a00e576ef0cf9f4f0f104bb4d5480d1fadee9006e3f44",
+    ".pf/artifacts/t08-mcp-operability-20260925/investigation.md": "sha256:ebd2b8004584c8edd70b67bbda39739bc2fc97d7652dd4ad303101dcc3dfdcd8",
+    ".pf/artifacts/t08-mcp-operability-20260925/domain.md": "sha256:7005286664935d2a1acab39144726bdcc8c0b6100635fb5b363fd5da11143684",
+    ".pf/artifacts/t08-mcp-operability-20260925/architecture.md": "sha256:7066c1e48679e5faaba5c44218e5eb6d23df48fb3f4a8fbf45f3467603761b1a",
+    ".pf/artifacts/t08-mcp-operability-20260925/implementation.md": "sha256:7429bebe798a3dee67f7c506d0acf97cc2b2d0d3118c267e20539939692fe1c9",
+    ".pf/artifacts/t08-mcp-operability-20260925/review-findings.md": "sha256:64ea4fc329af6100964556233521d3faac2e462ba1f3b15eeca78d7f39523f12",
+    ".pf/artifacts/t08-mcp-operability-20260925/test-plan.md": "sha256:a68b8f80a6d0e1ba90ce69ceb55af87e4a960e93459e0d1d0dc3c8b78893773b",
+    ".pf/artifacts/t08-mcp-operability-20260925/test-cases.md": "sha256:7acfd8f6dfda79168fe8102541cb2199e98bd337da93b844289b7dde4720f77a",
+    ".pf/artifacts/t08-mcp-operability-20260925/test-report.md": "sha256:3465ee9be3f14baad188bd99c6053ad2a325af18423ee2cb280e1afdbda77cb3",
+    ".pf/artifacts/t08-mcp-operability-20260925/delivery-report.md": "sha256:ed4f8bda2276069b8286507a90a3fdb55e0047bc883adab00ed931479ac956f2",
+    ".pf/artifacts/t08-mcp-operability-20260925/evolution-report.md": "sha256:0ecb335be3adf3e2d17097b75541f8f760fec62fa7572efd6d75ad4e9fc11838"
+  },
+  "main_run_doctor": {
+    "exit_code": 0,
+    "pass_count": 21,
+    "evidence": "Actual source CLI run-doctor output captured by tool on 2026-09-25 after MCP run_completed"
+  },
+  "fixture_run_doctor": {
+    "exit_code": 0,
+    "stdout": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: completed\nPASS: summary status matches run: completed\nPASS: task index status matches run: completed\nPASS: handoff status matches run: completed\nPASS: process exists: t08-host-acceptance\nPASS: .pf/runs/garage-t08-real-host-acceptance-verify-selected-resource-authorization-r/run.yaml has no private absolute paths\nPASS: task id unique: t08-real-host-acceptance-verify-selected-resource-authorization-required\nPASS: task status valid for t08-real-host-acceptance-verify-selected-resource-authorization-required: done\nPASS: assignment exists for t08-real-host-acceptance-verify-selected-resource-authorization-required: .pf/assignments/t08-real-host-acceptance-verify-selected-resource-authorization-required.yaml\nPASS: t08-real-host-acceptance-verify-selected-resource-authorization-required run_id matches run\nPASS: completed run has all blocking tasks done\nPASS: .pf/runs/garage-t08-real-host-acceptance-verify-selected-resource-authorization-r/summary.md exists\nPASS: .pf/handoffs/runs/garage-t08-real-host-acceptance-verify-selected-resource-authorization-r-handoff.md exists\n",
+    "stderr": ""
+  },
+  "fixture_archive": {
+    "path": "fixture-evidence.zip",
+    "entries": 29,
+    "sha256": "6a4317ea6f2b5e82df8cf1fecba1b5bbec17be01561be7d0322612bec67ebcea",
+    "testzip": "PASS"
+  }
+}

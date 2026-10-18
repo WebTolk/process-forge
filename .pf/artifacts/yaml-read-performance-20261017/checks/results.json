@@ -1,0 +1,52 @@
+[
+  {
+    "check": "smoke_request_scope.py",
+    "returncode": 0,
+    "elapsed_seconds": 0.921
+  },
+  {
+    "check": "smoke_yaml_parse_cache.py",
+    "returncode": 0,
+    "elapsed_seconds": 1.022
+  },
+  {
+    "check": "smoke_project_metadata_real_core.py",
+    "returncode": 0,
+    "elapsed_seconds": 2.91
+  },
+  {
+    "check": "smoke_process_catalog_real_core.py",
+    "returncode": 2,
+    "elapsed_seconds": 0.778
+  },
+  {
+    "check": "smoke_project_snapshot_read_composition.py",
+    "returncode": 0,
+    "elapsed_seconds": 1.494
+  },
+  {
+    "check": "smoke_work_context_read_composition.py",
+    "returncode": 0,
+    "elapsed_seconds": 2.383
+  },
+  {
+    "check": "smoke_yaml_inventory.py",
+    "returncode": 0,
+    "elapsed_seconds": 0.923
+  },
+  {
+    "check": "smoke_runtime_metrics.py",
+    "returncode": 0,
+    "elapsed_seconds": 2.188
+  },
+  {
+    "check": "smoke_runtime_scheduler_failure_isolation.py",
+    "returncode": 0,
+    "elapsed_seconds": 2.372
+  },
+  {
+    "check": "smoke_long_lived_runtime.py",
+    "returncode": 0,
+    "elapsed_seconds": 62.704
+  }
+]

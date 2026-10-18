@@ -1,0 +1,1 @@
+PASS: project coordination modes smoke

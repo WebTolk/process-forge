@@ -1,0 +1,35 @@
+# docs111-update-report
+
+**Timestamp (UTC):** 2026-09-07T13:32:00Z  
+**Run:** `docs-fix-1-1-1-shell-20260907`  
+**Assignment:** `docs111-update`
+
+## Files changed
+- [`docs/ru/getting-started/update-system.md`](D:\Dev\process-forge\docs\ru\getting-started\update-system.md)
+- [`docs/ru/concepts/core-update-manifest.md`](D:\Dev\process-forge\docs\ru\concepts\core-update-manifest.md)
+
+## Result summary
+- Синхронизировал RU-документацию с текущими англоязычными источниками для `update-system` и `core-update-manifest`.
+- Обновил CLI-примеры в RU:
+  - добавлен `--workplace-root` в `core-update plan/apply` примеры;
+  - сохранена явная `--confirm` для `apply`;
+  - добавлены шаги с `doctor-workplace` и `last-apply.json`.
+- Зафиксировал поведение миграции рабочего места для 1.0.2 → 1.1.0:
+  - только add-only (`copy_if_missing` / `append_registry_entry_if_missing`);
+  - существующая конфигурация сохраняется;
+  - явно указано, что `workplace-init` не является updater.
+- Добавил/закрепил текст по `post-update doctor-workplace` и расположению результата (`last-apply.json`).
+- Не добавлял/не упоминал миграции за пределы 1.0.2 → 1.1.0 и не менял миграции.
+
+## Checks/results
+- `git diff --check -- docs/ru/getting-started/update-system.md docs/ru/concepts/core-update-manifest.md`
+  - no whitespace/apply errors.
+  - only Git CRLF→LF warning on next touch (expected environment warning).
+- Parser-only validation of changed CLI blocks (pattern checks via grep-style search):
+  - `--workplace-root` found in both updated docs.
+  - `last-apply.json` referenced in both relevant docs sections.
+  - `workplace-init` explicitly marked as initialization-only (not updater).
+
+## Residual risks
+- Даты и версии синхронизированы с источником 1.0.2/1.1.0 и не предполагают автоматизации выше 1.1.0 (с соблюдением явной инструкции).
+- CRLF/LF warning may appear depending on further edits in repo by other workers.

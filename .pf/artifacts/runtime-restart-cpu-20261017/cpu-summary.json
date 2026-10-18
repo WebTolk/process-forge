@@ -1,0 +1,24 @@
+{
+  "logical_processors": 4,
+  "windows": [
+    {
+      "window": "before",
+      "duration_seconds": 30.001,
+      "average_cpu_percent": 21.8876,
+      "maximum_cpu_percent": 30.2675
+    },
+    {
+      "window": "startup",
+      "duration_seconds": 30.0,
+      "average_cpu_percent": 21.4189,
+      "maximum_cpu_percent": 25.9594
+    },
+    {
+      "window": "settled",
+      "duration_seconds": 60.001,
+      "average_cpu_percent": 20.7354,
+      "maximum_cpu_percent": 26.943
+    }
+  ],
+  "validation": "interval totals and aggregate normalized CPU agree"
+}

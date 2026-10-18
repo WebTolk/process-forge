@@ -1,0 +1,15 @@
+# T06 investigation and impact
+
+Status: ready_for_review. Evidence class: source inspection, not executed test proof.
+
+T05 has three durable proof scripts outside standard QA: recovery-proof.py covers a real collector exit at completion publication, dead-owner lock recovery and governed collection invariance; private-path-proof.py creates an actual Windows Junction and refuses private input redirection; developer-proof.py covers manual/offline execution and result attribution. The ordinary smoke_prepared_execution_context.py already covers the latter and simulated receipt repair, but not the actual process death, governed collection and Junction cases. Promote only the missing behaviors into a separate registered smoke, reusing fixture helpers.
+
+Existing smoke_work_resource_binding.py covers Work grants, current authorization, bound-session fixture checks and separate source stdio MCP calls. smoke_work_capsule_contract_parity.py covers complete context parity/identity/permissions; smoke_provider_adapter_admission.py covers trusted ingress; smoke_diagnostics_process_invariance.py exercises all five profiles through real isolated Work transitions. smoke_runtime_ledger_hooks_mcp.py supplies actual isolated Runtime/stdio coverage. These are source tests, not this application's installed-host acceptance.
+
+Documentation drift: runtime-drivers.md still says codex-exec always consumes mutable capsule/prompt/workspace pointers and unconditionally grants --add-dir. Current prepared-input.md and Codex source instead use verified prepared bytes, no mutable prompt fallback and no broad directory grants. Its sample task also omits the report/output declarations now required for worker readiness. Update EN/RU runtime driver documentation and cross-link Garage, lifecycle and MCP guidance to Work-context/resource/prepared-input contracts. Do not claim scope declarations implement an OS sandbox.
+
+T08 is already complete (newer handoff overrides memory): actual host context/navigation/negative checks and isolated Work passed; reconnect was a separate installed stdio connection. T09 was accepted at source level and explicitly deferred the updated installed-host boundary. Current host lacks pf.work.search/pf.work.resolve in its discovered tool set and generated a legacy T06 capsule. No existing connection can validate the new source features before separate installation; preserve that gap.
+
+Tooling gap: Serena pattern reads work, but get_symbols_overview fails with Active languages: []. Bounded UTF-8 source reads are the fallback, recorded rather than silently treated as semantic analysis.
+
+Impact: one new regression plus release registration and documentation/checksum updates; no production API change planned. Fixtures must never touch the main Work or shared Workplace/Runtime. Snapshot/capsule/evidence stay immutable. Failures from process timeout/path cleanup must preserve useful output and avoid an orphan writer. Tests use the normal source registry timeout and fresh temp roots.

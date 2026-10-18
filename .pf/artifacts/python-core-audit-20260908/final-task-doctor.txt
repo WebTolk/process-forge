@@ -1,0 +1,13 @@
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: done
+PASS: referenced run exists: garage-audit-current-processforge-python-core-and-codebase-for-reproduci
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.yaml has no private absolute paths
+PASS: completed task has result summary or artifact

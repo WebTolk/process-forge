@@ -1,0 +1,23 @@
+{
+  "source": {
+    "commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+    "dirty": false,
+    "tree": "16f63bae232fd161a5f721428bb1cc1096bf6d7d",
+    "vcs": "git"
+  },
+  "version": "1.2.0",
+  "archive": "processforge-1.2.0-dev-20261017-metadata-r2.zip",
+  "archive_bytes": 2538277,
+  "archive_sha256": "e332a74de958b2daad9711644bd848a82d1024b83bd03c47537377a27884a7dc",
+  "sidecar_sha256": "d9fc5b9fcc670d5d59b141aa26c6fa5dec287233153a6f23062b72cc6c0b9233",
+  "entries": 1309,
+  "managed_files": 1308,
+  "metadata_sha256": "38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e",
+  "superseded_archive_sha256": "999667c53b51743d8e4b982ad12215de7149342ff8c6b5917fe0f008d2656184",
+  "changed_from_first_archive": [
+    "checksums/processforge.sha256",
+    "processforge-core.manifest.json",
+    "tools/smoke_work_transition_commit_service.py"
+  ],
+  "all_production_payload_bytes_unchanged": true
+}

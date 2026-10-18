@@ -1,0 +1,197 @@
+schema_version: 1
+run:
+  id: codebase-audit-shell-20260910
+  title: Independent Python MCP and Runtime correctness audit
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+  model: ""
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: audit-core
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-core/**
+      - .pf/tmp/audit-core/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - requirements.txt
+      - VERSION
+      - .pf/AGENTS.md
+      - .pf/process-forge.yaml
+      - .pf/artifacts/**
+      - .pf/handoffs/**
+      - .pf/contexts/**
+      - .pf/runtime/agent-runs/**
+    forbidden_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: audit-core-report
+        path: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+    depends_on:
+      []
+  -
+    id: audit-mcp
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-mcp/**
+      - .pf/tmp/audit-mcp/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - requirements.txt
+      - VERSION
+      - .pf/AGENTS.md
+      - .pf/process-forge.yaml
+      - .pf/artifacts/**
+      - .pf/handoffs/**
+      - .pf/contexts/**
+      - .pf/runtime/agent-runs/**
+    forbidden_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: audit-mcp-report
+        path: .pf/artifacts/codebase-audit-20260910/audit-mcp/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/codebase-audit-20260910/audit-mcp/report.md
+    depends_on:
+      []
+  -
+    id: audit-hooks
+    order: 3
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-hooks/**
+      - .pf/tmp/audit-hooks/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - requirements.txt
+      - VERSION
+      - .pf/AGENTS.md
+      - .pf/process-forge.yaml
+      - .pf/artifacts/**
+      - .pf/handoffs/**
+      - .pf/contexts/**
+      - .pf/runtime/agent-runs/**
+    forbidden_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: audit-hooks-report
+        path: .pf/artifacts/codebase-audit-20260910/audit-hooks/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/codebase-audit-20260910/audit-hooks/report.md
+    depends_on:
+      []

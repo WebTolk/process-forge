@@ -1,0 +1,9 @@
+{
+  "label": "installed-status-before",
+  "started_at": "2026-10-17T18:18:04.253478+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.1874029000173323,
+  "raw_sha256": "212af656291a50ce8044f6279eaa806ed80f7e3f3496f34b35dc69b39719aff0",
+  "raw_bytes": 300,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/installed-status-before.log"
+}

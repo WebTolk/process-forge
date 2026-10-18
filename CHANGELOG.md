@@ -2,6 +2,78 @@
 
 ## Unreleased
 
+## 1.2.0 - 2026-10-18
+
+### Changed
+
+- Refresh English and Russian user documentation, setup guidance, agent prompts
+  and diagrams. Add a shared requirements checklist with Python modules,
+  storage needs and app-server memory planning; README badges follow the
+  latest published stable release automatically.
+- Keep project scratch under `.pf/tmp/`. Add configurable old-file
+  notifications from the optional app-server, without automatic deletion.
+  See [temporary files](docs/temporary-files.md).
+- Store project event and native hook journals in separate local SQLite databases
+  with transactional admissions, indexed replay and independent history controls.
+  Existing journals require a controlled cutover with the explicit temporary
+  migrator; installing Core does not import or delete legacy history. See
+  [journal migration](docs/concepts/hook-journal-sqlite.md).
+- Remove each Runtime publisher's failed staging file while preserving the
+  destination and original error. Host JSON/history share the bounded Windows
+  publication writer; the standalone hook installer retains its backup and
+  cleans its own unique staging file. No directory scan is added to hooks.
+- Separate Runtime operational health from Inspector task outcomes. Failed
+  worker attempts and collection recovery remain visible without degrading a
+  successful scheduler pass; explicit tick exit codes retain their task meaning.
+  Partial metrics coverage remains explicit after successful publication.
+- Make automatic Garage hooks opt-in with inherited `runtime.garage_hooks`
+  configuration, while Forge retains its required gatekeeper. Native session
+  hooks register/check out automatically through Runtime or CLI; first allowed
+  hooks cover live opt-in without creating an avoidable deferred message.
+  See [hook configuration](docs/concepts/runtime-configuration.md).
+- Reuse unchanged safe YAML parsing across requests with bounded, content-keyed
+  memory and isolated results. Runtime Run discovery retains only validated
+  identity/status fields instead of copying complete histories. Current file
+  reads, safe-loader rules and authority checks remain live; see
+  [document reads](docs/concepts/document-reads.md).
+
+- Fixed an intermediate checkpoint of the ongoing Core refactoring: concrete
+  readers, context/resource policies, lifecycle rules and journal owners serve
+  migrated consumers; default bootstrap/composition still includes legacy paths.
+- Optimized verified exact Work selection and bounded current-byte journal
+  reuse across projects. Full OOP-01 through OOP-05 acceptance remains future work.
+- Supervisor observes completed captures as history and stops automatic repeated
+  stable semantic collect refusal with a visible recovery reason. Explicit/first
+  collection, new attempts and transient-error retry retain their checks.
+- Preserved separate release/process/schema/startup-contract versions and
+  historical Work pins. See `docs/releases/1.2.0-migration.md`.
+
+### Known qualification limits
+
+- Large retained histories can increase scheduler/admission cost. Qualification
+  of source, archive, installed Core and connected host remains distinct;
+  publication requires explicit maintainer approval.
+
+### Fixed
+
+- Deferred egress initialization to its CLI callback, preserving parser and
+  egress contracts while avoiding unrelated command startup work.
+- Corrected diagnostic smoke accounting for bounded best-effort refusal and
+  started the thread fixture deadline inside the requesting thread. The
+  diagnostics implementation, 50 ms admission budget and exclusion/storage
+  checks remain unchanged.
+
+
+### Changed
+
+- `START_AGENT_HERE.md` is no longer needed. New project onboarding and
+  deterministic repair no longer create it; project entry uses root `AGENTS.md`
+  and current ProcessForge context instead.
+- Existing START files remain untouched, including during forced onboarding
+  and repair. A missing START no longer affects project readiness or doctor
+  checks. `agent-start-prompt` remains a no-write guidance preview; explicit
+  compatibility placement is still available with `--apply`.
+
 ## 1.1.0 - 2026-08-31
 
 ### Added

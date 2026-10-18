@@ -1,0 +1,42 @@
+[
+  {
+    "name": "smoke_core_update_missing_owned",
+    "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0\\tools\\smoke_core_update_missing_owned.py"
+    ],
+    "exit": 0,
+    "seconds": 0.88
+  },
+  {
+    "name": "smoke_search_source_integrity",
+    "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0\\tools\\smoke_search_source_integrity.py"
+    ],
+    "exit": 0,
+    "seconds": 1.0
+  },
+  {
+    "name": "smoke_raw_ingress_incremental_recovery",
+    "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0\\tools\\smoke_raw_ingress_incremental_recovery.py"
+    ],
+    "exit": 0,
+    "seconds": 16.11
+  },
+  {
+    "name": "smoke_central_event_ingress_kernel",
+    "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0",
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0912-public-m7zc85c0\\tools\\smoke_central_event_ingress_kernel.py"
+    ],
+    "exit": 0,
+    "seconds": 8.42
+  }
+]

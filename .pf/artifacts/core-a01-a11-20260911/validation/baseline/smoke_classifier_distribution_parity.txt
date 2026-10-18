@@ -1,0 +1,21 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_classifier_distribution_parity.py
+
+CWD:
+  D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_classifier_distribution_parity.py", line 122, in <module>
+    main()
+    ~~~~^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_classifier_distribution_parity.py", line 78, in main
+    assert result_a["matched_rules"][0]["source"] == expected_source, result_a
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'status': 'classified', 'project_types': ['fixture.python'], 'platforms': [], 'tags': ['fixture'], 'confidence': 'high', 'loaded_classifiers': ['fixture.distribution.classifier'], 'matched_rules': [{'classifier': 'fixture.distribution.classifier', 'rule': 'fixture.python-rule', 'confidence': 'high', 'source': 'fixture.yaml'}], 'inactive_classifier_hints': []}

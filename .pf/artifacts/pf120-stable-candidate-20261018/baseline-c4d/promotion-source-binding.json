@@ -1,0 +1,10 @@
+{
+  "label": "promotion-source-binding",
+  "started_at": "2026-10-18T03:59:55.866956+00:00",
+  "finished_at": "2026-10-18T03:59:56.567691+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.7006748000276275,
+  "raw_sha256": "0881fdcce443325a507e10c9acbbbceb93e335792707ba969d1ab30e66ab63d8",
+  "raw_bytes": 127,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/baseline-c4d/promotion-source-binding.log"
+}

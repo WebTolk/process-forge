@@ -1,0 +1,4 @@
+PRESENT: .pf/contexts/assignment-capsules/f05-completion.capsule.yaml
+WROTE: .pf/runtime/agent-runs/core-f03-f05-shell-20260910/f05-completion/workspace-access.json
+WROTE: .pf/runs/core-f03-f05-shell-20260910/worker-prompts/f05-completion.md
+RUNNING: f05-completion pid=1892

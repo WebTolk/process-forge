@@ -1,0 +1,98 @@
+PASS: workplace.yaml found
+PASS: workplace.yaml contains no obvious secret values
+PASS: workplace manifest is valid YAML
+PASS: workplace manifest matches workplace.schema.json
+PASS: default_project_mode is simple
+PASS: director_enabled is false
+PASS: path_constants configured
+PASS: path constant PF_WORKPLACE resolves (resolved_from_constant)
+PASS: path constant PF_DISTRIBUTION resolves (resolved_from_constant)
+PASS: path constant PF_KNOWLEDGE resolves (resolved_from_constant)
+PASS: path constant PF_TEMPLATES resolves (resolved_from_constant)
+PASS: path constant PF_TOOLS resolves (resolved_from_constant)
+PASS: path constant PF_MCP resolves (resolved_from_constant)
+PASS: path constant PF_PLATFORM_CONTRACTS resolves (resolved_from_constant)
+PASS: path constant PF_SPECIALIZATIONS resolves (resolved_from_constant)
+PASS: path constant PF_PROCESS_TEMPLATES resolves (resolved_from_constant)
+PASS: path constant PF_RUNTIME resolves (resolved_from_constant)
+PASS: path constant PF_CACHE resolves (resolved_from_constant)
+PASS: registry distributions resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/distributions.yaml
+PASS: registry platforms resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/platforms.yaml
+PASS: registry knowledge_roots resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/knowledge-roots.yaml
+PASS: registry package_roots resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/package-roots.yaml
+PASS: registry templates resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/templates.yaml
+PASS: registry tools resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/tools.yaml
+PASS: registry mcp resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/mcp.yaml
+PASS: registry process_packs resolves to D:/Dev/process-forge/.pf/tmp/runtime-probe-20260910/registries/process-packs.yaml
+PASS: package_roots.global.path resolves (resolved_from_constant)
+PASS: package_root id global unique
+PASS: package_root global path exists
+PASS: package_root global writable candidate
+PASS: default/first available package_root can be selected
+PASS: registries/distributions.yaml found
+PASS: registries/distributions.yaml is valid YAML
+PASS: registries/distributions.yaml matches distributions-registry.schema.json
+PASS: registries/platforms.yaml found
+PASS: registries/platforms.yaml is valid YAML
+PASS: registries/platforms.yaml matches platform-registry.schema.json
+PASS: registries/knowledge-roots.yaml found
+PASS: registries/knowledge-roots.yaml is valid YAML
+PASS: registries/knowledge-roots.yaml matches knowledge-roots-registry.schema.json
+PASS: registries/package-roots.yaml found
+PASS: registries/package-roots.yaml is valid YAML
+PASS: registries/package-roots.yaml matches package-roots-registry.schema.json
+PASS: registries/templates.yaml found
+PASS: registries/templates.yaml is valid YAML
+PASS: registries/templates.yaml matches template-registry.schema.json
+PASS: registries/tools.yaml found
+PASS: registries/tools.yaml is valid YAML
+PASS: registries/tools.yaml matches tool-registry.schema.json
+PASS: registries/mcp.yaml found
+PASS: registries/mcp.yaml is valid YAML
+PASS: registries/mcp.yaml matches mcp-registry.schema.json
+PASS: registries/process-packs.yaml found
+PASS: registries/process-packs.yaml has a valid process_packs collection
+PASS: cache/ found
+PASS: runtime/ found
+PASS: logs/ found
+WARN: knowledge_roots.local-docs missing or empty
+
+Why:
+  Local heavy documentation and source snapshots must be referenced through knowledge_roots.local-docs instead of private package paths.
+
+Fix:
+  add local-docs pointing to your documentation root
+PASS: D:/Dev/process-forge/.pf/tmp/pf-update-5c95391/seeds/knowledge-packages/docs.example-child.yaml contains no private absolute paths
+PASS: D:/Dev/process-forge/.pf/tmp/pf-update-5c95391/seeds/knowledge-packages/docs.example-parent.yaml contains no private absolute paths
+WARN: optional MCP providers are not configured
+SEARCH_INDEX_SCOPE: workplace
+SEARCH_INDEX_REPORT: runtime/search/latest-maintenance.yaml
+SEARCH_INDEX: workplace action=refresh status=fresh generation=36c432a1075ddaba documents=0
+WRITTEN: AGENTS.md
+WRITTEN: workplace.yaml
+WRITTEN: terms.yaml
+WRITTEN: registries/distributions.yaml
+WRITTEN: registries/platforms.yaml
+WRITTEN: registries/knowledge-roots.yaml
+WRITTEN: registries/package-roots.yaml
+WRITTEN: registries/templates.yaml
+WRITTEN: registries/tools.yaml
+WRITTEN: registries/mcp.yaml
+WRITTEN: registries/parameters.yaml
+WRITTEN: registries/specializations.yaml
+WRITTEN: registries/project-classifiers.yaml
+WRITTEN: registries/process-packs.yaml
+WRITTEN: registries/agents.yaml
+WRITTEN: registries/runtime-drivers.yaml
+WRITTEN: registries/update-sources.yaml
+WRITTEN: registries/installed-subjects.yaml
+WRITTEN: registries/update-site-overrides.yaml
+WRITTEN: logs/workplace-init-report.md
+WRITTEN: artifacts/workplace-bootstrap-report.md
+WRITTEN: reviews/workplace-bootstrap-review.md
+WRITTEN: handoffs/workplace-ready-handoff.md
+WRITTEN: runtime-drivers/manual.yaml
+WRITTEN: runtime-drivers/generic-shell.yaml
+WRITTEN: runtime-drivers/codex-exec.yaml
+WRITTEN: runtime-drivers/test-echo-worker.yaml
+WRITTEN: runtime-drivers/test-shell-agent.yaml

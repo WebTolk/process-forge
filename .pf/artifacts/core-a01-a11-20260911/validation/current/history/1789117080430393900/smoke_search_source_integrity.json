@@ -1,0 +1,10 @@
+{
+  "test": "smoke_search_source_integrity.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 0.66,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_search_source_integrity.py"
+  ]
+}

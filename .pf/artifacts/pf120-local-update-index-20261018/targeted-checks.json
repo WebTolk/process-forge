@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "version": "1.2.0",
+  "default": {
+    "current": "1.2.0",
+    "latest": "1.2.0",
+    "update": "none"
+  },
+  "previous": {
+    "current": "1.1.0",
+    "latest": "1.2.0",
+    "update": "available",
+    "migration_required": true,
+    "guide": "docs/releases/1.2.0-migration.md"
+  },
+  "historical_versions_preserved": 5,
+  "official_manifest_endpoint_unchanged": true,
+  "old_project_assessment": "passed",
+  "public_inventory_changed_entries": [
+    "updates/processforge-update-index.yaml"
+  ],
+  "new_index_sha256": "f19ae25b1164792fce4ade226f4a9fcb9e5e46c339f4c7d2ec3cdbbcecfe11e7",
+  "code_test_parser_runtime_changes": false
+}

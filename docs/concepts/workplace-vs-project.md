@@ -39,6 +39,9 @@ ProcessForge is Python-first. The canonical public distribution entrypoint is `b
 
 A normal linked project does not contain ProcessForge core. It may contain `.pf/runtime/bin/pf.py`, which reads private local config and calls the distribution CLI.
 
-Agent configuration folders such as `.codex`, `.claude`, and `.agents` should only contain a short instruction that tells the agent where ProcessForge is installed and that project-specific instructions live in `.pf/START_AGENT_HERE.md`.
+Agent configuration may provide a navigation hint to the installed tool.
+Project entry uses root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project).
+Select a supported loader or an explicit client adapter; a global pointer does
+not prove delivery. See [entry policy](agent-entry.md).
 
 The workplace holds machine-level knowledge packages, reusable templates, tools, MCP servers, platform contracts, and roots such as `knowledge_roots.local-docs`. A project receives a `.pf/` folder from `project-onboard`; it does not receive a copy of the ProcessForge repository or heavy documentation/source trees.

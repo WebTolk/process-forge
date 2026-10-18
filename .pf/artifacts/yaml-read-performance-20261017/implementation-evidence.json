@@ -1,0 +1,21 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "changed-files",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/implementation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "change-summary",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/implementation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "implementation-scope-respected",
+    "path": ".pf/artifacts/yaml-read-performance-20261017/implementation.md",
+    "status": "passed",
+    "summary": "Shared safe YAML parse reuse and small validated Run projection implemented; focused freshness and compatibility checks pass."
+  }
+]

@@ -1,0 +1,1 @@
+PASS: raw/history off, live overrides, conversation delivery, no ingress rebuild/scan, unchanged tick and Work recovery without history

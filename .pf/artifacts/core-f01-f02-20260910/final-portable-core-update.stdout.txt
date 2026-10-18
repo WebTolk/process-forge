@@ -1,0 +1,3 @@
+SKIP: symlink fixture unavailable: [WinError 1314] Клиент не обладает требуемыми правами: 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-symlink-np3xcpr1\\outside.txt' -> 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-symlink-np3xcpr1\\core\\user-link.txt'
+SKIP: broken-symlink fixture unavailable: [WinError 1314] Клиент не обладает требуемыми правами: 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-broken-symlink-tjrfomw3\\missing-target' -> 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-broken-symlink-tjrfomw3\\core\\user-link.txt'
+PASS: manifest-based core update smoke

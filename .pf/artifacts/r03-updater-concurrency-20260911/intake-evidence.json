@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r03-updater-concurrency-20260911/intake.md",
+        "status":  "ready",
+        "artifact_id":  "run-record",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R03 assignment, static review evidence, no-apply boundary, and disposable-fixture acceptance criteria are recorded.",
+        "gate_id":  "run-has-context",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

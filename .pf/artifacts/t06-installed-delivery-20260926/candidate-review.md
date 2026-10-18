@@ -1,0 +1,7 @@
+# Candidate review findings
+
+Result: PASS for release-delivery stage. Reviewed package provenance, payload ownership, extracted evidence, serial updater/backup logic, exact installed target and Runtime settings. Found one documentation defect during assurance; executable EN/RU examples resolve it without changing runtime or test code. Source-to-candidate parity is exact apart from Git text normalization, and the successor payload delta is limited to the stated three files.
+
+No pending candidate blocker. Installation must assert the final archive SHA256, release-delivery Work stage, conflict-free matching counts, idle Runtime and original launch settings before stopping anything. Preserve the old manifest/last-apply/logs, then apply from the independent candidate. Verify 987 installed files and 37 backup files; restart only the existing Runtime with port 0 and interval 2.0. Verify unchanged Workplace configs, original T06 capsule, current snapshot and 561 prior frozen artifacts.
+
+Post-install gates: Runtime ready/doctor, Workplace doctor, unchanged fresh project context, installed diagnostics/performance and targeted transport/feature checks. Leave the already running application's MCP process alone. Its old imports and tool list are not evidence for new installed features. A genuine client reconnect and original T06 actual-host gate remain required. Public release, other projects, T07/T10 and project migration are out of scope. No UI/browser verification applies to this CLI/Core distribution delivery.

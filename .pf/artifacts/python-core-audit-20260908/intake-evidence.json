@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-record",
+    "status": "ready",
+    "path": ".pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/run.yaml"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-context",
+    "status": "passed",
+    "summary": "Scoped audit run and task exist; plan and baseline recorded."
+  }
+]

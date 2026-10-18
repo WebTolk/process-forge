@@ -1,0 +1,100 @@
+schema_version: 1
+id: r02-release-command-review
+title: R02 independent release-command review
+run_id: r02-release-command-review-20260911
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T11:55:21Z'
+updated_at: '2026-09-11T12:02:53Z'
+objective: Read the bounded release command surfaces and write a concise report identifying the required source, archive, and extracted validation commands and any safety boundary. Do not run packaging or edit product files.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/r02-release-candidate-20260911/intake.md
+  - .pf/artifacts/r02-release-candidate-20260911/plan.md
+allowed_files:
+  - .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/**
+  - .pf/tmp/r02-release-command-review/**
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/r02-release-candidate-20260911/**
+  - tools/processforge.py
+  - tools/release_test.py
+  - VERSION
+  - checksums/**
+  - docs/**
+forbidden_files:
+  - src/**
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: r02-release-command-review
+  owner_label: worker-r02-release-command-review
+  role: assurance-worker
+  writer: true
+  owned_files:
+    - .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/**
+    - .pf/tmp/r02-release-command-review/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/**
+    - .pf/tmp/r02-release-command-review/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: r02-release-command-review-report
+    path: .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: low
+expected_report:
+  language: en
+  artifact: .pf/artifacts/r02-release-candidate-20260911/r02-release-command-review/report.md
+  format: concise_markdown
+  include:
+    - r02-release-command-review-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

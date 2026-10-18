@@ -1,0 +1,393 @@
+schema_version: 1
+id: t01-pf-vision-alignment-r02-define-the-provider-neutral-work-executor-im
+title: 'T01 PF vision alignment r02: define the provider-neutral Work, executor, immutab'
+run_id: garage-t01-pf-vision-alignment-r02-define-the-provider-neutral-work-exec
+process: software-feature-development
+status: done
+created_at: '2026-09-25T18:18:51Z'
+updated_at: '2026-09-25T18:40:12Z'
+objective: 'T01 PF vision alignment r02: define the provider-neutral Work, executor, immutable context, stage resource authorization, capability/scope/output and diagnostics contracts; source-backed decisions, compatibility examples and negative acceptance matrix. Documentation and private ADR only; no product code changes. T08 real-host MCP acceptance is completed; operator authorizes automatic sequential execution of the approved plan.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: T01 complete; continue automatically to a separate T09 Work. Preserve accepted target contract and all evidence; diagnostics implementation and budgets remain next.
+  artifacts:
+    - .pf/artifacts/t01-work-contract-20260925/architecture.md
+    - .pf/artifacts/t01-work-contract-20260925/delivery-report.md
+    - .pf/artifacts/t01-work-contract-20260925/domain.md
+    - .pf/artifacts/t01-work-contract-20260925/evolution-report.md
+    - .pf/artifacts/t01-work-contract-20260925/implementation.md
+    - .pf/artifacts/t01-work-contract-20260925/investigation.md
+    - .pf/artifacts/t01-work-contract-20260925/review-findings.md
+    - .pf/artifacts/t01-work-contract-20260925/scope.md
+    - .pf/artifacts/t01-work-contract-20260925/test-cases.md
+    - .pf/artifacts/t01-work-contract-20260925/test-plan.md
+    - .pf/artifacts/t01-work-contract-20260925/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-25T18:39:58Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t01-work-contract-20260925/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-25T18:40:07Z'
+      sha256: 'sha256:3cc66434a6567f3ac305a183fa3a0b0e0d9ab2951fb6e130fe282cbd946481f4'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t01-work-contract-20260925/evolution-report.md
+      status: passed
+      summary: Builder parity, coverage distinction and bounded junior delegation lessons recorded; T09 follow-up defined.
+      recorded_at: '2026-09-25T18:40:07Z'
+      sha256: 'sha256:3cc66434a6567f3ac305a183fa3a0b0e0d9ab2951fb6e130fe282cbd946481f4'
+  notes: T01 complete; continue automatically to a separate T09 Work. Preserve accepted target contract and all evidence; diagnostics implementation and budgets remain next.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-25T18:18:51Z'
+    completed_at: '2026-09-25T18:20:57Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:20:53Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:20:53Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:20:53Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: passed
+        summary: T01 context and documentation-only scope established from accepted T08 and AFK plan r02; source/installed identity and single-agent boundary explicit.
+        recorded_at: '2026-09-25T18:20:53Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+    notes: T01 context and documentation-only scope established from accepted T08 and AFK plan r02; source/installed identity and single-agent boundary explicit.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-25T18:20:57Z'
+    completed_at: '2026-09-25T18:21:20Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:21:13Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:21:13Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T18:21:13Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t01-work-contract-20260925/scope.md
+        status: passed
+        summary: Accept T01 documentation/ADR-only scope and decision-matrix acceptance. Investigate current source before domain/architecture; product changes deferred to later dedicated Works.
+        recorded_at: '2026-09-25T18:21:13Z'
+        sha256: 'sha256:eef5234d5e074cd9d2df633c913d982f429e4614f21efcf4c484335e59bd0709'
+    notes: Accept T01 documentation/ADR-only scope and decision-matrix acceptance. Investigate current source before domain/architecture; product changes deferred to later dedicated Works.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-25T18:21:20Z'
+    completed_at: '2026-09-25T18:25:41Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t01-work-contract-20260925/investigation.md
+        status: ready
+        recorded_at: '2026-09-25T18:25:36Z'
+        sha256: 'sha256:70d11c53626710d8a94e1de5303c76dc92cda123a3862990e88284bc041f48d5'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t01-work-contract-20260925/investigation.md
+        status: ready
+        recorded_at: '2026-09-25T18:25:36Z'
+        sha256: 'sha256:70d11c53626710d8a94e1de5303c76dc92cda123a3862990e88284bc041f48d5'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t01-work-contract-20260925/investigation.md
+        status: passed
+        summary: Existing source paths, schemas, docs and T08 live evidence inspected. Two capsule builders, project-scoped reading, provider rules in Host and MCP-only worker prompt confirmed; documentation-only impact bounded.
+        recorded_at: '2026-09-25T18:25:36Z'
+        sha256: 'sha256:70d11c53626710d8a94e1de5303c76dc92cda123a3862990e88284bc041f48d5'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t01-work-contract-20260925/investigation.md
+        status: passed
+        summary: Existing source paths, schemas, docs and T08 live evidence inspected. Two capsule builders, project-scoped reading, provider rules in Host and MCP-only worker prompt confirmed; documentation-only impact bounded.
+        recorded_at: '2026-09-25T18:25:36Z'
+        sha256: 'sha256:70d11c53626710d8a94e1de5303c76dc92cda123a3862990e88284bc041f48d5'
+    notes: Existing source paths, schemas, docs and T08 live evidence inspected. Two capsule builders, project-scoped reading, provider rules in Host and MCP-only worker prompt confirmed; documentation-only impact bounded.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-25T18:25:41Z'
+    completed_at: '2026-09-25T18:26:03Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t01-work-contract-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T18:25:56Z'
+        sha256: 'sha256:a48325fbc695130c5fea2d616ac6b64c3d80c69f37331062ef04ab0dd647d24f'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t01-work-contract-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T18:25:56Z'
+        sha256: 'sha256:a48325fbc695130c5fea2d616ac6b64c3d80c69f37331062ef04ab0dd647d24f'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t01-work-contract-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T18:25:56Z'
+        sha256: 'sha256:a48325fbc695130c5fea2d616ac6b64c3d80c69f37331062ef04ab0dd647d24f'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t01-work-contract-20260925/domain.md
+        status: passed
+        summary: Work/context/attempt identities, intersected current authorization, mutable-output distinction, deny precedence and journal-versus-diagnostics boundaries modeled independently of provider and transport.
+        recorded_at: '2026-09-25T18:25:56Z'
+        sha256: 'sha256:a48325fbc695130c5fea2d616ac6b64c3d80c69f37331062ef04ab0dd647d24f'
+    notes: Work/context/attempt identities, intersected current authorization, mutable-output distinction, deny precedence and journal-versus-diagnostics boundaries modeled independently of provider and transport.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-25T18:26:03Z'
+    completed_at: '2026-09-25T18:28:46Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t01-work-contract-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T18:28:36Z'
+        sha256: 'sha256:5d9aab0d2289dfa16a889fa63c76ed9d27ed20e331d289ea52de01ce125b6c87'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t01-work-contract-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T18:28:36Z'
+        sha256: 'sha256:5d9aab0d2289dfa16a889fa63c76ed9d27ed20e331d289ea52de01ce125b6c87'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t01-work-contract-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T18:28:36Z'
+        sha256: 'sha256:5d9aab0d2289dfa16a889fa63c76ed9d27ed20e331d289ea52de01ce125b6c87'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t01-work-contract-20260925/architecture.md
+        status: passed
+        summary: Fifteen explicit decisions, version/legacy migration and transport/provider boundaries established. Public contract plus private ADR only; code implementation assigned to separate plan Works.
+        recorded_at: '2026-09-25T18:28:36Z'
+        sha256: 'sha256:5d9aab0d2289dfa16a889fa63c76ed9d27ed20e331d289ea52de01ce125b6c87'
+    notes: Architecture fixes D01вЂ“D15 and additive versioned contract, with explicit legacy/migration behavior and bounded diagnostics. Proceed to documentation/ADR implementation; no product code changes.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-25T18:28:46Z'
+    completed_at: '2026-09-25T18:33:15Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t01-work-contract-20260925/implementation.md
+        status: ready
+        recorded_at: '2026-09-25T18:33:09Z'
+        sha256: 'sha256:150d9174798da7958bca126c58726ddd5e9a90733a20591014ced01d7600936d'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t01-work-contract-20260925/implementation.md
+        status: ready
+        recorded_at: '2026-09-25T18:33:09Z'
+        sha256: 'sha256:150d9174798da7958bca126c58726ddd5e9a90733a20591014ced01d7600936d'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t01-work-contract-20260925/implementation.md
+        status: passed
+        summary: Only new public design documentation, private ADR and T01 artifacts changed; no product Python/schema/installed/config changes. Current/target claims explicit; bounded junior review assigned after implementation.
+        recorded_at: '2026-09-25T18:33:09Z'
+        sha256: 'sha256:150d9174798da7958bca126c58726ddd5e9a90733a20591014ced01d7600936d'
+    notes: T01 documentation and ADR implemented within scope. Proceed to semantic review and local document validation; product tests/package/deploy not applicable to this slice.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-25T18:33:15Z'
+    completed_at: '2026-09-25T18:39:22Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t01-work-contract-20260925/review-findings.md
+        status: ready
+        recorded_at: '2026-09-25T18:39:18Z'
+        sha256: 'sha256:6a43566083e005dc275c1f4669df12aaab1df5907467290e6d1d2acb9a5bd68d'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t01-work-contract-20260925/test-plan.md
+        status: ready
+        recorded_at: '2026-09-25T18:39:18Z'
+        sha256: 'sha256:b29d0aef77c101ca64e2044bd86b0697bd31a50dc57991e5154fc9798e5d8b89'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t01-work-contract-20260925/test-cases.md
+        status: ready
+        recorded_at: '2026-09-25T18:39:18Z'
+        sha256: 'sha256:ad167ad0e41156d178dbb8b914f2a7da615f96ff99d50c332c887e7ce9e93866'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t01-work-contract-20260925/test-report.md
+        status: ready
+        recorded_at: '2026-09-25T18:39:18Z'
+        sha256: 'sha256:3f720d68aa74fd641c07e3aeca4c966b9cf14e7bca897052fa806f2bb75f51dc'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t01-work-contract-20260925/test-report.md
+        status: passed
+        summary: Documentation coverage, source parity, hygiene/public-cleanliness and unchanged product source verified; advisory condition resolved.
+        recorded_at: '2026-09-25T18:39:18Z'
+        sha256: 'sha256:3f720d68aa74fd641c07e3aeca4c966b9cf14e7bca897052fa806f2bb75f51dc'
+    notes: Primary accepted T01 documentation after bounded junior review and source/document checks. One coordination condition resolved by newer explicit operator permission; immutable earlier evidence preserved.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-25T18:39:22Z'
+    completed_at: '2026-09-25T18:39:58Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t01-work-contract-20260925/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-25T18:39:52Z'
+        sha256: 'sha256:6af916d923f1a367543e687c1dbbd2a35e61e4f9310cba33696c0cac201842b9'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t01-work-contract-20260925/delivery-report.md
+        status: passed
+        summary: Local documentation accepted; packaging/install/publication skipped with documented scope reason.
+        recorded_at: '2026-09-25T18:39:52Z'
+        sha256: 'sha256:6af916d923f1a367543e687c1dbbd2a35e61e4f9310cba33696c0cac201842b9'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t01-work-contract-20260925/delivery-report.md
+        status: passed
+        summary: Local documentation accepted; packaging/install/publication skipped with documented scope reason.
+        recorded_at: '2026-09-25T18:39:52Z'
+        sha256: 'sha256:6af916d923f1a367543e687c1dbbd2a35e61e4f9310cba33696c0cac201842b9'
+    notes: T01 accepted as local documentation delivery. Package/install/publication are inapplicable to this documentation-only Work. Next T09 is authorized by the AFK plan.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-25T18:39:58Z'
+    completed_at: '2026-09-25T18:40:12Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t01-work-contract-20260925/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-25T18:40:07Z'
+        sha256: 'sha256:3cc66434a6567f3ac305a183fa3a0b0e0d9ab2951fb6e130fe282cbd946481f4'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t01-work-contract-20260925/evolution-report.md
+        status: passed
+        summary: Builder parity, coverage distinction and bounded junior delegation lessons recorded; T09 follow-up defined.
+        recorded_at: '2026-09-25T18:40:07Z'
+        sha256: 'sha256:3cc66434a6567f3ac305a183fa3a0b0e0d9ab2951fb6e130fe282cbd946481f4'
+    notes: T01 complete; continue automatically to a separate T09 Work. Preserve accepted target contract and all evidence; diagnostics implementation and budgets remain next.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t01-pf-vision-alignment-r02-define-the-provider-neutral-work-executor-im.capsule.yaml
+  assignment_capsule_checksum: 'sha256:3f85624d54b63cb69d1dbd4e2ae92071c70854bfd5bbd8acdc3e22b72e4b2cca'

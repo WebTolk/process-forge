@@ -1,0 +1,17 @@
+{
+  "time": "2026-09-26T17:45:18.707874+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate\\bin\\pf.py",
+    "release-pack",
+    "--root",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\t10-installed-delivery-20260926\\delivery-package\\processforge-1.1.0-t10-40c98942.zip"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "WROTE: D:/Dev/process-forge/.pf/artifacts/t10-installed-delivery-20260926/delivery-package/processforge-1.1.0-t10-40c98942.zip\nWROTE: D:/Dev/process-forge/.pf/artifacts/t10-installed-delivery-20260926/delivery-package/processforge-1.1.0-t10-40c98942.manifest.json\nFILES: 992\n",
+  "stderr": ""
+}

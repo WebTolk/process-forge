@@ -1,0 +1,8 @@
+{
+  "source": "Observed direct tool results before final review additions; not a replayed test run",
+  "checks": [
+    {"command": "python -B tools/smoke_request_scope.py", "returncode": 0, "tests": 8, "reported_test_seconds": 0.054},
+    {"command": "python -B tools/smoke_yaml_parse_cache.py", "returncode": 0, "tests": 11, "reported_test_seconds": 0.145}
+  ],
+  "followup": "Policy stability, supported key-graph types, required metrics parser import, type parity and added/deleted/duplicate Run cases were subsequently reviewed and changed; focused checks must run again for the final source."
+}

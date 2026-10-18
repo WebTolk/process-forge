@@ -1,0 +1,10 @@
+{
+  "label": "proposed-manifest-schema",
+  "started_at": "2026-10-18T03:59:09.469592+00:00",
+  "finished_at": "2026-10-18T03:59:10.689455+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.2197901000035927,
+  "raw_sha256": "1d985668bba13a4bef0760c66fc9efb1a237c1ffee5e0f4e102e3ad5c3815683",
+  "raw_bytes": 174,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/baseline-c4d/proposed-manifest-schema.log"
+}

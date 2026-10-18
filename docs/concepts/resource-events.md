@@ -6,7 +6,7 @@ Resource Management emits events to:
 runtime/events/events.ndjson
 ```
 
-for workplace operations, or `.pf/runtime/events/events.ndjson` for project-scoped operations.
+for workplace operations, or `.pf/runtime/events/events.sqlite3` for project-scoped operations.
 
 The MVP event record includes:
 

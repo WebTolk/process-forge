@@ -1,0 +1,3 @@
+WROTE: D:/Dev/process-forge/.pf/artifacts/core-f09-f12-20260910/processforge-901d055.zip
+WROTE: D:/Dev/process-forge/.pf/artifacts/core-f09-f12-20260910/processforge-901d055.manifest.json
+FILES: 943

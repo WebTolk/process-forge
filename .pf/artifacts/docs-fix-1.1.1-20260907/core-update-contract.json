@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/smoke_core_update_manifest.py"
+  ],
+  "started_at": "2026-09-07T13:27:48.189550+00:00",
+  "finished_at": "2026-09-07T13:28:00.492535+00:00",
+  "elapsed_seconds": 12.303,
+  "exit_code": 0,
+  "output": "PASS: manifest-based core update smoke\n"
+}

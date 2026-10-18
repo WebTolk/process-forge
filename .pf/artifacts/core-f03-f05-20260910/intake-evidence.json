@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-record",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f03-f05-20260910/baseline.json"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-context",
+    "status": "passed",
+    "summary": "Current source context fresh, carrier capsule read and accepted prior work preserved in baseline."
+  }
+]

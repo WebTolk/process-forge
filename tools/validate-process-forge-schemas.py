@@ -747,6 +747,8 @@ def validate_instance(value: Any, node: dict[str, Any], root_schema: dict[str, A
         errors.append(f"{path}: expected one of {node['enum']!r}")
     if "minimum" in node and isinstance(value, (int, float)) and value < node["minimum"]:
         errors.append(f"{path}: expected minimum {node['minimum']}")
+    if "maximum" in node and isinstance(value, (int, float)) and value > node["maximum"]:
+        errors.append(f"{path}: expected maximum {node['maximum']}")
     if "minLength" in node and isinstance(value, str) and len(value) < node["minLength"]:
         errors.append(f"{path}: expected minLength {node['minLength']}")
     if "minItems" in node and isinstance(value, list) and len(value) < node["minItems"]:
@@ -967,6 +969,11 @@ def validate_yaml_schema_files(root: Path) -> None:
 
     if (root / "workplace.yaml").is_file():
         mappings.append((root / "workplace.yaml", "workplace.schema.json"))
+    for path in [root / "configuration.yaml", root / "templates" / "workplace-configuration.yaml"]:
+        if path.is_file():
+            mappings.append((path, "workplace-configuration.schema.json"))
+    if (root / ".pf" / "configuration.yaml").is_file():
+        mappings.append((root / ".pf" / "configuration.yaml", "project-configuration.schema.json"))
     if (root / ".pf" / "hooks.yaml").is_file():
         mappings.append((root / ".pf" / "hooks.yaml", "hooks.schema.json"))
     if (root / ".pf" / "process-routes.yaml").is_file():
@@ -987,8 +994,16 @@ def validate_yaml_schema_files(root: Path) -> None:
 
 
 def validate_ndjson_events(root: Path) -> None:
+    journal = root / ".pf" / "runtime" / "events" / "events.sqlite3"
+    if journal.is_file():
+        sys.path.insert(0, str(root / "src"))
+        from processforge_core.process_event_journal import ProcessEventJournal
+        schema = load_schema(root, "event-envelope.schema.json")
+        for sequence, event, error in ProcessEventJournal().records(journal):
+            if error:
+                raise SystemExit(f"FAIL: event record {sequence}: {error}")
+            validate_against_schema(event, schema, f"{journal.relative_to(root).as_posix()}:{sequence}")
     checks = [
-        (".pf/runtime/events/events.ndjson", "event-envelope.schema.json"),
         (".pf/runtime/telemetry", "session-telemetry-event.schema.json"),
         (".pf/runtime/chat/transcripts", "chat-message.schema.json"),
     ]

@@ -1,0 +1,25 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1",
+    "--assignment",
+    "plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    ".pf/artifacts/docs-fix-1.1.1-20260907/execution-evidence.json",
+    "--notes",
+    "All five delegated tasks and integration reviews are recorded. Implementation complete; full source-suite verdict remains pending before final acceptance.",
+    "--json"
+  ],
+  "started_at": "2026-09-07T14:07:43.699624+00:00",
+  "finished_at": "2026-09-07T14:07:57.787666+00:00",
+  "elapsed_seconds": 14.088,
+  "exit_code": 0,
+  "output": "{\n  \"action\": \"stage_transitioned\",\n  \"allowed_outcomes\": [\n    {\n      \"id\": \"completed\",\n      \"next_stage\": \"run-review\",\n      \"title\": \"completed\"\n    }\n  ],\n  \"artifacts\": [\n    {\n      \"evidence\": {},\n      \"id\": \"task-result\",\n      \"kind\": \"artifact\",\n      \"satisfied\": false\n    }\n  ],\n  \"assignment\": {\n    \"id\": \"plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using\",\n    \"status\": \"in_progress\"\n  },\n  \"blockers\": [],\n  \"completion\": {\n    \"requirements\": [\n      {\n        \"artifact_id\": \"task-result\",\n        \"code\": \"artifact_evidence_missing\"\n      },\n      {\n        \"code\": \"gate_evidence_missing\",\n        \"gate_id\": \"all-blocking-tasks-completed\"\n      },\n      {\n        \"code\": \"handoff_note_required\",\n        \"stage_id\": \"task-result-fixation\"\n      }\n    ],\n    \"status\": \"incomplete\"\n  },\n  \"evidence\": [],\n  \"gates\": {\n    \"entry\": [\n      {\n        \"blocking\": true,\n        \"evidence\": {\n          \"id\": \"task-results-recorded\",\n          \"kind\": \"gate\",\n          \"path\": \".pf/artifacts/docs-fix-1.1.1-20260907/execution-record.md\",\n          \"recorded_at\": \"2026-09-07T14:07:48Z\",\n          \"sha256\": \"sha256:318aa46f40a855370566a062d318776045f7d271032bcb2e67896161b56847f9\",\n          \"status\": \"passed\"\n        },\n        \"id\": \"task-results-recorded\",\n        \"phase\": \"entry\",\n        \"required\": true,\n        \"satisfied\": true,\n        \"type\": \"checklist\"\n      }\n    ],\n    \"exit\": [\n      {\n        \"blocking\": true,\n        \"evidence\": {},\n        \"id\": \"all-blocking-tasks-completed\",\n        \"phase\": \"exit\",\n        \"required\": true,\n        \"satisfied\": false,\n        \"type\": \"checklist\"\n      }\n    ]\n  },\n  \"incomplete\": [\n    {\n      \"artifact_id\": \"task-result\",\n      \"code\": \"artifact_evidence_missing\"\n    },\n    {\n      \"code\": \"gate_evidence_missing\",\n      \"gate_id\": \"all-blocking-tasks-completed\"\n    },\n    {\n      \"code\": \"handoff_note_required\",\n      \"stage_id\": \"task-result-fixation\"\n    }\n  ],\n  \"kind\": \"pf.work.state\",\n  \"next_stage_id\": \"task-result-fixation\",\n  \"obligations\": [],\n  \"previous_stage_id\": \"task-execution-loop\",\n  \"process\": {\n    \"fingerprint\": \"sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2\",\n    \"id\": \"task-batch-execution\",\n    \"pin_status\": \"pinned\",\n    \"version\": \"1.0.0\"\n  },\n  \"project\": {\n    \"id\": \"process-forge\"\n  },\n  \"required_evidence\": [],\n  \"required_inputs\": [\n    {\n      \"evidence\": {\n        \"id\": \"task-iteration-log\",\n        \"kind\": \"artifact\",\n        \"path\": \".pf/artifacts/docs-fix-1.1.1-20260907/execution-record.md\",\n        \"recorded_at\": \"2026-09-07T14:07:48Z\",\n        \"sha256\": \"sha256:318aa46f40a855370566a062d318776045f7d271032bcb2e67896161b56847f9\",\n        \"status\": \"ready\"\n      },\n      \"id\": \"task-iteration-log\",\n      \"kind\": \"input\",\n      \"satisfied\": true\n    }\n  ],\n  \"run\": {\n    \"id\": \"garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1\",\n    \"status\": \"in_progress\"\n  },\n  \"schema_version\": 1,\n  \"stage\": {\n    \"id\": \"task-result-fixation\",\n    \"status\": \"in_progress\",\n    \"title\": \"Fix task results\"\n  },\n  \"work\": {\n    \"active_specializations\": [],\n    \"selected_resource_ids\": []\n  }\n}\n"
+}

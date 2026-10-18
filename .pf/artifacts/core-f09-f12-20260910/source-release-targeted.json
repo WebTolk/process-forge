@@ -1,0 +1,114 @@
+{
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_update_missing_owned.py"
+      ],
+      "elapsed_seconds": 0.786,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T12:01:39Z",
+      "label": "smoke_core_update_missing_owned",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T12:01:38Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_search_source_integrity.py"
+      ],
+      "elapsed_seconds": 0.895,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T12:01:40Z",
+      "label": "smoke_search_source_integrity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T12:01:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_raw_ingress_incremental_recovery.py"
+      ],
+      "elapsed_seconds": 18.745,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T12:01:59Z",
+      "label": "smoke_raw_ingress_incremental_recovery",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T12:01:40Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 43.262,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T12:02:42Z",
+      "label": "schema validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T12:01:59Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 9.199,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T12:02:51Z",
+      "label": "public cleanliness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T12:02:42Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py",
+        "--root",
+        "D:\\Dev\\process-forge",
+        "--check"
+      ],
+      "elapsed_seconds": 0.56,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T12:02:52Z",
+      "label": "checksum",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T12:02:51Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    }
+  ],
+  "elapsed_seconds": 73.448,
+  "finished_at": "2026-09-10T12:02:52Z",
+  "public": false,
+  "public_checks": [],
+  "result": "PASS",
+  "schema_version": 1,
+  "started_at": "2026-09-10T12:01:38Z"
+}

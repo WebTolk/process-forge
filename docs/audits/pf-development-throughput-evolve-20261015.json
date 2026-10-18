@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "kind": "processforge.development_throughput_evolve",
+  "status": "measured_retrospective",
+  "source_head": "bd48e567626c2a17312994ef961934628dfd8c85",
+  "executable_source": "96bfcabf1f58a350442ab0d978addf53cc25f624",
+  "sample": {
+    "parent_command_pairs": 802,
+    "scope": "Seven named prior task roots, direct root/receipts plus audit resume; copied evidence excluded.",
+    "summed_minutes": 261.428,
+    "union_minutes": 249.211,
+    "span_minutes": 856.57,
+    "first_utc": "2026-10-14T13:26:45.250191+00:00",
+    "last_utc": "2026-10-15T03:43:19.477957+00:00",
+    "missing_result_pairs": 0,
+    "invalid_time_pairs": 0
+  },
+  "operations": [
+    {
+      "operation": "PF:work-start",
+      "calls": 15,
+      "summed_minutes": 117.595,
+      "median_seconds": 489.91,
+      "p90_seconds": 621.591,
+      "max_seconds": 669.286,
+      "nonzero_exits": 3
+    },
+    {
+      "operation": "PF:work-transition",
+      "calls": 167,
+      "summed_minutes": 54.899,
+      "median_seconds": 18.422,
+      "p90_seconds": 27.402,
+      "max_seconds": 40.513,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:work-state",
+      "calls": 333,
+      "summed_minutes": 40.851,
+      "median_seconds": 6.636,
+      "p90_seconds": 10.418,
+      "max_seconds": 17.032,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:task-create",
+      "calls": 10,
+      "summed_minutes": 25.913,
+      "median_seconds": 161.398,
+      "p90_seconds": 182.647,
+      "max_seconds": 195.908,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:release-archive-test",
+      "calls": 2,
+      "summed_minutes": 4.363,
+      "median_seconds": 130.884,
+      "p90_seconds": 155.178,
+      "max_seconds": 155.178,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "TEST:smoke",
+      "calls": 19,
+      "summed_minutes": 1.864,
+      "median_seconds": 3.626,
+      "p90_seconds": 20.057,
+      "max_seconds": 28.971,
+      "nonzero_exits": 1
+    },
+    {
+      "operation": "PF:worker-run collect",
+      "calls": 8,
+      "summed_minutes": 1.763,
+      "median_seconds": 12.656,
+      "p90_seconds": 18.353,
+      "max_seconds": 18.353,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:task-doctor",
+      "calls": 28,
+      "summed_minutes": 1.608,
+      "median_seconds": 3.131,
+      "p90_seconds": 5.121,
+      "max_seconds": 5.498,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:worker-run start",
+      "calls": 12,
+      "summed_minutes": 1.487,
+      "median_seconds": 6.384,
+      "p90_seconds": 10.212,
+      "max_seconds": 14.039,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:work-resolve",
+      "calls": 24,
+      "summed_minutes": 1.395,
+      "median_seconds": 3.332,
+      "p90_seconds": 4.908,
+      "max_seconds": 5.087,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:worker-run prepare",
+      "calls": 12,
+      "summed_minutes": 1.269,
+      "median_seconds": 5.436,
+      "p90_seconds": 8.848,
+      "max_seconds": 10.185,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:run-doctor",
+      "calls": 19,
+      "summed_minutes": 0.982,
+      "median_seconds": 2.693,
+      "p90_seconds": 4.048,
+      "max_seconds": 6.958,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:release-pack",
+      "calls": 3,
+      "summed_minutes": 0.83,
+      "median_seconds": 15.223,
+      "p90_seconds": 20.303,
+      "max_seconds": 20.303,
+      "nonzero_exits": 1
+    },
+    {
+      "operation": "OTHER",
+      "calls": 16,
+      "summed_minutes": 0.776,
+      "median_seconds": 0.907,
+      "p90_seconds": 14.766,
+      "max_seconds": 20.162,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:agent-status",
+      "calls": 28,
+      "summed_minutes": 0.732,
+      "median_seconds": 1.434,
+      "p90_seconds": 1.979,
+      "max_seconds": 6.433,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "TEST:validate",
+      "calls": 6,
+      "summed_minutes": 0.684,
+      "median_seconds": 1.967,
+      "p90_seconds": 21.494,
+      "max_seconds": 21.494,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:work-cancel",
+      "calls": 3,
+      "summed_minutes": 0.522,
+      "median_seconds": 7.526,
+      "p90_seconds": 22.562,
+      "max_seconds": 22.562,
+      "nonzero_exits": 1
+    },
+    {
+      "operation": "PF:runtime status",
+      "calls": 12,
+      "summed_minutes": 0.494,
+      "median_seconds": 2.576,
+      "p90_seconds": 3.606,
+      "max_seconds": 3.733,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:core-update plan",
+      "calls": 5,
+      "summed_minutes": 0.456,
+      "median_seconds": 5.767,
+      "p90_seconds": 7.355,
+      "max_seconds": 7.355,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:agent-checkin",
+      "calls": 19,
+      "summed_minutes": 0.434,
+      "median_seconds": 1.173,
+      "p90_seconds": 2.061,
+      "max_seconds": 2.122,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "git:other",
+      "calls": 8,
+      "summed_minutes": 0.405,
+      "median_seconds": 4.582,
+      "p90_seconds": 5.087,
+      "max_seconds": 5.087,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:continuation-create",
+      "calls": 1,
+      "summed_minutes": 0.383,
+      "median_seconds": 22.997,
+      "p90_seconds": 22.997,
+      "max_seconds": 22.997,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:agent-register",
+      "calls": 14,
+      "summed_minutes": 0.319,
+      "median_seconds": 1.226,
+      "p90_seconds": 2.459,
+      "max_seconds": 2.553,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:chat-record",
+      "calls": 2,
+      "summed_minutes": 0.164,
+      "median_seconds": 4.935,
+      "p90_seconds": 6.788,
+      "max_seconds": 6.788,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:core-update apply",
+      "calls": 2,
+      "summed_minutes": 0.163,
+      "median_seconds": 4.894,
+      "p90_seconds": 5.702,
+      "max_seconds": 5.702,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:agent-checkout",
+      "calls": 8,
+      "summed_minutes": 0.148,
+      "median_seconds": 1.058,
+      "p90_seconds": 1.562,
+      "max_seconds": 1.562,
+      "nonzero_exits": 1
+    },
+    {
+      "operation": "PF:worker-run status",
+      "calls": 5,
+      "summed_minutes": 0.146,
+      "median_seconds": 1.569,
+      "p90_seconds": 2.904,
+      "max_seconds": 2.904,
+      "nonzero_exits": 2
+    },
+    {
+      "operation": "PF:runtime doctor",
+      "calls": 2,
+      "summed_minutes": 0.131,
+      "median_seconds": 3.94,
+      "p90_seconds": 4.063,
+      "max_seconds": 4.063,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:project-context-check",
+      "calls": 2,
+      "summed_minutes": 0.118,
+      "median_seconds": 3.542,
+      "p90_seconds": 3.578,
+      "max_seconds": 3.578,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:server stop",
+      "calls": 4,
+      "summed_minutes": 0.112,
+      "median_seconds": 1.673,
+      "p90_seconds": 2.226,
+      "max_seconds": 2.226,
+      "nonzero_exits": 2
+    },
+    {
+      "operation": "PF:run-create",
+      "calls": 1,
+      "summed_minutes": 0.108,
+      "median_seconds": 6.468,
+      "p90_seconds": 6.468,
+      "max_seconds": 6.468,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:version",
+      "calls": 4,
+      "summed_minutes": 0.103,
+      "median_seconds": 1.511,
+      "p90_seconds": 2.107,
+      "max_seconds": 2.107,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:server start",
+      "calls": 2,
+      "summed_minutes": 0.076,
+      "median_seconds": 2.282,
+      "p90_seconds": 2.325,
+      "max_seconds": 2.325,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:doctor-project",
+      "calls": 2,
+      "summed_minutes": 0.057,
+      "median_seconds": 1.698,
+      "p90_seconds": 1.88,
+      "max_seconds": 1.88,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:core-update status",
+      "calls": 2,
+      "summed_minutes": 0.04,
+      "median_seconds": 1.198,
+      "p90_seconds": 1.542,
+      "max_seconds": 1.542,
+      "nonzero_exits": 0
+    },
+    {
+      "operation": "PF:--help",
+      "calls": 2,
+      "summed_minutes": 0.039,
+      "median_seconds": 1.17,
+      "p90_seconds": 1.193,
+      "max_seconds": 1.193,
+      "nonzero_exits": 0
+    }
+  ],
+  "task_instrumentation_windows": [
+    {
+      "task": "Аудит и follow-ups",
+      "calls": 124,
+      "first_utc": "2026-10-14T13:26:45.250191+00:00",
+      "last_utc": "2026-10-14T16:01:00.614959+00:00",
+      "summed_command_minutes": 62.17
+    },
+    {
+      "task": "UTF-8 stdio",
+      "calls": 122,
+      "first_utc": "2026-10-14T16:37:09.915629+00:00",
+      "last_utc": "2026-10-14T19:33:05.238893+00:00",
+      "summed_command_minutes": 47.719
+    },
+    {
+      "task": "Метаданные проекта",
+      "calls": 111,
+      "first_utc": "2026-10-14T19:59:10.111147+00:00",
+      "last_utc": "2026-10-14T21:41:23.976558+00:00",
+      "summed_command_minutes": 31.948
+    },
+    {
+      "task": "Отменённая dev-попытка",
+      "calls": 28,
+      "first_utc": "2026-10-14T21:59:39.580585+00:00",
+      "last_utc": "2026-10-14T22:21:57.773914+00:00",
+      "summed_command_minutes": 3.377
+    },
+    {
+      "task": "Fixture и первая dev-поставка",
+      "calls": 166,
+      "first_utc": "2026-10-14T22:30:33.013475+00:00",
+      "last_utc": "2026-10-15T00:20:28.057004+00:00",
+      "summed_command_minutes": 40.432
+    },
+    {
+      "task": "Capability records",
+      "calls": 98,
+      "first_utc": "2026-10-15T00:36:27.208656+00:00",
+      "last_utc": "2026-10-15T02:04:52.432339+00:00",
+      "summed_command_minutes": 35.64
+    },
+    {
+      "task": "Вторая dev-поставка",
+      "calls": 153,
+      "first_utc": "2026-10-15T02:16:08.706684+00:00",
+      "last_utc": "2026-10-15T03:43:19.477957+00:00",
+      "summed_command_minutes": 40.141
+    }
+  ],
+  "worker_lifetimes": [
+    {
+      "task": "UTF-8 stdio",
+      "role": "executor",
+      "minutes": 58.367,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "UTF-8 stdio",
+      "role": "reviewer",
+      "minutes": 56.817,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Метаданные проекта",
+      "role": "executor",
+      "minutes": 56.817,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Метаданные проекта",
+      "role": "reviewer",
+      "minutes": 39.133,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Fixture и первая dev-поставка",
+      "role": "executor",
+      "minutes": 60.6,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Fixture и первая dev-поставка",
+      "role": "reviewer",
+      "minutes": 54.917,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Capability records",
+      "role": "executor",
+      "minutes": 60.183,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Capability records",
+      "role": "reviewer",
+      "minutes": 30.483,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Вторая dev-поставка",
+      "role": "executor",
+      "minutes": 19.0,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    },
+    {
+      "task": "Вторая dev-поставка",
+      "role": "reviewer",
+      "minutes": 26.783,
+      "status": "completed",
+      "configured_timeout_seconds": 3600
+    }
+  ],
+  "helper_inventory": {
+    "direct_python_files": 175,
+    "lines": 9643,
+    "task_directories": 6,
+    "includes_reused_code": true,
+    "attribution": "Independently recounted from six authorized direct file globs. Includes reused code; not measured authoring time."
+  },
+  "profile": {
+    "yaml_safe_load_calls": 1323,
+    "document_reader_load_calls": 1321,
+    "record_reader_runs_calls": 481,
+    "assignment_load_calls": 836,
+    "profile_seconds": 27.999,
+    "instrumented_wall_seconds": 28.012,
+    "normal_launcher_wall_seconds": 5.776,
+    "record_catalog_cumulative_seconds": 22.046,
+    "limitations": [
+      "cProfile instrumentation and concurrent admission increase elapsed time. This is a hotspot/call-count diagnosis, not a native speed benchmark.",
+      "This profiles work-state, not full new work-start. It does not prove that catalog cost accounts for the entire 8-minute admission.",
+      "No actual connected MCP loaded-module qualification is claimed."
+    ]
+  },
+  "mcp_admission_observation": {
+    "client_timeout_seconds": 60,
+    "assignment_created_utc": "2026-10-15T04:29:09Z",
+    "capsule_generated_utc": "2026-10-15T04:36:33Z",
+    "late_work_created": true,
+    "duplicate_retry": false,
+    "loaded_host_version_not_qualified": true
+  },
+  "transition_response": {
+    "top_level_full_current_state": true,
+    "extra_immediate_state_read_required": false,
+    "native_access_and_identity_validation_preserved": true
+  },
+  "progress": {
+    "commits": 7,
+    "direct_core_refactoring_commits": 2,
+    "all_five_oop_epics": "open"
+  },
+  "limitations": [
+    "Sample is not all calls; excludes most direct model tools, MCP calls, worker internal commands, Git API publication and reading/thinking time.",
+    "Summed times overlap and must not be added to worker lifetimes or treated as a complete wall-time budget.",
+    "Audit receipts include pre-restart preparation; Git commit window is a separate observation.",
+    "Worker lifetime includes useful work, reading and coordination; it is not idle time."
+  ],
+  "application": "Local proposed candidates only; no active process, global package, grants, Core implementation or service changed.",
+  "percentile_convention": "nearest-rank: sorted[ceil(0.9*n)-1]",
+  "independent_evidence": {
+    "raw_rows_matched": 802,
+    "raw_source_hashes_matched": 1604,
+    "worker_statuses_matched": 10,
+    "helper_inventory_matched": true,
+    "scope": "Independent retrospective recalculation; no new source/runtime tests."
+  }
+}

@@ -1,0 +1,13 @@
+# Current source and data contracts
+
+Installed accepted candidate 40c9894227738472976546849047550415099486, update core-update-20260926T175155Z; 991 owned files verified. Main HEAD a180ad624442d4fbe8ac1710073ef7d4c44babc4 retains prior dirty work plus the five-file journal fix. Journal Work completed and actual source schemas now PASS. The journal fix is intentionally not installed yet.
+
+Monitor reads service/host cache with 1 MiB cap; host cache is about 1.9 MiB and stores 96 historical session registrations, causing cache_oversize and unknown activity. Runtime already loads that cache in known_project_roots; reuse its small registration counts, do not add a cache scan per repaint. Runtime service.json is small, atomically saved and owner-bound; publish compact metrics nested in this existing state rather than introducing another required journal/service.
+
+Authoritative available contracts: Agent Presence canonical/legacy paths and dedup, online status + last_seen_at/heartbeat_ttl_seconds; lease YAML status and issued/expires timestamps; project worker status.json running state; Run YAML status enums in_progress/blocked/etc. There is no canonical waiting-for-user state, no universal MCP connection health or provider-complete event-rate/backlog aggregate. No such number may be inferred. Source core locates domain files; Runtime adapts/publishes, monitor only projects.
+
+Runtime scheduler currently resolves known roots, isolates failures per project, updates saved job results and calls save. Collect optional metrics outside state lock on a slower cadence, keep failure isolated, use independent budgets by group. A separately registered plg-content-varreplace lacks .pf manifest; preserve its warning/config, mark cross-project coverage partial.
+
+Existing Runtime /shutdown authenticates but has no busy guard. Add negotiated guarded shutdown for new server command; legacy runtime semantics stay unchanged. Advertise a versioned capability, reject default guarded calls to old servers rather than letting them ignore a new request field. Guard current worker records and in-flight Runtime requests; do not imply an atomic global freeze of independently operating CLI/MCP workers.
+
+T09 diagnostics configuration resolves project -> Work -> session -> environment -> invocation, honors locked fields/only-tighter limits, limits config to 64 KiB, and requires detailed profile expiry within 15 minutes. Reuse this policy; no UI-only config format. Read current EN/RU diagnostics docs, schema, CLI and module. Existing launcher patterns are Python, Windows batch and shell; release ZIP currently uses regular-file mode 0644, so portable invocation is Python (or explicit shell), not an untested native binary.

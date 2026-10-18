@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T19:01:02.516318+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-20260926\\candidate\\tools\\smoke_diagnostics_configure.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "PASS: diagnostics profile plan/apply, preservation, locks, expiry, bounds and no-write inspection\n",
+  "stderr": ""
+}

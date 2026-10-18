@@ -1,0 +1,13 @@
+# Journal assurance and reviewed recovery readiness
+
+Result: PASS for source change and isolated recovery procedure; live repair is the release-delivery operation still to execute. See assurance-results.json and exact per-command JSON records. No claim that the live journal is already repaired.
+
+Behavior evidence: unchanged four-process smoke reproduced three duplicate copies on original source, then passed after the lock fix. It retains all unique large Unicode events, deduplicates the shared id, preserves seed bytes, checks fsync before releasing the writer lock and hook dispatch afterward, and verifies lock failure is an explicit RuntimeError without journal writes or dispatch. green-observation.md preserves actual output. Private repair test passed with 100 concurrent append-only writes, prefix/offset/CRLF preservation, backup verification, rejection of changed hash/multiple corrupt records/unterminated tail, and safe abort on concurrent prefix replacement.
+
+Independent regressions PASS: central event ingress, central event replay, stage-transition event emission, registry lock ownership/dead-owner/contention/concurrent update suite. Public fixture schemas, source public cleanliness and checksum checks PASS. AST parsing, documentation links, git diff --check and exact source scope verification PASS. Exactly five public paths changed, 987 baseline public files unchanged. scoped.patch is the delta against the captured already-dirty starting files; previous unrelated implementation retained.
+
+Review: existing event id/dispatch behavior is preserved; one persistent registry guard serializes dedup and write; dead-owner recovery uses existing proof and OS lock, not unsafe metadata deletion. Hooks run outside the writer boundary. No public schema changes, swallowed failures or new database. New processes must load this source; old connected MCP processes are not retroactively patched.
+
+The historical fragment's originating producer remains unknown. Scope is exact reviewed invalid body SHA256, not arbitrary journal cleanup. Live plan confirms one 26-byte record including CRLF at offset 41877766; only its 24-byte body will become whitespace. Backup is written/fsynced first, all remaining original bytes and later appends verified afterward. Full live journal parse and full checkout schema validation are required after delivery, before this Work is marked complete.
+
+Browser verification: not_applicable (no browser/UI change). Native Windows concurrency was executed; native POSIX execution was not. Installed source delivery is deferred to the next combined standard Core update with the remaining T10 changes; current installed Core remains the successfully delivered monitor build.

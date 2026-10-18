@@ -1,0 +1,48 @@
+{
+  "surface": "fresh independent installed MCP stdio; separate from the existing host connection",
+  "status": "passed",
+  "started_at": "2026-10-17T19:18:37.335141+00:00",
+  "source": {
+    "commit": "8ea152bfa6376a66fc87c7ed48d74eacc5c2ad41",
+    "dirty": false,
+    "tree": "16f63bae232fd161a5f721428bb1cc1096bf6d7d",
+    "vcs": "git"
+  },
+  "metadata_sha256": "38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e",
+  "tools_listed": 31,
+  "server_info": {
+    "name": "processforge",
+    "version": "1.2.0"
+  },
+  "context": {
+    "status": "fresh",
+    "mode": "forge",
+    "warmup_samples": 1,
+    "measured_samples_seconds": [
+      1.919357399980072,
+      1.849440100020729,
+      1.8661705999984406,
+      1.6422435999847949,
+      1.5941159999929368
+    ],
+    "median_seconds": 1.849440100020729,
+    "minimum_seconds": 1.5941159999929368,
+    "maximum_seconds": 1.919357399980072,
+    "unique_payload_hashes": 1
+  },
+  "exact_work": {
+    "context": "valid",
+    "readiness": "ready",
+    "stage": "release-delivery",
+    "elapsed_seconds": 0.018026100005954504
+  },
+  "resource": {
+    "status": "ready",
+    "elapsed_seconds": 0.8873731000348926
+  },
+  "search": {
+    "status": "ready",
+    "elapsed_seconds": 1.0472430999507196,
+    "total": 5
+  }
+}

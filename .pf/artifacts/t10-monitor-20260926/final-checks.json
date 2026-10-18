@@ -1,0 +1,64 @@
+{
+  "recorded_at": "2026-09-26T16:35:51.943185+00:00",
+  "run": "garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "completed_stages": [
+    "orchestration",
+    "intake-scope",
+    "investigation",
+    "domain-modeling",
+    "architecture-plan",
+    "implementation",
+    "code-assurance",
+    "release-delivery",
+    "evolve"
+  ],
+  "evidence_records": 33,
+  "evidence_hashes": {
+    ".pf/artifacts/t10-monitor-20260926/orchestration.md": "21fb5c7ee35cd154db8932af8341d3f5762c085ae2e4563a722b1ad757f1c2ed",
+    ".pf/artifacts/t10-monitor-20260926/scope.md": "5feb51b9d293b85f3f774755432b2dbfb535b8b0a00c1610204422ef46c6bed8",
+    ".pf/artifacts/t10-monitor-20260926/investigation.md": "4b74f0fc97136f460afd0a37bd52406bc470aa8a0a482751d97b79ec5a41921b",
+    ".pf/artifacts/t10-monitor-20260926/domain.md": "60f88c871284b9ea6fb1c6ac6143ef39561e6365dc4397f317fb5b47b9bb21af",
+    ".pf/artifacts/t10-monitor-20260926/architecture.md": "0ad947da2942e898a16934ea92181d8f520903da4f12a0ac7d31b86ddc91ff06",
+    ".pf/artifacts/t10-monitor-20260926/implementation.md": "5f51971c1dd7d833778979ed22d231d1a4f1a86ed4767e7e266745334f936f61",
+    ".pf/artifacts/t10-monitor-20260926/preservation.json": "430728f96d89dd85e1f96a0770e349e65a58c5b5e7652e50a292d95f0d11eb9f",
+    ".pf/artifacts/t10-monitor-20260926/review-findings.md": "78afc561394c29613c7a88dc6da89e5c3aeb6cc6ec1db7d30b67285c7c66db8b",
+    ".pf/artifacts/t10-monitor-20260926/test-plan.md": "8071bf89bb17dd81da5a41eaddd87cd25867eb21bb66333266239536dbec8b12",
+    ".pf/artifacts/t10-monitor-20260926/test-report.md": "c6428639bc59eca55328d36fc087aee2070f1fa837fbbd3d05dc30f7c1ac228b",
+    ".pf/artifacts/t10-monitor-20260926/delivery-report.md": "6a0747f8762f27ef6c6d168fb914ae71da0c355673c1c4124c01ad977bb4f8af",
+    ".pf/artifacts/t10-monitor-20260926/evolution-report.md": "f56acac4f874799e783a34778b9a97ea8e7f95c453e23ee0d28bff5ceed69e62"
+  },
+  "capsule_sha256": "6fb471b0e5f7ec47533c9acc17a18ef1cd262dd6ccb3cb79dd4044ebd0fe2cf4",
+  "source_hashes": {
+    "tools/pf_runtime/monitor.py": "2d74c81eb8e524b7dc6493fd456b90d262286dde18d68734d18690aec39e779f",
+    "tools/pf_runtime/service.py": "16fc587dc901545075b4a02b7fa870527fddba8a6fedf30b31789921861864ee",
+    "tools/processforge.py": "ad40115561ccf0a9b615e91a8d358c2e47d8a3a0cecc17780b504f9dcace8bae",
+    "tools/smoke_runtime_monitor.py": "e75c52ec0e8d86ba4cc5c29a17656ad5dae55af65c9fb3ead523d844c2fd159c",
+    "docs/concepts/runtime-monitor.md": "bc3f084a08357e736531017ad737a798117aa66f1b3f92b399e1fb5ff7e2c3f5",
+    "docs/ru/concepts/runtime-monitor.md": "e8dee9260aae40ce282066fba585931afb248b3faae5e16f534ad5e0af3c22ce",
+    "docs/concepts/runtime-mcp.md": "e242c4e86cae66e5e9dd84e0017012db7f89fe25671849b4c263c2b0db925962",
+    "docs/ru/concepts/runtime-mcp.md": "222dc64053da9d25adbad197afab516360a0bd24e72ddbd0ccce3743ee3cdd26",
+    "checksums/processforge.sha256": "82ca88cf65bb72dc06ae59f2a9fd354475485c6aac50845ab939797e83c3349b"
+  },
+  "baseline_files": 3769,
+  "links_checked": 11,
+  "doctor": {
+    "command": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "-B",
+      "D:/.agents/processforge/bin/pf.py",
+      "run-doctor",
+      "--project-root",
+      "D:\\Dev\\process-forge",
+      "--run",
+      "garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: completed\nPASS: summary status matches run: completed\nPASS: task index status matches run: completed\nPASS: handoff status matches run: completed\nPASS: process exists: software-feature-development\nPASS: .pf/runs/garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi/run.yaml has no private absolute paths\nPASS: task id unique: t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon\nPASS: task status valid for t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon: done\nPASS: assignment exists for t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon: .pf/assignments/t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon.yaml\nPASS: t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon run_id matches run\nPASS: completed run has all blocking tasks done\nPASS: .pf/runs/garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi/summary.md exists\nPASS: .pf/handoffs/runs/garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi-handoff.md exists\n",
+    "stderr": ""
+  },
+  "source_head": "a180ad624442d4fbe8ac1710073ef7d4c44babc4",
+  "doctor_passes": 21,
+  "status": "PASS"
+}

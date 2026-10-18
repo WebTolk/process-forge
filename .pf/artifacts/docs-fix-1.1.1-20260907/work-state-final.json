@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/smoke_work_state_current_stage.py"
+  ],
+  "started_at": "2026-09-07T14:14:15.759835+00:00",
+  "finished_at": "2026-09-07T14:14:36.342209+00:00",
+  "elapsed_seconds": 20.582,
+  "exit_code": 0,
+  "output": "PASS: work state current stage\n"
+}

@@ -6,39 +6,44 @@ should use the complete command runbook in
 
 ## One-time workstation setup
 
-Register ProcessForge MCP once for the Codex host/user:
+First follow the [installation guide](docs/getting-started/installation.md)
+and check the [requirements](docs/requirements.md). You can use the Python CLI
+without MCP or a background service.
+
+If you use Codex with MCP, register ProcessForge once for that host/user:
 
 ```bash
 python <processforge-root>/bin/pf.py codex-mcp install --workplace <workplace-root> --apply
 ```
 
 Codex then owns and starts one connected stdio MCP child for each host
-connection. Do not start MCP manually. For Forge on Windows, also install the
-one-per-workplace Runtime task once:
+connection. Do not start MCP manually. If your Forge coordination needs the
+background service on Windows, install one Runtime task for the workplace:
 
 ```powershell
 python <processforge-root>/bin/pf.py runtime autostart install --workplace <workplace-root> --apply
 ```
 
-Garage does not need Runtime autostart. After setup, everyday use is simply
-`cd <project-root>` and start Codex.
+Garage does not need Runtime autostart. After setup, open the project in your
+agent, read its root `AGENTS.md`, and use the current context and governed Work.
+See the [agent runbook](docs/getting-started/agent-prompts.md) for the full cycle.
 
 | | Garage | Forge |
 |---|---|---|
 | Runtime daemon | Not required | Required when coordination uses it |
-| MCP | Started by the host | Started by the host |
+| MCP | Optional; started by the host | Optional; started by the host |
 | Ledger session | Not needed for context/search/resolve/work.start | Used for orchestration |
 | Hooks | Optional host telemetry | Optional host-specific telemetry |
 | Director | No | Yes when coordination requires it |
-| Runtime autostart | Not needed | Recommended/required |
+| Runtime autostart | Not needed | Optional when using the service |
 
 ## 1. Prepare The Tool
 
 ```text
 Prepare ProcessForge on this machine. It is located at <processforge-root>.
 
-Inspect the README and use docs/getting-started/agent-prompts.md as the
-operational command runbook.
+Inspect the README, docs/requirements.md and the installation guide. Use
+docs/getting-started/agent-prompts.md as the operational command runbook.
 
 Verify that the distribution root is usable and tell me the exact path I should
 use as <processforge-root>.
@@ -98,7 +103,7 @@ Inspect the repository first, choose a conservative project type, connect it to
 the existing workplace, and first verify that required workplace resources are
 already present or explicitly out of scope.
 
-Create the project-local .pf layer, read the generated .pf/START_AGENT_HERE.md,
+Create the project-local .pf state and root AGENTS.md, read the entry contract,
 run doctor-project, refresh the project context, and summarize what ProcessForge
 now knows about the project. Run project-context-check and confirm whether the
 snapshot is fresh, fresh_with_updates, stale, or broken.
@@ -222,4 +227,4 @@ For update checks, start with `python bin/pf.py update candidates refresh
 Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
 `.agents`, or similar agent configuration folders. Install ProcessForge once as
 a tool and tell the agent where it is installed; project-specific instructions
-live in `.pf/START_AGENT_HERE.md`.
+use root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). See [entry compatibility](docs/concepts/agent-entry.md); a pointer is not delivery proof.

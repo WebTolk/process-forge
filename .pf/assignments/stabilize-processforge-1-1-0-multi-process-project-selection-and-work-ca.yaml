@@ -3,9 +3,9 @@ id: stabilize-processforge-1-1-0-multi-process-project-selection-and-work-ca
 title: Stabilize ProcessForge 1.1.0 multi-process project selection and Work Capsule is
 run_id: garage-stabilize-processforge-1-1-0-multi-process-project-selection-and
 process: task-batch-execution
-status: in_progress
+status: done
 created_at: '2026-09-03T06:49:22Z'
-updated_at: '2026-09-03T09:42:07Z'
+updated_at: '2026-09-07T08:43:58Z'
 objective: Stabilize ProcessForge 1.1.0 multi-process project selection and Work Capsule isolation according to the supplied master prompt.
 platform: ""
 selected_specializations:
@@ -19,22 +19,65 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: Recovered the stale assurance task with accepted evidence, then completed the governed run through the pinned Work Capsule transition. The generated run summary and run handoff are authoritative final artifacts; public release qualification remains out of scope.
   artifacts:
-    []
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/run-record.md
+    - .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+    - .pf/logs/multi-process-work-capsule-stability-20260903.md
+    - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-code-review.md
+    - .pf/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and/task-index.md
 execution_mode:
   kind: implementation
   code_changes_allowed: true
   artifact_changes_allowed: true
   requires_review: true
 stage: run-summary
-stage_status: in_progress
+stage_status: completed
 stage_execution:
   started_at: '2026-09-03T09:42:07Z'
   evidence:
-    []
-  notes: ""
+    -
+      kind: attestation
+      id: attestation-1
+      status: ready
+      summary: '{kind:artifact,artifact_id:run-summary,status:ready,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+      recorded_at: '2026-09-07T08:43:26Z'
+    -
+      kind: attestation
+      id: attestation-2
+      status: ready
+      summary: '{kind:artifact,artifact_id:run-handoff,status:ready,path:.pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md}'
+      recorded_at: '2026-09-07T08:43:26Z'
+    -
+      kind: attestation
+      id: attestation-3
+      status: ready
+      summary: '{kind:gate,gate_id:run-summary-created,status:passed,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+      recorded_at: '2026-09-07T08:43:26Z'
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+      recorded_at: '2026-09-07T08:43:55Z'
+      sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+      recorded_at: '2026-09-07T08:43:55Z'
+      sha256: 'sha256:94af4191df5e54878813498f8defbc7988d420c5b18be2a17f040438bd43fce5'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+      recorded_at: '2026-09-07T08:43:55Z'
+      sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+  notes: Recovered the stale assurance task with accepted evidence, then completed the governed run through the pinned Work Capsule transition. The generated run summary and run handoff are authoritative final artifacts; public release qualification remains out of scope.
 stage_history:
   -
     stage_id: run-intake
@@ -163,6 +206,54 @@ stage_history:
         recorded_at: '2026-09-03T09:42:05Z'
         sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
     notes: Independent architecture and code reviews and the run-doctor evidence are recorded for the completed multi-process stabilization.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-03T09:42:07Z'
+    completed_at: '2026-09-07T08:43:58Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: attestation
+        id: attestation-1
+        status: ready
+        summary: '{kind:artifact,artifact_id:run-summary,status:ready,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+        recorded_at: '2026-09-07T08:43:26Z'
+      -
+        kind: attestation
+        id: attestation-2
+        status: ready
+        summary: '{kind:artifact,artifact_id:run-handoff,status:ready,path:.pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md}'
+        recorded_at: '2026-09-07T08:43:26Z'
+      -
+        kind: attestation
+        id: attestation-3
+        status: ready
+        summary: '{kind:gate,gate_id:run-summary-created,status:passed,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+        recorded_at: '2026-09-07T08:43:26Z'
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+        recorded_at: '2026-09-07T08:43:55Z'
+        sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+        recorded_at: '2026-09-07T08:43:55Z'
+        sha256: 'sha256:94af4191df5e54878813498f8defbc7988d420c5b18be2a17f040438bd43fce5'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+        recorded_at: '2026-09-07T08:43:55Z'
+        sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+    notes: Recovered the stale assurance task with accepted evidence, then completed the governed run through the pinned Work Capsule transition. The generated run summary and run handoff are authoritative final artifacts; public release qualification remains out of scope.
 process_execution:
   process_id: task-batch-execution
   process_version: 1.0.0

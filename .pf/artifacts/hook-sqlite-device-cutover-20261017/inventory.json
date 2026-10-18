@@ -1,0 +1,21 @@
+{
+  "projects": [
+    {
+      "director_enabled": true,
+      "effective_mode": "organized",
+      "flow_root": ".pf",
+      "project_id": "process-forge",
+      "project_root": "D:\\Dev\\process-forge"
+    },
+    {
+      "director_enabled": false,
+      "effective_mode": "simple",
+      "flow_root": ".pf",
+      "project_id": "wt-image-resize-and-convert-joomla-plugin",
+      "project_root": "D:\\Dev\\wt-image-resize-and-convert-joomla-plugin"
+    }
+  ],
+  "sessions_count": 248,
+  "legacy_raw_files": 331,
+  "legacy_raw_bytes": 262453444
+}

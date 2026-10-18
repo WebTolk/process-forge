@@ -1,0 +1,4 @@
+[
+  {"kind":"artifact","id":"task-result","path":".pf/artifacts/docs-fix-1.1.1-20260907/integration-report.md"},
+  {"kind":"gate","id":"all-blocking-tasks-completed","status":"passed","path":".pf/artifacts/docs-fix-1.1.1-20260907/integration-report.md"}
+]

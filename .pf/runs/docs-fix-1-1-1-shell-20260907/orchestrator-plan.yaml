@@ -1,0 +1,265 @@
+schema_version: 1
+run:
+  id: docs-fix-1-1-1-shell-20260907
+  title: PF 1.1.1 documentation remediation D01-D08
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - scope ownership
+    - worker launch and evidence collection
+    - independent source review
+    - integration and final verification
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+workers:
+  -
+    id: docs111-mechanical
+    title: 'D01 D05 D08: bounded documentation examples'
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.3-codex-spark
+    reasoning_effort: low
+    allowed_files:
+      - docs/ru/concepts/resource-search-index.md
+      - docs/concepts/assignment-front-matter.md
+      - docs/validation/validation.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-brief.md
+    required_outputs:
+      -
+        id: docs111-mechanical-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: docs111-workflow
+    title: 'D02 D03 D04 D07: Garage workflow and evidence'
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.4-mini
+    reasoning_effort: medium
+    allowed_files:
+      - prompts/task-batch-execution-agent.md
+      - docs/getting-started/task-batch-workflow.md
+      - docs/ru/getting-started/task-batch-workflow.md
+      - docs/concepts/runtime-mcp.md
+      - docs/ru/concepts/runtime-mcp.md
+      - docs/getting-started/agent-prompts.md
+      - docs/ru/getting-started/agent-prompts.md
+      - docs/concepts/declarative-process-execution.md
+      - docs/index.md
+      - docs/ru/index.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-brief.md
+    required_outputs:
+      -
+        id: docs111-workflow-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: docs111-update
+    title: 'D06: synchronize RU Workplace update instructions'
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.3-codex-spark
+    reasoning_effort: low
+    allowed_files:
+      - docs/ru/getting-started/update-system.md
+      - docs/ru/concepts/core-update-manifest.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-brief.md
+    required_outputs:
+      -
+        id: docs111-update-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: docs111-tests
+    title: Regression tests for documented CLI and contracts
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.4-mini
+    reasoning_effort: medium
+    allowed_files:
+      - tools/smoke_docs_current_code_contract.py
+      - tools/smoke_docs_agent_no_manual_infra.py
+      - tools/smoke_context_freshness_vs_execution_readiness.py
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-brief.md
+    required_outputs:
+      -
+        id: docs111-tests-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md
+    runtime_driver: codex-exec
+    depends_on:
+      - docs111-mechanical
+      - docs111-workflow
+      - docs111-update
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: docs111-review
+    title: Independent post-implementation review
+    role: reviewer
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-brief.md
+    execution_mode: assurance
+    writer: false
+    model: gpt-5.4-mini
+    reasoning_effort: medium
+    allowed_files:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-brief.md
+    required_outputs:
+      -
+        id: docs111-review-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-report.md
+    runtime_driver: codex-exec
+    depends_on:
+      - docs111-tests
+    allow_subagents: false
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/docs-fix-1.1.1-20260907/integration-report.md
+metadata:
+  authorization: Operator explicitly requested PF shell workers, junior models and spark for mechanical fixes; separate orchestration run implements that request without modifying pinned single-agent carrier.
+  carrier_run: garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1

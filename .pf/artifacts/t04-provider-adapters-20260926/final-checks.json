@@ -1,0 +1,69 @@
+{
+  "started_at": "2026-09-26T04:48:53.372312+00:00",
+  "checks": [
+    {
+      "command": [
+        "tools/smoke_provider_adapter_admission.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: trusted custom provider start/message, duplicate replay repair/idempotence, untrusted identity/provenance denial, forged Codex identity replay denial, partial-native raw-only denial, native-ID quarantine, duplicate registry rejection, Host/kernel/replay sources unchanged\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-schemas.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": ""
+    }
+  ],
+  "syntax_docs": "PASS",
+  "source_sha256": {
+    "tools/pf_runtime/provider_adapters.py": "a8dbf3bcc9f7bb70fb46a7c1d47da85820f31d5a5ad9fb6a37336b0c068e123d",
+    "tools/pf_runtime/builtin_provider_adapters.py": "043dfb0745e76aeb03bbe64baea0c84701ff9d6fc16e2ca204893a272ab1e847",
+    "tools/pf_runtime/codex_adapters.py": "38c6a8b17ecb7753f50b81080d0789350b207342cb3f1b079afed3c3191311df",
+    "tools/pf_runtime/host.py": "b8d3d813fa3e3c5a7e16546e277b9df9a7d778f2763e87e965332a96e6d7bcf4",
+    "tools/pf_runtime/session_replay.py": "f1bb4214f304c6420cd79326de53f6a496d49962771aa827047f42aff115bfc8",
+    "src/processforge_core/host_integration.py": "489d9810c12abbf74f8b084de150e7f333b85af4eff3610ca17c24378b67c6bf",
+    "src/processforge_core/project_initialization.py": "2890b3ecddc94d903027d9e6ef4f60ce264d5d9152827e6a38915ba7564df7c2",
+    "src/processforge_core/work_context.py": "6236204f0f3666881bd53090bf097a4210b907c3e7a2e0ee0ac0c28c52ed6f5e",
+    "tools/processforge.py": "76d66ab4b6b1ac7b50c60d1156a90da2317c9580af2d18be4dc48c23a2753369",
+    "tools/smoke_provider_adapter_admission.py": "acb83d5218105e0dfaa6bd32fd851b8bd337b4559246249828c67c2af0c41d31",
+    "tools/smoke_conversation_completeness.py": "41925bd2195236ea245a2f54fb33ca0faa4ed6b8dea6c7be366142bda199a562",
+    "tools/smoke_authenticated_report_content.py": "2fa5cc6bfa828ba7e958e77510385b197f42abfee8b139a86d2cc98b5d1195a2",
+    "tools/smoke_codex_exec_worker.py": "bccac08aeb0b655b86e424170a06c6d9787a5b86543fd600de5cd6b936330b36",
+    "docs/concepts/provider-adapters.md": "dde27faff4afe85af2d7a7731215bef37c7fe755c3994b6ab44b00557ef0c9ec",
+    "docs/ru/concepts/provider-adapters.md": "eaa09b644e4a21f73f30a32ffa01c820b7fa870230bf260ebf279d7763d8c6c7",
+    "docs/concepts/work-execution-contract.md": "a2fd36c4ff78b097172807a5d295c198a156b96b0f181ced7fd1a9e6f204bf0d"
+  },
+  "raw_kernel_unchanged": "7b3a99288d1e275eda98774f787a1b7b109c47c97bb55dcb2178298d11c5407a",
+  "main_legacy_capsule_sha256": "d503b512dfa96ae942fd873f067405ffc8899cf36c29f06d4d09bc77a06add75",
+  "finished_at": "2026-09-26T04:50:39.671028+00:00"
+}

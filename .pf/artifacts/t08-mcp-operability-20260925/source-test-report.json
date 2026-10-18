@@ -1,0 +1,123 @@
+{
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_core_update_missing_owned.py"
+      ],
+      "elapsed_seconds": 0.347,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:26:34Z",
+      "label": "smoke_core_update_missing_owned",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:26:34Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_classifier_distribution_parity.py"
+      ],
+      "elapsed_seconds": 3.841,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:26:38Z",
+      "label": "smoke_classifier_distribution_parity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:26:34Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_core_update_migration_sources.py"
+      ],
+      "elapsed_seconds": 0.365,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:26:39Z",
+      "label": "smoke_core_update_migration_sources",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:26:38Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_mcp_jsonrpc_validation.py"
+      ],
+      "elapsed_seconds": 0.79,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:26:39Z",
+      "label": "smoke_mcp_jsonrpc_validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:26:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_core_update_manifest.py"
+      ],
+      "elapsed_seconds": 9.968,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:26:49Z",
+      "label": "smoke_core_update_manifest",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:26:39Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_project_init_local_search_mcp.py"
+      ],
+      "elapsed_seconds": 43.99,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:27:33Z",
+      "label": "smoke_project_init_local_search_mcp",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:26:49Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925\\tools\\smoke_mcp_missing_session_diagnostics.py"
+      ],
+      "elapsed_seconds": 0.347,
+      "exit_code": 0,
+      "finished_at": "2026-09-25T14:27:34Z",
+      "label": "smoke_mcp_missing_session_diagnostics",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-25T14:27:33Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    }
+  ],
+  "elapsed_seconds": 59.649,
+  "finished_at": "2026-09-25T14:27:34Z",
+  "public": false,
+  "public_checks": [],
+  "result": "PASS",
+  "schema_version": 1,
+  "started_at": "2026-09-25T14:26:34Z"
+}

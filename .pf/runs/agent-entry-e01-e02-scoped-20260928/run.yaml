@@ -1,0 +1,31 @@
+schema_version: 1
+id: agent-entry-e01-e02-scoped-20260928
+title: Scoped E01 E02 portable entry implementation
+process: software-feature-development
+status: completed
+created_at: '2026-09-28T09:27:23Z'
+updated_at: '2026-10-02T16:33:30Z'
+objective: 'Successor to entry bootstrap: implement E01 E02 with explicit source scope and R13 budgets'
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: agent-entry-e01-e02-scoped
+    assignment: .pf/assignments/agent-entry-e01-e02-scoped.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/agent-entry-e01-e02-scoped-20260928/summary.md
+  - .pf/handoffs/runs/agent-entry-e01-e02-scoped-20260928-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

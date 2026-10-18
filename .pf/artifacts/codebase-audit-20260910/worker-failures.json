@@ -1,0 +1,41 @@
+[
+  {
+    "task": "audit-core",
+    "status": "failed",
+    "pid": 16896,
+    "exit": {
+      "schema_version": 1,
+      "exit_code": 1,
+      "status": "failed"
+    },
+    "endpoint_failure": "403 Forbidden",
+    "report_present": false,
+    "logs": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-core"
+  },
+  {
+    "task": "audit-mcp",
+    "status": "failed",
+    "pid": 19232,
+    "exit": {
+      "schema_version": 1,
+      "exit_code": 1,
+      "status": "failed"
+    },
+    "endpoint_failure": "403 Forbidden",
+    "report_present": false,
+    "logs": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-mcp"
+  },
+  {
+    "task": "audit-hooks",
+    "status": "failed",
+    "pid": 6064,
+    "exit": {
+      "schema_version": 1,
+      "exit_code": 1,
+      "status": "failed"
+    },
+    "endpoint_failure": "403 Forbidden",
+    "report_present": false,
+    "logs": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-hooks"
+  }
+]

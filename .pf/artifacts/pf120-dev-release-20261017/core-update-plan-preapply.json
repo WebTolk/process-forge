@@ -1,0 +1,9 @@
+{
+  "label": "core-update-plan-preapply",
+  "started_at": "2026-10-17T19:11:59.656994+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2.633902300032787,
+  "raw_sha256": "0a046eafb5cb90d68e086b765001589b58fc79cc3e315f2069230aab8cda7965",
+  "raw_bytes": 67575,
+  "raw_retained": ".pf/tmp/pf120-dev-release-20261017/core-update-plan-preapply.log"
+}

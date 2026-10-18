@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "architecture",
+    "path": ".pf/artifacts/t10-operator-20260926/architecture.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "implementation-plan",
+    "path": ".pf/artifacts/t10-operator-20260926/architecture.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "decision-log",
+    "path": ".pf/artifacts/t10-operator-20260926/architecture.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "architecture-plan-ready",
+    "path": ".pf/artifacts/t10-operator-20260926/architecture.md",
+    "status": "passed"
+  }
+]

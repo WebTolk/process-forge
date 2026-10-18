@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "checks": [
+    "first envelope and order retained",
+    "exact and time-only retry coalesced",
+    "original bytes unchanged",
+    "content conflicts refused",
+    "malformed input refused"
+  ]
+}

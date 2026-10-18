@@ -1,0 +1,23 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/delivery-report.md",
+    "summary": "Source-ready handoff; delivery profile skipped because commit, install and restart are outside this task scope."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/delivery-report.md",
+    "summary": "Source-level readiness accepted after scoped assurance checks passed."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/delivery-report.md",
+    "summary": "Delivery skipped with explicit reason: no device delivery scope was granted for this task."
+  }
+]

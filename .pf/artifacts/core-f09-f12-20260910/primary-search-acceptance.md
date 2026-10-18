@@ -1,0 +1,2 @@
+# Primary acceptance of f1011-search
+Worker execution completed exit 0; collection rejected transcript/report cardinality. Original report retained. Primary assumed source/test ownership, corrected harness and mode ordering, invalidated old derived index semantics, and independently executed four search smokes successfully; see search-primary-final-tests.json and integration-report.md. Complete the shell assignment by explicit primary acceptance, not by waiving output or rewriting a transcript.

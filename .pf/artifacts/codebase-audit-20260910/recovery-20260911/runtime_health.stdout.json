@@ -1,0 +1,25 @@
+[
+  {
+    "case": "invalid_task_order",
+    "scheduler_alive": true,
+    "escaped": [],
+    "internal_health": "degraded",
+    "reported_health": "ready",
+    "reported_status": "ready",
+    "last_scheduler_error": "invalid literal for int() with base 10: 'invalid'"
+  },
+  {
+    "case": "missing_assignment",
+    "scheduler_alive": false,
+    "escaped": [
+      {
+        "type": "SystemExit",
+        "error": "FAIL: task/assignment not found: missing"
+      }
+    ],
+    "internal_health": "ready",
+    "reported_health": "ready",
+    "reported_status": "ready",
+    "last_scheduler_error": null
+  }
+]

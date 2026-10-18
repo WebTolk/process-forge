@@ -1,0 +1,11 @@
+{
+  "previous_owner": {
+    "created_at": "2026-10-17T06:18:26Z",
+    "instance_id": "7e99504388824711a0e0c38b5fa400cf",
+    "pid": 16976
+  },
+  "operator_authorization": "User explicitly requested complete dev device update and journal migration, including required writer quiescence. Earlier managed stop refused 409 due busy/unknown guard; no PF executor processes observed. This is managed authenticated force shutdown, no Runtime OS kill.",
+  "returncode": 0,
+  "stdout": "RUNTIME: stopped\n",
+  "stderr": ""
+}

@@ -1,15 +1,23 @@
 schema_version: 1
 id: software-feature-development
 name: Software Feature Development
-version: 1.1.0
+version: 1.2.0
 status: active
-description: Guides software work from orchestration and intake through investigation, domain understanding, architecture, implementation, assurance, release delivery, and evolution capture. Release and evolution stages may be completed as not_applicable with evidence when the task does not require delivery.
+description: Guides one cohesive software result through orchestration, intake, investigation, domain understanding, architecture, iterative implementation, integrated assurance, release delivery and evolution capture. Internal iterations and nested worker contributions stay inside the parent result boundary. Release and evolution stages may be completed as not_applicable with evidence when delivery is not required.
 required_capabilities:
 - repository_read
 - repository_write
 - test_running
 - review
 metadata:
+  application_guidance:
+    delivery_unit: One cohesive, independently reviewable result defines the Run boundary; a function, tool call, worker response, commit or elapsed time does not. A small independent fix can be a complete result.
+    inner_iterations: Repeat domain and architecture reasoning, approved revisions, implementation and targeted checks inside the current Work grants. Iteration completion does not itself require new admission, final assurance or delivery.
+    worker_packages: When delegation is authorized, give a worker a substantial independent package or batch related small work. A full child process may be nested inside the parent; its completion contributes to parent acceptance and does not restart or publish the parent.
+    verification: Plan focused checks for iterations and risk-based assurance for the integrated candidate. Reuse earlier evidence only while applicable; rerun checks invalidated by later edits.
+    delivery: Apply explicit project and operator commit, publication, release and installation requirements at the agreed delivery boundary; record not_applicable decisions with reason and evidence.
+    artifacts: Keep artifacts proportional to the decisions and reference current validated facts. Reuse evidence without duplicating the lifecycle per iteration; approved artifacts, process pins and capsules remain immutable.
+    authority: Guidance does not grant delegation, broaden file/tool scope, add stage transitions or bypass gates. Use PF-returned outcomes and governed revisions/handoffs when required.
   lifecycle_modes:
     full:
       description: Full software lifecycle from intake to evolve.
@@ -126,7 +134,7 @@ roles:
 stages:
 - id: orchestration
   title: Orchestration
-  description: Prepare execution context, lifecycle mode, coordination mode, run/task ids, context snapshot, and available delivery/build profile.
+  description: Prepare context and lifecycle mode; identify the cohesive delivery unit, acceptance boundary, parent Run/Assignment when nested, coordination mode and available delivery/build profile.
   required_inputs: []
   produced_artifacts:
   - task-record
@@ -146,7 +154,7 @@ stages:
   - context-ready
 - id: intake-scope
   title: Intake And Scope
-  description: Capture objective, boundaries, non-goals, acceptance criteria, risks, unknowns, and release/delivery requirement.
+  description: Capture the result objective, included and deferred work, acceptance criteria, risks, unknowns and delivery requirement; distinguish internal iterations and worker contributions from independent deliveries.
   required_inputs:
   - execution-context-summary
   - lifecycle-mode-decision
@@ -169,7 +177,7 @@ stages:
   - scope-accepted
 - id: investigation
   title: Investigation
-  description: Inspect existing code, affected areas, configs, tests, docs, compatibility, migration risk, and evidence paths.
+  description: Inspect affected code, configs, tests, docs, compatibility and evidence paths; reuse current validated facts and investigate gaps relevant to the agreed result.
   required_inputs:
   - scope
   produced_artifacts:
@@ -193,7 +201,7 @@ stages:
   - impact-understood
 - id: domain-modeling
   title: Domain Modeling
-  description: Capture domain terms, rules, constraints, and platform/framework rules from project context and platform contracts.
+  description: Capture or reference current domain terms, rules, constraints and platform/framework rules; record affected rules and refinements rather than recreating unchanged domain documents for each iteration.
   required_inputs:
   - investigation-report
   - impact-analysis
@@ -218,7 +226,7 @@ stages:
   - domain-rules-captured
 - id: architecture-plan
   title: Architecture Plan
-  description: Choose approach, file/module plan, verification outline, trade-offs, rollback, and migration concerns.
+  description: Choose the cohesive approach, dependencies, file/module ownership and implementation plan; distinguish targeted iteration checks from integrated assurance and delivery, with trade-offs and rollback concerns.
   required_inputs:
   - domain-rules
   produced_artifacts:
@@ -241,7 +249,7 @@ stages:
   - architecture-plan-ready
 - id: implementation
   title: Implementation
-  description: Make bounded changes, preserve unrelated files, collect evidence, and update decisions when the plan changes.
+  description: Build the integrated candidate through as many scoped reasoning, approved revision, edit and targeted-check iterations as needed; preserve unrelated files and record changes without restarting the lifecycle for each contribution.
   required_inputs:
   - implementation-plan
   produced_artifacts:
@@ -272,7 +280,7 @@ stages:
   - implementation-scope-respected
 - id: code-assurance
   title: Code Assurance
-  description: Review behavior, risks, static checks, tests, browser/UI verification when applicable, regressions, and known limitations.
+  description: Review the accumulated candidate against acceptance criteria and the risk-based verification plan, including applicable integration, regression and browser/UI checks; reuse valid evidence and rerun checks affected by later edits.
   required_inputs:
   - change-summary
   produced_artifacts:
@@ -298,7 +306,7 @@ stages:
   - assurance-complete
 - id: release-delivery
   title: Release Delivery
-  description: Decide release readiness, prepare package or patch when requested, run delivery/build profile when configured, and record release evidence or not_applicable reason.
+  description: Apply the agreed result-level delivery requirement and explicit project/operator policies, run the configured profile when required, and record package/publication evidence or a justified not_applicable decision.
   required_inputs:
   - test-report
   produced_artifacts:
@@ -333,7 +341,7 @@ stages:
   - delivery-profile-run-or-skipped-with-reason
 - id: evolve
   title: Evolve
-  description: Capture lessons learned and propose updates to rules, templates, knowledge packages, checks, delivery profiles, or agent instructions.
+  description: Consolidate lessons from the result and its internal/worker iterations into evidence-backed proposals for rules, templates, knowledge, checks, delivery profiles or instructions at the Run boundary.
   required_inputs:
   - delivery-report
   produced_artifacts:

@@ -1,0 +1,12 @@
+{
+  "revision": "1aecc18b6824204ca45ab30241b92d26e6d583a5",
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-f0102-baseline-runtime-5itq2wiz\\public\\tools\\smoke_long_lived_runtime.py"
+  ],
+  "exit_code": 1,
+  "elapsed_seconds": 24.594,
+  "same_startup_failure": true,
+  "public_files": 946,
+  "source": "git archive exact baseline public files without .pf/.git"
+}
