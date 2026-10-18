@@ -15,6 +15,7 @@ provides explicit paths and choices.
 
 - [Top-level README](../README.md)
 - [Quickstart prompts](../QUICKSTART.md)
+- [Requirements and memory planning](requirements.md)
 - [Installation](getting-started/installation.md)
 - [Guided workplace setup](getting-started/guided-workplace-setup.md)
 - [Initialization order](getting-started/initialization-order.md)
@@ -25,6 +26,7 @@ provides explicit paths and choices.
 
 ## For AI Agents
 
+- [Requirements and optional infrastructure](requirements.md)
 - [Agent command runbook and prompts](getting-started/agent-prompts.md)
 - [Guided workplace setup agent prompt](../prompts/guided-workplace-setup-agent.md)
 - [Automatic workplace initialization agent prompt](../prompts/workplace-initialization-agent.md)
@@ -34,6 +36,7 @@ provides explicit paths and choices.
 
 ## Getting Started
 
+- [Requirements](requirements.md)
 - [First run](getting-started/first-run.md)
 - [Installation](getting-started/installation.md)
 - [Initialization order](getting-started/initialization-order.md)
@@ -95,6 +98,21 @@ provides explicit paths and choices.
 - [Multi-agent orchestration](concepts/multi-agent-orchestration.md)
 - [Known limitations](known-limitations.md)
 
+For everyday work, start with [Garage and governed Work](concepts/garage-core.md).
+Use [continuation](concepts/work-continuation.md) to resume a selected Work after a
+session change. The [agent runbook](getting-started/agent-prompts.md) includes
+the CLI path when MCP is unavailable.
+
+## Developer And Maintainer Reference
+
+These pages explain implementation and validation; they are not setup steps:
+
+- [Python Core architecture](concepts/python-core-structure.md)
+- [Document reads and cache boundaries](concepts/document-reads.md)
+- [SQLite journal storage and migration](concepts/hook-journal-sqlite.md)
+- [Development audit evidence](audits/canonical-work-selection-20261016.md)
+- [Validation](validation/validation.md)
+
 ## Layer Order
 
 1. Workplace device: computer, laptop, server, or runner host.
@@ -110,6 +128,8 @@ Process definitions remain platform-agnostic process mechanics.
 
 ## Release And Validation
 
+- [What changes in 1.2.0](releases/1.2.0.md)
+- [Upgrade and migration steps](releases/1.2.0-migration.md)
 - [Release checklist](release-checklist.md)
 - [Release publishing](maintainers/release-publishing.md)
 - [Initial release notes](releases/initial-release.md)

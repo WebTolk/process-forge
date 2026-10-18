@@ -25,24 +25,62 @@ class MetricsConfig:
 
 
 @dataclass(frozen=True)
+class TemporaryFilesConfig:
+    mode: str = "notify"
+    max_age_hours: float = 168
+
+    def __post_init__(self) -> None:
+        _temporary_mode(self.mode)
+        _temporary_age(self.max_age_hours)
+
+
+def _temporary_mode(value: Any) -> None:
+    if type(value) is not str or value not in {"notify", "off"}:
+        raise InvalidConfiguration("configuration_temporary_files_mode_invalid")
+
+
+def _temporary_age(value: Any) -> None:
+    if type(value) not in (int, float) or not 1 <= value <= 87600 or not math.isfinite(value):
+        raise InvalidConfiguration("configuration_temporary_files_age_invalid")
+
+
+@dataclass(frozen=True)
+class TemporaryFilesOverrides:
+    mode: str | None = None
+    max_age_hours: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.mode is not None:
+            _temporary_mode(self.mode)
+        if self.max_age_hours is not None:
+            _temporary_age(self.max_age_hours)
+
+
+@dataclass(frozen=True)
 class RuntimeConfig:
     metrics: MetricsConfig = field(default_factory=MetricsConfig)
     garage_hooks: bool = False
+    temporary_files: TemporaryFilesConfig = field(default_factory=TemporaryFilesConfig)
 
     def __post_init__(self) -> None:
         if type(self.metrics) is not MetricsConfig:
             raise InvalidConfiguration("configuration_metrics_invalid")
         if type(self.garage_hooks) is not bool:
             raise InvalidConfiguration("configuration_garage_hooks_invalid")
+        if type(self.temporary_files) is not TemporaryFilesConfig:
+            raise InvalidConfiguration("configuration_temporary_files_invalid")
 
 
 @dataclass(frozen=True)
 class RuntimeOverrides:
     garage_hooks: bool | None = None
+    temporary_files: TemporaryFilesOverrides = field(default_factory=TemporaryFilesOverrides)
 
     def __post_init__(self) -> None:
         if self.garage_hooks is not None and type(self.garage_hooks) is not bool:
             raise InvalidConfiguration("configuration_garage_hooks_invalid")
+        if type(self.temporary_files) is not TemporaryFilesOverrides:
+            raise InvalidConfiguration("configuration_temporary_files_invalid")
 
 
 @dataclass(frozen=True)
@@ -107,10 +145,12 @@ class PFConfig:
     @classmethod
     def from_dict(cls, value: dict) -> PFConfig:
         root = _section(value, {"schema_version", "runtime", "logging"})
-        runtime = _section(root.get("runtime", {}), {"metrics", "garage_hooks"})
+        runtime = _section(root.get("runtime", {}), {"metrics", "garage_hooks", "temporary_files"})
         metrics = _section(runtime.get("metrics", {}), {"interval_seconds"})
+        temporary = _section(runtime.get("temporary_files", {}), {"mode", "max_age_hours"})
         logging = _section(root.get("logging", {}), {"raw_hooks", "events"})
-        return cls(runtime=RuntimeConfig(MetricsConfig(**metrics), runtime.get("garage_hooks", False)), schema_version=root.get("schema_version", 1),
+        return cls(runtime=RuntimeConfig(MetricsConfig(**metrics), runtime.get("garage_hooks", False),
+                                         TemporaryFilesConfig(**temporary)), schema_version=root.get("schema_version", 1),
                    logging=LoggingConfig(**logging))
 
     def to_dict(self) -> dict:
@@ -122,6 +162,7 @@ class PFConfig:
     def with_changes(self, changes: dict[str, Any]) -> PFConfig:
         return self.from_dict(_with_changes(self.to_dict(), changes, {
             "runtime.metrics.interval_seconds", "runtime.garage_hooks", "logging.raw_hooks", "logging.events",
+            "runtime.temporary_files.mode", "runtime.temporary_files.max_age_hours",
         }))
 
     def for_project(self, overrides: ProjectPFConfig) -> PFConfig:
@@ -131,6 +172,9 @@ class PFConfig:
                   for key, value in asdict(overrides.logging).items()}
         garage_hooks = overrides.runtime.garage_hooks
         runtime = self.runtime if garage_hooks is None else replace(self.runtime, garage_hooks=garage_hooks)
+        temporary = {key: getattr(runtime.temporary_files, key) if value is None else value
+                     for key, value in asdict(overrides.runtime.temporary_files).items()}
+        runtime = replace(runtime, temporary_files=TemporaryFilesConfig(**temporary))
         return replace(self, runtime=runtime, logging=LoggingConfig(**values))
 
 
@@ -153,9 +197,10 @@ class ProjectPFConfig:
     def from_dict(cls, value: dict) -> ProjectPFConfig:
         root = _section(value, {"schema_version", "logging", "runtime"})
         logging = _section(root.get("logging", {}), {"raw_hooks", "events"})
-        runtime = _section(root.get("runtime", {}), {"garage_hooks"})
+        runtime = _section(root.get("runtime", {}), {"garage_hooks", "temporary_files"})
+        temporary = _section(runtime.get("temporary_files", {}), {"mode", "max_age_hours"})
         return cls(logging=LoggingOverrides(**logging), schema_version=root.get("schema_version", 1),
-                   runtime=RuntimeOverrides(**runtime))
+                   runtime=RuntimeOverrides(runtime.get("garage_hooks"), TemporaryFilesOverrides(**temporary)))
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -166,4 +211,5 @@ class ProjectPFConfig:
     def with_changes(self, changes: dict[str, Any]) -> ProjectPFConfig:
         return self.from_dict(_with_changes(self.to_dict(), changes, {
             "logging.raw_hooks", "logging.events", "runtime.garage_hooks",
+            "runtime.temporary_files.mode", "runtime.temporary_files.max_age_hours",
         }))

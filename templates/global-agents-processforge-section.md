@@ -23,4 +23,7 @@ Rules:
 7. Follow assignment and immutable-capsule boundaries.
 8. Do not install, start, or repair PF Runtime, MCP, host hooks, or Agent Ledger
    during ordinary project work; report operator-level infrastructure blockers.
+9. Put arbitrary agent scratch only in the project's `.pf/tmp/`. Durable artifacts
+   keep their established locations; atomic replacement staging stays beside its
+   destination. Age alone never authorizes deletion.
 <!-- PROCESSFORGE:END -->

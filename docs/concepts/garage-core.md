@@ -5,6 +5,11 @@ a `.pf` context. It lets an agent understand the project, search approved local
 knowledge, and resolve selected resources before any governed work, Runtime
 session, hook replay, chat transcript, Director, or multi-agent lease exists.
 
+Use Garage to establish what the project permits before changing it. Governed
+Work then records the selected process, scope, evidence and handoff so another
+human or agent can verify and continue the result. See the shared
+[requirements](../requirements.md) before setup.
+
 ## Levels
 
 Level 1, Garage essentials:
@@ -109,15 +114,20 @@ metadata-only.
 The default agent path is:
 
 1. read root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project);
-2. call `pf.context` with `project_root`, or read the snapshot when MCP is
-   unavailable;
+2. call `pf.context` with `project_root`; when MCP is unavailable, use the
+   existing CLI and check the snapshot with `project-context-check`. Stop
+   dependent work if context is missing, stale, invalid or blocked;
 3. use `pf.search` for authorized project knowledge, templates, process, and
    tool metadata;
 4. use `pf.resolve` before opening a resource root;
 5. perform local read-only analysis;
-6. call `pf.work.start` with the substantive objective;
-7. call `pf.work.state`, satisfy the current obligations, and call
-   `pf.work.transition` with outcome and evidence;
+6. for new work, call `pf.work.start` with the substantive objective. For existing
+   work, discover and resume an exact [continuation](work-continuation.md);
+7. retain the returned `run_id`, `assignment_id` and `context.id`. Without a bound
+   session, pass these exact selectors to every Work state/transition call.
+   Verify the Assignment and immutable capsule, including scope and permissions;
+   satisfy the current obligations and call `pf.work.transition` with outcome
+   and evidence. Use `pf.work.search`/`pf.work.resolve` for Work resources;
 8. repeat until `action: run_completed`.
 
 For a multi-process project, call `pf.work.start` with an offered `process_id`
@@ -127,6 +137,16 @@ Completion can contain a handoff, next-work recommendation and an advisory
 session-continuity recommendation. With no active Work, a fresh `pf.context`
 can expose the latest relevant compact handoff continuation. Garage never
 creates or restarts an external session, Runtime, MCP, or Ledger session.
+
+Manual `run-create`, `task-create` and `task-complete` belong to the advanced
+[task-batch workflow](../getting-started/task-batch-workflow.md). They are not
+additional steps in this governed Work cycle. Its final transition writes the
+Run summary and handoff automatically; completion does not close a host session.
+
+The optional app-server runs Runtime scheduling for a workplace. The MCP host
+starts and owns its separate stdio adapter. Neither a running app-server nor
+host hooks are prerequisites for file-only Garage work. See
+[Runtime model](runtime-model.md) for the ownership boundary.
 
 ## Work resources and executor handoff
 

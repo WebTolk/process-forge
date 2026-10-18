@@ -1,5 +1,9 @@
 # Project journals in SQLite
 
+Project journals preserve hook acceptance and the facts used by Work checks.
+They are private operational data, separate from public artifacts and reports.
+Use the [requirements](../requirements.md) for supported SQLite and storage.
+
 Each validated project owns two private local databases:
 
 | File | Owner and purpose |
@@ -32,6 +36,23 @@ and latest verification facts. It does not suspend Work or chat delivery. The
 existing transcript owner stores conversation bodies; event history refers to
 them. These settings do not erase earlier data or promise physical secure erasure.
 See [configuration](../authoring/workplace-configuration.md#project-history-and-raw-hooks).
+
+## Journals that remain NDJSON
+
+This migration changes the two project journals above. Other owners retain
+their own formats:
+
+| Scope | File | Purpose |
+| --- | --- | --- |
+| Workplace | `runtime/events/events.ndjson` | Resource and authoring events |
+| Workplace | `runtime/agent-ledger/sessions.ndjson` | Agent Ledger session history |
+| Project | `.pf/runtime/telemetry/<session-id>.ndjson` | Session telemetry |
+| Project | `.pf/runtime/chat/transcripts/session-<identity-digest>.ndjson` | Private conversation messages |
+
+Transcript reads also support the legacy session-named files. Do not feed
+these independent streams into the project journal migrator or rename them to
+SQLite. See [session telemetry](session-telemetry.md), [chat relay](chat-relay.md)
+and [workplace resources](workplace-resources.md).
 
 ## Temporary file migrator
 

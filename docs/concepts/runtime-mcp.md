@@ -17,6 +17,14 @@ host-owned: Codex starts the Python process from Codex MCP configuration and
 owns the stdin/stdout pipes. It is not registered as a Windows scheduled task or
 detached background service.
 
+The optional **pf-app-server** is the separate workplace Runtime service for
+scheduling and orchestration. This stdio facade calls shared Core services;
+Garage context and governed Work do not require a running app-server. Use the
+existing CLI when no MCP connection is available. See
+[Garage Core](garage-core.md) and [requirements](../requirements.md).
+
+## Implementation reference: stdio transport
+
 At startup, the server configures standard stdin and stdout text codecs as UTF-8,
 independently of the locale and `PYTHONIOENCODING`. Streams already using UTF-8
 keep their codec, including input that was read before startup. Unicode path
@@ -30,6 +38,8 @@ The native transport validates JSON-RPC 2.0 envelopes and advertised tool
 argument schemas before dispatch. Parse errors, invalid requests, and invalid
 parameters return distinct protocol errors. Notifications have no response,
 including when dispatch fails; an explicit null `id` remains a request.
+
+## Use the project and Work tools
 
 Garage read tools accept an explicit `project_root` and do not require a session identity,
 hooks, daemon, Ledger event, Director process, or chat transcript. Session and
@@ -134,7 +144,7 @@ requires current worker/request/scheduler idleness and a compatible owner;
 Runtime, not the host-owned MCP stdio process; updating Core on disk does not
 reload a connected host.
 
-## Runtime HTTP request bodies
+## Implementation reference: Runtime HTTP request bodies
 
 The existing loopback Runtime POST adapter accepts a JSON object within a
 1 MiB byte limit. `Content-Length` must contain ASCII decimal digits, with

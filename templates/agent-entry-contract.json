@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "contract_version": "1.1.0",
-  "sha256": "b5491764bf2ab070630c0b78c4849bc8d75729d8c8b676f9ac7581f2466abeba",
+  "contract_version": "1.1.1",
+  "sha256": "2a863a7e5a1913d3b9ff3d36817219f3df027a94270aeac971de6ece96a54be4",
   "max_utf8_bytes": 4096,
   "known_blocks": [
     {
@@ -11,6 +11,10 @@
     {
       "version": "1.1.0",
       "sha256": "b5491764bf2ab070630c0b78c4849bc8d75729d8c8b676f9ac7581f2466abeba"
+    },
+    {
+      "version": "1.1.1",
+      "sha256": "2a863a7e5a1913d3b9ff3d36817219f3df027a94270aeac971de6ece96a54be4"
     }
   ],
   "legacy_prefixes": [

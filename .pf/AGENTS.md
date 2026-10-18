@@ -1,4 +1,4 @@
-<!-- PF:ENTRY:BEGIN contract=1.1.0 -->
+<!-- PF:ENTRY:BEGIN contract=1.1.1 -->
 ## ProcessForge startup contract
 
 This project is governed by ProcessForge (PF). This section is the startup
@@ -38,7 +38,10 @@ tool, resource, process or infrastructure permissions by itself.
    existing CLI operations when MCP is unavailable; do not invent commands.
 7. Respect one writer per scope. Keep approved artifacts, process versions and
    capsules immutable. Use a governed handoff for scope/context changes. Keep
-   repository scratch under `.pf/tmp/`; remove it unless retained as evidence.
+   arbitrary agent scratch only under this project's `.pf/tmp/`; remove it unless
+   retained as evidence. Durable artifacts keep their established locations;
+   atomic replacement staging stays beside its destination. Age alone never
+   authorizes deletion.
    Never put private paths, credentials or machine details in public outputs.
 8. Ordinary work must not install, start, restart or repair PF Runtime, MCP,
    host hooks or Agent Ledger. Report infrastructure blockers to the operator.

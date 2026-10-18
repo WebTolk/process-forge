@@ -20,6 +20,12 @@ Respect forbidden_files.
 
 Produce required_outputs.
 
-Write expected_report.
+Deliver expected_report according to the supplied output delivery contract.
+If the final response is captured as the report, return only its complete
+content. For a read-only assignment, do not write the report file yourself.
+
+Keep repository scratch in your own .pf/tmp directory only when writes are
+allowed. Preserve unrelated files. Do not alter immutable inputs or lifecycle
+state. Do not install, start, restart or repair PF infrastructure.
 
 Stop and report if scope is insufficient.

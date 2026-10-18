@@ -1,5 +1,10 @@
 # First Run
 
+First complete [installation](installation.md) and its
+[requirements/preflight](../requirements.md). Use the same Python environment
+for these commands and later project launchers. Garage work needs no Runtime,
+MCP, hooks or manual Ledger session.
+
 First run has two operational initialization processes:
 
 - `workplace-initialization`: prepares the local workplace, registries, packages, tools, and knowledge roots.

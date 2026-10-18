@@ -1,6 +1,10 @@
 # Runtime Driver And Execution Inspector Quickstart
 
-Use this after `workplace-init` and `project-onboard`.
+Use this optional operator workflow after `workplace-init` and
+`project-onboard`, with a valid context and process permission to launch workers.
+It is not required for file-only Garage work. Use the same Python environment
+as in [installation](installation.md). `execution-inspector-run` is the semantic
+alias for the bounded `supervisor run` command shown below; run one, not both.
 
 `supervisor` is the historical technical command name. In ProcessForge
 semantics this loop is the Process Execution Inspector: it checks assigned task
@@ -16,20 +20,26 @@ python .pf/runtime/bin/pf.py runtime-driver validate --project-root . --driver t
 python .pf/runtime/bin/pf.py runtime-driver validate --project-root . --driver test-shell-agent
 ```
 
-Prepare a manual worker run:
+For an existing assignment, prepare a manual worker run. Replace `<task-id>`
+with the exact task id from your plan:
 
 ```bash
-python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task docs-worker --driver manual
-python .pf/runtime/bin/pf.py worker-run status --project-root . --task docs-worker
+python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task <task-id> --driver manual
+python .pf/runtime/bin/pf.py worker-run status --project-root . --task <task-id>
 ```
 
-Run a supervised test plan with the distribution example:
+For a separate test-driver demonstration, create the plan from the distribution
+root and point at the actual onboarded project:
 
 ```bash
-python .pf/runtime/bin/pf.py orchestrator-plan create --project-root . --run supervised-run --title "Supervised run" --answers examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml --apply
+python bin/pf.py orchestrator-plan create --project-root <project-root> --run supervised-run --title "Supervised run" --answers examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml --apply
+```
+
+Then, from the onboarded project root:
+
+```bash
 python .pf/runtime/bin/pf.py orchestrator-plan apply --project-root . --run supervised-run --apply
 python .pf/runtime/bin/pf.py supervisor run --project-root . --run supervised-run --max-ticks 5 --interval 0
-python .pf/runtime/bin/pf.py execution-inspector-run --project-root . --run supervised-run --max-ticks 5 --interval 0
 python .pf/runtime/bin/pf.py run-status --project-root . --run supervised-run
 ```
 

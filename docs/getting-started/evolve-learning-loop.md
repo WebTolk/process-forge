@@ -4,10 +4,10 @@ Minimal local loop:
 
 ```bash
 python bin/pf.py evolve-run --project-root <project> --workplace <workplace> --process <process> --run <run-id>
-python bin/pf.py evolve-candidate-create --project-root <project> --workplace <workplace> --from-file .pf/artifacts/evolve/knowledge-candidates/kc-example.yaml
-python bin/pf.py evolve-candidate-export --workplace <workplace> --target docs.example --output learning-export.zip
+python bin/pf.py evolve-candidate-create --project-root <project> --workplace <workplace> --from-file <candidate-file.yaml>
+python bin/pf.py evolve-candidate-export --workplace <workplace> --target docs.example --output <project>/.pf/tmp/evolve/learning-export.zip
 python bin/pf.py knowledge-hub-init --hub <hub> --apply
-python bin/pf.py knowledge-hub-import --hub <hub> --bundle learning-export.zip --apply
+python bin/pf.py knowledge-hub-import --hub <hub> --bundle <project>/.pf/tmp/evolve/learning-export.zip --apply
 python bin/pf.py knowledge-package-build-from-candidates --hub <hub> --package docs.example --version 1.1.0 --apply
 python bin/pf.py knowledge-package-release --hub <hub> --package docs.example --version 1.1.0 --output <hub>/packages/docs.example/releases/1.1.0/docs.example-1.1.0.zip
 ```

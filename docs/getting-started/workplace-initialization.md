@@ -1,6 +1,9 @@
 # Workplace Initialization
 
-Workplace initialization is run once per machine, device, server, or runner host.
+Initialize each workplace once. A workplace shares resources across projects
+on that machine, device, server, or runner host. Follow
+[installation](installation.md) and [requirements](../requirements.md) first;
+`workplace-init` is not an update command.
 For human-led setup of a new machine, prefer
 [Guided workplace setup](guided-workplace-setup.md); use this direct command
 path for fully automatic setup or when the setup answers are already known.
@@ -9,7 +12,8 @@ the agent inspects accessible `AGENTS.md`, skills, local docs, platforms,
 toolchains, tools, MCP configuration, and project roots, then proposes which
 ProcessForge entities to create or register before apply.
 
-The command can be run from any directory. Do not use the shell current working
+Use the installed launcher when running from another directory. The command
+examples below assume the ProcessForge distribution root. Do not use the shell current working
 directory as an implicit project root. Machine setup records explicit roles:
 installed ProcessForge distribution, workplace root, optional global agent root,
 knowledge roots, and candidate project roots. A global agent root may be a
@@ -31,24 +35,24 @@ It creates:
 Command:
 
 ```bash
-python bin/pf.py workplace-init --workplace ./pf-workplace --apply
-python bin/pf.py doctor-workplace --root ./pf-workplace
+python bin/pf.py workplace-init --workplace ../pf-workplace --apply
+python bin/pf.py doctor-workplace --root ../pf-workplace
 ```
 
 The default `generic` profile leaves all domain-specific official packs
 inactive:
 
 ```bash
-python bin/pf.py workplace-init --profile generic --workplace ./pf-workplace --apply
+python bin/pf.py workplace-init --profile generic --workplace ../pf-workplace --apply
 ```
 
 Select a production workflow profile when the workplace should activate its
 official bundled pack:
 
 ```bash
-python bin/pf.py workplace-init --profile software-development --workplace ./pf-workplace --apply
-python bin/pf.py workplace-init --profile content-workflow --workplace ./pf-workplace --apply
-python bin/pf.py workplace-init --profile verification --workplace ./pf-workplace --apply
+python bin/pf.py workplace-init --profile software-development --workplace ../pf-workplace --apply
+python bin/pf.py workplace-init --profile content-workflow --workplace ../pf-workplace --apply
+python bin/pf.py workplace-init --profile verification --workplace ../pf-workplace --apply
 ```
 
 Profiles activate data packs; they do not change the ProcessForge kernel.
@@ -67,10 +71,10 @@ coordination:
 Useful commands:
 
 ```bash
-python bin/pf.py workplace-mode status --workplace ./pf-workplace
-python bin/pf.py workplace-mode set --workplace ./pf-workplace --director-enabled true --director-office-enabled true
-python bin/pf.py workplace-mode set-default-project-mode --workplace ./pf-workplace --mode simple
-python bin/pf.py workplace-mode doctor --workplace ./pf-workplace
+python bin/pf.py workplace-mode status --workplace ../pf-workplace
+python bin/pf.py workplace-mode set --workplace ../pf-workplace --director-enabled true --director-office-enabled true
+python bin/pf.py workplace-mode set-default-project-mode --workplace ../pf-workplace --mode simple
+python bin/pf.py workplace-mode doctor --workplace ../pf-workplace
 ```
 
 This process does not create `.pf/` in a project and does not select a project type.

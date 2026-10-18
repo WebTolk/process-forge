@@ -1,8 +1,11 @@
 # Agent Command Runbook And Prompts
 
 This page is for AI agents. Human-facing quickstarts should link here instead
-of duplicating command lists. Keep release numbers out of prose, examples,
-archive names, and reports.
+of duplicating command lists. Reusable instructions and archive examples should
+stay release-neutral. Release notes, migration instructions and evidence reports
+must retain the actual version, source commit and archive SHA-256 when relevant;
+never substitute a placeholder for recorded provenance. Check
+[requirements](../requirements.md) before setup or resource planning.
 
 ## Operating Rules
 
@@ -36,8 +39,8 @@ archive names, and reports.
   knowledge packages, templates, tools, MCP providers, capabilities, processes,
   coding standards, project type hints, policies, and optional parent/child
   platform inheritance.
-- Release-specific archive names belong in release checklists. Reusable prompt
-  examples should use neutral archive filenames.
+- Reusable prompt examples should use neutral archive filenames. Release
+  checklists and evidence must identify the exact archive that was checked.
 - `--interactive` is accepted by first-run initialization commands for UX
   compatibility; current commands remain file-first and do not require terminal
   prompting.
@@ -72,6 +75,109 @@ archive names, and reports.
 - Treat native subagents from the host AI environment as external executors:
   pass only ProcessForge assignment/capsule scope and expected report paths.
   Do not treat them as ProcessForge runtime drivers.
+- For continuation, discover candidates with `pf.continuation.status` or read
+  the named continuation. Select exact Run/assignment/context ids, explicitly
+  create a continuation if needed, then call `pf.continuation.resume`. Never
+  select the first or newest candidate automatically. Without a bound session,
+  pass the returned selectors to every Work call.
+- Within selected Work, use `pf.work.search` and `pf.work.resolve` with those
+  same selectors. Metadata-only resources do not authorize body reads. A denied
+  action or required unavailable input blocks dependent work.
+- A prepared worker executes its immutable input. It must not bootstrap PF,
+  start another Work, reselect a process or rebuild context. It needs no PF MCP
+  connection. Follow its output delivery contract, including final-response
+  capture when specified.
+- Keep repository scratch under your own `.pf/tmp/` directory. Remove it when
+  finished unless retained as evidence; preserve unrelated or live files.
+
+## Continue Work Without MCP
+
+Use the existing project CLI and current context snapshot. Check freshness;
+do not install or start infrastructure to obtain context. Stop dependent work
+if current context or required inputs cannot be validated.
+
+Discover candidates without creating Work, then select the exact intended
+Run, assignment and immutable context. If selection is ambiguous, ask the user.
+The placeholders below must come from verified PF output:
+
+```bash
+python .pf/runtime/bin/pf.py project-context-check --project-root . --json
+python .pf/runtime/bin/pf.py continuation-status --project-root . --json
+python .pf/runtime/bin/pf.py continuation-create --project-root . --id <continuation-id> --run <run-id> --assignment <assignment-id> --context-id <context-id> --apply --json
+python .pf/runtime/bin/pf.py continuation-resume --project-root . --continuation <continuation-id> --json
+python .pf/runtime/bin/pf.py work-state --project-root . --run <run-id> --assignment <assignment-id> --context-id <context-id> --json
+python .pf/runtime/bin/pf.py work-search --project-root . --run <run-id> --assignment <assignment-id> --context-id <context-id> --query "<query>" --json
+python .pf/runtime/bin/pf.py work-resolve --project-root . --run <run-id> --assignment <assignment-id> --context-id <context-id> --resource-id <resource-id> --json
+```
+
+If a continuation already exists, inspect it with `continuation-status
+--continuation <continuation-id>` and resume it instead of creating another.
+Read the selected assignment and capsule, satisfy the current stage, then use
+`work-transition` with the same selectors, the declared `--outcome` and real
+`--evidence-file` or repeatable `--evidence` records. PF selects the next stage;
+continue until `action: run_completed`. Use explicitly scoped `work-start`
+only for new work, as described below. A prepared worker follows its supplied contract instead of
+running this admission/continuation sequence.
+
+## Start New Work With An Explicit Scope
+
+An objective is not a file permission grant. Ask the primary agent to prepare
+the scope from the task you authorized. Review its paths and actions before
+creation; do not infer broad permissions from an empty declaration.
+
+For example, this declaration permits one documentation edit and its own
+evidence/scratch. Adapt the paths to the actual task and save the UTF-8 JSON as
+`.pf/tmp/task-note/scope.json`:
+
+```json
+{
+  "schema_version": 1,
+  "assignment": {
+    "allowed_actions": ["read", "write_artifact", "write_product"],
+    "allowed_read_files": [
+      "AGENTS.md", "README.md", "docs/**", ".pf/AGENTS.md",
+      ".pf/process-forge.yaml", ".pf/contexts/**", ".pf/assignments/**",
+      ".pf/artifacts/task-note/**", ".pf/tmp/task-note/**"
+    ],
+    "allowed_files": [
+      "docs/task-note.md", ".pf/artifacts/task-note/**", ".pf/tmp/task-note/**"
+    ],
+    "execution_mode": {
+      "kind": "implementation",
+      "code_changes_allowed": true,
+      "artifact_changes_allowed": true,
+      "requires_review": true
+    },
+    "required_outputs": [
+      {
+        "id": "task-note-report",
+        "path": ".pf/artifacts/task-note/report.md",
+        "type": "markdown",
+        "required": true
+      }
+    ]
+  }
+}
+```
+
+`write_product` covers the public document as well as source-code files; the
+explicit path list limits what can change. From an onboarded project, select
+only a process offered by PF and run:
+
+```bash
+python .pf/runtime/bin/pf.py work-start --project-root . --process-id <offered-process-id> --objective "Update the task note" --scope-file .pf/tmp/task-note/scope.json --json
+```
+
+With MCP, call `pf.work.start` with the same `objective`, selected `process_id`
+and `project_root`, and pass the entire JSON object above as `scope_intent`.
+Do not pass a local filename as the MCP `scope_intent` value.
+
+Read the returned exact assignment and capsule. Require a valid context and
+`execution_readiness.status: ready`, with the intended read/write grants and
+no blockers. `created_new` alone is not permission to act. If scope was omitted
+or is insufficient, follow the returned remediation and create a governed,
+explicitly scoped successor when authorized; do not edit the existing capsule
+or blindly retry with wider grants. See [Work creation scope](../concepts/work-context.md#explicit-local-work-creation-scope).
 
 ## Distribution Root Checks
 
@@ -82,8 +188,8 @@ python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
 python bin/pf.py release-test --root . --public --fail-fast
-python bin/pf.py release-pack --root . --output dist/processforge.zip
-python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full
+python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
+python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
 
@@ -269,12 +375,14 @@ Initialize ProcessForge in fully automatic mode. It is located at
 
 ```text
 Use ProcessForge for this task. Read root AGENTS.md (or .pf/AGENTS.md in an
-unmigrated project), verify pf.context, and create or reuse work through
-pf.work.start. Keep the returned Run, assignment and capsule identities.
-Use pf.search and pf.resolve for
-authorized resources, inspect the current state with pf.work.state, record
+unmigrated project) and verify pf.context. For continuation, discover or read
+the exact continuation and use pf.continuation.resume; use pf.work.start for
+new work. Keep the returned Run, assignment and capsule identities and pass
+the exact selectors when no session is bound. Use pf.work.search and
+pf.work.resolve for selected Work resources, inspect pf.work.state, record
 each step with pf.work.transition(outcome, evidence, notes), continue until
-the work reports run_completed, keep artifacts in .pf, run the relevant checks,
+the work reports run_completed, keep artifacts in .pf and scratch in .pf/tmp,
+run the relevant checks,
 and finish with a concise evidence-based handoff. Do not maintain PF
 infrastructure.
 ```
@@ -292,7 +400,8 @@ Tasks:
 - update only the assigned documentation files;
 - keep human docs prompt-only where requested;
 - keep agent docs command-complete;
-- avoid embedding release numbers in prose or archive examples;
+- keep reusable examples release-neutral; preserve exact version/commit/hash
+  provenance in release notes and evidence reports;
 - return a file list, summary, and residual risks.
 ```
 
@@ -320,8 +429,8 @@ Scope: validation only unless explicitly asked to repair a failing gate.
 
 Tasks:
 - run the requested validation commands;
-- rebuild release archives only with neutral filenames for documentation-facing
-  evidence;
+- use neutral filenames in reusable examples; identify actual release archives
+  by version, source commit and SHA-256 in evidence;
 - test the archive after packaging;
 - report pass/fail status with command names and the first actionable failure.
 ```
@@ -335,8 +444,8 @@ Scope: review changed files and evidence. Do not change files unless the main
 agent asks for a repair.
 
 Tasks:
-- look for behavior regressions, stale commands, current-version references in
-  documentation, misplaced human/agent instructions, and missing validation;
+- look for behavior regressions, stale commands, incorrect release provenance,
+  misplaced human/agent instructions, and missing validation;
 - cite files and lines for findings;
 - separate blocking findings from non-blocking follow-up.
 ```

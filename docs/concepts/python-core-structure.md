@@ -1,10 +1,15 @@
 # Python Core Structure
 
+This is an implementation reference for Core contributors. For daily operation,
+start with [Garage Core](garage-core.md), [Runtime model](runtime-model.md) and
+the shared [requirements](../requirements.md). The ownership and migration
+details below are not additional user workflow steps.
+
 The core is evolving incrementally. `tools/processforge.py` is still the active legacy facade, not retired code. Existing CLI, MCP, hook entrypoints and bootstrap aliases remain unchanged.
 
 The migration target is a thin compatibility facade: entrypoints parse and format transport data, then call the OOP Core that owns behavior, state and rules. Each migrated responsibility uses concrete Core owners without importing or calling the monolith. Remaining callback paths are recorded as unfinished migration work.
 
-**pf-app-server** is the long-lived background ProcessForge application/server process, launched through the existing runtime/server commands. It hosts Runtime scheduling and shared application services; CLI and MCP are separate entry adapters. The term names the running process and its lifetime; command, API and configuration names stay compatible.
+**pf-app-server** is the optional long-lived background ProcessForge application/server process, launched through the existing runtime/server commands. It hosts Runtime scheduling and shared application services; CLI and MCP are separate entry adapters. The term names the running process and its lifetime; command, API and configuration names stay compatible.
 
 ## Package Placement
 

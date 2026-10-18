@@ -48,6 +48,18 @@ Run на управляемые поручения. Iteration фиксирует
 outcomes, защиту утверждённых артефактов и правила handoff. Нельзя расширять
 scope, придумывать обратный переход или пересобирать неизменяемую капсулу.
 
+## Обычная Work и расширенный batch-сценарий
+
+Обычная работа следует [Garage Core](garage-core.md):
+`pf.context -> pf.work.start -> pf.work.state -> evidence -> pf.work.transition`
+до `action: run_completed`. Для существующей работы используйте точное
+[продолжение](work-continuation.md). Закреплённый процесс выбирает стадию;
+последний переход сам сохраняет summary и handoff.
+
+Ручные команды создания Run/Task и завершения batch относятся к отдельному
+[расширенному сценарию](../getting-started/task-batch-workflow.md). Они не нужны
+как дополнительные шаги завершения управляемой Work.
+
 ## Граница software lifecycle
 
 Process definition описывает жизненный цикл, а не платформенную команду сборки

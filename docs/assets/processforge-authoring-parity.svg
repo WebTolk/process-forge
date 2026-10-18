@@ -48,6 +48,7 @@
   <path class="arrow" d="M225 210 L285 210"/>
   <path class="arrow" d="M495 210 L555 210"/>
   <path class="arrow" d="M720 210 L780 210"/>
-  <rect class="box" x="225" y="360" width="510" height="52" rx="12"/>
-  <text class="label" x="250" y="394">Missing stage, gate, artifact, or run_model is FAIL; unsupported custom fields are WARN.</text>
+  <rect class="box" x="40" y="350" width="880" height="72" rx="12"/>
+  <text class="label" x="62" y="380">Missing stage, gate, artifact, or run_model: FAIL</text>
+  <text class="text" x="62" y="405">Unsupported custom fields: WARN. Review the reports before accepting the generated draft.</text>
 </svg>

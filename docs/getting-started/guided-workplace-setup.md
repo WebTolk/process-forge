@@ -6,7 +6,11 @@ when a human operator is involved. The agent asks questions in blocks, updates
 existing initialization mechanics, runs `doctor-workplace`, and writes resource
 authoring plus project onboarding next steps.
 
-The CLI supports the dialogue artifacts; it is not a terminal-only wizard.
+The dialogue is led by an agent or operator. The CLI stores and reviews the
+answers; it does not provide an interactive installer or scan the machine
+automatically. The accepted `--interactive` initialization flag does not start
+a question-and-answer terminal interface. Check [requirements](../requirements.md)
+and complete [installation](installation.md) first.
 
 The order stays strict: workplace first, workplace resources second (knowledge,
 templates, tools, MCP, package roots, platform contracts), and project
@@ -27,7 +31,18 @@ machine-local work into ProcessForge resources.
 
 ```bash
 python bin/pf.py workplace-setup start --workplace <workplace-root> --session-id first-machine --apply
+```
+
+Edit the session’s `answers.yaml` with the agreed answers before review. The
+review command writes updated proposal/review files unless `--dry-run` is used:
+
+```bash
 python bin/pf.py workplace-setup review --workplace <workplace-root> --session-id first-machine
+```
+
+Inspect `proposal.md` and `review.md` before applying:
+
+```bash
 python bin/pf.py workplace-setup apply --workplace <workplace-root> --session-id first-machine --apply
 python bin/pf.py workplace-setup status --workplace <workplace-root> --session-id first-machine
 ```

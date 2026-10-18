@@ -1,5 +1,8 @@
 schema_version: 1
 runtime:
+  temporary_files:
+    mode: notify
+    max_age_hours: 168
   metrics:
     interval_seconds: 10
 logging:

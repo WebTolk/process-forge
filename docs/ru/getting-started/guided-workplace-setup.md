@@ -7,8 +7,11 @@
 `doctor-workplace` и записывает следующие шаги для создания ресурсов и
 `project-onboard`.
 
-CLI поддерживает файловый сценарий, но не является мастером, который работает
-только в терминале.
+Диалог ведёт агент или оператор. CLI сохраняет и проверяет ответы, но не
+предоставляет интерактивный установщик и не сканирует машину автоматически.
+Флаг инициализации `--interactive` принимается, но не запускает вопросы в
+терминале. Сначала проверьте [требования](../requirements.md) и выполните
+[установку](installation.md).
 
 Порядок остаётся строгим: сначала workplace, затем ресурсы workplace (знания,
 шаблоны, инструменты, MCP, корни пакетов, platform contracts), затем подключение
@@ -29,7 +32,18 @@ ProcessForge, workplace, необязательных global agent root и ре�
 
 ```bash
 python bin/pf.py workplace-setup start --workplace <workplace-root> --session-id first-machine --apply
+```
+
+Запишите согласованные ответы в `answers.yaml` сессии. Команда review
+обновляет файлы предложения и проверки; для просмотра без записи есть `--dry-run`:
+
+```bash
 python bin/pf.py workplace-setup review --workplace <workplace-root> --session-id first-machine
+```
+
+Прочитайте `proposal.md` и `review.md`, затем примените согласованный план:
+
+```bash
 python bin/pf.py workplace-setup apply --workplace <workplace-root> --session-id first-machine --apply
 python bin/pf.py workplace-setup status --workplace <workplace-root> --session-id first-machine
 ```

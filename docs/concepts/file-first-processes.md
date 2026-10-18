@@ -18,7 +18,11 @@ The process itself is defined separately so that multiple assignments can follow
 
 ## Why Files
 
-Files make the system portable, reviewable, versionable, and usable without a service dependency. A future runner or backend may read the same files, but the files remain authoritative.
+Files make the system portable, reviewable, versionable, and usable without a
+service dependency. The CLI and optional Runtime adapters use the same durable
+Work records; the selected process and immutable capsule remain authoritative.
+Use [Garage Core](garage-core.md) for the ordinary context, state, evidence and
+transition cycle.
 
 ## Status Model
 

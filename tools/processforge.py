@@ -311,6 +311,9 @@ Rules:
 7. Follow assignment and immutable-capsule boundaries.
 8. Do not install, start, or repair PF Runtime, MCP, host hooks, or Agent Ledger
    during ordinary project work; report operator-level infrastructure blockers.
+9. Put arbitrary agent scratch only in the project's `.pf/tmp/`. Durable artifacts
+   keep their established locations; atomic replacement staging stays beside its
+   destination. Age alone never authorizes deletion.
 {GLOBAL_AGENT_SECTION_END}
 """
 
@@ -9484,11 +9487,26 @@ def project_context_report_path(project_root: Path) -> Path:
 def project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
     with diagnostics.span("context.check", component="context"):
         result = _project_context_check_result(project_root, explicit_workplace=explicit_workplace)
+    result["temporary_files"] = project_temporary_files_summary(project_root, explicit_workplace=explicit_workplace)
     diagnostics.annotate(snapshot_id=result.get("snapshot_id"))
     diagnostics.emit("info" if result.get("fresh") else "warning", "context.freshness", lambda: {
         key: result.get(key) for key in ("snapshot_id", "status", "policy_action", "recommended_action", "reasons", "stale_resources", "broken_refs")
     }, component="context")
     return result
+
+
+def project_temporary_files_summary(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
+    from processforge_core.configuration import ConfigurationError
+    from processforge_core.maintenance.temporary_files import last_summary
+
+    try:
+        workplace = Path(explicit_workplace).expanduser().resolve() if explicit_workplace else None
+        resolved = project_configuration(project_root, workplace)
+        if resolved.errors:
+            return {"status": "unknown", "notification": False, "reason": "configuration_invalid"}
+        return last_summary(project_root, resolved.config.runtime.temporary_files)
+    except (ConfigurationError, OSError, RuntimeError, ValueError):
+        return {"status": "unknown", "notification": False, "reason": "configuration_unavailable"}
 
 
 def _project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
@@ -11272,6 +11290,10 @@ def command_project_context_check(args: argparse.Namespace) -> int:
             "## Execution Readiness",
             "",
             dump_yaml(result.get("execution_readiness", {})),
+            "",
+            "## Temporary Files",
+            "",
+            dump_yaml(result.get("temporary_files", {})),
         ]
         report_path.write_text("\n".join(lines), encoding="utf-8")
         result["report"] = rel(report_path, project_root)
@@ -11282,6 +11304,8 @@ def command_project_context_check(args: argparse.Namespace) -> int:
         print(f"STATUS: {result.get('status')}")
         print(f"POLICY_ACTION: {result.get('policy_action')}")
         print(f"RECOMMENDED_ACTION: {result.get('recommended_action')}")
+        temporary = result.get("temporary_files", {})
+        print(f"TEMPORARY_FILES: {temporary.get('status', 'unknown')} notification={temporary.get('notification', False)}")
         for item in result.get("updates_available", []):
             print(f"UPDATE_AVAILABLE: {item.get('id')} {item.get('snapshot_version')} -> {item.get('available_version')}")
         for item in result.get("stale_resources", []):

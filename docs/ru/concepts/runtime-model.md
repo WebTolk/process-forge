@@ -8,6 +8,21 @@ project и workplace files, пишет нужный artifact или runtime reco
 общего Python Core; `tools/processforge.py` остается legacy CLI-adapter
 boundary.
 
+## Как выбрать интерфейс
+
+Для контекста и управляемой Work используйте [Garage](garage-core.md) через
+существующий CLI или подключённый MCP. Файловая работа доступна без работающей
+службы. Необязательный **pf-app-server** нужен для планирования workplace,
+наблюдения за исполнителями и оперативного состояния. Это долгоживущий процесс
+PF Runtime, доступный через существующие команды runtime/server.
+
+Приложение-хост отдельно запускает stdio-процесс MCP и управляет им.
+Запуск или перезапуск app-server не запускает и не перезагружает MCP.
+Обновление файлов Core не меняет код, уже загруженный подключённым хостом.
+Действия с инфраструктурой выполняет уполномоченный оператор.
+
+## Долговечные файлы проекта
+
 File layout является runtime contract:
 
 - `.pf/process-forge.yaml` хранит project manifest.
@@ -32,7 +47,7 @@ File layout является runtime contract:
 изменении входных файлов или последних фактов проверки. При неизменных данных
 очередной такт не разбирает YAML задач и не вычисляет заново хеши результатов.
 Проверки Work продолжают проверять актуальные исходные данные. Порядок переноса
-описан в [SQLite и миграции журналов](../../concepts/hook-journal-sqlite.md).
+описан в [SQLite и миграции журналов](hook-journal-sqlite.md).
 
 Release archive включает `src/processforge_core`, `tools/processforge.py` и
 `tools/pf_runtime/*`, но не включает workplace raw journals, chat transcripts,
@@ -62,10 +77,10 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 ## Runtime Requirements
 
-Для runtime usage рекомендуется Python 3.11+. Python 3.10+ допустим только
-когда текущие tests подтверждают compatibility. Также нужны зависимости из
-`requirements.txt`, включая `PyYAML`, UTF-8 capable filesystem и read/write
-access к ProcessForge distribution, workplace и project folders.
+Версии Python, зависимости, требования к SQLite/локальному хранилищу и
+планирование ресурсов app-server описаны в общих [требованиях](../requirements.md).
+Для изменений нужен доступ к записи в соответствующие workplace и проект;
+операции чтения сохраняют объявленные границы доступа.
 
 Default Runtime usage не требует PowerShell, Git, daemon или background process.
 Git нужен только для version-control integration или development/release checks.
@@ -77,6 +92,11 @@ Optional PF Runtime service startup описан в
 PF Runtime — workplace-scoped local lifecycle host, scheduler и IPC transport.
 Это не второй PF Core. Agent Ledger владеет canonical session-to-project
 binding; project и session maps Runtime являются только rebuildable caches.
+
+## Справка по реализации: исправность и восстановление
+
+Далее приведены подробности для диагностики и сопровождения. Они не добавляют
+шагов к обычному циклу Work.
 
 Поле `scheduler_alive` показывает, работает ли поток планировщика. Ошибка
 операции планировщика или повреждение кеша маршрутизации переводит состояние здоровья в
@@ -96,7 +116,7 @@ binding; project и session maps Runtime являются только rebuildab
 Состояние Runtime и проекции Host записываются через уникальные временные файлы.
 При ошибке записи или замены удаляется только временный файл данной операции;
 исходная ошибка и целевой файл сохраняются. Повтор замены при конфликте доступа
-Windows ограничен прежним окном50 мс. Установщик хуков сохраняет резервную копию
+Windows ограничен прежним окном 50 мс. Установщик хуков сохраняет резервную копию
 конфигурации и удаляет временный файл при неудаче. Входящие хуки не обходят каталог
 в поисках остатков. Принудительное завершение процесса и запрет удаления файлов
 всё ещё могут оставить временные данные: их очистка требует точных путей и

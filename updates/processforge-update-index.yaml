@@ -171,7 +171,7 @@ versions:
 
   - version: "1.2.0"
     channel: stable
-    released_at: "2026-10-17"
+    released_at: "2026-10-18"
     compatibility:
       min_project_schema: 1
       max_project_schema: 1

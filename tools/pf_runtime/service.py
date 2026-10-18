@@ -381,6 +381,8 @@ class RuntimeProcess:
         self.state: dict[str, Any] = base_state(workplace_root, core, status="starting", instance_id=self.instance_id)
         self.state_lock = threading.RLock()
         self._project_errors: dict[str, str] = {}
+        self._temporary_files_last_run: dict[Path, float] = {}
+        self._temporary_files_results: dict[Path, dict[str, Any]] = {}
         self._registrations = metrics_core().registrations({})
         self.active_requests = 0
         self.scheduler_active = False
@@ -556,6 +558,58 @@ class RuntimeProcess:
         if self.core.project_id(session_project) != self.core.project_id(requested_project):
             raise PermissionError("session is not authorized for requested project_root")
 
+    def observe_temporary_files(self, roots: list[Path]) -> dict[str, str]:
+        from processforge_core.configuration import ConfigurationError
+        from processforge_core.maintenance import temporary_files
+
+        known = set(roots)
+        self._temporary_files_last_run = {root: stamp for root, stamp in self._temporary_files_last_run.items() if root in known}
+        self._temporary_files_results = {root: result for root, result in self._temporary_files_results.items() if root in known}
+        now = time.monotonic()
+        for project_root in roots:
+            previous = self._temporary_files_last_run.get(project_root)
+            if previous is not None and now - previous < temporary_files.PERIOD_SECONDS:
+                continue
+            self._temporary_files_last_run[project_root] = now
+            result: dict[str, Any] = {"last_run": self.core.now_utc(), "last_result": "failed"}
+            self._temporary_files_results[project_root] = result
+            try:
+                resolved = self.core.project_configuration(project_root, self.workplace_root)
+                if resolved.errors:
+                    result["error"] = "temporary_files_configuration_invalid"
+                    continue
+                config = resolved.config.runtime.temporary_files
+            except (Exception, SystemExit) as exc:
+                result["error"] = exc.code if isinstance(exc, ConfigurationError) else "temporary_files_configuration_failed"
+                continue
+            # A restart must not repeat a recent observation, even after a config change.
+            if previous is None:
+                age = temporary_files.observation_age(project_root)
+                if age is not None and age < temporary_files.PERIOD_SECONDS:
+                    self._temporary_files_last_run[project_root] = now - age
+                    result.update(last_result="deferred", reason="recent_report")
+                    continue
+            try:
+                report = temporary_files.observe(project_root, config)
+            except (Exception, SystemExit):
+                report = temporary_files.failed_observation(config)
+            try:
+                with temporary_files.report_destination(project_root, create=True) as (path, _descriptor):
+                    write_json_atomic(path, report)
+            except (Exception, SystemExit):
+                result["error"] = "temporary_files_report_write_failed"
+                continue
+            result["last_result"] = report["state"]
+            if report["state"] == "error":
+                result["error"] = "temporary_files_observation_failed"
+        with self.state_lock:
+            self.state.setdefault("scheduler", {}).setdefault("jobs", {})["temporary_files"] = {
+                "period_seconds": temporary_files.PERIOD_SECONDS,
+                "projects": {str(root): dict(result) for root, result in self._temporary_files_results.items()},
+            }
+        return {f"temporary_files:{root}": result["error"]
+                for root, result in self._temporary_files_results.items() if "error" in result}
+
     def scheduler_loop(self) -> None:
         self.scheduler_thread = threading.current_thread()
         while not self.stop_event.wait(self.interval):
@@ -588,6 +642,8 @@ class RuntimeProcess:
                     except Exception as exc:  # noqa: BLE001 - isolate one bad project.
                         project_errors[str(project_root)] = str(exc)
                         status = 1
+                # Maintenance faults have their own keys and cannot replace a tick fault.
+                project_errors.update(self.observe_temporary_files(roots))
                 payload = {"status": "ok" if status == 0 and not project_errors else "failed", "projects": projects}
                 with self.state_lock:
                     self._project_errors = project_errors

@@ -8,12 +8,19 @@ assigned work through the declared process, preserving bounded scope and evidenc
    with the project root. Current context outranks stale generated reports.
 2. Use `pf.search` when knowledge is needed and `pf.resolve` before opening
    selected managed resources.
-3. Call `pf.work.start` with a non-empty `objective`. If it returns
+3. For continuation, discover candidates with `pf.continuation.status` or read
+   the named continuation, select exact Run/assignment/context ids, create a
+   continuation with explicit apply if needed, and call `pf.continuation.resume`.
+   Never select the first or newest candidate automatically. Use `pf.work.start`
+   with a non-empty `objective` for new work. If it returns
    `process_choice_required`, choose an offered process and repeat with
    `process_id`; `default` is a recommendation only. An existing Work keeps
    its pinned process.
 4. Call `pf.work.state`; read the assigned task and immutable capsule. Check
    allowed/forbidden files and current inputs, artifacts, gates and outcomes.
+   Without a bound session, pass the returned selectors to every Work call.
+   Use `pf.work.search` and `pf.work.resolve` for selected Work resources.
+   Metadata-only grants do not authorize body reads. Empty grants grant nothing.
 5. Perform the current stage's work and checks. Record work/debug/fix results
    in the declared artifacts. Review semantic quality before attesting a gate.
 6. Call `pf.work.transition` with a declared `outcome`, real artifact/gate
@@ -43,3 +50,9 @@ check-in/check-out is an operator diagnostic, not a prerequisite for a batch.
 Do not create new process definitions, background watchers or runner daemons
 as part of ordinary task execution. Respect the selected process's delegation
 policy and never put private absolute paths into public files.
+
+Keep repository scratch in your own `.pf/tmp/` directory. Remove it after work
+unless retained as evidence; preserve unrelated or live files. A worker with
+prepared immutable input follows that input instead of creating or resuming
+Work again. It must not bootstrap PF, reselect a process or rebuild context,
+and it does not need a PF MCP connection.

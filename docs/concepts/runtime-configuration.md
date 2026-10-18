@@ -1,5 +1,8 @@
 # Hook collection and session lifecycle
 
+For project scratch and configurable old-file reminders, see
+[temporary files](../temporary-files.md). These notifications do not delete files.
+
 Automatic agent hooks use the project's effective coordination mode, including
 workplace inheritance. Forge (`organized`) always admits the gatekeeper.
 Garage (`simple`) ignores hooks by default; its operator can opt in through

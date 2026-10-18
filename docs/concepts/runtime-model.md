@@ -7,6 +7,21 @@ and workplace files, writes the requested artifact or runtime record, and
 exits. The optional Runtime host and MCP facade are adapters around the shared
 Python Core; `tools/processforge.py` remains the legacy CLI-adapter boundary.
 
+## Choose the interface for your work
+
+Use [Garage](garage-core.md) for context and governed Work through the existing
+CLI or connected MCP. File-only work remains usable without a running service.
+Enable the optional **pf-app-server** when workplace scheduling, worker
+supervision and live operational views are needed. It is the long-lived PF
+Runtime process reached through existing runtime/server commands.
+
+The application's MCP host independently starts and owns the stdio MCP process.
+Starting or restarting the app-server does not start or reload that MCP process;
+updating Core files does not update code already loaded by a connected host.
+Infrastructure lifecycle actions belong to an authorized operator.
+
+## Durable project files
+
 The file layout is the runtime contract:
 
 - `.pf/process-forge.yaml` stores the project manifest.
@@ -65,7 +80,10 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 ## Runtime Requirements
 
-Runtime usage expects Python 3.11+ recommended, Python 3.10+ only when the current tests confirm compatibility, Python package dependencies from `requirements.txt` including `PyYAML`, a UTF-8 capable filesystem, and read/write access to the ProcessForge distribution, workplace, and project folders.
+Use the canonical [requirements](../requirements.md) for Python, dependencies,
+SQLite/local storage and optional app-server capacity planning. A writable
+workplace/project and a UTF-8 capable filesystem are needed for mutations;
+read-only operations retain their declared access boundaries.
 
 Default Runtime usage does not require PowerShell, Git, a daemon, or a
 background process. Git is only needed when the user wants version-control
@@ -79,6 +97,11 @@ PF Runtime is a workplace-scoped local lifecycle host, scheduler, and IPC
 transport. It is not a second PF Core. Agent Ledger owns agent/session
 presence and the canonical session-to-project binding; Runtime's project and
 session maps are rebuildable caches only.
+
+## Implementation reference: health and recovery
+
+The following details explain diagnostics and recovery for maintainers; they
+are not extra steps in the ordinary Work lifecycle.
 
 Runtime status reports scheduler liveness as `scheduler_alive`. A failed scheduler
 operation or malformed routing cache degrades health while other valid projects continue;
@@ -96,7 +119,7 @@ lower bounds and coverage issues remain explicit.
 Runtime state and Host history publication use unique atomic staging files.
 Failed write/replacement removes only that invocation's staging and preserves
 the original error and destination. Windows sharing-conflict retry stays bounded
-to the existing50ms admission window. Hook installation retains its configuration
+to the existing 50 ms admission window. Hook installation retains its configuration
 backup while cleaning failed staging. No orphan scan runs on incoming hooks.
 Forced process termination and filesystem cleanup denial can still leave files;
 stale-file maintenance requires exact paths and verified inactive owners.

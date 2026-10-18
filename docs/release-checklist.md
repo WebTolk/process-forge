@@ -34,13 +34,14 @@ python tools/smoke_error_workflow.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
 python bin/pf.py dev-test --root . --suite supervisor-stress
-python bin/pf.py release-pack --root . --output dist/processforge.zip
-python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full
+python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
+python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
 
 Release output must not include:
 
+- `.pf/tmp/`
 - `.pf/runtime/`
 - `.pf/artifacts/`
 - `.pf/reviews/`
@@ -57,3 +58,9 @@ Release output must not include:
 - hook outbox payloads
 - local transcripts
 - stale `dist/processforge-v*.zip` archives or matching stale manifests
+
+Use a writer-owned directory under `.pf/tmp/` for repository scratch. Record
+the actual source commit, version and final archive SHA-256 in qualification
+evidence. A later rebuild needs its own hash and applicable checks. See
+[release publishing](maintainers/release-publishing.md) for publication and
+mirrored-asset verification.

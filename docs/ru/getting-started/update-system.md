@@ -1,11 +1,16 @@
 # Система обновлений
 
-Система обновлений работает от рабочего места. Она сначала собирает сведения о
-серверах обновлений, затем находит кандидатов, подготавливает артефакт,
-проверяет его и только после явного подтверждения применяет поддержанное
-файловое обновление.
+Команды предназначены оператору. Запускайте их из установленного дистрибутива
+Python-окружением из [инструкции установки](installation.md). Workplace и
+проекты должны находиться отдельно от заменяемого Core. Агент обычного
+проекта не должен обновлять Core или чинить необязательную инфраструктуру
+ради обхода затруднений в задаче.
 
-Минимальный сценарий:
+## Найдите и проверьте обновление
+
+Система собирает сведения о серверах, находит кандидатов, подготавливает и
+проверяет артефакт. Поддерживаемое файловое обновление применяется только
+после явного подтверждения:
 
 ```bash
 python bin/pf.py update entity-sources rebuild --workplace <workplace>
@@ -19,93 +24,74 @@ python bin/pf.py update apply --workplace <workplace> --candidate <candidate-id>
 python bin/pf.py update rollback --workplace <workplace> --candidate <candidate-id>
 ```
 
-Для воспроизводимых локальных проверок используйте `manifest_url` и артефакты с
-URL вида `file:///...`. Для настоящего удалённого сервера обновлений используйте
-HTTPS, `sha256` и ручное подтверждение оператора перед применением.
+Для воспроизводимых локальных проверок используйте URL `file:///` для манифеста
+и артефакта. Для удалённых серверов нужны HTTPS, доверенные сертификаты,
+контрольные суммы sha256 и проверка источника релиза и миграционных указаний.
+См. [требования](../requirements.md).
 
-## Как обновлять установленное ядро ProcessForge
+## Обновите установленное ядро
 
-Не распаковывайте новый релиз в проектную `.pf`. Обновляется установленный
-дистрибутив ProcessForge, а рабочие места и проекты остаются отдельно.
+Не распаковывайте релиз поверх проектной `.pf/`. Сделайте резервные копии
+установки и изменяемых данных. Если настроены долгоживущие процессы PF,
+оператору нужно выделить время для их остановки перед заменой и запуска
+нужной версии после проверки. Файловая работа Garage не требует установки служб.
 
-### Первый управляемый переход с 1.0.2 на 1.1.0
+Если установленный Core уже содержит updater, постройте план для скачанного
+архива. Перед apply прочитайте конфликты и объявленную миграцию workplace:
 
-В публичном дистрибутиве 1.0.2 ещё нет manifest-based core updater. Для этого
-единственного перехода распакуйте архив 1.1.0 во временную staging-папку и
-запустите новый updater оттуда против стабильного пути установленного Core.
+```bash
+python bin/pf.py core-update plan --core-root <installed-processforge> --archive <release-archive.zip> --workplace-root <workplace>
+python bin/pf.py core-update apply --core-root <installed-processforge> --archive <release-archive.zip> --workplace-root <workplace> --confirm
+python bin/pf.py core-update status --core-root <installed-processforge>
+python bin/pf.py doctor-workplace --root <workplace>
+```
 
-1. Сделайте резервную копию установленного Core и остановите optional
-   long-lived PF Runtime.
-2. Распакуйте `processforge-1.1.0.zip` в `<staged-processforge-1.1.0>`.
-3. Проверьте staging-дистрибутив:
+Updater проверяет манифест управляемых файлов, создаёт резервные копии и
+журнал операции. Если архив объявляет подходящую миграцию workplace, она
+выполняется после Core. Независимые миграции workplace параллельно не
+запускаются. Существующая пользовательская конфигурация — не повод повторно
+вызывать `workplace-init`: команда предназначена для первичной настройки.
+Если обновление прервано, изучите `core-update status` и используйте
+предусмотренный сценарий `core-update repair`.
 
-   ```powershell
-   python <staged-processforge-1.1.0>/bin/pf.py version
-   python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
-   ```
+В старом публичном дистрибутиве 1.0.2 ещё нет такого updater. Для первого
+управляемого перехода используется updater из распакованного целевого
+дистрибутива с явными путями установленного Core и workplace. Исторический
+[переход 1.0.2 → 1.1.0](../../../updates/migrations/1.1.0-stable-release.md)
+описан отдельно; его утверждения о конкретной версии не гарантируют отсутствие
+миграций в последующих релизах. Временные данные проекта храните под его
+`.pf/tmp/`, отдельно от заменяемой установки.
 
-4. Постройте план и явно примените обновление Core, а затем совместимую
-   миграцию Workplace к стабильным установленным папкам:
+## Проверьте каждый подключённый проект
 
-   ```powershell
-   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
-   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace> --confirm
-   ```
-
-   Архив 1.1.0 добавляет только отсутствующие стандартные настройки Workplace,
-   включая драйвер `codex-exec` и его регистрацию, и сохраняет существующую
-   конфигурацию. Не используйте `workplace-init` как updater: эта команда
-   предназначена для первичной инициализации. Порядок всегда последовательный:
-   Core, затем Workplace; независимые миграции Workplace параллельно не
-   запускаются.
-
-   После успешного apply с `--workplace-root` автоматически выполняется
-   `doctor-workplace`; результат сохраняется в
-   `<core>/runtime/core-update/last-apply.json`.
-
-5. Проверьте установленный Core и workplace, затем перезапустите PF Runtime,
-   если он настроен:
-
-   ```powershell
-   python <installed-processforge>/bin/pf.py version
-   python <installed-processforge>/bin/pf.py core-update status --core-root <installed-processforge>
-   python <installed-processforge>/bin/pf.py doctor-workplace --root <workplace>
-   ```
-
-6. Только после проверки Core и Workplace для каждого связанного проекта
-   выполните `project-upgrade-check`, обновите
-   context и запустите `doctor-project` через установленный CLI 1.1.0.
-
-Updater заранее пишет backups и operation journal. При прерванном обновлении
-используйте `core-update status` и `core-update repair`. Следующие релизы смогут
-использовать updater, уже установленный в составе 1.1.0.
-
-## Как обновлять проектную `.pf`
-
-Проектная `.pf` не обновляется наложением архива ProcessForge. Команда
-`project-upgrade-check` создаёт отчёт оценки под `.pf/artifacts/` и не изменяет
-проектные файлы автоматически:
+После проверки Core и Workplace выполните оценку установленным CLI:
 
 ```bash
 python bin/pf.py project-upgrade-check --project-root <project>
 ```
 
-После отчёта:
+Команда использует установленный индекс обновлений и записывает
+`.pf/artifacts/processforge-update-assessment.md`. Она не мигрирует
+конфигурацию автоматически и не подтверждает перенос данных журналов.
+До изменений прочитайте оценку и указания целевого релиза.
 
-1. Прочитайте результат оценки и migration guide для целевой версии.
-2. Если миграция не требуется, обновите снимок контекста:
+Существующие непустые NDJSON-журналы проектных событий и входящих хуков требуют
+явного импорта в SQLite перед их использованием. Это отдельная операция:
+замена файлов Core и обновление контекста её не выполняют. См.
+[миграцию журналов SQLite](../../concepts/hook-journal-sqlite.md) и
+[инструмент миграции](../../../tools/migrate-hook-journals.py). Сохраняйте
+оригиналы; другие журналы NDJSON не становятся устаревшими только из-за формата.
 
-   ```bash
-   python bin/pf.py project-context-refresh --project-root <project>
-   python bin/pf.py project-context-check --project-root <project>
-   python bin/pf.py doctor-project --project-root <project>
-   ```
+После необходимых миграций обновите и проверьте текущий контекст:
 
-3. Если отчёт требует изменений в проектной `.pf`, внесите их явно через
-   соответствующий процесс или команду ProcessForge, затем снова выполните
-   `project-context-refresh`, `project-context-check` и `doctor-project`.
+```bash
+python bin/pf.py project-context-refresh --project-root <project>
+python bin/pf.py project-context-check --project-root <project>
+python bin/pf.py doctor-project --project-root <project>
+```
 
-Для ProcessForge `1.1.0` обязательная миграция проектных `.pf` не требуется.
-Существующие assignments и capsules остаются валидными. Обновите project
-context и search indexes, чтобы Garage, MCP и Runtime использовали актуальные
-resource snapshots.
+Существующие капсулы остаются привязаны к исходному контексту. Обновление
+снимка не разрешает молча переписывать или расширять капсулы. Если требуется
+передача работы, выполните её через управляемый Work. Индексы ресурсов
+обновляйте по их текущему состоянию. Внутри проекта используйте
+`python .pf/runtime/bin/pf.py` вместо пути launcher относительно дистрибутива.

@@ -1,66 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="640" viewBox="0 0 1040 640" role="img" aria-labelledby="title desc">
-  <title id="title">ProcessForge workplace layout</title>
-  <desc id="desc">A workstation contains a global agent area with ProcessForge and workplace resources, plus multiple projects that each have a project-local .pf flow layer.</desc>
-  <style>
-    .bg { fill: #f7f8f4; }
-    .device { fill: #ffffff; stroke: #56635a; stroke-width: 2.5; rx: 18; }
-    .global { fill: #edf7ef; stroke: #6c9a73; stroke-width: 2; rx: 12; }
-    .forge { fill: #fff4df; stroke: #af8b42; stroke-width: 2; rx: 10; }
-    .project { fill: #edf4fb; stroke: #6f8fad; stroke-width: 2; rx: 10; }
-    .flow { fill: #f4eef9; stroke: #8c70a8; stroke-width: 1.8; rx: 8; }
-    .title { font: 700 28px Arial, sans-serif; fill: #202923; }
-    .label { font: 700 18px Arial, sans-serif; fill: #202923; }
-    .text { font: 14px Arial, sans-serif; fill: #334139; }
-    .small { font: 12px Arial, sans-serif; fill: #59655d; }
-    .line { stroke: #c6cec7; stroke-width: 1.5; }
-    .arrow { fill: none; stroke: #59655d; stroke-width: 2.2; marker-end: url(#arrow); }
-  </style>
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#59655d"/>
-    </marker>
-  </defs>
-
-  <rect class="bg" x="0" y="0" width="1040" height="640"/>
-  <rect class="device" x="36" y="36" width="968" height="568" rx="18"/>
-  <text class="title" x="70" y="82">Workplace: one computer, laptop, server, or runner host</text>
-  <text class="small" x="70" y="108">Humans and AI agents work here. ProcessForge is installed once; each project keeps only its local flow layer.</text>
-
-  <rect class="global" x="70" y="142" width="410" height="410" rx="12"/>
-  <text class="label" x="96" y="178">Global .agents area</text>
-  <line class="line" x1="96" y1="194" x2="454" y2="194"/>
-
-  <rect class="forge" x="96" y="220" width="358" height="118" rx="10"/>
-  <text class="label" x="122" y="254">ProcessForge tool root</text>
-  <text class="text" x="122" y="284">bin/pf.py, docs, schemas</text>
-  <text class="text" x="122" y="310">processes, templates, validation tools</text>
-
-  <rect class="flow" x="96" y="366" width="358" height="146" rx="8"/>
-  <text class="label" x="122" y="400">Global machine content</text>
-  <text class="text" x="122" y="430">knowledge packages, local docs roots</text>
-  <text class="text" x="122" y="456">tools, MCP servers, templates</text>
-  <text class="text" x="122" y="482">platform contracts and registries</text>
-
-  <rect class="project" x="560" y="142" width="380" height="160" rx="10"/>
-  <text class="label" x="586" y="178">Project 1 repository</text>
-  <line class="line" x1="586" y1="194" x2="914" y2="194"/>
-  <rect class="flow" x="586" y="216" width="328" height="62" rx="8"/>
-  <text class="label" x="606" y="244">.pf</text>
-  <text class="text" x="656" y="244">context, selected resources, runs, tasks</text>
-  <text class="small" x="606" y="266">artifacts, reviews, handoffs, private runtime files</text>
-
-  <rect class="project" x="560" y="342" width="380" height="160" rx="10"/>
-  <text class="label" x="586" y="378">Project 2 repository</text>
-  <line class="line" x1="586" y1="394" x2="914" y2="394"/>
-  <rect class="flow" x="586" y="416" width="328" height="62" rx="8"/>
-  <text class="label" x="606" y="444">.pf</text>
-  <text class="text" x="656" y="444">project-local flow state and evidence</text>
-  <text class="small" x="606" y="466">no copied ProcessForge core or heavy global docs</text>
-
-  <path class="arrow" d="M454 426 C510 426, 510 250, 586 250"/>
-  <text class="small" x="494" y="323">project-onboard selects resources</text>
-  <path class="arrow" d="M454 280 C510 280, 508 224, 560 224"/>
-  <text class="small" x="492" y="220">runtime launcher calls tool root</text>
-  <path class="arrow" d="M454 464 C516 464, 510 448, 586 448"/>
-  <text class="small" x="494" y="486">each project has its own .pf</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="740" viewBox="0 0 1120 740" role="img" aria-labelledby="title desc">
+<title id="title">ProcessForge distribution, workplace and project ownership</title><desc id="desc">The distribution supplies shared Core and definitions. The workplace supplies registered resources and optional Runtime. CLI, host-owned MCP and optional app-server are separate adapters. Each project keeps its own context, exact Work contracts, evidence and private SQLite journals. These are ownership layers, not required physical directory nesting.</desc>
+<style>
+.bg { fill: #f7f9f7; }
+.card { fill: #fff; stroke: #aabbb1; stroke-width: 1.7; }
+.blue { fill: #edf5fd; stroke: #7498b9; }
+.green { fill: #edf7f0; stroke: #74a184; }
+.gold { fill: #fff7e8; stroke: #b69a61; }
+.purple { fill: #f3eef9; stroke: #9a81b6; }
+.title { font: 700 26px Arial, sans-serif; fill: #21352b; }
+.label { font: 700 19px Arial, sans-serif; fill: #21352b; }
+.text { font: 15px Arial, sans-serif; fill: #344b3e; }
+.small { font: 14px Arial, sans-serif; fill: #53695c; }
+.arrow { fill: none; stroke: #53695c; stroke-width: 2; marker-end: url(#arrow); }
+.loop { fill: none; stroke: #917640; stroke-width: 2; marker-end: url(#gold-arrow); }
+</style>
+<defs>
+<marker id="arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#53695c"/></marker>
+<marker id="gold-arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#917640"/></marker>
+</defs>
+<rect class="bg" width="1120" height="740"/>
+<text class="title" x="40" y="48">Shared Core, separate owners</text>
+<text class="small" x="40" y="78">Ownership layers on one device or runner host; no required directory nesting or global .agents path.</text>
+<rect class="card gold" x="40" y="115" width="500" height="155" rx="12"/>
+<rect class="card green" x="580" y="115" width="500" height="155" rx="12"/>
+<text class="label" x="62" y="150">ProcessForge distribution</text>
+<text class="text" x="62" y="180">bin/pf.py and shared Python Core</text>
+<text class="text" x="62" y="205">Official processes, schemas, templates and documentation</text>
+<text class="small" x="62" y="245">A linked project calls this installation; it does not copy Core.</text>
+<text class="label" x="602" y="150">Workplace: machine-local resources</text>
+<text class="text" x="602" y="180">Registries, knowledge roots, tools, templates and local config</text>
+<text class="text" x="602" y="205">Shared search index; Agent Ledger; optional Runtime state</text>
+<text class="small" x="602" y="245">Availability is distinct from a project&#x27;s selected authorization.</text>
+<rect class="card " x="40" y="320" width="1040" height="95" rx="12"/>
+<text class="label" x="62" y="352">Entry adapters use the shared Core</text>
+<text class="text" x="62" y="382">CLI: short-lived commands</text>
+<text class="text" x="378" y="382">MCP: independent host-owned stdio</text>
+<text class="text" x="753" y="382">App-server: optional PF Runtime</text>
+<path class="arrow" d="M290 270 V320"/>
+<path class="arrow" d="M830 270 V320"/>
+<rect class="card blue" x="40" y="465" width="500" height="190" rx="12"/>
+<text class="label" x="62" y="500">Project A: its own .pf/</text>
+<text class="text" x="62" y="532">Manifest, current context and selected resource references</text>
+<text class="text" x="62" y="559">Pinned Work, assignments, capsules and durable evidence</text>
+<text class="text" x="62" y="586">Artifacts, reviews and handoffs</text>
+<text class="small" x="62" y="625">Private runtime: events.sqlite3, hooks.sqlite3 and transcripts</text>
+<rect class="card blue" x="580" y="465" width="500" height="190" rx="12"/>
+<text class="label" x="602" y="500">Project B: its own .pf/</text>
+<text class="text" x="602" y="532">Independent context, scope and exact Work identities</text>
+<text class="text" x="602" y="559">Its own evidence and private project journals</text>
+<text class="text" x="602" y="586">Local launcher routes to the shared distribution</text>
+<text class="small" x="602" y="625">No copied Core or heavy workplace documentation trees</text>
+<path class="arrow" d="M290 415 V465"/>
+<path class="arrow" d="M830 415 V465"/>
+<text class="small" x="40" y="699">File-only Garage work needs no running app-server. The MCP host independently owns its connected process.</text>
 </svg>

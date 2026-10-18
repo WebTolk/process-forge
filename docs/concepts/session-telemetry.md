@@ -51,18 +51,16 @@ describe flow-level facts that hooks or future consumers can observe. Chat relay
 records conversation messages separately under `.pf/runtime/chat/transcripts/`
 and emits `chat.message.recorded` with metadata-only content by default.
 
-## Project event journal writers
+## Project journals are separate
 
-Project event-id deduplication and append use the same cross-process writer
-lock. A complete UTF-8 record is appended and flushed before success; hooks
-dispatch after releasing the lock. A lock failure is reported explicitly.
-Already running clients keep their loaded code until their normal restart or
-reconnect, so the guarantee applies to writers using the updated Core.
+Project events now use transactional SQLite in
+`.pf/runtime/events/events.sqlite3`. Unique SQL admissions and pending dispatch
+replace the old NDJSON append/lock model for that journal. Raw hook input has
+its own `.pf/runtime/agent-events/hooks.sqlite3`. Session telemetry remains
+NDJSON, as do workplace events, Agent Ledger history and private transcripts.
+See [journal ownership and migration](hook-journal-sqlite.md).
 
-Malformed historical records must retain their original evidence. Do not
-replace or truncate a live journal to remove a bad line: concurrent appended
-events and byte offsets would be at risk. A reviewed operator recovery may
-quarantine an exact invalid fragment, preserve its newline and byte length,
-and verify every valid byte plus later appends. Blank lines are ignored by the
-existing NDJSON readers. Keep the original backup and a separate repair audit;
-do not reconstruct an event id or payload from an incomplete timestamp.
+Do not apply line or byte-offset repairs to a SQLite database. Preserve the
+original evidence and use a reviewed operator backup/recovery procedure for
+the affected owner. Frozen legacy NDJSON sources remain migration inputs;
+they are not the active project event journal.

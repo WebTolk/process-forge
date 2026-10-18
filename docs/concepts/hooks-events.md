@@ -26,7 +26,7 @@ independently. See [SQLite journals and migration](hook-journal-sqlite.md).
 
 ## Codex adapter and registration
 
-`tools/pf_runtime/codex_hooks.py` is a thin adapter. Its normalized mappings include session lifecycle, compaction and tool facts. Every registered event is accepted raw-first. `UserPromptSubmit` records the user prompt, `Stop` records `last_assistant_message`, and `SubagentStop` records the subagent final message when their Ledger session and project binding are valid.
+`tools/pf_runtime/codex_hooks.py` is a thin adapter. Its normalized mappings include session lifecycle, compaction and tool facts. Every registered event is accepted raw-first. `UserPromptSubmit` records the user prompt, `Stop` and `SessionEnd` record a supplied `last_assistant_message`, and `SubagentStop` records the supplied subagent final message when their Ledger session and project binding are valid.
 
 This capability is not proof that every Codex hook is registered in an environment. The distribution does not install a host `.codex/hooks.json`. Adapter acceptance, normalized mapping, conversation mapping and actual host registration are separate facts. Unknown native events can remain raw-only.
 

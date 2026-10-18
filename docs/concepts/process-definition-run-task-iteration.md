@@ -1,4 +1,4 @@
-﻿# Process Definition, Run, Task, Iteration
+# Process Definition, Run, Task, Iteration
 
 Process definitions describe lifecycle mechanics, not platform-specific build
 or delivery commands. For example, `software-feature-development` includes
@@ -27,8 +27,19 @@ A worker can own a substantial package with its own complete process. Its cycle 
 
 These boundaries do not change permissions. Use the current Work contract, declared outcomes, protected-artifact revision and governed handoff mechanisms; do not widen scope, invent a return transition or rebuild an immutable capsule.
 
+## Ordinary Work and advanced batch records
+
+For ordinary governed work, start with [Garage Core](garage-core.md):
+`pf.context -> pf.work.start -> pf.work.state -> evidence -> pf.work.transition`
+until `action: run_completed`. Resume an existing Work through an exact
+[continuation](work-continuation.md). The pinned process selects the stage;
+the final transition writes the summary and handoff automatically.
+
 Authoring produces the process definition and companion prompt/docs/examples.
-Execution commands then use that process id:
+The following lower-level commands create explicit batch records. This is a
+partial setup example, not the ordinary governed Work cycle or a complete
+batch closure; follow the [task-batch guide](../getting-started/task-batch-workflow.md)
+for task completion, summary, doctor and final batch completion:
 
 ```bash
 python bin/pf.py run-create --project-root <project-root> --id <run-id> --title "<title>" --process <process-id> --apply

@@ -1,13 +1,16 @@
 # Multi-Agent Orchestration Quickstart
 
-Use this flow inside an onboarded project.
+Use this optional flow inside an onboarded project when the chosen process
+permits delegation. Ordinary Garage work does not require it. Review the plan
+before apply: each worker needs explicit inputs, read/write scope, outputs and
+dependencies. Keep one writer per scope and preserve immutable capsules.
 
 ```bash
 python .pf/runtime/bin/pf.py orchestrator-plan create --project-root . --run example-run --title "Example multi-agent run" --apply
 python .pf/runtime/bin/pf.py orchestrator-plan validate --project-root . --plan .pf/runs/example-run/orchestrator-plan.yaml
 python .pf/runtime/bin/pf.py orchestrator-plan apply --project-root . --plan .pf/runs/example-run/orchestrator-plan.yaml --apply
 python .pf/runtime/bin/pf.py orchestrator-plan status --project-root . --run example-run
-python .pf/runtime/bin/pf.py worker-launch-prompt create --project-root . --task docs-worker --apply
+python .pf/runtime/bin/pf.py worker-launch-prompt create --project-root . --task fixture-worker-a --apply
 ```
 
 Flat aliases are also available:
@@ -23,7 +26,10 @@ Flat aliases are also available:
 - `worker-run-collect`
 - `supervisor-run`
 
-The plan template is `templates/orchestrator-task-plan.yaml`.
+The generated example uses `fixture-worker-a` and `fixture-worker-b`. Replace
+the sample work and use the task id actually present in your plan. The source
+template is `templates/orchestrator-task-plan.yaml` in the distribution; a
+linked project does not receive that entire directory.
 
 Plans may include:
 

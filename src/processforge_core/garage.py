@@ -14,8 +14,8 @@ from .project.snapshot import load_snapshot
 from .resources.snapshot import resource_selection_summary, snapshot_with_resolved_search_roots
 
 
-def diagnostics_from_check(check: dict[str, Any], search: dict[str, Any], mode: dict[str, Any] | None = None) -> list[dict[str, str]]:
-    diagnostics: list[dict[str, str]] = []
+def diagnostics_from_check(check: dict[str, Any], search: dict[str, Any], mode: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    diagnostics: list[dict[str, Any]] = []
     if check.get("status") not in {"fresh", "fresh_with_updates"}:
         diagnostics.append({"code": "context_not_fresh", "severity": "blocked", "message": str(check.get("recommended_action") or "refresh required")})
     if search.get("status") == "empty":
@@ -25,6 +25,13 @@ def diagnostics_from_check(check: dict[str, Any], search: dict[str, Any], mode: 
     for blocker in (mode or {}).get("blockers", []):
         if isinstance(blocker, dict):
             diagnostics.append({"code": str(blocker.get("code") or "mode_blocker"), "severity": "blocked", "message": str(blocker.get("message") or "")})
+    temporary = check.get("temporary_files")
+    if isinstance(temporary, dict):
+        notification = bool(temporary.get("notification"))
+        diagnostics.append({"code": "temporary_files_status", "severity": "warn" if notification else "info",
+                            "message": ("Old-file candidates observed; age does not authorize deletion." if notification
+                                        else f"Temporary-files observation: {temporary.get('status', 'unknown')}."),
+                            "temporary_files": temporary})
     return diagnostics
 
 

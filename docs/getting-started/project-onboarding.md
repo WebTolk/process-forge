@@ -27,12 +27,12 @@ It creates root entry and project-local `.pf/` state:
 
 Command:
 
-For dry-run, create or select `./my-project` first. Apply mode can create a
+For dry-run, create or select `../my-project` first. Apply mode can create a
 missing greenfield project root.
 
 ```bash
-python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
-python bin/pf.py agent-start-prompt --project-root ./my-project
+python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
+python bin/pf.py agent-start-prompt --project-root ../my-project
 ```
 
 The public manifest declares `context_requirements` and `context_policy`.
@@ -43,10 +43,10 @@ created with.
 Project coordination mode is independent from workplace capability:
 
 ```bash
-python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --coordination-mode inherit --apply
-python bin/pf.py project-mode status --project-root ./my-project --workplace ./pf-workplace --json
-python bin/pf.py project-mode set --project-root ./my-project --mode simple
-python bin/pf.py project-mode set --project-root ./my-project --mode organized --init-office
+python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --coordination-mode inherit --apply
+python bin/pf.py project-mode status --project-root ../my-project --workplace ../pf-workplace --json
+python bin/pf.py project-mode set --project-root ../my-project --mode simple
+python bin/pf.py project-mode set --project-root ../my-project --mode organized --init-office
 ```
 
 Use `simple` for the default 1-1-1-1 flow. Use `organized` only when the

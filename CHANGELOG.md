@@ -2,10 +2,17 @@
 
 ## Unreleased
 
-## 1.2.0 - 2026-10-17
+## 1.2.0 - 2026-10-18
 
 ### Changed
 
+- Refresh English and Russian user documentation, setup guidance, agent prompts
+  and diagrams. Add a shared requirements checklist with Python modules,
+  storage needs and app-server memory planning; README badges follow the
+  latest published stable release automatically.
+- Keep project scratch under `.pf/tmp/`. Add configurable old-file
+  notifications from the optional app-server, without automatic deletion.
+  See [temporary files](docs/temporary-files.md).
 - Store project event and native hook journals in separate local SQLite databases
   with transactional admissions, indexed replay and independent history controls.
   Existing journals require a controlled cutover with the explicit temporary

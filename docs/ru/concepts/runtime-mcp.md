@@ -17,6 +17,14 @@
 stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
 detached background service.
 
+Необязательный **pf-app-server** — отдельная служба Runtime для планирования
+и координации workplace. Stdio-фасад использует общий Core; контекст Garage
+и управляемая Work не требуют работающего app-server. При отсутствии MCP
+используйте существующий CLI. См. [Garage Core](garage-core.md) и
+[требования](../requirements.md).
+
+## Справка по реализации: транспорт stdio
+
 При запуске сервер задаёт UTF-8 для стандартных текстовых stdin и stdout
 независимо от локали и `PYTHONIOENCODING`. Уже настроенные на UTF-8 потоки
 сохраняют кодировку, в том числе входной поток, который читали до запуска.
@@ -30,6 +38,8 @@ detached background service.
 инструмента до выполнения запроса. Ошибки разбора JSON, структуры запроса и
 параметров имеют разные коды. Уведомления не создают ответов, в том числе при
 ошибке выполнения; явно заданный `id: null` остаётся запросом.
+
+## Инструменты проекта и Work
 
 Garage read tools принимают явный `project_root` и не требуют session identity,
 hooks, daemon, Ledger event, Director process или chat transcript. Session и
@@ -139,7 +149,7 @@ status, stop, restart. Защищённая остановка требует с
 [монитора](runtime-monitor.md) без записи. Команды управляют workplace Runtime;
 обновление файлов Core не перезагружает MCP stdio, которым владеет хост.
 
-## Тело HTTP-запроса Runtime
+## Справка по реализации: тело HTTP-запроса Runtime
 
 Существующий локальный HTTP-адаптер Runtime принимает в POST JSON-объект
 размером не более 1 МиБ в байтах. `Content-Length` должен содержать десятичные

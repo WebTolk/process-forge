@@ -23,7 +23,9 @@ workplace; репозиторий хранит состояние процесс
 
 - [Корневой README](../../README.ru.md)
 - [Промпты быстрого старта](../../QUICKSTART.ru.md)
+- [Требования и планирование памяти](requirements.md)
 - [Установка](getting-started/installation.md)
+- [Временные файлы и уведомления](temporary-files.md)
 - [Пошаговая настройка workplace](getting-started/guided-workplace-setup.md)
 - [Порядок инициализации](getting-started/initialization-order.md)
 - [Workplace vs project](concepts/workplace-vs-project.md)
@@ -33,6 +35,7 @@ workplace; репозиторий хранит состояние процесс
 
 ## Для ИИ-агентов
 
+- [Требования и необязательная инфраструктура](requirements.md)
 - [Командный справочник агента и промпты](getting-started/agent-prompts.md)
 - [Промпт агента для пошаговой настройки workplace](../../prompts/guided-workplace-setup-agent.md)
 - [Промпт агента для автоматической инициализации workplace](../../prompts/workplace-initialization-agent.md)
@@ -42,6 +45,7 @@ workplace; репозиторий хранит состояние процесс
 
 ## Начало работы
 
+- [Требования](requirements.md)
 - [Установка](getting-started/installation.md)
 - [Первый запуск](getting-started/first-run.md)
 - [Порядок инициализации](getting-started/initialization-order.md)
@@ -74,7 +78,7 @@ workplace; репозиторий хранит состояние процесс
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Модель среды выполнения](concepts/runtime-model.md)
-- [Garage Core (EN)](../concepts/garage-core.md)
+- [Garage и управляемая Work](concepts/garage-core.md)
 - [Declarative process execution](concepts/declarative-process-execution.md)
 - [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Модель агентской сессии](concepts/agent-session-model.md)
@@ -96,6 +100,21 @@ workplace; репозиторий хранит состояние процесс
 - [Hooks и events](concepts/hooks-events.md)
 - [Semantic parity](concepts/semantic-parity.md)
 
+Для повседневной работы начните с [Garage и управляемой Work](concepts/garage-core.md).
+После смены сессии используйте [продолжение выбранной Work](concepts/work-continuation.md).
+В [командном справочнике агента](getting-started/agent-prompts.md) есть путь
+через CLI для случая, когда MCP недоступен.
+
+## Справочник разработчика и сопровождающего
+
+Эти страницы объясняют реализацию и проверки; они не являются шагами установки:
+
+- [Архитектура Python Core](concepts/python-core-structure.md)
+- [Чтение документов и границы кэша](concepts/document-reads.md)
+- [Журналы SQLite и их перенос](concepts/hook-journal-sqlite.md)
+- [Доказательства аудита разработки](audits/canonical-work-selection-20261016.md)
+- [Проверки (EN)](../validation/validation.md)
+
 ## Порядок слоёв
 
 1. Устройство workplace: компьютер, ноутбук, сервер или узел выполнения.
@@ -114,6 +133,8 @@ Platform contracts являются композиционными манифе�
 
 ## Релизы
 
+- [Что меняется в 1.2.0](releases/1.2.0.md)
+- [Обновление и миграция](releases/1.2.0-migration.md)
 - [Публикация релиза](../maintainers/release-publishing.md)
 - [Initial release notes](releases/initial-release.md)
 - [Ограничения](known-limitations.md)

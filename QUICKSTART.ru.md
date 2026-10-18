@@ -6,31 +6,38 @@
 
 ## Одноразовая настройка машины
 
-Один раз зарегистрируйте ProcessForge MCP для пользователя/host Codex:
+Сначала пройдите [установку](docs/ru/getting-started/installation.md) и проверьте
+[требования](docs/ru/requirements.md). Python CLI можно использовать без MCP и
+фоновой службы.
+
+Если используете Codex с MCP, один раз зарегистрируйте ProcessForge для этого
+пользователя и приложения:
 
 ```bash
 python <processforge-root>/bin/pf.py codex-mcp install --workplace <workplace-root> --apply
 ```
 
-После этого Codex сам запускает отдельный подключённый stdio MCP child process
-для каждого host connection. MCP не нужно запускать вручную. Для Forge на
-Windows один раз установите Runtime task для workplace:
+После этого Codex сам запускает подключённый stdio MCP-процесс для каждого
+соединения. MCP не нужно запускать вручную. Если координации Forge нужна фоновая
+служба в Windows, один раз создайте задачу Runtime для рабочего места:
 
 ```powershell
 python <processforge-root>/bin/pf.py runtime autostart install --workplace <workplace-root> --apply
 ```
 
-Garage не требует Runtime autostart. Обычная ежедневная работа после настройки:
-`cd <project-root>` и запуск Codex.
+Garage не требует автозапуска Runtime. Для ежедневной работы откройте проект
+в своём агенте, прочитайте корневой `AGENTS.md` и используйте текущий контекст
+и управляемую Work. Полный цикл описан в
+[командном справочнике агента](docs/ru/getting-started/agent-prompts.md).
 
 | | Garage | Forge |
 |---|---|---|
 | Runtime daemon | не обязателен | обязателен, когда его требует coordination |
-| MCP | запускается host | запускается host |
+| MCP | необязателен; запускается приложением | необязателен; запускается приложением |
 | Ledger session | не нужна для context/search/resolve/work.start | используется orchestration |
 | hooks | optional host telemetry | optional host-specific telemetry |
 | Director | нет | да, когда его требует coordination |
-| Runtime autostart | не нужен | рекомендуется/требуется |
+| Runtime autostart | не нужен | необязателен при использовании службы |
 
 ## 1. Подготовить инструмент
 
@@ -38,8 +45,8 @@ Garage не требует Runtime autostart. Обычная ежедневна�
 Подготовь ProcessForge на этой машине. Он находится в папке
 <путь-к-processforge>.
 
-Изучи README и используй docs/ru/getting-started/agent-prompts.md как командный
-справочник.
+Изучи README, docs/ru/requirements.md и инструкцию по установке. Используй
+docs/ru/getting-started/agent-prompts.md как командный справочник.
 
 Проверь, что корень дистрибутива пригоден к работе, и назови точный путь,
 который мне нужно использовать как <processforge-root>.

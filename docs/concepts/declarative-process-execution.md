@@ -46,15 +46,19 @@ Suppose `pf.work.state` returns this excerpt for `task-result-fixation`:
 }
 ```
 
-First write `.pf/artifacts/result.md`, check the blocking tasks and record the
-actual results. A transition without the required artifact/gate evidence is
-rejected with `transition_rejected` and missing requirements; the stage does
-not advance. Inspect `pf.work.state`, satisfy those requirements, then submit
-this argument object to `pf.work.transition`:
+First write `.pf/artifacts/result.md` within the allowed scope, check the
+blocking tasks and record the actual results. Missing required artifact/gate
+evidence returns `action: incomplete` with the unsatisfied requirements;
+invalid evidence can return `action: transition_rejected`. Neither advances the
+stage. Inspect `pf.work.state`, satisfy the requirements, then submit this
+argument object to `pf.work.transition`:
 
 ```json
 {
   "project_root": "<project-root>",
+  "run_id": "<returned-run-id>",
+  "assignment_id": "<returned-assignment-id>",
+  "context_id": "<returned-context-id>",
   "outcome": "completed",
   "notes": "Task results and blocking-task checks are recorded; ready for run review.",
   "evidence": [
@@ -65,7 +69,11 @@ this argument object to `pf.work.transition`:
 ```
 
 This is an example for these specific obligations, not a universal payload.
-Use IDs and allowed outcomes from your actual state. Gate status accepts
+Use IDs and allowed outcomes from your actual state. Keep the exact selectors
+returned by start/resume; without a bound session, supply them on every Work
+call. Check the Assignment and capsule permissions before writing an artifact.
+For an existing Work, use [continuation](work-continuation.md) rather than
+rewording the objective in another start call. Gate status accepts
 `passed`, `approved`, or justified `not_applicable`; `pass` does not satisfy it.
 Artifact evidence identifies an existing file; gate evidence is an attestation
 of a check actually performed, not independent proof of semantic quality.
@@ -83,6 +91,11 @@ history, refreshes the execution projection, and emits `process.stage.*`
 events. The final successful transition from the last stage completes the
 Assignment and Run automatically and writes the summary and handoff without a
 separate terminal completion command.
+
+Manual batch record commands such as `run-create` and `task-complete` serve a
+separate [advanced workflow](../getting-started/task-batch-workflow.md). Do not
+add `run-complete` or `run-summary` to close this governed Work: the final
+transition owns completion. Host session lifecycle remains separate.
 
 ## Internal iterations and nested work
 

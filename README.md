@@ -4,8 +4,8 @@
 
 **A platform-neutral, AI-provider-neutral framework for creating and running AI-assisted processes.**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-2F6FED?style=for-the-badge)](VERSION)
-[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![Latest release](https://img.shields.io/github/v/release/WebTolk/process-forge?sort=date&style=for-the-badge&color=2F6FED)](https://github.com/WebTolk/process-forge/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](docs/requirements.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![File First](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/concepts/runtime-model.md)
 [![Platform Neutral](https://img.shields.io/badge/core-platform--neutral-6A1B9A?style=for-the-badge)](docs/concepts/domain-neutral-core.md)
@@ -68,12 +68,22 @@ this mode.
 
 ## Quick Start
 
+### Check Your Environment
+
+Use Python 3.11+ and install the dependencies from `requirements.txt` in the
+Python environment your agent will use. See [requirements](docs/requirements.md)
+for Python modules, local storage, optional integrations and app-server memory
+planning. The [installation guide](docs/getting-started/installation.md) walks
+through setup and verification.
+
 ### Place ProcessForge
 
-Download the release archive, `processforge.zip`,
-and unpack it into a stable folder that your AI agents can access, for example
+Download the ZIP and its adjacent manifest from the
+[latest published release](https://github.com/WebTolk/process-forge/releases/latest),
+then unpack the ZIP into a stable folder that your AI agents can access, for example
 a shared agent tools folder. Use that folder as `<processforge-root>` in the
-prompts below.
+prompts below. Use the asset names shown on the release page; keep the manifest
+outside the ZIP for verification and updates.
 
 If you work from a source checkout, use the repository root as
 `<processforge-root>`. Local release builds write the archive to

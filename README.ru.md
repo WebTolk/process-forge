@@ -4,8 +4,8 @@
 
 **Фреймворк для создания ИИ-процессов, независимый от конкретных платформ и поставщиков ИИ.**
 
-[![Версия](https://img.shields.io/badge/version-1.1.0-2F6FED?style=for-the-badge)](VERSION)
-[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![Последний релиз](https://img.shields.io/github/v/release/WebTolk/process-forge?sort=date&style=for-the-badge&color=2F6FED)](https://github.com/WebTolk/process-forge/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](docs/ru/requirements.md)
 [![Лицензия](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Файловый режим](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/ru/concepts/runtime-model.md)
 [![Независимость от платформ](https://img.shields.io/badge/core-platform--neutral-6A1B9A?style=for-the-badge)](docs/ru/concepts/domain-neutral-core.md)
@@ -15,12 +15,11 @@
 
 </div>
 
-ProcessForge - файловый фреймворк для создания, версионирования и выполнения
-ИИ-процессов. Он не зависит от конкретных платформ реализации и поставщиков ИИ
-(AI providers): предметные области, инструментальные цепочки (toolchains),
-пакеты знаний (knowledge packages), шаблоны, драйверы выполнения
-(runtime drivers) и платформенные контракты (platform contracts) подключаются
-через версионируемые файлы, а не зашиваются в ядро.
+ProcessForge — файловая среда для создания, версионирования и выполнения
+процессов с участием ИИ. Она не привязана к конкретной платформе или поставщику
+ИИ: предметные области, инструменты разработки, пакеты знаний, шаблоны,
+драйверы выполнения и платформенные контракты подключаются через
+версионируемые файлы.
 
 Этот README написан для человека. ИИ-агенты должны использовать командный
 справочник в
@@ -82,12 +81,22 @@ Runtime, host telemetry и worker orchestration подключаются для 
 
 ## Быстрый старт
 
+### Проверить окружение
+
+Используйте Python 3.11+ и установите зависимости из `requirements.txt` в то
+окружение Python, с которым будет работать агент. [Требования](docs/ru/requirements.md)
+описывают модули Python, локальное хранилище, необязательные интеграции и запас
+памяти для app-server. Порядок настройки и проверки приведён в
+[инструкции по установке](docs/ru/getting-started/installation.md).
+
 ### Разместить ProcessForge
 
-Скачайте релизный архив (release archive)
-`processforge.zip` и распакуйте его в стабильную
-папку, доступную ИИ-агентам: например, в общую папку инструментов для агентов.
-Используйте эту папку как `<processforge-root>` в промптах ниже.
+Скачайте ZIP и соседний файл манифеста со страницы
+[последнего опубликованного релиза](https://github.com/WebTolk/process-forge/releases/latest).
+Распакуйте ZIP в постоянную папку, доступную ИИ-агентам: например, в общую
+папку инструментов. Используйте её как `<processforge-root>` в промптах ниже.
+Точные имена файлов смотрите на странице релиза; манифест храните рядом с ZIP
+для проверки архива и обновлений.
 
 Если вы работаете из рабочей копии исходного кода (source checkout), используйте
 корень репозитория как `<processforge-root>`. Локальная релизная сборка создаёт

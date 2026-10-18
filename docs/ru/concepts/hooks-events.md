@@ -27,15 +27,15 @@ SQLite хранит уникальные квитанции, данные нез
 необязательную историю. Контрольные точки повторной обработки также относятся
 к проекту. Эти данные приватны и исключены из архива поставки. Параметры
 `logging.raw_hooks` и `logging.events` наследуются от глобального PFConfig с
-проектными переопределениями. См. [описание миграции](../../concepts/hook-journal-sqlite.md).
+проектными переопределениями. См. [описание миграции](hook-journal-sqlite.md).
 
 ## Codex adapter and registration
 
 `tools/pf_runtime/codex_hooks.py` — тонкий adapter. Normalized mappings включают
 session lifecycle, compaction и tool facts. Каждый зарегистрированный event
-принимается raw-first. `UserPromptSubmit` записывает user prompt, `Stop`
-записывает `last_assistant_message`, а `SubagentStop` записывает subagent final
-message, когда их Ledger session и project binding валидны.
+принимается raw-first. `UserPromptSubmit` записывает user prompt, `Stop` и `SessionEnd`
+записывают переданное поле `last_assistant_message`, а `SubagentStop` — переданное
+итоговое сообщение subagent, когда их Ledger session и project binding валидны.
 
 Эта возможность не доказывает, что все Codex hooks зарегистрированы в
 environment. Distribution не устанавливает host `.codex/hooks.json`. Adapter

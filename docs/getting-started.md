@@ -3,20 +3,27 @@
 ProcessForge starts with files, not services. A project flow lives under `.pf/`.
 Python CLI is the canonical runtime.
 
+Check [requirements and memory planning](requirements.md) first. For human-led
+setup, use [guided workplace setup](getting-started/guided-workplace-setup.md);
+the direct commands below are for operators with explicit paths and choices.
+
 ## Garage and Forge
 
 | | Garage | Forge |
 |---|---|---|
 | Runtime daemon | Not required | Required when coordination uses it |
-| MCP | Host-owned stdio process | Host-owned stdio process |
+| MCP | Optional host-owned stdio process; CLI works without it | Host-owned stdio when selected |
 | Ledger session | Not needed for `pf.context/search/resolve/work.start` | Used for orchestration |
-| Hooks | Optional telemetry | Optional host-specific telemetry |
+| Hooks | Optional host telemetry | Forge admission checks; host telemetry when selected |
 | Director | No | Yes when required by coordination |
 | Runtime autostart | Not needed | Recommended/required |
 
 The normal project-agent path is `pf.context -> pf.search -> pf.resolve ->
 pf.work.start`. Current context outranks historical generated reports. Runtime,
 MCP, hook, Ledger, and index maintenance are operator/advanced paths.
+For existing Work, use [exact continuation](concepts/work-continuation.md).
+For selected Work resources, use `pf.work.search` and `pf.work.resolve` with
+the returned Run/assignment/context ids. Keep repository scratch in `.pf/tmp/`.
 
 ## Initialize A Workplace
 

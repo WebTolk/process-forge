@@ -1,8 +1,14 @@
 # Update System
 
-Use the unified updater from a workplace root. It discovers update servers,
-finds candidates, stages an artifact, verifies it, and applies supported
-file-based updates only after explicit operator confirmation:
+Run these operator commands from the installed distribution root with the
+Python environment selected during [installation](installation.md). Workplaces
+and projects remain outside the replaceable Core directory. Ordinary project
+agents must not update Core or repair optional infrastructure as a task workaround.
+
+## Discover and review an update
+
+The unified updater discovers servers and candidates, stages an artifact,
+verifies it, and applies supported file-based updates after explicit confirmation:
 
 ```bash
 python bin/pf.py update entity-sources rebuild --workplace <workplace>
@@ -16,88 +22,72 @@ python bin/pf.py update apply --workplace <workplace> --candidate <candidate-id>
 python bin/pf.py update rollback --workplace <workplace> --candidate <candidate-id>
 ```
 
-For deterministic local testing, use `file:///` manifest and artifact URLs.
-For real remote update servers, use HTTPS URLs, sha256 hashes, and operator
-review before staging or applying.
+Use `file:///` manifest/artifact URLs for deterministic local testing. Real
+remote servers need HTTPS and trusted certificates, sha256 hashes, and review
+of the release source and migration notes. See [requirements](../requirements.md).
 
-## Updating The Installed ProcessForge Core
+## Update the installed Core
 
-Do not unpack a ProcessForge release into a project `.pf` directory. Update the
-installed ProcessForge distribution; workplaces and projects stay separate.
+Do not unpack a release over a project's `.pf/`. Back up the installation and
+its mutable data. If long-lived PF processes are configured, arrange an operator
+maintenance window before replacement, then start the intended new processes
+after validation. File-only Garage needs no service installation.
 
-### First managed update from 1.0.2 to 1.1.0
+With an updater-capable installation, plan against the downloaded archive and
+inspect conflicts and the declared workplace migration before apply:
 
-The public 1.0.2 distribution does not contain the manifest-based core updater.
-For this one transition, extract the 1.1.0 archive to a temporary staging
-directory and run the new updater from that directory against the stable
-installed Core path.
+```bash
+python bin/pf.py core-update plan --core-root <installed-processforge> --archive <release-archive.zip> --workplace-root <workplace>
+python bin/pf.py core-update apply --core-root <installed-processforge> --archive <release-archive.zip> --workplace-root <workplace> --confirm
+python bin/pf.py core-update status --core-root <installed-processforge>
+python bin/pf.py doctor-workplace --root <workplace>
+```
 
-1. Back up the installed Core and stop its optional long-lived PF Runtime.
-2. Extract `processforge-1.1.0.zip` to `<staged-processforge-1.1.0>`.
-3. Verify the staged distribution:
+The updater validates the archive's managed-file manifest, records backups and
+an operation journal, and applies a matching archive-declared workplace
+migration when one exists. The order is Core, then Workplace; do not run
+independent workplace migrations concurrently. Existing user configuration is
+not a reason to rerun `workplace-init`: that command is for initial setup.
+For an interrupted operation, inspect `core-update status` and use the supported
+`core-update repair` flow.
 
-   ```powershell
-   python <staged-processforge-1.1.0>/bin/pf.py version
-   python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
-   ```
+The older public 1.0.2 distribution has no manifest-based Core updater. Its
+first managed transition uses the updater from an extracted target distribution,
+with the same explicit installed Core and workplace targets. The original
+[1.0.2 → 1.1.0 migration guide](../../updates/migrations/1.1.0-stable-release.md)
+records that historical transition; its version-specific statements are not a
+blanket migration promise for later releases. Keep project staging/scratch under
+that project's `.pf/tmp/`, separate from the installation being replaced.
 
-4. Plan and explicitly apply the Core update, followed by its compatible
-   Workplace migration, to the stable installed directories:
+## Check each linked project
 
-   ```powershell
-   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
-   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace> --confirm
-   ```
-
-   The 1.1.0 archive adds only missing PF-owned Workplace defaults (including
-   `codex-exec`) and preserves existing Workplace configuration. The order is
-   serial: Core, then Workplace. Do not run independent Workplace migrations in
-   parallel. Do not use
-   `workplace-init` as an updater: it is for first-time initialization.
-
-5. Validate the installed Core and workplace, then restart PF Runtime when it is
-   configured:
-
-   ```powershell
-   python <installed-processforge>/bin/pf.py version
-   python <installed-processforge>/bin/pf.py core-update status --core-root <installed-processforge>
-   python <installed-processforge>/bin/pf.py doctor-workplace --root <workplace>
-   ```
-
-6. Only after Core and Workplace validation, for each linked project run
-   `project-upgrade-check`, refresh the context,
-   and run `doctor-project` with the installed 1.1.0 CLI.
-
-The updater writes backups and an operation journal before replacing managed
-files. Use `core-update status` and `core-update repair` if an interrupted update
-is reported. Future releases can use the updater already installed by 1.1.0.
-
-## Updating Project `.pf`
-
-Project `.pf` is not updated through package overlay. Use:
+After Core and Workplace validation, assess each project with the installed CLI:
 
 ```bash
 python bin/pf.py project-upgrade-check --project-root <project>
 ```
 
-The command writes an assessment/migration report under the project
-`.pf/artifacts/` directory and does not modify project files automatically.
+This writes `.pf/artifacts/processforge-update-assessment.md` using the installed
+update index. It does not automatically migrate project configuration or prove
+that journal data has been migrated. Read the assessment and the target release's
+migration instructions before changing files.
 
-After the assessment:
+Existing non-empty legacy project event/raw-hook NDJSON journals require explicit
+SQLite import before those journals can be used. This is separate from replacing
+Core files or refreshing context. Follow [SQLite journal migration](../concepts/hook-journal-sqlite.md)
+and the declared [migration tool](../../tools/migrate-hook-journals.py); retain the
+originals and do not treat other NDJSON owners as obsolete.
 
-1. Read the report and the migration guide for the target ProcessForge version.
-2. If no migration is required, refresh and validate the context snapshot:
+When required migrations are complete, refresh and check the current project:
 
-   ```bash
-   python bin/pf.py project-context-refresh --project-root <project>
-   python bin/pf.py project-context-check --project-root <project>
-   python bin/pf.py doctor-project --project-root <project>
-   ```
+```bash
+python bin/pf.py project-context-refresh --project-root <project>
+python bin/pf.py project-context-check --project-root <project>
+python bin/pf.py doctor-project --project-root <project>
+```
 
-3. If the report requires project `.pf` changes, apply them explicitly through
-   the relevant ProcessForge process or CLI command, then rerun the context and
-   project doctors.
-
-For ProcessForge `1.1.0`, no mandatory project `.pf` migration is required.
-Existing assignments and capsules remain valid. Refresh project context and
-search indexes so Garage, MCP, and Runtime use current resource snapshots.
+Existing assignment capsules stay pinned to their original context. A refresh
+does not authorize silently rewriting or widening them. Resolve any required
+handoff through the governed Work flow, and refresh resource indexes when their
+status requires it. Inside a linked project use `python .pf/runtime/bin/pf.py`
+instead of the distribution-relative launcher.

@@ -22,5 +22,16 @@ self-reference. If a rebuild changes ZIP bytes, the rebuilt SHA-256 is
 authoritative and every public metadata reference must be updated before
 publication. Do not preserve an obsolete candidate hash.
 
-ProcessForge 1.1.0 uses HTTPS, SHA-256, immutable assets, and Git provenance.
+For a release mirrored across hosts, publish identical ZIP/sidecar bytes and
+the same tagged source commit on each required host. Verify remote asset hashes
+and update discovery after publication. Authorization to publish and successful
+publication are separate facts: do not label a candidate as published before
+the maintainer confirms the actual release.
+
+Reusable command examples can use neutral archive names. Qualification evidence
+must preserve the actual release version, tagged source commit and SHA-256 of
+the bytes checked. Keep repository scratch in `.pf/tmp/`; retain durable
+evidence before removing owned intermediates.
+
+ProcessForge uses HTTPS, SHA-256, immutable assets, and Git provenance.
 TUF-backed trust metadata is future hardening, not a current capability.
