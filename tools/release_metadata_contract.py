@@ -10,8 +10,8 @@ from typing import Any
 
 
 PRODUCT_ID = "processforge"
-RELEASE_VERSION = "1.1.0"
-RELEASE_TAG = "v1.1.0"
+RELEASE_VERSION = "1.2.0"
+RELEASE_TAG = "v1.2.0"
 REPOSITORY = "WebTolk/process-forge"
 ASSET_BASE_URL = f"https://github.com/{REPOSITORY}/releases/download/{RELEASE_TAG}"
 ARCHIVE_NAME = f"processforge-{RELEASE_VERSION}.zip"
@@ -45,5 +45,5 @@ def release_version(manifest: dict[str, Any]) -> dict[str, Any]:
         raise AssertionError("stable manifest must expose exactly one version")
     version = versions[0]
     if not isinstance(version, dict) or version.get("version") != RELEASE_VERSION:
-        raise AssertionError("stable manifest does not expose only 1.1.0")
+        raise AssertionError("stable manifest does not expose only 1.2.0")
     return version
