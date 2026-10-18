@@ -164,7 +164,8 @@ def declared_stage_obligations(project_root: Path, core: Any, *, dependencies: s
         run_id = str(task.get("run_id") or "")
         if dependencies is not None:
             if run_id:
-                dependencies.add(core.worker_run_paths(project_root, run_id, str(task["id"]))["status"])
+                from processforge_core.work.paths import WorkPaths
+                dependencies.add(WorkPaths().worker_run(project_root, run_id, str(task["id"]))["status"])
             from processforge_core.work.context_documents import ContextContractInputs
             for output in ContextContractInputs().normalize_required_outputs(task.get("required_outputs")):
                 from processforge_core.work.outputs import WorkOutputPolicy

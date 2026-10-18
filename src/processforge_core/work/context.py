@@ -170,8 +170,8 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
                   "non_overlap": core.normalize_non_overlap(metadata.get("non_overlap"), allowed)},
         "outputs": {"required_outputs": outputs, "expected_report": expected},
         "workspace_access": access,
-        "agent_model": core.normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
-        "agent_reasoning_effort": core.normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
+        "agent_model": ContextContractInputs().normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
+        "agent_reasoning_effort": ContextContractInputs().normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
         "subagent_policy": core.normalize_subagent_policy(metadata.get("subagent_policy")),
     }
     _portable_values({key: result[key] for key in ("scope", "outputs", "subagent_policy")})

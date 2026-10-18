@@ -1,0 +1,8 @@
+{
+  "reason": "Retained exit-zero egress output uses PASS followed by a space, not colon. Recognition corrected without rerunning any successful check or changing product source. Remaining checks continue on identical final bytes.",
+  "reconciled": [
+    "smoke_egress_work"
+  ],
+  "prior_receipt_sha256": "962afbb5055b55badf8063d07758406c990fb4bce71cda5354bd34a18c658e58",
+  "source_stable": true
+}

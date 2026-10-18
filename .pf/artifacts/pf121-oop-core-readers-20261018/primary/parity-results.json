@@ -1,0 +1,446 @@
+{
+  "passed": true,
+  "total": 68,
+  "native_exceptions": 3,
+  "groups": {
+    "annotations": 31,
+    "paths": 12,
+    "command": 5,
+    "platform": 6,
+    "documents": 12,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "run_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "run_yaml_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "assignment_yaml_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "task_artifacts_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "run_summary_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "run_handoff_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "worker_prompt_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "agent_run_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "worker_run_paths",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "build_worker_process_command",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "worker_sandbox_for_task",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_id",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_registry_entry",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "seed_platform_contract_paths",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "project_platform_contract_paths",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_record",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_manifest_index",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_platform_contract",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_registry_file",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_source_registry_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "installed_subjects_registry_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_site_overrides_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "derived_installed_update_sites_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_update_yaml",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_doctor_yaml",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_manifest_candidates_under",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "update_resolved_registry_paths",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_update_index",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "file_url_to_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_yaml_or_json_document",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_yaml_or_json_text",
+      "passed": true
+    },
+    {
+      "group": "paths",
+      "case": "run-generated-review--2",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b57decc6e440b9bec8df40e91e7269844623e82cfe8e2eb6d51c3bd5263190a6"
+    },
+    {
+      "group": "paths",
+      "case": "handoff-generated-review--2",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "66a11c798f98d9ae9df12eac097f35db669d6d3a92a052fcde2b34aa306dc1e6"
+    },
+    {
+      "group": "paths",
+      "case": "run-A B",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c7eb2de493cd717fd94a5387940674912f99906cbcb731ede94d6ebe19977d1c"
+    },
+    {
+      "group": "paths",
+      "case": "handoff-A B",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "16cd7300bbea09576c86882dd97c4700f97f0694d94b60b375f3566fd51e2db3"
+    },
+    {
+      "group": "paths",
+      "case": "run-",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a0411ad0e7b194e255d342b829bbc5393bade64fd335d73e98015a5d23238567"
+    },
+    {
+      "group": "paths",
+      "case": "handoff-",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "33de40fa308354bb5b5bd65d59722b9f73a8adb13bd2921cf2218c25793290d2"
+    },
+    {
+      "group": "paths",
+      "case": "run-a---b",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3824efee46e62791ecd26a1f72213820597fc8d0249e53cecb2cf04f04fd3990"
+    },
+    {
+      "group": "paths",
+      "case": "handoff-a---b",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "59cb00b3d2c684dbc245953b3d9975b11663fc9d108d2286d648c60d30ec9159"
+    },
+    {
+      "group": "paths",
+      "case": "run-None",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "dff52dd90ec6c185e36d6e45e3efb5afa7f17f0ab3bd13f7c918edae22010a47"
+    },
+    {
+      "group": "paths",
+      "case": "handoff-None",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a1539d188cdbf500edb32a9bef92fe51b1d23bbbff6348445d338a4a849b9fff"
+    },
+    {
+      "group": "paths",
+      "case": "worker-key-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8b1abf8b77ebf722710b6a4e4c27ecfb1d1ab20e89a3c02f1c7b61c5cbc97ba6"
+    },
+    {
+      "group": "paths",
+      "case": "normalizing-assignment",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "242cb847b91eac8b913665507cb72b49d69bbf4c11851fcd6fad8871ce3f205b"
+    },
+    {
+      "group": "command",
+      "case": "ordinary",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "197a3b97145fec235f44a48094a7ea45301935e418c36104f51d24f38597f9de"
+    },
+    {
+      "group": "command",
+      "case": "wrapper",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ec4391fc031fa0b47e724f3a7baee14d29206cd654ac9700d5461c0c6df66486"
+    },
+    {
+      "group": "command",
+      "case": "wrapper-missing-input",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "43224ddcacfd407038241ed794490cab97324352e2aced1e4fa9412629881f11"
+    },
+    {
+      "group": "command",
+      "case": "model-args-refusal",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "4eabb06bbf22f1595fbb303cb42ba14e90d35b5bd69f2e71e2475ca969c89c47"
+    },
+    {
+      "group": "command",
+      "case": "output-preflight-first",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "254a14efc448eeaf1ab7ea305e8d77425d5ab2da9513f8ee23b64f57b92ff7d6"
+    },
+    {
+      "group": "platform",
+      "case": "overlay-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ac27cc552f412d78b310d7679ce735763d6b9fbf3a7b9f3cb382040deaff5f3f"
+    },
+    {
+      "group": "platform",
+      "case": "disabled-fallback",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4f445459d771f77940e9233871b570817d62f987cd9269518c5a8faa942693ba"
+    },
+    {
+      "group": "platform",
+      "case": "alias",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ac4919e652bbc4ffb58d310e68d064a2419234ab16d73bdd61b2d43932e05366"
+    },
+    {
+      "group": "platform",
+      "case": "fresh-before",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e5e4798cc5434cbccd2fff4f110735afa937b61c46d450788da58af456941106"
+    },
+    {
+      "group": "platform",
+      "case": "fresh-after",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8d04404e3d9355df95f65aa85f61be27d5eccf982d1fb76d7bb7b77247fb9e82"
+    },
+    {
+      "group": "platform",
+      "case": "deleted-falls-to-project",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "35de1726c878659b07f7f984231c93de7c033d74f75f4defff07e34996e43002"
+    },
+    {
+      "group": "documents",
+      "case": "custom-registry",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "411550c56f819673934907ac690009e25215af151f222a5cab89b66d461e7773"
+    },
+    {
+      "group": "documents",
+      "case": "soft-yaml",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ce797d4aa55db2b48dbe799f1ab51859da7586ef19c48033cbf17aba6c50ab60"
+    },
+    {
+      "group": "documents",
+      "case": "doctor-return-with-schema-error",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3263298fdca1e2e1e17795923c7bb3a3c18fe786dd102f66d322bb741cd0822b"
+    },
+    {
+      "group": "documents",
+      "case": "soft-yaml-error",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "6cba7dfeacb8a7dc57d4051d4a760ea613101ca652167bc698972af43b5f9e37"
+    },
+    {
+      "group": "documents",
+      "case": "doctor-yaml-error",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "96e4d6dcd080f0b4ba65776905d728fd1dfc738528f3cbbbe958e7d92f9776c8"
+    },
+    {
+      "group": "documents",
+      "case": "index-retains-error-sentinel",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4fa7d75f7cbc7bca7b791d1d5ffe4363e0edba79004fe5d2135922c8ca571723"
+    },
+    {
+      "group": "documents",
+      "case": "text-0",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b2b8efd9bb8024941cbb09b7c4f45fe2086eaad73e84ed7192c7ae04c48cef73"
+    },
+    {
+      "group": "documents",
+      "case": "text-1",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "207b65bb3c6751eaff4a2465a0267cff25ad12e7e7d3d1e31544d69ff1213179"
+    },
+    {
+      "group": "documents",
+      "case": "text-2",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "9a9d36af2d74bc0566d470a02bf24cd09bca81e2763da973eb83239b44c31a30"
+    },
+    {
+      "group": "documents",
+      "case": "text-3",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "59849f05305643325d8b486b7493839780ff03942efc232b19586a5c6e659101"
+    },
+    {
+      "group": "documents",
+      "case": "relative-file-reference",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ccdc77c0131ea5b5b38c911a9f556f4961d8ae34dc9a64c2be909f1d60f67b57"
+    },
+    {
+      "group": "documents",
+      "case": "manifest-duplicates",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e7b5dedd4cc0e70709f2c537715cf5e2ddb95466f0ed500b80805ff16418fd32"
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "39a70beb57525d292580a87a62048a116afd1367b4abd51c27e69b64c30a78df",
+    "src/processforge_core/egress/service.py": "723fb28c17bd2af85003fac17010fef5e2f1a9ec14dc533eed1734abcb58366a",
+    "src/processforge_core/prepared/input.py": "fd3fcc46416441538d477d5deb17f1d2b10cb17c5c66ea5fb5757f54b52c909d",
+    "src/processforge_core/work/context.py": "ce560001126915e7df76b1290dc81a74864618473f374203a3fd7bdc42203e92",
+    "tools/smoke_codex_worker_governance.py": "9d6e3121491720da623a366b040b405460f7d1eb380d6c134dbba5cfc7060135",
+    "tools/smoke_continuation_work.py": "da0a997d4a6c993da04dcfbd9c83f3ca7dd90f3b7e04f76a10a71962c6ae894e",
+    "tools/smoke_egress_work.py": "5676da72fc59f8b6a2a55786046adbb95e668cb2f7c1acae4cc29c16bbf7e9c3",
+    "tools/smoke_prepared_execution_context.py": "911d753190b809b5246fa2cb1e499ccfd6509e783105100a649c7b1cee074f9b",
+    "tools/smoke_prepared_execution_recovery.py": "1414d9c0a0e0d441928ec12358e15049748c70224b35db14de672a81ae09bbe2",
+    "tools/smoke_runtime_scheduler_failure_isolation.py": "abb2ff32bf4991eece238907f3ebeb51cb441625c7387d3917d3635c5f25bd02",
+    "tools/smoke_run_id_preserves_repeated_hyphens.py": "eb7b37249e8e2b3c903273c16997d7f669279604e2dedc2546c17f8d9fd8e21a",
+    "tools/pf_runtime/host.py": "08f802e21e3b90e3fd8b80bb44944d167577c721c2df2ffd91e0cf49afaa7224",
+    "docs/concepts/python-core-structure.md": "a27267ae1e6229451ddae9db2ae3ee3f17d5907594fa2c77cbf871a209eb2581",
+    "docs/ru/concepts/python-core-structure.md": "f22d1485e416e23e2460eb6f9a72e6be0d37eb514edfc237c34e19f49aa70700",
+    "src/processforge_core/work/paths.py": "9d9e6e3c59203a155feb89c55ee764f1bda2d9af6cbfbe87854b49980191d9d7",
+    "src/processforge_core/runtime/command.py": "f1daf79a89f6232038c39b19beb20850adc3bd5c35fdd45572152f40f7c9b7cd",
+    "src/processforge_core/project/platforms.py": "4281ffb1e114ccc4f3b58a932cc0ac31bf86e67d6cb653a94235ccf19aaa66a0",
+    "src/processforge_core/maintenance/documents.py": "9918e7d69cf5cf93d7dd84fcb78e78f00fc79c1e1c4ef04ae36ce4cff3c40b3c"
+  },
+  "scope": "Complete algorithm/consumer AST is checked separately. This small source-only characterization covers new concrete wiring; synthetic environment only. No archive/install/Runtime/connected-host or ZIP checks."
+}

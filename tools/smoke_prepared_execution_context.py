@@ -64,7 +64,8 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def prepared_paths(project: Path, task: str) -> tuple[dict[str, Path], dict[str, Any], dict[str, Any]]:
     task_doc = core.load_task(project, task)
-    paths = core.worker_run_paths(project, RUN_ID, task)
+    from processforge_core.work.paths import WorkPaths
+    paths = WorkPaths().worker_run(project, RUN_ID, task)
     state = read_json(paths["status"])
     manifest_path = project / state["prepared_input"]["path"]
     return paths, state, read_json(manifest_path)
@@ -228,7 +229,8 @@ def main() -> int:
         empty_status, empty_text = call(project, "unknown-grant-task", "prepare")
         require(empty_status != 0 and "resource_not_in_snapshot" in empty_text,
                 {"status": empty_status, "output": empty_text})
-        require(not core.worker_run_paths(project, RUN_ID, "unknown-grant-task")["status"].exists(),
+        from processforge_core.work.paths import WorkPaths
+        require(not WorkPaths().worker_run(project, RUN_ID, "unknown-grant-task")["status"].exists(),
                 "unmatched resource grant left a ready worker state")
 
         status, output = call(project, "empty-task", "prepare")
@@ -343,8 +345,10 @@ def main() -> int:
         require(status != 0 and not receipt_path.exists(), {"status": status, "output": output, "receipt": receipt_path.exists()})
         report_path_manual.write_text("# Manual prepared report\n", encoding="utf-8")
 
-        assignment_path = core.assignment_yaml_path(project, "manual-task")
-        run_path = core.run_root(project, RUN_ID) / "run.yaml"
+        from processforge_core.work.paths import WorkPaths
+        assignment_path = WorkPaths().assignment_document(project, "manual-task")
+        from processforge_core.work.paths import WorkPaths
+        run_path = WorkPaths().run_root(project, RUN_ID) / "run.yaml"
         assignment_before = assignment_path.read_bytes()
         run_before = run_path.read_bytes()
 

@@ -48,7 +48,8 @@ def main() -> int:
         pf.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
 
         driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
-        command, _paths = pf.build_worker_process_command(project, writable, driver)
+        from processforge_core.runtime.command import WorkerCommandBuilder
+        command, _paths = WorkerCommandBuilder(pf.ROOT).build(project, writable, driver)
         environment = command["command"]["environment"]
         if environment.get("PF_CODEX_SANDBOX") != "workspace-write":
             raise AssertionError(environment)
@@ -81,7 +82,8 @@ def main() -> int:
             raise AssertionError("foreign hook must disable automatic trust")
 
         readonly = task(writer=False, code=False, artifacts=False)
-        readonly_command, _paths = pf.build_worker_process_command(project, readonly, driver)
+        from processforge_core.runtime.command import WorkerCommandBuilder
+        readonly_command, _paths = WorkerCommandBuilder(pf.ROOT).build(project, readonly, driver)
         if readonly_command["command"]["environment"].get("PF_CODEX_SANDBOX") != "read-only":
             raise AssertionError(readonly_command)
 

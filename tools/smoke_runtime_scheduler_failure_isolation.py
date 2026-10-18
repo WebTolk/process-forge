@@ -83,7 +83,8 @@ def main() -> int:
             task_id = "old-failed-worker"
             assignment = projects[0] / f".pf/assignments/{task_id}.yaml"
             core.write_yaml_file(assignment, {"id": task_id, "run_id": "broken", "status": "failed"})
-            worker_status = core.worker_run_paths(projects[0], "broken", task_id)["status"]
+            from processforge_core.work.paths import WorkPaths
+            worker_status = WorkPaths().worker_run(projects[0], "broken", task_id)["status"]
             worker_status.parent.mkdir(parents=True, exist_ok=True)
             worker_status.write_text(json.dumps({"status": "failed", "driver_id": "manual", "failure_reason": "fixture failure"}), encoding="utf-8")
             core.write_yaml_file(bad_run, {"id": "broken", "status": "in_progress", "tasks": [{"id": task_id}]})

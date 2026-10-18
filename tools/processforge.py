@@ -161,6 +161,15 @@ _work_output_policy = WorkOutputPolicy()
 _project_detection_service = ProjectDetectionService()
 _worker_environment_policy = WorkerEnvironmentPolicy()
 _update_schema_checks = UpdateSchemaChecks(ROOT)
+from processforge_core.work.paths import WorkPaths
+from processforge_core.runtime.command import WorkerCommandBuilder
+from processforge_core.project.platforms import PlatformContractReader
+from processforge_core.maintenance.documents import UpdateDocumentReader
+
+_work_paths = WorkPaths()
+_worker_command_builder = WorkerCommandBuilder(ROOT)
+_platform_contract_reader = PlatformContractReader(ROOT)
+_update_document_reader = UpdateDocumentReader(ROOT)
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -2913,7 +2922,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             checks.append(check("FAIL", "workplace.yaml appears to contain a secret value"))
         else:
             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
-        load_doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
+        _update_document_reader.doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
         cfg = _project_coordination_reader.workplace(manifest)
         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
@@ -2965,7 +2974,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             "registries/mcp.yaml": "mcp-registry.schema.json",
         }.get(rel_path)
         if path.is_file() and registry_schema:
-            load_doctor_yaml(path, registry_schema, rel_path, checks)
+            _update_document_reader.doctor_yaml(path, registry_schema, rel_path, checks)
         elif path.is_file() and rel_path == "registries/process-packs.yaml":
             process_pack_registry = load_yaml_document(path)
             error = yaml_error(process_pack_registry)
@@ -3698,7 +3707,7 @@ def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any]
     for key in ["platform", "platforms", "platform_contract", "platform_contracts"]:
         value = project_answers.get(key)
         if value:
-            selected.update(platform_contract_id(item).removeprefix("platform.") for item in answer_strings(value))
+            selected.update(_platform_contract_reader.contract_id(item).removeprefix("platform.") for item in answer_strings(value))
     selected.update(platform_ids_from_detection_rules(workplace_manifest, project_root))
     selected.update(workplace_platform_ids_for_project_type(workplace_manifest, project_type, project_root))
     return sorted(selected)
@@ -3757,7 +3766,7 @@ def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, pro
     evidence, or its own concrete detection rules.
     """
     matched: list[str] = []
-    contracts = platform_contract_manifest_index(workplace_manifest, project_root)
+    contracts = _platform_contract_reader.index(workplace_manifest, project_root)
     for contract_id, entry in contracts.items():
         contract = entry["contract"]
         parent_hints = platform_contract_parent_type_hints(contract, contracts)
@@ -3774,7 +3783,7 @@ def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, pro
 
 def platform_ids_from_detection_rules(workplace_manifest: Path | None, project_root: Path) -> list[str]:
     matched: list[str] = []
-    for contract_id, entry in platform_contract_manifest_index(workplace_manifest, project_root).items():
+    for contract_id, entry in _platform_contract_reader.index(workplace_manifest, project_root).items():
         if _project_detection_service.matches(entry["contract"], project_root):
             matched.append(contract_id.removeprefix("platform."))
     return sorted(set(matched))
@@ -3982,81 +3991,16 @@ def load_workplace_registry(workplace_manifest: Path | None, registry_key: str, 
     return load_yaml_document(path)
 
 
-def platform_contract_id(platform_id: str) -> str:
-    return platform_id if platform_id.startswith("platform.") or platform_id.startswith("fixture.platform.") else f"platform.{platform_id}"
 
 
-def platform_contract_registry_entry(workplace_manifest: Path | None, contract_id: str) -> dict[str, Any] | None:
-    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
-    entries = registry.get("platforms") if isinstance(registry, dict) else None
-    if not isinstance(entries, list):
-        return None
-    aliases = {contract_id, contract_id.removeprefix("platform.")}
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        entry_ids = {str(entry.get("id", "")), str(entry.get("package_id", ""))}
-        if aliases.intersection(entry_ids):
-            return entry
-    return None
 
 
-def seed_platform_contract_paths(distribution_root: Path | None = None) -> list[Path]:
-    root = distribution_root or ROOT
-    seed_root = root / "seeds" / "platform-contracts"
-    if not seed_root.is_dir():
-        return []
-    return sorted([*seed_root.glob("*.yaml"), *seed_root.glob("*.yml")])
 
 
-def project_platform_contract_paths(project_root: Path | None) -> list[Path]:
-    if not project_root:
-        return []
-    candidates: list[Path] = []
-    for root in [project_root / PROJECT_FLOW_ROOT / "platform-contracts", project_root / "platform-contracts"]:
-        if root.is_dir():
-            candidates.extend(sorted(root.glob("*.yaml")))
-            candidates.extend(sorted(root.glob("*.yml")))
-            candidates.extend(sorted(root.glob("*/platform-contract.yaml")))
-            candidates.extend(sorted(root.glob("*/platform-contract.yml")))
-    return candidates
 
 
-def platform_contract_record(path: Path, source: str, registry_entry: dict[str, Any] | None = None) -> tuple[str, dict[str, Any]] | None:
-    data = load_yaml_document(path)
-    if not data or yaml_error(data):
-        return None
-    contract_id = data.get("id")
-    if not contract_id:
-        return None
-    normalized_id = platform_contract_id(str(contract_id))
-    return normalized_id, {"contract": data, "path": path, "source": source, "status": "available", "registry_entry": registry_entry}
 
 
-def platform_contract_manifest_index(workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
-    index: dict[str, dict[str, Any]] = {}
-    for path in seed_platform_contract_paths(ROOT):
-        record = platform_contract_record(path, "seed")
-        if record:
-            index[record[0]] = record[1]
-    for path in project_platform_contract_paths(project_root):
-        record = platform_contract_record(path, "project")
-        if record:
-            index[record[0]] = record[1]
-    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
-    entries = registry.get("platforms") if isinstance(registry, dict) else None
-    if isinstance(entries, list) and workplace_manifest:
-        for entry in entries:
-            if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
-                continue
-            raw_path = entry.get("path")
-            if not raw_path:
-                continue
-            path = resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
-            record = platform_contract_record(path, "workplace", entry)
-            if record:
-                index[record[0]] = record[1]
-    return index
 
 
 def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest: Path | None = None) -> Path:
@@ -4065,15 +4009,6 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
     return path_resolution_to_path(resolution)
 
 
-def load_platform_contract(workplace_manifest: Path | None, contract_id: str, project_root: Path | None = None) -> tuple[dict[str, Any], dict[str, Any] | None, str, str]:
-    normalized_id = platform_contract_id(contract_id)
-    entry = platform_contract_manifest_index(workplace_manifest, project_root).get(normalized_id)
-    if entry:
-        return entry["contract"], entry.get("registry_entry"), str(entry.get("status", "available")), str(entry.get("source", "manifest"))
-    registry_entry = platform_contract_registry_entry(workplace_manifest, normalized_id)
-    if registry_entry and str(registry_entry.get("status", "available")) in {"missing", "disabled"}:
-        return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, str(registry_entry.get("status")), "registry"
-    return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, "missing", "missing"
 
 
 
@@ -4083,12 +4018,12 @@ def normalize_platform_ref(value: Any, *, default_required: bool = True) -> dict
         ref_id = value.strip()
         if not ref_id:
             return None
-        return {"id": platform_contract_id(ref_id), "required": default_required}
+        return {"id": _platform_contract_reader.contract_id(ref_id), "required": default_required}
     if isinstance(value, dict):
         raw_id = value.get("id") or value.get("platform") or value.get("package_id")
         if not raw_id:
             return None
-        record: dict[str, Any] = {"id": platform_contract_id(str(raw_id)), "required": bool(value.get("required", default_required))}
+        record: dict[str, Any] = {"id": _platform_contract_reader.contract_id(str(raw_id)), "required": bool(value.get("required", default_required))}
         if value.get("version"):
             record["version"] = str(value["version"])
         return record
@@ -4200,7 +4135,7 @@ def resolve_platform_contracts(
     resolving: list[str] = []
 
     def resolve_one(raw_platform_id: str, *, relation: str = "selected", inherited_by: str | None = None, include_resources: bool = True, required: bool = True) -> None:
-        contract_id = platform_contract_id(raw_platform_id)
+        contract_id = _platform_contract_reader.contract_id(raw_platform_id)
         if contract_id in resolving:
             cycle = " -> ".join([*resolving[resolving.index(contract_id):], contract_id])
             circular_platforms.append(cycle)
@@ -4214,7 +4149,7 @@ def resolve_platform_contracts(
             status = "available"
             source = "staged"
         else:
-            contract, entry, status, source = load_platform_contract(workplace_manifest, contract_id, project_root)
+            contract, entry, status, source = _platform_contract_reader.load(workplace_manifest, contract_id, project_root)
         extends_refs = contract_extends(contract)
         required_platform_refs = contract_required_platforms(contract)
         for ref in extends_refs:
@@ -4429,7 +4364,7 @@ def dedupe_sorted(values: list[str]) -> list[str]:
 
 
 def specialization_registry_path(workplace_root: Path) -> Path:
-    return update_registry_file(workplace_root, "specializations", "specializations.yaml")
+    return _update_document_reader.registry_file(workplace_root, "specializations", "specializations.yaml")
 
 
 def specialization_path_from_registry_entry(workplace_root: Path, entry: dict[str, Any], workplace_manifest: Path | None = None) -> Path | None:
@@ -4548,10 +4483,10 @@ def load_specialization(workplace_manifest: Path | None, specialization_id: str,
 
 
 def platform_binding_matches(binding: dict[str, Any], selected_platforms: list[str], platform_stack: list[dict[str, Any]], process_id: str | None = None) -> bool:
-    selected = {platform_contract_id(item) for item in selected_platforms}
-    stack_ids = {str(item.get("id") or platform_contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
-    binding_platforms = {platform_contract_id(item) for item in list_value(binding.get("platforms"))}
-    stack_includes = {platform_contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
+    selected = {_platform_contract_reader.contract_id(item) for item in selected_platforms}
+    stack_ids = {str(item.get("id") or _platform_contract_reader.contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
+    binding_platforms = {_platform_contract_reader.contract_id(item) for item in list_value(binding.get("platforms"))}
+    stack_includes = {_platform_contract_reader.contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
     process_filter = set(list_value(binding.get("applies_to_processes")))
     if process_filter and process_id and process_id not in process_filter:
         return False
@@ -4968,7 +4903,7 @@ def resolve_specialization_context(
     for item in capability_resolution["unsatisfied"]:
         conflicts.append({"id": item["capability"], "kind": "capability", "source": item["required_by"], "reason": item["reason"]})
     active_resource_profile = {
-        "selected_platform": [platform_contract_id(item) for item in platform_ids],
+        "selected_platform": [_platform_contract_reader.contract_id(item) for item in platform_ids],
         "platform_stack": platform_resolution.get("platform_stack", []),
         "selected_specializations": selected_specializations,
         "available_knowledge_packages": dedupe_sorted(list(required["knowledge_packages"].union(recommended["knowledge_packages"]).union(optional["knowledge_packages"]))),
@@ -5016,9 +4951,9 @@ def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], r
     templates_text = registry_text(workplace_manifest, "templates.yaml")
     package_text = registry_text(workplace_manifest, "package-roots.yaml")
 
-    available_platform_ids = set(platform_contract_manifest_index(workplace_manifest))
+    available_platform_ids = set(_platform_contract_reader.index(workplace_manifest))
     available_platform_ids.update(item.removeprefix("platform.") for item in list(available_platform_ids))
-    matched_platforms = [item for item in detected["platforms"] if item and (item in available_platform_ids or platform_contract_id(item) in available_platform_ids)]
+    matched_platforms = [item for item in detected["platforms"] if item and (item in available_platform_ids or _platform_contract_reader.contract_id(item) in available_platform_ids)]
     missing_platforms = [item for item in detected["platforms"] if item and item not in matched_platforms]
     matched_tools = [cap for cap in required + optional if cap and cap in tools_text]
     matched_mcp = [cap for cap in required + optional if cap and cap in mcp_text]
@@ -8927,7 +8862,7 @@ def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) 
     from processforge_core.work.context import validate_execution_contract
     task_id = safe_id(str(task.get("id") or "task"), "task")
     capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
-    validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
+    validation = validate_execution_contract(project_root, _work_paths.assignment_document(project_root, task_id), task,
                                              capsule, sys.modules[__name__], require_ready=True)
     if validation["status"] != "valid":
         raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid"))
@@ -8941,7 +8876,7 @@ def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]
     from processforge_core.prepared.input import private_file
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     task_id = safe_id(str(task.get("id") or "task"), "task")
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     private_file(project_root, rel(paths["workspace_access"], project_root))
     document = workspace_access_runtime_document(project_root, task)
     json_write(paths["workspace_access"], document)
@@ -8971,7 +8906,7 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
             )
         )
     checks.append(check("PASS", f"package {package_id} resolved through package root {package_root.root_id}"))
-    loaded = load_doctor_yaml(
+    loaded = _update_document_reader.doctor_yaml(
         manifest_path,
         "package-manifest.schema.json",
         f"package {package_id} manifest",
@@ -11376,24 +11311,12 @@ ITERATION_KINDS = {"work", "debug", "fix", "review", "test", "research", "handof
 ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed", "cancelled"}
 
 
-def run_root(project_root: Path, run_id: str) -> Path:
-    candidate = str(run_id or "").strip()
-    # ProcessExecutionService may append a collision suffix to a truncated id,
-    # leaving a valid repeated hyphen such as `review--2`. Preserve that ID.
-    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
-    return locate_flow_root(project_root) / "runs" / normalized
 
 
-def run_yaml_path(project_root: Path, run_id: str) -> Path:
-    return run_root(project_root, run_id) / "run.yaml"
 
 
-def assignment_yaml_path(project_root: Path, task_id: str) -> Path:
-    return locate_flow_root(project_root) / "assignments" / f"{safe_id(task_id, 'task')}.yaml"
 
 
-def task_artifacts_root(project_root: Path, run_id: str, task_id: str) -> Path:
-    return locate_flow_root(project_root) / "artifacts" / "runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
 
 
 def read_yaml_file(path: Path) -> dict[str, Any]:
@@ -11954,14 +11877,8 @@ def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def run_summary_path(project_root: Path, run_id: str) -> Path:
-    return run_root(project_root, run_id) / "summary.md"
 
 
-def run_handoff_path(project_root: Path, run_id: str) -> Path:
-    candidate = str(run_id or "").strip()
-    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
-    return locate_flow_root(project_root) / "handoffs" / "runs" / f"{normalized}-handoff.md"
 
 
 def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
@@ -11969,7 +11886,7 @@ def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
     lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
     for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
         if isinstance(item, dict):
-            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
+            task = load_yaml_document(_work_paths.assignment_document(project_root, str(item.get("id", ""))))
             result = task.get("result") if isinstance(task.get("result"), dict) else {}
             lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
     if len(lines) == 7:
@@ -11979,28 +11896,28 @@ def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
 
 def render_run_handoff(project_root: Path, run: dict[str, Any]) -> str:
     run_id = str(run.get("id", "run"))
-    summary = run_summary_path(project_root, run_id)
+    summary = _work_paths.summary(project_root, run_id)
     return f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
 
 
 def write_run_artifact_bundle(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
     """Persist one Run state and its derived documents while the caller holds its lock."""
     run_id = str(run.get("id", "run"))
-    root = run_root(project_root, run_id)
+    root = _work_paths.run_root(project_root, run_id)
     if include_summary_handoff:
-        write_text_file_atomic(run_summary_path(project_root, run_id), render_run_summary(project_root, run))
-        write_text_file_atomic(run_handoff_path(project_root, run_id), render_run_handoff(project_root, run))
+        write_text_file_atomic(_work_paths.summary(project_root, run_id), render_run_summary(project_root, run))
+        write_text_file_atomic(_work_paths.handoff(project_root, run_id), render_run_handoff(project_root, run))
     write_text_file_atomic(root / "task-index.md", render_task_index(project_root, run))
-    write_yaml_file_atomic(run_yaml_path(project_root, run_id), run)
+    write_yaml_file_atomic(_work_paths.run_document(project_root, run_id), run)
 
 
 def write_task_index(project_root: Path, run: dict[str, Any]) -> None:
     run_id = str(run.get("id", "run"))
-    write_text_file_atomic(run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
+    write_text_file_atomic(_work_paths.run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
 
 
 def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
-    path = run_yaml_path(project_root, run_id)
+    path = _work_paths.run_document(project_root, run_id)
     if not path.is_file():
         raise SystemExit(f"FAIL: run not found: {safe_id(run_id, 'run')}")
     return read_yaml_file(path)
@@ -12008,7 +11925,7 @@ def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
 
 def save_run(project_root: Path, run: dict[str, Any]) -> None:
     run_id = str(run.get("id", "run"))
-    with registry_file_lock(run_yaml_path(project_root, run_id)):
+    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
         save_run_locked(project_root, run)
 
 
@@ -12018,7 +11935,7 @@ def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_
 
 
 def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
-    path = assignment_yaml_path(project_root, task_id)
+    path = _work_paths.assignment_document(project_root, task_id)
     if not path.is_file():
         raise SystemExit(f"FAIL: task/assignment not found: {safe_id(task_id, 'task')}")
     return read_yaml_file(path)
@@ -12026,12 +11943,12 @@ def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
 
 def save_task(project_root: Path, task: dict[str, Any]) -> None:
     task["updated_at"] = now_utc()
-    write_yaml_file(assignment_yaml_path(project_root, str(task.get("id", "task"))), task)
+    write_yaml_file(_work_paths.assignment_document(project_root, str(task.get("id", "task"))), task)
 
 
 def update_run_task_status(project_root: Path, run_id: str, task_id: str, status: str) -> None:
     safe_run_id = safe_id(run_id, "run")
-    with registry_file_lock(run_yaml_path(project_root, safe_run_id)):
+    with registry_file_lock(_work_paths.run_document(project_root, safe_run_id)):
         update_run_task_status_locked(project_root, safe_run_id, task_id, status)
 
 
@@ -12053,7 +11970,7 @@ def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
 def validate_run_consistency(project_root: Path, run_id: str, include_runtime_events: bool = False) -> list[Check]:
     flow_root = require_flow_root(project_root)
     checks: list[Check] = []
-    path = run_yaml_path(project_root, run_id)
+    path = _work_paths.run_document(project_root, run_id)
     if not path.is_file():
         return [check("FAIL", f"{rel(path, project_root)} missing")]
     run = read_yaml_file(path)
@@ -12065,9 +11982,9 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
     status = str(run.get("status", ""))
     checks.append(check("PASS" if status in RUN_STATUSES else "FAIL", f"run status valid: {status or 'missing'}"))
     artifact_paths = {
-        "summary": run_summary_path(project_root, str(run.get("id", run_id))),
-        "task index": run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
-        "handoff": run_handoff_path(project_root, str(run.get("id", run_id))),
+        "summary": _work_paths.summary(project_root, str(run.get("id", run_id))),
+        "task index": _work_paths.run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
+        "handoff": _work_paths.handoff(project_root, str(run.get("id", run_id))),
     }
     status_patterns = {
         "summary": r"^- status: `([^`]+)`$",
@@ -12123,7 +12040,7 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
 def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
     require_flow_root(project_root)
     checks: list[Check] = []
-    path = assignment_yaml_path(project_root, task_id)
+    path = _work_paths.assignment_document(project_root, task_id)
     if not path.is_file():
         return [check("FAIL", f"{rel(path, project_root)} missing")]
     task = read_yaml_file(path)
@@ -12132,7 +12049,7 @@ def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
     status = str(task.get("status", ""))
     checks.append(check("PASS" if status in TASK_STATUSES else "FAIL", f"task status valid: {status or 'missing'}"))
     run_id = str(task.get("run_id", ""))
-    checks.append(check("PASS" if run_id and run_yaml_path(project_root, run_id).is_file() else "FAIL", f"referenced run exists: {run_id or 'missing'}"))
+    checks.append(check("PASS" if run_id and _work_paths.run_document(project_root, run_id).is_file() else "FAIL", f"referenced run exists: {run_id or 'missing'}"))
     process_id = task_process_id(task)
     checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
     checks.append(check("PASS" if not public_yaml_has_private_path(task) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
@@ -15086,7 +15003,7 @@ def command_handoff_start_target_run(args: argparse.Namespace) -> int:
     handoff = load_handoff(project_root, args.handoff)
     run_id = safe_id(args.run or f"{handoff.get('id')}-target", "run")
     process_id = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or "task-batch-execution")
-    if not run_yaml_path(project_root, run_id).is_file():
+    if not _work_paths.run_document(project_root, run_id).is_file():
         status = command_run_create(argparse.Namespace(project_root=str(project_root), id=run_id, title=f"Target run for {handoff.get('id')}", process=process_id, objective=f"Handoff target for {handoff.get('id')}", status="in_progress", dry_run=False))
         if status:
             return status
@@ -15397,11 +15314,9 @@ def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
 
 
 def orchestrator_plan_path(project_root: Path, run_id: str) -> Path:
-    return run_root(project_root, run_id) / "orchestrator-plan.yaml"
+    return _work_paths.run_root(project_root, run_id) / "orchestrator-plan.yaml"
 
 
-def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
-    return run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
 
 
 
@@ -15510,8 +15425,6 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     return 0
 
 
-def agent_run_root(project_root: Path, run_id: str, task_id: str) -> Path:
-    return locate_flow_root(project_root) / "runtime" / "agent-runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
 
 
 def supervisor_root(project_root: Path) -> Path:
@@ -15533,20 +15446,6 @@ def json_read(path: Path) -> dict[str, Any]:
 
 
 
-def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str, Path]:
-    root = agent_run_root(project_root, run_id, task_id)
-    return {
-        "root": root,
-        "status": root / "status.json",
-        "command": root / "command.json",
-        "process": root / "process.json",
-        "exit": root / "exit.json",
-        "stdout": root / "stdout.log",
-        "stderr": root / "stderr.log",
-        "heartbeat": root / "heartbeat.json",
-        "collection": root / "collection-report.md",
-        "workspace_access": root / "workspace-access.json",
-    }
 
 
 DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] = {}
@@ -15555,9 +15454,9 @@ DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] =
 @contextlib.contextmanager
 def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
     from processforge_core.prepared.input import private_file
-    root = agent_run_root(project_root, run_id, task_id)
+    root = _work_paths.agent_run(project_root, run_id, task_id)
     try:
-        for path in worker_run_paths(project_root, run_id, task_id).values():
+        for path in _work_paths.worker_run(project_root, run_id, task_id).values():
             private_file(project_root, rel(path, project_root))
         for name in (".lifecycle.lock", ".lifecycle.lock.guard"):
             private_file(project_root, rel(root / name, project_root))
@@ -15587,7 +15486,7 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
 def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], state: dict[str, Any], fallback_driver_ref: str | None = None) -> dict[str, Any]:
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
-    command = json_read(worker_run_paths(project_root, run_id, task_id)["command"])
+    command = json_read(_work_paths.worker_run(project_root, run_id, task_id)["command"])
     driver_ref = command.get("driver_ref")
     if isinstance(driver_ref, str) and driver_ref.strip():
         try:
@@ -15601,7 +15500,7 @@ def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], st
 def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, task_id: str, state: dict[str, Any]) -> bool:
     if str(state.get("status") or "") != "running":
         return False
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     if paths["exit"].is_file():
         return True
     pid = state.get("pid")
@@ -15622,7 +15521,7 @@ def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, ta
 def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallback_driver_ref: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]] | None:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     state = load_agent_run_state(project_root, run_id, task_id)
     if str(state.get("status") or "") != "running":
         return None
@@ -15643,141 +15542,18 @@ def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[
         process_id=task_process_id(task),
         subject=task_id,
         assignment_id_value=task_id,
-        assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root),
+        assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root),
         payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": pid if isinstance(pid, int) else None, "reason": "already running"},
         correlation_id=f"run-{run_id}",
     )
 
 
-def normalize_agent_model(value: Any) -> str:
-    return _context_contract_inputs.normalize_agent_model(value)
 
 
-def normalize_agent_reasoning_effort(value: Any) -> str:
-    return _context_contract_inputs.normalize_agent_reasoning_effort(value)
 
 
-def worker_sandbox_for_task(task: dict[str, Any]) -> str:
-    execution = task.get("execution_mode") if isinstance(task.get("execution_mode"), dict) else {}
-    ownership = task.get("ownership") if isinstance(task.get("ownership"), dict) else {}
-    writable = ownership.get("writer") is True and (
-        execution.get("code_changes_allowed") is True
-        or execution.get("artifact_changes_allowed") is True
-    )
-    return "workspace-write" if writable else "read-only"
 
 
-def build_worker_process_command(
-    project_root: Path,
-    task: dict[str, Any],
-    driver: dict[str, Any],
-    executable_override: str | None = None,
-    *,
-    attempt: int = 1,
-    prepared_input: dict[str, str] | None = None,
-) -> tuple[dict[str, Any], dict[str, Path]]:
-    task_id = safe_id(str(task.get("id") or "task"), "task")
-    run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    paths = worker_run_paths(project_root, run_id, task_id)
-    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
-    prompt_path = worker_prompt_path(project_root, run_id, task_id)
-    try:
-        report_path = _work_output_policy.path(project_root, _work_output_policy.expected_report(task))
-        for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
-            if output.get("path"):
-                _work_output_policy.path(project_root, str(output["path"]))
-    except (OSError, ValueError) as exc:
-        raise SystemExit(f"FAIL: invalid worker output path: {exc}") from exc
-    variables = {
-        "project_root": str(project_root),
-        "processforge_root": str(ROOT),
-        "run_id": run_id,
-        "task_id": task_id,
-        "attempt": str(attempt),
-        "agent_run_dir": str(paths["root"]),
-        "driver_id": str(driver.get("id") or "manual"),
-        "capsule_path": str(capsule_path),
-        "worker_prompt_path": str(prompt_path),
-        "workspace_access_path": str(paths["workspace_access"]),
-        "prepared_input_path": str(project_root / prepared_input["path"]) if prepared_input else "",
-        "prepared_input_checksum": prepared_input["checksum"] if prepared_input else "",
-        "expected_report_path": str(report_path),
-        "python_executable": sys.executable,
-        "executable": executable_override or "",
-        "stdout_path": str(paths["stdout"]),
-        "stderr_path": str(paths["stderr"]),
-        "heartbeat_path": str(paths["heartbeat"]),
-        "exit_path": str(paths["exit"]),
-        "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
-        "agent_reasoning_effort": normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
-        "agent_sandbox": worker_sandbox_for_task(task),
-    }
-    io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
-    stdout_path = Path(str(_worker_environment_policy.expand(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
-    stderr_path = Path(str(_worker_environment_policy.expand(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
-    if not stdout_path.is_absolute():
-        stdout_path = (project_root / stdout_path).resolve()
-    if not stderr_path.is_absolute():
-        stderr_path = (project_root / stderr_path).resolve()
-    paths["stdout"] = stdout_path
-    paths["stderr"] = stderr_path
-    heartbeat = driver.get("heartbeat") if isinstance(driver.get("heartbeat"), dict) else {}
-    heartbeat_path = Path(str(_worker_environment_policy.expand(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
-    if not heartbeat_path.is_absolute():
-        heartbeat_path = (project_root / heartbeat_path).resolve()
-    paths["heartbeat"] = heartbeat_path
-    variables.update(
-        {
-            "stdout_path": str(paths["stdout"]),
-            "stderr_path": str(paths["stderr"]),
-            "heartbeat_path": str(paths["heartbeat"]),
-            "exit_path": str(paths["exit"]),
-        }
-    )
-    command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
-    executable = executable_override or str(_worker_environment_policy.expand(command_spec.get("executable") or "", variables))
-    args = _worker_environment_policy.expand(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
-    if variables["agent_model"]:
-        model_args_raw = command_spec.get("model_args") if "model_args" in command_spec else ["--model", "{agent_model}"]
-        if not isinstance(model_args_raw, list):
-            raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
-        args.extend(_worker_environment_policy.expand(model_args_raw, variables))
-    env, inherit_env = _worker_environment_policy.build(driver, variables)
-    if driver.get("prepared_lifecycle_wrapper") is True and executable:
-        if not prepared_input:
-            raise SystemExit("FAIL: prepared_input_required")
-        args = [str(ROOT / "tools" / "prepared_executor.py"), "--prepared-input", variables["prepared_input_path"],
-                "--prepared-sha256", variables["prepared_input_checksum"], "--heartbeat", str(paths["heartbeat"]),
-                "--exit-path", str(paths["exit"]), "--", executable, *args]
-        executable = sys.executable
-    working_directory = str(_worker_environment_policy.expand(driver.get("working_directory") or "{project_root}", variables))
-    command = {
-        "schema_version": 1,
-        "run_id": run_id,
-        "task_id": task_id,
-        "attempt": str(attempt),
-        "driver_id": str(driver.get("id") or "manual"),
-        "agent_model": variables["agent_model"],
-        "agent_reasoning_effort": variables["agent_reasoning_effort"],
-        "kind": str(driver.get("kind") or "manual"),
-        "prepared_input": prepared_input or {},
-        "executable_override": executable_override or "",
-        "command": {
-            "executable": executable,
-            "args": args,
-            "argv": [executable, *args] if executable else [],
-            "working_directory": working_directory,
-            "environment": {str(key): str(value) for key, value in env.items()},
-            "environment_inherit": inherit_env,
-            "shell": False,
-        },
-        "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
-        "limits": _runtime_driver_definition_policy.parse_limits(driver)[0],
-    }
-    driver_ref = driver.get("_driver_ref")
-    if isinstance(driver_ref, str) and driver_ref.strip():
-        command["driver_ref"] = driver_ref.strip()
-    return command, paths
 
 
 def write_agent_run_state(
@@ -15797,7 +15573,7 @@ def write_agent_run_state(
 ) -> dict[str, Any]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    paths = paths or worker_run_paths(project_root, run_id, task_id)
+    paths = paths or _work_paths.worker_run(project_root, run_id, task_id)
     driver_limits, limit_errors = _runtime_driver_definition_policy.parse_limits(driver)
     if limit_errors:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
@@ -15812,7 +15588,7 @@ def write_agent_run_state(
         "run_id": run_id,
         "task_id": task_id,
         "driver_id": str(driver.get("id") or "manual"),
-        "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
+        "agent_model": _context_contract_inputs.normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
         "status": status,
         "pid": pid,
         "started_at": started_at,
@@ -15822,7 +15598,7 @@ def write_agent_run_state(
         "attempt": attempt,
         "max_retries": driver_limits["max_retries"],
         "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
-        "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
+        "worker_prompt_path": rel(_work_paths.worker_prompt(project_root, run_id, task_id), project_root),
         "expected_report_path": _work_output_policy.expected_report(task),
         "stdout_path": rel(paths["stdout"], project_root),
         "stderr_path": rel(paths["stderr"], project_root),
@@ -15844,7 +15620,7 @@ def write_agent_run_state(
 
 
 def load_agent_run_state(project_root: Path, run_id: str, task_id: str) -> dict[str, Any]:
-    return json_read(worker_run_paths(project_root, run_id, task_id)["status"])
+    return json_read(_work_paths.worker_run(project_root, run_id, task_id)["status"])
 
 
 def worker_process_key(project_root: Path, run_id: str, task_id: str) -> tuple[str, str, str]:
@@ -15892,7 +15668,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     if isinstance(driver, str):
         driver = runtime_driver_for_worker_state(project_root, task, state, driver)
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     status = str(state.get("status") or "")
     if status != "running":
         return state
@@ -15912,7 +15688,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         failure_reason = str(exit_marker.get("failure_reason") or "") or None
         state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
         DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
-        emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+        emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
         return state
     started_dt = parse_runtime_timestamp(started_at)
     timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
@@ -15943,7 +15719,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
             failure_reason = "process exited without durable exit contract"
             state = write_agent_run_state(project_root, task, driver, "unknown_exit", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=failure_reason, command=command, paths=paths)
             json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
-            emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+            emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
             return state
         else:
             return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
@@ -15952,7 +15728,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
     json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
-    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     return state
 
 
@@ -15963,7 +15739,7 @@ def worker_run_work_is_terminal(project_root: Path, task: dict[str, Any]) -> boo
     if status == "cancelled" or ("process_execution" in task and status in TERMINAL_ASSIGNMENT_STATUSES):
         return True
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    path = run_root(project_root, run_id) / "run.yaml"
+    path = _work_paths.run_root(project_root, run_id) / "run.yaml"
     run = load_yaml_document(path) if path.is_file() else {}
     if "process_execution" not in task and "process_execution" not in run:
         return False
@@ -15974,8 +15750,8 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     task = load_task(project_root, task_id)
     if worker_run_work_is_terminal(project_root, task):
         raise SystemExit("FAIL: work_is_terminal")
-    agent_model = normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
-    agent_reasoning_effort = normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
+    agent_model = _context_contract_inputs.normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
+    agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
     if agent_model and task.get("agent_model") != agent_model:
         task["agent_model"] = agent_model
         save_task(project_root, task)
@@ -15994,7 +15770,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
             command_assignment_capsule,
             argparse.Namespace(
                 project_root=str(project_root),
-                assignment=str(assignment_yaml_path(project_root, task_id)),
+                assignment=str(_work_paths.assignment_document(project_root, task_id)),
                 force=_context_contract_inputs.assignment_allows_write_scope_overlap(task),
             ),
         )
@@ -16004,7 +15780,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     task = load_task(project_root, task_id)
     from processforge_core.work.context import validate_execution_contract
     prepared_capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
-    validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
+    validation = validate_execution_contract(project_root, _work_paths.assignment_document(project_root, task_id), task,
                                              prepared_capsule, sys.modules[__name__], require_ready=True)
     if validation["status"] != "valid":
         raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid") + "; create_successor_work")
@@ -16016,7 +15792,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     ]
     if start_failures:
         raise SystemExit("FAIL: runtime driver is not start-ready: " + "; ".join(start_failures))
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     previous_state = json_read(paths["status"])
     try:
         attempt = max(1, int(previous_state.get("attempt") or 0) + 1)
@@ -16032,13 +15808,13 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     try:
         document = prepared_input.build(project_root, task, prepared_capsule, attempt, sys.modules[__name__])
         reference = {"path": rel(prepared_path, project_root), "checksum": prepared_input.digest(prepared_input.encoded(document))}
-        command, paths = build_worker_process_command(project_root, task, driver, executable_override, attempt=attempt, prepared_input=reference)
+        command, paths = _worker_command_builder.build(project_root, task, driver, executable_override, attempt=attempt, prepared_input=reference)
         prepared_input.private_file(project_root, reference["path"])
         prepared_input.write_once(prepared_path, document)
     except (OSError, ValueError, RuntimeError) as exc:
         raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
     json_write(paths["workspace_access"], document["input"]["resources"])
-    prompt_path = worker_prompt_path(project_root, run_id, task_id)
+    prompt_path = _work_paths.worker_prompt(project_root, run_id, task_id)
     prepared_input.local_file(project_root, rel(prompt_path, project_root))
     prompt_path.parent.mkdir(parents=True, exist_ok=True)
     prompt_path.write_text(render_worker_launch_prompt(project_root, task_id, prepared_input=reference), encoding="utf-8")
@@ -16049,7 +15825,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     # of a newly launched process.
     paths["exit"].unlink(missing_ok=True)
     write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
-    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
     diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
     diagnostics.emit("info", "worker.prepared", {"driver_id": driver.get("id"), "status": state_status}, component="worker")
     return task, driver, paths
@@ -16109,7 +15885,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
             print("FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair")
             return 1
         if state.get("status") in {"ready", "manual_required"}:
-            paths = worker_run_paths(project_root, run_id, task_id)
+            paths = _work_paths.worker_run(project_root, run_id, task_id)
             saved = json_read(paths["command"])
             driver = runtime_driver_for_worker_state(project_root, task, state)
             requested_driver = getattr(args, "driver", None)
@@ -16165,7 +15941,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
         if detach:
             DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
-            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
             print(f"RUNNING: {task_id} pid={proc.pid}")
             return 0
     assert proc is not None
@@ -16182,7 +15958,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         finished_at = now_utc()
         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
         json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
     return 0 if final_status == "completed" else 1
 
@@ -16222,7 +15998,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
         else:
             os.kill(int(pid), signal.SIGTERM)
     driver = runtime_driver_for_worker_state(project_root, task, state)
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
         return 0
@@ -16268,7 +16044,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         return 1
     if not report_path.is_file():
         missing.append(_work_output_policy.expected_report(task))
-    paths = worker_run_paths(project_root, run_id, task_id)
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
     lines = [
         f"# Worker Run Collection: {task_id}",
         "",
@@ -16361,7 +16137,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         return 1
     # A governed primary Work still has stage obligations. Worker delivery is
     # evidence for those transitions, never a compatibility completion bypass.
-    run = load_yaml_document(run_root(project_root, run_id) / "run.yaml")
+    run = load_yaml_document(_work_paths.run_root(project_root, run_id) / "run.yaml")
     governed = "process_execution" in run or "process_execution" in task
     status = 0
     if not governed:
@@ -16369,7 +16145,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         print(output, end="")
         if status:
             return status
-    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
+    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
     prepared_input.write_once(completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]})
     if governed:
         print(f"COLLECTED: {task_id}; governed stage transition remains required")
@@ -16391,7 +16167,7 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     if str(task.get("status")) in {"done", "completed", "failed", "cancelled"}:
         return
-    run_path = run_root(project_root, run_id) / "run.yaml"
+    run_path = _work_paths.run_root(project_root, run_id) / "run.yaml"
     if "process_execution" in task or (run_path.is_file() and "process_execution" in load_yaml_document(run_path)):
         return
     runtime_status = str(state.get("status") or "failed")
@@ -16406,7 +16182,7 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     }
     save_task(project_root, task)
     update_run_task_status(project_root, run_id, task_id, "failed")
-    emit_process_event(project_root, "task.failed", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "task.failed", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
 
 
 def default_supervisor_profile() -> dict[str, Any]:
@@ -16453,7 +16229,7 @@ def task_dependency_ids(task: dict[str, Any], worker: dict[str, Any] | None = No
 
 def task_dependencies_done(project_root: Path, task: dict[str, Any], worker: dict[str, Any] | None = None) -> bool:
     for dep_id in task_dependency_ids(task, worker):
-        dep_path = assignment_yaml_path(project_root, dep_id)
+        dep_path = _work_paths.assignment_document(project_root, dep_id)
         if not dep_path.is_file():
             return False
         dep = read_yaml_file(dep_path)
@@ -17049,7 +16825,7 @@ def plan_allows_write_scope_overlap(plan: dict[str, Any]) -> bool:
 
 
 def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -> dict[str, Any]:
-    agent_model = normalize_agent_model(model)
+    agent_model = _context_contract_inputs.normalize_agent_model(model)
     if not agent_model:
         return plan
     result = copy.deepcopy(plan)
@@ -17081,9 +16857,9 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
             max_parallel = runtime.get("max_parallel_workers")
             checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
         if "model" in runtime:
-            checks.append(check("PASS" if normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
+            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
         if "reasoning_effort" in runtime:
-            checks.append(check("PASS" if normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
+            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
     checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
     checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
     checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
@@ -17120,9 +16896,9 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         writer = bool(raw_worker.get("writer", True))
         driver_id = str(raw_worker.get("runtime_driver") or default_driver)
         if "model" in raw_worker:
-            checks.append(check("PASS" if normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
+            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
         if "reasoning_effort" in raw_worker or "agent_reasoning_effort" in raw_worker:
-            checks.append(check("PASS" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
+            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
         if writer:
             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
         checks.append(check("PASS" if driver_id in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
@@ -17175,7 +16951,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
     task = load_task(project_root, task_id)
     run_id = str(task.get("run_id") or "")
     capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
-    workspace_access = rel(worker_run_paths(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
+    workspace_access = rel(_work_paths.worker_run(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
     requested_workspace_access = normalize_workspace_access(task.get("workspace_access"))
     allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
     allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
@@ -17218,7 +16994,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
         "",
         f"- task_id: `{task_id}`",
         f"- run_id: `{run_id}`",
-        f"- assignment: `{rel(assignment_yaml_path(project_root, task_id), project_root)}`",
+        f"- assignment: `{rel(_work_paths.assignment_document(project_root, task_id), project_root)}`",
         f"- capsule: `{capsule}`",
         f"- workspace_access_file: `{workspace_access}`",
         f"- prepared_input_file: `{(prepared_input or {}).get('path', 'pending preparation')}`",
@@ -17268,8 +17044,8 @@ def write_orchestration_summary(project_root: Path, plan: dict[str, Any]) -> Non
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     run_id = safe_id(str(run.get("id") or "run"), "run")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
-    summary = run_root(project_root, run_id) / "orchestration-summary.md"
-    task_index = run_root(project_root, run_id) / "orchestration-task-index.md"
+    summary = _work_paths.run_root(project_root, run_id) / "orchestration-summary.md"
+    task_index = _work_paths.run_root(project_root, run_id) / "orchestration-task-index.md"
     handoff = locate_flow_root(project_root) / "handoffs" / "runs" / f"{run_id}-orchestrator-handoff.md"
     summary_lines = [f"# Orchestration Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", "- process: `multi-agent-task-orchestration`", "", "## Workers", ""]
     index_lines = [f"# Orchestration Task Index: {run_id}", ""]
@@ -17277,7 +17053,7 @@ def write_orchestration_summary(project_root: Path, plan: dict[str, Any]) -> Non
         if not isinstance(worker, dict):
             continue
         task_id = safe_id(str(worker.get("id") or "worker"), "worker")
-        prompt_rel = rel(worker_prompt_path(project_root, run_id, task_id), project_root)
+        prompt_rel = rel(_work_paths.worker_prompt(project_root, run_id, task_id), project_root)
         capsule_rel = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
         summary_lines.append(f"- `{task_id}`: prompt `{prompt_rel}`, capsule `{capsule_rel}`")
         index_lines.append(f"- `{task_id}` -> `.pf/assignments/{task_id}.yaml`")
@@ -17321,10 +17097,10 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
-    default_model = normalize_agent_model(runtime.get("model") or "")
-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
+    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     normalized_workers: list[dict[str, Any]] = []
     for order, worker in enumerate(plan.get("workers", []) if isinstance(plan.get("workers"), list) else [], start=1):
         if not isinstance(worker, dict):
@@ -17335,8 +17111,8 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
                 "id": worker_id,
                 "order": order,
                 "runtime_driver": str(worker.get("runtime_driver") or default_driver),
-                "model": normalize_agent_model(worker.get("model") or default_model),
-                "reasoning_effort": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
+                "model": _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model),
+                "reasoning_effort": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
                 "allow_subagents": bool(worker.get("allow_subagents", False)),
                 "subagent_policy": worker_subagent_policy(worker),
                 "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
@@ -17372,8 +17148,8 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
     normalized = normalized_orchestrator_plan(project_root, plan)
     run_id = str(normalized["run"]["id"])
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
-    default_model = normalize_agent_model(runtime.get("model") or "")
-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
+    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     raw_workers: dict[str, dict[str, Any]] = {}
     for raw_worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
         if isinstance(raw_worker, dict):
@@ -17382,7 +17158,7 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
     for worker in normalized["workers"]:
         policy = worker["subagent_policy"] if isinstance(worker.get("subagent_policy"), dict) else {}
         raw_worker = raw_workers.get(str(worker["id"]), {})
-        if normalize_agent_model(raw_worker.get("model") if isinstance(raw_worker, dict) else ""):
+        if _context_contract_inputs.normalize_agent_model(raw_worker.get("model") if isinstance(raw_worker, dict) else ""):
             model_source = f"workers[{worker['id']}].model"
         elif default_model:
             model_source = "runtime.model"
@@ -17397,13 +17173,13 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
                     "behavior": ["worker-run.runtime_driver"],
                 },
                 "agent_model": {
-                    "value": normalize_agent_model(worker.get("model")),
+                    "value": _context_contract_inputs.normalize_agent_model(worker.get("model")),
                     "source": model_source,
                     "behavior": ["assignment.agent_model", "capsule.agent_model", "worker-run.PF_AGENT_MODEL", "runtime-driver.command.model_args"],
                 },
                 "agent_reasoning_effort": {
-                    "value": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or default_reasoning_effort),
-                    "source": f"workers[{worker['id']}].reasoning_effort" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") if isinstance(raw_worker, dict) else "") else ("runtime.reasoning_effort" if default_reasoning_effort else "default.empty"),
+                    "value": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or default_reasoning_effort),
+                    "source": f"workers[{worker['id']}].reasoning_effort" if _context_contract_inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") if isinstance(raw_worker, dict) else "") else ("runtime.reasoning_effort" if default_reasoning_effort else "default.empty"),
                     "behavior": ["assignment.agent_reasoning_effort", "capsule.agent_reasoning_effort", "worker-run.PF_AGENT_REASONING_EFFORT", "codex-exec.PF_CODEX_REASONING_EFFORT"],
                 },
                 "subagent_policy": {
@@ -17441,7 +17217,7 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
 def write_orchestrator_config_resolution_artifacts(project_root: Path, plan: dict[str, Any]) -> None:
     normalized = normalized_orchestrator_plan(project_root, plan)
     run_id = str(normalized["run"]["id"])
-    root = run_root(project_root, run_id)
+    root = _work_paths.run_root(project_root, run_id)
     root.mkdir(parents=True, exist_ok=True)
     write_yaml_file(root / "orchestrator-shell-plan.normalized.yaml", normalized)
     write_yaml_file(root / "config-resolution-report.yaml", build_config_resolution_report(project_root, plan))
@@ -17454,7 +17230,7 @@ def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) ->
         if not isinstance(worker, dict):
             continue
         task_id = safe_id(str(worker.get("id") or "worker"), "worker")
-        path = assignment_yaml_path(project_root, task_id)
+        path = _work_paths.assignment_document(project_root, task_id)
         if not path.is_file():
             continue
         task = load_task(project_root, task_id)
@@ -17514,7 +17290,7 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = str(task.get("run_id") or "")
-    output = Path(args.output).expanduser() if getattr(args, "output", None) else worker_prompt_path(project_root, run_id, task_id)
+    output = Path(args.output).expanduser() if getattr(args, "output", None) else _work_paths.worker_prompt(project_root, run_id, task_id)
     if not output.is_absolute():
         output = (project_root / output).resolve()
     prompt = render_worker_launch_prompt(project_root, task_id)
@@ -17523,7 +17299,7 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
         return 0
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(prompt, encoding="utf-8")
-    emit_process_event(project_root, "worker.launch_prompt.created", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.launch_prompt.created", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(output, project_root)}")
     return 0
 
@@ -17542,14 +17318,14 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     title = str(run.get("title") or run_id)
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
-    default_model = normalize_agent_model(runtime.get("model") or "")
-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
+    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
-    planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts", run_root(project_root, run_id) / "config-resolution-report.yaml"]
+    planned = [_work_paths.run_document(project_root, run_id), orchestrator_plan_path(project_root, run_id), _work_paths.run_root(project_root, run_id) / "worker-prompts", _work_paths.run_root(project_root, run_id) / "config-resolution-report.yaml"]
     if not args.apply or getattr(args, "dry_run", False):
         print_plan("orchestrator-plan apply dry run", planned, project_root)
         return 0
-    if not run_yaml_path(project_root, run_id).is_file():
+    if not _work_paths.run_document(project_root, run_id).is_file():
         status, output = run_command_capture(
             command_run_create,
             argparse.Namespace(project_root=str(project_root), id=run_id, title=title, process="multi-agent-task-orchestration", objective=str(run.get("objective") or title), status="in_progress", dry_run=False),
@@ -17558,7 +17334,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             print(output, end="")
             return status
     if runtime:
-        with registry_file_lock(run_yaml_path(project_root, run_id)):
+        with registry_file_lock(_work_paths.run_document(project_root, run_id)):
             run_doc = load_run(project_root, run_id)
             run_doc["runtime"] = {
                 "default_driver": default_driver,
@@ -17573,7 +17349,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if not isinstance(worker, dict):
             continue
         task_id = safe_id(str(worker.get("id") or f"worker-{order}"), "worker")
-        assignment_path = assignment_yaml_path(project_root, task_id)
+        assignment_path = _work_paths.assignment_document(project_root, task_id)
         if not assignment_path.is_file():
             status, output = run_command_capture(
                 command_task_create,
@@ -17605,8 +17381,8 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     expected_report_language=str(worker.get("expected_report_language") or "en"),
                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
                     force_with_handoff=bool(plan.get("allow_write_scope_overlap", False) or as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
-                    agent_model=normalize_agent_model(worker.get("model") or default_model),
-                    reasoning_effort=normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
+                    agent_model=_context_contract_inputs.normalize_agent_model(worker.get("model") or default_model),
+                    reasoning_effort=_context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
                     dry_run=False,
                 ),
             )
@@ -17616,10 +17392,10 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         task = load_task(project_root, task_id)
         task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
         task["runtime_driver"] = str(worker.get("runtime_driver") or default_driver)
-        agent_model = normalize_agent_model(worker.get("model") or default_model)
+        agent_model = _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model)
         if agent_model:
             task["agent_model"] = agent_model
-        agent_reasoning_effort = normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort)
+        agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort)
         if agent_reasoning_effort:
             task["agent_reasoning_effort"] = agent_reasoning_effort
         task["workspace_access"] = normalize_workspace_access(worker.get("workspace_access"))
@@ -17643,7 +17419,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             print(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create_successor_work; immutable contexts cannot be rebuilt in place")
             return 1
         else:
-            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=bool(plan.get("allow_write_scope_overlap", False))))
+            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(_work_paths.assignment_document(project_root, task_id)), force=bool(plan.get("allow_write_scope_overlap", False))))
             print(output, end="")
             if status:
                 return status
@@ -17691,7 +17467,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             return supervisor_status
     doctor_status = command_run_doctor(argparse.Namespace(project_root=str(project_root), run=run_id))
     emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
-    print(f"WROTE: {rel(run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
+    print(f"WROTE: {rel(_work_paths.run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
     return doctor_status
 
 
@@ -17703,7 +17479,7 @@ def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
     run_id = safe_id(str(run.get("id") or "run"), "run")
     print(f"RUN: {run_id}")
     print(f"PLAN: {rel(orchestrator_plan_path(project_root, run_id), project_root)}")
-    if run_yaml_path(project_root, run_id).is_file():
+    if _work_paths.run_document(project_root, run_id).is_file():
         return command_run_status(argparse.Namespace(project_root=str(project_root), run=run_id))
     print("STATUS: plan-created")
     return 0
@@ -17730,7 +17506,7 @@ def command_run_create(args: argparse.Namespace) -> int:
     run_id = safe_id(args.id, "run")
     process_id = safe_id(args.process, "task-batch-execution")
     require_official_process_active(project_root, process_id)
-    path = run_yaml_path(project_root, run_id)
+    path = _work_paths.run_document(project_root, run_id)
     if path.exists():
         raise SystemExit(f"FAIL: run already exists: {rel(path, project_root)}")
     run = {
@@ -17750,11 +17526,11 @@ def command_run_create(args: argparse.Namespace) -> int:
         "events": {"emitted": ["run.created"]},
         "privacy": {"public_safe": True},
     }
-    planned = [path, run_root(project_root, run_id) / "plan.md", run_root(project_root, run_id) / "task-index.md"]
+    planned = [path, _work_paths.run_root(project_root, run_id) / "plan.md", _work_paths.run_root(project_root, run_id) / "task-index.md"]
     if getattr(args, "dry_run", False):
         print_plan("run-create dry run", planned, project_root)
         return 0
-    root = run_root(project_root, run_id)
+    root = _work_paths.run_root(project_root, run_id)
     root.mkdir(parents=True, exist_ok=True)
     save_run(project_root, run)
     (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
@@ -17789,7 +17565,7 @@ def command_run_status(args: argparse.Namespace) -> int:
     print(f"STATUS: {run.get('status')}")
     print("TASKS: " + ", ".join(f"{key}={value}" for key, value in sorted(counts.items())) if counts else "TASKS: none")
     for item in sorted(tasks, key=lambda value: int(value.get("order", 0) or 0)):
-        task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
+        task = load_yaml_document(_work_paths.assignment_document(project_root, str(item.get("id", ""))))
         iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
         latest = iterations[-1] if iterations and isinstance(iterations[-1], dict) else {}
         latest_text = f" latest={latest.get('id')}:{latest.get('kind')}:{latest.get('status')}" if latest else ""
@@ -17803,7 +17579,7 @@ def command_run_status(args: argparse.Namespace) -> int:
 def command_run_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run_id = str(args.run or "").strip()
-    with registry_file_lock(run_yaml_path(project_root, run_id)):
+    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
         checks = validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
     result = print_checks(checks)
     emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
@@ -17813,7 +17589,7 @@ def command_run_doctor(args: argparse.Namespace) -> int:
 def command_run_summary(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run_id = safe_id(args.run, "run")
-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+    with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml"):
         return _command_run_summary_locked(args)
 
 
@@ -17821,8 +17597,8 @@ def _command_run_summary_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
-    summary = run_summary_path(project_root, run_id)
-    handoff = run_handoff_path(project_root, run_id)
+    summary = _work_paths.summary(project_root, run_id)
+    handoff = _work_paths.handoff(project_root, run_id)
     if getattr(args, "dry_run", False):
         print_plan("run-summary dry run", [summary, handoff], project_root)
         return 0
@@ -17841,7 +17617,7 @@ def _command_run_summary_locked(args: argparse.Namespace) -> int:
 def command_run_complete(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run_id = safe_id(args.run, "run")
-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+    with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml"):
         return _command_run_complete_locked(args)
 
 
@@ -17860,8 +17636,8 @@ def _command_run_complete_locked(args: argparse.Namespace) -> int:
     emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
     if isinstance(emitted, list) and "run.completed" not in emitted:
         emitted.append("run.completed")
-    summary = run_summary_path(project_root, run_id)
-    handoff = run_handoff_path(project_root, run_id)
+    summary = _work_paths.summary(project_root, run_id)
+    handoff = _work_paths.handoff(project_root, run_id)
     artifacts = [rel(summary, project_root), rel(handoff, project_root)]
     run["final_artifacts"] = artifacts
     if isinstance(emitted, list) and "run.summary.created" not in emitted:
@@ -17876,7 +17652,7 @@ def _command_run_complete_locked(args: argparse.Namespace) -> int:
 def command_task_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run_id = safe_id(args.run, "run")
-    with registry_file_lock(run_yaml_path(project_root, run_id)):
+    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
         return _command_task_create_locked(args)
 
 
@@ -17893,7 +17669,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         declared_stages = {str(item.get("id") or "") for item in as_list(definition.process.get("stages")) if isinstance(item, dict)}
         if stage_id not in declared_stages:
             raise SystemExit(f"FAIL: stage {stage_id} is not declared by process {process_id}")
-    path = assignment_yaml_path(project_root, task_id)
+    path = _work_paths.assignment_document(project_root, task_id)
     if path.exists():
         raise SystemExit(f"FAIL: task already exists: {rel(path, project_root)}")
     tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
@@ -17968,10 +17744,10 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         }
     if required_outputs:
         task["required_outputs"] = required_outputs
-    agent_model = normalize_agent_model(getattr(args, "agent_model", None) or getattr(args, "model", None) or "")
+    agent_model = _context_contract_inputs.normalize_agent_model(getattr(args, "agent_model", None) or getattr(args, "model", None) or "")
     if agent_model:
         task["agent_model"] = agent_model
-    agent_reasoning_effort = normalize_agent_reasoning_effort(getattr(args, "reasoning_effort", None) or getattr(args, "agent_reasoning_effort", None) or "")
+    agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(getattr(args, "reasoning_effort", None) or getattr(args, "agent_reasoning_effort", None) or "")
     if agent_reasoning_effort:
         task["agent_reasoning_effort"] = agent_reasoning_effort
     expected_report: dict[str, Any] = {}
@@ -17997,7 +17773,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         raise SystemExit("FAIL: task write scope overlaps active assignments: " + dump_yaml(overlap_check))
     if overlap_check["status"] == "fail":
         task.setdefault("non_overlap", {})["overlap_check"] = overlap_check
-    planned = [path, task_artifacts_root(project_root, run_id, task_id), run_root(project_root, run_id) / "task-index.md"]
+    planned = [path, _work_paths.task_artifacts(project_root, run_id, task_id), _work_paths.run_root(project_root, run_id) / "task-index.md"]
     if getattr(args, "dry_run", False):
         print_plan("task-create dry run", planned, project_root)
         if allowed_files or forbidden_files:
@@ -18006,7 +17782,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
                 print(f"- {item}")
             print("OVERLAP_CHECK: " + overlap_check["status"])
         return 0
-    task_artifacts_root(project_root, run_id, task_id).mkdir(parents=True, exist_ok=True)
+    _work_paths.task_artifacts(project_root, run_id, task_id).mkdir(parents=True, exist_ok=True)
     write_yaml_file(path, task)
     tasks.append({"id": task_id, "assignment": rel(path, project_root), "status": "open", "order": order, "blocking": True})
     run["tasks"] = tasks
@@ -18030,7 +17806,7 @@ def command_task_start(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    with registry_file_lock(run_yaml_path(project_root, run_id)):
+    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
         return _command_task_start_locked(args)
 
 
@@ -18043,7 +17819,7 @@ def _command_task_start_locked(args: argparse.Namespace) -> int:
     save_task(project_root, task)
     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "in_progress")
     for event_type in ["task.started", "assignment.started"]:
-        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
+        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
     print(f"STARTED: {task_id}")
     return 0
 
@@ -18053,7 +17829,7 @@ def command_task_complete(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml", stale_after_seconds=0 if getattr(args, "completion_id", None) else 300):
+    with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml", stale_after_seconds=0 if getattr(args, "completion_id", None) else 300):
         return _command_task_complete_locked(args)
 
 
@@ -18076,7 +17852,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
     save_task(project_root, task)
     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "done")
     for event_type in ["task.completed", "assignment.completed"]:
-        event_kwargs = dict(process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
+        event_kwargs = dict(process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
         if getattr(args, "completion_id", None):
             emit_worker_completion_event(project_root, event_type, args.completion_id, **event_kwargs)
         else:
@@ -18114,7 +17890,7 @@ def command_task_doctor(args: argparse.Namespace) -> int:
     checks = validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
     task = load_task(project_root, task_id)
-    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
+    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
     return result
 
 
@@ -18133,20 +17909,20 @@ def command_iteration_add(args: argparse.Namespace) -> int:
     if any(isinstance(item, dict) and item.get("id") == iter_id for item in iterations):
         raise SystemExit(f"FAIL: duplicate iteration id: {iter_id}")
     artifact_kind = "debug-log.md" if kind == "debug" else "work-log.md"
-    artifact = rel(task_artifacts_root(project_root, str(task.get("run_id", "")), task_id) / artifact_kind, project_root)
+    artifact = rel(_work_paths.task_artifacts(project_root, str(task.get("run_id", "")), task_id) / artifact_kind, project_root)
     iteration = {"id": iter_id, "kind": kind, "status": status, "started_at": now_utc(), "summary": args.summary, "artifacts": [artifact]}
     if status in {"completed", "passed", "failed", "cancelled"}:
         iteration["completed_at"] = now_utc()
     if getattr(args, "dry_run", False):
         print(f"DRY-RUN: would add {iter_id} to {task_id}")
         return 0
-    task_artifacts_root(project_root, str(task.get("run_id", "")), task_id).mkdir(parents=True, exist_ok=True)
+    _work_paths.task_artifacts(project_root, str(task.get("run_id", "")), task_id).mkdir(parents=True, exist_ok=True)
     iterations.append(iteration)
     task["iterations"] = iterations
     if status == "in_progress":
         task["status"] = "debugging" if kind == "debug" else "in_progress"
     save_task(project_root, task)
-    emit_process_event(project_root, "iteration.added", process_id=task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    emit_process_event(project_root, "iteration.added", process_id=task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
     print(f"ADDED: {iter_id}")
     return 0
 
@@ -18175,7 +17951,7 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
         return 0
     task["iterations"] = iterations
     save_task(project_root, task)
-    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
     print(f"UPDATED: {args.iteration}")
     return 0
 
@@ -18382,7 +18158,7 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
     capsule = load_yaml_document(capsule_path)
     if isinstance(capsule, dict) and "execution_contract" in capsule:
         from processforge_core.work.context import validate_execution_contract
-        assignment_path = assignment_yaml_path(project_root, task_id)
+        assignment_path = _work_paths.assignment_document(project_root, task_id)
         metadata = extract_assignment_front_matter(assignment_path) if assignment_path.is_file() else {}
         validation = validate_execution_contract(project_root, assignment_path, metadata, capsule, sys.modules[__name__])
         return ("fresh" if validation["status"] == "valid" else "stale"), rel(capsule_path, project_root)
@@ -18390,7 +18166,7 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
     recorded_checksum = str(capsule_meta.get("assignment_checksum") or "") if isinstance(capsule_meta, dict) else ""
     if not recorded_checksum:
         return "legacy", rel(capsule_path, project_root)
-    assignment_path = assignment_yaml_path(project_root, task_id)
+    assignment_path = _work_paths.assignment_document(project_root, task_id)
     current_checksum = sha256_file(assignment_path) if assignment_path.is_file() else ""
     if recorded_checksum == current_checksum:
         return "fresh", rel(capsule_path, project_root)
@@ -18502,7 +18278,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         text = manifest.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "public manifest has no local absolute paths"))
         checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "public manifest contains no secret values"))
-        loaded_manifest = load_doctor_yaml(
+        loaded_manifest = _update_document_reader.doctor_yaml(
             manifest,
             "process-forge-manifest.schema.json",
             "project ProcessForge manifest",
@@ -18748,38 +18524,6 @@ def update_workplace_root(raw: str) -> Path:
     return path
 
 
-def update_registry_file(workplace_root: Path, registry_key: str, default_name: str) -> Path:
-    manifest = workplace_root / "workplace.yaml"
-    if manifest.is_file():
-        data = load_yaml_document(manifest)
-        registries = data.get("registries") if isinstance(data, dict) else None
-        raw = registries.get(registry_key) if isinstance(registries, dict) else None
-        if isinstance(raw, str) and raw.strip():
-            return path_resolution_to_path(workplace_path_resolution(workplace_root, raw))
-    return workplace_root / "registries" / default_name
-
-
-def update_source_registry_path(workplace_root: Path) -> Path:
-    return update_registry_file(workplace_root, "update_sources", "update-sources.yaml")
-
-
-def installed_subjects_registry_path(workplace_root: Path) -> Path:
-    return update_registry_file(workplace_root, "installed_subjects", "installed-subjects.yaml")
-
-
-def update_site_overrides_path(workplace_root: Path) -> Path:
-    return update_registry_file(workplace_root, "update_site_overrides", "update-site-overrides.yaml")
-
-
-def derived_installed_update_sites_path(workplace_root: Path) -> Path:
-    return workplace_root / "runtime" / "update" / "installed-update-sites.json"
-
-
-def load_update_yaml(path: Path) -> dict[str, Any]:
-    if not path.is_file():
-        return {}
-    data = load_yaml_document(path)
-    return data if isinstance(data, dict) and not yaml_error(data) else {}
 
 
 
@@ -18800,24 +18544,16 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
 
 
 
-def load_doctor_yaml(
-    path: Path,
-    schema_name: str,
-    label: str,
-    checks: list[Check],
-) -> dict[str, Any] | None:
-    """Load and schema-check a governed YAML document without mutating it."""
-    data = load_yaml_document(path)
-    error = yaml_error(data)
-    if error:
-        checks.append(check("FAIL", f"{label} YAML parse failed: {error}"))
-        return None
-    if not isinstance(data, dict) or not data:
-        checks.append(check("FAIL", f"{label} must be a non-empty YAML object"))
-        return None
-    checks.append(check("PASS", f"{label} is valid YAML"))
-    _update_schema_checks.append(checks, data, schema_name, label)
-    return data
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -18857,8 +18593,8 @@ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False)
 
 def command_update_bootstrap_source_list(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    path = update_source_registry_path(workplace_root)
-    data = load_update_yaml(path)
+    path = _update_document_reader.source_registry(workplace_root)
+    data = _update_document_reader.yaml(path)
     if not data:
         print(f"FAIL: update source registry not found or invalid: {path}")
         return 1
@@ -18867,8 +18603,8 @@ def command_update_bootstrap_source_list(args: argparse.Namespace) -> int:
 
 def command_update_bootstrap_source_validate(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    path = update_source_registry_path(workplace_root)
-    checks = _update_source_contract_policy.validate_registry(load_update_yaml(path), path)
+    path = _update_document_reader.source_registry(workplace_root)
+    checks = _update_source_contract_policy.validate_registry(_update_document_reader.yaml(path), path)
     return print_checks(checks)
 
 
@@ -18883,23 +18619,8 @@ def command_update_sources(args: argparse.Namespace) -> int:
     return command_update_bootstrap_source_list(args)
 
 
-def update_manifest_candidates_under(root: Path, patterns: list[str]) -> list[Path]:
-    if not root.is_dir():
-        return []
-    candidates: list[Path] = []
-    for pattern in patterns:
-        candidates.extend(sorted(root.glob(pattern)))
-    return [path.resolve() for path in candidates if path.is_file()]
 
 
-def update_resolved_registry_paths(workplace_root: Path, registry_name: str, collection_key: str) -> list[Path]:
-    data = load_update_yaml(workplace_root / "registries" / registry_name)
-    entries = data.get(collection_key) if isinstance(data.get(collection_key), list) else []
-    paths: list[Path] = []
-    for entry in entries:
-        if isinstance(entry, dict) and isinstance(entry.get("path"), str):
-            paths.append(path_resolution_to_path(workplace_path_resolution(workplace_root, str(entry.get("path")))))
-    return paths
 
 
 def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]:
@@ -18911,11 +18632,11 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
     if not package_roots:
         package_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/packages"))]
     for root in package_roots:
-        for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/package.yaml", "*/package.yml"]):
+        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/package.yaml", "*/package.yml"]):
             if path in seen:
                 continue
             seen.add(path)
-            data = load_update_yaml(path)
+            data = _update_document_reader.yaml(path)
             if not data.get("id"):
                 continue
             subject_type = str(data.get("type") or "knowledge_package")
@@ -18933,8 +18654,8 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
             )
 
     process_root = path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/processes"))
-    for path in update_manifest_candidates_under(process_root, ["*.yaml", "*.yml"]):
-        data = load_update_yaml(path)
+    for path in _update_document_reader.manifest_candidates(process_root, ["*.yaml", "*.yml"]):
+        data = _update_document_reader.yaml(path)
         if data.get("id"):
             subject_type = str(data.get("type") or "process_definition")
             if subject_type not in UPDATE_SUBJECT_TYPES:
@@ -18950,12 +18671,12 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
                 }
             )
 
-    template_roots = update_resolved_registry_paths(workplace_root, "templates.yaml", "template_roots")
+    template_roots = _update_document_reader.registry_paths(workplace_root, "templates.yaml", "template_roots")
     if not template_roots:
         template_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_TEMPLATES}"))]
     for root in template_roots:
-        for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
-            data = load_update_yaml(path)
+        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
+            data = _update_document_reader.yaml(path)
             if data.get("id"):
                 subject_type = str(data.get("type") or "reusable_template")
                 if subject_type not in UPDATE_SUBJECT_TYPES:
@@ -18971,15 +18692,15 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
                     }
                 )
 
-    platform_roots = update_resolved_registry_paths(workplace_root, "platform-contract-roots.yaml", "platform_contract_roots")
+    platform_roots = _update_document_reader.registry_paths(workplace_root, "platform-contract-roots.yaml", "platform_contract_roots")
     if not platform_roots:
         platform_roots = [
             path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_PLATFORM_CONTRACTS}")),
             path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/platforms")),
         ]
     for root in platform_roots:
-        for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/platform.yaml", "*/platform.yml", "*/platform-contract.yaml", "*/platform-contract.yml"]):
-            data = load_update_yaml(path)
+        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/platform.yaml", "*/platform.yml", "*/platform-contract.yaml", "*/platform-contract.yml"]):
+            data = _update_document_reader.yaml(path)
             if data.get("id") and data.get("type") == "platform_contract":
                 records.append(
                     {
@@ -18993,7 +18714,7 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
                 )
 
     tools_path = workplace_root / "registries" / "tools.yaml"
-    tools_data = load_update_yaml(tools_path)
+    tools_data = _update_document_reader.yaml(tools_path)
     for entry in tools_data.get("tools", []) if isinstance(tools_data.get("tools"), list) else []:
         if isinstance(entry, dict) and entry.get("id"):
             subject_type = str(entry.get("type") or "tool_definition")
@@ -19011,7 +18732,7 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
             )
 
     mcp_path = workplace_root / "registries" / "mcp.yaml"
-    mcp_data = load_update_yaml(mcp_path)
+    mcp_data = _update_document_reader.yaml(mcp_path)
     for entry in mcp_data.get("mcp_servers", []) if isinstance(mcp_data.get("mcp_servers"), list) else []:
         if isinstance(entry, dict) and entry.get("id"):
             records.append(
@@ -19030,8 +18751,8 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
 
 
 def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
-    path = update_site_overrides_path(workplace_root)
-    data = load_update_yaml(path)
+    path = _update_document_reader.overrides_path(workplace_root)
+    data = _update_document_reader.yaml(path)
     overrides = data.get("overrides") if isinstance(data.get("overrides"), list) else []
     result: dict[str, dict[str, Any]] = {}
     for item in overrides:
@@ -19091,7 +18812,7 @@ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> lis
 
 
 def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str], str]:
-    data = load_update_yaml(installed_subjects_registry_path(workplace_root))
+    data = _update_document_reader.yaml(_update_document_reader.installed_registry(workplace_root))
     subjects = data.get("subjects") if isinstance(data.get("subjects"), list) else []
     result: dict[tuple[str, str], str] = {}
     for subject in subjects:
@@ -19109,9 +18830,9 @@ def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str],
 
 def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], list[Check]]:
     checks: list[Check] = []
-    overrides_path = update_site_overrides_path(workplace_root)
+    overrides_path = _update_document_reader.overrides_path(workplace_root)
     if overrides_path.is_file():
-        checks.extend(validate_update_site_overrides_data(load_update_yaml(overrides_path), overrides_path))
+        checks.extend(validate_update_site_overrides_data(_update_document_reader.yaml(overrides_path), overrides_path))
     overrides = update_site_overrides(workplace_root)
     installed_versions = installed_subject_version_map(workplace_root)
     sites: list[dict[str, Any]] = []
@@ -19216,7 +18937,7 @@ def command_update_entity_sources_rebuild(args: argparse.Namespace) -> int:
     if failures:
         print_checks(checks)
         return 1
-    target = derived_installed_update_sites_path(workplace_root)
+    target = _update_document_reader.derived_sites_path(workplace_root)
     if args.dry_run:
         print(json.dumps(derived, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -19229,7 +18950,7 @@ def command_update_entity_sources_rebuild(args: argparse.Namespace) -> int:
 
 def command_update_entity_sources_list(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    target = derived_installed_update_sites_path(workplace_root)
+    target = _update_document_reader.derived_sites_path(workplace_root)
     if target.is_file():
         try:
             data = json.loads(target.read_text(encoding="utf-8"))
@@ -19313,23 +19034,13 @@ def command_update_manifest_validate(args: argparse.Namespace) -> int:
             print(f"FAIL: invalid JSON: {path}: {exc}")
             return 1
     else:
-        data = load_update_yaml(path)
+        data = _update_document_reader.yaml(path)
     if not isinstance(data, dict) or not data:
         print(f"FAIL: normalized update manifest is empty or invalid: {path}")
         return 1
     return print_checks(validate_normalized_update_manifest_data(data, path))
 
 
-def load_update_index(distribution_root: Path) -> dict[str, Any]:
-    candidates = [
-        distribution_root / "updates" / "processforge-update-index.yaml",
-        distribution_root / "updates" / "channels.yaml",
-    ]
-    for path in candidates:
-        if path.is_file():
-            data = load_yaml_document(path)
-            return data if isinstance(data, dict) else {}
-    return {}
 
 
 
@@ -19339,7 +19050,7 @@ def load_update_index(distribution_root: Path) -> dict[str, Any]:
 def command_self_update_check(args: argparse.Namespace) -> int:
     distribution_root = Path(args.distribution_root).expanduser().resolve() if args.distribution_root else ROOT
     channel = args.channel
-    update_index = load_update_index(distribution_root)
+    update_index = _update_document_reader.index(distribution_root)
     if not update_index:
         print(f"FAIL: update index not found under {distribution_root / 'updates'}")
         return 1
@@ -19375,7 +19086,7 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
             distribution_root = resolve_distribution_path(workplace, "processforge")
     if not distribution_root:
         distribution_root = project_root if (project_root / "updates").is_dir() else ROOT
-    update_index = load_update_index(distribution_root)
+    update_index = _update_document_reader.index(distribution_root)
     if not update_index:
         print(f"FAIL: update index not found under {distribution_root / 'updates'}")
         return 1
@@ -19400,43 +19111,10 @@ def update_notifications_path(workplace_root: Path) -> Path:
     return update_runtime_root(workplace_root) / "notifications.json"
 
 
-def file_url_to_path(value: str, base: Path | None = None) -> Path:
-    text = value.strip()
-    if text.startswith("file://"):
-        parsed = urlparse(text)
-        raw = url2pathname(parsed.path or "")
-        if os.name == "nt" and re.match(r"^/[A-Za-z]:/", raw):
-            raw = raw[1:]
-        return Path(raw).expanduser().resolve()
-    path = Path(text).expanduser()
-    if not path.is_absolute() and base is not None:
-        path = base / path
-    return path.resolve()
 
 
-def load_yaml_or_json_document(path: Path) -> dict[str, Any]:
-    if path.suffix.lower() == ".json":
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {}
-        return data if isinstance(data, dict) else {}
-    return load_update_yaml(path)
 
 
-def load_yaml_or_json_text(text: str) -> dict[str, Any]:
-    try:
-        data = json.loads(text)
-        return data if isinstance(data, dict) else {}
-    except json.JSONDecodeError:
-        pass
-    try:
-        import yaml  # type: ignore
-
-        data = yaml.safe_load(text)
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
 
 
 def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
@@ -19447,8 +19125,8 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
     parsed = urlparse(location)
     scheme = parsed.scheme.lower()
     if scheme == "file" or not scheme:
-        path = file_url_to_path(location, workplace_root)
-        data = load_yaml_or_json_document(path)
+        path = _update_document_reader.file_url_path(location, workplace_root)
+        data = _update_document_reader.document(path)
         if not data:
             return {}, [f"manifest not found or invalid: {path}"]
         return data, warnings
@@ -19458,7 +19136,7 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
                 text = response.read().decode("utf-8")
         except Exception as exc:
             return {}, [f"manifest fetch failed: {exc}"]
-        data = load_yaml_or_json_text(text)
+        data = _update_document_reader.text(text)
         if not data:
             return {}, [f"manifest response invalid: {location}"]
         return data, warnings
@@ -19478,7 +19156,7 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
 
 
 def installed_subjects_by_key(workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
-    data = load_update_yaml(installed_subjects_registry_path(workplace_root))
+    data = _update_document_reader.yaml(_update_document_reader.installed_registry(workplace_root))
     result: dict[tuple[str, str], dict[str, Any]] = {}
     for subject in data.get("subjects", []) if isinstance(data.get("subjects"), list) else []:
         if isinstance(subject, dict) and isinstance(subject.get("type"), str) and isinstance(subject.get("id"), str):
@@ -19514,7 +19192,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
         print_checks(checks)
         return 1
     if not args.dry_run:
-        target_sites = derived_installed_update_sites_path(workplace_root)
+        target_sites = _update_document_reader.derived_sites_path(workplace_root)
         target_sites.parent.mkdir(parents=True, exist_ok=True)
         target_sites.write_text(json.dumps(derived, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     installed = installed_subjects_by_key(workplace_root)
@@ -19752,7 +19430,7 @@ def command_update_changelog_show(args: argparse.Namespace) -> int:
     changelog_url = str(candidate.get("changelog_url") or "")
     print(f"CHANGELOG_URL: {changelog_url or 'none'}")
     if changelog_url.startswith("file://") or (changelog_url and "://" not in changelog_url):
-        path = file_url_to_path(changelog_url, workplace_root)
+        path = _update_document_reader.file_url_path(changelog_url, workplace_root)
         if path.is_file():
             print(path.read_text(encoding="utf-8")[:4000])
     return 0
@@ -19768,7 +19446,7 @@ def copy_or_download_update_artifact(candidate: dict[str, Any], target: Path, wo
         raise ValueError("candidate has no download_url")
     parsed = urlparse(url)
     if parsed.scheme in {"", "file"}:
-        source = file_url_to_path(url, workplace_root)
+        source = _update_document_reader.file_url_path(url, workplace_root)
         if not source.is_file():
             raise FileNotFoundError(source)
         target_name = source.name
@@ -19802,7 +19480,7 @@ def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
                 text = archive.read(name).decode("utf-8")
             except Exception:
                 continue
-            data = load_yaml_or_json_text(text)
+            data = _update_document_reader.text(text)
             if data.get("id"):
                 return data
     return {}
@@ -19813,7 +19491,7 @@ def staged_update_record_path(workplace_root: Path, candidate_id: str) -> Path:
 
 
 def read_staged_update_record(workplace_root: Path, candidate_id: str) -> dict[str, Any]:
-    return load_update_yaml(staged_update_record_path(workplace_root, candidate_id))
+    return _update_document_reader.yaml(staged_update_record_path(workplace_root, candidate_id))
 
 
 def command_update_stage(args: argparse.Namespace) -> int:
@@ -19903,8 +19581,8 @@ def update_install_path(workplace_root: Path, candidate: dict[str, Any]) -> Path
 
 
 def update_installed_subject_version(workplace_root: Path, candidate: dict[str, Any], install_path: Path | None = None) -> None:
-    path = installed_subjects_registry_path(workplace_root)
-    data = load_update_yaml(path)
+    path = _update_document_reader.installed_registry(workplace_root)
+    data = _update_document_reader.yaml(path)
     if not data:
         data = {"schema_version": 1, "subjects": []}
     subjects = data.get("subjects")
@@ -20964,13 +20642,13 @@ def command_knowledge_package_create(args: argparse.Namespace) -> int:
 
 def normalize_platform_id(raw: str) -> tuple[str, str]:
     platform_id = safe_id(raw.removeprefix("platform."), "platform")
-    return platform_id, platform_contract_id(platform_id)
+    return platform_id, _platform_contract_reader.contract_id(platform_id)
 
 
 def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
     platform_id, contract_id = normalize_platform_id(platform)
     for candidate_id in [contract_id, platform_id]:
-        entry = platform_contract_registry_entry(workplace_root / "workplace.yaml", candidate_id)
+        entry = _platform_contract_reader.registry_entry(workplace_root / "workplace.yaml", candidate_id)
         if entry and entry.get("path"):
             path = workplace_root / str(entry["path"])
             if path.is_file():
@@ -20991,7 +20669,7 @@ def platform_contract_semantic_checks(
 ) -> list[Check]:
     checks: list[Check] = []
     checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
-    contract_id = platform_contract_id(str(data.get("id") or platform))
+    contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
     for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
         if policy_id_matches(contract_id, entry):
             checks.append(
@@ -21143,7 +20821,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
     if contract_path:
         text = contract_path.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "platform contract has no local absolute paths"))
-        data = load_doctor_yaml(
+        data = _update_document_reader.doctor_yaml(
             contract_path,
             "platform-contract.schema.json",
             f"platform {platform} contract",
@@ -21152,7 +20830,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
         if data is None:
             return print_checks(checks)
         checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
-        contract_id = platform_contract_id(str(data.get("id") or platform))
+        contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
         for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
             if policy_id_matches(contract_id, entry):
                 checks.append(
@@ -21535,7 +21213,7 @@ def command_template_doctor(args: argparse.Namespace) -> int:
     if manifest_path:
         text = manifest_path.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "template manifest has no local absolute paths"))
-        data = load_doctor_yaml(
+        data = _update_document_reader.doctor_yaml(
             manifest_path,
             "reusable-template.schema.json",
             f"template {template_id} manifest",
@@ -21772,7 +21450,7 @@ def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -
     )
     if not path:
         return checks
-    data = load_doctor_yaml(
+    data = _update_document_reader.doctor_yaml(
         path,
         "specialization.schema.json",
         f"specialization {normalized_id} manifest",
@@ -21858,8 +21536,8 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
     if not isinstance(data, dict) or yaml_error(data):
         raise SystemExit(f"FAIL: specialization YAML invalid: {rel(path, workplace_root)}")
     binding = {
-        "platforms": [platform_contract_id(str(args.platform))],
-        "platform_stack_includes": [platform_contract_id(item) for item in getattr(args, "platform_stack_includes", [])],
+        "platforms": [_platform_contract_reader.contract_id(str(args.platform))],
+        "platform_stack_includes": [_platform_contract_reader.contract_id(item) for item in getattr(args, "platform_stack_includes", [])],
         "applies_to_project_types": [str(item) for item in getattr(args, "project_type", [])],
         "tags": [],
         "resources": default_resource_buckets(),
@@ -21885,7 +21563,7 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
         data["platform_bindings"] = bindings
     bindings.append(binding)
     write_authoring_text(path, dump_yaml(data))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": platform_contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": _platform_contract_reader.contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
     print(f"UPDATED: {rel(path, workplace_root)}")
     return 0
 
@@ -21988,7 +21666,7 @@ def platform_authoring_values(args: argparse.Namespace) -> dict[str, Any]:
         str(args.id).removeprefix("platform."),
         "platform",
     )
-    contract_id = platform_contract_id(platform_id)
+    contract_id = _platform_contract_reader.contract_id(platform_id)
     required_packages = [
         item for item in getattr(args, "requires_package", []) if item
     ]

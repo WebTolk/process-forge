@@ -1,0 +1,2931 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index fd81f4b..210b7c8 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-3288fda0c3720d4db09d4366e063a6fe2df828cd69fa5c7a2159426b09aa509b  docs/concepts/python-core-structure.md
++a27267ae1e6229451ddae9db2ae3ee3f17d5907594fa2c77cbf871a209eb2581  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-8cd4de8c89c9b43ec262badd0c1e34876741aeef1501892a1e340441d3adfb39  docs/ru/concepts/python-core-structure.md
++f22d1485e416e23e2460eb6f9a72e6be0d37eb514edfc237c34e19f49aa70700  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -709,7 +709,7 @@ d60afda961e74996ad97a14a3d32a90dea7d5555234f125d25ad9ad95da1a7cd  src/processfor
+ 9b52bad0e3071d098ef038015ac1eeb9cdd0255af6bdc8c6e2b789b1f3466470  src/processforge_core/egress/contracts.py
+ af7cae971d496ff154bedea7e54cb31a2db74b42489c5f88535ee610d4a414bc  src/processforge_core/egress/engine.py
+ 5e8e8f61c54f353181be1b7d4782e1232520d2081d43967dfeef14d11c732e58  src/processforge_core/egress/policy.py
+-13d261671d79c7c268cd69a1c5120d3ef6f69e3642acc19ad4958f97e8d780fc  src/processforge_core/egress/service.py
++723fb28c17bd2af85003fac17010fef5e2f1a9ec14dc533eed1734abcb58366a  src/processforge_core/egress/service.py
+ 26d7308680296963943c60c23e05819bbaacbea63c049e6a1355254f1901f52f  src/processforge_core/egress/storage.py
+ e472defb8a93b918d477b66503c0b3358ead78c00ed24a1c7327cbc96428d1db  src/processforge_core/egress/transport.py
+ 8e4e1e80988a8f45289336f8a8e4fc50a2ce6e5e853973bccc4bad4e98a4c72a  src/processforge_core/egress/windows.py
+@@ -722,6 +722,7 @@ d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef  src/processfor
+ f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de  src/processforge_core/evolution/privacy.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
++9918e7d69cf5cf93d7dd84fcb78e78f00fc79c1e1c4ef04ae36ce4cff3c40b3c  src/processforge_core/maintenance/documents.py
+ f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1  src/processforge_core/maintenance/presentation.py
+ 5c27d092f2cfdf1102b082159de30accfa59af4fd7ca34d91bc6a3d45f97895b  src/processforge_core/maintenance/schema_checks.py
+ 4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7  src/processforge_core/maintenance/sites.py
+@@ -734,7 +735,7 @@ c6d8cf6128923402c8bd0856b6cc6d6cfaadb30e9a19e78a74ccb72927e60307  src/processfor
+ f935e52187565190fdeefa3b4e2a7da812db6eafd139f6fdd43e29f5b5a6db90  src/processforge_core/ports.py
+ ad31887204f183a08fbcb321b8375ffa7d81a7d20c2429f3fb93e0b8e658a141  src/processforge_core/prepared/__init__.py
+ b80f22c860ddd5917db4d024399eed807cdc85355558f22b38abad9d6035a3dc  src/processforge_core/prepared/collection.py
+-f15db9f76dcf55062659ab36bcd1b2d62c1c1c6e1c21ad3429a55838605df59c  src/processforge_core/prepared/input.py
++fd3fcc46416441538d477d5deb17f1d2b10cb17c5c66ea5fb5757f54b52c909d  src/processforge_core/prepared/input.py
+ 2c6f22998ba2adf36d6f6a20b5f54bb42ae8081a150762a98cb1f19dc0bfb97f  src/processforge_core/prepared/knowledge_resources.py
+ 8024d254bb64f75eb33ff9f960cc893c31ca5bd07f71ca358907c880faa58971  src/processforge_core/prepared/registry_resources.py
+ d050e9412b2d190474c36f4a527628a3c55e8cfbb812a78c02ec6ca33a970532  src/processforge_core/prepared/resource_selection.py
+@@ -771,6 +772,7 @@ ae664b3fac858723a91f41b5795d20447bc965ef24a6dd4ae625520db27d650d  src/processfor
+ ca249dfd6b769f07f02b4f26661e9f822af60d64679b0ba9f1a707687447f121  src/processforge_core/project/knowledge_selection.py
+ 82b81be0c8975dbbf0977d8ccb4b4650e0b9a66c68d0f26a57af9ecc4bf53088  src/processforge_core/project/metadata.py
+ 9f87f464f366b7c8f3f680145e0c8f20b6d7c9af3d4ef1fc7c5319302a604f55  src/processforge_core/project/mode.py
++4281ffb1e114ccc4f3b58a932cc0ac31bf86e67d6cb653a94235ccf19aaa66a0  src/processforge_core/project/platforms.py
+ 7c55ccadd9156a08b9afd83c525e3b8178cd9a81a0f352b30969e20ef2f2d24d  src/processforge_core/project/readiness.py
+ 8996b55c64966e6bc808d3dac89fa2d3aa58ec0050f50455c2e31a0ca7d4bca2  src/processforge_core/project/reconciliation.py
+ f0b95163dad744983bd1a4a3d912a458aea619c358780d2bd1d757d870d9aaf9  src/processforge_core/project/reports.py
+@@ -790,6 +792,7 @@ cbd7d0c29a26719ded5471eee83bfdbaa837abfeb1b575ae04690bc0cbd59e59  src/processfor
+ bff728e23d056f8b20e789cafc04cd40b8e76c883e8cc400299efa822c247a51  src/processforge_core/resources/versioning.py
+ 670e292e6448728f65ec2f8ffbd5241fe7ae39029f20832b9d235260e46f65cb  src/processforge_core/runtime/__init__.py
+ 183f370372d3a840a38be677925a2744525308febd2e420fd3cd936261b25336  src/processforge_core/runtime/catalog.py
++f1daf79a89f6232038c39b19beb20850adc3bd5c35fdd45572152f40f7c9b7cd  src/processforge_core/runtime/command.py
+ b273cb7da6197b94596e62323dfca551eeb22664fc7d4d474968e3c62de12d25  src/processforge_core/runtime/drivers.py
+ 8cb985ae19b4a33fc92cf7e2bf63fe35df8b951e5b703c90dad10308402e812a  src/processforge_core/runtime/environment.py
+ d95f20647297326251bf9b1622a4bc580bf5a4a9876331a4e049b48ae7494c77  src/processforge_core/runtime/metrics.py
+@@ -801,7 +804,7 @@ b373a52476eb6aa626295975618458b6605f5d5bb8c40be72c914d56ddc9e707  src/processfor
+ 062642fce66e6e0315086dc59191834311b51eb7f0a8a883532d4e032bbecea8  src/processforge_core/work/boundary_advisory.py
+ 788f590f38fa42a1863abb36fe32f84c882d42e521a28e4053c1207b8c788c66  src/processforge_core/work/cancellation_replay.py
+ 8a752253c676155b7b8187dd6b0266f25e9c283ccad3bc472d1fea6bf66e1fbd  src/processforge_core/work/capsule_publication.py
+-a58a0a41f067b733f4828d996d73a81d71b09a7d9b279b86d3faf8da368c5a02  src/processforge_core/work/context.py
++ce560001126915e7df76b1290dc81a74864618473f374203a3fd7bdc42203e92  src/processforge_core/work/context.py
+ 035f85f7d8741659167304f668bccbf18a4229240eff3537f7e91fa8242eedcc  src/processforge_core/work/context_documents.py
+ ab48a3ad173b9c2227f4566ba9670c7d08ab4da9aa8b3f6a62460de3a2b8f95b  src/processforge_core/work/context_read.py
+ 2026996a1398f1c471d42d504ec9c491b0c1c83d8dac36e245fad65e5bbb1a03  src/processforge_core/work/continuation.py
+@@ -816,6 +819,7 @@ e8edbeae980116feb4b882e4fc48b748f2a58b578afbcda2d0dd1858822b6b45  src/processfor
+ cbc599b3b4740d025c680866048814bac43d2a8e71309f65966aecc710e6d50a  src/processforge_core/work/material_read.py
+ 38604627556b503872b0476f29da03e3f29500bdb8b466b75805249e04a3016e  src/processforge_core/work/metadata.py
+ dfd1e20b19ddd0bcff3de35c802f31d5ff0850f95241b99492f362043fb9a8c2  src/processforge_core/work/outputs.py
++9d9e6e3c59203a155feb89c55ee764f1bda2d9af6cbfbe87854b49980191d9d7  src/processforge_core/work/paths.py
+ ae3a86f12685b5e3c1ea918e69f36593fad84dafd25fb1a1eb62e92f6b10e4a6  src/processforge_core/work/permissions.py
+ c940a1e539adc12f0b61aecbbb4706517a1124252d41ab576bc0cc9b05ec08d7  src/processforge_core/work/projection.py
+ 330d0c00d0db92ee184c00bc0491acedb98404ee68762b425c28ada3a09fb6e7  src/processforge_core/work/publication.py
+@@ -998,7 +1002,7 @@ abf554dad66d83c4aa2c8d7077873256b61c90ff76d5ba822fe7c9ea6f26bb01  tools/pf_runti
+ c88b77c7560a938cb4f264ccf098aa796c93485e9bc85a2818125d514edc40ee  tools/pf_runtime/codex_hooks.py
+ 1b1dfafaba990964d71f6741206d1b1b3cec873ad5b7fa372eeb2fdea39ae7b6  tools/pf_runtime/codex_integration.py
+ 9fc01f05c2fd365adfb4bb10479c45704ee570b4ae6e4331f637ded4fb2e564e  tools/pf_runtime/codex_mcp.py
+-124b76095ad20c1fd9b7c4ad66764eea06923ab31e99988e534f2dc6dfb2b5b8  tools/pf_runtime/host.py
++db8ebdbe12610377429b2c928bc28ff95024ef8c0c01b3161524907604dbc2e5  tools/pf_runtime/host.py
+ bad15ce0a1e82773b5de636b1bc49aceeabfb95f3b242113011ff269e771debf  tools/pf_runtime/mcp_server.py
+ 3e8104bc7f7202543db58ca830c0b49507eff5815ff8a57b6c8fbc2713ce1ec6  tools/pf_runtime/monitor.py
+ 6b04880e06be71e362dead8bca901f70b89993140ab7cb1a5021158ee6ad8ac0  tools/pf_runtime/provider_adapters.py
+@@ -1009,7 +1013,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-4ef75d1f126899e203a6773a5db2fc925384349961c1f771be1fd4b99ab6ff56  tools/processforge.py
++58865a2ee0728f7870713795075a8d7b76002afa6ecc6042e4c8e89af89eb2f4  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+@@ -1039,7 +1043,7 @@ c075fd2f1b7156ff0a60f39fee799655d519557f0657ffa9f4502fd6377f32e8  tools/smoke_cl
+ d353381ae07d25025d70675216eaf18199f9e27daa0b048ca2236fb780e5e291  tools/smoke_codex_exec_worker.py
+ b049d0d95cf4663d5055928bcc4f7421598040072c96040f691563b8c7859acc  tools/smoke_codex_integration.py
+ 071b5db6137ddf144098bc712ee5ae812e63650fbec9c79e09229393c23351b6  tools/smoke_codex_lifecycle_identity.py
+-b3f8cd951a10bd012c0092a84e30b54482e3a6f087d5e35cd9b4f7e108dec9dd  tools/smoke_codex_worker_governance.py
++9d6e3121491720da623a366b040b405460f7d1eb380d6c134dbba5cfc7060135  tools/smoke_codex_worker_governance.py
+ 8f03c3e1c64d3e61cf92509c5553bc7e65f22944e5deb608cdd729b12090c3e7  tools/smoke_completion_document_service.py
+ 5001968957b5376053214e4a57530b42d0d39236ea210ed8ee023ef6c3eb33a1  tools/smoke_completion_intent_builder.py
+ 1be8a1d0e1fc82456430d0ddf1b720dfaad1979da3cb27b0f2c346cbd8f92c80  tools/smoke_completion_intent_read_service.py
+@@ -1048,7 +1052,7 @@ b3f8cd951a10bd012c0092a84e30b54482e3a6f087d5e35cd9b4f7e108dec9dd  tools/smoke_co
+ 0e8c2aae6481128ca1b2f3fd1f8db663e2774354a49a2ef5c49eb2113c87944f  tools/smoke_config_behavior_contracts.py
+ ad00d591cd40fdb0dd349203658cdcbe1d99dddf64c8adf365d09ecf30598cb4  tools/smoke_configuration.py
+ 10f5b97e6f0d9c4e16611c413c726e0ccd8813e1bab766be43e346a99557a073  tools/smoke_context_freshness_vs_execution_readiness.py
+-98716c25dd7cb0fab3f52de43a90d72643146409bf84462fdda67a2eca849987  tools/smoke_continuation_work.py
++da0a997d4a6c993da04dcfbd9c83f3ca7dd90f3b7e04f76a10a71962c6ae894e  tools/smoke_continuation_work.py
+ 67eaaeb0e84648b4d1dcaf250e92fe9ec7fc3d139692ccd28cd2f65440704691  tools/smoke_conversation_completeness.py
+ f8e9b45ea106d2a52bc40bce7ac369266b6e20c9878deb418ed0f541599c848c  tools/smoke_core_domain_neutral_still_passes.py
+ 4ffab3e2a8931373d78bff95026309274c45cb131421b181ae43f46289def413  tools/smoke_core_has_no_domain_knowledge_seeds.py
+@@ -1078,7 +1082,7 @@ b67f4d9d6b80f7e3881d6061574279cb3544917dc2c97bc3019617085da02b54  tools/smoke_do
+ 03782096c2409335470a27a63b467d5b386b0148fcb557498190092911f05176  tools/smoke_domain_pack_can_classify_after_install.py
+ 0d4fee44f1fba30882f24a9cf7efdee7a0aa69d486d265d9aca08927ac11bbca  tools/smoke_egress_engine.py
+ 228503a02f4520ad0299cac91e84c96c61644b001ab58db9579c7d5113edaf25  tools/smoke_egress_transport.py
+-38fe3d3bfb578186c887b8c8d984c8f439d220203792d4512dcf9acfbf39b927  tools/smoke_egress_work.py
++5676da72fc59f8b6a2a55786046adbb95e668cb2f7c1acae4cc29c16bbf7e9c3  tools/smoke_egress_work.py
+ 999671d6679d0075c4a58c2c6efec9a0ac4e805edda7ea2f75bf2b31b03d7a96  tools/smoke_empty_workplace_has_no_domain_resources.py
+ 97e0bdfafd5402589d551ba4f75dacb90cb6d4a390fde484b075f36a6ba45b54  tools/smoke_error_workflow.py
+ 098ae78ff8ec4a1790727c00f094706a7dd70985585a11de79659e1b91384394  tools/smoke_evidence_collection_policy.py
+@@ -1146,8 +1150,8 @@ dfa025882ae1f90cecd4862caff28922949581b2f080b54b70db73836e15cfb9  tools/smoke_or
+ 10385c3daae274f5f5a1de0427c1f4ca1ea60bf413a585d66883e24bdfb4c638  tools/smoke_parameter_freshness.py
+ 6bc94c982ff5963e427effbb43a0b87d3d8a7a38590745841b22e667922b8ed1  tools/smoke_pf_project_process_refs_follow_layout.py
+ c726a515ef7c9694064c52756ecff5b454a6327ce029f4e8cf4006ae32ac1b73  tools/smoke_platform_create_include_levels.py
+-e5741c92cc9e13215fef1354822f078af98b8ddd6430e7aa4f4cd7ed3e2b4e32  tools/smoke_prepared_execution_context.py
+-dcf7d9751f42ffa9e2aa13e44805987e8b1511b0001238d7e5a10f4c528e6d36  tools/smoke_prepared_execution_recovery.py
++911d753190b809b5246fa2cb1e499ccfd6509e783105100a649c7b1cee074f9b  tools/smoke_prepared_execution_context.py
++1414d9c0a0e0d441928ec12358e15049748c70224b35db14de672a81ae09bbe2  tools/smoke_prepared_execution_recovery.py
+ 2c2bdf4522a18bd59a3f91df39c947c3bc5f0a67a15fe267fdac991aace4696e  tools/smoke_process_authoring_evolve_questions.py
+ 267efa3b551acd467c1a5edb447166178065a16214f81246854cba5a0aefc742  tools/smoke_process_authoring_evolve_targeting.py
+ 8ce647c9347855172c59c892955e4cfe249190ff2fbe902ba31b8be297cfd54d  tools/smoke_process_authoring_materialization_parity.py
+@@ -1232,7 +1236,7 @@ f53cc0a17bbda6c3d0b849ff042515ef92bfb3166a6633b8c88cdd3ed7117ff4  tools/smoke_re
+ 29c0df1981d6348052037ec4a470e5b82f174ff97cac0a9812d2e3d04d28a67f  tools/smoke_resource_search_snapshot_composition.py
+ 9fa2a63de54523b210bbbe1baf08e3f97f088745ef408da6573162faa1f5616b  tools/smoke_resource_versioning_modes.py
+ 839ab227c9c4e6820c3d934dd69444bf1d8d740860759aced951dfcabb78a57f  tools/smoke_run_completion_policy.py
+-25bf523b9eeb7141914107457ff196b8862db3bea871c165268021fff45ad207  tools/smoke_run_id_preserves_repeated_hyphens.py
++eb7b37249e8e2b3c903273c16997d7f669279604e2dedc2546c17f8d9fd8e21a  tools/smoke_run_id_preserves_repeated_hyphens.py
+ 2dbf239b1845daebb13b654381db76732a4f027b944b2bc50ac0d04923ea70e7  tools/smoke_runtime_driver_registry.py
+ 69623ab38a1e364f3a06abe74d7478ea880827ad7204e417dde2c6081abbd6cb  tools/smoke_runtime_host_poc.py
+ d9ef81af0a3391a6a754ef1fe920a7217aad85f3df6e481cf4670d7547bbac36  tools/smoke_runtime_http_body.py
+@@ -1242,7 +1246,7 @@ ce1cbbde9d9a6fe0823b798f93c6bf9dfe457eab96e13b8dcb7397ebedc2b3ef  tools/smoke_ru
+ ee6200e600ba71e131e2a906c4b7731804e8c6d8e35d951922c9bb13ed1c17c9  tools/smoke_runtime_monitor.py
+ 3e4d06d04e560e26729a6d42fe8a66aa0339cc588ac6265bcb48fe252daee194  tools/smoke_runtime_no_domain_capability_constants.py
+ d132a00a7be32f1346a97bb62c26c6fee11a31e4efcfa91b75c61078b502686f  tools/smoke_runtime_no_domain_file_patterns.py
+-f9373080dd18ade56bb6f3c02b73387ce15755ebb28512e6df290aac858105fc  tools/smoke_runtime_scheduler_failure_isolation.py
++abb2ff32bf4991eece238907f3ebeb51cb441625c7387d3917d3635c5f25bd02  tools/smoke_runtime_scheduler_failure_isolation.py
+ 907ce46ba735defa735357e9b60281ea9b1a9a67ca780083c0d2860c68e96a92  tools/smoke_runtime_singleton_orphan.py
+ 83d7d23321ad8dca33523b8a8b50277d55f4c8db8fdc93ff49cf059c1edbfe12  tools/smoke_runtime_status_timeout.py
+ 4553612f6907b59bc39914c5d7b64184d01716e0c147685556b00ca963d872d5  tools/smoke_runtime_status_version_truth.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index 9034f5c..3cd54ca 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -144,6 +144,10 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/project/detection.py` | ProjectDetectionService for current generic file inventory and existing platform detection rules. |
+ | `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy for placeholder expansion, durable explicit environment and launch-only inheritance. |
+ | `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks for the existing JSON Schema subset and current schema-file checks with an explicit distribution root. |
++| `src/processforge_core/work/paths.py` | WorkPaths for existing Run, Assignment, artifact, handoff and worker-attempt locations, preserving their distinct ID normalization. |
++| `src/processforge_core/runtime/command.py` | WorkerCommandBuilder for existing sandbox projection and command composition with concrete Core policies. |
++| `src/processforge_core/project/platforms.py` | PlatformContractReader for live seed/project/workplace catalog overlays and exact registry fallback. |
++| `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader for existing registry paths, YAML/JSON reads, doctor checks and local file-URL resolution. |
+ | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
+ | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
+ | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
+@@ -722,3 +726,39 @@ Construction performs no I/O; schema files are read afresh for each check.
+ Update orchestration, network, installation and recovery remain with their
+ existing owners. These moves qualify source behavior only; archive, installed,
+ Runtime and connected-host acceptance remain separate.
++
++## Work locations, worker commands and live catalogs
++
++`work.paths.WorkPaths` owns Run and Assignment document paths, task artifacts,
++summaries, handoffs, worker prompts and ordered attempt paths. Run directory and
++handoff normalization preserve valid generated IDs with repeated hyphens;
++assignment and agent/task locations retain their separate `safe_id` behavior.
++The strict assignment-path validation in `ContextContractInputs` remains distinct.
++Concrete `ProjectMetadataReader` supplies the flow root without constructor I/O.
++
++`runtime.command.WorkerCommandBuilder(distribution_root)` owns `sandbox` and
++`build`, composing existing Work paths, output rules, environment, driver limits
++and context normalizers. Output preflight precedes variables and environment;
++placeholder expansion, model arguments, prepared wrapper, path resolution and
++command fields preserve their earlier ordering and behavior. Existing consumers
++use canonical owners. The terminal-admission test spies on the relocated builder
++and retains its original assertions. Process launch, locks, durable attempt
++state, collection and recovery retain their existing owners.
++
++`project.platforms.PlatformContractReader(distribution_root)` owns ID projection,
++registry lookup, seed/project paths, record loading, overlay index and lookup
++fallback. It reuses concrete Core YAML and `WorkspacePathReferenceReader` rather
++than copying registry/path algorithms. Seed, project and workplace overlays,
++aliases, duplicates, unknown fields, disabled/missing records and borrowed values
++preserve their existing behavior. Operations read current files without caching.
++
++`maintenance.documents.UpdateDocumentReader(distribution_root)` owns update
++registry locations, soft YAML reads, doctor YAML/schema checks, manifest candidate
++paths, registry path lists, update index, local file URLs and YAML/JSON document
++and text reading. It reuses existing YAML, workspace-path and schema owners.
++Soft update YAML filters parse errors; index reading retains its earlier error
++sentinel behavior; doctor checks may append schema errors and still return the
++parsed mapping. Construction performs no I/O. Network fetch, effects and update
++lifecycle remain legacy responsibilities. Egress and prepared-input consumers
++use canonical Work paths but retain their other unmoved dependencies. This is
++bounded source ownership, with later delivery layers and OOP epics still separate.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index d1233be..02a4b72 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -152,6 +152,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/project/detection.py` | ProjectDetectionService: актуальный общий список файлов и прежние правила обнаружения платформы. |
+ | `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy: placeholders, сохраняемое явное окружение и наследование только при запуске. |
+ | `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks: существующее подмножество JSON Schema и актуальное чтение схем с явным корнем дистрибутива. |
++| `src/processforge_core/work/paths.py` | WorkPaths: прежние пути Run, Assignment, артефактов, handoff и worker attempt с различной нормализацией ID. |
++| `src/processforge_core/runtime/command.py` | WorkerCommandBuilder: прежняя проекция sandbox и сборка команды через конкретные политики Core. |
++| `src/processforge_core/project/platforms.py` | PlatformContractReader: актуальный каталог seed/project/workplace с прежним перекрытием и fallback. |
++| `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader: прежние пути реестров, YAML/JSON, doctor checks и локальные file URL. |
+ | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
+ | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
+ | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
+@@ -738,3 +742,37 @@ defaults, формой remote/artifact URL, env-reference и source checks, пр
+ Координация обновлений, сеть, установка и восстановление остаются у прежних
+ владельцев. Приёмка относится к исходникам; архив, установленный Core, Runtime
+ и реально подключённый хост проверяются отдельно.
++
++## Пути Work, команды воркеров и актуальные каталоги
++
++`work.paths.WorkPaths` владеет путями документов Run и Assignment, артефактов,
++сводок, handoff, worker prompts и упорядоченными путями попытки. Каталог Run
++и handoff сохраняют допустимые generated ID с повторными дефисами; пути
++Assignment и agent/task используют прежнюю отдельную нормализацию `safe_id`.
++Строгая проверка пути Assignment в `ContextContractInputs` остаётся отдельной.
++Конкретный `ProjectMetadataReader` предоставляет flow root без I/O конструктора.
++
++`runtime.command.WorkerCommandBuilder(distribution_root)` владеет `sandbox` и
++`build`, используя существующих владельцев путей, выходов, окружения, driver
++limits и нормализации контекста. Проверка выходов предшествует variables и
++окружению. Placeholders, model arguments, prepared wrapper, разрешение путей
++и поля команды сохраняют исходный порядок. Проверка terminal admission
++наблюдает перенесённый builder и сохраняет прежние assertions. Запуск процесса,
++блокировки, состояние попытки, сбор и восстановление остаются у прежних владельцев.
++
++`project.platforms.PlatformContractReader(distribution_root)` владеет ID,
++поиском реестра, seed/project путями, чтением записей, overlay index и fallback.
++Он переиспользует YAML Core и `WorkspacePathReferenceReader`, сохраняя порядок
++seed/project/workplace, aliases, дубликаты, неизвестные поля, disabled/missing
++и ссылки на исходные вложенные значения. Операции читают актуальные файлы без кеша.
++
++`maintenance.documents.UpdateDocumentReader(distribution_root)` владеет путями
++реестров обновлений, мягким чтением YAML, doctor YAML/schema checks, поиском путей
++manifest, списками registry paths, update index, локальными file URL и чтением
++YAML/JSON документов и текста. Переиспользованы прежние YAML/path/schema owners.
++Мягкое чтение отбрасывает ошибки YAML; index сохраняет прежний error sentinel;
++doctor может добавить ошибки схемы и всё равно вернуть разобранный словарь.
++Конструктор не выполняет I/O. Сеть, запись и lifecycle обновлений остаются
++у прежних владельцев. Egress и prepared inputs используют канонические пути
++Work, сохраняя остальные неперенесённые зависимости. Приёмка ограничена
++исходниками; более поздние слои поставки и OOP-эпики проверяются отдельно.
+diff --git a/src/processforge_core/egress/service.py b/src/processforge_core/egress/service.py
+index 0af7c0f..8e02158 100644
+--- a/src/processforge_core/egress/service.py
++++ b/src/processforge_core/egress/service.py
+@@ -22,7 +22,8 @@ def policy_file(path):
+ 
+ 
+ def work_session(core, *, project, assignment_id, attempt, policy_path, store_root, credential_path=None):
+-    assignment_path = core.assignment_yaml_path(project, assignment_id)
++    from processforge_core.work.paths import WorkPaths
++    assignment_path = WorkPaths().assignment_document(project, assignment_id)
+     capsule_path = core.assignment_capsule_path(project, assignment_id)
+     initial_stage = None
+ 
+diff --git a/src/processforge_core/maintenance/documents.py b/src/processforge_core/maintenance/documents.py
+new file mode 100644
+index 0000000..a5405fa
+--- /dev/null
++++ b/src/processforge_core/maintenance/documents.py
+@@ -0,0 +1,138 @@
++from __future__ import annotations
++
++import json
++import os
++from pathlib import Path
++import re
++from typing import Any
++from urllib.parse import urlparse
++from urllib.request import url2pathname
++
++from ..common.checks import Check, check
++from ..common.yaml_io import yaml_error
++from ..resources.snapshot import WorkspacePathReferenceReader
++from ..work.context_documents import ContextContractInputs
++from .schema_checks import UpdateSchemaChecks
++
++
++class UpdateDocumentReader:
++    """Read the existing update registries, paths and document formats."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.distribution_root = distribution_root
++        self.inputs = ContextContractInputs()
++        self.schema_checks = UpdateSchemaChecks(distribution_root)
++
++    def registry_file(self, workplace_root: Path, registry_key: str, default_name: str) -> Path:
++        manifest = workplace_root / "workplace.yaml"
++        if manifest.is_file():
++            data = self.inputs.load_yaml_document(manifest)
++            registries = data.get("registries") if isinstance(data, dict) else None
++            raw = registries.get(registry_key) if isinstance(registries, dict) else None
++            if isinstance(raw, str) and raw.strip():
++                references = WorkspacePathReferenceReader(workplace_root, workplace_root, inputs=self.inputs)
++                return references.path_resolution_to_path(references.workplace_path_resolution(workplace_root, raw))
++        return workplace_root / "registries" / default_name
++
++    def source_registry(self, workplace_root: Path) -> Path:
++        return self.registry_file(workplace_root, "update_sources", "update-sources.yaml")
++
++    def installed_registry(self, workplace_root: Path) -> Path:
++        return self.registry_file(workplace_root, "installed_subjects", "installed-subjects.yaml")
++
++    def overrides_path(self, workplace_root: Path) -> Path:
++        return self.registry_file(workplace_root, "update_site_overrides", "update-site-overrides.yaml")
++
++    def derived_sites_path(self, workplace_root: Path) -> Path:
++        return workplace_root / "runtime" / "update" / "installed-update-sites.json"
++
++    def yaml(self, path: Path) -> dict[str, Any]:
++        if not path.is_file():
++            return {}
++        data = self.inputs.load_yaml_document(path)
++        return data if isinstance(data, dict) and not yaml_error(data) else {}
++
++    def doctor_yaml(
++        self,
++        path: Path,
++        schema_name: str,
++        label: str,
++        checks: list[Check],
++    ) -> dict[str, Any] | None:
++        """Load and schema-check a governed YAML document without mutating it."""
++        data = self.inputs.load_yaml_document(path)
++        error = yaml_error(data)
++        if error:
++            checks.append(check("FAIL", f"{label} YAML parse failed: {error}"))
++            return None
++        if not isinstance(data, dict) or not data:
++            checks.append(check("FAIL", f"{label} must be a non-empty YAML object"))
++            return None
++        checks.append(check("PASS", f"{label} is valid YAML"))
++        self.schema_checks.append(checks, data, schema_name, label)
++        return data
++
++    def manifest_candidates(self, root: Path, patterns: list[str]) -> list[Path]:
++        if not root.is_dir():
++            return []
++        candidates: list[Path] = []
++        for pattern in patterns:
++            candidates.extend(sorted(root.glob(pattern)))
++        return [path.resolve() for path in candidates if path.is_file()]
++
++    def registry_paths(self, workplace_root: Path, registry_name: str, collection_key: str) -> list[Path]:
++        data = self.yaml(workplace_root / "registries" / registry_name)
++        entries = data.get(collection_key) if isinstance(data.get(collection_key), list) else []
++        paths: list[Path] = []
++        references = WorkspacePathReferenceReader(workplace_root, workplace_root, inputs=self.inputs)
++        for entry in entries:
++            if isinstance(entry, dict) and isinstance(entry.get("path"), str):
++                paths.append(references.path_resolution_to_path(references.workplace_path_resolution(workplace_root, str(entry.get("path")))))
++        return paths
++
++    def index(self, distribution_root: Path) -> dict[str, Any]:
++        candidates = [
++            distribution_root / "updates" / "processforge-update-index.yaml",
++            distribution_root / "updates" / "channels.yaml",
++        ]
++        for path in candidates:
++            if path.is_file():
++                data = self.inputs.load_yaml_document(path)
++                return data if isinstance(data, dict) else {}
++        return {}
++
++    def file_url_path(self, value: str, base: Path | None = None) -> Path:
++        text = value.strip()
++        if text.startswith("file://"):
++            parsed = urlparse(text)
++            raw = url2pathname(parsed.path or "")
++            if os.name == "nt" and re.match(r"^/[A-Za-z]:/", raw):
++                raw = raw[1:]
++            return Path(raw).expanduser().resolve()
++        path = Path(text).expanduser()
++        if not path.is_absolute() and base is not None:
++            path = base / path
++        return path.resolve()
++
++    def document(self, path: Path) -> dict[str, Any]:
++        if path.suffix.lower() == ".json":
++            try:
++                data = json.loads(path.read_text(encoding="utf-8"))
++            except (OSError, json.JSONDecodeError):
++                return {}
++            return data if isinstance(data, dict) else {}
++        return self.yaml(path)
++
++    def text(self, text: str) -> dict[str, Any]:
++        try:
++            data = json.loads(text)
++            return data if isinstance(data, dict) else {}
++        except json.JSONDecodeError:
++            pass
++        try:
++            import yaml  # type: ignore
++
++            data = yaml.safe_load(text)
++        except Exception:
++            return {}
++        return data if isinstance(data, dict) else {}
+diff --git a/src/processforge_core/prepared/input.py b/src/processforge_core/prepared/input.py
+index b56fd7c..e877e9a 100644
+--- a/src/processforge_core/prepared/input.py
++++ b/src/processforge_core/prepared/input.py
+@@ -101,7 +101,8 @@ def output_records(project: Path, outputs: dict[str, Any], *, required: bool = F
+ def semantic_input(project: Path, task: dict, capsule: dict, core: Any) -> dict:
+     from .resources import authorize_resources
+ 
+-    assignment = core.assignment_yaml_path(project, task["id"])
++    from processforge_core.work.paths import WorkPaths
++    assignment = WorkPaths().assignment_document(project, task["id"])
+     run = core.load_run(project, task["run_id"])
+     if "process_execution" in run:
+         pin = task.get("process_execution") or {}
+@@ -200,7 +201,8 @@ def load(project: Path, task: dict, state: dict, core: Any, *, current: bool = T
+         attempt = int(attempt)
+     if type(attempt) is not int or attempt < 1:
+         raise ValueError("prepared_attempt_invalid")
+-    expected = core.worker_run_paths(project, task["run_id"], task["id"])["root"] / "attempts" / str(attempt) / "prepared-input.json"
++    from processforge_core.work.paths import WorkPaths
++    expected = WorkPaths().worker_run(project, task["run_id"], task["id"])["root"] / "attempts" / str(attempt) / "prepared-input.json"
+     if reference.get("path") != core.rel(expected, project):
+         raise ValueError("prepared_input_reference_mismatch")
+     raw = bounded_read(private_file(project, reference["path"]))
+diff --git a/src/processforge_core/project/platforms.py b/src/processforge_core/project/platforms.py
+new file mode 100644
+index 0000000..29ca2a6
+--- /dev/null
++++ b/src/processforge_core/project/platforms.py
+@@ -0,0 +1,111 @@
++"""Live platform contract discovery and document reads."""
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.yaml_io import yaml_error
++from ..resources.snapshot import WorkspacePathReferenceReader
++from ..work.context_documents import ContextContractInputs
++from .metadata import PROJECT_FLOW_ROOT
++
++
++class PlatformContractReader:
++    """Read the existing seed, project and workplace platform overlays."""
++
++    def __init__(self, distribution_root: Path):
++        self.distribution_root = distribution_root
++        self._inputs = ContextContractInputs()
++
++    def contract_id(self, platform_id: str) -> str:
++        return platform_id if platform_id.startswith("platform.") or platform_id.startswith("fixture.platform.") else f"platform.{platform_id}"
++
++    def registry_entry(self, workplace_manifest: Path | None, contract_id: str) -> dict[str, Any] | None:
++        references = WorkspacePathReferenceReader(
++            self.distribution_root,
++            workplace_manifest.parent if workplace_manifest else None,
++            workplace_manifest=workplace_manifest,
++            inputs=self._inputs,
++        )
++        registry = references.load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
++        entries = registry.get("platforms") if isinstance(registry, dict) else None
++        if not isinstance(entries, list):
++            return None
++        aliases = {contract_id, contract_id.removeprefix("platform.")}
++        for entry in entries:
++            if not isinstance(entry, dict):
++                continue
++            entry_ids = {str(entry.get("id", "")), str(entry.get("package_id", ""))}
++            if aliases.intersection(entry_ids):
++                return entry
++        return None
++
++    def seed_paths(self, distribution_root: Path | None = None) -> list[Path]:
++        root = distribution_root or self.distribution_root
++        seed_root = root / "seeds" / "platform-contracts"
++        if not seed_root.is_dir():
++            return []
++        return sorted([*seed_root.glob("*.yaml"), *seed_root.glob("*.yml")])
++
++    def project_paths(self, project_root: Path | None) -> list[Path]:
++        if not project_root:
++            return []
++        candidates: list[Path] = []
++        for root in [project_root / PROJECT_FLOW_ROOT / "platform-contracts", project_root / "platform-contracts"]:
++            if root.is_dir():
++                candidates.extend(sorted(root.glob("*.yaml")))
++                candidates.extend(sorted(root.glob("*.yml")))
++                candidates.extend(sorted(root.glob("*/platform-contract.yaml")))
++                candidates.extend(sorted(root.glob("*/platform-contract.yml")))
++        return candidates
++
++    def record(self, path: Path, source: str, registry_entry: dict[str, Any] | None = None) -> tuple[str, dict[str, Any]] | None:
++        data = self._inputs.load_yaml_document(path)
++        if not data or yaml_error(data):
++            return None
++        contract_id = data.get("id")
++        if not contract_id:
++            return None
++        normalized_id = self.contract_id(str(contract_id))
++        return normalized_id, {"contract": data, "path": path, "source": source, "status": "available", "registry_entry": registry_entry}
++
++    def index(self, workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
++        index: dict[str, dict[str, Any]] = {}
++        for path in self.seed_paths(self.distribution_root):
++            record = self.record(path, "seed")
++            if record:
++                index[record[0]] = record[1]
++        for path in self.project_paths(project_root):
++            record = self.record(path, "project")
++            if record:
++                index[record[0]] = record[1]
++        references = WorkspacePathReferenceReader(
++            project_root or self.distribution_root,
++            workplace_manifest.parent if workplace_manifest else None,
++            workplace_manifest=workplace_manifest,
++            inputs=self._inputs,
++        )
++        registry = references.load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
++        entries = registry.get("platforms") if isinstance(registry, dict) else None
++        if isinstance(entries, list) and workplace_manifest:
++            for entry in entries:
++                if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
++                    continue
++                raw_path = entry.get("path")
++                if not raw_path:
++                    continue
++                path = references.resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
++                record = self.record(path, "workplace", entry)
++                if record:
++                    index[record[0]] = record[1]
++        return index
++
++    def load(self, workplace_manifest: Path | None, contract_id: str, project_root: Path | None = None) -> tuple[dict[str, Any], dict[str, Any] | None, str, str]:
++        normalized_id = self.contract_id(contract_id)
++        entry = self.index(workplace_manifest, project_root).get(normalized_id)
++        if entry:
++            return entry["contract"], entry.get("registry_entry"), str(entry.get("status", "available")), str(entry.get("source", "manifest"))
++        registry_entry = self.registry_entry(workplace_manifest, normalized_id)
++        if registry_entry and str(registry_entry.get("status", "available")) in {"missing", "disabled"}:
++            return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, str(registry_entry.get("status")), "registry"
++        return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, "missing", "missing"
+diff --git a/src/processforge_core/runtime/command.py b/src/processforge_core/runtime/command.py
+new file mode 100644
+index 0000000..1bcb302
+--- /dev/null
++++ b/src/processforge_core/runtime/command.py
+@@ -0,0 +1,149 @@
++"""Worker sandbox selection and process command composition."""
++
++from __future__ import annotations
++
++from pathlib import Path
++import sys
++from typing import Any
++
++from processforge_core.common.ids import safe_id
++from processforge_core.common.paths import rel
++from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
++from processforge_core.runtime.environment import WorkerEnvironmentPolicy
++from processforge_core.work.context_documents import ContextContractInputs
++from processforge_core.work.outputs import WorkOutputPolicy
++from processforge_core.work.paths import WorkPaths
++
++
++class WorkerCommandBuilder:
++    """Compose worker commands with the existing concrete Core policies."""
++
++    def __init__(self, distribution_root: Path):
++        self.distribution_root = distribution_root
++        self.paths = WorkPaths()
++        self.inputs = ContextContractInputs()
++        self.outputs = WorkOutputPolicy(self.inputs)
++        self.environment = WorkerEnvironmentPolicy()
++        self.drivers = RuntimeDriverDefinitionPolicy()
++
++    def sandbox(self, task: dict[str, Any]) -> str:
++        execution = task.get("execution_mode") if isinstance(task.get("execution_mode"), dict) else {}
++        ownership = task.get("ownership") if isinstance(task.get("ownership"), dict) else {}
++        writable = ownership.get("writer") is True and (
++            execution.get("code_changes_allowed") is True
++            or execution.get("artifact_changes_allowed") is True
++        )
++        return "workspace-write" if writable else "read-only"
++
++    def build(
++        self,
++        project_root: Path,
++        task: dict[str, Any],
++        driver: dict[str, Any],
++        executable_override: str | None = None,
++        *,
++        attempt: int = 1,
++        prepared_input: dict[str, str] | None = None,
++    ) -> tuple[dict[str, Any], dict[str, Path]]:
++        task_id = safe_id(str(task.get("id") or "task"), "task")
++        run_id = safe_id(str(task.get("run_id") or "run"), "run")
++        paths = self.paths.worker_run(project_root, run_id, task_id)
++        capsule_path = self.inputs.locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
++        prompt_path = self.paths.worker_prompt(project_root, run_id, task_id)
++        try:
++            report_path = self.outputs.path(project_root, self.outputs.expected_report(task))
++            for output in self.inputs.normalize_required_outputs(task.get("required_outputs")):
++                if output.get("path"):
++                    self.outputs.path(project_root, str(output["path"]))
++        except (OSError, ValueError) as exc:
++            raise SystemExit(f"FAIL: invalid worker output path: {exc}") from exc
++        variables = {
++            "project_root": str(project_root),
++            "processforge_root": str(self.distribution_root),
++            "run_id": run_id,
++            "task_id": task_id,
++            "attempt": str(attempt),
++            "agent_run_dir": str(paths["root"]),
++            "driver_id": str(driver.get("id") or "manual"),
++            "capsule_path": str(capsule_path),
++            "worker_prompt_path": str(prompt_path),
++            "workspace_access_path": str(paths["workspace_access"]),
++            "prepared_input_path": str(project_root / prepared_input["path"]) if prepared_input else "",
++            "prepared_input_checksum": prepared_input["checksum"] if prepared_input else "",
++            "expected_report_path": str(report_path),
++            "python_executable": sys.executable,
++            "executable": executable_override or "",
++            "stdout_path": str(paths["stdout"]),
++            "stderr_path": str(paths["stderr"]),
++            "heartbeat_path": str(paths["heartbeat"]),
++            "exit_path": str(paths["exit"]),
++            "agent_model": self.inputs.normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
++            "agent_reasoning_effort": self.inputs.normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
++            "agent_sandbox": self.sandbox(task),
++        }
++        io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
++        stdout_path = Path(str(self.environment.expand(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
++        stderr_path = Path(str(self.environment.expand(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
++        if not stdout_path.is_absolute():
++            stdout_path = (project_root / stdout_path).resolve()
++        if not stderr_path.is_absolute():
++            stderr_path = (project_root / stderr_path).resolve()
++        paths["stdout"] = stdout_path
++        paths["stderr"] = stderr_path
++        heartbeat = driver.get("heartbeat") if isinstance(driver.get("heartbeat"), dict) else {}
++        heartbeat_path = Path(str(self.environment.expand(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
++        if not heartbeat_path.is_absolute():
++            heartbeat_path = (project_root / heartbeat_path).resolve()
++        paths["heartbeat"] = heartbeat_path
++        variables.update(
++            {
++                "stdout_path": str(paths["stdout"]),
++                "stderr_path": str(paths["stderr"]),
++                "heartbeat_path": str(paths["heartbeat"]),
++                "exit_path": str(paths["exit"]),
++            }
++        )
++        command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
++        executable = executable_override or str(self.environment.expand(command_spec.get("executable") or "", variables))
++        args = self.environment.expand(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
++        if variables["agent_model"]:
++            model_args_raw = command_spec.get("model_args") if "model_args" in command_spec else ["--model", "{agent_model}"]
++            if not isinstance(model_args_raw, list):
++                raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
++            args.extend(self.environment.expand(model_args_raw, variables))
++        env, inherit_env = self.environment.build(driver, variables)
++        if driver.get("prepared_lifecycle_wrapper") is True and executable:
++            if not prepared_input:
++                raise SystemExit("FAIL: prepared_input_required")
++            args = [str(self.distribution_root / "tools" / "prepared_executor.py"), "--prepared-input", variables["prepared_input_path"],
++                    "--prepared-sha256", variables["prepared_input_checksum"], "--heartbeat", str(paths["heartbeat"]),
++                    "--exit-path", str(paths["exit"]), "--", executable, *args]
++            executable = sys.executable
++        working_directory = str(self.environment.expand(driver.get("working_directory") or "{project_root}", variables))
++        command = {
++            "schema_version": 1,
++            "run_id": run_id,
++            "task_id": task_id,
++            "attempt": str(attempt),
++            "driver_id": str(driver.get("id") or "manual"),
++            "agent_model": variables["agent_model"],
++            "agent_reasoning_effort": variables["agent_reasoning_effort"],
++            "kind": str(driver.get("kind") or "manual"),
++            "prepared_input": prepared_input or {},
++            "executable_override": executable_override or "",
++            "command": {
++                "executable": executable,
++                "args": args,
++                "argv": [executable, *args] if executable else [],
++                "working_directory": working_directory,
++                "environment": {str(key): str(value) for key, value in env.items()},
++                "environment_inherit": inherit_env,
++                "shell": False,
++            },
++            "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
++            "limits": self.drivers.parse_limits(driver)[0],
++        }
++        driver_ref = driver.get("_driver_ref")
++        if isinstance(driver_ref, str) and driver_ref.strip():
++            command["driver_ref"] = driver_ref.strip()
++        return command, paths
+diff --git a/src/processforge_core/work/context.py b/src/processforge_core/work/context.py
+index 587f3b7..50e55e7 100644
+--- a/src/processforge_core/work/context.py
++++ b/src/processforge_core/work/context.py
+@@ -170,8 +170,8 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
+                   "non_overlap": core.normalize_non_overlap(metadata.get("non_overlap"), allowed)},
+         "outputs": {"required_outputs": outputs, "expected_report": expected},
+         "workspace_access": access,
+-        "agent_model": core.normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
+-        "agent_reasoning_effort": core.normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
++        "agent_model": ContextContractInputs().normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
++        "agent_reasoning_effort": ContextContractInputs().normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
+         "subagent_policy": core.normalize_subagent_policy(metadata.get("subagent_policy")),
+     }
+     _portable_values({key: result[key] for key in ("scope", "outputs", "subagent_policy")})
+diff --git a/src/processforge_core/work/paths.py b/src/processforge_core/work/paths.py
+new file mode 100644
+index 0000000..f0ade72
+--- /dev/null
++++ b/src/processforge_core/work/paths.py
+@@ -0,0 +1,54 @@
++from __future__ import annotations
++
++import re
++from pathlib import Path
++
++from processforge_core.common.ids import safe_id
++from processforge_core.project.metadata import ProjectMetadataReader
++
++
++class WorkPaths:
++    def run_root(self, project_root: Path, run_id: str) -> Path:
++        candidate = str(run_id or "").strip()
++        # ProcessExecutionService may append a collision suffix to a truncated id,
++        # leaving a valid repeated hyphen such as `review--2`. Preserve that ID.
++        normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
++        return ProjectMetadataReader(project_root).flow_root() / "runs" / normalized
++
++    def run_document(self, project_root: Path, run_id: str) -> Path:
++        return self.run_root(project_root, run_id) / "run.yaml"
++
++    def assignment_document(self, project_root: Path, task_id: str) -> Path:
++        return ProjectMetadataReader(project_root).flow_root() / "assignments" / f"{safe_id(task_id, 'task')}.yaml"
++
++    def task_artifacts(self, project_root: Path, run_id: str, task_id: str) -> Path:
++        return ProjectMetadataReader(project_root).flow_root() / "artifacts" / "runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
++
++    def summary(self, project_root: Path, run_id: str) -> Path:
++        return self.run_root(project_root, run_id) / "summary.md"
++
++    def handoff(self, project_root: Path, run_id: str) -> Path:
++        candidate = str(run_id or "").strip()
++        normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
++        return ProjectMetadataReader(project_root).flow_root() / "handoffs" / "runs" / f"{normalized}-handoff.md"
++
++    def worker_prompt(self, project_root: Path, run_id: str, task_id: str) -> Path:
++        return self.run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
++
++    def agent_run(self, project_root: Path, run_id: str, task_id: str) -> Path:
++        return ProjectMetadataReader(project_root).flow_root() / "runtime" / "agent-runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
++
++    def worker_run(self, project_root: Path, run_id: str, task_id: str) -> dict[str, Path]:
++        root = self.agent_run(project_root, run_id, task_id)
++        return {
++            "root": root,
++            "status": root / "status.json",
++            "command": root / "command.json",
++            "process": root / "process.json",
++            "exit": root / "exit.json",
++            "stdout": root / "stdout.log",
++            "stderr": root / "stderr.log",
++            "heartbeat": root / "heartbeat.json",
++            "collection": root / "collection-report.md",
++            "workspace_access": root / "workspace-access.json",
++        }
+diff --git a/tools/pf_runtime/host.py b/tools/pf_runtime/host.py
+index 2458c65..297881a 100644
+--- a/tools/pf_runtime/host.py
++++ b/tools/pf_runtime/host.py
+@@ -164,7 +164,8 @@ def declared_stage_obligations(project_root: Path, core: Any, *, dependencies: s
+         run_id = str(task.get("run_id") or "")
+         if dependencies is not None:
+             if run_id:
+-                dependencies.add(core.worker_run_paths(project_root, run_id, str(task["id"]))["status"])
++                from processforge_core.work.paths import WorkPaths
++                dependencies.add(WorkPaths().worker_run(project_root, run_id, str(task["id"]))["status"])
+             from processforge_core.work.context_documents import ContextContractInputs
+             for output in ContextContractInputs().normalize_required_outputs(task.get("required_outputs")):
+                 from processforge_core.work.outputs import WorkOutputPolicy
+diff --git a/tools/processforge.py b/tools/processforge.py
+index 6e8c701..e2a07f6 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -161,6 +161,15 @@ _work_output_policy = WorkOutputPolicy()
+ _project_detection_service = ProjectDetectionService()
+ _worker_environment_policy = WorkerEnvironmentPolicy()
+ _update_schema_checks = UpdateSchemaChecks(ROOT)
++from processforge_core.work.paths import WorkPaths
++from processforge_core.runtime.command import WorkerCommandBuilder
++from processforge_core.project.platforms import PlatformContractReader
++from processforge_core.maintenance.documents import UpdateDocumentReader
++
++_work_paths = WorkPaths()
++_worker_command_builder = WorkerCommandBuilder(ROOT)
++_platform_contract_reader = PlatformContractReader(ROOT)
++_update_document_reader = UpdateDocumentReader(ROOT)
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -2913,7 +2922,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
+             checks.append(check("FAIL", "workplace.yaml appears to contain a secret value"))
+         else:
+             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
+-        load_doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
++        _update_document_reader.doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
+         cfg = _project_coordination_reader.workplace(manifest)
+         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
+         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
+@@ -2965,7 +2974,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
+             "registries/mcp.yaml": "mcp-registry.schema.json",
+         }.get(rel_path)
+         if path.is_file() and registry_schema:
+-            load_doctor_yaml(path, registry_schema, rel_path, checks)
++            _update_document_reader.doctor_yaml(path, registry_schema, rel_path, checks)
+         elif path.is_file() and rel_path == "registries/process-packs.yaml":
+             process_pack_registry = load_yaml_document(path)
+             error = yaml_error(process_pack_registry)
+@@ -3698,7 +3707,7 @@ def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any]
+     for key in ["platform", "platforms", "platform_contract", "platform_contracts"]:
+         value = project_answers.get(key)
+         if value:
+-            selected.update(platform_contract_id(item).removeprefix("platform.") for item in answer_strings(value))
++            selected.update(_platform_contract_reader.contract_id(item).removeprefix("platform.") for item in answer_strings(value))
+     selected.update(platform_ids_from_detection_rules(workplace_manifest, project_root))
+     selected.update(workplace_platform_ids_for_project_type(workplace_manifest, project_type, project_root))
+     return sorted(selected)
+@@ -3757,7 +3766,7 @@ def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, pro
+     evidence, or its own concrete detection rules.
+     """
+     matched: list[str] = []
+-    contracts = platform_contract_manifest_index(workplace_manifest, project_root)
++    contracts = _platform_contract_reader.index(workplace_manifest, project_root)
+     for contract_id, entry in contracts.items():
+         contract = entry["contract"]
+         parent_hints = platform_contract_parent_type_hints(contract, contracts)
+@@ -3774,7 +3783,7 @@ def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, pro
+ 
+ def platform_ids_from_detection_rules(workplace_manifest: Path | None, project_root: Path) -> list[str]:
+     matched: list[str] = []
+-    for contract_id, entry in platform_contract_manifest_index(workplace_manifest, project_root).items():
++    for contract_id, entry in _platform_contract_reader.index(workplace_manifest, project_root).items():
+         if _project_detection_service.matches(entry["contract"], project_root):
+             matched.append(contract_id.removeprefix("platform."))
+     return sorted(set(matched))
+@@ -3982,81 +3991,16 @@ def load_workplace_registry(workplace_manifest: Path | None, registry_key: str,
+     return load_yaml_document(path)
+ 
+ 
+-def platform_contract_id(platform_id: str) -> str:
+-    return platform_id if platform_id.startswith("platform.") or platform_id.startswith("fixture.platform.") else f"platform.{platform_id}"
+ 
+ 
+-def platform_contract_registry_entry(workplace_manifest: Path | None, contract_id: str) -> dict[str, Any] | None:
+-    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
+-    entries = registry.get("platforms") if isinstance(registry, dict) else None
+-    if not isinstance(entries, list):
+-        return None
+-    aliases = {contract_id, contract_id.removeprefix("platform.")}
+-    for entry in entries:
+-        if not isinstance(entry, dict):
+-            continue
+-        entry_ids = {str(entry.get("id", "")), str(entry.get("package_id", ""))}
+-        if aliases.intersection(entry_ids):
+-            return entry
+-    return None
+ 
+ 
+-def seed_platform_contract_paths(distribution_root: Path | None = None) -> list[Path]:
+-    root = distribution_root or ROOT
+-    seed_root = root / "seeds" / "platform-contracts"
+-    if not seed_root.is_dir():
+-        return []
+-    return sorted([*seed_root.glob("*.yaml"), *seed_root.glob("*.yml")])
+ 
+ 
+-def project_platform_contract_paths(project_root: Path | None) -> list[Path]:
+-    if not project_root:
+-        return []
+-    candidates: list[Path] = []
+-    for root in [project_root / PROJECT_FLOW_ROOT / "platform-contracts", project_root / "platform-contracts"]:
+-        if root.is_dir():
+-            candidates.extend(sorted(root.glob("*.yaml")))
+-            candidates.extend(sorted(root.glob("*.yml")))
+-            candidates.extend(sorted(root.glob("*/platform-contract.yaml")))
+-            candidates.extend(sorted(root.glob("*/platform-contract.yml")))
+-    return candidates
+ 
+ 
+-def platform_contract_record(path: Path, source: str, registry_entry: dict[str, Any] | None = None) -> tuple[str, dict[str, Any]] | None:
+-    data = load_yaml_document(path)
+-    if not data or yaml_error(data):
+-        return None
+-    contract_id = data.get("id")
+-    if not contract_id:
+-        return None
+-    normalized_id = platform_contract_id(str(contract_id))
+-    return normalized_id, {"contract": data, "path": path, "source": source, "status": "available", "registry_entry": registry_entry}
+ 
+ 
+-def platform_contract_manifest_index(workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
+-    index: dict[str, dict[str, Any]] = {}
+-    for path in seed_platform_contract_paths(ROOT):
+-        record = platform_contract_record(path, "seed")
+-        if record:
+-            index[record[0]] = record[1]
+-    for path in project_platform_contract_paths(project_root):
+-        record = platform_contract_record(path, "project")
+-        if record:
+-            index[record[0]] = record[1]
+-    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
+-    entries = registry.get("platforms") if isinstance(registry, dict) else None
+-    if isinstance(entries, list) and workplace_manifest:
+-        for entry in entries:
+-            if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
+-                continue
+-            raw_path = entry.get("path")
+-            if not raw_path:
+-                continue
+-            path = resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
+-            record = platform_contract_record(path, "workplace", entry)
+-            if record:
+-                index[record[0]] = record[1]
+-    return index
+ 
+ 
+ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest: Path | None = None) -> Path:
+@@ -4065,15 +4009,6 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
+     return path_resolution_to_path(resolution)
+ 
+ 
+-def load_platform_contract(workplace_manifest: Path | None, contract_id: str, project_root: Path | None = None) -> tuple[dict[str, Any], dict[str, Any] | None, str, str]:
+-    normalized_id = platform_contract_id(contract_id)
+-    entry = platform_contract_manifest_index(workplace_manifest, project_root).get(normalized_id)
+-    if entry:
+-        return entry["contract"], entry.get("registry_entry"), str(entry.get("status", "available")), str(entry.get("source", "manifest"))
+-    registry_entry = platform_contract_registry_entry(workplace_manifest, normalized_id)
+-    if registry_entry and str(registry_entry.get("status", "available")) in {"missing", "disabled"}:
+-        return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, str(registry_entry.get("status")), "registry"
+-    return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, "missing", "missing"
+ 
+ 
+ 
+@@ -4083,12 +4018,12 @@ def normalize_platform_ref(value: Any, *, default_required: bool = True) -> dict
+         ref_id = value.strip()
+         if not ref_id:
+             return None
+-        return {"id": platform_contract_id(ref_id), "required": default_required}
++        return {"id": _platform_contract_reader.contract_id(ref_id), "required": default_required}
+     if isinstance(value, dict):
+         raw_id = value.get("id") or value.get("platform") or value.get("package_id")
+         if not raw_id:
+             return None
+-        record: dict[str, Any] = {"id": platform_contract_id(str(raw_id)), "required": bool(value.get("required", default_required))}
++        record: dict[str, Any] = {"id": _platform_contract_reader.contract_id(str(raw_id)), "required": bool(value.get("required", default_required))}
+         if value.get("version"):
+             record["version"] = str(value["version"])
+         return record
+@@ -4200,7 +4135,7 @@ def resolve_platform_contracts(
+     resolving: list[str] = []
+ 
+     def resolve_one(raw_platform_id: str, *, relation: str = "selected", inherited_by: str | None = None, include_resources: bool = True, required: bool = True) -> None:
+-        contract_id = platform_contract_id(raw_platform_id)
++        contract_id = _platform_contract_reader.contract_id(raw_platform_id)
+         if contract_id in resolving:
+             cycle = " -> ".join([*resolving[resolving.index(contract_id):], contract_id])
+             circular_platforms.append(cycle)
+@@ -4214,7 +4149,7 @@ def resolve_platform_contracts(
+             status = "available"
+             source = "staged"
+         else:
+-            contract, entry, status, source = load_platform_contract(workplace_manifest, contract_id, project_root)
++            contract, entry, status, source = _platform_contract_reader.load(workplace_manifest, contract_id, project_root)
+         extends_refs = contract_extends(contract)
+         required_platform_refs = contract_required_platforms(contract)
+         for ref in extends_refs:
+@@ -4429,7 +4364,7 @@ def dedupe_sorted(values: list[str]) -> list[str]:
+ 
+ 
+ def specialization_registry_path(workplace_root: Path) -> Path:
+-    return update_registry_file(workplace_root, "specializations", "specializations.yaml")
++    return _update_document_reader.registry_file(workplace_root, "specializations", "specializations.yaml")
+ 
+ 
+ def specialization_path_from_registry_entry(workplace_root: Path, entry: dict[str, Any], workplace_manifest: Path | None = None) -> Path | None:
+@@ -4548,10 +4483,10 @@ def load_specialization(workplace_manifest: Path | None, specialization_id: str,
+ 
+ 
+ def platform_binding_matches(binding: dict[str, Any], selected_platforms: list[str], platform_stack: list[dict[str, Any]], process_id: str | None = None) -> bool:
+-    selected = {platform_contract_id(item) for item in selected_platforms}
+-    stack_ids = {str(item.get("id") or platform_contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
+-    binding_platforms = {platform_contract_id(item) for item in list_value(binding.get("platforms"))}
+-    stack_includes = {platform_contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
++    selected = {_platform_contract_reader.contract_id(item) for item in selected_platforms}
++    stack_ids = {str(item.get("id") or _platform_contract_reader.contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
++    binding_platforms = {_platform_contract_reader.contract_id(item) for item in list_value(binding.get("platforms"))}
++    stack_includes = {_platform_contract_reader.contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
+     process_filter = set(list_value(binding.get("applies_to_processes")))
+     if process_filter and process_id and process_id not in process_filter:
+         return False
+@@ -4968,7 +4903,7 @@ def resolve_specialization_context(
+     for item in capability_resolution["unsatisfied"]:
+         conflicts.append({"id": item["capability"], "kind": "capability", "source": item["required_by"], "reason": item["reason"]})
+     active_resource_profile = {
+-        "selected_platform": [platform_contract_id(item) for item in platform_ids],
++        "selected_platform": [_platform_contract_reader.contract_id(item) for item in platform_ids],
+         "platform_stack": platform_resolution.get("platform_stack", []),
+         "selected_specializations": selected_specializations,
+         "available_knowledge_packages": dedupe_sorted(list(required["knowledge_packages"].union(recommended["knowledge_packages"]).union(optional["knowledge_packages"]))),
+@@ -5016,9 +4951,9 @@ def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], r
+     templates_text = registry_text(workplace_manifest, "templates.yaml")
+     package_text = registry_text(workplace_manifest, "package-roots.yaml")
+ 
+-    available_platform_ids = set(platform_contract_manifest_index(workplace_manifest))
++    available_platform_ids = set(_platform_contract_reader.index(workplace_manifest))
+     available_platform_ids.update(item.removeprefix("platform.") for item in list(available_platform_ids))
+-    matched_platforms = [item for item in detected["platforms"] if item and (item in available_platform_ids or platform_contract_id(item) in available_platform_ids)]
++    matched_platforms = [item for item in detected["platforms"] if item and (item in available_platform_ids or _platform_contract_reader.contract_id(item) in available_platform_ids)]
+     missing_platforms = [item for item in detected["platforms"] if item and item not in matched_platforms]
+     matched_tools = [cap for cap in required + optional if cap and cap in tools_text]
+     matched_mcp = [cap for cap in required + optional if cap and cap in mcp_text]
+@@ -8927,7 +8862,7 @@ def workspace_access_runtime_document(project_root: Path, task: dict[str, Any])
+     from processforge_core.work.context import validate_execution_contract
+     task_id = safe_id(str(task.get("id") or "task"), "task")
+     capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
+-    validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
++    validation = validate_execution_contract(project_root, _work_paths.assignment_document(project_root, task_id), task,
+                                              capsule, sys.modules[__name__], require_ready=True)
+     if validation["status"] != "valid":
+         raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid"))
+@@ -8941,7 +8876,7 @@ def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]
+     from processforge_core.prepared.input import private_file
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+     task_id = safe_id(str(task.get("id") or "task"), "task")
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     private_file(project_root, rel(paths["workspace_access"], project_root))
+     document = workspace_access_runtime_document(project_root, task)
+     json_write(paths["workspace_access"], document)
+@@ -8971,7 +8906,7 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
+             )
+         )
+     checks.append(check("PASS", f"package {package_id} resolved through package root {package_root.root_id}"))
+-    loaded = load_doctor_yaml(
++    loaded = _update_document_reader.doctor_yaml(
+         manifest_path,
+         "package-manifest.schema.json",
+         f"package {package_id} manifest",
+@@ -11376,24 +11311,12 @@ ITERATION_KINDS = {"work", "debug", "fix", "review", "test", "research", "handof
+ ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed", "cancelled"}
+ 
+ 
+-def run_root(project_root: Path, run_id: str) -> Path:
+-    candidate = str(run_id or "").strip()
+-    # ProcessExecutionService may append a collision suffix to a truncated id,
+-    # leaving a valid repeated hyphen such as `review--2`. Preserve that ID.
+-    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
+-    return locate_flow_root(project_root) / "runs" / normalized
+ 
+ 
+-def run_yaml_path(project_root: Path, run_id: str) -> Path:
+-    return run_root(project_root, run_id) / "run.yaml"
+ 
+ 
+-def assignment_yaml_path(project_root: Path, task_id: str) -> Path:
+-    return locate_flow_root(project_root) / "assignments" / f"{safe_id(task_id, 'task')}.yaml"
+ 
+ 
+-def task_artifacts_root(project_root: Path, run_id: str, task_id: str) -> Path:
+-    return locate_flow_root(project_root) / "artifacts" / "runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
+ 
+ 
+ def read_yaml_file(path: Path) -> dict[str, Any]:
+@@ -11954,14 +11877,8 @@ def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
+     return "\n".join(lines) + "\n"
+ 
+ 
+-def run_summary_path(project_root: Path, run_id: str) -> Path:
+-    return run_root(project_root, run_id) / "summary.md"
+ 
+ 
+-def run_handoff_path(project_root: Path, run_id: str) -> Path:
+-    candidate = str(run_id or "").strip()
+-    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
+-    return locate_flow_root(project_root) / "handoffs" / "runs" / f"{normalized}-handoff.md"
+ 
+ 
+ def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
+@@ -11969,7 +11886,7 @@ def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
+     lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
+     for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+         if isinstance(item, dict):
+-            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
++            task = load_yaml_document(_work_paths.assignment_document(project_root, str(item.get("id", ""))))
+             result = task.get("result") if isinstance(task.get("result"), dict) else {}
+             lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
+     if len(lines) == 7:
+@@ -11979,28 +11896,28 @@ def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
+ 
+ def render_run_handoff(project_root: Path, run: dict[str, Any]) -> str:
+     run_id = str(run.get("id", "run"))
+-    summary = run_summary_path(project_root, run_id)
++    summary = _work_paths.summary(project_root, run_id)
+     return f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
+ 
+ 
+ def write_run_artifact_bundle(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
+     """Persist one Run state and its derived documents while the caller holds its lock."""
+     run_id = str(run.get("id", "run"))
+-    root = run_root(project_root, run_id)
++    root = _work_paths.run_root(project_root, run_id)
+     if include_summary_handoff:
+-        write_text_file_atomic(run_summary_path(project_root, run_id), render_run_summary(project_root, run))
+-        write_text_file_atomic(run_handoff_path(project_root, run_id), render_run_handoff(project_root, run))
++        write_text_file_atomic(_work_paths.summary(project_root, run_id), render_run_summary(project_root, run))
++        write_text_file_atomic(_work_paths.handoff(project_root, run_id), render_run_handoff(project_root, run))
+     write_text_file_atomic(root / "task-index.md", render_task_index(project_root, run))
+-    write_yaml_file_atomic(run_yaml_path(project_root, run_id), run)
++    write_yaml_file_atomic(_work_paths.run_document(project_root, run_id), run)
+ 
+ 
+ def write_task_index(project_root: Path, run: dict[str, Any]) -> None:
+     run_id = str(run.get("id", "run"))
+-    write_text_file_atomic(run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
++    write_text_file_atomic(_work_paths.run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
+ 
+ 
+ def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
+-    path = run_yaml_path(project_root, run_id)
++    path = _work_paths.run_document(project_root, run_id)
+     if not path.is_file():
+         raise SystemExit(f"FAIL: run not found: {safe_id(run_id, 'run')}")
+     return read_yaml_file(path)
+@@ -12008,7 +11925,7 @@ def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
+ 
+ def save_run(project_root: Path, run: dict[str, Any]) -> None:
+     run_id = str(run.get("id", "run"))
+-    with registry_file_lock(run_yaml_path(project_root, run_id)):
++    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
+         save_run_locked(project_root, run)
+ 
+ 
+@@ -12018,7 +11935,7 @@ def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_
+ 
+ 
+ def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
+-    path = assignment_yaml_path(project_root, task_id)
++    path = _work_paths.assignment_document(project_root, task_id)
+     if not path.is_file():
+         raise SystemExit(f"FAIL: task/assignment not found: {safe_id(task_id, 'task')}")
+     return read_yaml_file(path)
+@@ -12026,12 +11943,12 @@ def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
+ 
+ def save_task(project_root: Path, task: dict[str, Any]) -> None:
+     task["updated_at"] = now_utc()
+-    write_yaml_file(assignment_yaml_path(project_root, str(task.get("id", "task"))), task)
++    write_yaml_file(_work_paths.assignment_document(project_root, str(task.get("id", "task"))), task)
+ 
+ 
+ def update_run_task_status(project_root: Path, run_id: str, task_id: str, status: str) -> None:
+     safe_run_id = safe_id(run_id, "run")
+-    with registry_file_lock(run_yaml_path(project_root, safe_run_id)):
++    with registry_file_lock(_work_paths.run_document(project_root, safe_run_id)):
+         update_run_task_status_locked(project_root, safe_run_id, task_id, status)
+ 
+ 
+@@ -12053,7 +11970,7 @@ def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
+ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_events: bool = False) -> list[Check]:
+     flow_root = require_flow_root(project_root)
+     checks: list[Check] = []
+-    path = run_yaml_path(project_root, run_id)
++    path = _work_paths.run_document(project_root, run_id)
+     if not path.is_file():
+         return [check("FAIL", f"{rel(path, project_root)} missing")]
+     run = read_yaml_file(path)
+@@ -12065,9 +11982,9 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
+     status = str(run.get("status", ""))
+     checks.append(check("PASS" if status in RUN_STATUSES else "FAIL", f"run status valid: {status or 'missing'}"))
+     artifact_paths = {
+-        "summary": run_summary_path(project_root, str(run.get("id", run_id))),
+-        "task index": run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
+-        "handoff": run_handoff_path(project_root, str(run.get("id", run_id))),
++        "summary": _work_paths.summary(project_root, str(run.get("id", run_id))),
++        "task index": _work_paths.run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
++        "handoff": _work_paths.handoff(project_root, str(run.get("id", run_id))),
+     }
+     status_patterns = {
+         "summary": r"^- status: `([^`]+)`$",
+@@ -12123,7 +12040,7 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
+ def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
+     require_flow_root(project_root)
+     checks: list[Check] = []
+-    path = assignment_yaml_path(project_root, task_id)
++    path = _work_paths.assignment_document(project_root, task_id)
+     if not path.is_file():
+         return [check("FAIL", f"{rel(path, project_root)} missing")]
+     task = read_yaml_file(path)
+@@ -12132,7 +12049,7 @@ def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
+     status = str(task.get("status", ""))
+     checks.append(check("PASS" if status in TASK_STATUSES else "FAIL", f"task status valid: {status or 'missing'}"))
+     run_id = str(task.get("run_id", ""))
+-    checks.append(check("PASS" if run_id and run_yaml_path(project_root, run_id).is_file() else "FAIL", f"referenced run exists: {run_id or 'missing'}"))
++    checks.append(check("PASS" if run_id and _work_paths.run_document(project_root, run_id).is_file() else "FAIL", f"referenced run exists: {run_id or 'missing'}"))
+     process_id = task_process_id(task)
+     checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
+     checks.append(check("PASS" if not public_yaml_has_private_path(task) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
+@@ -15086,7 +15003,7 @@ def command_handoff_start_target_run(args: argparse.Namespace) -> int:
+     handoff = load_handoff(project_root, args.handoff)
+     run_id = safe_id(args.run or f"{handoff.get('id')}-target", "run")
+     process_id = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or "task-batch-execution")
+-    if not run_yaml_path(project_root, run_id).is_file():
++    if not _work_paths.run_document(project_root, run_id).is_file():
+         status = command_run_create(argparse.Namespace(project_root=str(project_root), id=run_id, title=f"Target run for {handoff.get('id')}", process=process_id, objective=f"Handoff target for {handoff.get('id')}", status="in_progress", dry_run=False))
+         if status:
+             return status
+@@ -15397,11 +15314,9 @@ def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
+ 
+ 
+ def orchestrator_plan_path(project_root: Path, run_id: str) -> Path:
+-    return run_root(project_root, run_id) / "orchestrator-plan.yaml"
++    return _work_paths.run_root(project_root, run_id) / "orchestrator-plan.yaml"
+ 
+ 
+-def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
+-    return run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
+ 
+ 
+ 
+@@ -15510,8 +15425,6 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
+     return 0
+ 
+ 
+-def agent_run_root(project_root: Path, run_id: str, task_id: str) -> Path:
+-    return locate_flow_root(project_root) / "runtime" / "agent-runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
+ 
+ 
+ def supervisor_root(project_root: Path) -> Path:
+@@ -15533,20 +15446,6 @@ def json_read(path: Path) -> dict[str, Any]:
+ 
+ 
+ 
+-def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str, Path]:
+-    root = agent_run_root(project_root, run_id, task_id)
+-    return {
+-        "root": root,
+-        "status": root / "status.json",
+-        "command": root / "command.json",
+-        "process": root / "process.json",
+-        "exit": root / "exit.json",
+-        "stdout": root / "stdout.log",
+-        "stderr": root / "stderr.log",
+-        "heartbeat": root / "heartbeat.json",
+-        "collection": root / "collection-report.md",
+-        "workspace_access": root / "workspace-access.json",
+-    }
+ 
+ 
+ DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] = {}
+@@ -15555,9 +15454,9 @@ DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] =
+ @contextlib.contextmanager
+ def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
+     from processforge_core.prepared.input import private_file
+-    root = agent_run_root(project_root, run_id, task_id)
++    root = _work_paths.agent_run(project_root, run_id, task_id)
+     try:
+-        for path in worker_run_paths(project_root, run_id, task_id).values():
++        for path in _work_paths.worker_run(project_root, run_id, task_id).values():
+             private_file(project_root, rel(path, project_root))
+         for name in (".lifecycle.lock", ".lifecycle.lock.guard"):
+             private_file(project_root, rel(root / name, project_root))
+@@ -15587,7 +15486,7 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
+ def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], state: dict[str, Any], fallback_driver_ref: str | None = None) -> dict[str, Any]:
+     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+-    command = json_read(worker_run_paths(project_root, run_id, task_id)["command"])
++    command = json_read(_work_paths.worker_run(project_root, run_id, task_id)["command"])
+     driver_ref = command.get("driver_ref")
+     if isinstance(driver_ref, str) and driver_ref.strip():
+         try:
+@@ -15601,7 +15500,7 @@ def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], st
+ def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, task_id: str, state: dict[str, Any]) -> bool:
+     if str(state.get("status") or "") != "running":
+         return False
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     if paths["exit"].is_file():
+         return True
+     pid = state.get("pid")
+@@ -15622,7 +15521,7 @@ def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, ta
+ def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallback_driver_ref: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]] | None:
+     task_id = safe_id(str(task.get("id") or "task"), "task")
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     state = load_agent_run_state(project_root, run_id, task_id)
+     if str(state.get("status") or "") != "running":
+         return None
+@@ -15643,141 +15542,18 @@ def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[
+         process_id=task_process_id(task),
+         subject=task_id,
+         assignment_id_value=task_id,
+-        assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root),
++        assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root),
+         payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": pid if isinstance(pid, int) else None, "reason": "already running"},
+         correlation_id=f"run-{run_id}",
+     )
+ 
+ 
+-def normalize_agent_model(value: Any) -> str:
+-    return _context_contract_inputs.normalize_agent_model(value)
+ 
+ 
+-def normalize_agent_reasoning_effort(value: Any) -> str:
+-    return _context_contract_inputs.normalize_agent_reasoning_effort(value)
+ 
+ 
+-def worker_sandbox_for_task(task: dict[str, Any]) -> str:
+-    execution = task.get("execution_mode") if isinstance(task.get("execution_mode"), dict) else {}
+-    ownership = task.get("ownership") if isinstance(task.get("ownership"), dict) else {}
+-    writable = ownership.get("writer") is True and (
+-        execution.get("code_changes_allowed") is True
+-        or execution.get("artifact_changes_allowed") is True
+-    )
+-    return "workspace-write" if writable else "read-only"
+ 
+ 
+-def build_worker_process_command(
+-    project_root: Path,
+-    task: dict[str, Any],
+-    driver: dict[str, Any],
+-    executable_override: str | None = None,
+-    *,
+-    attempt: int = 1,
+-    prepared_input: dict[str, str] | None = None,
+-) -> tuple[dict[str, Any], dict[str, Path]]:
+-    task_id = safe_id(str(task.get("id") or "task"), "task")
+-    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+-    paths = worker_run_paths(project_root, run_id, task_id)
+-    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
+-    prompt_path = worker_prompt_path(project_root, run_id, task_id)
+-    try:
+-        report_path = _work_output_policy.path(project_root, _work_output_policy.expected_report(task))
+-        for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
+-            if output.get("path"):
+-                _work_output_policy.path(project_root, str(output["path"]))
+-    except (OSError, ValueError) as exc:
+-        raise SystemExit(f"FAIL: invalid worker output path: {exc}") from exc
+-    variables = {
+-        "project_root": str(project_root),
+-        "processforge_root": str(ROOT),
+-        "run_id": run_id,
+-        "task_id": task_id,
+-        "attempt": str(attempt),
+-        "agent_run_dir": str(paths["root"]),
+-        "driver_id": str(driver.get("id") or "manual"),
+-        "capsule_path": str(capsule_path),
+-        "worker_prompt_path": str(prompt_path),
+-        "workspace_access_path": str(paths["workspace_access"]),
+-        "prepared_input_path": str(project_root / prepared_input["path"]) if prepared_input else "",
+-        "prepared_input_checksum": prepared_input["checksum"] if prepared_input else "",
+-        "expected_report_path": str(report_path),
+-        "python_executable": sys.executable,
+-        "executable": executable_override or "",
+-        "stdout_path": str(paths["stdout"]),
+-        "stderr_path": str(paths["stderr"]),
+-        "heartbeat_path": str(paths["heartbeat"]),
+-        "exit_path": str(paths["exit"]),
+-        "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
+-        "agent_reasoning_effort": normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
+-        "agent_sandbox": worker_sandbox_for_task(task),
+-    }
+-    io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
+-    stdout_path = Path(str(_worker_environment_policy.expand(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
+-    stderr_path = Path(str(_worker_environment_policy.expand(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
+-    if not stdout_path.is_absolute():
+-        stdout_path = (project_root / stdout_path).resolve()
+-    if not stderr_path.is_absolute():
+-        stderr_path = (project_root / stderr_path).resolve()
+-    paths["stdout"] = stdout_path
+-    paths["stderr"] = stderr_path
+-    heartbeat = driver.get("heartbeat") if isinstance(driver.get("heartbeat"), dict) else {}
+-    heartbeat_path = Path(str(_worker_environment_policy.expand(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
+-    if not heartbeat_path.is_absolute():
+-        heartbeat_path = (project_root / heartbeat_path).resolve()
+-    paths["heartbeat"] = heartbeat_path
+-    variables.update(
+-        {
+-            "stdout_path": str(paths["stdout"]),
+-            "stderr_path": str(paths["stderr"]),
+-            "heartbeat_path": str(paths["heartbeat"]),
+-            "exit_path": str(paths["exit"]),
+-        }
+-    )
+-    command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+-    executable = executable_override or str(_worker_environment_policy.expand(command_spec.get("executable") or "", variables))
+-    args = _worker_environment_policy.expand(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
+-    if variables["agent_model"]:
+-        model_args_raw = command_spec.get("model_args") if "model_args" in command_spec else ["--model", "{agent_model}"]
+-        if not isinstance(model_args_raw, list):
+-            raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
+-        args.extend(_worker_environment_policy.expand(model_args_raw, variables))
+-    env, inherit_env = _worker_environment_policy.build(driver, variables)
+-    if driver.get("prepared_lifecycle_wrapper") is True and executable:
+-        if not prepared_input:
+-            raise SystemExit("FAIL: prepared_input_required")
+-        args = [str(ROOT / "tools" / "prepared_executor.py"), "--prepared-input", variables["prepared_input_path"],
+-                "--prepared-sha256", variables["prepared_input_checksum"], "--heartbeat", str(paths["heartbeat"]),
+-                "--exit-path", str(paths["exit"]), "--", executable, *args]
+-        executable = sys.executable
+-    working_directory = str(_worker_environment_policy.expand(driver.get("working_directory") or "{project_root}", variables))
+-    command = {
+-        "schema_version": 1,
+-        "run_id": run_id,
+-        "task_id": task_id,
+-        "attempt": str(attempt),
+-        "driver_id": str(driver.get("id") or "manual"),
+-        "agent_model": variables["agent_model"],
+-        "agent_reasoning_effort": variables["agent_reasoning_effort"],
+-        "kind": str(driver.get("kind") or "manual"),
+-        "prepared_input": prepared_input or {},
+-        "executable_override": executable_override or "",
+-        "command": {
+-            "executable": executable,
+-            "args": args,
+-            "argv": [executable, *args] if executable else [],
+-            "working_directory": working_directory,
+-            "environment": {str(key): str(value) for key, value in env.items()},
+-            "environment_inherit": inherit_env,
+-            "shell": False,
+-        },
+-        "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
+-        "limits": _runtime_driver_definition_policy.parse_limits(driver)[0],
+-    }
+-    driver_ref = driver.get("_driver_ref")
+-    if isinstance(driver_ref, str) and driver_ref.strip():
+-        command["driver_ref"] = driver_ref.strip()
+-    return command, paths
+ 
+ 
+ def write_agent_run_state(
+@@ -15797,7 +15573,7 @@ def write_agent_run_state(
+ ) -> dict[str, Any]:
+     task_id = safe_id(str(task.get("id") or "task"), "task")
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+-    paths = paths or worker_run_paths(project_root, run_id, task_id)
++    paths = paths or _work_paths.worker_run(project_root, run_id, task_id)
+     driver_limits, limit_errors = _runtime_driver_definition_policy.parse_limits(driver)
+     if limit_errors:
+         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
+@@ -15812,7 +15588,7 @@ def write_agent_run_state(
+         "run_id": run_id,
+         "task_id": task_id,
+         "driver_id": str(driver.get("id") or "manual"),
+-        "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
++        "agent_model": _context_contract_inputs.normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
+         "status": status,
+         "pid": pid,
+         "started_at": started_at,
+@@ -15822,7 +15598,7 @@ def write_agent_run_state(
+         "attempt": attempt,
+         "max_retries": driver_limits["max_retries"],
+         "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
+-        "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
++        "worker_prompt_path": rel(_work_paths.worker_prompt(project_root, run_id, task_id), project_root),
+         "expected_report_path": _work_output_policy.expected_report(task),
+         "stdout_path": rel(paths["stdout"], project_root),
+         "stderr_path": rel(paths["stderr"], project_root),
+@@ -15844,7 +15620,7 @@ def write_agent_run_state(
+ 
+ 
+ def load_agent_run_state(project_root: Path, run_id: str, task_id: str) -> dict[str, Any]:
+-    return json_read(worker_run_paths(project_root, run_id, task_id)["status"])
++    return json_read(_work_paths.worker_run(project_root, run_id, task_id)["status"])
+ 
+ 
+ def worker_process_key(project_root: Path, run_id: str, task_id: str) -> tuple[str, str, str]:
+@@ -15892,7 +15668,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
+     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+     if isinstance(driver, str):
+         driver = runtime_driver_for_worker_state(project_root, task, state, driver)
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     status = str(state.get("status") or "")
+     if status != "running":
+         return state
+@@ -15912,7 +15688,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
+         failure_reason = str(exit_marker.get("failure_reason") or "") or None
+         state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
+         DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
+-        emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
++        emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+         return state
+     started_dt = parse_runtime_timestamp(started_at)
+     timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
+@@ -15943,7 +15719,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
+             failure_reason = "process exited without durable exit contract"
+             state = write_agent_run_state(project_root, task, driver, "unknown_exit", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=failure_reason, command=command, paths=paths)
+             json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
+-            emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
++            emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+             return state
+         else:
+             return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
+@@ -15952,7 +15728,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
+     state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
+     json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+     DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
+-    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
++    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+     return state
+ 
+ 
+@@ -15963,7 +15739,7 @@ def worker_run_work_is_terminal(project_root: Path, task: dict[str, Any]) -> boo
+     if status == "cancelled" or ("process_execution" in task and status in TERMINAL_ASSIGNMENT_STATUSES):
+         return True
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+-    path = run_root(project_root, run_id) / "run.yaml"
++    path = _work_paths.run_root(project_root, run_id) / "run.yaml"
+     run = load_yaml_document(path) if path.is_file() else {}
+     if "process_execution" not in task and "process_execution" not in run:
+         return False
+@@ -15974,8 +15750,8 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+     task = load_task(project_root, task_id)
+     if worker_run_work_is_terminal(project_root, task):
+         raise SystemExit("FAIL: work_is_terminal")
+-    agent_model = normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
+-    agent_reasoning_effort = normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
++    agent_model = _context_contract_inputs.normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
++    agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
+     if agent_model and task.get("agent_model") != agent_model:
+         task["agent_model"] = agent_model
+         save_task(project_root, task)
+@@ -15994,7 +15770,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+             command_assignment_capsule,
+             argparse.Namespace(
+                 project_root=str(project_root),
+-                assignment=str(assignment_yaml_path(project_root, task_id)),
++                assignment=str(_work_paths.assignment_document(project_root, task_id)),
+                 force=_context_contract_inputs.assignment_allows_write_scope_overlap(task),
+             ),
+         )
+@@ -16004,7 +15780,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+     task = load_task(project_root, task_id)
+     from processforge_core.work.context import validate_execution_contract
+     prepared_capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
+-    validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
++    validation = validate_execution_contract(project_root, _work_paths.assignment_document(project_root, task_id), task,
+                                              prepared_capsule, sys.modules[__name__], require_ready=True)
+     if validation["status"] != "valid":
+         raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid") + "; create_successor_work")
+@@ -16016,7 +15792,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+     ]
+     if start_failures:
+         raise SystemExit("FAIL: runtime driver is not start-ready: " + "; ".join(start_failures))
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     previous_state = json_read(paths["status"])
+     try:
+         attempt = max(1, int(previous_state.get("attempt") or 0) + 1)
+@@ -16032,13 +15808,13 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+     try:
+         document = prepared_input.build(project_root, task, prepared_capsule, attempt, sys.modules[__name__])
+         reference = {"path": rel(prepared_path, project_root), "checksum": prepared_input.digest(prepared_input.encoded(document))}
+-        command, paths = build_worker_process_command(project_root, task, driver, executable_override, attempt=attempt, prepared_input=reference)
++        command, paths = _worker_command_builder.build(project_root, task, driver, executable_override, attempt=attempt, prepared_input=reference)
+         prepared_input.private_file(project_root, reference["path"])
+         prepared_input.write_once(prepared_path, document)
+     except (OSError, ValueError, RuntimeError) as exc:
+         raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
+     json_write(paths["workspace_access"], document["input"]["resources"])
+-    prompt_path = worker_prompt_path(project_root, run_id, task_id)
++    prompt_path = _work_paths.worker_prompt(project_root, run_id, task_id)
+     prepared_input.local_file(project_root, rel(prompt_path, project_root))
+     prompt_path.parent.mkdir(parents=True, exist_ok=True)
+     prompt_path.write_text(render_worker_launch_prompt(project_root, task_id, prepared_input=reference), encoding="utf-8")
+@@ -16049,7 +15825,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+     # of a newly launched process.
+     paths["exit"].unlink(missing_ok=True)
+     write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
+-    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
++    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
+     diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
+     diagnostics.emit("info", "worker.prepared", {"driver_id": driver.get("id"), "status": state_status}, component="worker")
+     return task, driver, paths
+@@ -16109,7 +15885,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
+             print("FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair")
+             return 1
+         if state.get("status") in {"ready", "manual_required"}:
+-            paths = worker_run_paths(project_root, run_id, task_id)
++            paths = _work_paths.worker_run(project_root, run_id, task_id)
+             saved = json_read(paths["command"])
+             driver = runtime_driver_for_worker_state(project_root, task, state)
+             requested_driver = getattr(args, "driver", None)
+@@ -16165,7 +15941,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
+         json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
+         if detach:
+             DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
+-            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
++            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+             print(f"RUNNING: {task_id} pid={proc.pid}")
+             return 0
+     assert proc is not None
+@@ -16182,7 +15958,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
+         finished_at = now_utc()
+         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
+         json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+-    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
++    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+     print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
+     return 0 if final_status == "completed" else 1
+ 
+@@ -16222,7 +15998,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
+         else:
+             os.kill(int(pid), signal.SIGTERM)
+     driver = runtime_driver_for_worker_state(project_root, task, state)
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
+         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
+         return 0
+@@ -16268,7 +16044,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+         return 1
+     if not report_path.is_file():
+         missing.append(_work_output_policy.expected_report(task))
+-    paths = worker_run_paths(project_root, run_id, task_id)
++    paths = _work_paths.worker_run(project_root, run_id, task_id)
+     lines = [
+         f"# Worker Run Collection: {task_id}",
+         "",
+@@ -16361,7 +16137,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+         return 1
+     # A governed primary Work still has stage obligations. Worker delivery is
+     # evidence for those transitions, never a compatibility completion bypass.
+-    run = load_yaml_document(run_root(project_root, run_id) / "run.yaml")
++    run = load_yaml_document(_work_paths.run_root(project_root, run_id) / "run.yaml")
+     governed = "process_execution" in run or "process_execution" in task
+     status = 0
+     if not governed:
+@@ -16369,7 +16145,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+         print(output, end="")
+         if status:
+             return status
+-    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
++    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
+     prepared_input.write_once(completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]})
+     if governed:
+         print(f"COLLECTED: {task_id}; governed stage transition remains required")
+@@ -16391,7 +16167,7 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
+     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+     if str(task.get("status")) in {"done", "completed", "failed", "cancelled"}:
+         return
+-    run_path = run_root(project_root, run_id) / "run.yaml"
++    run_path = _work_paths.run_root(project_root, run_id) / "run.yaml"
+     if "process_execution" in task or (run_path.is_file() and "process_execution" in load_yaml_document(run_path)):
+         return
+     runtime_status = str(state.get("status") or "failed")
+@@ -16406,7 +16182,7 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
+     }
+     save_task(project_root, task)
+     update_run_task_status(project_root, run_id, task_id, "failed")
+-    emit_process_event(project_root, "task.failed", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
++    emit_process_event(project_root, "task.failed", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+ 
+ 
+ def default_supervisor_profile() -> dict[str, Any]:
+@@ -16453,7 +16229,7 @@ def task_dependency_ids(task: dict[str, Any], worker: dict[str, Any] | None = No
+ 
+ def task_dependencies_done(project_root: Path, task: dict[str, Any], worker: dict[str, Any] | None = None) -> bool:
+     for dep_id in task_dependency_ids(task, worker):
+-        dep_path = assignment_yaml_path(project_root, dep_id)
++        dep_path = _work_paths.assignment_document(project_root, dep_id)
+         if not dep_path.is_file():
+             return False
+         dep = read_yaml_file(dep_path)
+@@ -17049,7 +16825,7 @@ def plan_allows_write_scope_overlap(plan: dict[str, Any]) -> bool:
+ 
+ 
+ def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -> dict[str, Any]:
+-    agent_model = normalize_agent_model(model)
++    agent_model = _context_contract_inputs.normalize_agent_model(model)
+     if not agent_model:
+         return plan
+     result = copy.deepcopy(plan)
+@@ -17081,9 +16857,9 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
+             max_parallel = runtime.get("max_parallel_workers")
+             checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
+         if "model" in runtime:
+-            checks.append(check("PASS" if normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
++            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
+         if "reasoning_effort" in runtime:
+-            checks.append(check("PASS" if normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
++            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
+     checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
+     checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
+     checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
+@@ -17120,9 +16896,9 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
+         writer = bool(raw_worker.get("writer", True))
+         driver_id = str(raw_worker.get("runtime_driver") or default_driver)
+         if "model" in raw_worker:
+-            checks.append(check("PASS" if normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
++            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
+         if "reasoning_effort" in raw_worker or "agent_reasoning_effort" in raw_worker:
+-            checks.append(check("PASS" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
++            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
+         if writer:
+             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
+         checks.append(check("PASS" if driver_id in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
+@@ -17175,7 +16951,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
+     task = load_task(project_root, task_id)
+     run_id = str(task.get("run_id") or "")
+     capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+-    workspace_access = rel(worker_run_paths(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
++    workspace_access = rel(_work_paths.worker_run(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
+     requested_workspace_access = normalize_workspace_access(task.get("workspace_access"))
+     allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
+     allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
+@@ -17218,7 +16994,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
+         "",
+         f"- task_id: `{task_id}`",
+         f"- run_id: `{run_id}`",
+-        f"- assignment: `{rel(assignment_yaml_path(project_root, task_id), project_root)}`",
++        f"- assignment: `{rel(_work_paths.assignment_document(project_root, task_id), project_root)}`",
+         f"- capsule: `{capsule}`",
+         f"- workspace_access_file: `{workspace_access}`",
+         f"- prepared_input_file: `{(prepared_input or {}).get('path', 'pending preparation')}`",
+@@ -17268,8 +17044,8 @@ def write_orchestration_summary(project_root: Path, plan: dict[str, Any]) -> Non
+     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+     run_id = safe_id(str(run.get("id") or "run"), "run")
+     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+-    summary = run_root(project_root, run_id) / "orchestration-summary.md"
+-    task_index = run_root(project_root, run_id) / "orchestration-task-index.md"
++    summary = _work_paths.run_root(project_root, run_id) / "orchestration-summary.md"
++    task_index = _work_paths.run_root(project_root, run_id) / "orchestration-task-index.md"
+     handoff = locate_flow_root(project_root) / "handoffs" / "runs" / f"{run_id}-orchestrator-handoff.md"
+     summary_lines = [f"# Orchestration Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", "- process: `multi-agent-task-orchestration`", "", "## Workers", ""]
+     index_lines = [f"# Orchestration Task Index: {run_id}", ""]
+@@ -17277,7 +17053,7 @@ def write_orchestration_summary(project_root: Path, plan: dict[str, Any]) -> Non
+         if not isinstance(worker, dict):
+             continue
+         task_id = safe_id(str(worker.get("id") or "worker"), "worker")
+-        prompt_rel = rel(worker_prompt_path(project_root, run_id, task_id), project_root)
++        prompt_rel = rel(_work_paths.worker_prompt(project_root, run_id, task_id), project_root)
+         capsule_rel = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+         summary_lines.append(f"- `{task_id}`: prompt `{prompt_rel}`, capsule `{capsule_rel}`")
+         index_lines.append(f"- `{task_id}` -> `.pf/assignments/{task_id}.yaml`")
+@@ -17321,10 +17097,10 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
+     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+     default_driver = str(runtime.get("default_driver") or "manual")
+-    default_model = normalize_agent_model(runtime.get("model") or "")
+-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
++    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
++    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
++    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
++    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+     normalized_workers: list[dict[str, Any]] = []
+     for order, worker in enumerate(plan.get("workers", []) if isinstance(plan.get("workers"), list) else [], start=1):
+         if not isinstance(worker, dict):
+@@ -17335,8 +17111,8 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
+                 "id": worker_id,
+                 "order": order,
+                 "runtime_driver": str(worker.get("runtime_driver") or default_driver),
+-                "model": normalize_agent_model(worker.get("model") or default_model),
+-                "reasoning_effort": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
++                "model": _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model),
++                "reasoning_effort": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
+                 "allow_subagents": bool(worker.get("allow_subagents", False)),
+                 "subagent_policy": worker_subagent_policy(worker),
+                 "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
+@@ -17372,8 +17148,8 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) ->
+     normalized = normalized_orchestrator_plan(project_root, plan)
+     run_id = str(normalized["run"]["id"])
+     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+-    default_model = normalize_agent_model(runtime.get("model") or "")
+-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
++    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
++    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+     raw_workers: dict[str, dict[str, Any]] = {}
+     for raw_worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
+         if isinstance(raw_worker, dict):
+@@ -17382,7 +17158,7 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) ->
+     for worker in normalized["workers"]:
+         policy = worker["subagent_policy"] if isinstance(worker.get("subagent_policy"), dict) else {}
+         raw_worker = raw_workers.get(str(worker["id"]), {})
+-        if normalize_agent_model(raw_worker.get("model") if isinstance(raw_worker, dict) else ""):
++        if _context_contract_inputs.normalize_agent_model(raw_worker.get("model") if isinstance(raw_worker, dict) else ""):
+             model_source = f"workers[{worker['id']}].model"
+         elif default_model:
+             model_source = "runtime.model"
+@@ -17397,13 +17173,13 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) ->
+                     "behavior": ["worker-run.runtime_driver"],
+                 },
+                 "agent_model": {
+-                    "value": normalize_agent_model(worker.get("model")),
++                    "value": _context_contract_inputs.normalize_agent_model(worker.get("model")),
+                     "source": model_source,
+                     "behavior": ["assignment.agent_model", "capsule.agent_model", "worker-run.PF_AGENT_MODEL", "runtime-driver.command.model_args"],
+                 },
+                 "agent_reasoning_effort": {
+-                    "value": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or default_reasoning_effort),
+-                    "source": f"workers[{worker['id']}].reasoning_effort" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") if isinstance(raw_worker, dict) else "") else ("runtime.reasoning_effort" if default_reasoning_effort else "default.empty"),
++                    "value": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or default_reasoning_effort),
++                    "source": f"workers[{worker['id']}].reasoning_effort" if _context_contract_inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") if isinstance(raw_worker, dict) else "") else ("runtime.reasoning_effort" if default_reasoning_effort else "default.empty"),
+                     "behavior": ["assignment.agent_reasoning_effort", "capsule.agent_reasoning_effort", "worker-run.PF_AGENT_REASONING_EFFORT", "codex-exec.PF_CODEX_REASONING_EFFORT"],
+                 },
+                 "subagent_policy": {
+@@ -17441,7 +17217,7 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) ->
+ def write_orchestrator_config_resolution_artifacts(project_root: Path, plan: dict[str, Any]) -> None:
+     normalized = normalized_orchestrator_plan(project_root, plan)
+     run_id = str(normalized["run"]["id"])
+-    root = run_root(project_root, run_id)
++    root = _work_paths.run_root(project_root, run_id)
+     root.mkdir(parents=True, exist_ok=True)
+     write_yaml_file(root / "orchestrator-shell-plan.normalized.yaml", normalized)
+     write_yaml_file(root / "config-resolution-report.yaml", build_config_resolution_report(project_root, plan))
+@@ -17454,7 +17230,7 @@ def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) ->
+         if not isinstance(worker, dict):
+             continue
+         task_id = safe_id(str(worker.get("id") or "worker"), "worker")
+-        path = assignment_yaml_path(project_root, task_id)
++        path = _work_paths.assignment_document(project_root, task_id)
+         if not path.is_file():
+             continue
+         task = load_task(project_root, task_id)
+@@ -17514,7 +17290,7 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
+     task_id = safe_id(args.task, "task")
+     task = load_task(project_root, task_id)
+     run_id = str(task.get("run_id") or "")
+-    output = Path(args.output).expanduser() if getattr(args, "output", None) else worker_prompt_path(project_root, run_id, task_id)
++    output = Path(args.output).expanduser() if getattr(args, "output", None) else _work_paths.worker_prompt(project_root, run_id, task_id)
+     if not output.is_absolute():
+         output = (project_root / output).resolve()
+     prompt = render_worker_launch_prompt(project_root, task_id)
+@@ -17523,7 +17299,7 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
+         return 0
+     output.parent.mkdir(parents=True, exist_ok=True)
+     output.write_text(prompt, encoding="utf-8")
+-    emit_process_event(project_root, "worker.launch_prompt.created", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
++    emit_process_event(project_root, "worker.launch_prompt.created", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
+     print(f"WROTE: {rel(output, project_root)}")
+     return 0
+ 
+@@ -17542,14 +17318,14 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+     title = str(run.get("title") or run_id)
+     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+     default_driver = str(runtime.get("default_driver") or "manual")
+-    default_model = normalize_agent_model(runtime.get("model") or "")
+-    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
++    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
++    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+-    planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts", run_root(project_root, run_id) / "config-resolution-report.yaml"]
++    planned = [_work_paths.run_document(project_root, run_id), orchestrator_plan_path(project_root, run_id), _work_paths.run_root(project_root, run_id) / "worker-prompts", _work_paths.run_root(project_root, run_id) / "config-resolution-report.yaml"]
+     if not args.apply or getattr(args, "dry_run", False):
+         print_plan("orchestrator-plan apply dry run", planned, project_root)
+         return 0
+-    if not run_yaml_path(project_root, run_id).is_file():
++    if not _work_paths.run_document(project_root, run_id).is_file():
+         status, output = run_command_capture(
+             command_run_create,
+             argparse.Namespace(project_root=str(project_root), id=run_id, title=title, process="multi-agent-task-orchestration", objective=str(run.get("objective") or title), status="in_progress", dry_run=False),
+@@ -17558,7 +17334,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+             print(output, end="")
+             return status
+     if runtime:
+-        with registry_file_lock(run_yaml_path(project_root, run_id)):
++        with registry_file_lock(_work_paths.run_document(project_root, run_id)):
+             run_doc = load_run(project_root, run_id)
+             run_doc["runtime"] = {
+                 "default_driver": default_driver,
+@@ -17573,7 +17349,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+         if not isinstance(worker, dict):
+             continue
+         task_id = safe_id(str(worker.get("id") or f"worker-{order}"), "worker")
+-        assignment_path = assignment_yaml_path(project_root, task_id)
++        assignment_path = _work_paths.assignment_document(project_root, task_id)
+         if not assignment_path.is_file():
+             status, output = run_command_capture(
+                 command_task_create,
+@@ -17605,8 +17381,8 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+                     expected_report_language=str(worker.get("expected_report_language") or "en"),
+                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
+                     force_with_handoff=bool(plan.get("allow_write_scope_overlap", False) or as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
+-                    agent_model=normalize_agent_model(worker.get("model") or default_model),
+-                    reasoning_effort=normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
++                    agent_model=_context_contract_inputs.normalize_agent_model(worker.get("model") or default_model),
++                    reasoning_effort=_context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
+                     dry_run=False,
+                 ),
+             )
+@@ -17616,10 +17392,10 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+         task = load_task(project_root, task_id)
+         task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
+         task["runtime_driver"] = str(worker.get("runtime_driver") or default_driver)
+-        agent_model = normalize_agent_model(worker.get("model") or default_model)
++        agent_model = _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model)
+         if agent_model:
+             task["agent_model"] = agent_model
+-        agent_reasoning_effort = normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort)
++        agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort)
+         if agent_reasoning_effort:
+             task["agent_reasoning_effort"] = agent_reasoning_effort
+         task["workspace_access"] = normalize_workspace_access(worker.get("workspace_access"))
+@@ -17643,7 +17419,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+             print(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create_successor_work; immutable contexts cannot be rebuilt in place")
+             return 1
+         else:
+-            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=bool(plan.get("allow_write_scope_overlap", False))))
++            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(_work_paths.assignment_document(project_root, task_id)), force=bool(plan.get("allow_write_scope_overlap", False))))
+             print(output, end="")
+             if status:
+                 return status
+@@ -17691,7 +17467,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+             return supervisor_status
+     doctor_status = command_run_doctor(argparse.Namespace(project_root=str(project_root), run=run_id))
+     emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
+-    print(f"WROTE: {rel(run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
++    print(f"WROTE: {rel(_work_paths.run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
+     return doctor_status
+ 
+ 
+@@ -17703,7 +17479,7 @@ def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
+     run_id = safe_id(str(run.get("id") or "run"), "run")
+     print(f"RUN: {run_id}")
+     print(f"PLAN: {rel(orchestrator_plan_path(project_root, run_id), project_root)}")
+-    if run_yaml_path(project_root, run_id).is_file():
++    if _work_paths.run_document(project_root, run_id).is_file():
+         return command_run_status(argparse.Namespace(project_root=str(project_root), run=run_id))
+     print("STATUS: plan-created")
+     return 0
+@@ -17730,7 +17506,7 @@ def command_run_create(args: argparse.Namespace) -> int:
+     run_id = safe_id(args.id, "run")
+     process_id = safe_id(args.process, "task-batch-execution")
+     require_official_process_active(project_root, process_id)
+-    path = run_yaml_path(project_root, run_id)
++    path = _work_paths.run_document(project_root, run_id)
+     if path.exists():
+         raise SystemExit(f"FAIL: run already exists: {rel(path, project_root)}")
+     run = {
+@@ -17750,11 +17526,11 @@ def command_run_create(args: argparse.Namespace) -> int:
+         "events": {"emitted": ["run.created"]},
+         "privacy": {"public_safe": True},
+     }
+-    planned = [path, run_root(project_root, run_id) / "plan.md", run_root(project_root, run_id) / "task-index.md"]
++    planned = [path, _work_paths.run_root(project_root, run_id) / "plan.md", _work_paths.run_root(project_root, run_id) / "task-index.md"]
+     if getattr(args, "dry_run", False):
+         print_plan("run-create dry run", planned, project_root)
+         return 0
+-    root = run_root(project_root, run_id)
++    root = _work_paths.run_root(project_root, run_id)
+     root.mkdir(parents=True, exist_ok=True)
+     save_run(project_root, run)
+     (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
+@@ -17789,7 +17565,7 @@ def command_run_status(args: argparse.Namespace) -> int:
+     print(f"STATUS: {run.get('status')}")
+     print("TASKS: " + ", ".join(f"{key}={value}" for key, value in sorted(counts.items())) if counts else "TASKS: none")
+     for item in sorted(tasks, key=lambda value: int(value.get("order", 0) or 0)):
+-        task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
++        task = load_yaml_document(_work_paths.assignment_document(project_root, str(item.get("id", ""))))
+         iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
+         latest = iterations[-1] if iterations and isinstance(iterations[-1], dict) else {}
+         latest_text = f" latest={latest.get('id')}:{latest.get('kind')}:{latest.get('status')}" if latest else ""
+@@ -17803,7 +17579,7 @@ def command_run_status(args: argparse.Namespace) -> int:
+ def command_run_doctor(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     run_id = str(args.run or "").strip()
+-    with registry_file_lock(run_yaml_path(project_root, run_id)):
++    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
+         checks = validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
+     result = print_checks(checks)
+     emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
+@@ -17813,7 +17589,7 @@ def command_run_doctor(args: argparse.Namespace) -> int:
+ def command_run_summary(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     run_id = safe_id(args.run, "run")
+-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
++    with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml"):
+         return _command_run_summary_locked(args)
+ 
+ 
+@@ -17821,8 +17597,8 @@ def _command_run_summary_locked(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     run = load_run(project_root, args.run)
+     run_id = str(run.get("id", safe_id(args.run, "run")))
+-    summary = run_summary_path(project_root, run_id)
+-    handoff = run_handoff_path(project_root, run_id)
++    summary = _work_paths.summary(project_root, run_id)
++    handoff = _work_paths.handoff(project_root, run_id)
+     if getattr(args, "dry_run", False):
+         print_plan("run-summary dry run", [summary, handoff], project_root)
+         return 0
+@@ -17841,7 +17617,7 @@ def _command_run_summary_locked(args: argparse.Namespace) -> int:
+ def command_run_complete(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     run_id = safe_id(args.run, "run")
+-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
++    with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml"):
+         return _command_run_complete_locked(args)
+ 
+ 
+@@ -17860,8 +17636,8 @@ def _command_run_complete_locked(args: argparse.Namespace) -> int:
+     emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
+     if isinstance(emitted, list) and "run.completed" not in emitted:
+         emitted.append("run.completed")
+-    summary = run_summary_path(project_root, run_id)
+-    handoff = run_handoff_path(project_root, run_id)
++    summary = _work_paths.summary(project_root, run_id)
++    handoff = _work_paths.handoff(project_root, run_id)
+     artifacts = [rel(summary, project_root), rel(handoff, project_root)]
+     run["final_artifacts"] = artifacts
+     if isinstance(emitted, list) and "run.summary.created" not in emitted:
+@@ -17876,7 +17652,7 @@ def _command_run_complete_locked(args: argparse.Namespace) -> int:
+ def command_task_create(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     run_id = safe_id(args.run, "run")
+-    with registry_file_lock(run_yaml_path(project_root, run_id)):
++    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
+         return _command_task_create_locked(args)
+ 
+ 
+@@ -17893,7 +17669,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         declared_stages = {str(item.get("id") or "") for item in as_list(definition.process.get("stages")) if isinstance(item, dict)}
+         if stage_id not in declared_stages:
+             raise SystemExit(f"FAIL: stage {stage_id} is not declared by process {process_id}")
+-    path = assignment_yaml_path(project_root, task_id)
++    path = _work_paths.assignment_document(project_root, task_id)
+     if path.exists():
+         raise SystemExit(f"FAIL: task already exists: {rel(path, project_root)}")
+     tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
+@@ -17968,10 +17744,10 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         }
+     if required_outputs:
+         task["required_outputs"] = required_outputs
+-    agent_model = normalize_agent_model(getattr(args, "agent_model", None) or getattr(args, "model", None) or "")
++    agent_model = _context_contract_inputs.normalize_agent_model(getattr(args, "agent_model", None) or getattr(args, "model", None) or "")
+     if agent_model:
+         task["agent_model"] = agent_model
+-    agent_reasoning_effort = normalize_agent_reasoning_effort(getattr(args, "reasoning_effort", None) or getattr(args, "agent_reasoning_effort", None) or "")
++    agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(getattr(args, "reasoning_effort", None) or getattr(args, "agent_reasoning_effort", None) or "")
+     if agent_reasoning_effort:
+         task["agent_reasoning_effort"] = agent_reasoning_effort
+     expected_report: dict[str, Any] = {}
+@@ -17997,7 +17773,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         raise SystemExit("FAIL: task write scope overlaps active assignments: " + dump_yaml(overlap_check))
+     if overlap_check["status"] == "fail":
+         task.setdefault("non_overlap", {})["overlap_check"] = overlap_check
+-    planned = [path, task_artifacts_root(project_root, run_id, task_id), run_root(project_root, run_id) / "task-index.md"]
++    planned = [path, _work_paths.task_artifacts(project_root, run_id, task_id), _work_paths.run_root(project_root, run_id) / "task-index.md"]
+     if getattr(args, "dry_run", False):
+         print_plan("task-create dry run", planned, project_root)
+         if allowed_files or forbidden_files:
+@@ -18006,7 +17782,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+                 print(f"- {item}")
+             print("OVERLAP_CHECK: " + overlap_check["status"])
+         return 0
+-    task_artifacts_root(project_root, run_id, task_id).mkdir(parents=True, exist_ok=True)
++    _work_paths.task_artifacts(project_root, run_id, task_id).mkdir(parents=True, exist_ok=True)
+     write_yaml_file(path, task)
+     tasks.append({"id": task_id, "assignment": rel(path, project_root), "status": "open", "order": order, "blocking": True})
+     run["tasks"] = tasks
+@@ -18030,7 +17806,7 @@ def command_task_start(args: argparse.Namespace) -> int:
+     task_id = safe_id(args.task, "task")
+     task = load_task(project_root, task_id)
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+-    with registry_file_lock(run_yaml_path(project_root, run_id)):
++    with registry_file_lock(_work_paths.run_document(project_root, run_id)):
+         return _command_task_start_locked(args)
+ 
+ 
+@@ -18043,7 +17819,7 @@ def _command_task_start_locked(args: argparse.Namespace) -> int:
+     save_task(project_root, task)
+     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "in_progress")
+     for event_type in ["task.started", "assignment.started"]:
+-        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
++        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
+     print(f"STARTED: {task_id}")
+     return 0
+ 
+@@ -18053,7 +17829,7 @@ def command_task_complete(args: argparse.Namespace) -> int:
+     task_id = safe_id(args.task, "task")
+     task = load_task(project_root, task_id)
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml", stale_after_seconds=0 if getattr(args, "completion_id", None) else 300):
++    with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml", stale_after_seconds=0 if getattr(args, "completion_id", None) else 300):
+         return _command_task_complete_locked(args)
+ 
+ 
+@@ -18076,7 +17852,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
+     save_task(project_root, task)
+     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "done")
+     for event_type in ["task.completed", "assignment.completed"]:
+-        event_kwargs = dict(process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
++        event_kwargs = dict(process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
+         if getattr(args, "completion_id", None):
+             emit_worker_completion_event(project_root, event_type, args.completion_id, **event_kwargs)
+         else:
+@@ -18114,7 +17890,7 @@ def command_task_doctor(args: argparse.Namespace) -> int:
+     checks = validate_task_consistency(project_root, task_id)
+     result = print_checks(checks)
+     task = load_task(project_root, task_id)
+-    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
++    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
+     return result
+ 
+ 
+@@ -18133,20 +17909,20 @@ def command_iteration_add(args: argparse.Namespace) -> int:
+     if any(isinstance(item, dict) and item.get("id") == iter_id for item in iterations):
+         raise SystemExit(f"FAIL: duplicate iteration id: {iter_id}")
+     artifact_kind = "debug-log.md" if kind == "debug" else "work-log.md"
+-    artifact = rel(task_artifacts_root(project_root, str(task.get("run_id", "")), task_id) / artifact_kind, project_root)
++    artifact = rel(_work_paths.task_artifacts(project_root, str(task.get("run_id", "")), task_id) / artifact_kind, project_root)
+     iteration = {"id": iter_id, "kind": kind, "status": status, "started_at": now_utc(), "summary": args.summary, "artifacts": [artifact]}
+     if status in {"completed", "passed", "failed", "cancelled"}:
+         iteration["completed_at"] = now_utc()
+     if getattr(args, "dry_run", False):
+         print(f"DRY-RUN: would add {iter_id} to {task_id}")
+         return 0
+-    task_artifacts_root(project_root, str(task.get("run_id", "")), task_id).mkdir(parents=True, exist_ok=True)
++    _work_paths.task_artifacts(project_root, str(task.get("run_id", "")), task_id).mkdir(parents=True, exist_ok=True)
+     iterations.append(iteration)
+     task["iterations"] = iterations
+     if status == "in_progress":
+         task["status"] = "debugging" if kind == "debug" else "in_progress"
+     save_task(project_root, task)
+-    emit_process_event(project_root, "iteration.added", process_id=task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
++    emit_process_event(project_root, "iteration.added", process_id=task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+     print(f"ADDED: {iter_id}")
+     return 0
+ 
+@@ -18175,7 +17951,7 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
+         return 0
+     task["iterations"] = iterations
+     save_task(project_root, task)
+-    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
++    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+     print(f"UPDATED: {args.iteration}")
+     return 0
+ 
+@@ -18382,7 +18158,7 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
+     capsule = load_yaml_document(capsule_path)
+     if isinstance(capsule, dict) and "execution_contract" in capsule:
+         from processforge_core.work.context import validate_execution_contract
+-        assignment_path = assignment_yaml_path(project_root, task_id)
++        assignment_path = _work_paths.assignment_document(project_root, task_id)
+         metadata = extract_assignment_front_matter(assignment_path) if assignment_path.is_file() else {}
+         validation = validate_execution_contract(project_root, assignment_path, metadata, capsule, sys.modules[__name__])
+         return ("fresh" if validation["status"] == "valid" else "stale"), rel(capsule_path, project_root)
+@@ -18390,7 +18166,7 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
+     recorded_checksum = str(capsule_meta.get("assignment_checksum") or "") if isinstance(capsule_meta, dict) else ""
+     if not recorded_checksum:
+         return "legacy", rel(capsule_path, project_root)
+-    assignment_path = assignment_yaml_path(project_root, task_id)
++    assignment_path = _work_paths.assignment_document(project_root, task_id)
+     current_checksum = sha256_file(assignment_path) if assignment_path.is_file() else ""
+     if recorded_checksum == current_checksum:
+         return "fresh", rel(capsule_path, project_root)
+@@ -18502,7 +18278,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
+         text = manifest.read_text(encoding="utf-8", errors="replace")
+         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "public manifest has no local absolute paths"))
+         checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "public manifest contains no secret values"))
+-        loaded_manifest = load_doctor_yaml(
++        loaded_manifest = _update_document_reader.doctor_yaml(
+             manifest,
+             "process-forge-manifest.schema.json",
+             "project ProcessForge manifest",
+@@ -18748,38 +18524,16 @@ def update_workplace_root(raw: str) -> Path:
+     return path
+ 
+ 
+-def update_registry_file(workplace_root: Path, registry_key: str, default_name: str) -> Path:
+-    manifest = workplace_root / "workplace.yaml"
+-    if manifest.is_file():
+-        data = load_yaml_document(manifest)
+-        registries = data.get("registries") if isinstance(data, dict) else None
+-        raw = registries.get(registry_key) if isinstance(registries, dict) else None
+-        if isinstance(raw, str) and raw.strip():
+-            return path_resolution_to_path(workplace_path_resolution(workplace_root, raw))
+-    return workplace_root / "registries" / default_name
+ 
+ 
+-def update_source_registry_path(workplace_root: Path) -> Path:
+-    return update_registry_file(workplace_root, "update_sources", "update-sources.yaml")
+ 
+ 
+-def installed_subjects_registry_path(workplace_root: Path) -> Path:
+-    return update_registry_file(workplace_root, "installed_subjects", "installed-subjects.yaml")
+ 
+ 
+-def update_site_overrides_path(workplace_root: Path) -> Path:
+-    return update_registry_file(workplace_root, "update_site_overrides", "update-site-overrides.yaml")
+ 
+ 
+-def derived_installed_update_sites_path(workplace_root: Path) -> Path:
+-    return workplace_root / "runtime" / "update" / "installed-update-sites.json"
+ 
+ 
+-def load_update_yaml(path: Path) -> dict[str, Any]:
+-    if not path.is_file():
+-        return {}
+-    data = load_yaml_document(path)
+-    return data if isinstance(data, dict) and not yaml_error(data) else {}
+ 
+ 
+ 
+@@ -18800,24 +18554,6 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
+ 
+ 
+ 
+-def load_doctor_yaml(
+-    path: Path,
+-    schema_name: str,
+-    label: str,
+-    checks: list[Check],
+-) -> dict[str, Any] | None:
+-    """Load and schema-check a governed YAML document without mutating it."""
+-    data = load_yaml_document(path)
+-    error = yaml_error(data)
+-    if error:
+-        checks.append(check("FAIL", f"{label} YAML parse failed: {error}"))
+-        return None
+-    if not isinstance(data, dict) or not data:
+-        checks.append(check("FAIL", f"{label} must be a non-empty YAML object"))
+-        return None
+-    checks.append(check("PASS", f"{label} is valid YAML"))
+-    _update_schema_checks.append(checks, data, schema_name, label)
+-    return data
+ 
+ 
+ 
+@@ -18857,8 +18593,8 @@ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False)
+ 
+ def command_update_bootstrap_source_list(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    path = update_source_registry_path(workplace_root)
+-    data = load_update_yaml(path)
++    path = _update_document_reader.source_registry(workplace_root)
++    data = _update_document_reader.yaml(path)
+     if not data:
+         print(f"FAIL: update source registry not found or invalid: {path}")
+         return 1
+@@ -18867,8 +18603,8 @@ def command_update_bootstrap_source_list(args: argparse.Namespace) -> int:
+ 
+ def command_update_bootstrap_source_validate(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    path = update_source_registry_path(workplace_root)
+-    checks = _update_source_contract_policy.validate_registry(load_update_yaml(path), path)
++    path = _update_document_reader.source_registry(workplace_root)
++    checks = _update_source_contract_policy.validate_registry(_update_document_reader.yaml(path), path)
+     return print_checks(checks)
+ 
+ 
+@@ -18883,23 +18619,8 @@ def command_update_sources(args: argparse.Namespace) -> int:
+     return command_update_bootstrap_source_list(args)
+ 
+ 
+-def update_manifest_candidates_under(root: Path, patterns: list[str]) -> list[Path]:
+-    if not root.is_dir():
+-        return []
+-    candidates: list[Path] = []
+-    for pattern in patterns:
+-        candidates.extend(sorted(root.glob(pattern)))
+-    return [path.resolve() for path in candidates if path.is_file()]
+ 
+ 
+-def update_resolved_registry_paths(workplace_root: Path, registry_name: str, collection_key: str) -> list[Path]:
+-    data = load_update_yaml(workplace_root / "registries" / registry_name)
+-    entries = data.get(collection_key) if isinstance(data.get(collection_key), list) else []
+-    paths: list[Path] = []
+-    for entry in entries:
+-        if isinstance(entry, dict) and isinstance(entry.get("path"), str):
+-            paths.append(path_resolution_to_path(workplace_path_resolution(workplace_root, str(entry.get("path")))))
+-    return paths
+ 
+ 
+ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]:
+@@ -18911,11 +18632,11 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+     if not package_roots:
+         package_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/packages"))]
+     for root in package_roots:
+-        for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/package.yaml", "*/package.yml"]):
++        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/package.yaml", "*/package.yml"]):
+             if path in seen:
+                 continue
+             seen.add(path)
+-            data = load_update_yaml(path)
++            data = _update_document_reader.yaml(path)
+             if not data.get("id"):
+                 continue
+             subject_type = str(data.get("type") or "knowledge_package")
+@@ -18933,8 +18654,8 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+             )
+ 
+     process_root = path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/processes"))
+-    for path in update_manifest_candidates_under(process_root, ["*.yaml", "*.yml"]):
+-        data = load_update_yaml(path)
++    for path in _update_document_reader.manifest_candidates(process_root, ["*.yaml", "*.yml"]):
++        data = _update_document_reader.yaml(path)
+         if data.get("id"):
+             subject_type = str(data.get("type") or "process_definition")
+             if subject_type not in UPDATE_SUBJECT_TYPES:
+@@ -18950,12 +18671,12 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+                 }
+             )
+ 
+-    template_roots = update_resolved_registry_paths(workplace_root, "templates.yaml", "template_roots")
++    template_roots = _update_document_reader.registry_paths(workplace_root, "templates.yaml", "template_roots")
+     if not template_roots:
+         template_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_TEMPLATES}"))]
+     for root in template_roots:
+-        for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
+-            data = load_update_yaml(path)
++        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
++            data = _update_document_reader.yaml(path)
+             if data.get("id"):
+                 subject_type = str(data.get("type") or "reusable_template")
+                 if subject_type not in UPDATE_SUBJECT_TYPES:
+@@ -18971,15 +18692,15 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+                     }
+                 )
+ 
+-    platform_roots = update_resolved_registry_paths(workplace_root, "platform-contract-roots.yaml", "platform_contract_roots")
++    platform_roots = _update_document_reader.registry_paths(workplace_root, "platform-contract-roots.yaml", "platform_contract_roots")
+     if not platform_roots:
+         platform_roots = [
+             path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_PLATFORM_CONTRACTS}")),
+             path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/platforms")),
+         ]
+     for root in platform_roots:
+-        for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/platform.yaml", "*/platform.yml", "*/platform-contract.yaml", "*/platform-contract.yml"]):
+-            data = load_update_yaml(path)
++        for path in _update_document_reader.manifest_candidates(root, ["*.yaml", "*.yml", "*/platform.yaml", "*/platform.yml", "*/platform-contract.yaml", "*/platform-contract.yml"]):
++            data = _update_document_reader.yaml(path)
+             if data.get("id") and data.get("type") == "platform_contract":
+                 records.append(
+                     {
+@@ -18993,7 +18714,7 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+                 )
+ 
+     tools_path = workplace_root / "registries" / "tools.yaml"
+-    tools_data = load_update_yaml(tools_path)
++    tools_data = _update_document_reader.yaml(tools_path)
+     for entry in tools_data.get("tools", []) if isinstance(tools_data.get("tools"), list) else []:
+         if isinstance(entry, dict) and entry.get("id"):
+             subject_type = str(entry.get("type") or "tool_definition")
+@@ -19011,7 +18732,7 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+             )
+ 
+     mcp_path = workplace_root / "registries" / "mcp.yaml"
+-    mcp_data = load_update_yaml(mcp_path)
++    mcp_data = _update_document_reader.yaml(mcp_path)
+     for entry in mcp_data.get("mcp_servers", []) if isinstance(mcp_data.get("mcp_servers"), list) else []:
+         if isinstance(entry, dict) and entry.get("id"):
+             records.append(
+@@ -19030,8 +18751,8 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+ 
+ 
+ def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
+-    path = update_site_overrides_path(workplace_root)
+-    data = load_update_yaml(path)
++    path = _update_document_reader.overrides_path(workplace_root)
++    data = _update_document_reader.yaml(path)
+     overrides = data.get("overrides") if isinstance(data.get("overrides"), list) else []
+     result: dict[str, dict[str, Any]] = {}
+     for item in overrides:
+@@ -19091,7 +18812,7 @@ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> lis
+ 
+ 
+ def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str], str]:
+-    data = load_update_yaml(installed_subjects_registry_path(workplace_root))
++    data = _update_document_reader.yaml(_update_document_reader.installed_registry(workplace_root))
+     subjects = data.get("subjects") if isinstance(data.get("subjects"), list) else []
+     result: dict[tuple[str, str], str] = {}
+     for subject in subjects:
+@@ -19109,9 +18830,9 @@ def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str],
+ 
+ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], list[Check]]:
+     checks: list[Check] = []
+-    overrides_path = update_site_overrides_path(workplace_root)
++    overrides_path = _update_document_reader.overrides_path(workplace_root)
+     if overrides_path.is_file():
+-        checks.extend(validate_update_site_overrides_data(load_update_yaml(overrides_path), overrides_path))
++        checks.extend(validate_update_site_overrides_data(_update_document_reader.yaml(overrides_path), overrides_path))
+     overrides = update_site_overrides(workplace_root)
+     installed_versions = installed_subject_version_map(workplace_root)
+     sites: list[dict[str, Any]] = []
+@@ -19216,7 +18937,7 @@ def command_update_entity_sources_rebuild(args: argparse.Namespace) -> int:
+     if failures:
+         print_checks(checks)
+         return 1
+-    target = derived_installed_update_sites_path(workplace_root)
++    target = _update_document_reader.derived_sites_path(workplace_root)
+     if args.dry_run:
+         print(json.dumps(derived, ensure_ascii=False, indent=2, sort_keys=True))
+         return 0
+@@ -19229,7 +18950,7 @@ def command_update_entity_sources_rebuild(args: argparse.Namespace) -> int:
+ 
+ def command_update_entity_sources_list(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    target = derived_installed_update_sites_path(workplace_root)
++    target = _update_document_reader.derived_sites_path(workplace_root)
+     if target.is_file():
+         try:
+             data = json.loads(target.read_text(encoding="utf-8"))
+@@ -19313,23 +19034,13 @@ def command_update_manifest_validate(args: argparse.Namespace) -> int:
+             print(f"FAIL: invalid JSON: {path}: {exc}")
+             return 1
+     else:
+-        data = load_update_yaml(path)
++        data = _update_document_reader.yaml(path)
+     if not isinstance(data, dict) or not data:
+         print(f"FAIL: normalized update manifest is empty or invalid: {path}")
+         return 1
+     return print_checks(validate_normalized_update_manifest_data(data, path))
+ 
+ 
+-def load_update_index(distribution_root: Path) -> dict[str, Any]:
+-    candidates = [
+-        distribution_root / "updates" / "processforge-update-index.yaml",
+-        distribution_root / "updates" / "channels.yaml",
+-    ]
+-    for path in candidates:
+-        if path.is_file():
+-            data = load_yaml_document(path)
+-            return data if isinstance(data, dict) else {}
+-    return {}
+ 
+ 
+ 
+@@ -19339,7 +19050,7 @@ def load_update_index(distribution_root: Path) -> dict[str, Any]:
+ def command_self_update_check(args: argparse.Namespace) -> int:
+     distribution_root = Path(args.distribution_root).expanduser().resolve() if args.distribution_root else ROOT
+     channel = args.channel
+-    update_index = load_update_index(distribution_root)
++    update_index = _update_document_reader.index(distribution_root)
+     if not update_index:
+         print(f"FAIL: update index not found under {distribution_root / 'updates'}")
+         return 1
+@@ -19375,7 +19086,7 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
+             distribution_root = resolve_distribution_path(workplace, "processforge")
+     if not distribution_root:
+         distribution_root = project_root if (project_root / "updates").is_dir() else ROOT
+-    update_index = load_update_index(distribution_root)
++    update_index = _update_document_reader.index(distribution_root)
+     if not update_index:
+         print(f"FAIL: update index not found under {distribution_root / 'updates'}")
+         return 1
+@@ -19400,43 +19111,10 @@ def update_notifications_path(workplace_root: Path) -> Path:
+     return update_runtime_root(workplace_root) / "notifications.json"
+ 
+ 
+-def file_url_to_path(value: str, base: Path | None = None) -> Path:
+-    text = value.strip()
+-    if text.startswith("file://"):
+-        parsed = urlparse(text)
+-        raw = url2pathname(parsed.path or "")
+-        if os.name == "nt" and re.match(r"^/[A-Za-z]:/", raw):
+-            raw = raw[1:]
+-        return Path(raw).expanduser().resolve()
+-    path = Path(text).expanduser()
+-    if not path.is_absolute() and base is not None:
+-        path = base / path
+-    return path.resolve()
+ 
+ 
+-def load_yaml_or_json_document(path: Path) -> dict[str, Any]:
+-    if path.suffix.lower() == ".json":
+-        try:
+-            data = json.loads(path.read_text(encoding="utf-8"))
+-        except (OSError, json.JSONDecodeError):
+-            return {}
+-        return data if isinstance(data, dict) else {}
+-    return load_update_yaml(path)
+ 
+ 
+-def load_yaml_or_json_text(text: str) -> dict[str, Any]:
+-    try:
+-        data = json.loads(text)
+-        return data if isinstance(data, dict) else {}
+-    except json.JSONDecodeError:
+-        pass
+-    try:
+-        import yaml  # type: ignore
+-
+-        data = yaml.safe_load(text)
+-    except Exception:
+-        return {}
+-    return data if isinstance(data, dict) else {}
+ 
+ 
+ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
+@@ -19447,8 +19125,8 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
+     parsed = urlparse(location)
+     scheme = parsed.scheme.lower()
+     if scheme == "file" or not scheme:
+-        path = file_url_to_path(location, workplace_root)
+-        data = load_yaml_or_json_document(path)
++        path = _update_document_reader.file_url_path(location, workplace_root)
++        data = _update_document_reader.document(path)
+         if not data:
+             return {}, [f"manifest not found or invalid: {path}"]
+         return data, warnings
+@@ -19458,7 +19136,7 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
+                 text = response.read().decode("utf-8")
+         except Exception as exc:
+             return {}, [f"manifest fetch failed: {exc}"]
+-        data = load_yaml_or_json_text(text)
++        data = _update_document_reader.text(text)
+         if not data:
+             return {}, [f"manifest response invalid: {location}"]
+         return data, warnings
+@@ -19478,7 +19156,7 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
+ 
+ 
+ def installed_subjects_by_key(workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
+-    data = load_update_yaml(installed_subjects_registry_path(workplace_root))
++    data = _update_document_reader.yaml(_update_document_reader.installed_registry(workplace_root))
+     result: dict[tuple[str, str], dict[str, Any]] = {}
+     for subject in data.get("subjects", []) if isinstance(data.get("subjects"), list) else []:
+         if isinstance(subject, dict) and isinstance(subject.get("type"), str) and isinstance(subject.get("id"), str):
+@@ -19514,7 +19192,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+         print_checks(checks)
+         return 1
+     if not args.dry_run:
+-        target_sites = derived_installed_update_sites_path(workplace_root)
++        target_sites = _update_document_reader.derived_sites_path(workplace_root)
+         target_sites.parent.mkdir(parents=True, exist_ok=True)
+         target_sites.write_text(json.dumps(derived, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+     installed = installed_subjects_by_key(workplace_root)
+@@ -19752,7 +19430,7 @@ def command_update_changelog_show(args: argparse.Namespace) -> int:
+     changelog_url = str(candidate.get("changelog_url") or "")
+     print(f"CHANGELOG_URL: {changelog_url or 'none'}")
+     if changelog_url.startswith("file://") or (changelog_url and "://" not in changelog_url):
+-        path = file_url_to_path(changelog_url, workplace_root)
++        path = _update_document_reader.file_url_path(changelog_url, workplace_root)
+         if path.is_file():
+             print(path.read_text(encoding="utf-8")[:4000])
+     return 0
+@@ -19768,7 +19446,7 @@ def copy_or_download_update_artifact(candidate: dict[str, Any], target: Path, wo
+         raise ValueError("candidate has no download_url")
+     parsed = urlparse(url)
+     if parsed.scheme in {"", "file"}:
+-        source = file_url_to_path(url, workplace_root)
++        source = _update_document_reader.file_url_path(url, workplace_root)
+         if not source.is_file():
+             raise FileNotFoundError(source)
+         target_name = source.name
+@@ -19802,7 +19480,7 @@ def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
+                 text = archive.read(name).decode("utf-8")
+             except Exception:
+                 continue
+-            data = load_yaml_or_json_text(text)
++            data = _update_document_reader.text(text)
+             if data.get("id"):
+                 return data
+     return {}
+@@ -19813,7 +19491,7 @@ def staged_update_record_path(workplace_root: Path, candidate_id: str) -> Path:
+ 
+ 
+ def read_staged_update_record(workplace_root: Path, candidate_id: str) -> dict[str, Any]:
+-    return load_update_yaml(staged_update_record_path(workplace_root, candidate_id))
++    return _update_document_reader.yaml(staged_update_record_path(workplace_root, candidate_id))
+ 
+ 
+ def command_update_stage(args: argparse.Namespace) -> int:
+@@ -19903,8 +19581,8 @@ def update_install_path(workplace_root: Path, candidate: dict[str, Any]) -> Path
+ 
+ 
+ def update_installed_subject_version(workplace_root: Path, candidate: dict[str, Any], install_path: Path | None = None) -> None:
+-    path = installed_subjects_registry_path(workplace_root)
+-    data = load_update_yaml(path)
++    path = _update_document_reader.installed_registry(workplace_root)
++    data = _update_document_reader.yaml(path)
+     if not data:
+         data = {"schema_version": 1, "subjects": []}
+     subjects = data.get("subjects")
+@@ -20964,13 +20642,13 @@ def command_knowledge_package_create(args: argparse.Namespace) -> int:
+ 
+ def normalize_platform_id(raw: str) -> tuple[str, str]:
+     platform_id = safe_id(raw.removeprefix("platform."), "platform")
+-    return platform_id, platform_contract_id(platform_id)
++    return platform_id, _platform_contract_reader.contract_id(platform_id)
+ 
+ 
+ def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
+     platform_id, contract_id = normalize_platform_id(platform)
+     for candidate_id in [contract_id, platform_id]:
+-        entry = platform_contract_registry_entry(workplace_root / "workplace.yaml", candidate_id)
++        entry = _platform_contract_reader.registry_entry(workplace_root / "workplace.yaml", candidate_id)
+         if entry and entry.get("path"):
+             path = workplace_root / str(entry["path"])
+             if path.is_file():
+@@ -20991,7 +20669,7 @@ def platform_contract_semantic_checks(
+ ) -> list[Check]:
+     checks: list[Check] = []
+     checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
+-    contract_id = platform_contract_id(str(data.get("id") or platform))
++    contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
+     for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
+         if policy_id_matches(contract_id, entry):
+             checks.append(
+@@ -21143,7 +20821,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
+     if contract_path:
+         text = contract_path.read_text(encoding="utf-8", errors="replace")
+         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "platform contract has no local absolute paths"))
+-        data = load_doctor_yaml(
++        data = _update_document_reader.doctor_yaml(
+             contract_path,
+             "platform-contract.schema.json",
+             f"platform {platform} contract",
+@@ -21152,7 +20830,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
+         if data is None:
+             return print_checks(checks)
+         checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
+-        contract_id = platform_contract_id(str(data.get("id") or platform))
++        contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
+         for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
+             if policy_id_matches(contract_id, entry):
+                 checks.append(
+@@ -21535,7 +21213,7 @@ def command_template_doctor(args: argparse.Namespace) -> int:
+     if manifest_path:
+         text = manifest_path.read_text(encoding="utf-8", errors="replace")
+         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "template manifest has no local absolute paths"))
+-        data = load_doctor_yaml(
++        data = _update_document_reader.doctor_yaml(
+             manifest_path,
+             "reusable-template.schema.json",
+             f"template {template_id} manifest",
+@@ -21772,7 +21450,7 @@ def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -
+     )
+     if not path:
+         return checks
+-    data = load_doctor_yaml(
++    data = _update_document_reader.doctor_yaml(
+         path,
+         "specialization.schema.json",
+         f"specialization {normalized_id} manifest",
+@@ -21858,8 +21536,8 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
+     if not isinstance(data, dict) or yaml_error(data):
+         raise SystemExit(f"FAIL: specialization YAML invalid: {rel(path, workplace_root)}")
+     binding = {
+-        "platforms": [platform_contract_id(str(args.platform))],
+-        "platform_stack_includes": [platform_contract_id(item) for item in getattr(args, "platform_stack_includes", [])],
++        "platforms": [_platform_contract_reader.contract_id(str(args.platform))],
++        "platform_stack_includes": [_platform_contract_reader.contract_id(item) for item in getattr(args, "platform_stack_includes", [])],
+         "applies_to_project_types": [str(item) for item in getattr(args, "project_type", [])],
+         "tags": [],
+         "resources": default_resource_buckets(),
+@@ -21885,7 +21563,7 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
+         data["platform_bindings"] = bindings
+     bindings.append(binding)
+     write_authoring_text(path, dump_yaml(data))
+-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": platform_contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
++    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": _platform_contract_reader.contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
+     print(f"UPDATED: {rel(path, workplace_root)}")
+     return 0
+ 
+@@ -21988,7 +21666,7 @@ def platform_authoring_values(args: argparse.Namespace) -> dict[str, Any]:
+         str(args.id).removeprefix("platform."),
+         "platform",
+     )
+-    contract_id = platform_contract_id(platform_id)
++    contract_id = _platform_contract_reader.contract_id(platform_id)
+     required_packages = [
+         item for item in getattr(args, "requires_package", []) if item
+     ]
+diff --git a/tools/smoke_codex_worker_governance.py b/tools/smoke_codex_worker_governance.py
+index 7361078..27bb257 100644
+--- a/tools/smoke_codex_worker_governance.py
++++ b/tools/smoke_codex_worker_governance.py
+@@ -48,7 +48,8 @@ def main() -> int:
+         pf.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
+ 
+         driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
+-        command, _paths = pf.build_worker_process_command(project, writable, driver)
++        from processforge_core.runtime.command import WorkerCommandBuilder
++        command, _paths = WorkerCommandBuilder(pf.ROOT).build(project, writable, driver)
+         environment = command["command"]["environment"]
+         if environment.get("PF_CODEX_SANDBOX") != "workspace-write":
+             raise AssertionError(environment)
+@@ -81,7 +82,8 @@ def main() -> int:
+             raise AssertionError("foreign hook must disable automatic trust")
+ 
+         readonly = task(writer=False, code=False, artifacts=False)
+-        readonly_command, _paths = pf.build_worker_process_command(project, readonly, driver)
++        from processforge_core.runtime.command import WorkerCommandBuilder
++        readonly_command, _paths = WorkerCommandBuilder(pf.ROOT).build(project, readonly, driver)
+         if readonly_command["command"]["environment"].get("PF_CODEX_SANDBOX") != "read-only":
+             raise AssertionError(readonly_command)
+ 
+diff --git a/tools/smoke_continuation_work.py b/tools/smoke_continuation_work.py
+index 79aff97..ea72d7c 100644
+--- a/tools/smoke_continuation_work.py
++++ b/tools/smoke_continuation_work.py
+@@ -137,7 +137,8 @@ def main():
+         before_cancel = records(project)
+         assert continuation.request('cancel_work', **cancel)['action'] == 'preview'
+         assert records(project) == before_cancel
+-        worker = core.worker_run_paths(project, selectors['run_id'], selectors['assignment_id'])['status']
++        from processforge_core.work.paths import WorkPaths
++        worker = WorkPaths().worker_run(project, selectors['run_id'], selectors['assignment_id'])['status']
+         worker.parent.mkdir(parents=True,exist_ok=True); worker.write_text('{"status":"running"}',encoding='utf-8')
+         assert continuation.request('resume', continuation_id='resume-exact')['reason'] == 'worker_not_quiescent'
+         assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'worker_not_quiescent'
+diff --git a/tools/smoke_egress_work.py b/tools/smoke_egress_work.py
+index 445659d..1aeb64c 100644
+--- a/tools/smoke_egress_work.py
++++ b/tools/smoke_egress_work.py
+@@ -44,7 +44,8 @@ def run_checks():
+         task = support.assignment(project, original)
+         service = ProcessExecutionService(project, workplace, core)
+         assert old["execution_contract"]["contract_version"] == 1 and "egress" not in old["execution_contract"]
+-        valid = validate_execution_contract(project, core.assignment_yaml_path(project, task["id"]), task, old, core, require_ready=True)
++        from processforge_core.work.paths import WorkPaths
++        valid = validate_execution_contract(project, WorkPaths().assignment_document(project, task["id"]), task, old, core, require_ready=True)
+         assert valid["status"] == "valid", valid
+         denied(lambda: require_v2(old["execution_contract"]), "egress_contract_required")
+         checks.append("A23 actual v1 Work unchanged strict v1 rejected")
+@@ -57,13 +58,15 @@ def run_checks():
+             assert mismatch.get("reason") == "security_intent_mismatch", mismatch
+             created = service.start(objective="Qualify a governed egress successor", process_id="declarative-smoke", security=security)
+             assert created["action"] == "created_new", created
+-            new_task = core.load_yaml_document(core.assignment_yaml_path(project, created["assignment_id"]))
++            from processforge_core.work.paths import WorkPaths
++            new_task = core.load_yaml_document(WorkPaths().assignment_document(project, created["assignment_id"]))
+             new_path = core.assignment_capsule_path(project, created["assignment_id"])
+             new_bytes = new_path.read_bytes()
+             capsule = yaml.safe_load(new_bytes)
+             assert capsule["execution_contract"]["contract_version"] == 2
+             assert old_path.read_bytes() == old_bytes
+-            valid = validate_execution_contract(project, core.assignment_yaml_path(project, new_task["id"]), new_task, capsule, core, require_ready=True)
++            from processforge_core.work.paths import WorkPaths
++            valid = validate_execution_contract(project, WorkPaths().assignment_document(project, new_task["id"]), new_task, capsule, core, require_ready=True)
+             assert valid["status"] == "valid", valid
+             checks.extend(["A23 successor sealed before lifecycle writes preserves predecessor", "A23 same-objective security mismatch never resumes v1"])
+ 
+@@ -79,7 +82,8 @@ def run_checks():
+             assert schema_errors(schema, grafted)
+             changed = copy.deepcopy(new_task)
+             changed["egress"]["purpose"] = "changed"
+-            result = validate_execution_contract(project, core.assignment_yaml_path(project, new_task["id"]), changed, capsule, core)
++            from processforge_core.work.paths import WorkPaths
++            result = validate_execution_contract(project, WorkPaths().assignment_document(project, new_task["id"]), changed, capsule, core)
+             assert result["status"] == "blocked" and result["reason"] == "assignment_contract_changed", result
+             checks.append("A23 schema version rejection and security intent tamper")
+ 
+diff --git a/tools/smoke_prepared_execution_context.py b/tools/smoke_prepared_execution_context.py
+index 109391b..bdfa223 100644
+--- a/tools/smoke_prepared_execution_context.py
++++ b/tools/smoke_prepared_execution_context.py
+@@ -64,7 +64,8 @@ def read_json(path: Path) -> dict[str, Any]:
+ 
+ def prepared_paths(project: Path, task: str) -> tuple[dict[str, Path], dict[str, Any], dict[str, Any]]:
+     task_doc = core.load_task(project, task)
+-    paths = core.worker_run_paths(project, RUN_ID, task)
++    from processforge_core.work.paths import WorkPaths
++    paths = WorkPaths().worker_run(project, RUN_ID, task)
+     state = read_json(paths["status"])
+     manifest_path = project / state["prepared_input"]["path"]
+     return paths, state, read_json(manifest_path)
+@@ -228,7 +229,8 @@ def main() -> int:
+         empty_status, empty_text = call(project, "unknown-grant-task", "prepare")
+         require(empty_status != 0 and "resource_not_in_snapshot" in empty_text,
+                 {"status": empty_status, "output": empty_text})
+-        require(not core.worker_run_paths(project, RUN_ID, "unknown-grant-task")["status"].exists(),
++        from processforge_core.work.paths import WorkPaths
++        require(not WorkPaths().worker_run(project, RUN_ID, "unknown-grant-task")["status"].exists(),
+                 "unmatched resource grant left a ready worker state")
+ 
+         status, output = call(project, "empty-task", "prepare")
+@@ -343,8 +345,10 @@ def main() -> int:
+         require(status != 0 and not receipt_path.exists(), {"status": status, "output": output, "receipt": receipt_path.exists()})
+         report_path_manual.write_text("# Manual prepared report\n", encoding="utf-8")
+ 
+-        assignment_path = core.assignment_yaml_path(project, "manual-task")
+-        run_path = core.run_root(project, RUN_ID) / "run.yaml"
++        from processforge_core.work.paths import WorkPaths
++        assignment_path = WorkPaths().assignment_document(project, "manual-task")
++        from processforge_core.work.paths import WorkPaths
++        run_path = WorkPaths().run_root(project, RUN_ID) / "run.yaml"
+         assignment_before = assignment_path.read_bytes()
+         run_before = run_path.read_bytes()
+ 
+diff --git a/tools/smoke_prepared_execution_recovery.py b/tools/smoke_prepared_execution_recovery.py
+index e915b84..3d5ff50 100644
+--- a/tools/smoke_prepared_execution_recovery.py
++++ b/tools/smoke_prepared_execution_recovery.py
+@@ -17,6 +17,7 @@ from unittest.mock import Mock, patch
+ import yaml
+ 
+ import processforge as core
++from processforge_core.runtime.command import WorkerCommandBuilder
+ import processforge_core.prepared.input as prepared_input
+ from process_execution_smoke_support import fixture
+ from processforge_core.prepared.input import private_file
+@@ -77,7 +78,8 @@ def terminal_worker_admission() -> None:
+                 stack.enter_context(patch.object(core, 'require_flow_root'))
+                 stack.enter_context(patch.object(core, 'load_task', return_value=task))
+                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
+-                stack.enter_context(patch.multiple(core, **spies))
++                stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name != "build_worker_process_command"}))
++                stack.enter_context(patch.object(WorkerCommandBuilder, "build", spies["build_worker_process_command"]))
+                 stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
+                 stack.enter_context(patch.object(prepared_input, 'load', provider))
+                 stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
+@@ -171,7 +173,8 @@ def terminal_worker_admission() -> None:
+ 
+ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
+     task = core.load_task(project, task_id)
+-    paths = core.worker_run_paths(project, run_id, task_id)
++    from processforge_core.work.paths import WorkPaths
++    paths = WorkPaths().worker_run(project, run_id, task_id)
+     state = core.json_read(paths['status'])
+     reader = CapturedAttemptReader(project)
+     captured = reader.read(task, state, run_id=run_id)
+@@ -181,7 +184,8 @@ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
+     complete = attempt / 'collection-complete.json'
+     prepared_path = project / state['prepared_input']['path']
+     capsule = core.assignment_capsule_path(project, task_id)
+-    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id), capsule, receipt, complete, prepared_path]
++    from processforge_core.work.paths import WorkPaths
++    protected = [WorkPaths().assignment_document(project, task_id), WorkPaths().run_document(project, run_id), capsule, receipt, complete, prepared_path]
+     before = [p.read_bytes() for p in protected]
+     events_before = event_rows(project)
+ 
+@@ -355,7 +359,8 @@ def prepared_attempt_type_checks(project: Path, task: dict, state: dict, run_id:
+ 
+ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: Path) -> None:
+     task = core.load_task(project, task_id)
+-    paths = core.worker_run_paths(project, run_id, task_id)
++    from processforge_core.work.paths import WorkPaths
++    paths = WorkPaths().worker_run(project, run_id, task_id)
+     state_raw = paths['status'].read_bytes()
+     state = core.json_read(paths['status'])
+     source = project / '.pf/artifacts/capture-input.txt'
+@@ -363,7 +368,8 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver:
+     attempt = (project / state['prepared_input']['path']).parent
+     marker = None
+     store = CollectionRecoveryStore(project)
+-    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id),
++    from processforge_core.work.paths import WorkPaths
++    protected = [WorkPaths().assignment_document(project, task_id), WorkPaths().run_document(project, run_id),
+                  core.assignment_capsule_path(project, task_id), project / state['prepared_input']['path']]
+     before = [p.read_bytes() for p in protected]
+ 
+@@ -529,8 +535,9 @@ def governed_continuation() -> None:
+         code, output = call(project, task, "start", driver=str(driver))
+         require(code == 0, output)
+         collection_refusal_checks(project, task, work['run_id'], driver)
+-        paths = [core.assignment_yaml_path(project, task),
+-                 core.run_yaml_path(project, work["run_id"]),
++        from processforge_core.work.paths import WorkPaths
++        paths = [WorkPaths().assignment_document(project, task),
++                 WorkPaths().run_document(project, work["run_id"]),
+                  core.assignment_capsule_path(project, task)]
+         before = [path.read_bytes() for path in paths]
+         for _ in range(2):
+@@ -601,7 +608,8 @@ core.command_worker_run_collect(argparse.Namespace(project_root=sys.argv[2],task
+             capture_output=True, text=True, encoding="utf-8", timeout=90,
+         )
+         require(crashed.returncode == 77, (crashed.returncode, crashed.stdout, crashed.stderr))
+-        paths = core.worker_run_paths(project, RUN_ID, "crash-task")
++        from processforge_core.work.paths import WorkPaths
++        paths = WorkPaths().worker_run(project, RUN_ID, "crash-task")
+         lock = paths["root"] / ".lifecycle.lock"
+         state = core.json_read(paths["status"])
+         attempt = (project / state["prepared_input"]["path"]).parent
+diff --git a/tools/smoke_run_id_preserves_repeated_hyphens.py b/tools/smoke_run_id_preserves_repeated_hyphens.py
+index 719c9c6..8aa3856 100644
+--- a/tools/smoke_run_id_preserves_repeated_hyphens.py
++++ b/tools/smoke_run_id_preserves_repeated_hyphens.py
+@@ -13,7 +13,8 @@ import yaml
+ ROOT = Path(__file__).resolve().parents[1]
+ sys.path.insert(0, str(ROOT / "tools"))
+ 
+-from processforge import load_run, run_root
++from processforge import load_run
++from processforge_core.work.paths import WorkPaths
+ 
+ 
+ def main() -> int:
+@@ -23,7 +24,7 @@ def main() -> int:
+         path = project / ".pf" / "runs" / run_id / "run.yaml"
+         path.parent.mkdir(parents=True)
+         path.write_text(yaml.safe_dump({"id": run_id, "status": "completed"}, sort_keys=False), encoding="utf-8")
+-        assert run_root(project, run_id) == path.parent
++        assert WorkPaths().run_root(project, run_id) == path.parent
+         assert load_run(project, run_id)["id"] == run_id
+     print("PASS: run ids preserve repeated hyphens")
+     return 0
+diff --git a/tools/smoke_runtime_scheduler_failure_isolation.py b/tools/smoke_runtime_scheduler_failure_isolation.py
+index b7d97f9..df28134 100644
+--- a/tools/smoke_runtime_scheduler_failure_isolation.py
++++ b/tools/smoke_runtime_scheduler_failure_isolation.py
+@@ -83,7 +83,8 @@ def main() -> int:
+             task_id = "old-failed-worker"
+             assignment = projects[0] / f".pf/assignments/{task_id}.yaml"
+             core.write_yaml_file(assignment, {"id": task_id, "run_id": "broken", "status": "failed"})
+-            worker_status = core.worker_run_paths(projects[0], "broken", task_id)["status"]
++            from processforge_core.work.paths import WorkPaths
++            worker_status = WorkPaths().worker_run(projects[0], "broken", task_id)["status"]
+             worker_status.parent.mkdir(parents=True, exist_ok=True)
+             worker_status.write_text(json.dumps({"status": "failed", "driver_id": "manual", "failure_reason": "fixture failure"}), encoding="utf-8")
+             core.write_yaml_file(bad_run, {"id": "broken", "status": "in_progress", "tasks": [{"id": task_id}]})

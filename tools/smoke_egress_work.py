@@ -44,7 +44,8 @@ def run_checks():
         task = support.assignment(project, original)
         service = ProcessExecutionService(project, workplace, core)
         assert old["execution_contract"]["contract_version"] == 1 and "egress" not in old["execution_contract"]
-        valid = validate_execution_contract(project, core.assignment_yaml_path(project, task["id"]), task, old, core, require_ready=True)
+        from processforge_core.work.paths import WorkPaths
+        valid = validate_execution_contract(project, WorkPaths().assignment_document(project, task["id"]), task, old, core, require_ready=True)
         assert valid["status"] == "valid", valid
         denied(lambda: require_v2(old["execution_contract"]), "egress_contract_required")
         checks.append("A23 actual v1 Work unchanged strict v1 rejected")
@@ -57,13 +58,15 @@ def run_checks():
             assert mismatch.get("reason") == "security_intent_mismatch", mismatch
             created = service.start(objective="Qualify a governed egress successor", process_id="declarative-smoke", security=security)
             assert created["action"] == "created_new", created
-            new_task = core.load_yaml_document(core.assignment_yaml_path(project, created["assignment_id"]))
+            from processforge_core.work.paths import WorkPaths
+            new_task = core.load_yaml_document(WorkPaths().assignment_document(project, created["assignment_id"]))
             new_path = core.assignment_capsule_path(project, created["assignment_id"])
             new_bytes = new_path.read_bytes()
             capsule = yaml.safe_load(new_bytes)
             assert capsule["execution_contract"]["contract_version"] == 2
             assert old_path.read_bytes() == old_bytes
-            valid = validate_execution_contract(project, core.assignment_yaml_path(project, new_task["id"]), new_task, capsule, core, require_ready=True)
+            from processforge_core.work.paths import WorkPaths
+            valid = validate_execution_contract(project, WorkPaths().assignment_document(project, new_task["id"]), new_task, capsule, core, require_ready=True)
             assert valid["status"] == "valid", valid
             checks.extend(["A23 successor sealed before lifecycle writes preserves predecessor", "A23 same-objective security mismatch never resumes v1"])
 
@@ -79,7 +82,8 @@ def run_checks():
             assert schema_errors(schema, grafted)
             changed = copy.deepcopy(new_task)
             changed["egress"]["purpose"] = "changed"
-            result = validate_execution_contract(project, core.assignment_yaml_path(project, new_task["id"]), changed, capsule, core)
+            from processforge_core.work.paths import WorkPaths
+            result = validate_execution_contract(project, WorkPaths().assignment_document(project, new_task["id"]), changed, capsule, core)
             assert result["status"] == "blocked" and result["reason"] == "assignment_contract_changed", result
             checks.append("A23 schema version rejection and security intent tamper")
 

@@ -1,0 +1,27 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-readers-20261018/review/report.md",
+  "review_sha256": "338d6aa044ca30a72c65ab3c97330be253242a9b9831ed0859bb66eed63c9018",
+  "product_sha256": {
+    "tools/processforge.py": "39a70beb57525d292580a87a62048a116afd1367b4abd51c27e69b64c30a78df",
+    "src/processforge_core/egress/service.py": "723fb28c17bd2af85003fac17010fef5e2f1a9ec14dc533eed1734abcb58366a",
+    "src/processforge_core/prepared/input.py": "fd3fcc46416441538d477d5deb17f1d2b10cb17c5c66ea5fb5757f54b52c909d",
+    "src/processforge_core/work/context.py": "ce560001126915e7df76b1290dc81a74864618473f374203a3fd7bdc42203e92",
+    "tools/smoke_codex_worker_governance.py": "9d6e3121491720da623a366b040b405460f7d1eb380d6c134dbba5cfc7060135",
+    "tools/smoke_continuation_work.py": "da0a997d4a6c993da04dcfbd9c83f3ca7dd90f3b7e04f76a10a71962c6ae894e",
+    "tools/smoke_egress_work.py": "5676da72fc59f8b6a2a55786046adbb95e668cb2f7c1acae4cc29c16bbf7e9c3",
+    "tools/smoke_prepared_execution_context.py": "911d753190b809b5246fa2cb1e499ccfd6509e783105100a649c7b1cee074f9b",
+    "tools/smoke_prepared_execution_recovery.py": "1414d9c0a0e0d441928ec12358e15049748c70224b35db14de672a81ae09bbe2",
+    "tools/smoke_runtime_scheduler_failure_isolation.py": "abb2ff32bf4991eece238907f3ebeb51cb441625c7387d3917d3635c5f25bd02",
+    "tools/smoke_run_id_preserves_repeated_hyphens.py": "eb7b37249e8e2b3c903273c16997d7f669279604e2dedc2546c17f8d9fd8e21a",
+    "tools/pf_runtime/host.py": "08f802e21e3b90e3fd8b80bb44944d167577c721c2df2ffd91e0cf49afaa7224",
+    "docs/concepts/python-core-structure.md": "a27267ae1e6229451ddae9db2ae3ee3f17d5907594fa2c77cbf871a209eb2581",
+    "docs/ru/concepts/python-core-structure.md": "f22d1485e416e23e2460eb6f9a72e6be0d37eb514edfc237c34e19f49aa70700",
+    "src/processforge_core/work/paths.py": "9d9e6e3c59203a155feb89c55ee764f1bda2d9af6cbfbe87854b49980191d9d7",
+    "src/processforge_core/runtime/command.py": "f1daf79a89f6232038c39b19beb20850adc3bd5c35fdd45572152f40f7c9b7cd",
+    "src/processforge_core/project/platforms.py": "4281ffb1e114ccc4f3b58a932cc0ac31bf86e67d6cb653a94235ccf19aaa66a0",
+    "src/processforge_core/maintenance/documents.py": "9918e7d69cf5cf93d7dd84fcb78e78f00fc79c1e1c4ef04ae36ce4cff3c40b3c",
+    "checksums/processforge.sha256": "bf4aa578c016218ec5d96ef04b1db3a75b2e40762b40f80d291c856efec7f145"
+  },
+  "scope": "Source-only behavior preservation. Source only; package/install/Runtime/connected-host and ZIP-content are not qualified."
+}

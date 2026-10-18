@@ -144,6 +144,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/detection.py` | ProjectDetectionService for current generic file inventory and existing platform detection rules. |
 | `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy for placeholder expansion, durable explicit environment and launch-only inheritance. |
 | `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks for the existing JSON Schema subset and current schema-file checks with an explicit distribution root. |
+| `src/processforge_core/work/paths.py` | WorkPaths for existing Run, Assignment, artifact, handoff and worker-attempt locations, preserving their distinct ID normalization. |
+| `src/processforge_core/runtime/command.py` | WorkerCommandBuilder for existing sandbox projection and command composition with concrete Core policies. |
+| `src/processforge_core/project/platforms.py` | PlatformContractReader for live seed/project/workplace catalog overlays and exact registry fallback. |
+| `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader for existing registry paths, YAML/JSON reads, doctor checks and local file-URL resolution. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
@@ -722,3 +726,39 @@ Construction performs no I/O; schema files are read afresh for each check.
 Update orchestration, network, installation and recovery remain with their
 existing owners. These moves qualify source behavior only; archive, installed,
 Runtime and connected-host acceptance remain separate.
+
+## Work locations, worker commands and live catalogs
+
+`work.paths.WorkPaths` owns Run and Assignment document paths, task artifacts,
+summaries, handoffs, worker prompts and ordered attempt paths. Run directory and
+handoff normalization preserve valid generated IDs with repeated hyphens;
+assignment and agent/task locations retain their separate `safe_id` behavior.
+The strict assignment-path validation in `ContextContractInputs` remains distinct.
+Concrete `ProjectMetadataReader` supplies the flow root without constructor I/O.
+
+`runtime.command.WorkerCommandBuilder(distribution_root)` owns `sandbox` and
+`build`, composing existing Work paths, output rules, environment, driver limits
+and context normalizers. Output preflight precedes variables and environment;
+placeholder expansion, model arguments, prepared wrapper, path resolution and
+command fields preserve their earlier ordering and behavior. Existing consumers
+use canonical owners. The terminal-admission test spies on the relocated builder
+and retains its original assertions. Process launch, locks, durable attempt
+state, collection and recovery retain their existing owners.
+
+`project.platforms.PlatformContractReader(distribution_root)` owns ID projection,
+registry lookup, seed/project paths, record loading, overlay index and lookup
+fallback. It reuses concrete Core YAML and `WorkspacePathReferenceReader` rather
+than copying registry/path algorithms. Seed, project and workplace overlays,
+aliases, duplicates, unknown fields, disabled/missing records and borrowed values
+preserve their existing behavior. Operations read current files without caching.
+
+`maintenance.documents.UpdateDocumentReader(distribution_root)` owns update
+registry locations, soft YAML reads, doctor YAML/schema checks, manifest candidate
+paths, registry path lists, update index, local file URLs and YAML/JSON document
+and text reading. It reuses existing YAML, workspace-path and schema owners.
+Soft update YAML filters parse errors; index reading retains its earlier error
+sentinel behavior; doctor checks may append schema errors and still return the
+parsed mapping. Construction performs no I/O. Network fetch, effects and update
+lifecycle remain legacy responsibilities. Egress and prepared-input consumers
+use canonical Work paths but retain their other unmoved dependencies. This is
+bounded source ownership, with later delivery layers and OOP epics still separate.

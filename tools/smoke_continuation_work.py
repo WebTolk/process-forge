@@ -137,7 +137,8 @@ def main():
         before_cancel = records(project)
         assert continuation.request('cancel_work', **cancel)['action'] == 'preview'
         assert records(project) == before_cancel
-        worker = core.worker_run_paths(project, selectors['run_id'], selectors['assignment_id'])['status']
+        from processforge_core.work.paths import WorkPaths
+        worker = WorkPaths().worker_run(project, selectors['run_id'], selectors['assignment_id'])['status']
         worker.parent.mkdir(parents=True,exist_ok=True); worker.write_text('{"status":"running"}',encoding='utf-8')
         assert continuation.request('resume', continuation_id='resume-exact')['reason'] == 'worker_not_quiescent'
         assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'worker_not_quiescent'

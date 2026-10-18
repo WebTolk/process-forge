@@ -17,6 +17,7 @@ from unittest.mock import Mock, patch
 import yaml
 
 import processforge as core
+from processforge_core.runtime.command import WorkerCommandBuilder
 import processforge_core.prepared.input as prepared_input
 from process_execution_smoke_support import fixture
 from processforge_core.prepared.input import private_file
@@ -77,7 +78,8 @@ def terminal_worker_admission() -> None:
                 stack.enter_context(patch.object(core, 'require_flow_root'))
                 stack.enter_context(patch.object(core, 'load_task', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
-                stack.enter_context(patch.multiple(core, **spies))
+                stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name != "build_worker_process_command"}))
+                stack.enter_context(patch.object(WorkerCommandBuilder, "build", spies["build_worker_process_command"]))
                 stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
                 stack.enter_context(patch.object(prepared_input, 'load', provider))
                 stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
@@ -171,7 +173,8 @@ def terminal_worker_admission() -> None:
 
 def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
     task = core.load_task(project, task_id)
-    paths = core.worker_run_paths(project, run_id, task_id)
+    from processforge_core.work.paths import WorkPaths
+    paths = WorkPaths().worker_run(project, run_id, task_id)
     state = core.json_read(paths['status'])
     reader = CapturedAttemptReader(project)
     captured = reader.read(task, state, run_id=run_id)
@@ -181,7 +184,8 @@ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
     complete = attempt / 'collection-complete.json'
     prepared_path = project / state['prepared_input']['path']
     capsule = core.assignment_capsule_path(project, task_id)
-    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id), capsule, receipt, complete, prepared_path]
+    from processforge_core.work.paths import WorkPaths
+    protected = [WorkPaths().assignment_document(project, task_id), WorkPaths().run_document(project, run_id), capsule, receipt, complete, prepared_path]
     before = [p.read_bytes() for p in protected]
     events_before = event_rows(project)
 
@@ -355,7 +359,8 @@ def prepared_attempt_type_checks(project: Path, task: dict, state: dict, run_id:
 
 def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: Path) -> None:
     task = core.load_task(project, task_id)
-    paths = core.worker_run_paths(project, run_id, task_id)
+    from processforge_core.work.paths import WorkPaths
+    paths = WorkPaths().worker_run(project, run_id, task_id)
     state_raw = paths['status'].read_bytes()
     state = core.json_read(paths['status'])
     source = project / '.pf/artifacts/capture-input.txt'
@@ -363,7 +368,8 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
     attempt = (project / state['prepared_input']['path']).parent
     marker = None
     store = CollectionRecoveryStore(project)
-    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id),
+    from processforge_core.work.paths import WorkPaths
+    protected = [WorkPaths().assignment_document(project, task_id), WorkPaths().run_document(project, run_id),
                  core.assignment_capsule_path(project, task_id), project / state['prepared_input']['path']]
     before = [p.read_bytes() for p in protected]
 
@@ -529,8 +535,9 @@ def governed_continuation() -> None:
         code, output = call(project, task, "start", driver=str(driver))
         require(code == 0, output)
         collection_refusal_checks(project, task, work['run_id'], driver)
-        paths = [core.assignment_yaml_path(project, task),
-                 core.run_yaml_path(project, work["run_id"]),
+        from processforge_core.work.paths import WorkPaths
+        paths = [WorkPaths().assignment_document(project, task),
+                 WorkPaths().run_document(project, work["run_id"]),
                  core.assignment_capsule_path(project, task)]
         before = [path.read_bytes() for path in paths]
         for _ in range(2):
@@ -601,7 +608,8 @@ core.command_worker_run_collect(argparse.Namespace(project_root=sys.argv[2],task
             capture_output=True, text=True, encoding="utf-8", timeout=90,
         )
         require(crashed.returncode == 77, (crashed.returncode, crashed.stdout, crashed.stderr))
-        paths = core.worker_run_paths(project, RUN_ID, "crash-task")
+        from processforge_core.work.paths import WorkPaths
+        paths = WorkPaths().worker_run(project, RUN_ID, "crash-task")
         lock = paths["root"] / ".lifecycle.lock"
         state = core.json_read(paths["status"])
         attempt = (project / state["prepared_input"]["path"]).parent

@@ -101,7 +101,8 @@ def output_records(project: Path, outputs: dict[str, Any], *, required: bool = F
 def semantic_input(project: Path, task: dict, capsule: dict, core: Any) -> dict:
     from .resources import authorize_resources
 
-    assignment = core.assignment_yaml_path(project, task["id"])
+    from processforge_core.work.paths import WorkPaths
+    assignment = WorkPaths().assignment_document(project, task["id"])
     run = core.load_run(project, task["run_id"])
     if "process_execution" in run:
         pin = task.get("process_execution") or {}
@@ -200,7 +201,8 @@ def load(project: Path, task: dict, state: dict, core: Any, *, current: bool = T
         attempt = int(attempt)
     if type(attempt) is not int or attempt < 1:
         raise ValueError("prepared_attempt_invalid")
-    expected = core.worker_run_paths(project, task["run_id"], task["id"])["root"] / "attempts" / str(attempt) / "prepared-input.json"
+    from processforge_core.work.paths import WorkPaths
+    expected = WorkPaths().worker_run(project, task["run_id"], task["id"])["root"] / "attempts" / str(attempt) / "prepared-input.json"
     if reference.get("path") != core.rel(expected, project):
         raise ValueError("prepared_input_reference_mismatch")
     raw = bounded_read(private_file(project, reference["path"]))

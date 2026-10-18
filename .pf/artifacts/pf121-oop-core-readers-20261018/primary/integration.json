@@ -1,0 +1,117 @@
+{
+  "status": "integrated",
+  "removed_definitions": [
+    "agent_run_root",
+    "assignment_yaml_path",
+    "build_worker_process_command",
+    "derived_installed_update_sites_path",
+    "file_url_to_path",
+    "installed_subjects_registry_path",
+    "load_doctor_yaml",
+    "load_platform_contract",
+    "load_update_index",
+    "load_update_yaml",
+    "load_yaml_or_json_document",
+    "load_yaml_or_json_text",
+    "normalize_agent_model",
+    "normalize_agent_reasoning_effort",
+    "platform_contract_id",
+    "platform_contract_manifest_index",
+    "platform_contract_record",
+    "platform_contract_registry_entry",
+    "project_platform_contract_paths",
+    "run_handoff_path",
+    "run_root",
+    "run_summary_path",
+    "run_yaml_path",
+    "seed_platform_contract_paths",
+    "task_artifacts_root",
+    "update_manifest_candidates_under",
+    "update_registry_file",
+    "update_resolved_registry_paths",
+    "update_site_overrides_path",
+    "update_source_registry_path",
+    "worker_prompt_path",
+    "worker_run_paths",
+    "worker_sandbox_for_task"
+  ],
+  "migrated_name_consumers": {
+    "run_root": 20,
+    "run_yaml_path": 15,
+    "assignment_yaml_path": 31,
+    "task_artifacts_root": 4,
+    "run_summary_path": 5,
+    "run_handoff_path": 4,
+    "worker_prompt_path": 4,
+    "agent_run_root": 1,
+    "worker_run_paths": 13,
+    "build_worker_process_command": 1,
+    "worker_sandbox_for_task": 0,
+    "platform_contract_id": 17,
+    "platform_contract_registry_entry": 1,
+    "seed_platform_contract_paths": 0,
+    "project_platform_contract_paths": 0,
+    "platform_contract_record": 0,
+    "platform_contract_manifest_index": 3,
+    "load_platform_contract": 1,
+    "update_registry_file": 1,
+    "update_source_registry_path": 2,
+    "installed_subjects_registry_path": 3,
+    "update_site_overrides_path": 2,
+    "derived_installed_update_sites_path": 3,
+    "load_update_yaml": 15,
+    "load_doctor_yaml": 7,
+    "update_manifest_candidates_under": 4,
+    "update_resolved_registry_paths": 2,
+    "load_update_index": 2,
+    "file_url_to_path": 3,
+    "load_yaml_or_json_document": 1,
+    "load_yaml_or_json_text": 2,
+    "normalize_agent_model": 14,
+    "normalize_agent_reasoning_effort": 14
+  },
+  "external_consumers": {
+    "src/processforge_core/egress/service.py": {
+      "assignment_yaml_path": 1
+    },
+    "src/processforge_core/prepared/input.py": {
+      "assignment_yaml_path": 1,
+      "worker_run_paths": 1
+    },
+    "src/processforge_core/work/context.py": {
+      "normalize_agent_model": 1,
+      "normalize_agent_reasoning_effort": 1
+    },
+    "tools/smoke_codex_worker_governance.py": {
+      "build_worker_process_command": 2
+    },
+    "tools/smoke_continuation_work.py": {
+      "worker_run_paths": 1
+    },
+    "tools/smoke_egress_work.py": {
+      "assignment_yaml_path": 4
+    },
+    "tools/smoke_prepared_execution_context.py": {
+      "worker_run_paths": 2,
+      "assignment_yaml_path": 1,
+      "run_root": 1
+    },
+    "tools/smoke_prepared_execution_recovery.py": {
+      "worker_run_paths": 3,
+      "assignment_yaml_path": 3,
+      "run_yaml_path": 3,
+      "dynamic_builder_spy": 1
+    },
+    "tools/smoke_runtime_scheduler_failure_isolation.py": {
+      "worker_run_paths": 1
+    },
+    "tools/smoke_run_id_preserves_repeated_hyphens.py": {
+      "run_root": 1
+    },
+    "tools/pf_runtime/host.py": {
+      "worker_run_paths": 1
+    }
+  },
+  "prepared_terminal_admission": "All original forbidden spies and assertions retained; builder spy moved to canonical WorkerCommandBuilder.build.",
+  "legacy_boundaries": "Actual process launch/lifecycle/locks/recovery and other unmoved egress/prepared dependencies retain their existing owners."
+}

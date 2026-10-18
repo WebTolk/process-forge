@@ -22,7 +22,8 @@ def policy_file(path):
 
 
 def work_session(core, *, project, assignment_id, attempt, policy_path, store_root, credential_path=None):
-    assignment_path = core.assignment_yaml_path(project, assignment_id)
+    from processforge_core.work.paths import WorkPaths
+    assignment_path = WorkPaths().assignment_document(project, assignment_id)
     capsule_path = core.assignment_capsule_path(project, assignment_id)
     initial_stage = None
 

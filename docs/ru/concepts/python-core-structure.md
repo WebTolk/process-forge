@@ -152,6 +152,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/detection.py` | ProjectDetectionService: актуальный общий список файлов и прежние правила обнаружения платформы. |
 | `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy: placeholders, сохраняемое явное окружение и наследование только при запуске. |
 | `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks: существующее подмножество JSON Schema и актуальное чтение схем с явным корнем дистрибутива. |
+| `src/processforge_core/work/paths.py` | WorkPaths: прежние пути Run, Assignment, артефактов, handoff и worker attempt с различной нормализацией ID. |
+| `src/processforge_core/runtime/command.py` | WorkerCommandBuilder: прежняя проекция sandbox и сборка команды через конкретные политики Core. |
+| `src/processforge_core/project/platforms.py` | PlatformContractReader: актуальный каталог seed/project/workplace с прежним перекрытием и fallback. |
+| `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader: прежние пути реестров, YAML/JSON, doctor checks и локальные file URL. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
@@ -738,3 +742,37 @@ defaults, формой remote/artifact URL, env-reference и source checks, пр
 Координация обновлений, сеть, установка и восстановление остаются у прежних
 владельцев. Приёмка относится к исходникам; архив, установленный Core, Runtime
 и реально подключённый хост проверяются отдельно.
+
+## Пути Work, команды воркеров и актуальные каталоги
+
+`work.paths.WorkPaths` владеет путями документов Run и Assignment, артефактов,
+сводок, handoff, worker prompts и упорядоченными путями попытки. Каталог Run
+и handoff сохраняют допустимые generated ID с повторными дефисами; пути
+Assignment и agent/task используют прежнюю отдельную нормализацию `safe_id`.
+Строгая проверка пути Assignment в `ContextContractInputs` остаётся отдельной.
+Конкретный `ProjectMetadataReader` предоставляет flow root без I/O конструктора.
+
+`runtime.command.WorkerCommandBuilder(distribution_root)` владеет `sandbox` и
+`build`, используя существующих владельцев путей, выходов, окружения, driver
+limits и нормализации контекста. Проверка выходов предшествует variables и
+окружению. Placeholders, model arguments, prepared wrapper, разрешение путей
+и поля команды сохраняют исходный порядок. Проверка terminal admission
+наблюдает перенесённый builder и сохраняет прежние assertions. Запуск процесса,
+блокировки, состояние попытки, сбор и восстановление остаются у прежних владельцев.
+
+`project.platforms.PlatformContractReader(distribution_root)` владеет ID,
+поиском реестра, seed/project путями, чтением записей, overlay index и fallback.
+Он переиспользует YAML Core и `WorkspacePathReferenceReader`, сохраняя порядок
+seed/project/workplace, aliases, дубликаты, неизвестные поля, disabled/missing
+и ссылки на исходные вложенные значения. Операции читают актуальные файлы без кеша.
+
+`maintenance.documents.UpdateDocumentReader(distribution_root)` владеет путями
+реестров обновлений, мягким чтением YAML, doctor YAML/schema checks, поиском путей
+manifest, списками registry paths, update index, локальными file URL и чтением
+YAML/JSON документов и текста. Переиспользованы прежние YAML/path/schema owners.
+Мягкое чтение отбрасывает ошибки YAML; index сохраняет прежний error sentinel;
+doctor может добавить ошибки схемы и всё равно вернуть разобранный словарь.
+Конструктор не выполняет I/O. Сеть, запись и lifecycle обновлений остаются
+у прежних владельцев. Egress и prepared inputs используют канонические пути
+Work, сохраняя остальные неперенесённые зависимости. Приёмка ограничена
+исходниками; более поздние слои поставки и OOP-эпики проверяются отдельно.
