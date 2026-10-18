@@ -1,0 +1,8 @@
+{
+  "label": "checksum",
+  "started_at": "2026-10-18T04:37:18.430575+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.2528005999629386,
+  "raw_sha256": "3de22b720cb66cb7a18225ff56f193b04d1768ef93d84ade54309630668e1564",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/checksum.log"
+}

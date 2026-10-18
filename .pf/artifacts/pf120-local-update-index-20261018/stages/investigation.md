@@ -1,0 +1,3 @@
+# Investigation
+
+Reproduced on clean c4d6649: version prints1.2.0; self-update-check reads local updates/processforge-update-index.yaml and prints CURRENT1.1.0/LATEST1.1.0. Tools/processforge.py command_self_update_check uses product.current_version and latest_update_version directly; no implementation change needed. Old index has1.1.0 current/latest and no1.2.0 record. This differs from waived historical online1.1.0 asset mismatch. Existing normalized official endpoint already points to the dev stable feed; preserve it. Source full274PASS/stress6PASS are baseline; parent obsolete consumer intentionally stopped with exact owned process identity and incomplete receipt preserved. Handoff: model release metadata independent of process/schema/capsule versions.

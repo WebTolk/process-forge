@@ -2,13 +2,13 @@ schema_version: 1
 
 product:
   id: processforge
-  current_version: "1.1.0"
+  current_version: "1.2.0"
 
 update_sites:
   - id: processforge-official
     enabled: true
     manifest_url: "https://raw.githubusercontent.com/WebTolk/process-forge/dev/release/updates/processforge-stable.json"
-    changelog_url: "https://github.com/WebTolk/process-forge/releases/tag/v1.1.0"
+    changelog_url: "https://github.com/WebTolk/process-forge/releases/tag/v1.2.0"
     channel: stable
     priority: 10
     trust:
@@ -26,7 +26,7 @@ update_sites:
 
 channels:
   stable:
-    latest: "1.1.0"
+    latest: "1.2.0"
 
 versions:
   - version: "0.1.0"
@@ -168,3 +168,41 @@ versions:
       - docs/concepts/garage-core.md
       - docs/getting-started/runtime-autostart.md
       - CHANGELOG.md
+
+  - version: "1.2.0"
+    channel: stable
+    released_at: "2026-10-17"
+    compatibility:
+      min_project_schema: 1
+      max_project_schema: 1
+    migration:
+      required: true
+      guide: docs/releases/1.2.0-migration.md
+    changes:
+      - type: release
+        summary: "Intermediate concrete Core read, policy, lifecycle and composition refactoring checkpoint; historical Work and version contracts remain preserved."
+        breaking: false
+      - type: runtime
+        summary: "Project event and native hook journals use separate local SQLite databases; existing history requires an explicit controlled cutover."
+        breaking: false
+      - type: performance
+        summary: "Bounded content-keyed safe YAML reuse and shared compact Work metadata reads retain current bytes and authority checks."
+        breaking: false
+      - type: runtime
+        summary: "Scheduler health remains separate from task outcomes, stable collection recovery and partial metrics; failed publication cleans only its own staging file."
+        breaking: false
+      - type: integration
+        summary: "Automatic Garage hooks are opt-in, Forge stays governed, and root AGENTS.md plus current PF context replace automatic START file generation."
+        breaking: false
+    affected_files:
+      - VERSION
+      - CHANGELOG.md
+      - tools/processforge.py
+      - tools/pf_runtime/mcp_server.py
+      - src/processforge_core/work/metadata.py
+      - docs/concepts/hook-journal-sqlite.md
+      - docs/concepts/runtime-configuration.md
+      - docs/concepts/document-reads.md
+      - docs/releases/1.2.0.md
+      - docs/releases/1.2.0-migration.md
+      - updates/processforge-update-index.yaml

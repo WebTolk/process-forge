@@ -1,0 +1,8 @@
+{
+  "label": "cleanliness",
+  "started_at": "2026-10-18T04:37:18.201912+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 9.735355900018476,
+  "raw_sha256": "1689b84422a842f5c9649175b97f013bea0e0affcc5b720b64394de4ae73ceae",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/cleanliness.log"
+}

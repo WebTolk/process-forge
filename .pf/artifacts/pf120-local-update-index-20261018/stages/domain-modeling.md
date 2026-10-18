@@ -1,0 +1,3 @@
+# Domain and rules
+
+Release VERSION1.2.0 is the authoritative default local update index version. Schema/startup contract and historical project/process/capsule versions remain independent and unchanged. Add release1.2.0 catalog data with migration_required=true and existing docs/releases/1.2.0-migration.md guide; retain every historical version row byte/semantic content. Official online manifest URL stays unchanged; release changelog URL moves to1.2.0. No active online stable feed or public tag/asset change. Update checks remain discovery/advice; installation still needs confirmation. Handoff: minimal YAML data correction plus exactly one canonical checksum entry.

@@ -1,0 +1,8 @@
+{
+  "label": "targeted-index",
+  "started_at": "2026-10-18T04:37:17.862319+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 11.831057699979283,
+  "raw_sha256": "c79eb8b5409282e01b2b4f4122bbfb459d8c922605b0d888a754513cfc5a2b36",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/targeted-index.log"
+}

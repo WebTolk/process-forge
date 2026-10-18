@@ -1,0 +1,8 @@
+{
+  "label": "schema",
+  "started_at": "2026-10-18T04:37:17.862281+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 22.823609699960798,
+  "raw_sha256": "e9c725e28f9eb7a8f67666f0d7b0f2e80d72c210b329c782614cf9f56b095c39",
+  "raw_retained": ".pf/tmp/pf120-local-update-index-20261018/schema.log"
+}

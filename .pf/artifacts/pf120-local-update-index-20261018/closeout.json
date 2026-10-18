@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "native_action": "run_completed",
+  "run_id": "garage-pf120-local-update-index-correction-20261018-fix-the-reproduced-r",
+  "run_status": "completed",
+  "assignment_id": "pf120-local-update-index-correction-20261018-fix-the-reproduced-release",
+  "assignment_status": "done",
+  "context_id": "pf120-local-update-index-correction-20261018-fix-the-reproduced-release-capsule",
+  "capsule_checksum": "sha256:f4f3bbbfb4497e0147557c521db726759bdfa791dd6ec59d41890996be4d92f5",
+  "context_validation": "valid",
+  "blockers": [],
+  "qualification": "source-only release metadata correction",
+  "product_paths": [
+    "updates/processforge-update-index.yaml",
+    "checksums/processforge.sha256"
+  ],
+  "default_current_latest": "1.2.0",
+  "historical_versions_preserved": 5,
+  "inventory_entries_changed": 1,
+  "checks": [
+    "targeted-index",
+    "schema",
+    "cleanliness",
+    "checksum",
+    "release-check"
+  ],
+  "doctors": {
+    "task": "passed",
+    "run": "passed"
+  },
+  "parent_next": "Rebuild/requalify exact corrected commit; old c4d candidate baseline superseded",
+  "public_release_or_device_operations": false
+}
