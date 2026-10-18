@@ -1,0 +1,9 @@
+{
+  "topic": "installation",
+  "run_id": "garage-pf121-oop-installation-20261018-actual-installation-and-update-en",
+  "assignment_id": "pf121-oop-installation-20261018-actual-installation-and-update-entrypoin",
+  "context_id": "pf121-oop-installation-20261018-actual-installation-and-update-entrypoin-capsule",
+  "completed_stage": "domain-modeling",
+  "action": "stage_transitioned",
+  "evidence_path": ".pf/artifacts/pf121-oop-installation-20261018/report.md"
+}

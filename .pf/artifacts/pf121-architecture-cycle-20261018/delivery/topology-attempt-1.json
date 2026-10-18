@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "topic": "topology",
+  "commit": "27e4cfcf3a7a0114b21c225c17a97142d9ad503a",
+  "branch": "dev",
+  "paths": [
+    ".pf/artifacts/pf121-oop-topology-20261018"
+  ],
+  "status": "incomplete",
+  "attempt": 1,
+  "unrelated_staged_entries_preserved": true,
+  "push": [
+    {
+      "remote": "origin",
+      "exit_code": 0
+    },
+    {
+      "remote": "gitverse",
+      "exit_code": 128
+    }
+  ],
+  "readback": [
+    {
+      "remote": "origin",
+      "exit_code": 0,
+      "commit": "27e4cfcf3a7a0114b21c225c17a97142d9ad503a",
+      "matches": true
+    },
+    {
+      "remote": "gitverse",
+      "exit_code": 0,
+      "commit": "2f027b9ff56019b96e17280dfe7e50bc7f5a43bc",
+      "matches": false
+    }
+  ],
+  "recorded_at": "2026-10-18T15:19:55.642582+00:00"
+}

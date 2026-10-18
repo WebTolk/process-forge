@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "topic": "topology",
+  "commit": "27e4cfcf3a7a0114b21c225c17a97142d9ad503a",
+  "branch": "dev",
+  "paths": [
+    ".pf/artifacts/pf121-oop-topology-20261018"
+  ],
+  "status": "delivered",
+  "attempt": 2,
+  "unrelated_staged_entries_preserved": true,
+  "push": [
+    {
+      "remote": "origin",
+      "exit_code": 0
+    },
+    {
+      "remote": "gitverse",
+      "exit_code": 0
+    }
+  ],
+  "readback": [
+    {
+      "remote": "origin",
+      "exit_code": 0,
+      "commit": "27e4cfcf3a7a0114b21c225c17a97142d9ad503a",
+      "matches": true
+    },
+    {
+      "remote": "gitverse",
+      "exit_code": 0,
+      "commit": "27e4cfcf3a7a0114b21c225c17a97142d9ad503a",
+      "matches": true
+    }
+  ],
+  "recorded_at": "2026-10-18T15:20:42.511727+00:00",
+  "attempted_remotes": [
+    "gitverse"
+  ],
+  "gitverse_authentication": "GITVERSE_TOKEN via process-only HTTP configuration; credential helper disabled"
+}

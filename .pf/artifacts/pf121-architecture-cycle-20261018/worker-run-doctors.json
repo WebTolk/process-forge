@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "checks": [
+    {
+      "topic": "topology",
+      "run_id": "garage-pf121-oop-topology-20261018-current-architecture-documents-admitt",
+      "command": "run-doctor --runtime-events",
+      "exit_code": 0,
+      "status": "passed"
+    },
+    {
+      "topic": "libraries",
+      "run_id": "garage-pf121-oop-libraries-20261018-current-logging-memory-and-internal",
+      "command": "run-doctor --runtime-events",
+      "exit_code": 0,
+      "status": "passed"
+    },
+    {
+      "topic": "installation",
+      "run_id": "garage-pf121-oop-installation-20261018-actual-installation-and-update-en",
+      "command": "run-doctor --runtime-events",
+      "exit_code": 0,
+      "status": "passed"
+    },
+    {
+      "topic": "mcp",
+      "run_id": "garage-pf121-oop-mcp-20261018-current-mcp-descriptions-tool-extension-se",
+      "command": "run-doctor --runtime-events",
+      "exit_code": 0,
+      "status": "passed"
+    }
+  ]
+}

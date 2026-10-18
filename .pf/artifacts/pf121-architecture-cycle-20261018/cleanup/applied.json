@@ -1,0 +1,79 @@
+{
+    "schema_version":  1,
+    "recorded_at":  "2026-10-18T15:03:15.5034115Z",
+    "apply":  true,
+    "retained_release_evidence":  [
+                                      {
+                                          "file":  "github-processforge-1.2.0.zip",
+                                          "sha256":  "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880"
+                                      },
+                                      {
+                                          "file":  "gitverse-processforge-1.2.0.zip",
+                                          "sha256":  "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880"
+                                      },
+                                      {
+                                          "file":  "github-processforge-1.2.0.manifest.json",
+                                          "sha256":  "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd"
+                                      },
+                                      {
+                                          "file":  "gitverse-processforge-1.2.0.manifest.json.txt",
+                                          "sha256":  "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd"
+                                      }
+                                  ],
+    "targets":  [
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/source-classifier",
+                        "status":  "removed",
+                        "files":  7811,
+                        "bytes":  71733270,
+                        "git_worktree":  true,
+                        "head":  "b70df739700f1559570f4b65481cd39616ccc1ea"
+                    },
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/source-release",
+                        "status":  "removed",
+                        "files":  7811,
+                        "bytes":  71731761,
+                        "git_worktree":  true,
+                        "head":  "ee0a28158d35443298d438b473abd4e068647052"
+                    },
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/source-final",
+                        "status":  "removed",
+                        "files":  7816,
+                        "bytes":  72031328,
+                        "git_worktree":  true,
+                        "head":  "af9352e066df03c138061220b9536792651ba92d"
+                    },
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/consumer-final",
+                        "status":  "removed",
+                        "files":  1323,
+                        "bytes":  9667133,
+                        "git_worktree":  false
+                    },
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/consumer-focused",
+                        "status":  "removed",
+                        "files":  1318,
+                        "bytes":  9357134,
+                        "git_worktree":  false
+                    },
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/stable-preview",
+                        "status":  "retained_dirty_worktree",
+                        "files":  0,
+                        "bytes":  0,
+                        "git_worktree":  true,
+                        "dirty_count":  6
+                    },
+                    {
+                        "path":  ".pf/tmp/pf120-docs-release-20261018/t",
+                        "status":  "removed",
+                        "files":  87,
+                        "bytes":  293524,
+                        "git_worktree":  false
+                    }
+                ],
+    "previously_denied_paths_touched":  false
+}

@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T15:13:47.178530+00:00",
+  "kind": "research-result-integrity",
+  "status": "passed",
+  "checks": [
+    {
+      "name": "topology_native_completed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "topology_native_collection",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "topology_expected_report",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "topology_immutable_capsule",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "libraries_native_completed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "libraries_native_collection",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "libraries_expected_report",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "libraries_immutable_capsule",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "installation_native_completed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "installation_native_collection",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "installation_expected_report",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "installation_immutable_capsule",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "mcp_native_completed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "mcp_native_collection",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "mcp_expected_report",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "mcp_immutable_capsule",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "root_immutable_capsule",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "product_paths_match_initial_head",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "monolith_matches_topology_observation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "deliverable_text_has_no_private_absolute_paths",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "local_markdown_links_resolve",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "six_cleanup_targets_absent",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "cleanup_targets_within_exact_capsule_scope",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "dirty_worktree_retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "retained_github-processforge-1.2.0.zip",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "retained_gitverse-processforge-1.2.0.zip",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "retained_github-processforge-1.2.0.manifest.json",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "retained_gitverse-processforge-1.2.0.manifest.json.txt",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "source_context_fresh_ready_continue",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "reports": [
+    {
+      "topic": "topology",
+      "path": ".pf/artifacts/pf121-oop-topology-20261018/report.md",
+      "sha256": "b77751805f1dc940b56da6a03b0093a06c2287630060f089f5b5c8f3bc4c6bb6",
+      "attempt": 1,
+      "native_exit_code": 0,
+      "collection": "completed",
+      "hash_meaning": "current bytes observed after native collect"
+    },
+    {
+      "topic": "libraries",
+      "path": ".pf/artifacts/pf121-oop-libraries-20261018/report.md",
+      "sha256": "a0974be762a5d5c566b2c7022f5e31a9c7ce12ef82bdeef23d887a89fbfb5b6c",
+      "attempt": 1,
+      "native_exit_code": 0,
+      "collection": "completed",
+      "hash_meaning": "current bytes observed after native collect"
+    },
+    {
+      "topic": "installation",
+      "path": ".pf/artifacts/pf121-oop-installation-20261018/report.md",
+      "sha256": "fd66d6235516e0a2e5fc05982b2c7ccbc32e661cf5eada9503fadb00b688bd0b",
+      "attempt": 1,
+      "native_exit_code": 0,
+      "collection": "completed",
+      "hash_meaning": "current bytes observed after native collect"
+    },
+    {
+      "topic": "mcp",
+      "path": ".pf/artifacts/pf121-oop-mcp-20261018/report.md",
+      "sha256": "c5aa1879f122424a8a1f9bc70d6379f7219b6c69b07b472b7dbd6c3e76849e6d",
+      "attempt": 1,
+      "native_exit_code": 0,
+      "collection": "completed",
+      "hash_meaning": "current bytes observed after native collect"
+    }
+  ],
+  "product_test_suites": "not_run_documentation_only",
+  "source_baseline": "2f027b9ff56019b96e17280dfe7e50bc7f5a43bc",
+  "cleanup_removed_bytes": 234814150
+}
