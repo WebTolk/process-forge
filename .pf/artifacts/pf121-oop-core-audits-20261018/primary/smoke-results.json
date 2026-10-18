@@ -1,0 +1,81 @@
+{
+  "started_at": "2026-10-18T23:28:07.801704+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "195eefc505712862e6518617721d3c72911edd65dce64b59e5afd837553174f1",
+    "src/processforge_core/work/context.py": "fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba",
+    "src/processforge_core/prepared/resources.py": "53ec801f5c3b0ee311aa16cab714ab74ab581f9a2430c586c164d35ef122f47f",
+    "docs/concepts/python-core-structure.md": "b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5",
+    "docs/ru/concepts/python-core-structure.md": "000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4",
+    "src/processforge_core/runtime/worker_validation.py": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45",
+    "src/processforge_core/project/hooks.py": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354",
+    "src/processforge_core/common/record_validation.py": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2",
+    "src/processforge_core/process_catalog/routes.py": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab",
+    "src/processforge_core/process_catalog/handoffs.py": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2",
+    "src/processforge_core/maintenance/validation.py": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc",
+    "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+    "src/processforge_core/maintenance/registries.py": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a"
+  },
+  "checks": [
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 7.394,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"compatibility containers preserve strict governed and unique Run membership\",\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"signed overlap diagnostics remain advisory; scope grants and immutable bytes stay protected\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_prepared_execution_context",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 35.926,
+      "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_orchestrator_shell_agents_with_subagent_policy",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 8.834,
+      "stdout": "PASS: orchestrator shell agents with subagent policy smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_transition_handoff",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 8.116,
+      "stdout": "PASS: process transition handoff smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_update_sites_schema",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.464,
+      "stdout": "PASS: unified update-site schema smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_update_candidate_discovery",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.273,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.946,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Seven affected existing scripts, with local deterministic fixture drivers only and no additional model workers. Full legacy/new algorithm proof and bounded live plan/hook/record/route/update/library wiring are recorded separately. No broad Runtime/scheduler/recovery/release/archive/install/connected-host/ZIP suites or external model orchestration.",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-18T23:29:13.763940+00:00"
+}

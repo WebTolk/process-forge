@@ -145,3 +145,9 @@ class UpdateDocumentReader:
 
     def notifications_path(self, workplace_root: Path) -> Path:
         return self.runtime_root(workplace_root) / "notifications.json"
+
+    def staged_path(self, workplace_root: Path, candidate_id: str) -> Path:
+        return self.runtime_root(workplace_root) / "staged" / candidate_id / "stage-record.yaml"
+
+    def staged_record(self, workplace_root: Path, candidate_id: str) -> dict[str, Any]:
+        return self.yaml(self.staged_path(workplace_root, candidate_id))

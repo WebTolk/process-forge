@@ -157,7 +157,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
         raise ContextContractError("assignment_contract_invalid")
     if expected.get("artifact"):
         expected["artifact"] = portable_path(expected["artifact"])
-    access = core.normalize_workspace_access(metadata.get("workspace_access"))
+    access = ContextContractInputs().normalize_workspace_access(metadata.get("workspace_access"))
     _portable_values(access)
     if core.workspace_access_public_path_issues(access):
         raise ContextContractError("private_path_forbidden")
@@ -173,7 +173,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
         "workspace_access": access,
         "agent_model": ContextContractInputs().normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
         "agent_reasoning_effort": ContextContractInputs().normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
-        "subagent_policy": core.normalize_subagent_policy(metadata.get("subagent_policy")),
+        "subagent_policy": ContextContractInputs().normalize_subagent_policy(metadata.get("subagent_policy")),
     }
     _portable_values({key: result[key] for key in ("scope", "outputs", "subagent_policy")})
     return result

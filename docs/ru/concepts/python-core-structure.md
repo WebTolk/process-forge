@@ -97,6 +97,12 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/runtime/worker_plans.py` | Прежние начальные планы работников, правила подагентов и зависимостей, рекурсия и актуальное чтение завершённости назначений. |
 | `src/processforge_core/project/platform_selection.py` | Прежний выбор платформ/типов/реестров и находки через конкретных владельцев ответов, документов, обнаружения, платформ и пакетов. |
 | `src/processforge_core/maintenance/registries.py` | Прежнее чтение entity/override/installed реестров и разрешение пути установки; без установки и записи версий. |
+| `src/processforge_core/runtime/worker_validation.py` | Прежние проверки планов, дополнительных ключей и отчётов подагентов. |
+| `src/processforge_core/project/hooks.py` | Путь конфигурации hooks и прежний порядок проверок. |
+| `src/processforge_core/common/record_validation.py` | Прежняя проверка полей event/chat и секретов. |
+| `src/processforge_core/process_catalog/routes.py` | Текущий поиск маршрута, проверка и требуемая роль. |
+| `src/processforge_core/process_catalog/handoffs.py` | Каталог, путь и мягкое чтение handoff. |
+| `src/processforge_core/maintenance/validation.py` | Прежние проверки overrides и нормализованного манифеста обновлений. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -593,8 +599,8 @@ merge policy не делает полный компилятор контекс�
 
 `process_catalog.artifacts.ProcessArtifactDeclarationPolicy` владеет обычными
 методами экземпляра `defined_ids(process)`, `declared_ids(process)` и
-`produced_ids(process)`. Проверка authoring, контракта процесса и отчёт builtin
-catalog в `tools/processforge.py` вызывают владельца напрямую; три старых
+`produced_ids(process)`. Core-проверки authoring и контракта процесса, а также
+отчёт builtin catalog вызывают владельца напрямую; три старых
 определения сбора ID артефактов удалены. Общие функции `common.values` сохраняют обработку
 только списков, порядок преобразования и фильтрации string-list, строки через
 запятую, различия dict/list, истинность ID, обработку дубликатов и прежний порядок
@@ -604,9 +610,9 @@ catalog в `tools/processforge.py` вызывают владельца напр�
 
 Обе policy не хранят состояние, не выполняют I/O и не импортируют монолит и не
 вызывают его через callbacks. Загрузка реестров классификаторов, обход дерева и
-активация остаются в legacy-путях CLI. Полные валидаторы процессов, чтение
-companion-файлов, регистрация каталога и активация также сохраняют прежних
-legacy-владельцев. Выделение чистых policy не означает полного переноса
+активация остаются в legacy-путях CLI. Проверки контракта процесса и companion
+принадлежат ProcessContractValidationService. Транзакции authoring, регистрация
+каталога и активация сохраняют прежних legacy-владельцев. Выделение чистых policy не означает полного переноса
 классификации или валидации, завершения OOP-эпиков или приёмки архива,
 установленного Core, Runtime либо подключённых хостов.
 
@@ -905,3 +911,37 @@ evolution, артефактов, авторинга и route-документо�
 поля, приоритет companion/templates и defaults карты сохранены. Проверка самой
 route-map, исполнение handoff, callbacks/транзакции авторинга, lifecycle,
 блокировки, recovery и приёмка последующих слоёв остаются отдельной работой.
+
+## Проверка планов, записей и чтение маршрутов и handoff
+
+`runtime.worker_validation.WorkerPlanValidationService(distribution_root)` владеет
+прежними проверками плана, фильтрацией дополнительных ключей и проверкой отчётов
+подагентов. Он использует готовые ContextContractInputs, RuntimeDriverCatalogReader,
+WorkerPlanPolicy и ScopeConflictService с фактическим проектом на операции.
+Буквальные проверки типов, повторные чтения драйверов, исключения зависимостей,
+конфликты областей и рекурсивные наблюдения отчётов сохраняют прежний порядок.
+Четыре набора полей плана принадлежат этому модулю. WORKSPACE_ACCESS_KEYS и обе
+нормализации используют готовый work.context_documents напрямую; старые обёртки
+и дублирующий tuple удалены, включая три обращения других компонентов Core.
+
+`project.hooks.HookConfigurationReader` владеет путём hooks.yaml и прежними
+упорядоченными проверками формы. `common.record_validation.RecordValidationPolicy`
+владеет обязательными полями event/chat, прежним выражением типа события и общей
+проверкой секретов. Сериализация JSON и её исходные ошибки сохранены.
+Отправка hooks, журналы и эффекты остаются у действующих владельцев.
+
+`process_catalog.routes.ProcessRouteService(distribution_root)` владеет текущим
+поиском и проверкой маршрута и проекцией требуемой роли. Используются готовый
+читатель маршрутов, общие режимы и проверка схемы. `process_catalog.handoffs.HandoffDocumentReader`
+владеет каталогом, путём и мягким чтением handoff через фактические metadata
+проекта и документы. Первое совпадение, ссылки на словари, порядок проверок
+и отказы отсутствия сохранены. Запись и исполнение handoff, leases, continuation,
+транзакции процесса и recovery остаются у действующих владельцев.
+
+`maintenance.validation.UpdateDocumentValidationService(distribution_root)`
+владеет прежними проверками overrides и нормализованного манифеста через
+конкретные schema/source-contract policies. Выражение SHA-256 сохранено.
+UpdateRegistryReader также владеет отдельной проекцией установленных версий;
+UpdateDocumentReader — путём и мягким чтением staged record. Конструкторы
+и все прежние методы читателей сохранены. Поиск, запись, установка, ввод-вывод
+артефактов, сеть и получение времени остаются у прежних владельцев.

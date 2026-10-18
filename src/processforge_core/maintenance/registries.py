@@ -189,3 +189,17 @@ class UpdateRegistryReader:
         if isinstance(installed_subject.get("install_path"), str) and str(installed_subject["install_path"]).strip():
             return self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, str(installed_subject["install_path"])))
         return workplace_root / "packages" / safe_id(str(subject.get("id") or "package"))
+
+    def installed_versions(self, workplace_root: Path) -> dict[tuple[str, str], str]:
+        data = self.documents.yaml(self.documents.installed_registry(workplace_root))
+        subjects = data.get("subjects") if isinstance(data.get("subjects"), list) else []
+        result: dict[tuple[str, str], str] = {}
+        for subject in subjects:
+            if not isinstance(subject, dict):
+                continue
+            subject_type = subject.get("type")
+            subject_id = subject.get("id")
+            version = subject.get("version")
+            if isinstance(subject_type, str) and isinstance(subject_id, str) and isinstance(version, str) and version:
+                result[(subject_type, subject_id)] = version
+        return result

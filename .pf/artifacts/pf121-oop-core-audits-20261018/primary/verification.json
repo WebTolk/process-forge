@@ -1,0 +1,131 @@
+{
+  "status": "passed",
+  "removed_monolith_functions": 21,
+  "complete_moved_algorithms": 19,
+  "removed_existing_canonical_wrappers": 2,
+  "moved_constants": 6,
+  "removed_duplicate_canonical_tuple": true,
+  "retained_monolith_definitions_with_only_expected_call_changes": 750,
+  "entire_monolith_ast_only_expected_delta": true,
+  "three_core_normalization_consumers_only_expected_delta": true,
+  "readonly_existing_owner_hashes_preserved": {
+    "src/processforge_core/common/checks.py": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+    "src/processforge_core/common/ids.py": "ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8",
+    "src/processforge_core/common/privacy.py": "d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074",
+    "src/processforge_core/common/values.py": "f7bcc6434d68d7591d3c310bc01ab6e84b15394e785dbad5c2a1d43d48f56702",
+    "src/processforge_core/common/yaml_io.py": "543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27",
+    "src/processforge_core/documents/reader.py": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+    "src/processforge_core/maintenance/schema_checks.py": "5c27d092f2cfdf1102b082159de30accfa59af4fd7ca34d91bc6a3d45f97895b",
+    "src/processforge_core/maintenance/source_contracts.py": "d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f",
+    "src/processforge_core/process_catalog/contracts.py": "41fc9fa82ad08ad84301be5045d5bcbd8066cfddc7d7f20b37426343246c405a",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/runtime/catalog.py": "183f370372d3a840a38be677925a2744525308febd2e420fd3cd936261b25336",
+    "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5",
+    "src/processforge_core/work/scope_conflicts.py": "40955b02ff9d1154837c5f88a45e4833ac3e0357abc8ec3b4f32836836cf1c93"
+  },
+  "native_complete_moved_algorithm_proofs": {
+    "workers": {
+      "complete_algorithms": 4,
+      "removed_existing_canonical_wrappers": 2,
+      "product_sha256": {
+        "src/processforge_core/runtime/worker_validation.py": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/log.md": "19e867145d9f37bf2fa4b839e64c439691e33ea8da46ecb3343a0d3b7cee86c2",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/proof.json": "6ae988889cd084f4006bed1b10f1115c6512dd9a92e64da6222208e848d083f8",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/proof.py": "aa8080ef9c4cd96128b277c3eda2e5eac325aafcb43c2534bff6cf06e84ddffa",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/report.md": "c371ed10dc3dc4cc5f95f96f6a636e09a65e2c3c6b6c9df971df5413098cc8b0"
+      }
+    },
+    "records": {
+      "complete_algorithms": 4,
+      "removed_existing_canonical_wrappers": 0,
+      "product_sha256": {
+        "src/processforge_core/project/hooks.py": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354",
+        "src/processforge_core/common/record_validation.py": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/input-verification.json": "68751319e44a74f4deb75b0e37a8f64b028bfde904fd9a59e17d5c4c82d12048",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/log.md": "b46bf47f9c443211e61a3dddcf25031569e8640539ee20be717b88f0c1398c36",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/proof.json": "dfbc6047905c728791135b430431b7317fdd0783af44dd295f8f327b8d617530",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/report.md": "29cdf1eaa9b1083f5827113902ad3cc4b6f3bfcb78276ef4ff9374e3cfc1396a",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/verify.py": "788531bb954ba17e8cb8a2fc2b0436b3211771077fff3e38a84b7f88b3e0a892"
+      }
+    },
+    "routes": {
+      "complete_algorithms": 6,
+      "removed_existing_canonical_wrappers": 0,
+      "product_sha256": {
+        "src/processforge_core/process_catalog/routes.py": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab",
+        "src/processforge_core/process_catalog/handoffs.py": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/execution-log.md": "5c189541b6f585a493e308b94d98c317becff8c0dc01d95cc15e7c1b6e5f48ba",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/proof.json": "7c77e3aae9b90b47727246be514d9d0c04e34e7085ec4254e75b2fd0fdc138a5",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/report.md": "aa93cdfbdd2c12bd031f3f6872f849b6aba73e33ab6cfa2628fb8989cfe3f931",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/verify.py": "d9d47b61c123c2805f09389bda128f95d530c9b0602edb22a74ece6b89750f0b"
+      }
+    },
+    "updates": {
+      "complete_algorithms": 5,
+      "removed_existing_canonical_wrappers": 0,
+      "product_sha256": {
+        "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+        "src/processforge_core/maintenance/registries.py": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a",
+        "src/processforge_core/maintenance/validation.py": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/input-verification.json": "59a615e0223b3d80847a8e2321262fc0fe395ea212d08a5e094c52db2c17ae89",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/log.md": "d1672e3fc35b05820598770d163af67b31da211e2827d7febeab49d6aab9a7bf",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/proof.json": "88954feb3b5fbdd4d2301e4f7b233edfc77cfe56f95b5571972a462c4815daa0",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/report.md": "4ee85d169d5a57ee94e2ce46c2dcfe734d2624019fafbd24a55705ceff46f790",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/verify.py": "658135a2eb209555e9678c23de54ca6e08a867d1058665de8e0fff4b370a96e6"
+      }
+    }
+  },
+  "parity": {
+    "total": 81,
+    "native_exceptions": 5,
+    "sha256": "f1f4499c170901bc730ac9d205fd34e1aaff20554120a530e7eb303426c2b50e"
+  },
+  "smokes": {
+    "passed": true,
+    "count": 7,
+    "sha256": "d4fb30c1d8108e84699eab50df4dcada4ae0f6e52ddbbc7cae2495ffb8eb5073"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "195eefc505712862e6518617721d3c72911edd65dce64b59e5afd837553174f1",
+    "src/processforge_core/work/context.py": "fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba",
+    "src/processforge_core/prepared/resources.py": "53ec801f5c3b0ee311aa16cab714ab74ab581f9a2430c586c164d35ef122f47f",
+    "docs/concepts/python-core-structure.md": "b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5",
+    "docs/ru/concepts/python-core-structure.md": "000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4",
+    "src/processforge_core/runtime/worker_validation.py": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45",
+    "src/processforge_core/project/hooks.py": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354",
+    "src/processforge_core/common/record_validation.py": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2",
+    "src/processforge_core/process_catalog/routes.py": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab",
+    "src/processforge_core/process_catalog/handoffs.py": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2",
+    "src/processforge_core/maintenance/validation.py": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc",
+    "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+    "src/processforge_core/maintenance/registries.py": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a",
+    "checksums/processforge.sha256": "810b51de09af20ac5dfa404fb300a525160123f1ef707c839bfd03ab0cdab54a"
+  },
+  "inventory": {
+    "rows_before": 1356,
+    "rows_after": 1362,
+    "changed_rows": 7,
+    "new_rows": 6,
+    "untouched_rows": 1349,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "limits": [
+    "Source only; later layers and OOP epics remain unqualified.",
+    "Seven existing affected scripts use local deterministic fixtures, no additional model workers.",
+    "No broad Runtime/scheduler/recovery/release/archive/install/connected-host/ZIP suites.",
+    "Actual hook/handoff/update/worker effects, clocks, network, locks and recovery remain at earlier owners."
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "status": "passed",
+  "source": "Independent reviewer attempt 2 retained Get-FileHash output; this extracts existing observations and does not rerun review or tests.",
+  "run_id": "garage-p121-core-audits-review-independent-clean-context-review-after-im",
+  "assignment_id": "p121-core-audits-review-independent-clean-context-review-after-implement",
+  "context_id": "p121-core-audits-review-independent-clean-context-review-after-implement-capsule",
+  "attempt": 2,
+  "model": "gpt-6-sol",
+  "native_log": ".pf/runtime/agent-runs/garage-p121-core-audits-review-independent-clean-context-review-after-im/p121-core-audits-review-independent-clean-context-review-after-implement/stderr.log",
+  "native_log_sha256": "e7edf7befd74d376123dff192b0712c8d77500e07171e4e9ca6c2dd0191ed2e2",
+  "native_output_line_range": [
+    564,
+    577
+  ],
+  "independent_raw_hash_pairs": {
+    "tools/processforge.py": {
+      "expected": "195eefc505712862e6518617721d3c72911edd65dce64b59e5afd837553174f1",
+      "observed": "195eefc505712862e6518617721d3c72911edd65dce64b59e5afd837553174f1"
+    },
+    "src/processforge_core/work/context.py": {
+      "expected": "fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba",
+      "observed": "fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba"
+    },
+    "src/processforge_core/prepared/resources.py": {
+      "expected": "53ec801f5c3b0ee311aa16cab714ab74ab581f9a2430c586c164d35ef122f47f",
+      "observed": "53ec801f5c3b0ee311aa16cab714ab74ab581f9a2430c586c164d35ef122f47f"
+    },
+    "docs/concepts/python-core-structure.md": {
+      "expected": "b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5",
+      "observed": "b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5"
+    },
+    "docs/ru/concepts/python-core-structure.md": {
+      "expected": "000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4",
+      "observed": "000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4"
+    },
+    "src/processforge_core/runtime/worker_validation.py": {
+      "expected": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45",
+      "observed": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45"
+    },
+    "src/processforge_core/project/hooks.py": {
+      "expected": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354",
+      "observed": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354"
+    },
+    "src/processforge_core/common/record_validation.py": {
+      "expected": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2",
+      "observed": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2"
+    },
+    "src/processforge_core/process_catalog/routes.py": {
+      "expected": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab",
+      "observed": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab"
+    },
+    "src/processforge_core/process_catalog/handoffs.py": {
+      "expected": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2",
+      "observed": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2"
+    },
+    "src/processforge_core/maintenance/validation.py": {
+      "expected": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc",
+      "observed": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc"
+    },
+    "src/processforge_core/maintenance/documents.py": {
+      "expected": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+      "observed": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552"
+    },
+    "src/processforge_core/maintenance/registries.py": {
+      "expected": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a",
+      "observed": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a"
+    },
+    "checksums/processforge.sha256": {
+      "expected": "810b51de09af20ac5dfa404fb300a525160123f1ef707c839bfd03ab0cdab54a",
+      "observed": "810b51de09af20ac5dfa404fb300a525160123f1ef707c839bfd03ab0cdab54a"
+    }
+  },
+  "original_review_sha256": "8a06b4245f1288127e99e85eb56abd6f3f7555fa8e7ec681b50501d2ec343a82",
+  "original_review_unchanged": true,
+  "reported_transcription": {
+    "path": "src/processforge_core/maintenance/registries.py",
+    "reported": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5f8d4af75a",
+    "verified": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a",
+    "reason": "Final narrative table omitted two hex characters. The same reviewer independently computed the full matching 64-character pair for this file and every other product before writing the final report."
+  },
+  "recorded_at": "2026-10-18T23:49:04.061334+00:00"
+}

@@ -1,0 +1,9 @@
+{
+  "failed_attempt": 1,
+  "status": "failed",
+  "reason": "Selected model is at capacity. Please try a different model.",
+  "final_review_report_created": false,
+  "successful_qa_retained": true,
+  "product_hashes_unchanged": true,
+  "resume": "Native worker start prepares the next attempt for the same nonterminal Work, exact scope/capsule/inputs and final source hashes. Use a supported alternate model at high reasoning without rerunning implementation or successful checks."
+}

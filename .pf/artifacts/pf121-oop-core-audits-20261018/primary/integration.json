@@ -1,0 +1,77 @@
+{
+  "status": "integrated",
+  "removed_functions": [
+    "config_extension_key",
+    "handoff_dir",
+    "handoff_yaml_path",
+    "hook_config_path",
+    "installed_subject_version_map",
+    "load_handoff",
+    "normalize_subagent_policy",
+    "normalize_workspace_access",
+    "read_staged_update_record",
+    "required_role_from_route",
+    "route_by_id",
+    "staged_update_record_path",
+    "unsupported_config_keys",
+    "validate_chat_message_object",
+    "validate_event_object",
+    "validate_hooks_config",
+    "validate_normalized_update_manifest_data",
+    "validate_orchestrator_task_plan",
+    "validate_process_route_map",
+    "validate_subagent_policy_outputs",
+    "validate_update_site_overrides_data"
+  ],
+  "moved_constants": [
+    "ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS",
+    "ORCHESTRATOR_PLAN_RUNTIME_KEYS",
+    "ORCHESTRATOR_PLAN_WORKER_KEYS",
+    "ORCHESTRATOR_PLAN_SUBAGENT_KEYS",
+    "EVENT_TYPE_PATTERN",
+    "SHA256_HEX_RE"
+  ],
+  "removed_duplicate_constant": "WORKSPACE_ACCESS_KEYS",
+  "already_canonical_normalizers": [
+    "normalize_workspace_access",
+    "normalize_subagent_policy"
+  ],
+  "migrated_name_consumers": {
+    "config_extension_key": 0,
+    "unsupported_config_keys": 0,
+    "validate_subagent_policy_outputs": 1,
+    "validate_orchestrator_task_plan": 2,
+    "hook_config_path": 1,
+    "validate_hooks_config": 2,
+    "validate_event_object": 1,
+    "validate_chat_message_object": 1,
+    "route_by_id": 1,
+    "validate_process_route_map": 1,
+    "required_role_from_route": 1,
+    "handoff_dir": 2,
+    "handoff_yaml_path": 1,
+    "load_handoff": 5,
+    "validate_update_site_overrides_data": 1,
+    "validate_normalized_update_manifest_data": 1,
+    "installed_subject_version_map": 1,
+    "staged_update_record_path": 2,
+    "read_staged_update_record": 2,
+    "normalize_workspace_access": 8,
+    "normalize_subagent_policy": 1
+  },
+  "migrated_core_consumers": [
+    {
+      "path": "src/processforge_core/work/context.py",
+      "operation": "normalize_workspace_access"
+    },
+    {
+      "path": "src/processforge_core/work/context.py",
+      "operation": "normalize_subagent_policy"
+    },
+    {
+      "path": "src/processforge_core/prepared/resources.py",
+      "operation": "normalize_workspace_access"
+    }
+  ],
+  "preflight_all_primary_edits_before_write": true
+}

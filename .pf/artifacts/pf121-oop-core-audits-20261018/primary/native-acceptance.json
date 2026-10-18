@@ -1,0 +1,67 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-10-18T23:29:55.124151+00:00",
+  "complete_algorithms": 19,
+  "removed_existing_canonical_wrappers": 2,
+  "roles": {
+    "workers": {
+      "complete_algorithms": 4,
+      "removed_existing_canonical_wrappers": 2,
+      "product_sha256": {
+        "src/processforge_core/runtime/worker_validation.py": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/log.md": "19e867145d9f37bf2fa4b839e64c439691e33ea8da46ecb3343a0d3b7cee86c2",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/proof.json": "6ae988889cd084f4006bed1b10f1115c6512dd9a92e64da6222208e848d083f8",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/proof.py": "aa8080ef9c4cd96128b277c3eda2e5eac325aafcb43c2534bff6cf06e84ddffa",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/workers/report.md": "c371ed10dc3dc4cc5f95f96f6a636e09a65e2c3c6b6c9df971df5413098cc8b0"
+      }
+    },
+    "records": {
+      "complete_algorithms": 4,
+      "removed_existing_canonical_wrappers": 0,
+      "product_sha256": {
+        "src/processforge_core/project/hooks.py": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354",
+        "src/processforge_core/common/record_validation.py": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/input-verification.json": "68751319e44a74f4deb75b0e37a8f64b028bfde904fd9a59e17d5c4c82d12048",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/log.md": "b46bf47f9c443211e61a3dddcf25031569e8640539ee20be717b88f0c1398c36",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/proof.json": "dfbc6047905c728791135b430431b7317fdd0783af44dd295f8f327b8d617530",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/report.md": "29cdf1eaa9b1083f5827113902ad3cc4b6f3bfcb78276ef4ff9374e3cfc1396a",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/records/verify.py": "788531bb954ba17e8cb8a2fc2b0436b3211771077fff3e38a84b7f88b3e0a892"
+      }
+    },
+    "routes": {
+      "complete_algorithms": 6,
+      "removed_existing_canonical_wrappers": 0,
+      "product_sha256": {
+        "src/processforge_core/process_catalog/routes.py": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab",
+        "src/processforge_core/process_catalog/handoffs.py": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/execution-log.md": "5c189541b6f585a493e308b94d98c317becff8c0dc01d95cc15e7c1b6e5f48ba",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/proof.json": "7c77e3aae9b90b47727246be514d9d0c04e34e7085ec4254e75b2fd0fdc138a5",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/report.md": "aa93cdfbdd2c12bd031f3f6872f849b6aba73e33ab6cfa2628fb8989cfe3f931",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/routes/verify.py": "d9d47b61c123c2805f09389bda128f95d530c9b0602edb22a74ece6b89750f0b"
+      }
+    },
+    "updates": {
+      "complete_algorithms": 5,
+      "removed_existing_canonical_wrappers": 0,
+      "product_sha256": {
+        "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+        "src/processforge_core/maintenance/registries.py": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a",
+        "src/processforge_core/maintenance/validation.py": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/input-verification.json": "59a615e0223b3d80847a8e2321262fc0fe395ea212d08a5e094c52db2c17ae89",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/log.md": "d1672e3fc35b05820598770d163af67b31da211e2827d7febeab49d6aab9a7bf",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/proof.json": "88954feb3b5fbdd4d2301e4f7b233edfc77cfe56f95b5571972a462c4815daa0",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/report.md": "4ee85d169d5a57ee94e2ce46c2dcfe734d2624019fafbd24a55705ceff46f790",
+        ".pf/artifacts/pf121-oop-core-audits-20261018/updates/verify.py": "658135a2eb209555e9678c23de54ca6e08a867d1058665de8e0fff4b370a96e6"
+      }
+    }
+  },
+  "scope": "Retained complete native algorithm/signature/data/prior-owner evidence read back at final raw hashes, without repeating native synthetic scenarios."
+}

@@ -1,0 +1,1664 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index 25c120a..d38557d 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-38fea3c3615d22447b7dae324c1f90c42750e031dd26bc61ad530e415cae034a  docs/concepts/python-core-structure.md
++b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-3d071e5a832070e3943ce4960a17c8ce8b9a9b2c1ec1c9322f738ea4961981e3  docs/ru/concepts/python-core-structure.md
++000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -681,6 +681,7 @@ ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processfor
+ 929ab865d31a4b72f5ae8728f513d8514add9cf4ab98c4f7c0269c0178ecabdf  src/processforge_core/common/ndjson.py
+ 19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56  src/processforge_core/common/paths.py
+ d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074  src/processforge_core/common/privacy.py
++e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2  src/processforge_core/common/record_validation.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
+ 26c0d3e47ca6b6fcf99d54e3fd6b187799292c34663ac03d392887c657849984  src/processforge_core/common/values.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+@@ -723,14 +724,15 @@ d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef  src/processfor
+ f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de  src/processforge_core/evolution/privacy.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
+-70ca9ad829459fb887f3682f569defd63d9ed08b36547cb0c675e6deb40b4b63  src/processforge_core/maintenance/documents.py
++3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552  src/processforge_core/maintenance/documents.py
+ f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1  src/processforge_core/maintenance/presentation.py
+-9318ce83e41add134d286022aa4f3502b56ebeffad788b03ebc2f77d9c6249f3  src/processforge_core/maintenance/registries.py
++c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a  src/processforge_core/maintenance/registries.py
+ 5c27d092f2cfdf1102b082159de30accfa59af4fd7ca34d91bc6a3d45f97895b  src/processforge_core/maintenance/schema_checks.py
+ 4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7  src/processforge_core/maintenance/sites.py
+ d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f  src/processforge_core/maintenance/source_contracts.py
+ 4eebb2407446439a008273923d6b9317cc08b6845c6d89cf826f6ab609114dfe  src/processforge_core/maintenance/temporary_files.py
+ 646b38abbe1a8ead93d00b1fc84e75555073dea8efbca0fbbb2987443d7c1756  src/processforge_core/maintenance/update.py
++feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc  src/processforge_core/maintenance/validation.py
+ 64cd8e795d9b63c178ea21fb2b3038d8d2c6326c60d98d25adb1e7bac5cb66dc  src/processforge_core/maintenance/versions.py
+ c6d8cf6128923402c8bd0856b6cc6d6cfaadb30e9a19e78a74ccb72927e60307  src/processforge_core/operations/__init__.py
+ 5c3f58d6613c759a5a97467377e8c3e306712ec6e04a9200bc1dc7b4e056fffb  src/processforge_core/operations/catalogue.py
+@@ -741,7 +743,7 @@ fd3fcc46416441538d477d5deb17f1d2b10cb17c5c66ea5fb5757f54b52c909d  src/processfor
+ 2c6f22998ba2adf36d6f6a20b5f54bb42ae8081a150762a98cb1f19dc0bfb97f  src/processforge_core/prepared/knowledge_resources.py
+ 8024d254bb64f75eb33ff9f960cc893c31ca5bd07f71ca358907c880faa58971  src/processforge_core/prepared/registry_resources.py
+ d050e9412b2d190474c36f4a527628a3c55e8cfbb812a78c02ec6ca33a970532  src/processforge_core/prepared/resource_selection.py
+-949a55a8e8430d58e431604ce83cadaec052457f8de724b37e5c472ffc760eab  src/processforge_core/prepared/resources.py
++99dce10f8793d1af6f42ed92fa7159b36ab5310c4a180dc78bb67bfec9bfa5f7  src/processforge_core/prepared/resources.py
+ f9cb908c5a31295837d2782865a9eae6835f873710ab74d0480f9b8b7c06762d  src/processforge_core/prepared/snapshot_read.py
+ 8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1  src/processforge_core/presentation/process_parity.py
+ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processforge_core/process_catalog/__init__.py
+@@ -752,10 +754,12 @@ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processfor
+ 98e4edee5f6f161b50698735e30945af4ead15832992c57fec340484812b0676  src/processforge_core/process_catalog/coordination.py
+ e5936d407aa0793795c8aa1b774acd3f76dc58205e15c0b1b1d18b8b336416ac  src/processforge_core/process_catalog/definition_read.py
+ 84fbfa98942a73a392c03ca8ceb3da39461e2b0e75dc7963a9d33bb45169a50f  src/processforge_core/process_catalog/evolution.py
++7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2  src/processforge_core/process_catalog/handoffs.py
+ 6a402ffb55914f53690be41619c9cf1bb312b4bf95b02526920cf8e39182b3a7  src/processforge_core/process_catalog/models.py
+ dd11b217014f4896c9101be12396bdf8452c6601230398c36a8218ddb20a7049  src/processforge_core/process_catalog/official_read.py
+ d7825e9222392321ad8e4e1991e215c97a632f10d3674f9071000f6109669527  src/processforge_core/process_catalog/pin.py
+ 6383c251dcd5f8801810083f8d73c90351d433667c00111e64b9292c921a4b88  src/processforge_core/process_catalog/presentation.py
++86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab  src/processforge_core/process_catalog/routes.py
+ 6252712fe29c7cde1134d48db54ca1c635ba609fddc162c12c6babb8236c2920  src/processforge_core/process_catalog/selection.py
+ c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2  src/processforge_core/process_catalog/semantics.py
+ 06bef2a6f14e9ad5fbf40028b0f69f9c92bae9fcc73a52717c98d2421721aae2  src/processforge_core/process_catalog/service.py
+@@ -773,6 +777,7 @@ ae664b3fac858723a91f41b5795d20447bc965ef24a6dd4ae625520db27d650d  src/processfor
+ 6c0d2224fa7e23408ca6c9b8b3d740b53d7fc4d7c833124f078d84814fc3c4b3  src/processforge_core/project/context_sources.py
+ 680cb8467fbe0678e3dbbe0a96c6ae8f2e3d8bcf820e243a94a1751fdb395338  src/processforge_core/project/coordination.py
+ 60001dc4337f1e5c63002bc428b1f366f1f4ef45e93e2a8c10bfd302f18ae7fa  src/processforge_core/project/detection.py
++283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354  src/processforge_core/project/hooks.py
+ 489d9810c12abbf74f8b084de150e7f333b85af4eff3610ca17c24378b67c6bf  src/processforge_core/project/host_integration.py
+ 73c2fe7f415b8ff2457706db04058032b5a284f3d4a6bf35ef210c787a8f18dd  src/processforge_core/project/initialization.py
+ ca249dfd6b769f07f02b4f26661e9f822af60d64679b0ba9f1a707687447f121  src/processforge_core/project/knowledge_selection.py
+@@ -808,6 +813,7 @@ b273cb7da6197b94596e62323dfca551eeb22664fc7d4d474968e3c62de12d25  src/processfor
+ d95f20647297326251bf9b1622a4bc580bf5a4a9876331a4e049b48ae7494c77  src/processforge_core/runtime/metrics.py
+ d428e95a5ee5bc0a1ddc982836c04c0080b56fdf196a8cf291f6c913da65ca75  src/processforge_core/runtime/selection.py
+ a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0  src/processforge_core/runtime/worker_plans.py
++e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45  src/processforge_core/runtime/worker_validation.py
+ c4d7c2bf6daf5bdd014478e72f8f1164b0ec627ed43c5cf904225ed611578e76  src/processforge_core/runtime_service_state.py
+ 74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572  src/processforge_core/sqlite_storage.py
+ 1c0f8dc4a03328ba9347a1d55bd01abd92938f6fdf6de79a41d9228bd98e5014  src/processforge_core/work/__init__.py
+@@ -816,7 +822,7 @@ b373a52476eb6aa626295975618458b6605f5d5bb8c40be72c914d56ddc9e707  src/processfor
+ 062642fce66e6e0315086dc59191834311b51eb7f0a8a883532d4e032bbecea8  src/processforge_core/work/boundary_advisory.py
+ 788f590f38fa42a1863abb36fe32f84c882d42e521a28e4053c1207b8c788c66  src/processforge_core/work/cancellation_replay.py
+ 8a752253c676155b7b8187dd6b0266f25e9c283ccad3bc472d1fea6bf66e1fbd  src/processforge_core/work/capsule_publication.py
+-4b04d4b3958e0bccda76f77d098db4f57dbeca7cde5bbc9403df023fda424d89  src/processforge_core/work/context.py
++fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba  src/processforge_core/work/context.py
+ 035f85f7d8741659167304f668bccbf18a4229240eff3537f7e91fa8242eedcc  src/processforge_core/work/context_documents.py
+ ab48a3ad173b9c2227f4566ba9670c7d08ab4da9aa8b3f6a62460de3a2b8f95b  src/processforge_core/work/context_read.py
+ 2026996a1398f1c471d42d504ec9c491b0c1c83d8dac36e245fad65e5bbb1a03  src/processforge_core/work/continuation.py
+@@ -1025,7 +1031,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-c24d9a17ebc48166f828ae6187de7928dfff38ed60558106357e1f3ad584bfb6  tools/processforge.py
++90fe3fe77a2e3fa937ab0f0976a21e8c8c76a47b7992cd7db68334359d96f71c  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index e82249e..30ada61 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -92,6 +92,12 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/runtime/worker_plans.py` | Existing worker plan defaults, subagent/dependency projections, recursion and current assignment-completion reads. |
+ | `src/processforge_core/project/platform_selection.py` | Existing platform/type/registry selection and findings with concrete answer, document, detection, platform and package owners. |
+ | `src/processforge_core/maintenance/registries.py` | Existing entity/override/installed registry reads and install-target resolution; no installation or version-write authority. |
++| `src/processforge_core/runtime/worker_validation.py` | Current worker plan, extension-key and subagent report checks. |
++| `src/processforge_core/project/hooks.py` | Hook configuration location and ordered validation. |
++| `src/processforge_core/common/record_validation.py` | Existing event/chat field and secret validation. |
++| `src/processforge_core/process_catalog/routes.py` | Current route lookup, validation and required role. |
++| `src/processforge_core/process_catalog/handoffs.py` | Handoff directory/path and soft document read. |
++| `src/processforge_core/maintenance/validation.py` | Existing update override and normalized-manifest checks. |
+ | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
+ | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
+ | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
+@@ -136,7 +142,7 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/configuration/parameters.py` | Stateless ParameterMergePolicy owning existing parameter-map merging and ordered provenance, without a monolith dependency. |
+ | `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for matching existing classifier rules; registry, traversal and activation remain legacy responsibilities. |
+ | `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
+-| `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; full validators and companion-file I/O remain legacy responsibilities. |
++| `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; contract checks and companion inspection use Core services; authoring publication retains its existing owner. |
+ | `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder for existing defaults, answer normalization and process materialization, using concrete evolution rules. |
+ | `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy for existing evolve defaults, normalization and ordered validation checks. |
+ | `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy for existing builtin documents, registry defaults, placeholders, limits and document readiness checks. |
+@@ -580,8 +586,8 @@ from the monolith; consumers import the owning Core modules explicitly.
+ 
+ `process_catalog.artifacts.ProcessArtifactDeclarationPolicy` owns the ordinary
+ instance methods `defined_ids(process)`, `declared_ids(process)` and
+-`produced_ids(process)`. Authoring validation, process contract validation and
+-builtin catalog reporting in `tools/processforge.py` call the owner directly;
++`produced_ids(process)`. Core authoring/contract validators and builtin catalog
++reporting call the owner directly;
+ the three old artifact-ID definitions are removed. Shared `common.values` helpers
+ preserve list-only handling, string-list conversion/filter order, comma-separated
+ strings, dict/list distinctions, ID truthiness, duplicate handling and native
+@@ -590,8 +596,9 @@ the two temporally distinct monolith `as_list` definitions remain in place.
+ 
+ Both policies are stateless, perform no I/O and have no monolith callback or
+ import. Classifier registry loading, tree walking and activation remain in the
+-legacy CLI paths. Full process validators, companion-file reading, catalog
+-registration and activation also retain their existing legacy ownership. These
++legacy CLI paths. Process contract checks and companion inspection belong to
++ProcessContractValidationService. Authoring transactions, catalog registration
++and activation retain their existing legacy owners. These
+ pure policy extractions do not fully migrate classification or validation,
+ complete any OOP epic, or establish archive, installed-Core, Runtime or
+ connected-host acceptance.
+@@ -890,3 +897,37 @@ to `contracts`. Guard/check/refusal and filesystem-observation order, strict/sta
+ severity, unknowns, companion/template precedence and route defaults remain unchanged.
+ Route-map validation, handoff execution, authoring callbacks/transactions, lifecycle,
+ locks, recovery and later delivery-layer qualification remain separate work.
++
++## Worker plan checks, record validation and route/handoff readers
++
++`runtime.worker_validation.WorkerPlanValidationService(distribution_root)` owns
++the existing plan checks, extension-key filtering and subagent report checks.
++It composes current ContextContractInputs, RuntimeDriverCatalogReader,
++WorkerPlanPolicy and ScopeConflictService with actual operation-local project
++roots. Literal type tests, repeated driver reads, dependency exemptions, scope
++conflicts and recursive current report observations retain their earlier order.
++The four plan field sets belong to that module. WORKSPACE_ACCESS_KEYS and both
++normalizers use existing work.context_documents definitions directly; the old
++Main wrappers/duplicate tuple are removed, including three other Core callers.
++
++`project.hooks.HookConfigurationReader` owns hooks.yaml location and its existing
++ordered shape checks. `common.record_validation.RecordValidationPolicy` owns
++event/chat required fields, the existing event-type expression and the shared
++secret check. JSON serialization and its native failures remain unchanged.
++Hook dispatch, journals and effects retain their existing owners.
++
++`process_catalog.routes.ProcessRouteService(distribution_root)` owns current
++route lookup, validation and required-role projection. It reuses the existing
++route reader, shared modes and schema checker. `process_catalog.handoffs.HandoffDocumentReader`
++owns handoff directory/path/soft read with real project metadata and document
++owners. First matches, borrowed mappings, schema/check order and not-found
++refusals remain intact. Handoff writes and execution, leases, continuation,
++workflow transactions and recovery retain their existing owners.
++
++`maintenance.validation.UpdateDocumentValidationService(distribution_root)` owns
++the existing overrides and normalized manifest checks with concrete schema and
++source-contract policies. The SHA-256 expression is unchanged. UpdateRegistryReader
++also owns the distinct installed-version projection; UpdateDocumentReader also
++owns staged-record location/soft reading. Existing reader constructors and
++previous methods are unchanged. Discovery, writes, installation, artifact I/O,
++network and timestamp generation retain their earlier owners.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index 1712995..5ef0d0d 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -97,6 +97,12 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/runtime/worker_plans.py` | Прежние начальные планы работников, правила подагентов и зависимостей, рекурсия и актуальное чтение завершённости назначений. |
+ | `src/processforge_core/project/platform_selection.py` | Прежний выбор платформ/типов/реестров и находки через конкретных владельцев ответов, документов, обнаружения, платформ и пакетов. |
+ | `src/processforge_core/maintenance/registries.py` | Прежнее чтение entity/override/installed реестров и разрешение пути установки; без установки и записи версий. |
++| `src/processforge_core/runtime/worker_validation.py` | Прежние проверки планов, дополнительных ключей и отчётов подагентов. |
++| `src/processforge_core/project/hooks.py` | Путь конфигурации hooks и прежний порядок проверок. |
++| `src/processforge_core/common/record_validation.py` | Прежняя проверка полей event/chat и секретов. |
++| `src/processforge_core/process_catalog/routes.py` | Текущий поиск маршрута, проверка и требуемая роль. |
++| `src/processforge_core/process_catalog/handoffs.py` | Каталог, путь и мягкое чтение handoff. |
++| `src/processforge_core/maintenance/validation.py` | Прежние проверки overrides и нормализованного манифеста обновлений. |
+ | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
+ | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
+ | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
+@@ -593,8 +599,8 @@ merge policy не делает полный компилятор контекс
+ 
+ `process_catalog.artifacts.ProcessArtifactDeclarationPolicy` владеет обычными
+ методами экземпляра `defined_ids(process)`, `declared_ids(process)` и
+-`produced_ids(process)`. Проверка authoring, контракта процесса и отчёт builtin
+-catalog в `tools/processforge.py` вызывают владельца напрямую; три старых
++`produced_ids(process)`. Core-проверки authoring и контракта процесса, а также
++отчёт builtin catalog вызывают владельца напрямую; три старых
+ определения сбора ID артефактов удалены. Общие функции `common.values` сохраняют обработку
+ только списков, порядок преобразования и фильтрации string-list, строки через
+ запятую, различия dict/list, истинность ID, обработку дубликатов и прежний порядок
+@@ -604,9 +610,9 @@ catalog в `tools/processforge.py` вызывают владельца напр
+ 
+ Обе policy не хранят состояние, не выполняют I/O и не импортируют монолит и не
+ вызывают его через callbacks. Загрузка реестров классификаторов, обход дерева и
+-активация остаются в legacy-путях CLI. Полные валидаторы процессов, чтение
+-companion-файлов, регистрация каталога и активация также сохраняют прежних
+-legacy-владельцев. Выделение чистых policy не означает полного переноса
++активация остаются в legacy-путях CLI. Проверки контракта процесса и companion
++принадлежат ProcessContractValidationService. Транзакции authoring, регистрация
++каталога и активация сохраняют прежних legacy-владельцев. Выделение чистых policy не означает полного переноса
+ классификации или валидации, завершения OOP-эпиков или приёмки архива,
+ установленного Core, Runtime либо подключённых хостов.
+ 
+@@ -905,3 +911,37 @@ evolution, артефактов, авторинга и route-документо
+ поля, приоритет companion/templates и defaults карты сохранены. Проверка самой
+ route-map, исполнение handoff, callbacks/транзакции авторинга, lifecycle,
+ блокировки, recovery и приёмка последующих слоёв остаются отдельной работой.
++
++## Проверка планов, записей и чтение маршрутов и handoff
++
++`runtime.worker_validation.WorkerPlanValidationService(distribution_root)` владеет
++прежними проверками плана, фильтрацией дополнительных ключей и проверкой отчётов
++подагентов. Он использует готовые ContextContractInputs, RuntimeDriverCatalogReader,
++WorkerPlanPolicy и ScopeConflictService с фактическим проектом на операции.
++Буквальные проверки типов, повторные чтения драйверов, исключения зависимостей,
++конфликты областей и рекурсивные наблюдения отчётов сохраняют прежний порядок.
++Четыре набора полей плана принадлежат этому модулю. WORKSPACE_ACCESS_KEYS и обе
++нормализации используют готовый work.context_documents напрямую; старые обёртки
++и дублирующий tuple удалены, включая три обращения других компонентов Core.
++
++`project.hooks.HookConfigurationReader` владеет путём hooks.yaml и прежними
++упорядоченными проверками формы. `common.record_validation.RecordValidationPolicy`
++владеет обязательными полями event/chat, прежним выражением типа события и общей
++проверкой секретов. Сериализация JSON и её исходные ошибки сохранены.
++Отправка hooks, журналы и эффекты остаются у действующих владельцев.
++
++`process_catalog.routes.ProcessRouteService(distribution_root)` владеет текущим
++поиском и проверкой маршрута и проекцией требуемой роли. Используются готовый
++читатель маршрутов, общие режимы и проверка схемы. `process_catalog.handoffs.HandoffDocumentReader`
++владеет каталогом, путём и мягким чтением handoff через фактические metadata
++проекта и документы. Первое совпадение, ссылки на словари, порядок проверок
++и отказы отсутствия сохранены. Запись и исполнение handoff, leases, continuation,
++транзакции процесса и recovery остаются у действующих владельцев.
++
++`maintenance.validation.UpdateDocumentValidationService(distribution_root)`
++владеет прежними проверками overrides и нормализованного манифеста через
++конкретные schema/source-contract policies. Выражение SHA-256 сохранено.
++UpdateRegistryReader также владеет отдельной проекцией установленных версий;
++UpdateDocumentReader — путём и мягким чтением staged record. Конструкторы
++и все прежние методы читателей сохранены. Поиск, запись, установка, ввод-вывод
++артефактов, сеть и получение времени остаются у прежних владельцев.
+diff --git a/src/processforge_core/common/record_validation.py b/src/processforge_core/common/record_validation.py
+new file mode 100644
+index 0000000..1c8f7dc
+--- /dev/null
++++ b/src/processforge_core/common/record_validation.py
+@@ -0,0 +1,46 @@
++"""Validate event and chat records with the existing privacy rules."""
++
++from __future__ import annotations
++
++import json
++import re
++from typing import Any
++
++from .privacy import contains_secret_value
++
++
++EVENT_TYPE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$")
++
++
++class RecordValidationPolicy:
++    """Apply existing record checks without serialization error translation."""
++
++    def event(self, event: Any, label: str) -> list[str]:
++        errors: list[str] = []
++        if not isinstance(event, dict):
++            return [f"{label}: event is not an object"]
++        for key in ["schema_version", "event_id", "event_type", "source", "subject", "time", "correlation_id", "project", "data"]:
++            if key not in event:
++                errors.append(f"{label}: missing {key}")
++        event_type = event.get("event_type")
++        if not isinstance(event_type, str) or not EVENT_TYPE_PATTERN.fullmatch(event_type):
++            errors.append(f"{label}: invalid event_type")
++        serialized = json.dumps(event, ensure_ascii=False)
++        if contains_secret_value(serialized):
++            errors.append(f"{label}: secret-like value found")
++        return errors
++
++    def chat(self, message: Any, label: str) -> list[str]:
++        errors: list[str] = []
++        if not isinstance(message, dict):
++            return [f"{label}: chat message is not an object"]
++        for key in ["schema_version", "message_id", "session_id", "turn_id", "timestamp", "participant", "message", "source"]:
++            if key not in message:
++                errors.append(f"{label}: missing {key}")
++        body = message.get("message") if isinstance(message.get("message"), dict) else {}
++        if "content_hash" not in body:
++            errors.append(f"{label}: missing message.content_hash")
++        serialized = json.dumps(message, ensure_ascii=False)
++        if contains_secret_value(serialized):
++            errors.append(f"{label}: secret-like value found")
++        return errors
+diff --git a/src/processforge_core/maintenance/documents.py b/src/processforge_core/maintenance/documents.py
+index 8a2adee..30ea158 100644
+--- a/src/processforge_core/maintenance/documents.py
++++ b/src/processforge_core/maintenance/documents.py
+@@ -145,3 +145,9 @@ class UpdateDocumentReader:
+ 
+     def notifications_path(self, workplace_root: Path) -> Path:
+         return self.runtime_root(workplace_root) / "notifications.json"
++
++    def staged_path(self, workplace_root: Path, candidate_id: str) -> Path:
++        return self.runtime_root(workplace_root) / "staged" / candidate_id / "stage-record.yaml"
++
++    def staged_record(self, workplace_root: Path, candidate_id: str) -> dict[str, Any]:
++        return self.yaml(self.staged_path(workplace_root, candidate_id))
+diff --git a/src/processforge_core/maintenance/registries.py b/src/processforge_core/maintenance/registries.py
+index 5237283..2b78af5 100644
+--- a/src/processforge_core/maintenance/registries.py
++++ b/src/processforge_core/maintenance/registries.py
+@@ -189,3 +189,17 @@ class UpdateRegistryReader:
+         if isinstance(installed_subject.get("install_path"), str) and str(installed_subject["install_path"]).strip():
+             return self._references(workplace_root).path_resolution_to_path(self._references(workplace_root).workplace_path_resolution(workplace_root, str(installed_subject["install_path"])))
+         return workplace_root / "packages" / safe_id(str(subject.get("id") or "package"))
++
++    def installed_versions(self, workplace_root: Path) -> dict[tuple[str, str], str]:
++        data = self.documents.yaml(self.documents.installed_registry(workplace_root))
++        subjects = data.get("subjects") if isinstance(data.get("subjects"), list) else []
++        result: dict[tuple[str, str], str] = {}
++        for subject in subjects:
++            if not isinstance(subject, dict):
++                continue
++            subject_type = subject.get("type")
++            subject_id = subject.get("id")
++            version = subject.get("version")
++            if isinstance(subject_type, str) and isinstance(subject_id, str) and isinstance(version, str) and version:
++                result[(subject_type, subject_id)] = version
++        return result
+diff --git a/src/processforge_core/maintenance/validation.py b/src/processforge_core/maintenance/validation.py
+new file mode 100644
+index 0000000..b67208f
+--- /dev/null
++++ b/src/processforge_core/maintenance/validation.py
+@@ -0,0 +1,111 @@
++from __future__ import annotations
++
++import re
++from pathlib import Path
++from typing import Any
++
++from ..common.checks import Check, check
++from .schema_checks import UpdateSchemaChecks
++from .source_contracts import UpdateSourceContractPolicy
++
++
++SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
++
++
++class UpdateDocumentValidationService:
++    """Validate existing update document semantics through concrete Core owners."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.schema_checks = UpdateSchemaChecks(distribution_root)
++        self.source_contracts = UpdateSourceContractPolicy()
++
++    def site_overrides(self, data: dict[str, Any], path: Path) -> list[Check]:
++        checks: list[Check] = []
++        if not data:
++            return [check("FAIL", f"{path} missing or invalid")]
++        self.schema_checks.append(checks, data, "update-site-overrides.schema.json", str(path))
++        overrides = data.get("overrides")
++        if not isinstance(overrides, list):
++            checks.append(check("FAIL", f"{path} overrides must be a list"))
++            return checks
++        seen: set[str] = set()
++        for index, item in enumerate(overrides):
++            label = f"overrides[{index}]"
++            if not isinstance(item, dict):
++                checks.append(check("FAIL", f"{label} must be an object"))
++                continue
++            site_id = item.get("site_id")
++            subject_id = item.get("subject_id")
++            if isinstance(site_id, str) and site_id.strip():
++                if site_id in seen:
++                    checks.append(check("FAIL", f"{label} duplicate site_id {site_id}"))
++                seen.add(site_id)
++            elif not (isinstance(subject_id, str) and subject_id.strip()) and not isinstance(item.get("subject"), dict):
++                checks.append(check("FAIL", f"{label} missing site_id, subject_id, or subject"))
++            if "enabled" in item and not isinstance(item.get("enabled"), bool):
++                checks.append(check("FAIL", f"{label}.enabled must be boolean"))
++            if "disabled" in item and not isinstance(item.get("disabled"), bool):
++                checks.append(check("FAIL", f"{label}.disabled must be boolean"))
++            if "channels" in item and (
++                not isinstance(item.get("channels"), list) or not all(isinstance(channel, str) and channel.strip() for channel in item.get("channels", []))
++            ):
++                checks.append(check("FAIL", f"{label}.channels must be a list of non-empty strings"))
++            self.source_contracts.append_env_checks(checks, item, label)
++            preserved = item.get("preserved_local") if isinstance(item.get("preserved_local"), dict) else {}
++            self.source_contracts.append_env_checks(checks, preserved, f"{label}.preserved_local")
++        if not checks:
++            checks.append(check("PASS", f"{path} valid update site overrides"))
++        return checks
++
++    def normalized_manifest(self, data: dict[str, Any], path: Path) -> list[Check]:
++        checks: list[Check] = []
++        self.schema_checks.append(checks, data, "normalized-update-manifest.schema.json", str(path))
++        if data.get("schema_version") != 1:
++            checks.append(check("FAIL", f"{path} schema_version must be 1"))
++        product = data.get("product") if isinstance(data.get("product"), dict) else {}
++        if not product.get("id"):
++            checks.append(check("FAIL", f"{path} product.id missing"))
++        subjects = data.get("subjects")
++        if not isinstance(subjects, list):
++            checks.append(check("FAIL", f"{path} subjects must be a list"))
++            return checks
++        for subject_index, subject in enumerate(subjects):
++            if not isinstance(subject, dict):
++                checks.append(check("FAIL", f"subjects[{subject_index}] must be an object"))
++                continue
++            for key in ("type", "id"):
++                if not isinstance(subject.get(key), str) or not str(subject.get(key)).strip():
++                    checks.append(check("FAIL", f"subjects[{subject_index}].{key} missing"))
++            versions = subject.get("versions")
++            if not isinstance(versions, list):
++                checks.append(check("FAIL", f"subjects[{subject_index}].versions must be a list"))
++                continue
++            for version_index, version in enumerate(versions):
++                if not isinstance(version, dict):
++                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}] must be an object"))
++                    continue
++                artifacts = version.get("artifacts")
++                if not isinstance(artifacts, list):
++                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts must be a list"))
++                    continue
++                for artifact_index, artifact in enumerate(artifacts):
++                    if not isinstance(artifact, dict):
++                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}] must be an object"))
++                        continue
++                    artifact_url = artifact.get("url")
++                    if not artifact_url:
++                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url missing"))
++                    elif not isinstance(artifact_url, str):
++                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url must be a string"))
++                    else:
++                        valid, reason = self.source_contracts.artifact_url_shape(artifact_url, artifact)
++                        if not valid:
++                            checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url {reason}"))
++                    artifact_sha256 = artifact.get("sha256")
++                    if not artifact_sha256:
++                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].sha256 missing"))
++                    elif not isinstance(artifact_sha256, str) or not SHA256_HEX_RE.fullmatch(artifact_sha256):
++                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].sha256 must be 64 hex characters"))
++        if not checks:
++            checks.append(check("PASS", f"{path} valid normalized update manifest"))
++        return checks
+diff --git a/src/processforge_core/prepared/resources.py b/src/processforge_core/prepared/resources.py
+index f61a5d3..893b389 100644
+--- a/src/processforge_core/prepared/resources.py
++++ b/src/processforge_core/prepared/resources.py
+@@ -14,6 +14,7 @@ from typing import Any
+ 
+ import yaml
+ 
++from ..work.context_documents import ContextContractInputs
+ from ..common.request_scope import safe_load as _safe_load_yaml
+ from ..project.snapshot import load_snapshot
+ from ..work.resource_material import (
+@@ -107,7 +108,7 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str,
+         contract_access = contract.get("workspace_access")
+         if not isinstance(contract_access, dict):
+             _fail("assignment_contract_invalid")
+-        requested = core.normalize_workspace_access(task.get("workspace_access"))
++        requested = ContextContractInputs().normalize_workspace_access(task.get("workspace_access"))
+         if requested != contract_access:
+             _fail("assignment_contract_changed")
+         capsule_access = capsule.get("workspace_access")
+diff --git a/src/processforge_core/process_catalog/handoffs.py b/src/processforge_core/process_catalog/handoffs.py
+new file mode 100644
+index 0000000..bf44d04
+--- /dev/null
++++ b/src/processforge_core/process_catalog/handoffs.py
+@@ -0,0 +1,30 @@
++"""Read handoff documents and construct their existing project paths."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.ids import safe_id
++from ..common.yaml_io import _parse_simple_yaml
++from ..documents.reader import YamlDocumentReader
++from ..project.metadata import ProjectMetadataReader
++
++
++class HandoffDocumentReader:
++    """Locate and softly read current handoff documents without lifecycle effects."""
++
++    def __init__(self) -> None:
++        self.documents = YamlDocumentReader(_parse_simple_yaml)
++
++    def directory(self, project_root: Path, handoff_id: str) -> Path:
++        return ProjectMetadataReader(project_root, documents=self.documents).flow_root() / "handoffs" / safe_id(handoff_id, "handoff")
++
++    def path(self, project_root: Path, handoff_id: str) -> Path:
++        return self.directory(project_root, handoff_id) / "handoff.yaml"
++
++    def read(self, project_root: Path, handoff_id: str) -> dict[str, Any]:
++        data = self.documents.load(self.path(project_root, handoff_id))
++        if not data:
++            raise SystemExit(f"FAIL: handoff not found: {safe_id(handoff_id, 'handoff')}")
++        return data
+diff --git a/src/processforge_core/process_catalog/routes.py b/src/processforge_core/process_catalog/routes.py
+new file mode 100644
+index 0000000..7d10072
+--- /dev/null
++++ b/src/processforge_core/process_catalog/routes.py
+@@ -0,0 +1,49 @@
++"""Read process routes and preserve their existing semantic checks."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.checks import Check, check
++from ..common.ids import safe_id
++from ..maintenance.schema_checks import UpdateSchemaChecks
++from .contracts import HANDOFF_MODES, ProcessRouteDocumentReader
++
++
++class ProcessRouteService:
++    """Own route lookup and validation using current document reads."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.routes = ProcessRouteDocumentReader()
++        self.schema_checks = UpdateSchemaChecks(distribution_root)
++
++    def by_id(self, project_root: Path, route_id: str) -> dict[str, Any]:
++        route_id = safe_id(route_id, "route")
++        routes = self.routes.read(project_root).get("routes", [])
++        for route in routes if isinstance(routes, list) else []:
++            if isinstance(route, dict) and str(route.get("id")) == route_id:
++                return route
++        raise SystemExit(f"FAIL: process route not found: {route_id}")
++
++    def validate(self, project_root: Path) -> list[Check]:
++        data = self.routes.read(project_root)
++        routes = data.get("routes") if isinstance(data.get("routes"), list) else []
++        checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
++        self.schema_checks.append(checks, data, "process-route-map.schema.json", "process route map")
++        seen: set[str] = set()
++        for route in routes:
++            if not isinstance(route, dict):
++                checks.append(check("FAIL", "route item must be object"))
++                continue
++            route_id = safe_id(str(route.get("id") or ""), "route")
++            checks.append(check("PASS" if route_id and route_id not in seen else "FAIL", f"route id unique: {route_id or 'missing'}"))
++            seen.add(route_id)
++            checks.append(check("PASS" if route.get("from_process") else "FAIL", f"{route_id} from_process present"))
++            checks.append(check("PASS" if route.get("to_process") else "FAIL", f"{route_id} to_process present"))
++            checks.append(check("PASS" if str(route.get("mode") or "") in HANDOFF_MODES else "FAIL", f"{route_id} mode valid"))
++        return checks
++
++    def required_role(self, route: dict[str, Any]) -> str:
++        requires = route.get("requires_agent") if isinstance(route.get("requires_agent"), dict) else {}
++        return str(requires.get("role") or "")
+diff --git a/src/processforge_core/project/hooks.py b/src/processforge_core/project/hooks.py
+new file mode 100644
+index 0000000..714b5cd
+--- /dev/null
++++ b/src/processforge_core/project/hooks.py
+@@ -0,0 +1,53 @@
++"""Read and validate current project hook configuration."""
++
++from __future__ import annotations
++
++from pathlib import Path
++
++from ..common.checks import Check, check
++from ..common.paths import rel
++from ..common.yaml_io import _parse_simple_yaml, yaml_error
++from ..documents.reader import YamlDocumentReader
++from .metadata import ProjectMetadataReader
++
++
++class HookConfigurationReader:
++    """Own hook paths and checks without dispatching hook effects."""
++
++    def __init__(self) -> None:
++        self.documents = YamlDocumentReader(_parse_simple_yaml)
++
++    def path(self, project_root: Path) -> Path:
++        return ProjectMetadataReader(project_root, documents=self.documents).flow_root() / "hooks.yaml"
++
++    def validate(self, project_root: Path) -> list[Check]:
++        path = self.path(project_root)
++        checks: list[Check] = []
++        if not path.is_file():
++            return [check("FAIL", f"{rel(path, project_root)} missing")]
++        data = self.documents.load(path)
++        error = yaml_error(data)
++        if error:
++            return [check("FAIL", f"{rel(path, project_root)} is invalid YAML: {error}")]
++        hooks_config = data.get("hooks") if isinstance(data, dict) else None
++        if not isinstance(hooks_config, dict):
++            return [check("FAIL", f"{rel(path, project_root)} missing hooks object")]
++        targets = hooks_config.get("targets")
++        if not isinstance(targets, list):
++            checks.append(check("FAIL", f"{rel(path, project_root)} hooks.targets must be a list"))
++            return checks
++        checks.append(check("PASS", f"{rel(path, project_root)} is valid YAML"))
++        checks.append(check("PASS", f"{rel(path, project_root)} hooks.targets is a list"))
++        for index, target in enumerate(targets):
++            label = f"hooks.targets[{index}]"
++            if not isinstance(target, dict):
++                checks.append(check("FAIL", f"{label} must be an object"))
++                continue
++            for key in ["id", "type", "enabled", "event_types"]:
++                checks.append(check("PASS" if key in target else "FAIL", f"{label}.{key} present"))
++            event_types = target.get("event_types")
++            if isinstance(event_types, list) and all(isinstance(item, str) and item for item in event_types):
++                checks.append(check("PASS", f"{label}.event_types is a string list"))
++            else:
++                checks.append(check("FAIL", f"{label}.event_types must be a string list; quote wildcard as \"*\""))
++        return checks
+diff --git a/src/processforge_core/runtime/worker_validation.py b/src/processforge_core/runtime/worker_validation.py
+new file mode 100644
+index 0000000..f81855f
+--- /dev/null
++++ b/src/processforge_core/runtime/worker_validation.py
+@@ -0,0 +1,195 @@
++"""Validate existing worker plans and observe required subagent reports."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.checks import Check, check
++from ..common.ids import safe_id
++from ..work.context_documents import WORKSPACE_ACCESS_KEYS, ContextContractInputs
++from ..work.scope_conflicts import ScopeConflictService
++from .catalog import RuntimeDriverCatalogReader
++from .worker_plans import WorkerPlanPolicy
++
++
++ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS = {
++    "schema_version",
++    "run",
++    "orchestrator",
++    "runtime",
++    "workers",
++    "integration",
++    "allow_write_scope_overlap",
++    "metadata",
++}
++ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "model", "reasoning_effort", "metadata"}
++ORCHESTRATOR_PLAN_WORKER_KEYS = {
++    "id",
++    "title",
++    "role",
++    "process",
++    "objective",
++    "execution_mode",
++    "writer",
++    "owner",
++    "runtime_driver",
++    "model",
++    "reasoning_effort",
++    "agent_reasoning_effort",
++    "allow_subagents",
++    "subagent_policy",
++    "allowed_files",
++    "allowed_read_files",
++    "forbidden_files",
++    "required_sources",
++    "context_artifacts",
++    "workspace_access",
++    "required_outputs",
++    "expected_report_artifact",
++    "expected_report_language",
++    "dependencies",
++    "depends_on",
++    "worker_may_rebuild_context",
++    "metadata",
++}
++ORCHESTRATOR_PLAN_SUBAGENT_KEYS = {"allow", "max_subagents", "allowed_roles", "require_reports", "reports_dir", "metadata"}
++
++
++class WorkerPlanValidationService:
++    """Keep plan checks and live observations with concrete Core owners."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.inputs = ContextContractInputs()
++        self.drivers = RuntimeDriverCatalogReader(distribution_root)
++        self.policy = WorkerPlanPolicy(inputs=self.inputs)
++
++    def extension_key(self, key: str) -> bool:
++        return key == "metadata" or key.startswith("x_") or key.startswith("x-")
++
++    def unsupported_keys(self, data: dict[str, Any], allowed: set[str]) -> list[str]:
++        return sorted(str(key) for key in data if str(key) not in allowed and not self.extension_key(str(key)))
++
++    def subagent_outputs(self, project_root: Path, task: dict[str, Any]) -> list[str]:
++        policy = self.inputs.normalize_subagent_policy(task.get("subagent_policy"))
++        if not policy.get("allow"):
++            return []
++        if not policy.get("require_reports"):
++            return []
++        reports_dir = self.inputs.normalize_assignment_path(str(policy.get("reports_dir") or ""))
++        if not reports_dir.startswith(".pf/artifacts/subagents/"):
++            return [f"subagent reports_dir outside allowed artifacts dir: {reports_dir or 'missing'}"]
++        report_root = project_root / reports_dir
++        if not report_root.is_dir():
++            return [f"subagent reports dir missing: {reports_dir}"]
++        reports = sorted([path for path in report_root.rglob("*") if path.is_file()])
++        if not reports:
++            return [f"subagent reports missing in: {reports_dir}"]
++        max_subagents = int(policy.get("max_subagents") or 0)
++        if max_subagents > 0 and len(reports) > max_subagents:
++            return [f"subagent reports exceed max_subagents: {len(reports)} > {max_subagents}"]
++        return []
++
++    def validate(self, project_root: Path, plan: dict[str, Any]) -> list[Check]:
++        checks: list[Check] = []
++        run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
++        runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
++        workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
++        for key in self.unsupported_keys(plan, ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS):
++            checks.append(check("FAIL", f"unsupported top-level config field: {key}"))
++        if "allow_write_scope_overlap" in plan:
++            checks.append(check("PASS" if isinstance(plan.get("allow_write_scope_overlap"), bool) else "FAIL", "allow_write_scope_overlap boolean"))
++        if runtime:
++            for key in self.unsupported_keys(runtime, ORCHESTRATOR_PLAN_RUNTIME_KEYS):
++                checks.append(check("FAIL", f"unsupported runtime config field: {key}"))
++            if "max_parallel_workers" in runtime:
++                max_parallel = runtime.get("max_parallel_workers")
++                checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
++            if "model" in runtime:
++                checks.append(check("PASS" if self.inputs.normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
++            if "reasoning_effort" in runtime:
++                checks.append(check("PASS" if self.inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
++        checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
++        checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
++        checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
++        checks.append(check("PASS" if workers else "FAIL", "workers present"))
++        default_driver = str(runtime.get("default_driver") or "manual")
++        start_policy = str(runtime.get("start_policy") or "manual")
++        checks.append(check("PASS" if default_driver in {item[0] for item in self.drivers.ids(project_root=project_root)} else "FAIL", f"runtime.default_driver registered: {default_driver}"))
++        checks.append(check("PASS" if start_policy in {"manual", "prepare", "supervisor"} else "FAIL", f"runtime.start_policy valid: {start_policy}"))
++        seen: set[str] = set()
++        scope_conflicts = ScopeConflictService(project_root)
++        write_scopes: list[tuple[str, list[str]]] = []
++        workers_by_id = {
++            safe_id(str(worker.get("id") or "worker"), "worker"): worker
++            for worker in workers
++            if isinstance(worker, dict)
++        }
++        for raw_worker in workers:
++            if not isinstance(raw_worker, dict):
++                checks.append(check("FAIL", "worker item must be an object"))
++                continue
++            for key in self.unsupported_keys(raw_worker, ORCHESTRATOR_PLAN_WORKER_KEYS):
++                checks.append(check("FAIL", f"unsupported worker config field: {key}"))
++            raw_subagent_policy = raw_worker.get("subagent_policy") if isinstance(raw_worker.get("subagent_policy"), dict) else {}
++            for key in self.unsupported_keys(raw_subagent_policy, ORCHESTRATOR_PLAN_SUBAGENT_KEYS):
++                checks.append(check("FAIL", f"unsupported subagent_policy config field: {key}"))
++            worker_id = safe_id(str(raw_worker.get("id") or ""), "worker")
++            checks.append(check("PASS" if worker_id and worker_id not in seen else "FAIL", f"worker id unique: {worker_id or 'missing'}"))
++            seen.add(worker_id)
++            allowed = self.inputs.assignment_scope_items(raw_worker.get("allowed_files"))
++            forbidden = self.inputs.assignment_scope_items(raw_worker.get("forbidden_files"))
++            read_allowed = self.inputs.assignment_scope_items(raw_worker.get("allowed_read_files"))
++            workspace_access = self.inputs.normalize_workspace_access(raw_worker.get("workspace_access"))
++            outputs = self.inputs.normalize_required_outputs(raw_worker.get("required_outputs"))
++            writer = bool(raw_worker.get("writer", True))
++            driver_id = str(raw_worker.get("runtime_driver") or default_driver)
++            if "model" in raw_worker:
++                checks.append(check("PASS" if self.inputs.normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
++            if "reasoning_effort" in raw_worker or "agent_reasoning_effort" in raw_worker:
++                checks.append(check("PASS" if self.inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
++            if writer:
++                checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
++            checks.append(check("PASS" if driver_id in {item[0] for item in self.drivers.ids(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
++            for dep_id in self.policy.dependency_set(raw_worker):
++                checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
++            has_workspace_access = any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS)
++            checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") or has_workspace_access else "WARN", f"{worker_id} has bounded read/context scope"))
++            forbidden_conflicts = scope_conflicts.conflicts(worker_id, allowed, worker_id, forbidden, reason_prefix="forbidden_wins:")
++            checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
++            subagent_policy = self.policy.subagent_policy(raw_worker)
++            reports_dir = str(subagent_policy.get("reports_dir") or "")
++            if "allow_subagents" in raw_worker:
++                checks.append(check("PASS" if isinstance(raw_worker.get("allow_subagents"), bool) else "FAIL", f"{worker_id} allow_subagents boolean"))
++            if "allow" in raw_subagent_policy:
++                checks.append(check("PASS" if isinstance(raw_subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent_policy.allow boolean"))
++            if "require_reports" in raw_subagent_policy:
++                checks.append(check("PASS" if isinstance(raw_subagent_policy.get("require_reports"), bool) else "FAIL", f"{worker_id} subagent_policy.require_reports boolean"))
++            if "max_subagents" in raw_subagent_policy:
++                max_subagents_raw = raw_subagent_policy.get("max_subagents")
++                checks.append(check("PASS" if type(max_subagents_raw) is int and max_subagents_raw >= 0 else "FAIL", f"{worker_id} subagent_policy.max_subagents non-negative integer"))
++            checks.append(check("PASS" if isinstance(subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent allow flag valid"))
++            if subagent_policy.get("allow") and subagent_policy.get("require_reports"):
++                checks.append(check("PASS" if reports_dir.startswith(".pf/artifacts/subagents/") else "FAIL", f"{worker_id} subagent reports_dir inside .pf/artifacts/subagents"))
++                checks.append(check("PASS" if int(subagent_policy.get("max_subagents") or 0) > 0 else "FAIL", f"{worker_id} subagent max_subagents positive"))
++            for output in outputs:
++                out_path = self.inputs.normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
++                checks.append(check("PASS" if out_path else "FAIL", f"{worker_id} required output has path"))
++                if out_path:
++                    allowed_output = self.inputs.path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
++                    checks.append(check("PASS" if allowed_output else "FAIL", f"{worker_id} required output inside allowed or artifact area: {out_path}"))
++            checks.append(check("PASS" if not bool(raw_worker.get("worker_may_rebuild_context", False)) else "FAIL", f"{worker_id} worker_may_rebuild_context false by default"))
++            if writer:
++                write_scopes.append((worker_id, allowed))
++        if not bool(plan.get("allow_write_scope_overlap", False)):
++            for index, (left_id, left_scope) in enumerate(write_scopes):
++                for right_id, right_scope in write_scopes[index + 1 :]:
++                    if self.policy.depends_on(workers_by_id, left_id, right_id) or self.policy.depends_on(workers_by_id, right_id, left_id):
++                        continue
++                    conflicts = scope_conflicts.conflicts(left_id, left_scope, right_id, right_scope)
++                    if conflicts:
++                        checks.append(check("FAIL", f"parallel write scopes overlap: {left_id} <-> {right_id}"))
++        integration = plan.get("integration") if isinstance(plan.get("integration"), dict) else {}
++        if integration.get("required", True):
++            checks.append(check("PASS" if integration.get("expected_output") else "FAIL", "integration expected_output present"))
++        return checks
+diff --git a/src/processforge_core/work/context.py b/src/processforge_core/work/context.py
+index 05fe5d1..d9ae8c0 100644
+--- a/src/processforge_core/work/context.py
++++ b/src/processforge_core/work/context.py
+@@ -157,7 +157,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
+         raise ContextContractError("assignment_contract_invalid")
+     if expected.get("artifact"):
+         expected["artifact"] = portable_path(expected["artifact"])
+-    access = core.normalize_workspace_access(metadata.get("workspace_access"))
++    access = ContextContractInputs().normalize_workspace_access(metadata.get("workspace_access"))
+     _portable_values(access)
+     if core.workspace_access_public_path_issues(access):
+         raise ContextContractError("private_path_forbidden")
+@@ -173,7 +173,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
+         "workspace_access": access,
+         "agent_model": ContextContractInputs().normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
+         "agent_reasoning_effort": ContextContractInputs().normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
+-        "subagent_policy": core.normalize_subagent_policy(metadata.get("subagent_policy")),
++        "subagent_policy": ContextContractInputs().normalize_subagent_policy(metadata.get("subagent_policy")),
+     }
+     _portable_values({key: result[key] for key in ("scope", "outputs", "subagent_policy")})
+     return result
+diff --git a/tools/processforge.py b/tools/processforge.py
+index 015a073..6de2121 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -207,6 +207,20 @@ _project_platform_selection_service = ProjectPlatformSelectionService(ROOT)
+ _update_registry_reader = UpdateRegistryReader(ROOT)
+ _process_contract_validation_service = ProcessContractValidationService(ROOT)
+ _process_route_document_reader = ProcessRouteDocumentReader()
++from processforge_core.runtime.worker_validation import WorkerPlanValidationService
++from processforge_core.project.hooks import HookConfigurationReader
++from processforge_core.common.record_validation import RecordValidationPolicy
++from processforge_core.process_catalog.routes import ProcessRouteService
++from processforge_core.process_catalog.handoffs import HandoffDocumentReader
++from processforge_core.maintenance.validation import UpdateDocumentValidationService
++from processforge_core.work.context_documents import WORKSPACE_ACCESS_KEYS
++
++_worker_plan_validation_service = WorkerPlanValidationService(ROOT)
++_hook_configuration_reader = HookConfigurationReader()
++_record_validation_policy = RecordValidationPolicy()
++_process_route_service = ProcessRouteService(ROOT)
++_handoff_document_reader = HandoffDocumentReader()
++_update_document_validation_service = UpdateDocumentValidationService(ROOT)
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -9050,45 +9064,12 @@ def process_event_exists(path: Path, event_id: str) -> bool:
+     return _process_event_journal.contains(path, event_id)
+ 
+ 
+-def hook_config_path(project_root: Path) -> Path:
+-    return locate_flow_root(project_root) / "hooks.yaml"
+ 
+ 
+ def hook_results_root(project_root: Path) -> Path:
+     return locate_flow_root(project_root) / "runtime" / "hooks" / "results"
+ 
+ 
+-def validate_hooks_config(project_root: Path) -> list[Check]:
+-    path = hook_config_path(project_root)
+-    checks: list[Check] = []
+-    if not path.is_file():
+-        return [check("FAIL", f"{rel(path, project_root)} missing")]
+-    data = load_yaml_document(path)
+-    error = yaml_error(data)
+-    if error:
+-        return [check("FAIL", f"{rel(path, project_root)} is invalid YAML: {error}")]
+-    hooks_config = data.get("hooks") if isinstance(data, dict) else None
+-    if not isinstance(hooks_config, dict):
+-        return [check("FAIL", f"{rel(path, project_root)} missing hooks object")]
+-    targets = hooks_config.get("targets")
+-    if not isinstance(targets, list):
+-        checks.append(check("FAIL", f"{rel(path, project_root)} hooks.targets must be a list"))
+-        return checks
+-    checks.append(check("PASS", f"{rel(path, project_root)} is valid YAML"))
+-    checks.append(check("PASS", f"{rel(path, project_root)} hooks.targets is a list"))
+-    for index, target in enumerate(targets):
+-        label = f"hooks.targets[{index}]"
+-        if not isinstance(target, dict):
+-            checks.append(check("FAIL", f"{label} must be an object"))
+-            continue
+-        for key in ["id", "type", "enabled", "event_types"]:
+-            checks.append(check("PASS" if key in target else "FAIL", f"{label}.{key} present"))
+-        event_types = target.get("event_types")
+-        if isinstance(event_types, list) and all(isinstance(item, str) and item for item in event_types):
+-            checks.append(check("PASS", f"{label}.event_types is a string list"))
+-        else:
+-            checks.append(check("FAIL", f"{label}.event_types must be a string list; quote wildcard as \"*\""))
+-    return checks
+ 
+ 
+ def resolve_runtime_config_path(project_root: Path, value: str | None, default: Path) -> Path:
+@@ -9167,7 +9148,7 @@ def event_matches_hook(event: dict[str, Any], hook: dict[str, Any]) -> bool:
+ 
+ 
+ def hook_targets(project_root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+-    config = load_yaml_document(hook_config_path(project_root))
++    config = load_yaml_document(_hook_configuration_reader.path(project_root))
+     hooks_config = config.get("hooks") if isinstance(config, dict) else None
+     if isinstance(hooks_config, dict):
+         targets = hooks_config.get("targets", [])
+@@ -9315,39 +9296,10 @@ def emit_process_event(project_root: Path, event_type: str, **kwargs: Any) -> di
+     return event
+ 
+ 
+-EVENT_TYPE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$")
+ 
+ 
+-def validate_event_object(event: Any, label: str) -> list[str]:
+-    errors: list[str] = []
+-    if not isinstance(event, dict):
+-        return [f"{label}: event is not an object"]
+-    for key in ["schema_version", "event_id", "event_type", "source", "subject", "time", "correlation_id", "project", "data"]:
+-        if key not in event:
+-            errors.append(f"{label}: missing {key}")
+-    event_type = event.get("event_type")
+-    if not isinstance(event_type, str) or not EVENT_TYPE_PATTERN.fullmatch(event_type):
+-        errors.append(f"{label}: invalid event_type")
+-    serialized = json.dumps(event, ensure_ascii=False)
+-    if contains_secret_value(serialized):
+-        errors.append(f"{label}: secret-like value found")
+-    return errors
+ 
+ 
+-def validate_chat_message_object(message: Any, label: str) -> list[str]:
+-    errors: list[str] = []
+-    if not isinstance(message, dict):
+-        return [f"{label}: chat message is not an object"]
+-    for key in ["schema_version", "message_id", "session_id", "turn_id", "timestamp", "participant", "message", "source"]:
+-        if key not in message:
+-            errors.append(f"{label}: missing {key}")
+-    body = message.get("message") if isinstance(message.get("message"), dict) else {}
+-    if "content_hash" not in body:
+-        errors.append(f"{label}: missing message.content_hash")
+-    serialized = json.dumps(message, ensure_ascii=False)
+-    if contains_secret_value(serialized):
+-        errors.append(f"{label}: secret-like value found")
+-    return errors
+ 
+ 
+ def iter_ndjson(path: Path) -> list[tuple[int, Any, str | None]]:
+@@ -10450,11 +10402,8 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
+     return normalize(project_root, assignment, metadata, sys.modules[__name__])
+ 
+ 
+-WORKSPACE_ACCESS_KEYS = ("knowledge_resources", "templates", "tools", "mcp")
+ 
+ 
+-def normalize_workspace_access(value: Any) -> dict[str, list[Any]]:
+-    return _context_contract_inputs.normalize_workspace_access(value)
+ 
+ 
+ def workspace_access_public_path_issues(access: dict[str, list[Any]]) -> list[str]:
+@@ -13665,13 +13614,6 @@ def mark_expired_agent_leases(workplace_root: Path) -> int:
+ 
+ 
+ 
+-def route_by_id(project_root: Path, route_id: str) -> dict[str, Any]:
+-    route_id = safe_id(route_id, "route")
+-    routes = _process_route_document_reader.read(project_root).get("routes", [])
+-    for route in routes if isinstance(routes, list) else []:
+-        if isinstance(route, dict) and str(route.get("id")) == route_id:
+-            return route
+-    raise SystemExit(f"FAIL: process route not found: {route_id}")
+ 
+ 
+ def command_process_route_list(args: argparse.Namespace) -> int:
+@@ -13686,66 +13628,37 @@ def command_process_route_list(args: argparse.Namespace) -> int:
+     return 0
+ 
+ 
+-def validate_process_route_map(project_root: Path) -> list[Check]:
+-    data = _process_route_document_reader.read(project_root)
+-    routes = data.get("routes") if isinstance(data.get("routes"), list) else []
+-    checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
+-    _update_schema_checks.append(checks, data, "process-route-map.schema.json", "process route map")
+-    seen: set[str] = set()
+-    for route in routes:
+-        if not isinstance(route, dict):
+-            checks.append(check("FAIL", "route item must be object"))
+-            continue
+-        route_id = safe_id(str(route.get("id") or ""), "route")
+-        checks.append(check("PASS" if route_id and route_id not in seen else "FAIL", f"route id unique: {route_id or 'missing'}"))
+-        seen.add(route_id)
+-        checks.append(check("PASS" if route.get("from_process") else "FAIL", f"{route_id} from_process present"))
+-        checks.append(check("PASS" if route.get("to_process") else "FAIL", f"{route_id} to_process present"))
+-        checks.append(check("PASS" if str(route.get("mode") or "") in HANDOFF_MODES else "FAIL", f"{route_id} mode valid"))
+-    return checks
+ 
+ 
+ def command_process_route_validate(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    return print_checks(validate_process_route_map(project_root))
++    return print_checks(_process_route_service.validate(project_root))
+ 
+ 
+ def command_process_route_doctor(args: argparse.Namespace) -> int:
+     return command_process_route_validate(args)
+ 
+ 
+-def handoff_dir(project_root: Path, handoff_id: str) -> Path:
+-    return locate_flow_root(project_root) / "handoffs" / safe_id(handoff_id, "handoff")
+ 
+ 
+-def handoff_yaml_path(project_root: Path, handoff_id: str) -> Path:
+-    return handoff_dir(project_root, handoff_id) / "handoff.yaml"
+ 
+ 
+-def load_handoff(project_root: Path, handoff_id: str) -> dict[str, Any]:
+-    data = load_yaml_document(handoff_yaml_path(project_root, handoff_id))
+-    if not data:
+-        raise SystemExit(f"FAIL: handoff not found: {safe_id(handoff_id, 'handoff')}")
+-    return data
+ 
+ 
+ def save_handoff(project_root: Path, handoff: dict[str, Any]) -> None:
+     handoff["updated_at"] = now_utc()
+-    write_yaml_file(handoff_yaml_path(project_root, str(handoff.get("id") or "handoff")), handoff)
++    write_yaml_file(_handoff_document_reader.path(project_root, str(handoff.get("id") or "handoff")), handoff)
+ 
+ 
+-def required_role_from_route(route: dict[str, Any]) -> str:
+-    requires = route.get("requires_agent") if isinstance(route.get("requires_agent"), dict) else {}
+-    return str(requires.get("role") or "")
+ 
+ 
+ def command_handoff_create(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    route = route_by_id(project_root, args.route)
++    route = _process_route_service.by_id(project_root, args.route)
+     handoff_id = safe_id(args.id or f"handoff-{route.get('id')}", "handoff")
+-    root = handoff_dir(project_root, handoff_id)
++    root = _handoff_document_reader.directory(project_root, handoff_id)
+     handoff = {
+         "schema_version": 1,
+         "id": handoff_id,
+@@ -13755,7 +13668,7 @@ def command_handoff_create(args: argparse.Namespace) -> int:
+         "to": {
+             "process": str(route.get("to_process") or ""),
+             "mode": str(route.get("mode") or "wait_for_result"),
+-            "required_role": required_role_from_route(route),
++            "required_role": _process_route_service.required_role(route),
+             "required_capabilities": [str(item) for item in as_list(route.get("required_capabilities"))],
+             "required_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("required_specializations"))],
+             "preferred_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("preferred_specializations"))],
+@@ -13804,7 +13717,7 @@ def handoff_available_agents(args: argparse.Namespace, handoff: dict[str, Any],
+ def command_handoff_status(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    handoff = load_handoff(project_root, args.handoff)
++    handoff = _handoff_document_reader.read(project_root, args.handoff)
+     agents = handoff_available_agents(args, handoff, project_root)
+     payload = {
+         "handoff": handoff.get("id"),
+@@ -13825,7 +13738,7 @@ def command_handoff_status(args: argparse.Namespace) -> int:
+ def command_handoff_accept(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    handoff = load_handoff(project_root, args.handoff)
++    handoff = _handoff_document_reader.read(project_root, args.handoff)
+     handoff["status"] = "accepted"
+     handoff["accepted_by"] = {"agent_id": safe_id(args.agent, "agent"), "session_id": args.session or "", "accepted_at": now_utc()}
+     save_handoff(project_root, handoff)
+@@ -13836,7 +13749,7 @@ def command_handoff_accept(args: argparse.Namespace) -> int:
+ def command_handoff_start_target_run(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    handoff = load_handoff(project_root, args.handoff)
++    handoff = _handoff_document_reader.read(project_root, args.handoff)
+     run_id = safe_id(args.run or f"{handoff.get('id')}-target", "run")
+     process_id = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or "task-batch-execution")
+     if not _work_paths.run_document(project_root, run_id).is_file():
+@@ -13853,7 +13766,7 @@ def command_handoff_start_target_run(args: argparse.Namespace) -> int:
+ def command_handoff_return(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    handoff = load_handoff(project_root, args.handoff)
++    handoff = _handoff_document_reader.read(project_root, args.handoff)
+     artifacts = [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.artifact)]
+     missing = [item for item in artifacts if not (project_root / item).is_file()]
+     if missing:
+@@ -13863,7 +13776,7 @@ def command_handoff_return(args: argparse.Namespace) -> int:
+     handoff["returned_at"] = now_utc()
+     handoff["return_artifacts"] = artifacts
+     save_handoff(project_root, handoff)
+-    write_yaml_file(handoff_dir(project_root, str(handoff.get("id"))) / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff.get("id"), "status": "returned", "artifacts": artifacts, "returned_at": handoff["returned_at"]})
++    write_yaml_file(_handoff_document_reader.directory(project_root, str(handoff.get("id"))) / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff.get("id"), "status": "returned", "artifacts": artifacts, "returned_at": handoff["returned_at"]})
+     print(f"RETURNED: {handoff.get('id')}")
+     return 0
+ 
+@@ -13871,7 +13784,7 @@ def command_handoff_return(args: argparse.Namespace) -> int:
+ def command_handoff_finalize(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    handoff = load_handoff(project_root, args.handoff)
++    handoff = _handoff_document_reader.read(project_root, args.handoff)
+     if str(handoff.get("status")) not in {"returned", "accepted", "in_progress"}:
+         print(f"FAIL: handoff is not finalizable: {handoff.get('status')}")
+         return 1
+@@ -14063,31 +13976,10 @@ def command_continuation_doctor(args: argparse.Namespace) -> int:
+     return print_checks(checks)
+ 
+ 
+-def normalize_subagent_policy(raw: Any) -> dict[str, Any]:
+-    return _context_contract_inputs.normalize_subagent_policy(raw)
+ 
+ 
+ 
+ 
+-def validate_subagent_policy_outputs(project_root: Path, task: dict[str, Any]) -> list[str]:
+-    policy = normalize_subagent_policy(task.get("subagent_policy"))
+-    if not policy.get("allow"):
+-        return []
+-    if not policy.get("require_reports"):
+-        return []
+-    reports_dir = _context_contract_inputs.normalize_assignment_path(str(policy.get("reports_dir") or ""))
+-    if not reports_dir.startswith(".pf/artifacts/subagents/"):
+-        return [f"subagent reports_dir outside allowed artifacts dir: {reports_dir or 'missing'}"]
+-    report_root = project_root / reports_dir
+-    if not report_root.is_dir():
+-        return [f"subagent reports dir missing: {reports_dir}"]
+-    reports = sorted([path for path in report_root.rglob("*") if path.is_file()])
+-    if not reports:
+-        return [f"subagent reports missing in: {reports_dir}"]
+-    max_subagents = int(policy.get("max_subagents") or 0)
+-    if max_subagents > 0 and len(reports) > max_subagents:
+-        return [f"subagent reports exceed max_subagents: {len(reports)} > {max_subagents}"]
+-    return []
+ 
+ 
+ 
+@@ -14793,7 +14685,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+     ]
+     for item in missing:
+         lines.append(f"- missing: `{item}`")
+-    subagent_failures = validate_subagent_policy_outputs(project_root, task)
++    subagent_failures = _worker_plan_validation_service.subagent_outputs(project_root, task)
+     lines.append(f"- subagent_policy_failures: `{len(subagent_failures)}`")
+     for item in subagent_failures:
+         lines.append(f"- subagent_policy_failure: `{item}`")
+@@ -15466,55 +15358,10 @@ def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_
+ 
+ 
+ 
+-ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS = {
+-    "schema_version",
+-    "run",
+-    "orchestrator",
+-    "runtime",
+-    "workers",
+-    "integration",
+-    "allow_write_scope_overlap",
+-    "metadata",
+-}
+-ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "model", "reasoning_effort", "metadata"}
+-ORCHESTRATOR_PLAN_WORKER_KEYS = {
+-    "id",
+-    "title",
+-    "role",
+-    "process",
+-    "objective",
+-    "execution_mode",
+-    "writer",
+-    "owner",
+-    "runtime_driver",
+-    "model",
+-    "reasoning_effort",
+-    "agent_reasoning_effort",
+-    "allow_subagents",
+-    "subagent_policy",
+-    "allowed_files",
+-    "allowed_read_files",
+-    "forbidden_files",
+-    "required_sources",
+-    "context_artifacts",
+-    "workspace_access",
+-    "required_outputs",
+-    "expected_report_artifact",
+-    "expected_report_language",
+-    "dependencies",
+-    "depends_on",
+-    "worker_may_rebuild_context",
+-    "metadata",
+-}
+-ORCHESTRATOR_PLAN_SUBAGENT_KEYS = {"allow", "max_subagents", "allowed_roles", "require_reports", "reports_dir", "metadata"}
+ 
+ 
+-def config_extension_key(key: str) -> bool:
+-    return key == "metadata" or key.startswith("x_") or key.startswith("x-")
+ 
+ 
+-def unsupported_config_keys(data: dict[str, Any], allowed: set[str]) -> list[str]:
+-    return sorted(str(key) for key in data if str(key) not in allowed and not config_extension_key(str(key)))
+ 
+ 
+ 
+@@ -15536,109 +15383,6 @@ def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -
+     return result
+ 
+ 
+-def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) -> list[Check]:
+-    checks: list[Check] = []
+-    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+-    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+-    workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+-    for key in unsupported_config_keys(plan, ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS):
+-        checks.append(check("FAIL", f"unsupported top-level config field: {key}"))
+-    if "allow_write_scope_overlap" in plan:
+-        checks.append(check("PASS" if isinstance(plan.get("allow_write_scope_overlap"), bool) else "FAIL", "allow_write_scope_overlap boolean"))
+-    if runtime:
+-        for key in unsupported_config_keys(runtime, ORCHESTRATOR_PLAN_RUNTIME_KEYS):
+-            checks.append(check("FAIL", f"unsupported runtime config field: {key}"))
+-        if "max_parallel_workers" in runtime:
+-            max_parallel = runtime.get("max_parallel_workers")
+-            checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
+-        if "model" in runtime:
+-            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
+-        if "reasoning_effort" in runtime:
+-            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
+-    checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
+-    checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
+-    checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
+-    checks.append(check("PASS" if workers else "FAIL", "workers present"))
+-    default_driver = str(runtime.get("default_driver") or "manual")
+-    start_policy = str(runtime.get("start_policy") or "manual")
+-    checks.append(check("PASS" if default_driver in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"runtime.default_driver registered: {default_driver}"))
+-    checks.append(check("PASS" if start_policy in {"manual", "prepare", "supervisor"} else "FAIL", f"runtime.start_policy valid: {start_policy}"))
+-    seen: set[str] = set()
+-    scope_conflicts = ScopeConflictService(project_root)
+-    write_scopes: list[tuple[str, list[str]]] = []
+-    workers_by_id = {
+-        safe_id(str(worker.get("id") or "worker"), "worker"): worker
+-        for worker in workers
+-        if isinstance(worker, dict)
+-    }
+-    for raw_worker in workers:
+-        if not isinstance(raw_worker, dict):
+-            checks.append(check("FAIL", "worker item must be an object"))
+-            continue
+-        for key in unsupported_config_keys(raw_worker, ORCHESTRATOR_PLAN_WORKER_KEYS):
+-            checks.append(check("FAIL", f"unsupported worker config field: {key}"))
+-        raw_subagent_policy = raw_worker.get("subagent_policy") if isinstance(raw_worker.get("subagent_policy"), dict) else {}
+-        for key in unsupported_config_keys(raw_subagent_policy, ORCHESTRATOR_PLAN_SUBAGENT_KEYS):
+-            checks.append(check("FAIL", f"unsupported subagent_policy config field: {key}"))
+-        worker_id = safe_id(str(raw_worker.get("id") or ""), "worker")
+-        checks.append(check("PASS" if worker_id and worker_id not in seen else "FAIL", f"worker id unique: {worker_id or 'missing'}"))
+-        seen.add(worker_id)
+-        allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_files"))
+-        forbidden = _context_contract_inputs.assignment_scope_items(raw_worker.get("forbidden_files"))
+-        read_allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_read_files"))
+-        workspace_access = normalize_workspace_access(raw_worker.get("workspace_access"))
+-        outputs = _context_contract_inputs.normalize_required_outputs(raw_worker.get("required_outputs"))
+-        writer = bool(raw_worker.get("writer", True))
+-        driver_id = str(raw_worker.get("runtime_driver") or default_driver)
+-        if "model" in raw_worker:
+-            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
+-        if "reasoning_effort" in raw_worker or "agent_reasoning_effort" in raw_worker:
+-            checks.append(check("PASS" if _context_contract_inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
+-        if writer:
+-            checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
+-        checks.append(check("PASS" if driver_id in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
+-        for dep_id in _worker_plan_policy.dependency_set(raw_worker):
+-            checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
+-        has_workspace_access = any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS)
+-        checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") or has_workspace_access else "WARN", f"{worker_id} has bounded read/context scope"))
+-        forbidden_conflicts = scope_conflicts.conflicts(worker_id, allowed, worker_id, forbidden, reason_prefix="forbidden_wins:")
+-        checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
+-        subagent_policy = _worker_plan_policy.subagent_policy(raw_worker)
+-        reports_dir = str(subagent_policy.get("reports_dir") or "")
+-        if "allow_subagents" in raw_worker:
+-            checks.append(check("PASS" if isinstance(raw_worker.get("allow_subagents"), bool) else "FAIL", f"{worker_id} allow_subagents boolean"))
+-        if "allow" in raw_subagent_policy:
+-            checks.append(check("PASS" if isinstance(raw_subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent_policy.allow boolean"))
+-        if "require_reports" in raw_subagent_policy:
+-            checks.append(check("PASS" if isinstance(raw_subagent_policy.get("require_reports"), bool) else "FAIL", f"{worker_id} subagent_policy.require_reports boolean"))
+-        if "max_subagents" in raw_subagent_policy:
+-            max_subagents_raw = raw_subagent_policy.get("max_subagents")
+-            checks.append(check("PASS" if type(max_subagents_raw) is int and max_subagents_raw >= 0 else "FAIL", f"{worker_id} subagent_policy.max_subagents non-negative integer"))
+-        checks.append(check("PASS" if isinstance(subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent allow flag valid"))
+-        if subagent_policy.get("allow") and subagent_policy.get("require_reports"):
+-            checks.append(check("PASS" if reports_dir.startswith(".pf/artifacts/subagents/") else "FAIL", f"{worker_id} subagent reports_dir inside .pf/artifacts/subagents"))
+-            checks.append(check("PASS" if int(subagent_policy.get("max_subagents") or 0) > 0 else "FAIL", f"{worker_id} subagent max_subagents positive"))
+-        for output in outputs:
+-            out_path = _context_contract_inputs.normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
+-            checks.append(check("PASS" if out_path else "FAIL", f"{worker_id} required output has path"))
+-            if out_path:
+-                allowed_output = _context_contract_inputs.path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
+-                checks.append(check("PASS" if allowed_output else "FAIL", f"{worker_id} required output inside allowed or artifact area: {out_path}"))
+-        checks.append(check("PASS" if not bool(raw_worker.get("worker_may_rebuild_context", False)) else "FAIL", f"{worker_id} worker_may_rebuild_context false by default"))
+-        if writer:
+-            write_scopes.append((worker_id, allowed))
+-    if not bool(plan.get("allow_write_scope_overlap", False)):
+-        for index, (left_id, left_scope) in enumerate(write_scopes):
+-            for right_id, right_scope in write_scopes[index + 1 :]:
+-                if _worker_plan_policy.depends_on(workers_by_id, left_id, right_id) or _worker_plan_policy.depends_on(workers_by_id, right_id, left_id):
+-                    continue
+-                conflicts = scope_conflicts.conflicts(left_id, left_scope, right_id, right_scope)
+-                if conflicts:
+-                    checks.append(check("FAIL", f"parallel write scopes overlap: {left_id} <-> {right_id}"))
+-    integration = plan.get("integration") if isinstance(plan.get("integration"), dict) else {}
+-    if integration.get("required", True):
+-        checks.append(check("PASS" if integration.get("expected_output") else "FAIL", "integration expected_output present"))
+-    return checks
+ 
+ 
+ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_input: dict[str, str] | None = None) -> str:
+@@ -15647,13 +15391,13 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
+     run_id = str(task.get("run_id") or "")
+     capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+     workspace_access = rel(_work_paths.worker_run(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
+-    requested_workspace_access = normalize_workspace_access(task.get("workspace_access"))
++    requested_workspace_access = _context_contract_inputs.normalize_workspace_access(task.get("workspace_access"))
+     allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
+     allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
+     forbidden_files = _context_contract_inputs.assignment_scope_items(task.get("forbidden_files"))
+     required_outputs = _context_contract_inputs.normalize_required_outputs(task.get("required_outputs"))
+     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+-    subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
++    subagent_policy = _context_contract_inputs.normalize_subagent_policy(task.get("subagent_policy"))
+     prepared_instructions = [
+         "Read the prepared input identified by PF_PREPARED_INPUT_FILE and verify PF_PREPARED_INPUT_SHA256 before working.",
+         "The orchestrator has already resolved the process, scope, inputs and resource permissions for this attempt.",
+@@ -15814,7 +15558,7 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
+                 "allowed_read_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
+                 "forbidden_files": _context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
+                 "required_outputs": _context_contract_inputs.normalize_required_outputs(worker.get("required_outputs")),
+-                "workspace_access": normalize_workspace_access(worker.get("workspace_access")),
++                "workspace_access": _context_contract_inputs.normalize_workspace_access(worker.get("workspace_access")),
+                 "expected_report_artifact": str(worker.get("expected_report_artifact") or _work_output_policy.default_report(worker_id)),
+                 "depends_on": sorted(_worker_plan_policy.dependency_set(worker)),
+             }
+@@ -15966,7 +15710,7 @@ def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+-    result = print_checks(validate_orchestrator_task_plan(project_root, plan))
++    result = print_checks(_worker_plan_validation_service.validate(project_root, plan))
+     if getattr(args, "write_normalized", None):
+         output = Path(args.write_normalized).expanduser()
+         if not output.is_absolute():
+@@ -16004,7 +15748,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+     require_flow_root(project_root)
+     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+     plan = apply_orchestrator_model_override(plan, getattr(args, "model", None))
+-    checks = validate_orchestrator_task_plan(project_root, plan)
++    checks = _worker_plan_validation_service.validate(project_root, plan)
+     if any(item.level == "FAIL" for item in checks):
+         print_checks(checks)
+         return 1
+@@ -16063,10 +15807,10 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+                     read_file=[],
+                     context_artifact=normalize_context_artifacts(worker.get("context_artifacts")),
+                     required_source=_context_contract_inputs.assignment_scope_items(worker.get("required_sources")),
+-                    workspace_knowledge_resource=normalize_workspace_access(worker.get("workspace_access"))["knowledge_resources"],
+-                    workspace_template=normalize_workspace_access(worker.get("workspace_access"))["templates"],
+-                    workspace_tool=normalize_workspace_access(worker.get("workspace_access"))["tools"],
+-                    workspace_mcp=normalize_workspace_access(worker.get("workspace_access"))["mcp"],
++                    workspace_knowledge_resource=_context_contract_inputs.normalize_workspace_access(worker.get("workspace_access"))["knowledge_resources"],
++                    workspace_template=_context_contract_inputs.normalize_workspace_access(worker.get("workspace_access"))["templates"],
++                    workspace_tool=_context_contract_inputs.normalize_workspace_access(worker.get("workspace_access"))["tools"],
++                    workspace_mcp=_context_contract_inputs.normalize_workspace_access(worker.get("workspace_access"))["mcp"],
+                     forbidden_file=_context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
+                     forbidden_glob=[],
+                     owner=str(worker.get("owner") or task_id),
+@@ -16093,7 +15837,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+         agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort)
+         if agent_reasoning_effort:
+             task["agent_reasoning_effort"] = agent_reasoning_effort
+-        task["workspace_access"] = normalize_workspace_access(worker.get("workspace_access"))
++        task["workspace_access"] = _context_contract_inputs.normalize_workspace_access(worker.get("workspace_access"))
+         task["subagent_policy"] = _worker_plan_policy.subagent_policy(worker)
+         blocked_by = sorted({safe_id(str(item), "task") for item in [*as_list(worker.get("dependencies")), *as_list(worker.get("depends_on"))] if item})
+         if blocked_by:
+@@ -16404,7 +16148,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         task["context_artifacts"] = context_artifacts
+     if required_sources:
+         task["required_sources"] = required_sources
+-    workspace_access = normalize_workspace_access(
++    workspace_access = _context_contract_inputs.normalize_workspace_access(
+         {
+             "knowledge_resources": getattr(args, "workspace_knowledge_resource", []),
+             "templates": getattr(args, "workspace_template", []),
+@@ -16633,7 +16377,7 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
+ def command_hooks_dispatch(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    hook_checks = validate_hooks_config(project_root)
++    hook_checks = _hook_configuration_reader.validate(project_root)
+     hook_failures = [item for item in hook_checks if item.level == "FAIL"]
+     if hook_failures:
+         for item in hook_failures:
+@@ -16679,7 +16423,7 @@ def command_events_validate(args: argparse.Namespace) -> int:
+         if error:
+             failures.append(f"{label}: invalid event record: {error}")
+         else:
+-            failures.extend(validate_event_object(data, label))
++            failures.extend(_record_validation_policy.event(data, label))
+ 
+     transcript_root = flow_root / "runtime" / "chat" / "transcripts"
+     if transcript_root.is_dir():
+@@ -16689,7 +16433,7 @@ def command_events_validate(args: argparse.Namespace) -> int:
+                 if error:
+                     failures.append(f"{label}: invalid NDJSON: {error}")
+                 else:
+-                    failures.extend(validate_chat_message_object(data, label))
++                    failures.extend(_record_validation_policy.chat(data, label))
+ 
+     if failures:
+         for failure in failures:
+@@ -17062,7 +16806,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
+                     "keep scan_policy.exclude_roles including distribution_root and workplace_root",
+                 )
+             )
+-    checks.extend(validate_hooks_config(project_root))
++    checks.extend(_hook_configuration_reader.validate(project_root))
+     checks.extend(coordination_doctor_checks(project_root))
+ 
+     if gitignore.is_file():
+@@ -17189,7 +16933,6 @@ Fix:
+ 
+ 
+ 
+-SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
+ 
+ def update_workplace_root(raw: str) -> Path:
+     path = Path(raw).expanduser().resolve()
+@@ -17303,58 +17046,8 @@ def command_update_sources(args: argparse.Namespace) -> int:
+ 
+ 
+ 
+-def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> list[Check]:
+-    checks: list[Check] = []
+-    if not data:
+-        return [check("FAIL", f"{path} missing or invalid")]
+-    _update_schema_checks.append(checks, data, "update-site-overrides.schema.json", str(path))
+-    overrides = data.get("overrides")
+-    if not isinstance(overrides, list):
+-        checks.append(check("FAIL", f"{path} overrides must be a list"))
+-        return checks
+-    seen: set[str] = set()
+-    for index, item in enumerate(overrides):
+-        label = f"overrides[{index}]"
+-        if not isinstance(item, dict):
+-            checks.append(check("FAIL", f"{label} must be an object"))
+-            continue
+-        site_id = item.get("site_id")
+-        subject_id = item.get("subject_id")
+-        if isinstance(site_id, str) and site_id.strip():
+-            if site_id in seen:
+-                checks.append(check("FAIL", f"{label} duplicate site_id {site_id}"))
+-            seen.add(site_id)
+-        elif not (isinstance(subject_id, str) and subject_id.strip()) and not isinstance(item.get("subject"), dict):
+-            checks.append(check("FAIL", f"{label} missing site_id, subject_id, or subject"))
+-        if "enabled" in item and not isinstance(item.get("enabled"), bool):
+-            checks.append(check("FAIL", f"{label}.enabled must be boolean"))
+-        if "disabled" in item and not isinstance(item.get("disabled"), bool):
+-            checks.append(check("FAIL", f"{label}.disabled must be boolean"))
+-        if "channels" in item and (
+-            not isinstance(item.get("channels"), list) or not all(isinstance(channel, str) and channel.strip() for channel in item.get("channels", []))
+-        ):
+-            checks.append(check("FAIL", f"{label}.channels must be a list of non-empty strings"))
+-        _update_source_contract_policy.append_env_checks(checks, item, label)
+-        preserved = item.get("preserved_local") if isinstance(item.get("preserved_local"), dict) else {}
+-        _update_source_contract_policy.append_env_checks(checks, preserved, f"{label}.preserved_local")
+-    if not checks:
+-        checks.append(check("PASS", f"{path} valid update site overrides"))
+-    return checks
+ 
+ 
+-def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str], str]:
+-    data = _update_document_reader.yaml(_update_document_reader.installed_registry(workplace_root))
+-    subjects = data.get("subjects") if isinstance(data.get("subjects"), list) else []
+-    result: dict[tuple[str, str], str] = {}
+-    for subject in subjects:
+-        if not isinstance(subject, dict):
+-            continue
+-        subject_type = subject.get("type")
+-        subject_id = subject.get("id")
+-        version = subject.get("version")
+-        if isinstance(subject_type, str) and isinstance(subject_id, str) and isinstance(version, str) and version:
+-            result[(subject_type, subject_id)] = version
+-    return result
+ 
+ 
+ 
+@@ -17363,9 +17056,9 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any],
+     checks: list[Check] = []
+     overrides_path = _update_document_reader.overrides_path(workplace_root)
+     if overrides_path.is_file():
+-        checks.extend(validate_update_site_overrides_data(_update_document_reader.yaml(overrides_path), overrides_path))
++        checks.extend(_update_document_validation_service.site_overrides(_update_document_reader.yaml(overrides_path), overrides_path))
+     overrides = _update_registry_reader.overrides(workplace_root)
+-    installed_versions = installed_subject_version_map(workplace_root)
++    installed_versions = _update_registry_reader.installed_versions(workplace_root)
+     sites: list[dict[str, Any]] = []
+     for record in _update_registry_reader.entities(workplace_root):
+         installed_version = installed_versions.get((record["type"], record["id"]), record["version"])
+@@ -17499,58 +17192,6 @@ def command_update_entity_sources_list(args: argparse.Namespace) -> int:
+     return print_derived_update_sites(data, subject_type=args.subject_type, json_output=args.json)
+ 
+ 
+-def validate_normalized_update_manifest_data(data: dict[str, Any], path: Path) -> list[Check]:
+-    checks: list[Check] = []
+-    _update_schema_checks.append(checks, data, "normalized-update-manifest.schema.json", str(path))
+-    if data.get("schema_version") != 1:
+-        checks.append(check("FAIL", f"{path} schema_version must be 1"))
+-    product = data.get("product") if isinstance(data.get("product"), dict) else {}
+-    if not product.get("id"):
+-        checks.append(check("FAIL", f"{path} product.id missing"))
+-    subjects = data.get("subjects")
+-    if not isinstance(subjects, list):
+-        checks.append(check("FAIL", f"{path} subjects must be a list"))
+-        return checks
+-    for subject_index, subject in enumerate(subjects):
+-        if not isinstance(subject, dict):
+-            checks.append(check("FAIL", f"subjects[{subject_index}] must be an object"))
+-            continue
+-        for key in ("type", "id"):
+-            if not isinstance(subject.get(key), str) or not str(subject.get(key)).strip():
+-                checks.append(check("FAIL", f"subjects[{subject_index}].{key} missing"))
+-        versions = subject.get("versions")
+-        if not isinstance(versions, list):
+-            checks.append(check("FAIL", f"subjects[{subject_index}].versions must be a list"))
+-            continue
+-        for version_index, version in enumerate(versions):
+-            if not isinstance(version, dict):
+-                checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}] must be an object"))
+-                continue
+-            artifacts = version.get("artifacts")
+-            if not isinstance(artifacts, list):
+-                checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts must be a list"))
+-                continue
+-            for artifact_index, artifact in enumerate(artifacts):
+-                if not isinstance(artifact, dict):
+-                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}] must be an object"))
+-                    continue
+-                artifact_url = artifact.get("url")
+-                if not artifact_url:
+-                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url missing"))
+-                elif not isinstance(artifact_url, str):
+-                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url must be a string"))
+-                else:
+-                    valid, reason = _update_source_contract_policy.artifact_url_shape(artifact_url, artifact)
+-                    if not valid:
+-                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url {reason}"))
+-                artifact_sha256 = artifact.get("sha256")
+-                if not artifact_sha256:
+-                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].sha256 missing"))
+-                elif not isinstance(artifact_sha256, str) or not SHA256_HEX_RE.fullmatch(artifact_sha256):
+-                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].sha256 must be 64 hex characters"))
+-    if not checks:
+-        checks.append(check("PASS", f"{path} valid normalized update manifest"))
+-    return checks
+ 
+ 
+ def command_update_manifest_validate(args: argparse.Namespace) -> int:
+@@ -17569,7 +17210,7 @@ def command_update_manifest_validate(args: argparse.Namespace) -> int:
+     if not isinstance(data, dict) or not data:
+         print(f"FAIL: normalized update manifest is empty or invalid: {path}")
+         return 1
+-    return print_checks(validate_normalized_update_manifest_data(data, path))
++    return print_checks(_update_document_validation_service.normalized_manifest(data, path))
+ 
+ 
+ 
+@@ -18004,12 +17645,8 @@ def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
+     return {}
+ 
+ 
+-def staged_update_record_path(workplace_root: Path, candidate_id: str) -> Path:
+-    return _update_document_reader.runtime_root(workplace_root) / "staged" / candidate_id / "stage-record.yaml"
+ 
+ 
+-def read_staged_update_record(workplace_root: Path, candidate_id: str) -> dict[str, Any]:
+-    return _update_document_reader.yaml(staged_update_record_path(workplace_root, candidate_id))
+ 
+ 
+ def command_update_stage(args: argparse.Namespace) -> int:
+@@ -18042,7 +17679,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
+         "artifact": {"path": rel(artifact_path, workplace_root), "sha256": actual_sha, "expected_sha256": expected_sha or None},
+         "verification": {"sha256": "pass" if verified else "fail"},
+     }
+-    staged_update_record_path(workplace_root, str(candidate["id"])).write_text(dump_yaml(record), encoding="utf-8")
++    _update_document_reader.staged_path(workplace_root, str(candidate["id"])).write_text(dump_yaml(record), encoding="utf-8")
+     print(f"STAGED: {rel(artifact_path, workplace_root)}")
+     print(f"SHA256: {'pass' if verified else 'fail'}")
+     return 0 if verified else 1
+@@ -18051,7 +17688,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
+ def command_update_verify(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+     candidate = find_update_candidate(workplace_root, args.candidate)
+-    record = read_staged_update_record(workplace_root, args.candidate)
++    record = _update_document_reader.staged_record(workplace_root, args.candidate)
+     if not candidate or not record:
+         print(f"FAIL: staged candidate not found: {args.candidate}")
+         return 1
+@@ -18080,7 +17717,7 @@ def command_update_verify(args: argparse.Namespace) -> int:
+     record["status"] = "verified"
+     record["verified_at"] = now_utc()
+     record["verification"] = {"sha256": "pass", "subject_identity": "pass" if manifest else "not_applicable"}
+-    staged_update_record_path(workplace_root, args.candidate).write_text(dump_yaml(record), encoding="utf-8")
++    _update_document_reader.staged_path(workplace_root, args.candidate).write_text(dump_yaml(record), encoding="utf-8")
+     print(f"VERIFIED: {args.candidate}")
+     return 0
+ 
+@@ -18169,7 +17806,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
+         return 1
+     workplace_root = update_workplace_root(args.workplace)
+     candidate = find_update_candidate(workplace_root, args.candidate)
+-    record = read_staged_update_record(workplace_root, args.candidate)
++    record = _update_document_reader.staged_record(workplace_root, args.candidate)
+     if not candidate or not record:
+         print(f"FAIL: staged candidate not found: {args.candidate}")
+         return 1

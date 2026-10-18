@@ -1,0 +1,537 @@
+{
+  "passed": true,
+  "total": 81,
+  "native_exceptions": 5,
+  "groups": {
+    "annotations": 21,
+    "constants": 1,
+    "workers": 18,
+    "hooks": 6,
+    "records": 8,
+    "routes": 7,
+    "handoffs": 7,
+    "updates": 11,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "config_extension_key",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "unsupported_config_keys",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_subagent_policy_outputs",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_orchestrator_task_plan",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "hook_config_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_hooks_config",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_event_object",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_chat_message_object",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "route_by_id",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_process_route_map",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "required_role_from_route",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "handoff_dir",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "handoff_yaml_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_handoff",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_update_site_overrides_data",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_normalized_update_manifest_data",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "installed_subject_version_map",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "staged_update_record_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "read_staged_update_record",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_workspace_access",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_subagent_policy",
+      "passed": true
+    },
+    {
+      "group": "constants",
+      "case": "canonical-workspace-tuple",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "extension-keys",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "634eaf4d8d14d40e7b969697bb0e75656366ec944ba9ac5c2720962042d58b78"
+    },
+    {
+      "group": "workers",
+      "case": "unsupported-sorted-keys",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b36579c0f93af14d1e37337d6495b712f0b7676b1aff23d3606041592d1cae7d"
+    },
+    {
+      "group": "workers",
+      "case": "canonical-workspace-normalization",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8ae78b541072d6b1f7f6ee5226243b9d9318114b88161cd9d629bcae23126a16"
+    },
+    {
+      "group": "workers",
+      "case": "canonical-subagent-normalization",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0e4ee027b02468be8b3fc230a92c8c4d411cbd47aac16ee7cf283ead5ea0ae2d"
+    },
+    {
+      "group": "workers",
+      "case": "empty-plan",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "da7f10ffd4dc7550e108b0db036bef938a9b0ffa2b0745fc676bfc650fb63f97"
+    },
+    {
+      "group": "workers",
+      "case": "default-driver-and-model-validation",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "cb38b96c09e0147a1cbb94c5b7c31e0d1a76ac2a223d73c36652e48af8bc8b81"
+    },
+    {
+      "group": "workers",
+      "case": "actual-manual-driver-registered",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "parallel-write-conflict",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7177b69ea599fcedec729b871ed4b7afca79bae07556fc129b7be5e650092db0"
+    },
+    {
+      "group": "workers",
+      "case": "actual-conflict",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "dependency-exempts-conflict",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b030b63d9721d02352b7aa06fe183688661883f1fc6ffbbeffb075deb116d025"
+    },
+    {
+      "group": "workers",
+      "case": "actual-dependent-exemption",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "literal-bool-and-unknown-fields",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "eaac5b434ceff744452717d728c626fceaa91604279100f1636e468fb4f13ef5"
+    },
+    {
+      "group": "workers",
+      "case": "missing-report-directory",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "87d53e3d372d66643224c95939f2b2b8eb7081db4446b89f7c647d60ccc62b94"
+    },
+    {
+      "group": "workers",
+      "case": "empty-report-directory",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8d633804f6f7ed065454bb7485b1420d62a168d2f68694366b1878dc5e3c3a10"
+    },
+    {
+      "group": "workers",
+      "case": "one-current-report",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "51e189813a51d3833105435ae7cfe75b005751751f213c3632258fa0a04f0ead"
+    },
+    {
+      "group": "workers",
+      "case": "live-report-count-refusal",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1257db8c2e45797b524e7a9d205dbfabfe9d45d1df19d07a889982a994b593ff"
+    },
+    {
+      "group": "workers",
+      "case": "actual-report-count-refusal",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "report-prefix-refusal",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4497c851f803dad9c77cd8cfadc3b0e04915eb0e6a39096bf518a0c37cc5d09b"
+    },
+    {
+      "group": "hooks",
+      "case": "configuration-location",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "bcb7381034b7db5d24d0fefbef08e3aed348e50defbedecfee8f8fece1bb3cb4"
+    },
+    {
+      "group": "hooks",
+      "case": "missing-hook-configuration",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "2e9fa412a79cf588f00d76a236e597b70a7afb66e4393deb55f82d8b3e57ff47"
+    },
+    {
+      "group": "hooks",
+      "case": "valid-hook-configuration",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3ea4af5e1647732311e17f93cfd1238f8e2204b37b6221a4049e5257d16aaac2"
+    },
+    {
+      "group": "hooks",
+      "case": "actual-valid-shape",
+      "passed": true
+    },
+    {
+      "group": "hooks",
+      "case": "ordered-field-and-list-errors",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "9d6e1323ca6674dd4b516b0bfe2d1dd4babcf108c75cc257e6e2f007d0f58665"
+    },
+    {
+      "group": "hooks",
+      "case": "native-yaml-error",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c7b969f44961503d0a36fad03ff298ca6d02aa00a0acbd450ce617d2979ba00b"
+    },
+    {
+      "group": "records",
+      "case": "valid-event",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "325ce43109985930f3cd4632d45dc83b444145dec36d6f0f38115485170754c8"
+    },
+    {
+      "group": "records",
+      "case": "missing-event-fields",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "2ea70b3787933dc0458796805e4fbfd5b6fc63b723434d2fccf4d030fbd5a0ab"
+    },
+    {
+      "group": "records",
+      "case": "wrong-event-shape",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0a47a01afb85997ce12489a3d8d2ad2a00f8630cb2151d7f4ba508400e3e7859"
+    },
+    {
+      "group": "records",
+      "case": "native-event-json-failure",
+      "passed": true,
+      "exception": "TypeError",
+      "observation_sha256": "c34b2dcc2bfb17ed873a844c4f8b2118191d10e308934720ef52ad11247ef7af"
+    },
+    {
+      "group": "records",
+      "case": "valid-chat",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ccc750f461b285b5230c563004cd632dd755c9884eb6f7b761c946192b049c39"
+    },
+    {
+      "group": "records",
+      "case": "missing-chat-body-hash",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b1b39586f8510644b28ce267227a7637d6bb8c4978da0a9d6d9883c93437d745"
+    },
+    {
+      "group": "records",
+      "case": "wrong-chat-shape",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ece0fd8da5c1212c0ba475f794bde35c737ba8cb9301b57e3d952910c15a21e5"
+    },
+    {
+      "group": "records",
+      "case": "native-chat-json-failure",
+      "passed": true,
+      "exception": "TypeError",
+      "observation_sha256": "113a779528fe4d34871d9eff9961035a77330c475f081476b883a11bbbbc38ef"
+    },
+    {
+      "group": "routes",
+      "case": "empty-map-validation",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "d3db05ce9c0813885121f5187f22fb3df4582be20e197940c07d165dc410d88c"
+    },
+    {
+      "group": "routes",
+      "case": "missing-route-refusal",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "9307dcabc43dc64837d351bf8a8ea01a43a69bfaccfdd5edb25d478301ab1e95"
+    },
+    {
+      "group": "routes",
+      "case": "first-route-match",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7158b27f5c0fd218aa794427504f561811739da82d771bf3b5424a3cf3a107f1"
+    },
+    {
+      "group": "routes",
+      "case": "actual-first-route",
+      "passed": true
+    },
+    {
+      "group": "routes",
+      "case": "duplicate-and-invalid-route-checks",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4af746dd61769901450cd78eef5d961e88b274be2c2d7d5fb74389dc58b88ce3"
+    },
+    {
+      "group": "routes",
+      "case": "required-role-projection",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "adde396856770321991c639a9c1e143aa5e422afda4756112071bd66e98f7ca5"
+    },
+    {
+      "group": "routes",
+      "case": "malformed-role-projection",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "53583288e1514277359dc67d94892b22dbe0a44017e5a5e9b9c04f1f1294b4b2"
+    },
+    {
+      "group": "handoffs",
+      "case": "directory",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e115dfd9d66b59ddfbf719100236b0ed7f79e13b51ccbdd28c5a8f31d2594285"
+    },
+    {
+      "group": "handoffs",
+      "case": "yaml-path",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "336e4304698a5d8ff94f20994d44a34f2092d88c9b442cf46aa271e975f37b7e"
+    },
+    {
+      "group": "handoffs",
+      "case": "missing-handoff-refusal",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "74ae892ff568c316f1be81da044ee73813a58382ed7cccb334ff40ae0e70c4df"
+    },
+    {
+      "group": "handoffs",
+      "case": "current-handoff-document",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e01859e15f1b553b40e103076663c99fe9251e6aaed89370e348105d7f4bf2ce"
+    },
+    {
+      "group": "handoffs",
+      "case": "same-stat-handoff-change",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3e77d364466aa88384fc1e697b8f484c71bd3926f05f3e0bc8a666a22b44eab6"
+    },
+    {
+      "group": "handoffs",
+      "case": "actual-handoff-change",
+      "passed": true
+    },
+    {
+      "group": "handoffs",
+      "case": "existing-soft-yaml-truthiness",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "76a395f6b82e4d0061a65a50e79c5bbbfd5108f30254c4aa1f4a216a70c40aa4"
+    },
+    {
+      "group": "updates",
+      "case": "empty-overrides-early-refusal",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "fa26feab1443fb66c8bf6b5a132546a937a4a6f7f99fee65a2d0d00e94722e9f"
+    },
+    {
+      "group": "updates",
+      "case": "override-schema-and-ordered-semantic-errors",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "054b23e85c0319dbbcb9316077dbacc94172f8092f9ed8656093706ea8e6704c"
+    },
+    {
+      "group": "updates",
+      "case": "empty-normalized-manifest",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c121982881754ed13a5b8c1a001cc751772065da00a742d9ab5b06ae7c8e0c0a"
+    },
+    {
+      "group": "updates",
+      "case": "nested-manifest-error-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "49e8c2e94c37ebb17d586c5ae56afaa72d2d5cc0e5a4d8a7fb6092bdd0cd2415"
+    },
+    {
+      "group": "updates",
+      "case": "installed-version-filter-and-last-wins",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7dc6a2aaef27b88e44e67160b63da8f768c9249b2b5c3a413de57894cece06db"
+    },
+    {
+      "group": "updates",
+      "case": "actual-distinct-version-filter",
+      "passed": true
+    },
+    {
+      "group": "updates",
+      "case": "live-installed-version",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "faa8ed34b9c3dcc4919b90be72c0068164bd543d9b7983b0f5ce03e9d3239700"
+    },
+    {
+      "group": "updates",
+      "case": "stage-record-location",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f9de83eef60af2b68ceef829cb3756d283b6a939e363686d2d156bb53bcdaf08"
+    },
+    {
+      "group": "updates",
+      "case": "missing-stage-record",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "964f3448d09d40983a65de439e467266bfd6bb746e32a2c17b92ffb35d7e4270"
+    },
+    {
+      "group": "updates",
+      "case": "current-stage-record",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1a8a6e5765c2a70ea0f8aa227a8f98a397e3d39bb328c60648ab855180487693"
+    },
+    {
+      "group": "updates",
+      "case": "soft-invalid-stage-record",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "964f3448d09d40983a65de439e467266bfd6bb746e32a2c17b92ffb35d7e4270"
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "195eefc505712862e6518617721d3c72911edd65dce64b59e5afd837553174f1",
+    "src/processforge_core/work/context.py": "fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba",
+    "src/processforge_core/prepared/resources.py": "53ec801f5c3b0ee311aa16cab714ab74ab581f9a2430c586c164d35ef122f47f",
+    "docs/concepts/python-core-structure.md": "b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5",
+    "docs/ru/concepts/python-core-structure.md": "000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4",
+    "src/processforge_core/runtime/worker_validation.py": "e2c04de2133de73f5e047859db5f27cb1eda1cb1739b1867162a51380f9ccd45",
+    "src/processforge_core/project/hooks.py": "283cb6ef9503464e7f25412d36cd9328745a3cd9e55c35388051051975dc6354",
+    "src/processforge_core/common/record_validation.py": "e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2",
+    "src/processforge_core/process_catalog/routes.py": "86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab",
+    "src/processforge_core/process_catalog/handoffs.py": "7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2",
+    "src/processforge_core/maintenance/validation.py": "feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc",
+    "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+    "src/processforge_core/maintenance/registries.py": "c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a"
+  },
+  "scope": "Real default/copied Core composition, literal plan/conflict semantics, current hook/route/handoff/stage/registry documents and native refusals/JSON errors. Native contributors separately proved complete algorithms/data/prior readers. No service, archive, installed, connected-host or ZIP checks."
+}

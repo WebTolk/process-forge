@@ -1,0 +1,11 @@
+{
+  "status": "accepted_source_only",
+  "successful_attempt": 2,
+  "model": "gpt-6-sol",
+  "reasoning_effort": "high",
+  "review_sha256": "8a06b4245f1288127e99e85eb56abd6f3f7555fa8e7ec681b50501d2ec343a82",
+  "failed_attempt_preserved": true,
+  "scope_capsule_inputs_and_source_hashes_unchanged": true,
+  "successful_qa_repeated": false,
+  "recorded_at": "2026-10-18T23:46:28.966884+00:00"
+}

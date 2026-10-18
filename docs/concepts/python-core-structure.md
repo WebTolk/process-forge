@@ -92,6 +92,12 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/runtime/worker_plans.py` | Existing worker plan defaults, subagent/dependency projections, recursion and current assignment-completion reads. |
 | `src/processforge_core/project/platform_selection.py` | Existing platform/type/registry selection and findings with concrete answer, document, detection, platform and package owners. |
 | `src/processforge_core/maintenance/registries.py` | Existing entity/override/installed registry reads and install-target resolution; no installation or version-write authority. |
+| `src/processforge_core/runtime/worker_validation.py` | Current worker plan, extension-key and subagent report checks. |
+| `src/processforge_core/project/hooks.py` | Hook configuration location and ordered validation. |
+| `src/processforge_core/common/record_validation.py` | Existing event/chat field and secret validation. |
+| `src/processforge_core/process_catalog/routes.py` | Current route lookup, validation and required role. |
+| `src/processforge_core/process_catalog/handoffs.py` | Handoff directory/path and soft document read. |
+| `src/processforge_core/maintenance/validation.py` | Existing update override and normalized-manifest checks. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -136,7 +142,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/configuration/parameters.py` | Stateless ParameterMergePolicy owning existing parameter-map merging and ordered provenance, without a monolith dependency. |
 | `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for matching existing classifier rules; registry, traversal and activation remain legacy responsibilities. |
 | `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
-| `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; full validators and companion-file I/O remain legacy responsibilities. |
+| `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; contract checks and companion inspection use Core services; authoring publication retains its existing owner. |
 | `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder for existing defaults, answer normalization and process materialization, using concrete evolution rules. |
 | `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy for existing evolve defaults, normalization and ordered validation checks. |
 | `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy for existing builtin documents, registry defaults, placeholders, limits and document readiness checks. |
@@ -580,8 +586,8 @@ from the monolith; consumers import the owning Core modules explicitly.
 
 `process_catalog.artifacts.ProcessArtifactDeclarationPolicy` owns the ordinary
 instance methods `defined_ids(process)`, `declared_ids(process)` and
-`produced_ids(process)`. Authoring validation, process contract validation and
-builtin catalog reporting in `tools/processforge.py` call the owner directly;
+`produced_ids(process)`. Core authoring/contract validators and builtin catalog
+reporting call the owner directly;
 the three old artifact-ID definitions are removed. Shared `common.values` helpers
 preserve list-only handling, string-list conversion/filter order, comma-separated
 strings, dict/list distinctions, ID truthiness, duplicate handling and native
@@ -590,8 +596,9 @@ the two temporally distinct monolith `as_list` definitions remain in place.
 
 Both policies are stateless, perform no I/O and have no monolith callback or
 import. Classifier registry loading, tree walking and activation remain in the
-legacy CLI paths. Full process validators, companion-file reading, catalog
-registration and activation also retain their existing legacy ownership. These
+legacy CLI paths. Process contract checks and companion inspection belong to
+ProcessContractValidationService. Authoring transactions, catalog registration
+and activation retain their existing legacy owners. These
 pure policy extractions do not fully migrate classification or validation,
 complete any OOP epic, or establish archive, installed-Core, Runtime or
 connected-host acceptance.
@@ -890,3 +897,37 @@ to `contracts`. Guard/check/refusal and filesystem-observation order, strict/sta
 severity, unknowns, companion/template precedence and route defaults remain unchanged.
 Route-map validation, handoff execution, authoring callbacks/transactions, lifecycle,
 locks, recovery and later delivery-layer qualification remain separate work.
+
+## Worker plan checks, record validation and route/handoff readers
+
+`runtime.worker_validation.WorkerPlanValidationService(distribution_root)` owns
+the existing plan checks, extension-key filtering and subagent report checks.
+It composes current ContextContractInputs, RuntimeDriverCatalogReader,
+WorkerPlanPolicy and ScopeConflictService with actual operation-local project
+roots. Literal type tests, repeated driver reads, dependency exemptions, scope
+conflicts and recursive current report observations retain their earlier order.
+The four plan field sets belong to that module. WORKSPACE_ACCESS_KEYS and both
+normalizers use existing work.context_documents definitions directly; the old
+Main wrappers/duplicate tuple are removed, including three other Core callers.
+
+`project.hooks.HookConfigurationReader` owns hooks.yaml location and its existing
+ordered shape checks. `common.record_validation.RecordValidationPolicy` owns
+event/chat required fields, the existing event-type expression and the shared
+secret check. JSON serialization and its native failures remain unchanged.
+Hook dispatch, journals and effects retain their existing owners.
+
+`process_catalog.routes.ProcessRouteService(distribution_root)` owns current
+route lookup, validation and required-role projection. It reuses the existing
+route reader, shared modes and schema checker. `process_catalog.handoffs.HandoffDocumentReader`
+owns handoff directory/path/soft read with real project metadata and document
+owners. First matches, borrowed mappings, schema/check order and not-found
+refusals remain intact. Handoff writes and execution, leases, continuation,
+workflow transactions and recovery retain their existing owners.
+
+`maintenance.validation.UpdateDocumentValidationService(distribution_root)` owns
+the existing overrides and normalized manifest checks with concrete schema and
+source-contract policies. The SHA-256 expression is unchanged. UpdateRegistryReader
+also owns the distinct installed-version projection; UpdateDocumentReader also
+owns staged-record location/soft reading. Existing reader constructors and
+previous methods are unchanged. Discovery, writes, installation, artifact I/O,
+network and timestamp generation retain their earlier owners.

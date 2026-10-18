@@ -14,6 +14,7 @@ from typing import Any
 
 import yaml
 
+from ..work.context_documents import ContextContractInputs
 from ..common.request_scope import safe_load as _safe_load_yaml
 from ..project.snapshot import load_snapshot
 from ..work.resource_material import (
@@ -107,7 +108,7 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
         contract_access = contract.get("workspace_access")
         if not isinstance(contract_access, dict):
             _fail("assignment_contract_invalid")
-        requested = core.normalize_workspace_access(task.get("workspace_access"))
+        requested = ContextContractInputs().normalize_workspace_access(task.get("workspace_access"))
         if requested != contract_access:
             _fail("assignment_contract_changed")
         capsule_access = capsule.get("workspace_access")
