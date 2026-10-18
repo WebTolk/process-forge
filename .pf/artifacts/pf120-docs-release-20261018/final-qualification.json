@@ -1,0 +1,125 @@
+{
+  "accepted": true,
+  "observed_at": "2026-10-18T13:53:28.300734+00:00",
+  "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+  "source_tree": "232811c9010508d109dd2a0d1ced469196119b33",
+  "archive_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+  "archive_bytes": 2596329,
+  "manifest_sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd",
+  "archive_entry_count": 1318,
+  "native_final_gates": [
+    {
+      "phase": "manifest-provenance",
+      "exit_code": 0,
+      "elapsed_seconds": 10.498,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "release-check",
+      "exit_code": 0,
+      "elapsed_seconds": 2.465,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "canonical-pack",
+      "exit_code": 0,
+      "elapsed_seconds": 8.173,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "supervisor-stress",
+      "exit_code": 0,
+      "elapsed_seconds": 173.942,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "archive-native-integrity",
+      "exit_code": 0,
+      "elapsed_seconds": 1.82,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "consumer-bin-help",
+      "exit_code": 0,
+      "elapsed_seconds": 1.717,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "consumer-tools-help",
+      "exit_code": 0,
+      "elapsed_seconds": 0.922,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    {
+      "phase": "consumer-public-full-trace",
+      "exit_code": 0,
+      "elapsed_seconds": 2743.73,
+      "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    }
+  ],
+  "complete_package_public_profile": {
+    "checks": 272,
+    "public_gates": 3,
+    "all_passed": true,
+    "profile": "native release-test --public --trace-smokes --fail-fast, retained exact extraction; no --only/--skip",
+    "native_archive_validation": "native release-archive-test source/hash/parity validation; inner full profile executed separately to retain diagnostics",
+    "payload_bindings": [
+      {
+        "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+        "archive_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+        "manifest_sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd",
+        "phase": "during",
+        "observed_at": "2026-10-18T13:34:04.994974+00:00",
+        "entry_count": 1318,
+        "payload_identity": "fbe0ebfd7a60e40935e6aa0a0c2d2d4fb013da99f70a5f92220a0bd24dedd1bb",
+        "released_files_match_exact_zip": true,
+        "profile_log_sha256": "95d36169dc8e43cea123bc6d5f18794459e971c5914a6dfdcb36efd49ca76706",
+        "boundary": "Payload verified during the retained native profile and again after completion; no retrospective claim of a pre-start receipt."
+      },
+      {
+        "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+        "archive_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+        "manifest_sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd",
+        "phase": "after",
+        "observed_at": "2026-10-18T13:52:33.001671+00:00",
+        "entry_count": 1318,
+        "payload_identity": "fbe0ebfd7a60e40935e6aa0a0c2d2d4fb013da99f70a5f92220a0bd24dedd1bb",
+        "released_files_match_exact_zip": true,
+        "profile_log_sha256": "3f8068332adb70cc74e73b5f3d84fc293a5181bdfb6417c492dd8ae97e707262",
+        "boundary": "Payload verified during the retained native profile and again after completion; no retrospective claim of a pre-start receipt."
+      }
+    ]
+  },
+  "package_feature_checks": {
+    "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+    "archive_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+    "consumer_version": "1.2.0",
+    "native_unmodified": true,
+    "checks": [
+      {
+        "test": "smoke_temporary_files_policy",
+        "exit_code": 0,
+        "elapsed_seconds": 4.355
+      },
+      {
+        "test": "smoke_configuration",
+        "exit_code": 0,
+        "elapsed_seconds": 12.909
+      },
+      {
+        "test": "smoke_agent_start_prompt",
+        "exit_code": 0,
+        "elapsed_seconds": 21.122
+      }
+    ],
+    "all_passed": true
+  },
+  "independent_reviews": [
+    "pf120-final-review-20261018",
+    "pf120-wrapper-review-20261018",
+    "pf120-classifier-review-20261018"
+  ],
+  "superseded_attempts": "ee0a281 initial40min wrapper timeout, completed wrapper lost classifier failure detail, retained trace exposed classifier boundary bug; new source and archive fully requalified",
+  "platform": "CPython3.14.3 Windows native source/archive; no installed, connected-host or native POSIX acceptance",
+  "publication_status_at_qualification": "not_yet_published"
+}

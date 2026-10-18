@@ -1,0 +1,50 @@
+{
+  "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+  "archive_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+  "manifest_sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd",
+  "observed_at": "2026-10-18T14:08:30.835002+00:00",
+  "both_drafts_verified": true,
+  "github": {
+    "release_id": 416483825,
+    "assets": [
+      {
+        "remote": "github",
+        "asset_id": 653621214,
+        "name": "processforge-1.2.0.manifest.json",
+        "canonical_name": "processforge-1.2.0.manifest.json",
+        "bytes": 239598,
+        "sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd"
+      },
+      {
+        "remote": "github",
+        "asset_id": 653621213,
+        "name": "processforge-1.2.0.zip",
+        "canonical_name": "processforge-1.2.0.zip",
+        "bytes": 2596329,
+        "sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880"
+      }
+    ]
+  },
+  "gitverse": {
+    "release_id": 548879692,
+    "assets": [
+      {
+        "remote": "gitverse",
+        "asset_id": 29543,
+        "name": "processforge-1.2.0.manifest.json.txt",
+        "canonical_name": "processforge-1.2.0.manifest.json",
+        "bytes": 239598,
+        "sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd"
+      },
+      {
+        "remote": "gitverse",
+        "asset_id": 29540,
+        "name": "processforge-1.2.0.zip",
+        "canonical_name": "processforge-1.2.0.zip",
+        "bytes": 2596329,
+        "sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880"
+      }
+    ]
+  },
+  "gitverse_manifest_filename_note": "GitVerse permits plain-text assets, not .json; identical manifest bytes use .json.txt. Rename by removing .txt after download, as release notes explain."
+}

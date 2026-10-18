@@ -1,0 +1,35 @@
+{
+  "observed_at": "2026-10-18T14:27:57.452842+00:00",
+  "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+  "release_tag": "v1.2.0",
+  "default_main_and_dev_shared_commit": "bd6eafc57e1a202e967192f4de47e27d8f8635e0",
+  "both_branch_contents_integrated": true,
+  "both_provider_PRs_marked_merged": false,
+  "github_pr": {
+    "mergeCommit": {
+      "oid": "bd6eafc57e1a202e967192f4de47e27d8f8635e0"
+    },
+    "state": "MERGED",
+    "url": "https://github.com/WebTolk/process-forge/pull/6"
+  },
+  "gitverse_pr": {
+    "number": 1,
+    "html_url": "https://gitverse.ru/webtolk/process-forge/pulls/1",
+    "state": "open",
+    "merged": false,
+    "merge_commit_sha": null
+  },
+  "remotes": {
+    "github": {
+      "refs/heads/dev": "bd6eafc57e1a202e967192f4de47e27d8f8635e0",
+      "refs/heads/main": "bd6eafc57e1a202e967192f4de47e27d8f8635e0",
+      "refs/tags/v1.2.0^{}": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    },
+    "gitverse": {
+      "refs/heads/dev": "bd6eafc57e1a202e967192f4de47e27d8f8635e0",
+      "refs/heads/main": "bd6eafc57e1a202e967192f4de47e27d8f8635e0",
+      "refs/tags/v1.2.0^{}": "b70df739700f1559570f4b65481cd39616ccc1ea"
+    }
+  },
+  "limitation": "GitVerse merge API returned400VALIDATION_ERROR; normal Git merge commit pushed and read back on main. Provider keeps PR1 open with merged:false despite main/dev having same commit. No closed-as-merged claim."
+}

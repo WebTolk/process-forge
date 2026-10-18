@@ -1,0 +1,38 @@
+{
+  "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+  "archive_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+  "manifest_sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd",
+  "observed_at": "2026-10-18T14:11:20.376252+00:00",
+  "both_published": true,
+  "assets_verified": true,
+  "github_latest": "v1.2.0",
+  "github_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.2.0",
+  "gitverse_url": "https://gitverse.ru/webtolk/process-forge/releases/tag/v1.2.0",
+  "assets": [
+    {
+      "remote": "github",
+      "name": "processforge-1.2.0.manifest.json",
+      "bytes": 239598,
+      "sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd"
+    },
+    {
+      "remote": "github",
+      "name": "processforge-1.2.0.zip",
+      "bytes": 2596329,
+      "sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880"
+    },
+    {
+      "remote": "gitverse",
+      "name": "processforge-1.2.0.manifest.json.txt",
+      "bytes": 239598,
+      "sha256": "2881c62ff279c9d418d7bb88ad01a321817c1c7454ec03e10227d3f6791d40bd"
+    },
+    {
+      "remote": "gitverse",
+      "name": "processforge-1.2.0.zip",
+      "bytes": 2596329,
+      "sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880"
+    }
+  ],
+  "gitverse_manifest_note": "Remove .txt from .manifest.json.txt after download; bytes are identical to the canonical JSON sidecar."
+}

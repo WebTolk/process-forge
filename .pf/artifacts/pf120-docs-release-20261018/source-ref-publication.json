@@ -1,0 +1,16 @@
+{
+  "source_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+  "tag": "v1.2.0",
+  "remotes": {
+    "github": {
+      "dev": "b70df739700f1559570f4b65481cd39616ccc1ea",
+      "tag_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+      "verified": true
+    },
+    "gitverse": {
+      "dev": "b70df739700f1559570f4b65481cd39616ccc1ea",
+      "tag_commit": "b70df739700f1559570f4b65481cd39616ccc1ea",
+      "verified": true
+    }
+  }
+}

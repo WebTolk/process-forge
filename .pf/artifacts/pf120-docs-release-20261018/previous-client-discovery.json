@@ -1,0 +1,29 @@
+{
+  "observed_at": "2026-10-18T14:14:34.234057+00:00",
+  "status": "passed",
+  "client_version": "1.1.0",
+  "client_origin": "Actual public 1.1.0 client verified earlier on 2026-10-18; historical republish waiver preserved",
+  "registry": "Isolated installed-subject record bound to the extracted previous Core",
+  "discovery": {
+    "installed_version": "1.1.0",
+    "available_version": "1.2.0",
+    "status": "available",
+    "installable": true,
+    "artifact_sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
+    "download_url": "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.zip",
+    "migration_required": true,
+    "conflicts": []
+  },
+  "apply_without_confirm": {
+    "exit_code": 1,
+    "refused_before_mutation": true
+  },
+  "core_update_without_confirm": {
+    "exit_code": 1,
+    "refused_before_mutation": true
+  },
+  "core_bytes_unchanged": true,
+  "fixture_state_unchanged": true,
+  "device_update_invoked": false,
+  "boundary": "Live HTTPS stable discovery after both releases and metadata publication; isolated previous public client and explicit-confirmation refusal, no device installation."
+}

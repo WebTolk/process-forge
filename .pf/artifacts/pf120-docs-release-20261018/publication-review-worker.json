@@ -1,0 +1,7 @@
+{
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "ultra",
+  "actual_stderr_proof": true,
+  "worker_exit_code": 0,
+  "native_collect_completed": true
+}

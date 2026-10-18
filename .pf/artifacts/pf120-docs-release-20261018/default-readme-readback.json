@@ -1,0 +1,35 @@
+{
+  "default_branch": "main",
+  "commit": "bd6eafc57e1a202e967192f4de47e27d8f8635e0",
+  "all_passed": true,
+  "checks": [
+    {
+      "remote": "github",
+      "path": "README.md",
+      "sha256": "706c3816333e2c4b3ffd06666c224fd993ade89ebcd3c199f51bcc9c5a3d67a3",
+      "matches_delivery": true,
+      "dynamic_release_badge": true
+    },
+    {
+      "remote": "github",
+      "path": "README.ru.md",
+      "sha256": "3a73bbc0e547f80c67523d3d03dca81fa26173cf31b7f233a4c08e0cd0ff2c37",
+      "matches_delivery": true,
+      "dynamic_release_badge": true
+    },
+    {
+      "remote": "gitverse",
+      "path": "README.md",
+      "sha256": "706c3816333e2c4b3ffd06666c224fd993ade89ebcd3c199f51bcc9c5a3d67a3",
+      "matches_delivery": true,
+      "dynamic_release_badge": true
+    },
+    {
+      "remote": "gitverse",
+      "path": "README.ru.md",
+      "sha256": "3a73bbc0e547f80c67523d3d03dca81fa26173cf31b7f233a4c08e0cd0ff2c37",
+      "matches_delivery": true,
+      "dynamic_release_badge": true
+    }
+  ]
+}

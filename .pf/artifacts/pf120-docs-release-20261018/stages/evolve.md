@@ -1,0 +1,7 @@
+# evolve
+
+Release lessons: qualify exact archive bytes using retained complete native trace and independent review, bind both ZIP and sidecar to acceptance, use optimization-independent mandatory guards, and distinguish successful source/tag pushes from real public assets and live old-client discovery. Native272 package checks,3 public gates,3 extra checks,6 stress scenarios and5 stable metadata checks passed. Provider file-extension/API differences require user-visible download guidance; a Git branch merge does not prove a provider PR-status update. GitVerse PR1 status remains open despite actual shared main/dev merge commit; do not silently close it or claim MERGED.
+
+The documentation/release scope is delivered. Next authorized work is a new bounded architecture/OOP cycle with four native PF shell workers on gpt-6.1-sol ultra, primary orchestrator/executor and a clean-context independent reviewer after implementation. Reconcile current architecture and source, assess established logging/RAM/internal libraries, installation/update wizard and MCP tools/resources. Preserve released behavior and file-only operation while planning future multi-workplace/device/project web management. Cleanup only owned inactive scratch, preserve evidence and denied targets, and never restart/update infrastructure merely to align an old host. No post-release implementation is claimed by this terminal release Work.
+
+Handoff: follow the pinned process and retain current evidence boundaries.

@@ -1,0 +1,100 @@
+{
+  "scope": "Private publication helper guards; no product or remote mutation",
+  "all_passed": true,
+  "negative_and_positive_cases": [
+    {
+      "case": "valid-qualified-bytes",
+      "python_optimized": true,
+      "exit_code": 0,
+      "expected_success": true,
+      "passed": true
+    },
+    {
+      "case": "unaccepted-qualification",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "identity-drift-source_commit",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "identity-drift-archive_sha256",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "identity-drift-manifest_sha256",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "identity-drift-archive_bytes",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "zip-bytes-replaced",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "sidecar-bytes-replaced",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "sidecar-semantic-commit",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "sidecar-semantic-tree",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "sidecar-semantic-dirty",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    },
+    {
+      "case": "sidecar-semantic-release_eligible",
+      "python_optimized": true,
+      "exit_code": 1,
+      "expected_success": false,
+      "passed": true
+    }
+  ],
+  "mandatory_guard_files_without_assert": [
+    "accept-final-qualification.py",
+    "publish-source-refs.py",
+    "prepare-stable-promotion.py",
+    "previous-client-live-discovery.py",
+    "run-consumer-focused.py",
+    "release_preflight.py",
+    "verify-consumer-binding.py"
+  ],
+  "native_package_profile": "still independently running; no result inferred"
+}
