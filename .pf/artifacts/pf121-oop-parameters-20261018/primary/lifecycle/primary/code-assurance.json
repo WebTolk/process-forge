@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-18T17:24:04.624655+00:00",
+  "role": "primary",
+  "run_id": "garage-pf121-parameters-20261018-coordinate-existing-parameter-merge-and",
+  "assignment_id": "pf121-parameters-20261018-coordinate-existing-parameter-merge-and-proven",
+  "context_id": "pf121-parameters-20261018-coordinate-existing-parameter-merge-and-proven-capsule",
+  "completed_stage": "code-assurance",
+  "evidence": ".pf/artifacts/pf121-oop-parameters-20261018/primary/verification.json",
+  "action": "stage_transitioned"
+}

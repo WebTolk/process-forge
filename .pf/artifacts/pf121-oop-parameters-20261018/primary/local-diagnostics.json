@@ -1,0 +1,19 @@
+{
+  "retained_local": [
+    {
+      "path": ".pf/artifacts/pf121-oop-parameters-20261018/qa/results.json",
+      "sha256": "544806e10f8742b38c442c1054ebbc4b337c3de17fee9b88e0b835d492e30da3",
+      "reason": "raw native environment diagnostics retained locally"
+    },
+    {
+      "path": ".pf/artifacts/pf121-oop-parameters-20261018/qa/smoke-results.json",
+      "sha256": "b8490aa18fe8bc98704f619daeae19748dee35272a0fe0f70c3306ba7a76b936",
+      "reason": "raw native environment diagnostics retained locally"
+    },
+    {
+      "path": ".pf/artifacts/pf121-oop-parameters-20261018/qa/smoke-results-py313.json",
+      "sha256": "0e4605097caaa86c37c405b6858a12845f402a4ba7ac99b3645a8d24c1083297",
+      "reason": "raw native environment diagnostics retained locally"
+    }
+  ]
+}

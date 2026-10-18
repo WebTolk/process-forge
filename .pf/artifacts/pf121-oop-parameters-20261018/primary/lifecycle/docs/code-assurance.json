@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-18T17:23:57.587159+00:00",
+  "role": "docs",
+  "run_id": "garage-p121-params-docs-after-the-completed-implementation-update-only-t",
+  "assignment_id": "p121-params-docs-after-the-completed-implementation-update-only-the-en-r",
+  "context_id": "p121-params-docs-after-the-completed-implementation-update-only-the-en-r-capsule",
+  "completed_stage": "code-assurance",
+  "evidence": ".pf/artifacts/pf121-oop-parameters-20261018/primary/verification.json",
+  "action": "stage_transitioned"
+}

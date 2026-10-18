@@ -75,6 +75,7 @@ from processforge_core.project.resolved_comparison import ProjectSnapshotResolve
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.sqlite_storage import JournalError
+from processforge_core.configuration.parameters import ParameterMergePolicy
 from processforge_core.configuration.resolution import ConfigurationResolver
 
 _file_digests = FileDigestReader()
@@ -8532,67 +8533,6 @@ SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
 
 
 
-def parameter_path(base: str, key: str) -> str:
-    return f"{base}.{key}" if base else key
-
-
-def parameter_list_item_path(base: str, item_id: str) -> str:
-    return f"{base}[id={item_id}]" if base else f"[id={item_id}]"
-
-
-def parameter_list_merges_by_id(base: Any, override: Any) -> bool:
-    if not isinstance(base, list) or not isinstance(override, list):
-        return False
-    if not base or not override:
-        return False
-    combined = [*base, *override]
-    return all(isinstance(item, dict) and item.get("id") not in (None, "") for item in combined)
-
-
-def merge_parameter_value(base: Any, override: Any, source_id: str, path: str, provenance: dict[str, Any]) -> Any:
-    if isinstance(base, dict) and isinstance(override, dict):
-        return merge_parameter_maps(base, override, source_id, path, provenance)
-    if parameter_list_merges_by_id(base, override):
-        result = [copy.deepcopy(item) for item in base]
-        index = {str(item["id"]): idx for idx, item in enumerate(result) if isinstance(item, dict) and item.get("id") not in (None, "")}
-        for item in override:
-            item_id = str(item["id"])
-            item_path = parameter_list_item_path(path, item_id)
-            if item.get("__delete__") is True or item.get("_delete") is True:
-                if item_id in index:
-                    del result[index[item_id]]
-                    provenance[item_path] = {"source": source_id, "action": "delete"}
-                    index = {str(value["id"]): idx for idx, value in enumerate(result) if isinstance(value, dict) and value.get("id") not in (None, "")}
-                continue
-            if item_id in index:
-                result[index[item_id]] = merge_parameter_maps(result[index[item_id]], item, source_id, item_path, provenance)
-            else:
-                result.append(copy.deepcopy(item))
-                provenance[item_path] = {"source": source_id, "action": "add"}
-        return result
-    provenance[path or "<root>"] = {"source": source_id, "action": "replace"}
-    return copy.deepcopy(override)
-
-
-def merge_parameter_maps(base: dict[str, Any], override: dict[str, Any], source_id: str, path: str = "", provenance: dict[str, Any] | None = None) -> dict[str, Any]:
-    provenance = provenance if provenance is not None else {}
-    result = copy.deepcopy(base)
-    for key, value in override.items():
-        key_text = str(key)
-        key_path = parameter_path(path, key_text)
-        if value is None:
-            if key_text in result:
-                del result[key_text]
-                provenance[key_path] = {"source": source_id, "action": "delete"}
-            continue
-        if key_text in result:
-            result[key_text] = merge_parameter_value(result[key_text], value, source_id, key_path, provenance)
-        else:
-            result[key_text] = copy.deepcopy(value)
-            provenance[key_path] = {"source": source_id, "action": "add"}
-    return result
-
-
 def parameter_payload(data: dict[str, Any]) -> dict[str, Any]:
     parameters = data.get("parameters") if isinstance(data, dict) else {}
     return parameters if isinstance(parameters, dict) else {}
@@ -8650,7 +8590,7 @@ def add_parameter_source(
     if not parameters:
         return
     result["sources"].append(parameter_source_record(source_id, layer, parameters, path=path, project_root=project_root, private=private, display_path=display_path))
-    result["resolved_parameters"] = merge_parameter_maps(result["resolved_parameters"], parameters, source_id, provenance=result["provenance"])
+    result["resolved_parameters"] = ParameterMergePolicy().merge_maps(result["resolved_parameters"], parameters, source_id, provenance=result["provenance"])
 
 
 def process_parameters_from_path(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:

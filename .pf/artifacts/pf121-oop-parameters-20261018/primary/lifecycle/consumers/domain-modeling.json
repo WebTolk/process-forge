@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-18T16:50:36.379737+00:00",
+  "role": "consumers",
+  "run_id": "garage-p121-params-consumers-migrate-every-real-consumer-of-the-five-par",
+  "assignment_id": "p121-params-consumers-migrate-every-real-consumer-of-the-five-parameter",
+  "context_id": "p121-params-consumers-migrate-every-real-consumer-of-the-five-parameter-capsule",
+  "completed_stage": "domain-modeling",
+  "evidence": ".pf\\artifacts\\pf121-oop-parameters-20261018\\primary\\brief.md",
+  "action": "stage_transitioned"
+}

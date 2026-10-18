@@ -1,0 +1,41 @@
+{
+  "started_at": "2026-10-18T17:08:04.599616+00:00",
+  "executor": "primary",
+  "python": "3.14.3",
+  "reason": "Native QA encountered temporary-fixture permissions before product checks; primary runs unchanged checks within its own granted scratch. No ACL or test changes.",
+  "scratch": ".pf/tmp/p121-parameters/primary/checks",
+  "source_hashes": {
+    "tools/processforge.py": "f973f5de5df2b672ec904ee94d772dd1cab8b13f4fe5309ea19408c878f3dc11",
+    "src/processforge_core/work/context.py": "b5ccb12c95ef258f6461a88f7ae48bc78411dfe8e2ae096c177d038219f37b81",
+    "src/processforge_core/configuration/parameters.py": "c8b0dd01b30012455e35f27cec02681ad50f773461eec196349fac303f246634"
+  },
+  "checks": [
+    {
+      "name": "smoke_parameter_cascade_resolution",
+      "exit_code": 0,
+      "duration_seconds": 1.667,
+      "stdout": "PASS: smoke_parameter_cascade_resolution\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_parameter_assignment_capsule",
+      "exit_code": 0,
+      "duration_seconds": 2.829,
+      "stdout": "PASS: smoke_parameter_assignment_capsule\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_parameter_freshness",
+      "exit_code": 0,
+      "duration_seconds": 2.497,
+      "stdout": "PASS: smoke_parameter_freshness\n",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "source_stable": true,
+  "finished_at": "2026-10-18T17:08:11.597565+00:00",
+  "passed": true
+}

@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-10-18T17:05:25.804080+00:00",
+  "role": "worker-p121-parameters-docs",
+  "hashing": "tools/validate-process-forge-checksums.py: sha256(released_content(path)); CRLF normalized to LF for files without NUL; bytes unchanged for files containing NUL",
+  "inventory_self_excluded": true,
+  "changes": [
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "action": "replace",
+      "old": "cde26e539cdb453e90c09a823a5a1205e823f670e9a7a0acc93373af0da8522c",
+      "new": "306bbb8ad150a3dd8846facbe3e3762a2d1091e0582fa86b116e14be82098cb2"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "action": "replace",
+      "old": "ef1b9524634ef613072c910935bc1fc0719405af7a697b20decc92ee01b17923",
+      "new": "ac46e9dd4e8f8f527f0218e18d8ccc0e85af72ca11a80b4f4d09c4eec555b522"
+    },
+    {
+      "path": "src/processforge_core/work/context.py",
+      "action": "replace",
+      "old": "a8757b008f7b3b85934bea2e8c9464e5507a086e28210aed476ce5683751abc1",
+      "new": "b5ccb12c95ef258f6461a88f7ae48bc78411dfe8e2ae096c177d038219f37b81"
+    },
+    {
+      "path": "tools/processforge.py",
+      "action": "replace",
+      "old": "540bd52f04de93ec4636a6f3210f0331830462bbdd6a0407acc857f8945fb4dc",
+      "new": "9ace7a979264eee2c0b18bc79387bd2c3cd9214b57e2c5c35f9e4a3262efcf0d"
+    },
+    {
+      "path": "src/processforge_core/configuration/parameters.py",
+      "action": "add",
+      "old": null,
+      "new": "c8b0dd01b30012455e35f27cec02681ad50f773461eec196349fac303f246634"
+    }
+  ],
+  "original_entries": 1316,
+  "final_entries": 1317,
+  "untouched_entries": 1312,
+  "untouched_inventory_lines_byte_identical": true,
+  "status": "verified",
+  "verification": {
+    "timestamp": "2026-10-18T17:06:11.879447+00:00",
+    "checks": [
+      "PASS: 4 checksum replacements, 1 addition, 0 removals; target hashes match helper.sha256.",
+      "PASS: all 1312 other inventory lines byte-identical, order and coverage preserved.",
+      "PASS: docs/concepts/python-core-structure.md: 25 added lines only; UTF-8/LF, owning paths, API and legacy boundary present.",
+      "PASS: docs/ru/concepts/python-core-structure.md: 25 added lines only; UTF-8/LF, owning paths, API and legacy boundary present.",
+      "PASS: AST confirms two direct consumers and continuing legacy calls from build_context_fields."
+    ],
+    "residual_out_of_scope_mismatches_preserved": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ],
+    "remaining_full_inventory_check": "fails due only to the three preserved out-of-scope mismatches",
+    "scope": "source-only documentation and checksum verification; no behavior/installed/runtime/host acceptance",
+    "existing_helper_check": {
+      "command": "python tools/validate-process-forge-checksums.py --root . --check",
+      "exit_code": 1,
+      "result": "FAIL: checksum inventory is stale; only the three preserved out-of-scope entries differ"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-18T17:02:06.721764+00:00",
+  "role": "qa",
+  "run_id": "garage-p121-params-qa-after-completed-implementation-test-only-the-param",
+  "assignment_id": "p121-params-qa-after-completed-implementation-test-only-the-parameter-re",
+  "context_id": "p121-params-qa-after-completed-implementation-test-only-the-parameter-re-capsule",
+  "completed_stage": "intake-scope",
+  "evidence": ".pf\\artifacts\\pf121-oop-parameters-20261018\\primary\\brief.md",
+  "action": "stage_transitioned"
+}

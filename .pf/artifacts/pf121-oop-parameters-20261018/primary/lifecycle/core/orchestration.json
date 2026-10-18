@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-18T16:50:07.210410+00:00",
+  "role": "core",
+  "run_id": "garage-p121-params-core-implement-parametermergepolicy-in-the-new-config",
+  "assignment_id": "p121-params-core-implement-parametermergepolicy-in-the-new-configuration",
+  "context_id": "p121-params-core-implement-parametermergepolicy-in-the-new-configuration-capsule",
+  "completed_stage": "orchestration",
+  "evidence": ".pf\\artifacts\\pf121-oop-parameters-20261018\\primary\\brief.md",
+  "action": "stage_transitioned"
+}

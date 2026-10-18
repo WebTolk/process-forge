@@ -119,11 +119,13 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/work/events.py` | Existing Work event envelope and subsequent diagnostics through a typed, dynamically resolved emitter. |
 | `src/processforge_core/work/context_read.py` | Live capsule validation and assignment normalization through concrete Core contract inputs. |
 | `src/processforge_core/work/context_documents.py` | Concrete field normalization and document/path/identity inputs for Work context reads. |
+| `src/processforge_core/work/context.py` | Existing assignment context compilation; parameter merging uses ParameterMergePolicy directly, while the compiler retains other legacy dependencies. |
 | `src/processforge_core/process_catalog/` | Concrete catalog and effective ProcessDefinition readers; offered process selection and pin construction retain their explicit operation dependencies. |
 | `src/processforge_core/process_catalog/summary.py` | Allowed-process context summary using a concrete catalog by default and an optional narrow catalog port for injection, without a monolith callback. |
 | `src/processforge_core/project/metadata.py` | Live project identity, manifest and flow-root reads through concrete Core YAML; shared by context, catalog and resources. |
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading through concrete Core YAML and file digest readers, bound to the project root. |
 | `src/processforge_core/common/digests.py` | Existing raw-byte SHA256 file reading, shared by snapshot reads, monolithic facades and maintenance update. |
+| `src/processforge_core/configuration/parameters.py` | Stateless ParameterMergePolicy owning existing parameter-map merging and ordered provenance, without a monolith dependency. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
@@ -500,3 +502,26 @@ input nonmutation. It performs no document reads and retains no inputs or result
 Snapshot assembly, freshness decisions and durable publication keep their
 existing responsibilities. This presentation move does not make those paths
 independent of the legacy composition or complete any OOP epic.
+
+## Parameter Merge
+
+`configuration.parameters.ParameterMergePolicy` owns the existing recursive map
+merge, ID-list merge, deletion and replacement rules with ordered provenance.
+Its instance method is `merge_maps(base, override, source_id, path="", provenance=None)`.
+The owner retains no per-merge state, performs no I/O and has no dependency on
+the CLI or Host. Deep copies, mutation of supplied provenance, native errors,
+iteration order and existing duplicate-ID behavior remain unchanged. Five old
+parameter helper definitions have been removed from `tools/processforge.py`.
+
+The two direct consumers import from the owning module: `add_parameter_source`
+in `tools/processforge.py` uses the policy for each source merge and passes the
+existing provenance object; `work.context.build_context_fields` uses it for
+the immutable assignment parameter merge.
+
+`build_context_fields` still calls `core.add_parameter_source` and
+`core.parameter_payload` for the process/stage/task source cascade. Assignment
+normalization, snapshot paths/checksums, project/workplace resolution, source
+capture and coordination also retain existing legacy dependencies. Extracting
+the merge policy does not make the complete context compiler independent of
+the monolith. This ownership reference describes source code; archive,
+installed-Core, Runtime and connected-host acceptance remain separate.

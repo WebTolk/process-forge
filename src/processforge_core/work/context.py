@@ -18,6 +18,7 @@ from typing import Any
 import yaml
 
 from ..common.request_scope import safe_load
+from ..configuration.parameters import ParameterMergePolicy
 from ..project.capability_registry import CapabilityRegistryReader
 from ..project.readiness import ProjectContextReadinessPolicy
 
@@ -405,7 +406,7 @@ def build_context_fields(project: Path, assignment_path: Path, metadata: dict[st
                   "sources": copy.deepcopy((snapshot.get("parameter_resolution") or {}).get("sources") or []),
                   "provenance": {}, "conflicts": []}
     core.add_parameter_source(resolution, source_id="assignment-process:" + str(pin.get("process_id") or ""), layer="process", parameters=core.parameter_payload(definition))
-    parameters = core.merge_parameter_maps(resolution["resolved_parameters"], intent["parameters"], "assignment")
+    parameters = ParameterMergePolicy().merge_maps(resolution["resolved_parameters"], intent["parameters"], "assignment")
     initial_stage = next((item for item in definition.get("stages", []) if item.get("id") == metadata.get("stage")), {})
     core.add_parameter_source(resolution, source_id="assignment-stage:" + str(metadata.get("stage") or ""), layer="stage", parameters=core.parameter_payload(initial_stage))
     core.add_parameter_source(resolution, source_id="assignment", layer="task", parameters=core.parameter_payload(metadata))

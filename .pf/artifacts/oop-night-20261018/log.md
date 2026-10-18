@@ -1,0 +1,22 @@
+# Ночной рефакторинг Core
+
+2026-10-18 20:48 +04, primary. Продолжена согласованная реализация после 1.2.0.
+Остановка новых задач: 2026-10-19 09:00 +04, затем завершение уже начатых.
+Первый срез: ParameterMergePolicy; роли и границы закреплены в
+../pf121-oop-parameters-20261018/primary/brief.md. Используется существующий source CLI:
+контекст fresh/ready, без ремонта инфраструктуры. Полные релизные прогоны исключены.
+Статус: реализация подготовлена, до изменений захватывается исходный алгоритм.
+
+2026-10-18T20:51:40+04:00, primary. User excluded ZIP-content checks after packaging; normal software development stages remain required. Native Core and consumer workers started with disjoint write scopes. Baseline of five helpers captured before edits.
+
+2026-10-18T20:56:06+04:00, primary. Core module completed and collected; five method bodies match baseline after self-call normalization. Implementation stage advanced through native API. Consumer migration still running; focused QA and independent review pending.
+
+2026-10-18T21:02:24.420247+04:00, primary. Both implementation workers completed and were collected. Existing helpers removed; consumers use the canonical policy. Docs worker is active on exactly EN/RU ownership docs plus checksum inventory; QA is prepared after code freeze. An initial docs_only scope request was rejected before any Work existed because write_product was normalized away; the archived rejection and exact no-Work readback were preserved, then the correct implementation request was admitted without broadening file scope.
+
+2026-10-18T21:06:52.736250+04:00, primary. Docs and focused QA are active after implementation. Symbolic reads established the next two accepted slices; a batch of Serena reference lookups stalled and was terminated, then bounded rg/AST recovered the exact artifact-declaration callers and effective late as_list semantics. No service restart or index repair. Existing unrelated inventory mismatches remain untouched; ZIP-content checks are excluded.
+
+2026-10-18T21:08:42.533893+04:00, primary. Docs completed: exactly four changed checksum rows plus one new row; unrelated drift preserved. Native QA Python 3.14 temporary-directory creation hit WinError 5 before product checks. Primary ran the same three unchanged smokes in primary-owned .pf/tmp scratch: all passed in 7 seconds, with stable source hashes. No ACL, test or service changes; differential QA still running.
+
+2026-10-18T21:18:04.682895+04:00, primary. Focused QA reconciled: 250 parity cases including 21 native exception cases, four contracts, two isolated imports and zero old-name consumers passed. The three main-process smoke results refer to exactly the same source bytes. Clean-context reviewer started after code/QA; product remains frozen. Raw environment diagnostics will remain local; portable evidence and exact owned product paths are selected for delivery.
+
+2026-10-18T21:21:45.475496+04:00, primary. User instructed selecting worker reasoning effort by actual task complexity. Future routine documentation and simple caller migration use medium, edge-case algorithm work and independent review use high; higher effort is reserved for complex transactional/recovery boundaries. The already running reviewer is not restarted. Native model remains gpt-6.1-sol.

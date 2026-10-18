@@ -1,0 +1,138 @@
+{
+  "recorded_at": "2026-10-18T17:14:33.264870+00:00",
+  "status": "focused_checks_passed_review_pending",
+  "scope": "source_only",
+  "qa_attempt_status": "blocked_environment",
+  "qa_report": {
+    "path": ".pf\\artifacts\\pf121-oop-parameters-20261018\\qa\\report.md",
+    "sha256": "840de6f11f1efaabc2ca3e23a14b9f404bc415c21c2606e1f3310c8e8634a6c5"
+  },
+  "raw_qa_results_sha256": "544806e10f8742b38c442c1054ebbc4b337c3de17fee9b88e0b835d492e30da3",
+  "primary_smokes": {
+    "path": ".pf\\artifacts\\pf121-oop-parameters-20261018\\primary\\smoke-results.json",
+    "sha256": "ce3abc63a27a5d91d0c8c487cae6ebca8d7255bca1d28faf21e5761ed88ff9f7",
+    "python": "3.14.3",
+    "checks": [
+      {
+        "name": "smoke_parameter_cascade_resolution",
+        "passed": true,
+        "duration_seconds": 1.667
+      },
+      {
+        "name": "smoke_parameter_assignment_capsule",
+        "passed": true,
+        "duration_seconds": 2.829
+      },
+      {
+        "name": "smoke_parameter_freshness",
+        "passed": true,
+        "duration_seconds": 2.497
+      }
+    ]
+  },
+  "parity": {
+    "status": "pass",
+    "total": 250,
+    "passed": 250,
+    "failed": 0,
+    "native_exception_cases": 21,
+    "exception_types": {
+      "TypeError": 10,
+      "AttributeError": 4,
+      "ValueError": 2,
+      "LookupError": 1,
+      "RuntimeError": 4
+    },
+    "deterministic_seed": 121,
+    "generated_cases": 80,
+    "evidence_file": "parameter-parity.json",
+    "compared": [
+      "values",
+      "recursive_dict_order_and_value_types",
+      "ordered_provenance",
+      "exception_type_message_and_side_effect_order",
+      "input_mutation",
+      "duplicate_and_deleted_ID_behavior"
+    ]
+  },
+  "independent_contracts": [
+    {
+      "name": "defensive-copies-and-aliases",
+      "status": "pass",
+      "detail": "Nested mutations in both directions are isolated; base alias relationship preserved."
+    },
+    {
+      "name": "explicit-provenance-identity-and-order",
+      "status": "pass",
+      "detail": "Caller-owned falsey provenance mutated in place; existing key position preserved."
+    },
+    {
+      "name": "duplicate-delete-index-quirks",
+      "status": "pass",
+      "detail": "Append does not update ID index; delete rebuilds it; duplicate base updates last index."
+    },
+    {
+      "name": "stateless-owner",
+      "status": "pass",
+      "detail": "Instance remains stateless across all bounded cases and repeated calls."
+    }
+  ],
+  "isolated_imports": [
+    {
+      "mode": "direct",
+      "returncode": 0,
+      "status": "pass"
+    },
+    {
+      "mode": "copied",
+      "returncode": 0,
+      "status": "pass"
+    }
+  ],
+  "consumer_scan": {
+    "status": "pass",
+    "python_files_scanned": 538,
+    "roots": [
+      "src",
+      "tools",
+      "bin",
+      "examples"
+    ],
+    "old_names": [
+      "parameter_path",
+      "parameter_list_item_path",
+      "parameter_list_merges_by_id",
+      "merge_parameter_value",
+      "merge_parameter_maps"
+    ],
+    "matches": [],
+    "bindings": [
+      {
+        "path": "tools/processforge.py",
+        "direct_owner_imports": 1,
+        "direct_policy_calls": 1
+      },
+      {
+        "path": "src/processforge_core/work/context.py",
+        "direct_owner_imports": 1,
+        "direct_policy_calls": 1
+      }
+    ]
+  },
+  "same_source_bytes_across_executors": true,
+  "source_sha256": {
+    "src/processforge_core/configuration/parameters.py": "c8b0dd01b30012455e35f27cec02681ad50f773461eec196349fac303f246634",
+    "tools/processforge.py": "f973f5de5df2b672ec904ee94d772dd1cab8b13f4fe5309ea19408c878f3dc11",
+    "src/processforge_core/work/context.py": "b5ccb12c95ef258f6461a88f7ae48bc78411dfe8e2ae096c177d038219f37b81"
+  },
+  "resolution": "Native shell temporary-fixture creation was blocked before product checks; primary executed the same three unmodified checks in its own granted scratch with identical source hashes. No permission, dependency, test or product changes were made. Review is still pending.",
+  "private_diagnostics": "Raw interpreter paths and native fixture traces stay local; this portable record retains their hashes.",
+  "excluded": [
+    "archive",
+    "zip_content_checks",
+    "installed",
+    "runtime",
+    "connected_host",
+    "full_release_suite"
+  ]
+}

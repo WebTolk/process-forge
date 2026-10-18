@@ -128,10 +128,12 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Актуальная проверка капсулы и нормализация Assignment через конкретные зависимости Core. |
 | `src/processforge_core/work/context_documents.py` | Нормализация полей и конкретное чтение документов, путей и идентификаторов для Work context. |
+| `src/processforge_core/work/context.py` | Прежняя компиляция контекста Assignment; слияние параметров вызывает ParameterMergePolicy напрямую, остальные legacy-зависимости компилятора сохраняются. |
 | `src/processforge_core/process_catalog/` | Конкретные читатели каталога и effective ProcessDefinition; выбор из предложенных процессов и подготовка pin сохраняют явные зависимости операций. |
 | `src/processforge_core/project/metadata.py` | Живое чтение ID проекта, manifest и корня .pf через Core YAML; общий владелец для контекста, каталога и ресурсов. |
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot через конкретные читатели YAML и файловых хешей Core, привязанные к корню проекта. |
 | `src/processforge_core/common/digests.py` | Прежнее чтение SHA256 исходных байтов файла, общее для snapshot, фасадов монолита и maintenance update. |
+| `src/processforge_core/configuration/parameters.py` | ParameterMergePolicy без состояния: прежнее слияние карт параметров и упорядоченный provenance без зависимости от монолита. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
@@ -513,3 +515,26 @@ CLI и существующий narrowing/search smoke вызывают влад
 Сборка снимка, определение актуальности и надёжная запись сохраняют свои
 существующие обязанности. Перенос представления не делает эти пути независимыми
 от прежней сборки зависимостей и не завершает ни один эпик OOP.
+
+## Слияние параметров
+
+`configuration.parameters.ParameterMergePolicy` владеет прежними правилами
+рекурсивного слияния карт, слияния списков по ID, удаления и замены с упорядоченным
+provenance. Метод экземпляра — `merge_maps(base, override, source_id, path="", provenance=None)`.
+Владелец не хранит состояние слияния, не выполняет I/O и не зависит от CLI или
+Host. Глубокое копирование, изменение переданного provenance, исходные ошибки,
+порядок обхода и прежнее поведение дубликатов ID сохранены. Пять старых определений
+parameter helpers удалены из `tools/processforge.py`.
+
+Два прямых потребителя импортируют класс из модуля-владельца: `add_parameter_source`
+в `tools/processforge.py` применяет policy при слиянии каждого источника и передаёт
+существующий объект provenance; `work.context.build_context_fields` использует её
+для слияния параметров неизменяемого контекста Assignment.
+
+`build_context_fields` по-прежнему вызывает `core.add_parameter_source` и
+`core.parameter_payload` для каскада источников process/stage/task. Нормализация
+Assignment, пути и хеши snapshot, определение проекта/рабочего места, захват
+источников и coordination также сохраняют прежние legacy-зависимости. Выделение
+merge policy не делает полный компилятор контекста независимым от монолита.
+Справочник описывает исходный код; приёмка архива, установленного Core, Runtime и
+подключённых хостов остаётся отдельной.
