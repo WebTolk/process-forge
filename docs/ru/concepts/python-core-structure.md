@@ -90,6 +90,11 @@ Work-импорты на текущем dev-этапе не сохраняютс
 
 | Модуль | Обязанность |
 | --- | --- |
+| `src/processforge_core/resources/project_packages.py` | Манифесты пакетов проекта, записи корней, актуальные candidates/index, дубликаты и зависимости через конкретные пути и документы Core. |
+| `src/processforge_core/project/platform_resolution.py` | Прежнее рекурсивное разрешение иерархии платформ и сбор ресурсов/зависимостей через конкретные каталоги и правила Core. |
+| `src/processforge_core/process_catalog/semantics.py` | Прежняя полнота авторинга, проекции семантики и упорядоченное сравнение совместимости. |
+| `src/processforge_core/presentation/process_parity.py` | Прежние Markdown-отчёты импорта и паритета процесса отдельно от семантических правил. |
+| `src/processforge_core/runtime/worker_plans.py` | Прежние начальные планы работников, правила подагентов и зависимостей, рекурсия и актуальное чтение завершённости назначений. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
 | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
@@ -160,7 +165,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/platform_policy.py` | PlatformContractPolicy: прежние проекции ссылок, зависимостей и required/recommended/optional ресурсов. |
 | `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService: прежние authoring logic, companion paths/checks и канонические workflow/iteration constants. |
 | `src/processforge_core/common/json_io.py` | Каноническая прежняя json_read с актуальным чтением и исходными ошибками. |
-| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
+| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков, списков и исходных словарей параметров. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
@@ -806,7 +811,7 @@ direct path, fallback и порядок проверок/ошибок. Суще�
 `PlatformContractReader` для канонических ID. Ему принадлежат нормализация ссылок,
 extends/requires и проекции required/recommended/optional ресурсов с прежними
 различиями типов/truthiness, сортировкой, dedup и includes. Разрешение иерархии
-и сборка каталога packages остаются у прежних владельцев.
+и каталог пакетов проекта используют конкретных владельцев, описанных ниже.
 
 `process_catalog.validation.ProcessAuthoringValidationService` владеет `logic`,
 `files` и `paths`, используя готовые evolution/artifact policies и канонические
@@ -816,3 +821,41 @@ companion root и наблюдение файлов сохранены. Обща
 и предикат. Полная проверка process contract/routes, публикация и recovery
 остаются у существующих владельцев. Внешние контракты 1.2.0 и приёмка более
 поздних слоёв поставки проверяются отдельно.
+
+## Пакеты проекта, иерархия платформ, семантика процессов и планы работников
+
+`resources.project_packages.ProjectPackageCatalogReader(distribution_root)` владеет
+`workplace_roots`, `workplace_root_paths`, `candidates`, `index`, `dependencies`
+и `root_from_entry`. Проект и workplace передаются на каждой операции. Поиск
+сохраняет порядок обхода, устранение повторных разрешённых путей и добавления из
+активных официальных пакетов. Индекс проекта сохраняет последнее совпадение и
+отдельную запись дубликатов; поисковый каталог workplace по-прежнему сохраняет
+первое совпадение. Кеша документов и чтения в конструкторе нет.
+
+Перенесённый `PackageRootResolution` сохраняет имя класса, поля, аннотации,
+значения по умолчанию и представление. Для записи корня используется готовый
+алгоритм `WorkspacePathReferenceReader`, затем явно сопоставляются поля обычной
+записи с сохранением ссылок warnings/entry. Прежняя частная модель snapshot и её
+потребители не меняются; правила разрешения путей не копируются.
+
+`project.platform_resolution.PlatformContractResolver(distribution_root)` владеет
+прежними рекурсивными операциями `resolve` и `merge_ids`. Он использует конкретных
+владельцев каталога, проекций платформ и пакетов. Сохраняются порядок обхода и
+циклов, различия ресурсов extends и required-platform, ссылки overrides, порядок
+конфликтов, сортировка результата и очередь зависимостей пакетов.
+`common.values.parameter_payload` возвращает прежний исходный словарь параметров.
+Сборка контекста Work использует этот примитив напрямую; остальные её зависимости
+остаются неперенесёнными.
+
+`process_catalog.semantics.ProcessSemanticPolicy` владеет полнотой авторинга,
+семантической картой и проекциями процесса, строк, событий, объектов и сравнением.
+`presentation.process_parity.ProcessParityRenderer` владеет прежними Markdown-
+отчётами `import_report` и `parity_report`. Их текст, приоритет ошибок и
+предупреждений, различия отсутствующих исходных полей сохранены.
+
+`runtime.worker_plans.WorkerPlanPolicy` владеет начальными планами, проекциями
+работников/подагентов и зависимостей, рекурсивной достижимостью, буквальным правилом
+пересечения записей и `task_dependencies_done`. Последняя операция использует
+актуальные пути Work и строгое чтение YAML. Исполнение, scopes/leases, блокировки,
+жизненный цикл и восстановление остаются у прежних владельцев. Внешнее поведение
+1.2.0 и приёмка более поздних слоёв поставки проверяются отдельно.

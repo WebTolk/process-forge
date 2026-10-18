@@ -1,0 +1,19 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-catalogs-20261018/review/report.md",
+  "review_sha256": "1910526f6d00863ce683e4a5a27ee8d6b8133331f96bf7fd783d826924232803",
+  "product_sha256": {
+    "tools/processforge.py": "ba2708d3b498b5c736d81776cda6fdc34035a9f0479774f4806cc7d471296357",
+    "src/processforge_core/work/context.py": "4b04d4b3958e0bccda76f77d098db4f57dbeca7cde5bbc9403df023fda424d89",
+    "docs/concepts/python-core-structure.md": "77112529e06912b44a72ef78362af639bbba3072c9557b42760e57794d618ed7",
+    "docs/ru/concepts/python-core-structure.md": "235770e2c090c3c5d539b599be7f51f47a559296f602a1aa5323735885eea512",
+    "src/processforge_core/resources/project_packages.py": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130",
+    "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+    "src/processforge_core/common/values.py": "c1629a906c93c547e71014a090da609cef02479496abafcdbe72dfaa7aa2431a",
+    "src/processforge_core/process_catalog/semantics.py": "c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2",
+    "src/processforge_core/presentation/process_parity.py": "8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1",
+    "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0",
+    "checksums/processforge.sha256": "d6db14f0ec6471b8156d533d34e9c0ee85be2e1020ac01a0735f5a2260b9d54f"
+  },
+  "scope": "Accepted final source only. No archive/install/Runtime/connected-host/ZIP acceptance; OOP epics remain open."
+}

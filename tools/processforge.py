@@ -184,6 +184,18 @@ from processforge_core.process_catalog.validation import (
 _runtime_driver_selection_service = RuntimeDriverSelectionService(ROOT)
 _platform_contract_policy = PlatformContractPolicy(_platform_contract_reader)
 _process_authoring_validation_service = ProcessAuthoringValidationService()
+from processforge_core.resources.project_packages import ProjectPackageCatalogReader, PackageRootResolution
+from processforge_core.project.platform_resolution import PlatformContractResolver
+from processforge_core.process_catalog.semantics import ProcessSemanticPolicy
+from processforge_core.presentation.process_parity import ProcessParityRenderer
+from processforge_core.runtime.worker_plans import WorkerPlanPolicy
+from processforge_core.common.values import parameter_payload
+
+_project_package_catalog_reader = ProjectPackageCatalogReader(ROOT)
+_platform_contract_resolver = PlatformContractResolver(ROOT)
+_process_semantic_policy = ProcessSemanticPolicy()
+_process_parity_renderer = ProcessParityRenderer()
+_worker_plan_policy = WorkerPlanPolicy()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -1226,15 +1238,6 @@ def planned_registry_upsert(
     return ensure_trailing_newline(dump_yaml(data)).encode("utf-8"), result, data
 
 
-@dataclass
-class PackageRootResolution:
-    root_id: str
-    original_path: str
-    resolved_path: Path
-    status: str
-    warnings: list[str]
-    fallback: bool = False
-    entry: dict[str, Any] | None = None
 
 
 
@@ -2872,7 +2875,7 @@ def package_root_registry_checks(workplace_root: Path) -> list[Check]:
     for entry in entries:
         if not isinstance(entry, dict):
             continue
-        root = package_root_resolution_from_entry(workplace_root, entry)
+        root = _project_package_catalog_reader.root_from_entry(workplace_root, entry)
         label = f"package_root {root.root_id}"
         if root.warnings:
             checks.append(
@@ -3035,7 +3038,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             if isinstance(item, dict) and (item.get("id") or item.get("package_id")) and str(item.get("status", "available")) not in {"missing", "disabled"}
         ] if isinstance(platform_entries, list) else []
         if platform_ids:
-            workplace_resolution = resolve_platform_contracts(manifest, platform_ids)
+            workplace_resolution = _platform_contract_resolver.resolve(manifest, platform_ids)
             checks.append(check("PASS" if not workplace_resolution["missing_required_contracts"] else "FAIL", "platform inheritance parent platforms resolve"))
             for missing in workplace_resolution["missing_required_contracts"]:
                 checks.append(
@@ -3058,7 +3061,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         public_manifest_paths: list[Path] = []
         if platform_ids:
             public_manifest_paths.extend(path for pid in platform_ids for path in [platform_contract_path(root, pid)] if path)
-        public_manifest_paths.extend(package_manifest_candidates(root, None, manifest))
+        public_manifest_paths.extend(_project_package_catalog_reader.candidates(root, None, manifest))
         for public_path in sorted(set(public_manifest_paths), key=lambda item: item.as_posix()):
             text = public_path.read_text(encoding="utf-8", errors="replace")
             checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", f"{rel(public_path, root)} contains no private absolute paths"))
@@ -4043,180 +4046,10 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
 
 
 
-def package_dependency_ids(manifest: dict[str, Any]) -> list[str]:
-    dependencies = set(list_value(manifest.get("dependencies")))
-    requires = manifest.get("requires") if isinstance(manifest.get("requires"), dict) else {}
-    dependencies.update(list_value(requires.get("knowledge_packages")))
-    return sorted(item for item in dependencies if item)
 
 
-def merge_id_list(target: dict[str, str], values: list[str], owner: str, conflicts: list[dict[str, Any]]) -> None:
-    for value in values:
-        if value not in target:
-            target[value] = owner
-        elif target[value] != owner:
-            conflicts.append({"id": value, "first_owner": target[value], "second_owner": owner, "resolution": "dedupe"})
 
 
-def resolve_platform_contracts(
-    workplace_manifest: Path | None,
-    platform_ids: list[str],
-    project_root: Path | None = None,
-    contract_overrides: dict[str, dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    contracts_by_id: dict[str, dict[str, Any]] = {}
-    platform_stack: list[dict[str, Any]] = []
-    required_capabilities: set[str] = set()
-    required_knowledge_packages: dict[str, str] = {}
-    recommended_knowledge_packages: dict[str, str] = {}
-    required_tools: dict[str, str] = {}
-    recommended_tools: dict[str, str] = {}
-    required_mcp: dict[str, str] = {}
-    recommended_mcp: dict[str, str] = {}
-    required_templates: dict[str, str] = {}
-    recommended_templates: dict[str, str] = {}
-    missing_required_contracts: list[str] = []
-    circular_platforms: list[str] = []
-    dependency_conflicts: list[dict[str, Any]] = []
-    resource_conflicts: list[dict[str, Any]] = []
-    resolved: set[str] = set()
-    resolving: list[str] = []
-
-    def resolve_one(raw_platform_id: str, *, relation: str = "selected", inherited_by: str | None = None, include_resources: bool = True, required: bool = True) -> None:
-        contract_id = _platform_contract_reader.contract_id(raw_platform_id)
-        if contract_id in resolving:
-            cycle = " -> ".join([*resolving[resolving.index(contract_id):], contract_id])
-            circular_platforms.append(cycle)
-            return
-        if contract_id in resolved:
-            return
-        resolving.append(contract_id)
-        if contract_overrides and contract_id in contract_overrides:
-            contract = contract_overrides[contract_id]
-            entry = {"id": contract_id, "status": "available", "source": "staged"}
-            status = "available"
-            source = "staged"
-        else:
-            contract, entry, status, source = _platform_contract_reader.load(workplace_manifest, contract_id, project_root)
-        extends_refs = _platform_contract_policy.extends(contract)
-        required_platform_refs = _platform_contract_policy.required_platforms(contract)
-        for ref in extends_refs:
-            if ref["id"] in resolving:
-                cycle = " -> ".join([*resolving[resolving.index(ref["id"]):], ref["id"]])
-                circular_platforms.append(cycle)
-                continue
-            resolve_one(ref["id"], relation="extends", inherited_by=contract_id, include_resources=True, required=bool(ref.get("required", True)))
-        for ref in required_platform_refs:
-            if ref["id"] in resolving:
-                cycle = " -> ".join([*resolving[resolving.index(ref["id"]):], ref["id"]])
-                circular_platforms.append(cycle)
-                continue
-            resolve_one(ref["id"], relation="requires.platforms", inherited_by=contract_id, include_resources=False, required=bool(ref.get("required", True)))
-        if status != "available" and required:
-            missing_required_contracts.append(contract_id)
-        platform_record = {
-            "id": contract_id,
-            "platform": contract_id.removeprefix("platform."),
-            "source": source,
-            "status": "available" if status == "available" else "missing",
-            "relation": relation,
-            "required": required,
-            "inherited_by": inherited_by,
-            "extends": [ref["id"] for ref in extends_refs],
-            "requires_platforms": [ref["id"] for ref in required_platform_refs],
-        }
-        platform_stack.append(platform_record)
-        if include_resources:
-            required_capabilities.update(_platform_contract_policy.required_capabilities(contract))
-            owner = contract_id
-            merge_id_list(required_knowledge_packages, _platform_contract_policy.required_items(contract, "knowledge_packages"), owner, resource_conflicts)
-            merge_id_list(recommended_knowledge_packages, _platform_contract_policy.recommended_items(contract, "knowledge_packages"), owner, resource_conflicts)
-            merge_id_list(required_tools, _platform_contract_policy.required_items(contract, "tools"), owner, resource_conflicts)
-            merge_id_list(recommended_tools, _platform_contract_policy.recommended_items(contract, "tools"), owner, resource_conflicts)
-            merge_id_list(required_mcp, _platform_contract_policy.required_items(contract, "mcp"), owner, resource_conflicts)
-            merge_id_list(recommended_mcp, _platform_contract_policy.recommended_items(contract, "mcp"), owner, resource_conflicts)
-            merge_id_list(required_templates, _platform_contract_policy.required_items(contract, "templates"), owner, resource_conflicts)
-            merge_id_list(recommended_templates, _platform_contract_policy.recommended_items(contract, "templates"), owner, resource_conflicts)
-        contracts_by_id[contract_id] = {
-            "id": contract_id,
-            "platform": contract_id.removeprefix("platform."),
-            "source": source,
-            "status": "available" if status == "available" else "missing",
-            "registry_entry": str(entry.get("id")) if isinstance(entry, dict) and entry.get("id") else None,
-            "required_contract": required,
-            "relation": relation,
-            "inherited_by": inherited_by,
-            "extends": [ref["id"] for ref in extends_refs],
-            "requires_platforms": [ref["id"] for ref in required_platform_refs],
-            "required_capabilities": sorted(_platform_contract_policy.required_capabilities(contract)),
-            "required": {
-                "knowledge_packages": sorted(_platform_contract_policy.required_items(contract, "knowledge_packages")),
-                "tools": sorted(_platform_contract_policy.required_items(contract, "tools")),
-                "mcp": sorted(_platform_contract_policy.required_items(contract, "mcp")),
-                "templates": sorted(_platform_contract_policy.required_items(contract, "templates")),
-            },
-            "recommended": {
-                "knowledge_packages": sorted(_platform_contract_policy.recommended_items(contract, "knowledge_packages")),
-                "tools": sorted(_platform_contract_policy.recommended_items(contract, "tools")),
-                "mcp": sorted(_platform_contract_policy.recommended_items(contract, "mcp")),
-                "templates": sorted(_platform_contract_policy.recommended_items(contract, "templates")),
-            },
-            "optional": {
-                "knowledge_packages": sorted(_platform_contract_policy.optional_items(contract, "knowledge_packages")),
-                "tools": sorted(_platform_contract_policy.optional_items(contract, "tools")),
-                "mcp": sorted(_platform_contract_policy.optional_items(contract, "mcp")),
-                "templates": sorted(_platform_contract_policy.optional_items(contract, "templates")),
-            },
-            "parameters": parameter_payload(contract),
-        }
-        resolving.pop()
-        resolved.add(contract_id)
-
-    for platform_id in platform_ids:
-        resolve_one(platform_id)
-
-    package_index_root = project_root or (workplace_manifest.parent if workplace_manifest and workplace_manifest.is_file() else ROOT)
-    package_index = package_manifest_index(package_index_root, ROOT, workplace_manifest)
-    dependency_queue = list(required_knowledge_packages)
-    while dependency_queue:
-        package_id = dependency_queue.pop(0)
-        manifest = package_index.get(package_id)
-        if not isinstance(manifest, dict):
-            continue
-        for dependency_id in package_dependency_ids(manifest):
-            if dependency_id not in required_knowledge_packages:
-                required_knowledge_packages[dependency_id] = f"package:{package_id}"
-                dependency_queue.append(dependency_id)
-
-    required_knowledge_ids = set(required_knowledge_packages)
-    recommended_knowledge_ids = set(recommended_knowledge_packages) - required_knowledge_ids
-    required_tool_ids = set(required_tools)
-    recommended_tool_ids = set(recommended_tools) - required_tool_ids
-    required_mcp_ids = set(required_mcp)
-    recommended_mcp_ids = set(recommended_mcp) - required_mcp_ids
-    required_template_ids = set(required_templates)
-    recommended_template_ids = set(recommended_templates) - required_template_ids
-    return {
-        "contracts": [contracts_by_id[item["id"]] for item in platform_stack if item["id"] in contracts_by_id],
-        "platform_stack": platform_stack,
-        "missing_required_contracts": sorted(set(missing_required_contracts)),
-        "circular_platforms": sorted(set(circular_platforms)),
-        "dependency_conflicts": dependency_conflicts,
-        "resource_conflicts": resource_conflicts,
-        "required_capabilities": sorted(required_capabilities),
-        "required_knowledge_packages": sorted(required_knowledge_ids),
-        "recommended_knowledge_packages": sorted(recommended_knowledge_ids),
-        "knowledge_packages": sorted(required_knowledge_ids.union(recommended_knowledge_ids)),
-        "required_tools": sorted(required_tool_ids),
-        "recommended_tools": sorted(recommended_tool_ids),
-        "tools": sorted(required_tool_ids.union(recommended_tool_ids)),
-        "required_mcp": sorted(required_mcp_ids),
-        "recommended_mcp": sorted(recommended_mcp_ids),
-        "mcp": sorted(required_mcp_ids.union(recommended_mcp_ids)),
-        "required_templates": sorted(required_template_ids),
-        "recommended_templates": sorted(recommended_template_ids),
-        "templates": sorted(required_template_ids.union(recommended_template_ids)),
-    }
 
 
 def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
@@ -4236,7 +4069,7 @@ def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
 def platform_resource_findings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     package_ids = registry_ids(load_workplace_registry(workplace_manifest, "package_roots", "package-roots.yaml"), "package_roots")
     if workplace_manifest and workplace_manifest.is_file():
-        package_ids = package_ids.union(set(package_manifest_index(workplace_manifest.parent, None, workplace_manifest)) - {"__duplicates__"})
+        package_ids = package_ids.union(set(_project_package_catalog_reader.index(workplace_manifest.parent, None, workplace_manifest)) - {"__duplicates__"})
     if package_index_ids:
         package_ids = package_ids.union(package_index_ids)
     tool_ids = registry_ids(load_workplace_registry(workplace_manifest, "tools", "tools.yaml"), "tools")
@@ -4717,7 +4550,7 @@ def resolve_specialization_context(
     platform_resolution: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     selected_ids = [specialization_resource_id(item) for item in (specialization_ids or [])]
-    platform_resolution = platform_resolution or resolve_platform_contracts(workplace_manifest, platform_ids, project_root=project_root)
+    platform_resolution = platform_resolution or _platform_contract_resolver.resolve(workplace_manifest, platform_ids, project_root=project_root)
     required = {
         "knowledge_packages": set(platform_resolution.get("required_knowledge_packages", [])),
         "tools": set(platform_resolution.get("required_tools", [])),
@@ -4936,7 +4769,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
     optional = answers.get("optional_capabilities") if isinstance(answers.get("optional_capabilities"), list) else []
     required = [str(item) for item in required if str(item)]
     optional = [str(item) for item in optional if str(item)]
-    platform_resolution = resolve_platform_contracts(workplace_manifest, detected["platforms"], project_root=project_root)
+    platform_resolution = _platform_contract_resolver.resolve(workplace_manifest, detected["platforms"], project_root=project_root)
     required_platform_missing, recommended_platform_missing = platform_resource_findings(workplace_manifest, platform_resolution)
     required = sorted(set(required).union(platform_resolution["required_capabilities"]))
     matches = match_global_resources(workplace_manifest, detected, required, optional)
@@ -7933,20 +7766,6 @@ def package_root_entries(workplace_root: Path) -> list[dict[str, Any]]:
     return [entry for entry in entries if isinstance(entry, dict)] if isinstance(entries, list) else []
 
 
-def package_root_resolution_from_entry(workplace_root: Path, entry: dict[str, Any]) -> PackageRootResolution:
-    root_id = str(entry.get("id", "package-root"))
-    original = str(entry.get("path", ""))
-    resolution = workplace_path_resolution(workplace_root, original)
-    warnings = [str(item) for item in resolution.get("errors", [])]
-    return PackageRootResolution(
-        root_id=root_id,
-        original_path=original,
-        resolved_path=path_resolution_to_path(resolution),
-        status=str(entry.get("status", "available")),
-        warnings=warnings,
-        fallback=False,
-        entry=entry,
-    )
 
 
 def resolve_package_root(workplace_root: Path, package_root_id: str | None = None, *, mode: str = "read") -> PackageRootResolution:
@@ -7965,7 +7784,7 @@ def resolve_package_root(workplace_root: Path, package_root_id: str | None = Non
     if package_root_id:
         for entry in entries:
             if str(entry.get("id")) == package_root_id:
-                selected = package_root_resolution_from_entry(workplace_root, entry)
+                selected = _project_package_catalog_reader.root_from_entry(workplace_root, entry)
                 break
         else:
             raise SystemExit(f"FAIL: package root '{package_root_id}' not found in registries/package-roots.yaml")
@@ -7976,10 +7795,10 @@ def resolve_package_root(workplace_root: Path, package_root_id: str | None = Non
         if selected_entry is None:
             existing = [
                 entry for entry in entries
-                if entry.get("path") and package_root_resolution_from_entry(workplace_root, entry).resolved_path.exists()
+                if entry.get("path") and _project_package_catalog_reader.root_from_entry(workplace_root, entry).resolved_path.exists()
             ]
             selected_entry = existing[0] if existing else entries[0]
-        selected = package_root_resolution_from_entry(workplace_root, selected_entry)
+        selected = _project_package_catalog_reader.root_from_entry(workplace_root, selected_entry)
     if selected.warnings:
         if mode == "write":
             if not selected.fallback:
@@ -8019,77 +7838,12 @@ def resolve_package_path(workplace_root: Path, package_id: str, package_root_id:
     )
 
 
-def workplace_package_roots(workplace_manifest: Path | None) -> list[PackageRootResolution]:
-    if not workplace_manifest or not workplace_manifest.is_file():
-        return []
-    workplace_root = workplace_manifest.parent
-    return [package_root_resolution_from_entry(workplace_root, entry) for entry in package_root_entries(workplace_root)]
 
 
-def workplace_package_root_paths(workplace_manifest: Path | None) -> list[Path]:
-    return [root.resolved_path for root in workplace_package_roots(workplace_manifest)]
 
 
-def package_manifest_candidates(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None = None) -> list[Path]:
-    flow_root = locate_flow_root(project_root)
-    candidates: list[Path] = []
-    candidates.extend(manifest_path_refs(project_root, "packages"))
-    roots: list[Path | None] = [
-        flow_root / "packages",
-        distribution_root / "packages" if distribution_root else None,
-        (distribution_root or ROOT) / "seeds" / "knowledge-packages",
-    ]
-    roots.extend(workplace_package_root_paths(workplace_manifest))
-    for root in roots:
-        if root and root.is_dir():
-            candidates.extend(sorted(root.glob("*.yaml")))
-            candidates.extend(sorted(root.glob("*.yml")))
-            candidates.extend(sorted(root.glob("*/package.yaml")))
-            candidates.extend(sorted(root.glob("*/package.yml")))
-    for process_pack_path, process_pack in active_official_pack_records(workplace_manifest):
-        provided = process_pack.get("provides") if isinstance(process_pack.get("provides"), dict) else {}
-        for package_id in as_list(provided.get("knowledge_packages")):
-            if not package_id:
-                continue
-            package_path = process_pack_path.parent / "knowledge-packages" / f"{package_id}.yaml"
-            if package_path.is_file():
-                candidates.append(package_path)
-    unique: list[Path] = []
-    seen: set[Path] = set()
-    for path in candidates:
-        resolved = path.resolve()
-        if resolved not in seen:
-            seen.add(resolved)
-            unique.append(resolved)
-    return unique
 
 
-def package_manifest_index(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None = None) -> dict[str, dict[str, Any]]:
-    index: dict[str, dict[str, Any]] = {}
-    duplicates: dict[str, list[str]] = {}
-    workplace_roots = workplace_package_roots(workplace_manifest)
-    for path in package_manifest_candidates(project_root, distribution_root, workplace_manifest):
-        data = load_yaml_document(path)
-        if not data or yaml_error(data):
-            continue
-        package_id = data.get("id")
-        if not package_id:
-            continue
-        record = dict(data)
-        record["__manifest_path"] = path
-        for root in workplace_roots:
-            try:
-                path.relative_to(root.resolved_path)
-                record["__package_root_id"] = root.root_id
-                break
-            except ValueError:
-                continue
-        if str(package_id) in index:
-            duplicates.setdefault(str(package_id), [index[str(package_id)]["__manifest_path"].as_posix()]).append(path.as_posix())
-        index[str(package_id)] = record
-    if duplicates:
-        index["__duplicates__"] = {"packages": duplicates}
-    return index
 
 
 def resource_record_from_package(package_id: str, resource: dict[str, Any], requirement: str, package_root_id: str | None = None) -> dict[str, Any]:
@@ -8107,7 +7861,7 @@ def resolve_package_resources(
 ) -> list[dict[str, Any]]:
     from processforge_core.resources.catalog_read import resource_record_from_package as project_resource
 
-    package_index = package_manifest_index(project_root, distribution_root, workplace_manifest)
+    package_index = _project_package_catalog_reader.index(project_root, distribution_root, workplace_manifest)
     resources: list[dict[str, Any]] = []
     required_set = set(required_package_ids or [])
     for package_id in package_ids:
@@ -8129,9 +7883,6 @@ SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
 
 
 
-def parameter_payload(data: dict[str, Any]) -> dict[str, Any]:
-    parameters = data.get("parameters") if isinstance(data, dict) else {}
-    return parameters if isinstance(parameters, dict) else {}
 
 
 def parameter_source_record(source_id: str, layer: str, parameters: dict[str, Any], *, path: Path | None = None, project_root: Path | None = None, private: bool = False, display_path: str | None = None) -> dict[str, Any]:
@@ -8578,7 +8329,7 @@ def find_workplace_package_manifests(workplace_root: Path, package_id: str) -> l
     manifests: list[tuple[PackageRootResolution, Path]] = []
     roots = package_root_entries(workplace_root)
     if roots:
-        root_resolutions = [package_root_resolution_from_entry(workplace_root, entry) for entry in roots]
+        root_resolutions = [_project_package_catalog_reader.root_from_entry(workplace_root, entry) for entry in roots]
     else:
         root_resolutions = [resolve_package_root(workplace_root, None, mode="read")]
     for root in root_resolutions:
@@ -8906,8 +8657,8 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
             checks.append(check("PASS" if str(section) in allowed_sections else "WARN", f"navigation section recognized: {section}"))
     elif package_id.startswith("docs."):
         checks.append(check("WARN", f"package {package_id} navigation configured"))
-    dependencies = package_dependency_ids(manifest)
-    package_index = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml")
+    dependencies = _project_package_catalog_reader.dependencies(manifest)
+    package_index = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml")
     for dependency_id in dependencies:
         checks.append(
             check("PASS", f"required knowledge package dependency available: {dependency_id}")
@@ -8938,7 +8689,7 @@ def project_knowledge_resource_index_checks(project_root: Path, distribution_roo
     checks: list[Check] = []
     checked = 0
     flow_root = locate_flow_root(project_root)
-    for manifest_path in package_manifest_candidates(project_root, distribution_root, workplace_manifest):
+    for manifest_path in _project_package_catalog_reader.candidates(project_root, distribution_root, workplace_manifest):
         manifest = load_yaml_document(manifest_path)
         if not manifest or yaml_error(manifest):
             continue
@@ -9174,7 +8925,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     meta_project_without_selection = project_type_is_meta_workspace(manifest_data) and not manifest_platform_ids
     if not manifest_platform_ids and not meta_project_without_selection:
         manifest_platform_ids = classification["platforms"]
-    platform_resolution = resolve_platform_contracts(workplace_manifest_path, manifest_platform_ids, project_root=project_root)
+    platform_resolution = _platform_contract_resolver.resolve(workplace_manifest_path, manifest_platform_ids, project_root=project_root)
     available_platform_contracts = available_platform_contract_records(workplace_manifest_path, project_root)
     if meta_project_without_selection:
         platform_selection = {
@@ -9185,7 +8936,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         platform_selection = {"status": "selected", "reason": "Project manifest or detection selected platform contracts."}
     else:
         platform_selection = {"status": "not_selected", "reason": "No platform contracts were selected for this project."}
-    package_index_ids = set(package_manifest_index(project_root, distribution_root, workplace_manifest_path))
+    package_index_ids = set(_project_package_catalog_reader.index(project_root, distribution_root, workplace_manifest_path))
     required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
     process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
     process_selection = project_process_selection(manifest_data)
@@ -13500,53 +13251,6 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
     return 0
 
 
-PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
-    "schema_version",
-    "id",
-    "name",
-    "kind",
-    "scope",
-    "version",
-    "status",
-    "description",
-    "purpose",
-    "execution_mode",
-    "execution_mode_questions",
-    "coordination_requirements",
-    "error_handling",
-    "run_model",
-    "required_capabilities",
-    "hooks",
-    "evolve",
-    "roles",
-    "stages",
-    "artifact_definitions",
-    "evidence_definitions",
-    "gates",
-    "required_packages",
-    "required_templates",
-    "allowed_tools",
-    "forbidden_actions",
-    "evolution_policy",
-    "expected_artifacts",
-    "process_transitions",
-    "agent_requirements",
-    "responsibility_boundaries",
-    "subagent_policy",
-    "runtime_requirements",
-    "runtime_execution_boundary",
-    "stage_completion",
-    "run_completion",
-    "metadata",
-    "catalog",
-    "process_pack",
-    "public_surface",
-    "agent_prompt",
-    "input_definitions",
-    "external_artifacts",
-    "virtual_artifacts",
-    "generated_files",
-}
 
 
 def process_backfill_root(project_root: Path, process_id: str) -> Path:
@@ -13568,65 +13272,10 @@ def process_backfill_paths(project_root: Path, process_id: str) -> dict[str, Pat
 
 
 
-def process_unsupported_fields(process: dict[str, Any]) -> list[dict[str, str]]:
-    unsupported: list[dict[str, str]] = []
-    for key in sorted(process.keys()):
-        if key not in PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL:
-            unsupported.append({"path": key, "reason": "not represented in process-authoring answers schema"})
-    return unsupported
 
 
-def process_semantic_map(process: dict[str, Any], process_path: Path, project_root: Path, unsupported: list[dict[str, str]]) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "source": {"type": "process", "id": str(process.get("id", process_path.stem)), "path": rel(process_path, project_root)},
-        "mapped": {
-            "id": "process.id",
-            "title": "process.name",
-            "purpose": "process.description",
-            "stages": "stages",
-            "roles": "roles",
-            "gates": "gates",
-            "artifacts": "artifact_definitions",
-            "events": "hooks.emit",
-            "evolve": "evolve",
-            "run_model": "run_model",
-            "requirements": "required_packages|required_templates|allowed_tools|required_capabilities",
-        },
-        "unsupported": unsupported,
-    }
 
 
-def render_process_import_report(process: dict[str, Any], process_path: Path, paths: dict[str, Path], project_root: Path, unsupported: list[dict[str, str]]) -> str:
-    status = "WARN" if unsupported else "PASS"
-    lines = [
-        f"# Process Authoring Import: {process.get('id', process_path.stem)}",
-        "",
-        "## Result",
-        "",
-        status,
-        "",
-        "## Source",
-        "",
-        f"- Path: `{rel(process_path, project_root)}`",
-        f"- Process id: `{process.get('id', process_path.stem)}`",
-        "",
-        "## Created",
-        "",
-        f"- `{rel(paths['answers'], project_root)}`",
-        f"- `{rel(paths['draft'], project_root)}`",
-        f"- `{rel(paths['source'], project_root)}`",
-        f"- `{rel(paths['semantic_map'], project_root)}`",
-        f"- `{rel(paths['unsupported'], project_root)}`",
-        "",
-        "## Unsupported Fields",
-        "",
-    ]
-    if unsupported:
-        lines.extend(f"- `{item['path']}`: {item['reason']}" for item in unsupported)
-    else:
-        lines.append("- None.")
-    return "\n".join(lines) + "\n"
 
 
 def command_process_authoring_import(args: argparse.Namespace) -> int:
@@ -13645,7 +13294,7 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
     process_id = safe_id(str(process.get("id") or process_path.stem), "process")
     answers = _process_authoring_definition_builder.from_definition(process)
     draft = _process_authoring_definition_builder.build(answers)
-    unsupported = process_unsupported_fields(process)
+    unsupported = _process_semantic_policy.unsupported_fields(process)
     paths = process_backfill_paths(project_root, process_id)
     planned = [paths["answers"], paths["draft"], paths["source"], paths["semantic_map"], paths["unsupported"], paths["import_report"]]
     if getattr(args, "dry_run", False):
@@ -13654,9 +13303,9 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
     write_yaml_file(paths["answers"], answers)
     write_yaml_file(paths["draft"], draft)
     write_yaml_file(paths["source"], process)
-    write_yaml_file(paths["semantic_map"], process_semantic_map(process, process_path, project_root, unsupported))
+    write_yaml_file(paths["semantic_map"], _process_semantic_policy.map(process, process_path, project_root, unsupported))
     write_yaml_file(paths["unsupported"], {"schema_version": 1, "unsupported": unsupported})
-    paths["import_report"].write_text(render_process_import_report(process, process_path, paths, project_root, unsupported), encoding="utf-8")
+    paths["import_report"].write_text(_process_parity_renderer.import_report(process, process_path, paths, project_root, unsupported), encoding="utf-8")
     emit_process_event(project_root, "authoring_parity.started", process_id=process_id, subject=process_id, payload={"command": "process-authoring-import", "source": rel(process_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
     if unsupported:
         emit_process_event(project_root, "authoring_parity.warning", process_id=process_id, subject=process_id, severity="warn", payload={"unsupported": unsupported}, correlation_id=f"authoring-parity-{process_id}")
@@ -13666,144 +13315,16 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
     return 0
 
 
-def sorted_strings(values: Any) -> list[str]:
-    return sorted(set(string_list(values)))
 
 
-def event_emits(process: dict[str, Any]) -> list[str]:
-    hooks = process.get("hooks") if isinstance(process.get("hooks"), dict) else {}
-    emits = hooks.get("emit") if isinstance(hooks.get("emit"), list) else []
-    return sorted({str(item.get("event")) for item in emits if isinstance(item, dict) and item.get("event")})
 
 
-def object_by_id(items: Any, keys: list[str]) -> dict[str, dict[str, Any]]:
-    result: dict[str, dict[str, Any]] = {}
-    for item in as_list(items):
-        if not isinstance(item, dict):
-            continue
-        item_id = safe_id(str(item.get("id", "")), "item")
-        result[item_id] = {key: item.get(key) for key in keys if key in item}
-    return result
 
 
-def process_semantics(process: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "id": safe_id(str(process.get("id", "")), "process"),
-        "title": str(process.get("name") or ""),
-        "kind": str(process.get("kind") or ""),
-        "scope": str(process.get("scope") or ""),
-        "purpose": str(process.get("purpose") or process.get("description") or ""),
-        "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
-        "roles": object_by_id(process.get("roles"), ["title", "responsibility"]),
-        "stages": object_by_id(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "required_artifacts", "required_evidence", "entry_gates", "exit_gates", "automation_bindings", "handoff_required"]),
-        "artifact_definitions": object_by_id(process.get("artifact_definitions"), ["title", "owner_role", "template", "lifecycle"]),
-        "evidence_definitions": object_by_id(process.get("evidence_definitions"), ["title", "kind", "artifact"]),
-        "gates": object_by_id(process.get("gates"), ["description", "blocking", "required_artifact", "stage", "stage_id"]),
-        "events": {"emits": event_emits(process)},
-        "requirements": {
-            "required_capabilities": sorted_strings(process.get("required_capabilities")),
-            "required_packages": sorted_strings(process.get("required_packages")),
-            "required_templates": sorted_strings(process.get("required_templates")),
-            "allowed_tools": sorted_strings(process.get("allowed_tools")),
-            "forbidden_actions": sorted_strings(process.get("forbidden_actions")),
-        },
-    }
 
 
-def compare_process_semantics(source: dict[str, Any], candidate: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
-    source_sem = process_semantics(source)
-    candidate_sem = process_semantics(candidate)
-    diffs: list[dict[str, str]] = []
-
-    def add(level: str, area: str, message: str) -> None:
-        diffs.append({"level": level, "area": area, "message": message})
-
-    for area in ["id", "run_model"]:
-        if source_sem.get(area) != candidate_sem.get(area):
-            add("FAIL", area, f"{area} differs")
-    for area in ["title", "kind", "scope", "purpose"]:
-        if area in {"kind", "scope"} and area not in source:
-            continue
-        if source_sem.get(area) != candidate_sem.get(area):
-            add("WARN", area, f"{area} differs")
-    for area in ["roles", "stages", "artifact_definitions", "gates"]:
-        source_ids = set(source_sem[area].keys())
-        candidate_ids = set(candidate_sem[area].keys())
-        for missing in sorted(source_ids - candidate_ids):
-            add("FAIL", area, f"{area} missing: {missing}")
-        for extra in sorted(candidate_ids - source_ids):
-            add("WARN", area, f"{area} extra: {extra}")
-    for area, label in [("events", "emits")]:
-        source_values = set(source_sem[area][label])
-        candidate_values = set(candidate_sem[area][label])
-        for missing in sorted(source_values - candidate_values):
-            add("FAIL", area, f"event missing: {missing}")
-    for key, source_values in source_sem["requirements"].items():
-        candidate_values = set(candidate_sem["requirements"].get(key, []))
-        for missing in sorted(set(source_values) - candidate_values):
-            add("FAIL", key, f"{key} missing: {missing}")
-    status = "FAIL" if any(item["level"] == "FAIL" for item in diffs) else ("WARN" if any(item["level"] == "WARN" for item in diffs) else "PASS")
-    return status, diffs
 
 
-def render_process_parity_report(process_id: str, source_path: Path, project_root: Path, status: str, diffs: list[dict[str, str]], unsupported: list[dict[str, str]], logic_checks: list[Check]) -> str:
-    lines = [
-        f"# Process Parity: {process_id}",
-        "",
-        "## Result",
-        "",
-        status,
-        "",
-        "## Source",
-        "",
-        f"- Path: `{rel(source_path, project_root)}`",
-        f"- Process id: `{process_id}`",
-        "",
-        "## Authoring Coverage",
-        "",
-        "| Area | Status | Notes |",
-        "|---|---|---|",
-    ]
-    logic_diff_levels = [item["level"] for item in diffs if item["area"] == "logic_review"]
-    logic_status = "FAIL" if "FAIL" in logic_diff_levels else ("WARN" if "WARN" in logic_diff_levels else "PASS")
-    lines.append(f"| logic_review | {logic_status} | {len(logic_checks)} checks |")
-    lines.append(f"| unsupported_fields | {'WARN' if unsupported else 'PASS'} | {len(unsupported)} unsupported fields |")
-    lines.append(f"| semantic_diff | {status} | {len(diffs)} differences |")
-    lines.extend(["", "## Semantic Diff", ""])
-    if diffs:
-        lines.extend(f"- {item['level']} `{item['area']}`: {item['message']}" for item in diffs)
-    else:
-        lines.append("- No meaningful differences.")
-    lines.extend(["", "## Unsupported Fields", ""])
-    if unsupported:
-        lines.extend(f"- `{item['path']}`: {item['reason']}" for item in unsupported)
-    else:
-        lines.append("- None.")
-    expected_warns = [item for item in diffs if item["level"] == "WARN" and item["area"] in {"logic_review", "unsupported_fields"}]
-    action_warns = [item for item in diffs if item["level"] == "WARN" and item["area"] not in {"logic_review", "unsupported_fields"}]
-    lines.extend(["", "## Checked", ""])
-    lines.append("- Process id, run model, roles, stages, artifacts, gates, emitted events, and resource requirements.")
-    lines.append("- Candidate process logic against ProcessForge authoring rules.")
-    lines.extend(["", "## Skipped", ""])
-    lines.append("- Byte-for-byte YAML formatting and key order are intentionally not compared.")
-    lines.extend(["", "## Expected WARN", ""])
-    if expected_warns:
-        lines.extend(f"- `{item['area']}`: {item['message']}" for item in expected_warns)
-    else:
-        lines.append("- None.")
-    lines.extend(["", "## Public Release WARN Actions", ""])
-    if action_warns:
-        lines.extend(f"- `{item['area']}`: {item['message']}" for item in action_warns)
-    else:
-        lines.append("- None.")
-    lines.extend(["", "## Recommendation", ""])
-    if status == "PASS":
-        lines.append("Process is semantically reproducible through authoring import.")
-    elif status == "WARN":
-        lines.append("Process is reproducible with documented warnings; public-release action items are listed explicitly when present.")
-    else:
-        lines.append("Process is not reproducible enough for release parity; fix FAIL items before public release.")
-    return "\n".join(lines) + "\n"
 
 
 def run_process_parity_check(project_root: Path, process_path: Path, candidate_path: Path | None = None) -> tuple[str, Path, Path, list[dict[str, str]]]:
@@ -13819,8 +13340,8 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
         args = argparse.Namespace(project_root=str(project_root), process=process_id, process_file=str(process_path), dry_run=False)
         command_process_authoring_import(args)
     candidate = read_yaml_file(candidate_path) if candidate_path else read_yaml_file(paths["draft"])
-    unsupported = process_unsupported_fields(source)
-    status, diffs = compare_process_semantics(source, candidate)
+    unsupported = _process_semantic_policy.unsupported_fields(source)
+    status, diffs = _process_semantic_policy.compare(source, candidate)
     answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
     logic_checks = _process_authoring_validation_service.logic(candidate, answers)
     source_logic_checks = _process_authoring_validation_service.logic(source, answers)
@@ -13840,7 +13361,7 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
     diff_path = locate_flow_root(project_root) / "artifacts" / "parity" / "processes" / f"{process_id}-semantic-diff.yaml"
     review.parent.mkdir(parents=True, exist_ok=True)
     diff_path.parent.mkdir(parents=True, exist_ok=True)
-    review.write_text(render_process_parity_report(process_id, process_path, project_root, status, diffs, unsupported, logic_checks), encoding="utf-8")
+    review.write_text(_process_parity_renderer.parity_report(process_id, process_path, project_root, status, diffs, unsupported, logic_checks), encoding="utf-8")
     write_yaml_file(diff_path, {"schema_version": 1, "process_id": process_id, "result": status, "diffs": diffs, "unsupported": unsupported})
     emit_process_event(project_root, "authoring_parity.process.checked", process_id=process_id, subject=process_id, severity="error" if status == "FAIL" else ("warn" if status == "WARN" else "info"), payload={"result": status, "review": rel(review, project_root), "semantic_diff": rel(diff_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
     if status == "FAIL":
@@ -15012,12 +14533,6 @@ def normalize_subagent_policy(raw: Any) -> dict[str, Any]:
     return _context_contract_inputs.normalize_subagent_policy(raw)
 
 
-def worker_subagent_policy(worker: dict[str, Any]) -> dict[str, Any]:
-    raw = worker.get("subagent_policy") if isinstance(worker.get("subagent_policy"), dict) else {}
-    policy = normalize_subagent_policy(raw)
-    if "allow_subagents" in worker:
-        policy["allow"] = bool(worker.get("allow_subagents"))
-    return policy
 
 
 def validate_subagent_policy_outputs(project_root: Path, task: dict[str, Any]) -> list[str]:
@@ -15041,57 +14556,6 @@ def validate_subagent_policy_outputs(project_root: Path, task: dict[str, Any]) -
     return []
 
 
-def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
-    run_id = safe_id(run_id, "run")
-    return {
-        "schema_version": 1,
-        "run": {"id": run_id, "title": title, "process": "multi-agent-task-orchestration"},
-        "orchestrator": {
-            "role": "orchestrator",
-            "responsibilities": ["decompose work", "assign workers", "review outputs", "integrate final result"],
-        },
-        "runtime": {
-            "default_driver": "manual",
-            "supervisor_profile": "default",
-            "start_policy": "manual",
-        },
-        "workers": [
-            {
-                "id": "fixture-worker-a",
-                "title": "Fixture work item A",
-                "role": "worker",
-                "process": "task-batch-execution",
-                "execution_mode": "implementation",
-                "writer": True,
-                "allowed_files": [".pf/artifacts/fixture-a/**"],
-                "allowed_read_files": [".pf/contexts/project-context.snapshot.yaml"],
-                "forbidden_files": ["tools/**", "schemas/**"],
-                "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
-                "required_outputs": [{"id": "fixture-a-report", "path": ".pf/artifacts/fixture-a-report.md", "type": "markdown", "required": True}],
-                "expected_report_artifact": ".pf/artifacts/fixture-a-report.md",
-                "runtime_driver": "manual",
-                "worker_may_rebuild_context": False,
-            },
-            {
-                "id": "fixture-worker-b",
-                "title": "Fixture work item B",
-                "role": "reviewer",
-                "process": "task-batch-execution",
-                "execution_mode": "assurance",
-                "writer": True,
-                "allowed_files": [".pf/artifacts/fixture-b/**"],
-                "allowed_read_files": [".pf/artifacts/fixture-a/**", ".pf/contexts/project-context.snapshot.yaml"],
-                "forbidden_files": ["tools/processforge.py"],
-                "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
-                "required_outputs": [{"id": "fixture-b-report", "path": ".pf/artifacts/fixture-b-report.md", "type": "markdown", "required": True}],
-                "expected_report_artifact": ".pf/artifacts/fixture-b-report.md",
-                "runtime_driver": "manual",
-                "depends_on": ["fixture-worker-a"],
-                "worker_may_rebuild_context": False,
-            },
-        ],
-        "integration": {"required": True, "role": "orchestrator", "expected_output": ".pf/artifacts/orchestrator-integration-report.md"},
-    }
 
 
 def orchestrator_plan_path(project_root: Path, run_id: str) -> Path:
@@ -15948,35 +15412,10 @@ def load_supervisor_profile(project_root: Path, profile_ref: str | None = None) 
     return read_yaml_file(path)
 
 
-def plan_worker_map(plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
-    result: dict[str, dict[str, Any]] = {}
-    for worker in workers:
-        if isinstance(worker, dict):
-            worker_id = safe_id(str(worker.get("id") or "worker"), "worker")
-            result[worker_id] = worker
-    return result
 
 
-def task_dependency_ids(task: dict[str, Any], worker: dict[str, Any] | None = None) -> list[str]:
-    values: list[str] = []
-    dependencies = task.get("dependencies") if isinstance(task.get("dependencies"), dict) else {}
-    values.extend(str(item) for item in as_list(dependencies.get("blocked_by")))
-    if worker:
-        values.extend(str(item) for item in as_list(worker.get("dependencies")))
-        values.extend(str(item) for item in as_list(worker.get("depends_on")))
-    return sorted({safe_id(item, "task") for item in values if item})
 
 
-def task_dependencies_done(project_root: Path, task: dict[str, Any], worker: dict[str, Any] | None = None) -> bool:
-    for dep_id in task_dependency_ids(task, worker):
-        dep_path = _work_paths.assignment_document(project_root, dep_id)
-        if not dep_path.is_file():
-            return False
-        dep = read_yaml_file(dep_path)
-        if str(dep.get("status")) not in {"done", "completed"}:
-            return False
-    return True
 
 
 def load_run_plan_if_present(project_root: Path, run_id: str) -> dict[str, Any]:
@@ -16087,9 +15526,9 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
         run = load_run(project_root, run_id)
         plan = load_run_plan_if_present(project_root, run_id)
         runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
-        workers = plan_worker_map(plan)
+        workers = _worker_plan_policy.worker_map(plan)
         run_max_parallel = int(runtime.get("max_parallel_workers") or max_parallel)
-        allow_write_scope_overlap = plan_allows_write_scope_overlap(plan)
+        allow_write_scope_overlap = _worker_plan_policy.allows_write_scope_overlap(plan)
         default_driver = getattr(args, "driver", None) or str(runtime.get("default_driver") or scheduling.get("default_driver") or defaults.get("runtime_driver") or "manual")
         tasks = sorted([entry for entry in run.get("tasks", []) if isinstance(entry, dict)], key=lambda value: int(value.get("order", 0) or 0))
         task_rows: list[tuple[str, dict[str, Any], dict[str, Any] | None, str]] = []
@@ -16158,7 +15597,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
             if str(task.get("status")) not in {"open", "in_progress", "blocked"}:
                 skipped.append(task_id)
                 continue
-            if not task_dependencies_done(project_root, task, worker):
+            if not _worker_plan_policy.task_dependencies_done(project_root, task, worker):
                 skipped.append(task_id)
                 continue
             if driver_id == "manual":
@@ -16489,25 +15928,8 @@ def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_
 
 
 
-def worker_dependency_set(worker: dict[str, Any]) -> set[str]:
-    result: set[str] = set()
-    for key in ["dependencies", "depends_on"]:
-        for item in as_list(worker.get(key)):
-            if item:
-                result.add(safe_id(str(item), "worker"))
-    return result
 
 
-def worker_depends_on(workers_by_id: dict[str, dict[str, Any]], worker_id: str, dependency_id: str, seen: set[str] | None = None) -> bool:
-    seen = seen or set()
-    if worker_id in seen:
-        return False
-    seen.add(worker_id)
-    worker = workers_by_id.get(worker_id, {})
-    dependencies = worker_dependency_set(worker)
-    if dependency_id in dependencies:
-        return True
-    return any(worker_depends_on(workers_by_id, dep_id, dependency_id, seen) for dep_id in dependencies)
 
 
 ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS = {
@@ -16561,8 +15983,6 @@ def unsupported_config_keys(data: dict[str, Any], allowed: set[str]) -> list[str
     return sorted(str(key) for key in data if str(key) not in allowed and not config_extension_key(str(key)))
 
 
-def plan_allows_write_scope_overlap(plan: dict[str, Any]) -> bool:
-    return plan.get("allow_write_scope_overlap") is True
 
 
 def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -> dict[str, Any]:
@@ -16643,13 +16063,13 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         if writer:
             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
         checks.append(check("PASS" if driver_id in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
-        for dep_id in worker_dependency_set(raw_worker):
+        for dep_id in _worker_plan_policy.dependency_set(raw_worker):
             checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
         has_workspace_access = any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS)
         checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") or has_workspace_access else "WARN", f"{worker_id} has bounded read/context scope"))
         forbidden_conflicts = scope_conflicts.conflicts(worker_id, allowed, worker_id, forbidden, reason_prefix="forbidden_wins:")
         checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
-        subagent_policy = worker_subagent_policy(raw_worker)
+        subagent_policy = _worker_plan_policy.subagent_policy(raw_worker)
         reports_dir = str(subagent_policy.get("reports_dir") or "")
         if "allow_subagents" in raw_worker:
             checks.append(check("PASS" if isinstance(raw_worker.get("allow_subagents"), bool) else "FAIL", f"{worker_id} allow_subagents boolean"))
@@ -16676,7 +16096,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
     if not bool(plan.get("allow_write_scope_overlap", False)):
         for index, (left_id, left_scope) in enumerate(write_scopes):
             for right_id, right_scope in write_scopes[index + 1 :]:
-                if worker_depends_on(workers_by_id, left_id, right_id) or worker_depends_on(workers_by_id, right_id, left_id):
+                if _worker_plan_policy.depends_on(workers_by_id, left_id, right_id) or _worker_plan_policy.depends_on(workers_by_id, right_id, left_id):
                     continue
                 conflicts = scope_conflicts.conflicts(left_id, left_scope, right_id, right_scope)
                 if conflicts:
@@ -16855,14 +16275,14 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
                 "model": _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model),
                 "reasoning_effort": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
                 "allow_subagents": bool(worker.get("allow_subagents", False)),
-                "subagent_policy": worker_subagent_policy(worker),
+                "subagent_policy": _worker_plan_policy.subagent_policy(worker),
                 "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
                 "allowed_read_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
                 "forbidden_files": _context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
                 "required_outputs": _context_contract_inputs.normalize_required_outputs(worker.get("required_outputs")),
                 "workspace_access": normalize_workspace_access(worker.get("workspace_access")),
                 "expected_report_artifact": str(worker.get("expected_report_artifact") or _work_output_policy.default_report(worker_id)),
-                "depends_on": sorted(worker_dependency_set(worker)),
+                "depends_on": sorted(_worker_plan_policy.dependency_set(worker)),
             }
         )
     return {
@@ -16880,7 +16300,7 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
             "model": default_model,
             "reasoning_effort": default_reasoning_effort,
         },
-        "allow_write_scope_overlap": plan_allows_write_scope_overlap(plan),
+        "allow_write_scope_overlap": _worker_plan_policy.allows_write_scope_overlap(plan),
         "workers": normalized_workers,
     }
 
@@ -16965,7 +16385,7 @@ def write_orchestrator_config_resolution_artifacts(project_root: Path, plan: dic
 
 
 def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) -> None:
-    if not plan_allows_write_scope_overlap(plan):
+    if not _worker_plan_policy.allows_write_scope_overlap(plan):
         return
     for worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
         if not isinstance(worker, dict):
@@ -16996,7 +16416,7 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
     require_flow_root(project_root)
     run_id = safe_id(args.run, "run")
     path = orchestrator_plan_path(project_root, run_id)
-    plan = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else default_orchestrator_task_plan(run_id, args.title)
+    plan = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else _worker_plan_policy.default_task_plan(run_id, args.title)
     if not plan.get("run"):
         plan["run"] = {"id": run_id, "title": args.title, "process": "multi-agent-task-orchestration"}
     if not args.apply or getattr(args, "dry_run", False):
@@ -17140,7 +16560,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if agent_reasoning_effort:
             task["agent_reasoning_effort"] = agent_reasoning_effort
         task["workspace_access"] = normalize_workspace_access(worker.get("workspace_access"))
-        task["subagent_policy"] = worker_subagent_policy(worker)
+        task["subagent_policy"] = _worker_plan_policy.subagent_policy(worker)
         blocked_by = sorted({safe_id(str(item), "task") for item in [*as_list(worker.get("dependencies")), *as_list(worker.get("depends_on"))] if item})
         if blocked_by:
             task.setdefault("dependencies", {})["blocked_by"] = blocked_by
@@ -18348,7 +17768,7 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
     records: list[dict[str, Any]] = []
     seen: set[Path] = set()
 
-    package_roots = workplace_package_root_paths(manifest if manifest.is_file() else None)
+    package_roots = _project_package_catalog_reader.workplace_root_paths(manifest if manifest.is_file() else None)
     if not package_roots:
         package_roots = [path_resolution_to_path(workplace_path_resolution(workplace_root, "${PF_WORKPLACE}/packages"))]
     for root in package_roots:
@@ -20432,7 +19852,7 @@ def platform_contract_semantic_checks(
                     "set requires.platforms[].required: true for the parent platform",
                 )
             )
-    platform_resolution = platform_resolution or resolve_platform_contracts(workplace_root / "workplace.yaml", [data.get("id") or platform])
+    platform_resolution = platform_resolution or _platform_contract_resolver.resolve(workplace_root / "workplace.yaml", [data.get("id") or platform])
     for missing in platform_resolution["missing_required_contracts"]:
         checks.append(
             check_with_hint(
@@ -20473,7 +19893,7 @@ def platform_contract_semantic_checks(
             )
         )
     for package_id in list_value(requires.get("knowledge_packages")):
-        manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+        manifest = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
         checks.append(
             check("PASS", f"required knowledge package available: {package_id}")
             if manifest
@@ -20486,7 +19906,7 @@ def platform_contract_semantic_checks(
             )
         )
     for package_id in _platform_contract_policy.includes(data, "knowledge_packages"):
-        manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+        manifest = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
         checks.append(
             check("PASS", f"optional knowledge package available: {package_id}")
             if manifest
@@ -20593,7 +20013,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
                         "set requires.platforms[].required: true for the parent platform",
                     )
                 )
-        platform_resolution = resolve_platform_contracts(workplace_root / "workplace.yaml", [data.get("id") or platform])
+        platform_resolution = _platform_contract_resolver.resolve(workplace_root / "workplace.yaml", [data.get("id") or platform])
         for missing in platform_resolution["missing_required_contracts"]:
             checks.append(
                 check_with_hint(
@@ -20634,7 +20054,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
                 )
             )
         for package_id in list_value(requires.get("knowledge_packages")):
-            manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+            manifest = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
             checks.append(
                 check("PASS", f"required knowledge package available: {package_id}")
                 if manifest
@@ -20647,7 +20067,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
                 )
             )
         for package_id in _platform_contract_policy.includes(data, "knowledge_packages"):
-            manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+            manifest = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
             checks.append(
                 check("PASS", f"optional knowledge package available: {package_id}")
                 if manifest
@@ -21780,7 +21200,7 @@ def build_platform_authoring_plan(
             "platform-contract.schema.json",
             f"platform {values['contract_id']} staged contract",
         )
-        platform_resolution = resolve_platform_contracts(
+        platform_resolution = _platform_contract_resolver.resolve(
             workplace_root / "workplace.yaml",
             [values["contract_id"]],
             contract_overrides={values["contract_id"]: candidate},

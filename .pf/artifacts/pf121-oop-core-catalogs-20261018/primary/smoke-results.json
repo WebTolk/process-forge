@@ -1,0 +1,79 @@
+{
+  "started_at": "2026-10-18T22:01:23.891152+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "ba2708d3b498b5c736d81776cda6fdc34035a9f0479774f4806cc7d471296357",
+    "src/processforge_core/work/context.py": "4b04d4b3958e0bccda76f77d098db4f57dbeca7cde5bbc9403df023fda424d89",
+    "docs/concepts/python-core-structure.md": "77112529e06912b44a72ef78362af639bbba3072c9557b42760e57794d618ed7",
+    "docs/ru/concepts/python-core-structure.md": "235770e2c090c3c5d539b599be7f51f47a559296f602a1aa5323735885eea512",
+    "src/processforge_core/resources/project_packages.py": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130",
+    "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+    "src/processforge_core/common/values.py": "c1629a906c93c547e71014a090da609cef02479496abafcdbe72dfaa7aa2431a",
+    "src/processforge_core/process_catalog/semantics.py": "c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2",
+    "src/processforge_core/presentation/process_parity.py": "8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1",
+    "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0"
+  },
+  "checks": [
+    {
+      "name": "smoke_project_local_package_index_detection",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.407,
+      "stdout": "PASS: project-local package index detection\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_onboard_platform_selection",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.664,
+      "stdout": "PASS: project onboarding selects derived platforms only with evidence\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_platform_create_include_levels",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.166,
+      "stdout": "PASS: platform-create include levels\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_authoring_materialization_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 4.717,
+      "stdout": "PASS: process-authoring materialization parity smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 6.592,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"compatibility containers preserve strict governed and unique Run membership\",\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"signed overlap diagnostics remain advisory; scope grants and immutable bytes stay protected\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.792,
+      "stdout": "PASS: Codex worker sandbox and prepared input governance\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.445,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Seven affected existing scripts. Full legacy/new algorithm proof and bounded live package/platform/dependency/library wiring are recorded separately. No broad Runtime/scheduler/recovery/release/archive/install/connected-host/ZIP suites or external model orchestration.",
+  "collector_resolution": ".pf/artifacts/pf121-oop-core-catalogs-20261018/primary/collector-resolution.json",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-18T22:02:49.803817+00:00"
+}

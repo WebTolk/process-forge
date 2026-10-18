@@ -1,0 +1,115 @@
+{
+  "status": "passed",
+  "removed_monolith_functions": 26,
+  "moved_public_model": 1,
+  "moved_constants": 1,
+  "retained_monolith_definitions_with_only_expected_call_changes": 805,
+  "entire_monolith_ast_only_expected_delta": true,
+  "public_model_entire_ast_preserved": true,
+  "common_values_prior_ast_and_raw_prefix_preserved": true,
+  "three_context_parameter_consumers_only_expected_delta": true,
+  "readonly_existing_owner_hashes_preserved": {
+    "src/processforge_core/configuration/parameters.py": "c8b0dd01b30012455e35f27cec02681ad50f773461eec196349fac303f246634",
+    "src/processforge_core/documents/reader.py": "d60afda961e74996ad97a14a3d32a90dea7d5555234f125d25ad9ad95da1a7cd",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/project/platform_policy.py": "e2beaf9cc56934140ad1b653eedb1e8b0a8dd96447ae7c8db489ceb417fcc29e",
+    "src/processforge_core/project/platforms.py": "4281ffb1e114ccc4f3b58a932cc0ac31bf86e67d6cb653a94235ccf19aaa66a0",
+    "src/processforge_core/resources/catalog_read.py": "f1d8caeddb95a678d3254829f144bda3acd334e5b6fff1d48663e6b131127f19",
+    "src/processforge_core/resources/snapshot.py": "0d470c544fc7ed60a536dac206ad00fe9d9657ad2b3190a477f4644517ad8582",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5",
+    "src/processforge_core/work/paths.py": "9d9e6e3c59203a155feb89c55ee764f1bda2d9af6cbfbe87854b49980191d9d7"
+  },
+  "native_complete_moved_algorithm_proofs": {
+    "packages": {
+      "complete_algorithms": 6,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/resources/project_packages.py": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/packages-final/proof.json": "f9a592cdc1f41381d52f484c6e3828ef21323fc76e624af24bbc8568f884fd7a",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/packages-final/report.md": "7f4d5e9a635e96faa2e545a063ad1a987435ff9c27c8677bd32f68d6c801f611"
+      },
+      "acceptance": "Five full normalized algorithms, exact shared canonical root algorithm plus seven-field Core conversion, six method signatures and exact public model; fourteen AST comparisons."
+    },
+    "hierarchy": {
+      "complete_algorithms": 3,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+        "src/processforge_core/common/values.py": "c1629a906c93c547e71014a090da609cef02479496abafcdbe72dfaa7aa2431a"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/hierarchy/proof.json": "209cdf0c4b1ef6336f51a7f01b7d3998a171c57df88f1a8a53e5108868e05a93",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/hierarchy/report.md": "d227571e4dfaec01e1ff31019caec66676d5ffa378ab731393630dce6f1f99a1"
+      },
+      "acceptance": "Complete three algorithms, actual bound signatures/annotations, nested resolve_one and unchanged prior common values."
+    },
+    "semantics": {
+      "complete_algorithms": 9,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/process_catalog/semantics.py": "c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2",
+        "src/processforge_core/presentation/process_parity.py": "8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/semantics-final/proof.json": "f62c6ab4a9a8306dbf7c43d544daa2b0cf87ba00303aa3a60d621079a7695a06",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/semantics-final/report.md": "5f2b5467a823585288e82b70d245d3a482257e15c5fb759e382d6667183fe2ef"
+      },
+      "acceptance": "Complete nine algorithms, signatures, annotations and exact authoring coverage data; rendering kept separate."
+    },
+    "workers": {
+      "complete_algorithms": 8,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/workers-final/proof.json": "c911fed34b7e635cfd17db1630815bead1f2e3bf73923ccca0b6e74265ed6a58",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/workers-final/report.md": "604ebf6bb17c090dfb4374f86b81a9cdc9b4f32fb6a4d70dd4f597d2e1541e35"
+      },
+      "acceptance": "Complete eight algorithms, signatures and annotations; recursion aliases/mutations, strict YAML and live dependencies."
+    }
+  },
+  "parity": {
+    "total": 75,
+    "native_exceptions": 1,
+    "sha256": "4320480e9ca568d8cecac663283c781dbba42682a0412702dfa759fefb640e8a"
+  },
+  "smokes": {
+    "passed": true,
+    "count": 7,
+    "sha256": "5bfd8e9da92f15aa4b006516a5ad4dde0b1add6cfa6b7d0122af02c4ec37ca59"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "ba2708d3b498b5c736d81776cda6fdc34035a9f0479774f4806cc7d471296357",
+    "src/processforge_core/work/context.py": "4b04d4b3958e0bccda76f77d098db4f57dbeca7cde5bbc9403df023fda424d89",
+    "docs/concepts/python-core-structure.md": "77112529e06912b44a72ef78362af639bbba3072c9557b42760e57794d618ed7",
+    "docs/ru/concepts/python-core-structure.md": "235770e2c090c3c5d539b599be7f51f47a559296f602a1aa5323735885eea512",
+    "src/processforge_core/resources/project_packages.py": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130",
+    "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+    "src/processforge_core/common/values.py": "c1629a906c93c547e71014a090da609cef02479496abafcdbe72dfaa7aa2431a",
+    "src/processforge_core/process_catalog/semantics.py": "c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2",
+    "src/processforge_core/presentation/process_parity.py": "8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1",
+    "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0",
+    "checksums/processforge.sha256": "d6db14f0ec6471b8156d533d34e9c0ee85be2e1020ac01a0735f5a2260b9d54f"
+  },
+  "inventory": {
+    "rows_before": 1348,
+    "rows_after": 1353,
+    "changed_rows": 5,
+    "new_rows": 5,
+    "untouched_rows": 1343,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "input_handoff": "Three original no-product contributor Works were cancelled and preserved after missing prepared inputs/stale installed MCP reports. Successors have identical product write scopes and all explicit architecture/dependency/verified Python inputs. Hierarchy and primary Works remained active; no capsules or infrastructure changed.",
+  "limits": [
+    "Source only, later layers and OOP epics unqualified.",
+    "No broad Runtime/scheduler/recovery/release/archive/install/connected-host/ZIP suites.",
+    "Historical baseline fixture strings and distinct current workplace search/diagnostics methods retain their own contracts; no artificial alias retained for the moved authoring constant."
+  ]
+}

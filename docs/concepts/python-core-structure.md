@@ -85,6 +85,11 @@ See [supported actions](action-discovery.md).
 
 | Module | Responsibility |
 | --- | --- |
+| `src/processforge_core/resources/project_packages.py` | Project package manifests, root records, current candidate/index reads, duplicate tracking and dependency IDs through concrete Core paths/documents. |
+| `src/processforge_core/project/platform_resolution.py` | Existing recursive platform hierarchy and resource/dependency aggregation with concrete catalog, projection and package owners. |
+| `src/processforge_core/process_catalog/semantics.py` | Existing authoring coverage, semantic projections and ordered compatibility comparison. |
+| `src/processforge_core/presentation/process_parity.py` | Existing process import/parity Markdown reports, separate from semantic rules. |
+| `src/processforge_core/runtime/worker_plans.py` | Existing worker plan defaults, subagent/dependency projections, recursion and current assignment-completion reads. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
@@ -152,7 +157,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/platform_policy.py` | PlatformContractPolicy for existing reference, dependency and required/recommended/optional resource projections. |
 | `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService for existing authoring logic, companion paths/file checks and canonical workflow/iteration constants. |
 | `src/processforge_core/common/json_io.py` | Canonical existing json_read primitive with current file reads and unchanged native failures. |
-| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
+| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title, list/string-list and borrowed parameter-mapping primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
@@ -792,7 +797,7 @@ the existing primitive, including raw JSON types and native parse/read failures.
 `PlatformContractReader` for canonical IDs. It owns reference normalization,
 extends/requires and required/recommended/optional resource projections, retaining
 type/truthiness distinctions, sorting, deduplication and existing includes rules.
-Hierarchy resolution and package catalog assembly retain their legacy owners.
+Hierarchy resolution and project package catalogs use the concrete owners below.
 
 `process_catalog.validation.ProcessAuthoringValidationService` owns `logic`,
 `files` and `paths`, using existing evolution/artifact policies and canonical
@@ -802,3 +807,40 @@ companion-root handling and file observations are unchanged. The shared
 and predicate. Full process-contract/route validation, publication and recovery
 remain with their existing owners. These are internal source interfaces; external
 1.2.0 contracts and later delivery-layer acceptance remain separate.
+
+## Project packages, platform hierarchy, process semantics and worker plans
+
+`resources.project_packages.ProjectPackageCatalogReader(distribution_root)` owns
+`workplace_roots`, `workplace_root_paths`, `candidates`, `index`, `dependencies`
+and `root_from_entry`. Project and workplace arguments remain explicit per call.
+Current candidates retain discovery order, resolved-path deduplication and active
+official-pack additions. Project indexes preserve last-wins and the duplicate
+sentinel; the existing workplace search catalog keeps its separate first-wins
+contract. There is no parsed-document cache or constructor I/O.
+
+The moved `PackageRootResolution` keeps its existing class name, fields,
+annotations, defaults and representation. Its root-entry operation uses the
+existing `WorkspacePathReferenceReader` algorithm, then explicitly maps the
+plain record fields while retaining warnings/entry aliases. The existing private
+snapshot record and its consumers are unchanged; path rules are not duplicated.
+
+`project.platform_resolution.PlatformContractResolver(distribution_root)` owns
+the existing recursive `resolve` and `merge_ids` operations. It uses concrete
+platform catalog/projection/package owners, preserving cycle and traversal order,
+extends versus required-platform resource inclusion, override aliases, conflict
+order, sorted outputs and package dependency FIFO. `common.values.parameter_payload`
+is the shared primitive that returns the original parameter mapping. Existing
+Work context assembly uses it directly; its other dependencies remain unmoved.
+
+`process_catalog.semantics.ProcessSemanticPolicy` owns authoring coverage,
+semantic-map and process projections, sorted strings/events/objects, and ordered
+comparison. `presentation.process_parity.ProcessParityRenderer` owns the existing
+`import_report` and `parity_report` Markdown. Their strings, warning/failure
+precedence and source-field distinctions retain the prior contract.
+
+`runtime.worker_plans.WorkerPlanPolicy` owns default plans, worker/subagent and
+dependency projections, recursive reachability, literal overlap policy and
+`task_dependencies_done`. The last operation uses current Work paths and strict
+YAML reads. Execution, scope/lease checks, locks, lifecycle and recovery retain
+their existing owners. These are internal source responsibilities; external
+1.2.0 behavior and later delivery-layer acceptance remain separate.

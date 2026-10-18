@@ -29,3 +29,8 @@ def list_value(value: Any) -> list[str]:
                     output.append(str(item_id))
         return output
     return []
+
+
+def parameter_payload(data: dict[str, Any]) -> dict[str, Any]:
+    parameters = data.get("parameters") if isinstance(data, dict) else {}
+    return parameters if isinstance(parameters, dict) else {}

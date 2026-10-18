@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "smoke_work_capsule_contract_parity"
+  ],
+  "reason": "Retained exit-zero capsule output contains WROTE prefix followed by a complete PASS JSON object with nineteen successful checks. Tail JSON recognized without rerunning a successful script; final source bytes unchanged.",
+  "prior_receipt_sha256": "9faacbe67c4a5893ab591844f20527175babd49bcaef28a86c9a6b60c20f3773"
+}

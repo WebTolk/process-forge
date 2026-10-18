@@ -1,0 +1,59 @@
+{
+  "status": "passed",
+  "roles": {
+    "packages": {
+      "complete_algorithms": 6,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/resources/project_packages.py": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/packages-final/proof.json": "f9a592cdc1f41381d52f484c6e3828ef21323fc76e624af24bbc8568f884fd7a",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/packages-final/report.md": "7f4d5e9a635e96faa2e545a063ad1a987435ff9c27c8677bd32f68d6c801f611"
+      },
+      "acceptance": "Five full normalized algorithms, exact shared canonical root algorithm plus seven-field Core conversion, six method signatures and exact public model; fourteen AST comparisons."
+    },
+    "hierarchy": {
+      "complete_algorithms": 3,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+        "src/processforge_core/common/values.py": "c1629a906c93c547e71014a090da609cef02479496abafcdbe72dfaa7aa2431a"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/hierarchy/proof.json": "209cdf0c4b1ef6336f51a7f01b7d3998a171c57df88f1a8a53e5108868e05a93",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/hierarchy/report.md": "d227571e4dfaec01e1ff31019caec66676d5ffa378ab731393630dce6f1f99a1"
+      },
+      "acceptance": "Complete three algorithms, actual bound signatures/annotations, nested resolve_one and unchanged prior common values."
+    },
+    "semantics": {
+      "complete_algorithms": 9,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/process_catalog/semantics.py": "c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2",
+        "src/processforge_core/presentation/process_parity.py": "8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/semantics-final/proof.json": "f62c6ab4a9a8306dbf7c43d544daa2b0cf87ba00303aa3a60d621079a7695a06",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/semantics-final/report.md": "5f2b5467a823585288e82b70d245d3a482257e15c5fb759e382d6667183fe2ef"
+      },
+      "acceptance": "Complete nine algorithms, signatures, annotations and exact authoring coverage data; rendering kept separate."
+    },
+    "workers": {
+      "complete_algorithms": 8,
+      "synthetic_cases": 5,
+      "product_sha256": {
+        "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/workers-final/proof.json": "c911fed34b7e635cfd17db1630815bead1f2e3bf73923ccca0b6e74265ed6a58",
+        ".pf/artifacts/pf121-oop-core-catalogs-20261018/workers-final/report.md": "604ebf6bb17c090dfb4374f86b81a9cdc9b4f32fb6a4d70dd4f597d2e1541e35"
+      },
+      "acceptance": "Complete eight algorithms, signatures and annotations; recursion aliases/mutations, strict YAML and live dependencies."
+    }
+  },
+  "complete_algorithms": 26,
+  "synthetic_cases": 20,
+  "frozen_source_sha256": "56cb814f508a02a95b6ebb2b09eac19ea8ff08e3e7196664c227120f0532abf0",
+  "scope": "Collected complete native contributions only; default/live caller integration and independent final source review remain primary obligations."
+}

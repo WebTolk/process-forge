@@ -1,0 +1,478 @@
+{
+  "passed": true,
+  "total": 75,
+  "native_exceptions": 1,
+  "groups": {
+    "annotations": 26,
+    "model": 3,
+    "packages": 13,
+    "hierarchy": 5,
+    "parameters": 3,
+    "semantics": 6,
+    "render": 2,
+    "workers": 15,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "workplace_package_roots",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "workplace_package_root_paths",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_manifest_candidates",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_manifest_index",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_dependency_ids",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_root_resolution_from_entry",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "merge_id_list",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "resolve_platform_contracts",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_unsupported_fields",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_semantic_map",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_semantics",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "compare_process_semantics",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "sorted_strings",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "event_emits",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "object_by_id",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "render_process_import_report",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "render_process_parity_report",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "worker_subagent_policy",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "default_orchestrator_task_plan",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "plan_worker_map",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "task_dependency_ids",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "task_dependencies_done",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "worker_dependency_set",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "worker_depends_on",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "plan_allows_write_scope_overlap",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "parameter_payload",
+      "passed": true
+    },
+    {
+      "group": "model",
+      "case": "annotations",
+      "passed": true
+    },
+    {
+      "group": "model",
+      "case": "field-contract",
+      "passed": true
+    },
+    {
+      "group": "model",
+      "case": "repr",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "missing-workplace",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0902196df294e10c451239fa777d0f5f217f87418a224eb3732482b13f4e4345"
+    },
+    {
+      "group": "packages",
+      "case": "root-model",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "64f954b5f970d75aae4c97480513faed99f55014772f8b1d66de91d2389d0d8f"
+    },
+    {
+      "group": "packages",
+      "case": "unknown-path-constant",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e30b1964a2501ceb99a008f252cac353812a242bddf33007a534ff45adaa1f5f"
+    },
+    {
+      "group": "packages",
+      "case": "registered-roots",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "12b4607e3eac350841ff121c0678c0ee8ff7b4127c4bd34dcdf7b92400478f65"
+    },
+    {
+      "group": "packages",
+      "case": "registered-paths",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0df7beb8cb23bfb9dca77118e1e2a8a59af5d605ead777f4750df4adab28aac9"
+    },
+    {
+      "group": "packages",
+      "case": "candidate-order-dedup",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f031c856e81ac6d27ead65aecef5deeb57b8388ed1053c83ed453ba5909ac5dc"
+    },
+    {
+      "group": "packages",
+      "case": "last-wins-and-duplicates",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b558cea7b567807fb67830025c15862f9bac279c4cc3c626aa1a6d3cc1fda806"
+    },
+    {
+      "group": "packages",
+      "case": "explicit-other-distribution",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "221f850918722aa0c2452314d30f1d2bb4b5fb7c13aa9114d405c99dede07ad6"
+    },
+    {
+      "group": "packages",
+      "case": "explicit-last-wins",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "same-stat-live-index",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "61a34df0b5c7223f120e2a347d1094040ad0c568a6e336d62dc7d4380d667a61"
+    },
+    {
+      "group": "packages",
+      "case": "fresh-version",
+      "passed": true
+    },
+    {
+      "group": "packages",
+      "case": "deletion-visible",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3dfbb1b202db56d14b93786770fa7be6f97ab2df148baa9e63cba5d501689cd6"
+    },
+    {
+      "group": "packages",
+      "case": "dependency-projection",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "87eb947063a3a4175aae7ea7f0f78c6d4d7be57b8afe1c7348ebf037d1014a23"
+    },
+    {
+      "group": "hierarchy",
+      "case": "extends-required-resource-inclusion",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1146ebae8aecaf00c5b661d500ef7da8059f440ee8ab1b2840d5731aaaa9c75e"
+    },
+    {
+      "group": "hierarchy",
+      "case": "borrowed-parameters",
+      "passed": true
+    },
+    {
+      "group": "hierarchy",
+      "case": "required-platform-excludes-resources",
+      "passed": true
+    },
+    {
+      "group": "hierarchy",
+      "case": "cycles-and-optional-missing",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7bbcf6c6395edbc12427052d0b48347201a1612439cadf8f5141efe855f03390"
+    },
+    {
+      "group": "hierarchy",
+      "case": "owner-conflicts",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "084a9793cb5197600a6d59c239970dcde7d7334070e8605c3f06eae258ed7806"
+    },
+    {
+      "group": "parameters",
+      "case": "mapping",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "13507532f6767432856c01bd6c33b7f1fa367a707983241021155adb2c2eece4"
+    },
+    {
+      "group": "parameters",
+      "case": "borrowed-alias",
+      "passed": true
+    },
+    {
+      "group": "parameters",
+      "case": "nonmapping",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "80daf9157d16809462e36db5d472b6392aa77a3dfc3e2c4be748fa0bbb63eb33"
+    },
+    {
+      "group": "semantics",
+      "case": "unsupported-sorted",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "6343c79bcfab8fccd15746e4070ad5b53616a134faaf9408f98e735fa2c710e6"
+    },
+    {
+      "group": "semantics",
+      "case": "semantic-map",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "96c2cc477ee82c396aaa49756fd33900a96a3ff7731d4e7d761943838e69768d"
+    },
+    {
+      "group": "semantics",
+      "case": "projection-last-object",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "22965490708cd05c51ff585981bd6294352692d601bfaf233fb27a9faa3464c6"
+    },
+    {
+      "group": "semantics",
+      "case": "equal",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "fb5e426dbd54b711ed1841581a6e1606396faaacb8663cfbe331cda94caec8bd"
+    },
+    {
+      "group": "semantics",
+      "case": "fail-warn-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "fd59049a2ccb8ac1d13fd26fc5fd6572d916b7ce3b5ec14c450b6cda03052536"
+    },
+    {
+      "group": "semantics",
+      "case": "missing-kind-scope",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4d9f0ffecb7b7ebde52b831051d7455dabf35fde0bf79536305a5de105d86b65"
+    },
+    {
+      "group": "render",
+      "case": "import-report",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "1817c0d9eba3de5592d461607809d576112a4f6695e4290402391b92413ae81d"
+    },
+    {
+      "group": "render",
+      "case": "parity-report",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "d27778407817ed2ff5f22c1012cc1eb7656e731800dd324cf38849e5401e916c"
+    },
+    {
+      "group": "workers",
+      "case": "subagent-override",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "693732f925be905f1716d34dbec9042e725a28379a91ca66ef0bf0495dfbf0aa"
+    },
+    {
+      "group": "workers",
+      "case": "default-literals",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3c2859be832f24538caca6e0eb65ef155d9e93aa5dd718cccd6f0f3a9ac0c419"
+    },
+    {
+      "group": "workers",
+      "case": "duplicate-id-map",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "763b7195d59778bf3ed5b2edb9a7a295c6a33198136ce87e5b358c662597b750"
+    },
+    {
+      "group": "workers",
+      "case": "combined-task-deps",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ee83ec3c70c1d8ae954f1e69ac3ae4245c2ba963859092f3472dcfcb96365c35"
+    },
+    {
+      "group": "workers",
+      "case": "cycle-reachable",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e9d03da7e983863e00dccc2e92476c7af64d524161ed7b8e4023f16a07b3f660"
+    },
+    {
+      "group": "workers",
+      "case": "cycle-unreachable",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "10b3a96d37481bb82d5f10855a775be58a42496a12594a219a7e1bbf8c8aa175"
+    },
+    {
+      "group": "workers",
+      "case": "nonempty-seen-mutation",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "0656a676af72d33452df16476a26697f02a124704e78183314af9273cf1844ee"
+    },
+    {
+      "group": "workers",
+      "case": "literal-true",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "37cae7318b73e6b3c0375af83eeea28cd68d21e0599e9bc40921b774f7e41f2e"
+    },
+    {
+      "group": "workers",
+      "case": "missing-assignment",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ad145bfd990c86001551df00dcf682d85b1b33d1c9c0d1a42277acfe506fa491"
+    },
+    {
+      "group": "workers",
+      "case": "actual-missing-is-false",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "done-assignment",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a171da981bf6a99df9dc0bab56c9df306be0ee6879d471d6a86d21d0e31ff025"
+    },
+    {
+      "group": "workers",
+      "case": "actual-done-is-true",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "same-stat-status-change",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ad145bfd990c86001551df00dcf682d85b1b33d1c9c0d1a42277acfe506fa491"
+    },
+    {
+      "group": "workers",
+      "case": "actual-changed-is-false",
+      "passed": true
+    },
+    {
+      "group": "workers",
+      "case": "strict-native-error",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "095e66bf2de69059ef60865656073554dd5d9f8e2d69587ff0fac12323692826"
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "ba2708d3b498b5c736d81776cda6fdc34035a9f0479774f4806cc7d471296357",
+    "src/processforge_core/work/context.py": "4b04d4b3958e0bccda76f77d098db4f57dbeca7cde5bbc9403df023fda424d89",
+    "docs/concepts/python-core-structure.md": "77112529e06912b44a72ef78362af639bbba3072c9557b42760e57794d618ed7",
+    "docs/ru/concepts/python-core-structure.md": "235770e2c090c3c5d539b599be7f51f47a559296f602a1aa5323735885eea512",
+    "src/processforge_core/resources/project_packages.py": "e8a4e15297d8a6f9bb8f1b825f4075c7eaa5088d464bbe1f07fc2211c9a55130",
+    "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+    "src/processforge_core/common/values.py": "c1629a906c93c547e71014a090da609cef02479496abafcdbe72dfaa7aa2431a",
+    "src/processforge_core/process_catalog/semantics.py": "c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2",
+    "src/processforge_core/presentation/process_parity.py": "8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1",
+    "src/processforge_core/runtime/worker_plans.py": "a10cc5ed53bc475cbd31dfa198183e62cc23281783a43f602ab2d798c8759ac0"
+  },
+  "scope": "Bounded real default composition, live package/YAML/dependency reads, recursive platform behavior and pure policy/report parity. Full algorithms/class/prior owners independently covered by native AST proof. No Runtime, archive/install/connected-host/ZIP qualification."
+}
