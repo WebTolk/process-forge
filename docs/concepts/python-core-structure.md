@@ -133,6 +133,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy for existing evolve defaults, normalization and ordered validation checks. |
 | `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy for existing builtin documents, registry defaults, placeholders, limits and document readiness checks. |
 | `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy for existing source identity, derived site records, overrides and policy merging, without I/O. |
+| `src/processforge_core/process_catalog/presentation.py`, `process_catalog/coordination.py` | Existing authoring text rendering and shared process coordination projection. |
+| `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader for existing live registry/document lookup with an explicit distribution root and concrete Core readers. |
+| `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy for existing candidate identity, target/routing, promotion readiness and targeting validation. |
+| `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Existing update-version normalization/selection and assessment rendering. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
@@ -603,3 +607,41 @@ and `title_from_id`; `common.values` owns strict-list `as_list` and the existing
 imports. The obsolete internal definitions are removed without wrappers.
 These moves preserve external 1.2.0 contracts and establish bounded source-only
 evidence; they do not complete the OOP epics or qualify other delivery layers.
+
+## Presentation, live driver catalog and candidate selection
+
+`ProcessAuthoringDefinitionBuilder.from_definition` owns the existing reverse
+projection from a process definition to authoring answers. Earlier builder
+methods are unchanged. `process_catalog.presentation.ProcessAuthoringRenderer`
+owns `questions`, `logic_review`, `agent_prompt` and `document`, preserving
+rendered bytes and evaluation order. The small canonical function
+`process_catalog.coordination.process_coordination_requirements` and its mode
+set are shared with the remaining monolith consumers.
+
+`runtime.catalog.RuntimeDriverCatalogReader(distribution_root)` uses concrete
+`YamlDocumentReader`, `ProjectMetadataReader` and `RuntimeDriverDefinitionPolicy`.
+It owns registry paths/entries, entry paths, strict document loading, exact
+registered lookup, reference resolution/classification/normalization and the
+driver ID list. It preserves first-match lookup, ordered overwrites, direct-path
+behavior, builtin fallback, unknown fields and native refusals. Construction
+performs no I/O; operations read current files without retaining parsed documents.
+The monolith and existing MCP registered-driver lookup call this owner. The MCP
+adapter keeps its driver-ID guard before a lazy owning-module import, preserving
+standalone bootstrap timing and bound project/workplace values.
+
+`evolution.candidates.KnowledgeCandidateTargetingPolicy` owns existing candidate
+ID, target and destination projections, promotion/generalization readiness and
+ordered targeting validation. It borrows the original nested mappings and uses
+canonical checks, identifiers, string-list conversion and existing evolve target
+types. The new responsibility package has a minimal initializer. Full candidate
+sanitization, publication/export and lifecycle retain their existing owners.
+
+`maintenance.versions.UpdateVersionSelectionPolicy` uses concrete
+`ResourceVersionPolicy` and `UpdateSitePolicy` for existing latest lookup, both
+manifest-version shapes, version selection and candidate IDs. Nested references,
+subject sharing, stable sorting and warnings retain their earlier behavior.
+`maintenance.presentation.UpdateAssessmentRenderer.render` owns the existing
+assessment text. Fetching, update orchestration, installation and recovery remain
+with their existing owners. These internal interfaces establish source ownership;
+external commands, MCP schemas and delivery-layer acceptance retain their existing
+contracts.

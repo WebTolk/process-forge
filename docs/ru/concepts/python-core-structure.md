@@ -141,6 +141,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy: прежние значения evolve по умолчанию, нормализация и упорядоченные проверки. |
 | `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy: прежние встроенные документы, реестр, placeholders, limits и проверки готовности документа. |
 | `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy: прежние идентификаторы источников, записи сайтов, переопределения и слияние политик без I/O. |
+| `src/processforge_core/process_catalog/presentation.py`, `process_catalog/coordination.py` | Прежнее оформление authoring-текстов и общая проекция требований координации процесса. |
+| `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader: актуальное чтение реестров и документов с явным корнем дистрибутива и конкретными читателями Core. |
+| `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy: прежние идентификаторы, target/routing, готовность promotion и проверка targeting. |
+| `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Прежняя нормализация и выбор версий обновления, оформление assessment. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
@@ -617,3 +621,42 @@ legacy-владельцев. Выделение чистых policy не озн�
 конкретные классы или эти импорты. Прежние внутренние определения удалены без
 обёрток. Перенос сохраняет внешние контракты 1.2.0 и подтверждён для исходников;
 он не завершает OOP-эпики и не квалифицирует другие слои поставки.
+
+## Представление, актуальный каталог драйверов и выбор candidates
+
+`ProcessAuthoringDefinitionBuilder.from_definition` владеет прежним обратным
+преобразованием определения процесса в authoring answers. Предыдущие методы
+builder не изменены. `process_catalog.presentation.ProcessAuthoringRenderer`
+содержит `questions`, `logic_review`, `agent_prompt` и `document`, сохраняя байты
+текста и порядок вычислений. Небольшая каноническая функция
+`process_catalog.coordination.process_coordination_requirements` и её набор
+режимов используются также оставшимися потребителями монолита.
+
+`runtime.catalog.RuntimeDriverCatalogReader(distribution_root)` использует
+конкретные `YamlDocumentReader`, `ProjectMetadataReader` и
+`RuntimeDriverDefinitionPolicy`. Ему принадлежат пути и записи реестров, пути
+документов, строгое чтение, точный поиск зарегистрированного драйвера, разрешение
+и нормализация ссылок, список ID. Сохранены первое подходящее совпадение,
+упорядоченные замены, прямые пути, встроенные значения, неизвестные поля и
+исходные отказы. Конструктор не выполняет I/O; операции читают текущие файлы
+без хранения разобранных документов. Монолит и существующий поиск драйвера
+в MCP вызывают этого владельца. Адаптер MCP сохраняет проверку ID перед
+отложенным импортом, порядок bootstrap и привязанные project/workplace.
+
+`evolution.candidates.KnowledgeCandidateTargetingPolicy` владеет прежними
+проекциями ID, target и destination, готовностью promotion/generalization
+и упорядоченной проверкой targeting. Он сохраняет ссылки на вложенные словари
+и использует канонические checks, идентификаторы, string-list и существующие
+типы evolve targets. Новый пакет ответственности имеет минимальный initializer.
+Полная очистка кандидатов, публикация/экспорт и lifecycle остаются у прежних
+владельцев.
+
+`maintenance.versions.UpdateVersionSelectionPolicy` использует конкретные
+`ResourceVersionPolicy` и `UpdateSitePolicy` для прежнего поиска latest, двух
+форматов версий manifest, выбора версии и ID кандидатов. Вложенные ссылки,
+общий словарь subject, стабильная сортировка и warnings сохраняют прежнее
+поведение. `maintenance.presentation.UpdateAssessmentRenderer.render` владеет
+исходным текстом assessment. Получение данных, координация обновления, установка
+и восстановление остаются у прежних владельцев. Эти внутренние интерфейсы
+фиксируют владение исходниками; внешние команды, схемы MCP и приёмка слоёв
+поставки сохраняют существующие контракты.

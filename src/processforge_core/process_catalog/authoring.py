@@ -450,3 +450,51 @@ class ProcessAuthoringDefinitionBuilder:
                     if isinstance(item, str):
                         add(str(key), item)
         return output
+
+    def from_definition(self, process: dict[str, Any]) -> dict[str, Any]:
+        process_id = safe_id(str(process.get("id", "process")), "process")
+        answers: dict[str, Any] = {
+            "schema_version": 1,
+            "process": {
+                "id": process_id,
+                "name": str(process.get("name") or title_from_id(process_id)),
+                "version": str(process.get("version") or "1.0.0"),
+                "status": str(process.get("status") or "draft"),
+                "kind": str(process.get("kind") or "process"),
+                "scope": str(process.get("scope") or "project"),
+                "description": str(process.get("description") or ""),
+                "purpose": str(process.get("purpose") or process.get("description") or ""),
+            },
+            "execution_mode": str(process.get("execution_mode") or "single_agent"),
+            "execution_mode_questions": process.get("execution_mode_questions") if isinstance(process.get("execution_mode_questions"), dict) else {},
+            "coordination_requirements": process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {},
+            "error_handling": process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {},
+            "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
+            "roles": as_list(process.get("roles")),
+            "stages": as_list(process.get("stages")),
+            "artifacts": as_list(process.get("artifact_definitions")),
+            "evidence_definitions": as_list(process.get("evidence_definitions")),
+            "gates": as_list(process.get("gates")),
+            "required_capabilities": string_list(process.get("required_capabilities")),
+            "required_packages": string_list(process.get("required_packages")),
+            "required_templates": string_list(process.get("required_templates")),
+            "allowed_tools": string_list(process.get("allowed_tools")),
+            "forbidden_actions": string_list(process.get("forbidden_actions")),
+        }
+        for key in ["hooks", "evolve", "evolution_policy", "expected_artifacts"]:
+            if key in process:
+                answers[key] = process[key]
+        for key in [
+            "process_transitions",
+            "agent_requirements",
+            "responsibility_boundaries",
+            "subagent_policy",
+            "runtime_requirements",
+            "runtime_execution_boundary",
+            "stage_completion",
+            "run_completion",
+            "metadata",
+        ]:
+            if key in process:
+                answers[key] = process[key]
+        return answers

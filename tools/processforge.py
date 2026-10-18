@@ -107,6 +107,26 @@ _process_evolution_policy = ProcessEvolutionPolicy()
 _process_authoring_definition_builder = ProcessAuthoringDefinitionBuilder()
 _runtime_driver_definition_policy = RuntimeDriverDefinitionPolicy()
 _update_site_policy = UpdateSitePolicy()
+from processforge_core.process_catalog.coordination import (
+    PROCESS_COORDINATION_MODES,
+    process_coordination_requirements,
+)
+from processforge_core.process_catalog.presentation import ProcessAuthoringRenderer
+from processforge_core.runtime.catalog import RuntimeDriverCatalogReader
+from processforge_core.evolution.candidates import (
+    EVOLVE_APPLICABILITY_SCOPES,
+    EVOLVE_GENERALIZATION_LEVELS,
+    EVOLVE_PROMOTION_STATUSES,
+    KnowledgeCandidateTargetingPolicy,
+)
+from processforge_core.maintenance.versions import UpdateVersionSelectionPolicy
+from processforge_core.maintenance.presentation import UpdateAssessmentRenderer
+
+_process_authoring_renderer = ProcessAuthoringRenderer()
+_runtime_driver_catalog_reader = RuntimeDriverCatalogReader(ROOT)
+_knowledge_candidate_targeting_policy = KnowledgeCandidateTargetingPolicy()
+_update_version_selection_policy = UpdateVersionSelectionPolicy()
+_update_assessment_renderer = UpdateAssessmentRenderer()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -284,7 +304,6 @@ PROJECT_FLOW_DIRS = [
 
 COORDINATION_PROJECT_MODES = {"inherit", "simple", "organized"}
 WORKPLACE_DEFAULT_PROJECT_MODES = {"simple", "organized"}
-PROCESS_COORDINATION_MODES = {"simple_allowed", "organized_required", "organized_optional"}
 ERROR_WORKFLOW_MODES = {"none", "director_inbox", "route_to_process", "needs_operator"}
 ERROR_WORKFLOW_FALLBACKS = {"needs_operator", "fail_validation"}
 DIRECTOR_OFFICE_DEFAULTS = {
@@ -503,17 +522,6 @@ LOCAL_PATH_PATTERNS = [
     re.compile("/" + "srv" + "/"),
 ]
 
-EVOLVE_APPLICABILITY_SCOPES = {"project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"}
-EVOLVE_GENERALIZATION_LEVELS = {
-    "narrow_observation",
-    "project_rule",
-    "package_rule",
-    "platform_rule",
-    "parent_platform_candidate",
-    "parent_platform_rule",
-    "universal_rule",
-}
-EVOLVE_PROMOTION_STATUSES = {"not_requested", "proposed", "needs_more_evidence", "approved", "rejected"}
 EVOLVE_CANDIDATE_CATEGORIES = {
     "domain",
     "architecture",
@@ -11975,16 +11983,6 @@ def coordination_doctor_checks(project_root: Path, explicit_workplace: str | Non
     return checks
 
 
-def process_coordination_requirements(process_data: dict[str, Any]) -> dict[str, Any]:
-    raw = process_data.get("coordination_requirements") if isinstance(process_data.get("coordination_requirements"), dict) else {}
-    mode = str(raw.get("mode") or "simple_allowed")
-    if mode not in PROCESS_COORDINATION_MODES:
-        mode = "simple_allowed"
-    return {
-        "mode": mode,
-        "director_inbox": raw.get("director_inbox") if isinstance(raw.get("director_inbox"), dict) else {"required": False, "optional": False},
-        "error_workflow": raw.get("error_workflow") if isinstance(raw.get("error_workflow"), dict) else {"mode": "none"},
-    }
 
 
 def validate_process_against_project_mode(process_data: dict[str, Any], project_root: Path, *, force: bool = False) -> list[Check]:
@@ -12435,8 +12433,6 @@ def as_list(value: Any) -> list[Any]:
 
 
 
-def candidate_id_from_data(data: dict[str, Any], fallback: str = "candidate") -> str:
-    return safe_id(str(data.get("id") or data.get("candidate_id") or fallback), "candidate")
 
 
 
@@ -12451,37 +12447,6 @@ def candidate_id_from_data(data: dict[str, Any], fallback: str = "candidate") ->
 
 
 
-def render_authoring_questions(answers: dict[str, Any]) -> str:
-    process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
-    return "\n".join(
-        [
-            f"# Process Authoring Questions: {process.get('name', process.get('id', 'process'))}",
-            "",
-            "- What concrete outcome must this process produce?",
-            "- Which roles own each stage and artifact?",
-            "- Which artifacts prove that a stage is complete?",
-            "- Which blocking gates can stop apply or completion?",
-            "- Does the process need multiple assignment-backed tasks or one linear flow?",
-            "- Which execution mode applies: single_agent, single_agent_with_subagents, orchestrated_agents, or process_factory?",
-            "- For single_agent mode, which CLI checks and gates replace separate Inspector/Supervisor work?",
-            "- Can this process run in simple project mode?",
-            "- Does this process require organized project mode or only optionally use Director when available?",
-            "- Should worker agents submit reports to Director inbox?",
-            "- Should errors go to Director inbox, a process route, or the operator?",
-            "- If the project is simple, should Director-related features be disabled, optional, or fail validation?",
-            "- Is common process evolve enabled or disabled for this process?",
-            "- If evolve is disabled, what reason should be recorded in `evolve.reason`?",
-            "- If evolve is enabled, which mode, timing, default scope, candidate targets, candidate targeting, extraction hints, privacy boundary, apply policy, and required outputs apply?",
-            "- Which target layer should receive each knowledge candidate?",
-            "- Where does each candidate apply, where does it not apply, and which source context proves that boundary?",
-            "- Should a mixed observation be split into multiple candidates before any generalization or promotion?",
-            "- What reusable knowledge may appear during this process?",
-            "- Which outputs are candidates for shared packages, and what must remain project-private?",
-            "- Which examples should prove the generated process is usable?",
-            "",
-            "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
-        ]
-    ) + "\n"
 
 
 def append_authoring_log(paths: dict[str, Path], message: str) -> None:
@@ -12491,14 +12456,6 @@ def append_authoring_log(paths: dict[str, Path], message: str) -> None:
         handle.write(line)
 
 
-def render_logic_review(process: dict[str, Any], checks: list[Check]) -> str:
-    lines = [f"# Process Logic Review: {process.get('id', 'process')}", "", "| Level | Check |", "| --- | --- |"]
-    for item in checks:
-        lines.append(f"| {item.level} | {item.message} |")
-    failures = [item for item in checks if item.level == "FAIL"]
-    warnings = [item for item in checks if item.level == "WARN"]
-    lines.extend(["", f"Result: `{'fail' if failures else 'pass'}`", f"Failures: `{len(failures)}`", f"Warnings: `{len(warnings)}`", ""])
-    return "\n".join(lines)
 
 
 def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str, Any] | None = None) -> list[Check]:
@@ -12621,7 +12578,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
         return 0
     write_yaml_file(paths["answers"], answers)
     write_yaml_file(paths["draft"], draft)
-    paths["questions"].write_text(render_authoring_questions(answers), encoding="utf-8")
+    paths["questions"].write_text(_process_authoring_renderer.questions(answers), encoding="utf-8")
     append_authoring_log(paths, "authoring session started")
     emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
     emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
@@ -12641,7 +12598,7 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
     answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
     draft = read_yaml_file(paths["draft"])
     checks = validate_process_authoring_logic(draft, answers)
-    paths["logic_review"].write_text(render_logic_review(draft, checks), encoding="utf-8")
+    paths["logic_review"].write_text(_process_authoring_renderer.logic_review(draft, checks), encoding="utf-8")
     append_authoring_log(paths, "logic review created")
     result = print_checks(checks)
     emit_process_event(project_root, "process_authoring.logic_review.created", process_id=process_id, subject=process_id, severity="error" if result else "info", payload={"path": rel(paths["logic_review"], project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-authoring-{process_id}")
@@ -12649,69 +12606,8 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
     return result
 
 
-def render_process_agent_prompt(process: dict[str, Any]) -> str:
-    process_id = str(process.get("id", "process"))
-    coordination = process_coordination_requirements(process)
-    lines = [
-        f"# {process.get('name', title_from_id(process_id))} Agent",
-        "",
-        f"Process id: `{process_id}`",
-        "",
-        "Use the governed high-level workflow:",
-        "",
-        "```bash",
-        "pf.context",
-        "pf.work.start(objective)",
-        "pf.work.state()",
-        "pf.work.transition(outcome, evidence, notes)",
-        "# Repeat state/transition until action=run_completed.",
-        "```",
-        "",
-        "Rules:",
-        "",
-        "- Treat pf.work.state as the source of truth for the current stage and allowed outcomes.",
-        f"- Execution mode: `{process.get('execution_mode', 'single_agent')}`.",
-        f"- Coordination requirement: `{coordination.get('mode', 'simple_allowed')}`.",
-        "- Record durable artifacts for every blocking gate.",
-        "- Run review before handoff when the process defines a review stage.",
-        "- Keep public files portable and free of secrets.",
-        "- Do not choose the next stage or create Run/Assignment records manually during normal work.",
-    ]
-    return "\n".join(lines) + "\n"
 
 
-def render_process_doc(process: dict[str, Any]) -> str:
-    process_id = str(process.get("id", "process"))
-    coordination = process_coordination_requirements(process)
-    error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
-    lines = [
-        f"# {process.get('name', title_from_id(process_id))}",
-        "",
-        str(process.get("description", "")),
-        "",
-        f"- process_id: `{process_id}`",
-        f"- version: `{process.get('version', '')}`",
-        f"- status: `{process.get('status', '')}`",
-        f"- scope: `{process.get('scope', 'project')}`",
-        f"- execution_mode: `{process.get('execution_mode', 'single_agent')}`",
-        f"- coordination_requirement: `{coordination.get('mode', 'simple_allowed')}`",
-        f"- error_handling: `{error_handling.get('mode', coordination.get('error_workflow', {}).get('mode', 'none'))}`",
-        "",
-        "## Stages",
-        "",
-    ]
-    for stage in as_list(process.get("stages")):
-        if isinstance(stage, dict):
-            lines.append(f"- `{stage.get('id')}`: {stage.get('description') or stage.get('title', '')}")
-    lines.extend(["", "## Artifacts", ""])
-    for artifact in as_list(process.get("artifact_definitions")):
-        if isinstance(artifact, dict):
-            lines.append(f"- `{artifact.get('id')}`: {artifact.get('title', '')}")
-    lines.extend(["", "## Gates", ""])
-    for gate_item in as_list(process.get("gates")):
-        if isinstance(gate_item, dict):
-            lines.append(f"- `{gate_item.get('id')}`: {gate_item.get('description', '')}")
-    return "\n".join(lines) + "\n"
 
 
 def write_process_authoring_example(project_root: Path, process: dict[str, Any], answers: dict[str, Any], review_text: str) -> list[Path]:
@@ -12851,7 +12747,7 @@ def build_process_create_plan(
     failures = [item.message for item in checks if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: process authoring logic failed: " + "; ".join(failures))
-    review_text = render_logic_review(draft, checks)
+    review_text = _process_authoring_renderer.logic_review(draft, checks)
 
     paths = process_authoring_paths(project_root, process_id)
     target_process = contained_resource_path(
@@ -12900,15 +12796,15 @@ def build_process_create_plan(
     session_documents = [
         (paths["answers"], process_yaml_content(answers)),
         (paths["draft"], process_yaml_content(draft)),
-        (paths["questions"], render_authoring_questions(answers).encode("utf-8")),
+        (paths["questions"], _process_authoring_renderer.questions(answers).encode("utf-8")),
         (paths["logic_review"], review_text.encode("utf-8")),
         (paths["log"], log_text.encode("utf-8")),
         (paths["apply_report"], ("\n".join(report_lines) + "\n").encode("utf-8")),
     ]
     public_documents = [
         (target_process, process_yaml_content(draft)),
-        (target_prompt, render_process_agent_prompt(draft).encode("utf-8")),
-        (target_doc, render_process_doc(draft).encode("utf-8")),
+        (target_prompt, _process_authoring_renderer.agent_prompt(draft).encode("utf-8")),
+        (target_doc, _process_authoring_renderer.document(draft).encode("utf-8")),
         *example_documents,
     ]
     writes = [
@@ -13735,102 +13631,33 @@ def evolve_sanitize_value(value: Any) -> Any:
     return value
 
 
-def candidate_target(data: dict[str, Any]) -> dict[str, Any]:
-    target = data.get("target")
-    if isinstance(target, dict):
-        return target
-    legacy_type = str(data.get("target_type") or target or "")
-    legacy_id = str(data.get("target_package") or data.get("package") or data.get("target_id") or "")
-    if legacy_type:
-        return {"type": legacy_type, "id": legacy_id}
-    return {}
 
 
-def candidate_target_type(data: dict[str, Any]) -> str:
-    return str(candidate_target(data).get("type") or "")
 
 
-def candidate_target_id(data: dict[str, Any]) -> str:
-    return str(candidate_target(data).get("id") or "")
 
 
-def candidate_routing_destination(data: dict[str, Any]) -> dict[str, Any]:
-    routing = data.get("routing") if isinstance(data.get("routing"), dict) else {}
-    destination = routing.get("recommended_destination")
-    return destination if isinstance(destination, dict) else {}
 
 
-def candidate_destination_matches(data: dict[str, Any], package_id: str) -> bool:
-    destination = candidate_routing_destination(data)
-    if str(destination.get("id") or "") == package_id:
-        return True
-    return candidate_target_id(data) == package_id
 
 
-def candidate_promotion_status(data: dict[str, Any]) -> str:
-    promotion = data.get("promotion") if isinstance(data.get("promotion"), dict) else {}
-    return str(promotion.get("status") or "not_requested")
 
 
-def candidate_generalization_level(data: dict[str, Any]) -> str:
-    generalization = data.get("generalization") if isinstance(data.get("generalization"), dict) else {}
-    return str(generalization.get("level") or "")
 
 
-def candidate_is_parent_promotion_candidate(data: dict[str, Any]) -> bool:
-    level = candidate_generalization_level(data)
-    applicability = data.get("applicability") if isinstance(data.get("applicability"), dict) else {}
-    return level in {"parent_platform_candidate", "parent_platform_rule", "universal_rule"} or str(applicability.get("scope") or "") in {"parent_platform", "platform_family", "core"}
 
 
-def candidate_ready_for_curated_package(data: dict[str, Any]) -> bool:
-    if not candidate_is_parent_promotion_candidate(data):
-        return True
-    return candidate_promotion_status(data) == "approved" or candidate_generalization_level(data) in {"parent_platform_rule", "universal_rule"}
 
 
-def validate_candidate_targeting(data: dict[str, Any], *, strict: bool = True) -> list[Check]:
-    checks: list[Check] = []
-    level = "FAIL" if strict else "WARN"
-    target = candidate_target(data)
-    target_type = str(target.get("type") or "")
-    target_id = str(target.get("id") or "")
-    checks.append(check("PASS" if target_type in EVOLVE_CANDIDATE_TARGETS else "FAIL", f"candidate target.type valid: {target_type}"))
-    checks.append(check("PASS" if target_id.strip() else "FAIL", "candidate target.id declared"))
-    applicability = data.get("applicability") if isinstance(data.get("applicability"), dict) else {}
-    checks.append(check("PASS" if applicability else level, "candidate applicability declared"))
-    scope = str(applicability.get("scope") or "")
-    checks.append(check("PASS" if scope in EVOLVE_APPLICABILITY_SCOPES else level, f"candidate applicability.scope valid: {scope}"))
-    source_context = data.get("source_context") if isinstance(data.get("source_context"), dict) else {}
-    checks.append(check("PASS" if isinstance(source_context, dict) and source_context else "WARN", "candidate source_context declared"))
-    generalization = data.get("generalization") if isinstance(data.get("generalization"), dict) else {}
-    level_value = str(generalization.get("level") or "")
-    if level_value:
-        checks.append(check("PASS" if level_value in EVOLVE_GENERALIZATION_LEVELS else "FAIL", f"candidate generalization.level valid: {level_value}"))
-    promotion = data.get("promotion") if isinstance(data.get("promotion"), dict) else {}
-    promotion_status = str(promotion.get("status") or "not_requested")
-    checks.append(check("PASS" if promotion_status in EVOLVE_PROMOTION_STATUSES else "FAIL", f"candidate promotion.status valid: {promotion_status}"))
-    if target_type in {"knowledge_package", "platform_contract"} and scope in {"parent_platform", "platform_family", "core"}:
-        checks.append(check("PASS" if level_value in {"parent_platform_candidate", "parent_platform_rule", "universal_rule"} else level, "parent/platform-wide candidate has explicit generalization metadata"))
-    inheritance = applicability.get("inheritance") if isinstance(applicability.get("inheritance"), dict) else {}
-    observed = string_list(inheritance.get("observed_on"))
-    parents = string_list(inheritance.get("parent_platforms"))
-    if parents and observed and target_id in parents and not bool(inheritance.get("safe_for_parent", False)):
-        checks.append(check(level, "child platform observation targets parent without safe_for_parent evidence"))
-    confidence = data.get("applicability_confidence") if isinstance(data.get("applicability_confidence"), dict) else {}
-    evidence_count = confidence.get("evidence_count")
-    if scope in {"parent_platform", "platform_family", "core"}:
-        checks.append(check("PASS" if isinstance(evidence_count, int) and evidence_count > 1 else "WARN", "broad applicability has multi-evidence support or remains unreviewed"))
-    return checks
 
 
 def validate_knowledge_candidate(data: dict[str, Any]) -> list[Check]:
     checks: list[Check] = []
     checks.append(check("PASS" if data.get("kind") == "processforge.knowledge_candidate" else "FAIL", "candidate kind is processforge.knowledge_candidate"))
-    candidate_id = candidate_id_from_data(data)
+    candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data)
     checks.append(check("PASS" if candidate_id == str(data.get("id") or data.get("candidate_id")) else "FAIL", "candidate id is portable"))
     category = str(data.get("category") or "generic")
-    checks.extend(validate_candidate_targeting(data, strict=True))
+    checks.extend(_knowledge_candidate_targeting_policy.validate(data, strict=True))
     checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
     checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
     findings = evolve_sanitizer_findings(json.dumps(data, ensure_ascii=False))
@@ -13844,7 +13671,7 @@ def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") ->
     failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: invalid knowledge candidate: " + "; ".join(failures))
-    candidate_id = candidate_id_from_data(data, source.stem)
+    candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data, source.stem)
     data["id"] = candidate_id
     state = data.get("status") if isinstance(data.get("status"), dict) else {}
     state["local"] = status
@@ -13857,9 +13684,9 @@ def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") ->
     candidates.append(
         {
             "id": candidate_id,
-            "target": candidate_target(data),
-            "target_id": candidate_target_id(data),
-            "target_type": candidate_target_type(data),
+            "target": _knowledge_candidate_targeting_policy.target(data),
+            "target_id": _knowledge_candidate_targeting_policy.target_id(data),
+            "target_type": _knowledge_candidate_targeting_policy.target_type(data),
             "routing": data.get("routing") if isinstance(data.get("routing"), dict) else {},
             "applicability_scope": str((data.get("applicability") or {}).get("scope") or "") if isinstance(data.get("applicability"), dict) else "",
             "category": data.get("category", "generic"),
@@ -13928,7 +13755,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
     selected: list[tuple[Path, dict[str, Any]]] = []
     for path in sorted((root / "inbox").glob("*.yaml")):
         data = read_yaml_file(path)
-        if not candidate_destination_matches(data, target_package):
+        if not _knowledge_candidate_targeting_policy.destination_matches(data, target_package):
             continue
         findings = evolve_sanitizer_findings(dump_yaml(data))
         if findings:
@@ -13948,7 +13775,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
         "target": target_package,
         "exported_at": now_utc(),
         "candidate_count": len(selected),
-        "candidates": [candidate_id_from_data(data, path.stem) for path, data in selected],
+        "candidates": [_knowledge_candidate_targeting_policy.id_from_data(data, path.stem) for path, data in selected],
     }
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.yaml", ensure_trailing_newline(dump_yaml(manifest)))
@@ -13959,7 +13786,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
             state["local"] = "exported"
             state.setdefault("hub", None)
             data["status"] = state
-            archive.writestr(f"candidates/{candidate_id_from_data(data, path.stem)}.yaml", ensure_trailing_newline(dump_yaml(data)))
+            archive.writestr(f"candidates/{_knowledge_candidate_targeting_policy.id_from_data(data, path.stem)}.yaml", ensure_trailing_newline(dump_yaml(data)))
     bundle_copy = root / "bundles" / output.name
     if output.resolve() != bundle_copy.resolve():
         shutil.copyfile(output, bundle_copy)
@@ -13998,7 +13825,7 @@ def command_evolve_run(args: argparse.Namespace) -> int:
         source = Path(candidate).expanduser()
         if not source.is_absolute():
             source = project_root / source
-        report["candidates"].append(candidate_id_from_data(read_yaml_file(source), source.stem))
+        report["candidates"].append(_knowledge_candidate_targeting_policy.id_from_data(read_yaml_file(source), source.stem))
         if getattr(args, "workplace", None):
             queue_candidate(Path(args.workplace).expanduser().resolve(), source)
     write_yaml_file(root / "evolution-report.yaml", report)
@@ -14064,15 +13891,15 @@ def command_knowledge_hub_import(args: argparse.Namespace) -> int:
         failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
         if failures:
             raise SystemExit("FAIL: imported candidate invalid: " + "; ".join(failures))
-        candidate_id = candidate_id_from_data(data, candidate.stem)
+        candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data, candidate.stem)
         shutil.copyfile(candidate, hub / "candidates" / f"{candidate_id}.yaml")
         rows = [item for item in rows if item.get("id") != candidate_id]
         rows.append(
             {
                 "id": candidate_id,
-                "target": candidate_target(data),
-                "target_id": candidate_target_id(data),
-                "target_type": candidate_target_type(data),
+                "target": _knowledge_candidate_targeting_policy.target(data),
+                "target_id": _knowledge_candidate_targeting_policy.target_id(data),
+                "target_type": _knowledge_candidate_targeting_policy.target_type(data),
                 "routing": data.get("routing") if isinstance(data.get("routing"), dict) else {},
                 "applicability_scope": str((data.get("applicability") or {}).get("scope") or "") if isinstance(data.get("applicability"), dict) else "",
                 "generalization": data.get("generalization") if isinstance(data.get("generalization"), dict) else {},
@@ -14097,7 +13924,7 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         "knowledge package",
     )
     candidates = [read_yaml_file(path) for path in sorted((hub / "candidates").glob("*.yaml"))]
-    candidates = [item for item in candidates if candidate_destination_matches(item, package_id)]
+    candidates = [item for item in candidates if _knowledge_candidate_targeting_policy.destination_matches(item, package_id)]
     if not candidates:
         raise SystemExit("FAIL: no candidates available for package " + package_id)
     if not getattr(args, "apply", False):
@@ -14121,8 +13948,8 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         f"knowledge package {package_id}",
     )
     (package_root / "resources").mkdir(parents=True, exist_ok=True)
-    curated_candidates = [item for item in candidates if candidate_ready_for_curated_package(item)]
-    incoming_candidates = [item for item in candidates if not candidate_ready_for_curated_package(item)]
+    curated_candidates = [item for item in candidates if _knowledge_candidate_targeting_policy.ready_for_curated_package(item)]
+    incoming_candidates = [item for item in candidates if not _knowledge_candidate_targeting_policy.ready_for_curated_package(item)]
     grouped: dict[str, list[dict[str, Any]]] = {}
     for item in curated_candidates:
         grouped.setdefault(str(item.get("category") or "generic"), []).append(item)
@@ -14131,7 +13958,7 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         for category in sorted(grouped):
             notes.extend([f"## {category}", ""])
             for item in grouped[category]:
-                notes.append(f"- `{candidate_id_from_data(item)}`: {item.get('summary', '')}")
+                notes.append(f"- `{_knowledge_candidate_targeting_policy.id_from_data(item)}`: {item.get('summary', '')}")
             notes.append("")
     else:
         notes.extend(["No curated candidates were approved for this package build.", ""])
@@ -14140,7 +13967,7 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         incoming = ["# Incoming Learnings", "", "## Unreviewed parent-platform candidates", ""]
         for item in incoming_candidates:
             promotion = item.get("promotion") if isinstance(item.get("promotion"), dict) else {}
-            incoming.append(f"- `{candidate_id_from_data(item)}`: {item.get('summary', '')} (promotion: {promotion.get('status', 'not_requested')})")
+            incoming.append(f"- `{_knowledge_candidate_targeting_policy.id_from_data(item)}`: {item.get('summary', '')} (promotion: {promotion.get('status', 'not_requested')})")
         notes.append("")
         (package_root / "resources" / "incoming-learnings.md").write_text("\n".join(incoming), encoding="utf-8")
         resources.append({"id": "incoming-learnings", "path": "resources/incoming-learnings.md", "type": "markdown"})
@@ -14307,53 +14134,6 @@ def process_backfill_paths(project_root: Path, process_id: str) -> dict[str, Pat
     }
 
 
-def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
-    process_id = safe_id(str(process.get("id", "process")), "process")
-    answers: dict[str, Any] = {
-        "schema_version": 1,
-        "process": {
-            "id": process_id,
-            "name": str(process.get("name") or title_from_id(process_id)),
-            "version": str(process.get("version") or "1.0.0"),
-            "status": str(process.get("status") or "draft"),
-            "kind": str(process.get("kind") or "process"),
-            "scope": str(process.get("scope") or "project"),
-            "description": str(process.get("description") or ""),
-            "purpose": str(process.get("purpose") or process.get("description") or ""),
-        },
-        "execution_mode": str(process.get("execution_mode") or "single_agent"),
-        "execution_mode_questions": process.get("execution_mode_questions") if isinstance(process.get("execution_mode_questions"), dict) else {},
-        "coordination_requirements": process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {},
-        "error_handling": process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {},
-        "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
-        "roles": as_list(process.get("roles")),
-        "stages": as_list(process.get("stages")),
-        "artifacts": as_list(process.get("artifact_definitions")),
-        "evidence_definitions": as_list(process.get("evidence_definitions")),
-        "gates": as_list(process.get("gates")),
-        "required_capabilities": string_list(process.get("required_capabilities")),
-        "required_packages": string_list(process.get("required_packages")),
-        "required_templates": string_list(process.get("required_templates")),
-        "allowed_tools": string_list(process.get("allowed_tools")),
-        "forbidden_actions": string_list(process.get("forbidden_actions")),
-    }
-    for key in ["hooks", "evolve", "evolution_policy", "expected_artifacts"]:
-        if key in process:
-            answers[key] = process[key]
-    for key in [
-        "process_transitions",
-        "agent_requirements",
-        "responsibility_boundaries",
-        "subagent_policy",
-        "runtime_requirements",
-        "runtime_execution_boundary",
-        "stage_completion",
-        "run_completion",
-        "metadata",
-    ]:
-        if key in process:
-            answers[key] = process[key]
-    return answers
 
 
 def process_unsupported_fields(process: dict[str, Any]) -> list[dict[str, str]]:
@@ -14431,7 +14211,7 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
         raise SystemExit("FAIL: provide --process or --process-file")
     process = read_yaml_file(process_path)
     process_id = safe_id(str(process.get("id") or process_path.stem), "process")
-    answers = process_to_authoring_answers(process)
+    answers = _process_authoring_definition_builder.from_definition(process)
     draft = _process_authoring_definition_builder.build(answers)
     unsupported = process_unsupported_fields(process)
     paths = process_backfill_paths(project_root, process_id)
@@ -15934,102 +15714,22 @@ def normalize_workplace_manifest(path: Path | None) -> Path | None:
     return candidate
 
 
-def runtime_driver_registry_paths(workplace_manifest: Path | None = None, project_root: Path | None = None) -> list[Path]:
-    paths = [ROOT / "templates" / "registries" / "runtime-drivers.yaml"]
-    if workplace_manifest and workplace_manifest.is_file():
-        paths.append(workplace_manifest.parent / "registries" / "runtime-drivers.yaml")
-    if project_root:
-        paths.append(locate_flow_root(project_root) / "runtime" / "registries" / "runtime-drivers.local.yaml")
-    return paths
 
 
-def runtime_driver_entries(registry_path: Path) -> list[dict[str, Any]]:
-    if not registry_path.is_file():
-        return []
-    data = load_yaml_document(registry_path)
-    entries = data.get("runtime_drivers") if isinstance(data, dict) else []
-    return [item for item in entries if isinstance(item, dict)]
 
 
-def runtime_driver_entry_path(registry_path: Path, entry: dict[str, Any]) -> Path | None:
-    raw = entry.get("path")
-    if not raw:
-        return None
-    text = str(raw).replace("{processforge_root}", str(ROOT)).replace("${PF_DISTRIBUTION}", str(ROOT))
-    path = Path(text).expanduser()
-    if not path.is_absolute():
-        path = (registry_path.parent / path).resolve()
-    return path
 
 
-def load_runtime_driver_by_path(path: Path) -> dict[str, Any]:
-    if not path.is_file():
-        raise SystemExit(f"FAIL: runtime driver not found: {path}")
-    data = read_yaml_file(path)
-    data.setdefault("_source_path", str(path))
-    return data
 
 
-def registered_runtime_driver_path(driver_id: str, *, workplace_manifest: Path | None = None, project_root: Path | None = None) -> Path | None:
-    """Select the existing registry path by exact ID without path fallback."""
-    for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
-        for entry in runtime_driver_entries(registry_path):
-            if str(entry.get("id")) != driver_id:
-                continue
-            path = runtime_driver_entry_path(registry_path, entry)
-            if path and path.is_file():
-                return path
-    return None
 
 
-def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None = None, project_root: Path | None = None) -> dict[str, Any]:
-    direct = Path(driver_ref).expanduser()
-    if direct.suffix in {".yaml", ".yml", ".json"} or direct.is_file():
-        if not direct.is_absolute():
-            base = project_root or ROOT
-            direct = (base / direct).resolve()
-        return load_runtime_driver_by_path(direct)
-    driver_id = safe_id(driver_ref, "manual")
-    path = registered_runtime_driver_path(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
-    if path is not None:
-        return load_runtime_driver_by_path(path)
-    builtin = _runtime_driver_definition_policy.default_documents().get(driver_id)
-    if builtin:
-        result = json.loads(json.dumps(builtin))
-        result["_source_path"] = "builtin"
-        return result
-    raise SystemExit(f"FAIL: runtime driver not found: {driver_ref}")
 
 
-def runtime_driver_ref_is_direct_path(driver_ref: str) -> bool:
-    direct = Path(driver_ref).expanduser()
-    return direct.suffix in {".yaml", ".yml", ".json"} or direct.is_file()
 
 
-def normalized_runtime_driver_ref(driver_ref: str, project_root: Path) -> str:
-    direct = Path(driver_ref).expanduser()
-    if not direct.is_absolute():
-        direct = (project_root / direct).resolve()
-    try:
-        return direct.relative_to(project_root).as_posix()
-    except ValueError:
-        return str(direct)
 
 
-def runtime_driver_id_list(*, workplace_manifest: Path | None = None, project_root: Path | None = None) -> list[tuple[str, str, str]]:
-    found: dict[str, tuple[str, str, str]] = {}
-    for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
-        source = rel(registry_path, ROOT) if registry_path.is_relative_to(ROOT) else str(registry_path)
-        for entry in runtime_driver_entries(registry_path):
-            driver_id = str(entry.get("id") or "")
-            if not driver_id:
-                continue
-            path = runtime_driver_entry_path(registry_path, entry)
-            status = str(entry.get("status") or ("available" if path and path.is_file() else "missing"))
-            found[driver_id] = (driver_id, status, source)
-    for driver_id in _runtime_driver_definition_policy.default_documents():
-        found.setdefault(driver_id, (driver_id, "available", "builtin"))
-    return sorted(found.values())
 
 
 
@@ -16093,7 +15793,7 @@ def command_runtime_driver_list(args: argparse.Namespace) -> int:
     if project_root:
         require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
-    for driver_id, status, source in runtime_driver_id_list(workplace_manifest=workplace_manifest, project_root=project_root):
+    for driver_id, status, source in _runtime_driver_catalog_reader.ids(workplace_manifest=workplace_manifest, project_root=project_root):
         print(f"{driver_id}\t{status}\t{source}")
     return 0
 
@@ -16103,7 +15803,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
     if project_root:
         require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
-    driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
+    driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
 
 
@@ -16112,7 +15812,7 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     if project_root:
         require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
-    driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
+    driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     driver.pop("_source_path", None)
     print(dump_yaml(driver))
     return 0
@@ -16205,10 +15905,10 @@ def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
 def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg: str | None = None) -> dict[str, Any]:
     driver_id = driver_arg or str(task.get("runtime_driver") or "manual")
     workplace_manifest = project_workplace_manifest(project_root)
-    driver = resolve_runtime_driver(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
-    if driver_arg and runtime_driver_ref_is_direct_path(driver_arg):
+    driver = _runtime_driver_catalog_reader.resolve(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
+    if driver_arg and _runtime_driver_catalog_reader.ref_is_direct_path(driver_arg):
         driver = copy.deepcopy(driver)
-        driver["_driver_ref"] = normalized_runtime_driver_ref(driver_arg, project_root)
+        driver["_driver_ref"] = _runtime_driver_catalog_reader.normalized_ref(driver_arg, project_root)
     failures = [item.message for item in _runtime_driver_definition_policy.validate(driver) if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
@@ -17732,7 +17432,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
     checks.append(check("PASS" if workers else "FAIL", "workers present"))
     default_driver = str(runtime.get("default_driver") or "manual")
     start_policy = str(runtime.get("start_policy") or "manual")
-    checks.append(check("PASS" if default_driver in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"runtime.default_driver registered: {default_driver}"))
+    checks.append(check("PASS" if default_driver in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"runtime.default_driver registered: {default_driver}"))
     checks.append(check("PASS" if start_policy in {"manual", "prepare", "supervisor"} else "FAIL", f"runtime.start_policy valid: {start_policy}"))
     seen: set[str] = set()
     scope_conflicts = ScopeConflictService(project_root)
@@ -17767,7 +17467,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
             checks.append(check("PASS" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
         if writer:
             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
-        checks.append(check("PASS" if driver_id in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
+        checks.append(check("PASS" if driver_id in {item[0] for item in _runtime_driver_catalog_reader.ids(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
         for dep_id in worker_dependency_set(raw_worker):
             checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
         has_workspace_access = any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS)
@@ -20339,89 +20039,8 @@ def load_update_index(distribution_root: Path) -> dict[str, Any]:
     return {}
 
 
-def latest_update_version(update_index: dict[str, Any], channel: str) -> dict[str, Any] | None:
-    channels = update_index.get("channels", {}) if isinstance(update_index.get("channels"), dict) else {}
-    latest = None
-    channel_data = channels.get(channel)
-    if isinstance(channel_data, dict):
-        latest = channel_data.get("latest")
-    elif isinstance(channel_data, str):
-        latest = channel_data
-    versions = update_index.get("versions") if isinstance(update_index.get("versions"), list) else []
-    for item in versions:
-        if isinstance(item, dict) and str(item.get("version")) == str(latest):
-            return item
-    return None
 
 
-def render_update_assessment(project_root: Path, current_version: str, channel: str, latest: dict[str, Any] | None) -> str:
-    available_version = str(latest.get("version", "none")) if latest else "none"
-    migration = latest.get("migration", {}) if latest and isinstance(latest.get("migration"), dict) else {}
-    changes = latest.get("changes", []) if latest and isinstance(latest.get("changes"), list) else []
-    affected = latest.get("affected_files", []) if latest and isinstance(latest.get("affected_files"), list) else []
-
-    def lines(items: list[Any], empty: str = "None.") -> str:
-        if not items:
-            return f"- {empty}"
-        output = []
-        for item in items:
-            if isinstance(item, dict):
-                output.append(f"- {item.get('type', 'change')}: {item.get('summary', item)}")
-            else:
-                output.append(f"- {item}")
-        return "\n".join(output)
-
-    result = "safe" if available_version in {"none", current_version} else ("requires_migration" if migration.get("required") else "requires_approval")
-    return f"""# ProcessForge Update Assessment
-
-## Status
-
-{result}
-
-## Project
-
-- root: {project_root.name}
-- current_version: {current_version}
-- available_version: {available_version}
-- channel: {channel}
-
-## Breaking Changes
-
-{lines([item for item in changes if isinstance(item, dict) and item.get("breaking")], "None recorded.")}
-
-## Required Migrations
-
-- required: {bool(migration.get("required", False))}
-- guide: {migration.get("guide", "none")}
-
-## Changes
-
-{lines(changes)}
-
-## Affected Files
-
-{lines(affected, "Review `.pf/process-forge.yaml`, `.pf/hooks.yaml`, and `.pf/contexts/project-context.snapshot.*`.")}
-
-## Required Manual Review
-
-- Review migration guide before changing project files.
-- Confirm linked distribution registry points to the intended version.
-- Run public cleanliness, schema validation, checksum validation, and project doctor after migration.
-
-## Recommended Steps
-
-1. Read the migration guide.
-2. Update the ProcessForge distribution outside the project.
-3. Refresh project context.
-4. Apply project migrations only with approval.
-5. Re-run validation gates.
-
-## Rollback Notes
-
-- Keep the previous ProcessForge distribution available in the workplace registry.
-- Repoint the workplace distributions registry to the previous version if migration is blocked.
-- Do not delete project `.pf/` artifacts created before the update until review passes.
-"""
 
 
 def command_self_update_check(args: argparse.Namespace) -> int:
@@ -20431,7 +20050,7 @@ def command_self_update_check(args: argparse.Namespace) -> int:
     if not update_index:
         print(f"FAIL: update index not found under {distribution_root / 'updates'}")
         return 1
-    latest = latest_update_version(update_index, channel)
+    latest = _update_version_selection_policy.latest(update_index, channel)
     product = update_index.get("product", {}) if isinstance(update_index.get("product"), dict) else {}
     current = str(args.current_version or product.get("current_version") or "1.0.0")
     print(f"PRODUCT: {product.get('id', 'processforge')}")
@@ -20467,8 +20086,8 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
     if not update_index:
         print(f"FAIL: update index not found under {distribution_root / 'updates'}")
         return 1
-    latest = latest_update_version(update_index, args.channel)
-    report = render_update_assessment(project_root, current, args.channel, latest)
+    latest = _update_version_selection_policy.latest(update_index, args.channel)
+    report = _update_assessment_renderer.render(project_root, current, args.channel, latest)
     target = flow_root / "artifacts" / "processforge-update-assessment.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(ensure_trailing_newline(report), encoding="utf-8")
@@ -20557,100 +20176,10 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
 
 
 
-def normalize_manifest_versions(raw: dict[str, Any], site: dict[str, Any], channel: str) -> list[dict[str, Any]]:
-    subject = site.get("subject") if isinstance(site.get("subject"), dict) else {}
-    manifest_subject = raw.get("subject") if isinstance(raw.get("subject"), dict) else {}
-    subject_type = str(manifest_subject.get("type") or subject.get("type") or "")
-    subject_id = str(manifest_subject.get("id") or subject.get("id") or "")
-    source = site.get("source") if isinstance(site.get("source"), dict) else site
-    source_id = str(source.get("id") or site.get("site_id") or "update-site")
-    manifest_url = _update_site_policy.location(source, "provider")
-    site_changelog = str(source.get("changelog_url") or "")
-    versions: list[dict[str, Any]] = []
-
-    channels = raw.get("channels") if isinstance(raw.get("channels"), dict) else {}
-    channel_data = channels.get(channel)
-    if isinstance(channel_data, dict):
-        for item in channel_data.get("versions", []) if isinstance(channel_data.get("versions"), list) else []:
-            if not isinstance(item, dict):
-                continue
-            versions.append(
-                {
-                    "subject": {"type": subject_type, "id": subject_id, "scope": str(subject.get("scope") or "global")},
-                    "version": str(item.get("version") or ""),
-                    "source_id": source_id,
-                    "manifest_url": manifest_url,
-                    "changelog_url": str(item.get("changelog_url") or site_changelog),
-                    "download_url": str(item.get("download_url") or item.get("url") or ""),
-                    "sha256": str(item.get("sha256") or ""),
-                    "size_bytes": item.get("size_bytes") or item.get("size"),
-                    "breaking": bool(item.get("breaking", False)),
-                    "migration_required": bool(item.get("migration_required", False)),
-                    "notes": item.get("notes"),
-                    "post_update_doctor": item.get("post_update_doctor") if isinstance(item.get("post_update_doctor"), list) else [],
-                    "update_policy": item.get("update_policy") if isinstance(item.get("update_policy"), dict) else {},
-                }
-            )
-
-    for manifest_subject_item in raw.get("subjects", []) if isinstance(raw.get("subjects"), list) else []:
-        if not isinstance(manifest_subject_item, dict):
-            continue
-        normalized_subject = {
-            "type": str(manifest_subject_item.get("type") or subject_type),
-            "id": str(manifest_subject_item.get("id") or subject_id),
-            "scope": str(subject.get("scope") or manifest_subject_item.get("scope") or "global"),
-        }
-        if normalized_subject["id"] and subject_id and normalized_subject["id"] != subject_id:
-            continue
-        for item in manifest_subject_item.get("versions", []) if isinstance(manifest_subject_item.get("versions"), list) else []:
-            if not isinstance(item, dict):
-                continue
-            item_channels = item.get("channels")
-            if isinstance(item_channels, list) and channel not in item_channels:
-                continue
-            artifacts = item.get("artifacts") if isinstance(item.get("artifacts"), list) else []
-            artifact = next((entry for entry in artifacts if isinstance(entry, dict)), {})
-            migration = item.get("migration") if isinstance(item.get("migration"), dict) else {}
-            release = item.get("release") if isinstance(item.get("release"), dict) else {}
-            versions.append(
-                {
-                    "subject": normalized_subject,
-                    "version": str(item.get("version") or ""),
-                    "source_id": source_id,
-                    "manifest_url": manifest_url,
-                    "changelog_url": str(item.get("changelog_url") or release.get("changelog_url") or site_changelog),
-                    "download_url": str(artifact.get("url") or ""),
-                    "sha256": str(artifact.get("sha256") or ""),
-                    "size_bytes": artifact.get("size") or artifact.get("size_bytes"),
-                    "breaking": any(bool(change.get("breaking")) for change in item.get("changes", []) if isinstance(change, dict)),
-                    "migration_required": bool(migration.get("required", False)),
-                    "notes": item.get("notes"),
-                    "post_update_doctor": item.get("post_update_doctor") if isinstance(item.get("post_update_doctor"), list) else [],
-                    "update_policy": item.get("update_policy") if isinstance(item.get("update_policy"), dict) else {},
-                }
-            )
-    return [item for item in versions if item.get("version")]
 
 
-def selected_update_version(versions: list[dict[str, Any]], installed: str | None) -> tuple[dict[str, Any] | None, list[str]]:
-    warnings: list[str] = []
-    newer: list[dict[str, Any]] = []
-    for item in versions:
-        is_newer, warning = _resource_version_policy.is_newer(str(item.get("version") or ""), installed)
-        if warning:
-            warnings.append(warning)
-        if is_newer:
-            newer.append(item)
-    if not newer:
-        return None, warnings
-    newer.sort(key=lambda item: _resource_version_policy.key(str(item.get("version") or "")))
-    return newer[-1], sorted(set(warnings))
 
 
-def update_candidate_id(subject_type: str, subject_id: str, available_version: str, source_id: str) -> str:
-    raw = f"{subject_type}:{subject_id}:{available_version}:{source_id}"
-    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
-    return f"candidate-{safe_id(subject_type)}-{safe_id(subject_id)}-{safe_id(available_version)}-{digest}"
 
 
 
@@ -20710,10 +20239,10 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
         if not raw_manifest:
             conflicts.append({"site_id": site.get("site_id"), "reason": "; ".join(warnings) or "manifest fetch failed"})
             continue
-        versions = normalize_manifest_versions(raw_manifest, site, effective_channel)
+        versions = _update_version_selection_policy.normalize(raw_manifest, site, effective_channel)
         installed_subject = installed.get((str(subject.get("type")), str(subject.get("id"))), {})
         installed_version = str(subject.get("installed_version") or installed_subject.get("version") or "")
-        selected, compare_warnings = selected_update_version(versions, installed_version or None)
+        selected, compare_warnings = _update_version_selection_policy.select(versions, installed_version or None)
         warnings.extend(compare_warnings)
         if not selected:
             continue
@@ -20734,7 +20263,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
         installable = bool(selected.get("download_url")) and (not require_sha or bool(sha256))
         status = "available" if installable else "missing_required_hash"
         candidate = {
-            "id": update_candidate_id(str(subject.get("type")), str(subject.get("id")), str(selected.get("version")), str(selected.get("source_id"))),
+            "id": _update_version_selection_policy.candidate_id(str(subject.get("type")), str(subject.get("id")), str(selected.get("version")), str(selected.get("source_id"))),
             "subject": selected.get("subject") or subject,
             "installed_version": installed_version or None,
             "current_version": installed_version or None,

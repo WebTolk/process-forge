@@ -1,0 +1,1510 @@
+{
+  "status": "passed",
+  "total": 247,
+  "passed": 247,
+  "native_exception_cases": 27,
+  "groups": {
+    "candidates": 122,
+    "driver_io": 34,
+    "imports": 2,
+    "mcp_binding": 4,
+    "presentation": 40,
+    "updates": 45
+  },
+  "source_sha256": {
+    "tools/processforge.py": "9949c90f0e0bf59259127cb475f6404cd19bd7f8c7bdabe4f1c7becdca37ac2f",
+    "tools/pf_runtime/mcp_server.py": "bad15ce0a1e82773b5de636b1bc49aceeabfb95f3b242113011ff269e771debf",
+    "src/processforge_core/process_catalog/authoring.py": "99abdb6ba983f6f77f1b7a22d3ca9b3267c26af1f1620cf8716d9a50af5125a2",
+    "src/processforge_core/process_catalog/coordination.py": "98e4edee5f6f161b50698735e30945af4ead15832992c57fec340484812b0676",
+    "src/processforge_core/process_catalog/presentation.py": "6383c251dcd5f8801810083f8d73c90351d433667c00111e64b9292c921a4b88",
+    "src/processforge_core/runtime/catalog.py": "183f370372d3a840a38be677925a2744525308febd2e420fd3cd936261b25336",
+    "src/processforge_core/evolution/__init__.py": "d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef",
+    "src/processforge_core/evolution/candidates.py": "0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8",
+    "src/processforge_core/maintenance/versions.py": "64cd8e795d9b63c178ea21fb2b3038d8d2c6326c60d98d25adb1e7bac5cb66dc",
+    "src/processforge_core/maintenance/presentation.py": "f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1"
+  },
+  "checks": [
+    {
+      "group": "presentation",
+      "case": "coordination:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "presentation",
+      "case": "document:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "coordination:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "agent_prompt:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "document:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "questions:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "questions:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "presentation",
+      "case": "questions:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "questions:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "review:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "review:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "review:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "presentation",
+      "case": "reverse borrowed roles/metadata",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:0:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:0:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "target:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:1",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:1:True",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:1:False",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:2:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:2:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:3:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:3:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:4:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:4:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:5:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:5:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:6:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:6:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:7:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:7:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:8:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:8:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "id_from_data:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_type:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target_id:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "routing_destination:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "destination_matches:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "promotion_status:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "generalization_level:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "is_parent_promotion_candidate:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "ready_for_curated_package:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:9:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "validate:9:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "candidates",
+      "case": "target borrowed dict",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "candidates",
+      "case": "destination borrowed dict",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "updates",
+      "case": "latest:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "latest:7",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "normalize:7",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "updates",
+      "case": "select:None:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:None:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:None:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:None:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select::0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select::1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select::2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select::3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:1.0:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:1.0:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:1.0:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:1.0:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:2.0:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:2.0:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:2.0:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:2.0:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:legacy:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:legacy:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:legacy:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "select:legacy:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "id:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "id:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "assessment:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "assessment:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "assessment:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "assessment:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "assessment:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "updates",
+      "case": "normalized shared subject",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "updates",
+      "case": "normalized borrowed notes",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "driver_io",
+      "case": "registry-order",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "entries",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "entry-path:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "entry-path:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "entry-path:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "entry-path:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "registered:custom",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "resolve:custom",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "registered:missing",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "resolve:missing",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "driver_io",
+      "case": "registered:local",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "resolve:local",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "registered:manual",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "resolve:manual",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "registered:not-found",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "resolve:not-found",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "driver_io",
+      "case": "id-list",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "ref-kind:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "normalized:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "ref-kind:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "normalized:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "ref-kind:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "normalized:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "ref-kind:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "normalized:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "ref-kind:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "normalized:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "direct-resolve",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "same-size-mtime-live-read",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "live new value",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "driver_io",
+      "case": "deleted-driver",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "driver_io",
+      "case": "invalid-yaml-strict",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "driver_io",
+      "case": "preserved-source-path",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "driver_io",
+      "case": "malformed-registry-native-error",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "mcp_binding",
+      "case": "custom",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "mcp_binding",
+      "case": "missing",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "mcp_binding",
+      "case": "NOT SAFE",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "mcp_binding",
+      "case": "../x.yaml",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "imports",
+      "case": "direct normal Core without CLI/Host",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "imports",
+      "case": "copied normal Core",
+      "passed": true,
+      "outcome": "contract"
+    }
+  ]
+}

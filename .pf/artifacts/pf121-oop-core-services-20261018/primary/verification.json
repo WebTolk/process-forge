@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "retained_monolith_definitions_with_only_expected_call_changes": 931,
+  "existing_builder_prefix_preserved_bytewise": true,
+  "original_module_annotation_semantics_preserved": true,
+  "mcp_only_expected_lazy_lookup_block_changed": true,
+  "mcp_driver_id_guard_precedes_import": true,
+  "parity": {
+    "path": ".pf\\artifacts\\pf121-oop-core-services-20261018\\primary\\parity-results.json",
+    "sha256": "673e33c9a5214557443cc6432d4f22ddf20e63d4472f777a9682270d76d624df",
+    "passed": true
+  },
+  "smokes": {
+    "path": ".pf\\artifacts\\pf121-oop-core-services-20261018\\primary\\smoke-results.json",
+    "sha256": "494f8c90405f9ace95391e576a1e641e42ca91d20ae200ad889afd9a6b03e02b",
+    "passed": true
+  },
+  "product_sha256": {
+    "tools/processforge.py": "9949c90f0e0bf59259127cb475f6404cd19bd7f8c7bdabe4f1c7becdca37ac2f",
+    "tools/pf_runtime/mcp_server.py": "bad15ce0a1e82773b5de636b1bc49aceeabfb95f3b242113011ff269e771debf",
+    "docs/concepts/python-core-structure.md": "f7f3494f9d18c341745e5f3eafa713b2fb82a1faf534e3825ca553a8498d593a",
+    "docs/ru/concepts/python-core-structure.md": "472e99968a93fa82b1d9860d686bc2a2b6e75563f48a2eb996b07e18c608a497",
+    "src/processforge_core/process_catalog/authoring.py": "99abdb6ba983f6f77f1b7a22d3ca9b3267c26af1f1620cf8716d9a50af5125a2",
+    "src/processforge_core/process_catalog/presentation.py": "6383c251dcd5f8801810083f8d73c90351d433667c00111e64b9292c921a4b88",
+    "src/processforge_core/process_catalog/coordination.py": "98e4edee5f6f161b50698735e30945af4ead15832992c57fec340484812b0676",
+    "src/processforge_core/runtime/catalog.py": "183f370372d3a840a38be677925a2744525308febd2e420fd3cd936261b25336",
+    "src/processforge_core/evolution/__init__.py": "d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef",
+    "src/processforge_core/evolution/candidates.py": "0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8",
+    "src/processforge_core/maintenance/versions.py": "64cd8e795d9b63c178ea21fb2b3038d8d2c6326c60d98d25adb1e7bac5cb66dc",
+    "src/processforge_core/maintenance/presentation.py": "f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1",
+    "checksums/processforge.sha256": "29bb24a96f0e0787e28f80e70ff0adb7a4f1bbbb26317d8ea8e29bc1f06dd2b7"
+  },
+  "inventory": {
+    "rows_before": 1325,
+    "rows_after": 1332,
+    "changed_rows": 5,
+    "new_rows": 7,
+    "untouched_rows": 1320,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "limits": [
+    "Source-only: no archive/install/Runtime/connected-host acceptance.",
+    "ZIP contents and broad release suites excluded by user.",
+    "Default unchanged Core YAML parsing reused; no separate dependency/environment qualification."
+  ]
+}

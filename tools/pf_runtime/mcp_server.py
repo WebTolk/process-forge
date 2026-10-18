@@ -120,7 +120,9 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         def registered_driver_ref(driver_id: str) -> str:
             if core.safe_id(driver_id, "manual") != driver_id:
                 raise ActionToolError("driver_id_required")
-            path = core.registered_runtime_driver_path(driver_id, workplace_manifest=core.normalize_workplace_manifest(workplace), project_root=bound_project)
+            from processforge_core.runtime.catalog import RuntimeDriverCatalogReader
+
+            path = RuntimeDriverCatalogReader(core.ROOT).registered_path(driver_id, workplace_manifest=core.normalize_workplace_manifest(workplace), project_root=bound_project)
             if path is None:
                 raise ActionToolError("registered_driver_manifest_unavailable")
             return str(path.resolve())

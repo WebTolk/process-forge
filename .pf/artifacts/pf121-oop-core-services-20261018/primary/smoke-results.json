@@ -1,0 +1,104 @@
+{
+  "started_at": "2026-10-18T18:53:50.244157+00:00",
+  "executor": "primary",
+  "python": "3.14.3",
+  "reason": "The known restricted-worker fixture limitation is avoided by running only affected unchanged existing smokes in primary-owned scratch. No ACL, dependency or test changes.",
+  "scratch": ".pf/tmp/p121-core-services/primary/checks",
+  "source_hashes": {
+    "tools/processforge.py": "9949c90f0e0bf59259127cb475f6404cd19bd7f8c7bdabe4f1c7becdca37ac2f",
+    "tools/pf_runtime/mcp_server.py": "bad15ce0a1e82773b5de636b1bc49aceeabfb95f3b242113011ff269e771debf",
+    "src/processforge_core/process_catalog/authoring.py": "99abdb6ba983f6f77f1b7a22d3ca9b3267c26af1f1620cf8716d9a50af5125a2",
+    "src/processforge_core/process_catalog/coordination.py": "98e4edee5f6f161b50698735e30945af4ead15832992c57fec340484812b0676",
+    "src/processforge_core/process_catalog/presentation.py": "6383c251dcd5f8801810083f8d73c90351d433667c00111e64b9292c921a4b88",
+    "src/processforge_core/runtime/catalog.py": "183f370372d3a840a38be677925a2744525308febd2e420fd3cd936261b25336",
+    "src/processforge_core/evolution/__init__.py": "d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef",
+    "src/processforge_core/evolution/candidates.py": "0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8",
+    "src/processforge_core/maintenance/versions.py": "64cd8e795d9b63c178ea21fb2b3038d8d2c6326c60d98d25adb1e7bac5cb66dc",
+    "src/processforge_core/maintenance/presentation.py": "f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1"
+  },
+  "checks": [
+    {
+      "name": "smoke_process_authoring_materialization_parity",
+      "exit_code": 0,
+      "duration_seconds": 4.753,
+      "stdout": "PASS: process-authoring materialization parity smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_authoring_evolve_questions",
+      "exit_code": 0,
+      "duration_seconds": 0.108,
+      "stdout": "PASS: process-authoring evolve questions smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_runtime_driver_registry",
+      "exit_code": 0,
+      "duration_seconds": 10.19,
+      "stdout": "PASS: runtime driver registry smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_mcp_action_tools",
+      "exit_code": 0,
+      "duration_seconds": 0.209,
+      "stdout": "PASS: typed native MCP actions preserve binding, terminal/apply guards, literal arguments, driver metadata privacy and pre-dispatch schema bounds\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_candidate_schema",
+      "exit_code": 0,
+      "duration_seconds": 0.893,
+      "stdout": "PASS: evolve candidate schema smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_candidate_targeting_schema",
+      "exit_code": 0,
+      "duration_seconds": 4.928,
+      "stdout": "PASS: evolve candidate targeting schema smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_candidate_narrowest_scope",
+      "exit_code": 0,
+      "duration_seconds": 3.899,
+      "stdout": "PASS: evolve candidate narrowest scope smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_evolve_candidate_export",
+      "exit_code": 0,
+      "duration_seconds": 3.872,
+      "stdout": "PASS: evolve candidate export smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_update_candidate_discovery",
+      "exit_code": 0,
+      "duration_seconds": 2.444,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_update_notifications",
+      "exit_code": 0,
+      "duration_seconds": 3.196,
+      "stdout": "PASS: update notifications smoke\n",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "source_stable": true,
+  "finished_at": "2026-10-18T18:54:24.746208+00:00",
+  "passed": true
+}

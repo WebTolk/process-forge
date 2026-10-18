@@ -1,0 +1,17 @@
+{
+  "role": "primary-after-collected-candidates",
+  "run_id": "garage-p121-core-services-candidates-implement-knowledgecandidatetargeti",
+  "assignment_id": "p121-core-services-candidates-implement-knowledgecandidatetargetingpolic",
+  "context_id": "p121-core-services-candidates-implement-knowledgecandidatetargetingpolic-capsule",
+  "path": "src/processforge_core/evolution/candidates.py",
+  "previous_sha256": "e1a3bea3bd50b7d8ec2f0434c645bcb72faf498bfb27d5980cb320f0d0897d4d",
+  "sha256": "0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8",
+  "change": "Restore original module future annotations; class algorithms unchanged. No concurrent writer. Final focused proof and existing smokes will be repeated before review.",
+  "validation": {
+    "status": "passed",
+    "original_annotation_mappings_equal": 31,
+    "final_parity": "247/247",
+    "original_receipts_retained": true,
+    "final_smokes": "passed: all ten selected existing checks on exact final source bytes"
+  }
+}
