@@ -62,7 +62,8 @@ def content_hash(payload: Any) -> str:
 
 def output_fact(project_root: Path, output: dict[str, Any], core: Any) -> dict[str, Any]:
     output_id = str(output.get("id") or "output")
-    path = core.task_output_path(project_root, output)
+    from processforge_core.work.outputs import WorkOutputPolicy
+    path = WorkOutputPolicy().task_path(project_root, output)
     if path is None:
         return {"id": output_id, "status": "invalid", "path": "", "reason": "required output has no path"}
     if not path.is_file():
@@ -164,13 +165,16 @@ def declared_stage_obligations(project_root: Path, core: Any, *, dependencies: s
         if dependencies is not None:
             if run_id:
                 dependencies.add(core.worker_run_paths(project_root, run_id, str(task["id"]))["status"])
-            for output in core.normalize_required_outputs(task.get("required_outputs")):
-                path = core.task_output_path(project_root, output)
+            from processforge_core.work.context_documents import ContextContractInputs
+            for output in ContextContractInputs().normalize_required_outputs(task.get("required_outputs")):
+                from processforge_core.work.outputs import WorkOutputPolicy
+                path = WorkOutputPolicy().task_path(project_root, output)
                 if path is not None:
                     dependencies.add(path)
             expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
             if expected.get("artifact"):
-                path = core.task_output_path(project_root, {"path": expected["artifact"]})
+                from processforge_core.work.outputs import WorkOutputPolicy
+                path = WorkOutputPolicy().task_path(project_root, {"path": expected["artifact"]})
                 if path is not None:
                     dependencies.add(path)
         run_state = core.load_agent_run_state(project_root, run_id, str(task.get("id"))) if run_id else {}
@@ -187,7 +191,8 @@ def declared_stage_obligations(project_root: Path, core: Any, *, dependencies: s
 
 
 def required_outputs_for_task(project_root: Path, task: dict[str, Any], core: Any) -> list[dict[str, Any]]:
-    required = [output_fact(project_root, output, core) for output in core.normalize_required_outputs(task.get("required_outputs")) if bool(output.get("required", True))]
+    from processforge_core.work.context_documents import ContextContractInputs
+    required = [output_fact(project_root, output, core) for output in ContextContractInputs().normalize_required_outputs(task.get("required_outputs")) if bool(output.get("required", True))]
     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     expected_path = str(expected.get("artifact") or "")
     if expected_path:
@@ -958,10 +963,12 @@ def _worker_session_authorized(envelope: dict[str, Any], project_root: Path, cor
         state = core.load_agent_run_state(project_root, binding.run_id, binding.task_id)
         if not state or binding.attempt != str(state.get("attempt") or ""):
             return False
-        expected_report = core.expected_report_artifact(task)
+        from processforge_core.work.outputs import WorkOutputPolicy
+        expected_report = WorkOutputPolicy().expected_report(task)
         if not expected_report or binding.expected_report != expected_report:
             return False
-        report = core.project_output_path(project_root, expected_report)
+        from processforge_core.work.outputs import WorkOutputPolicy
+        report = WorkOutputPolicy().path(project_root, expected_report)
         if binding.category == "input":
             return _worker_input_contract(binding, project_root, core) is not None
         return report.is_file() and report.read_text(encoding="utf-8", errors="replace") == binding.content

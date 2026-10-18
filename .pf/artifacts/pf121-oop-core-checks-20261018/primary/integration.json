@@ -1,0 +1,83 @@
+{
+  "status": "integrated",
+  "removed_definitions": [
+    "append_json_schema_checks",
+    "build_worker_environment",
+    "default_expected_report_artifact",
+    "detection_group_matches",
+    "expand_runtime_value",
+    "expected_report_artifact",
+    "list_project_files",
+    "list_value",
+    "materialize_worker_launch_environment",
+    "minimal_platform_environment",
+    "normalize_required_outputs",
+    "parse_required_output_waivers",
+    "platform_detection_matches",
+    "project_output_path",
+    "require_json_schema_document",
+    "task_output_path",
+    "update_resolve_schema_ref",
+    "update_schema_type_matches",
+    "validate_update_instance_against_schema"
+  ],
+  "migrated_name_consumers": {
+    "parse_required_output_waivers": 1,
+    "project_output_path": 4,
+    "task_output_path": 4,
+    "expected_report_artifact": 9,
+    "default_expected_report_artifact": 1,
+    "list_project_files": 1,
+    "detection_group_matches": 0,
+    "platform_detection_matches": 1,
+    "minimal_platform_environment": 0,
+    "build_worker_environment": 1,
+    "materialize_worker_launch_environment": 1,
+    "expand_runtime_value": 7,
+    "update_schema_type_matches": 0,
+    "update_resolve_schema_ref": 0,
+    "validate_update_instance_against_schema": 1,
+    "append_json_schema_checks": 7,
+    "require_json_schema_document": 10,
+    "normalize_required_outputs": 9
+  },
+  "external_consumers": {
+    "src/processforge_core/work/context.py": {
+      "normalize_required_outputs": 1
+    },
+    "tools/pf_runtime/host.py": {
+      "task_output_path": 3,
+      "expected_report_artifact": 1,
+      "project_output_path": 1,
+      "normalize_required_outputs": 2
+    },
+    "tools/smoke_classifier_inventory_pruning.py": {
+      "list_project_files": 1
+    },
+    "tools/smoke_cli_audit_f0608.py": {
+      "expected_report_artifact": 1
+    },
+    "tools/smoke_docs_current_code_contract.py": {
+      "normalize_required_outputs": 2
+    },
+    "tools/smoke_expected_report_containment.py": {
+      "task_output_path": 1
+    },
+    "tools/smoke_prepared_execution_context.py": {
+      "validate_update_instance_against_schema": 1
+    },
+    "tools/smoke_project_classification_data_driven.py": {
+      "list_project_files": 2
+    },
+    "tools/smoke_remediation_knowledge_builder_contract.py": {
+      "validate_update_instance_against_schema": 1
+    },
+    "tools/smoke_worker_environment_secret_redaction.py": {
+      "build_worker_environment": 1,
+      "materialize_worker_launch_environment": 1
+    }
+  },
+  "required_output_checks": "Legacy optional capability preserved; calls canonical path/normalization owners.",
+  "runtime_process_builder": "Legacy lifecycle/process builder unchanged apart from canonical environment calls.",
+  "host": "Lazy concrete imports at original call statement positions; guards and prior calls preserved."
+}

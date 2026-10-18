@@ -72,7 +72,8 @@ def prepared_paths(project: Path, task: str) -> tuple[dict[str, Path], dict[str,
 
 def schema_check(document: dict[str, Any]) -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8-sig"))
-    errors = core.validate_update_instance_against_schema(document, schema, schema, "$")
+    from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
+    errors = UpdateSchemaChecks(ROOT).validate(document, schema, schema, "$")
     require(not errors, {"schema_errors": errors})
     encoded = json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8") + b"\n"
     require(len(encoded) <= 4 * 1024 * 1024, {"manifest_bytes": len(encoded)})

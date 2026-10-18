@@ -140,6 +140,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/coordination.py` | ProjectCoordinationReader for existing project/workplace coordination defaults, mode normalization and live config reads. |
 | `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Canonical shared text patterns/predicates and existing evolve findings/redaction/recursive value transformation. |
 | `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy for existing trust, URL/env/source shape checks, registry validation and stable sorting. |
+| `src/processforge_core/work/outputs.py` | WorkOutputPolicy for existing declared output/report paths, containment and waiver parsing. |
+| `src/processforge_core/project/detection.py` | ProjectDetectionService for current generic file inventory and existing platform detection rules. |
+| `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy for placeholder expansion, durable explicit environment and launch-only inheritance. |
+| `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks for the existing JSON Schema subset and current schema-file checks with an explicit distribution root. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
@@ -552,7 +556,7 @@ and `any` retain short-circuit evaluation. Existing shape checks and nonblank
 `exists` string handling are unchanged.
 
 `common.paths.path_matches_pattern` is the shared primitive used by this policy,
-`detection_group_matches` and `platform_detection_matches`. It preserves backslash
+`ProjectDetectionService.group_matches` and `matches`. It preserves backslash
 normalization and standard-library `fnmatch.fnmatch` checks on the full path then
 its `Path(...).name`, including platform-dependent matching. `rel` is unchanged.
 The two old classifier definitions and the old matcher definition are removed
@@ -685,3 +689,36 @@ and full normalized-manifest validation continue to call these shared helpers
 from their legacy owners. No scanner, trust, authorization or update rule is added.
 These internal moves preserve module annotation semantics and external 1.2.0
 contracts; evidence remains limited to the qualified source slice.
+
+## Output declarations, platform detection, worker environment and schema checks
+
+`work.outputs.WorkOutputPolicy` owns `waivers`, `path`, `task_path`,
+`expected_report` and `default_report`. It uses existing `ContextContractInputs`
+for normalization and preserves traversal/drive/absolute-path checks before
+resolution, containment, native failures and existing defaults. Required-output
+normalization calls the existing Core owner directly. Required-output readiness,
+optional capabilities and lifecycle remain with their existing owners. Host and
+existing consumers call the policy at their former guard positions.
+
+`project.detection.ProjectDetectionService` owns `files`, `group_matches` and
+`matches`, using canonical `common.paths` and `common.values.list_value`.
+Generic inventory retains its existing ignored-component policy and remains
+distinct from classifier inventory pruning. Detection preserves file ordering,
+read limits, invalid-regex fallback and current filesystem observations; no
+parsed or metadata-only cache is introduced. Classifier loading/activation remain
+legacy responsibilities.
+
+`runtime.environment.WorkerEnvironmentPolicy` owns `minimal`, `build`,
+`materialize` and `expand`, reusing reserved keys from `runtime.drivers`.
+Persisted command data contains only existing PF-owned and explicit values;
+inherited host environment is materialized at launch. Placeholder recursion,
+coercion, reserved-key refusal and native errors retain their original behavior.
+Process creation, attempt state, collection and recovery retain their owners.
+
+`maintenance.schema_checks.UpdateSchemaChecks(distribution_root)` owns
+`type_matches`, `resolve_ref`, `validate`, `append` and `require`. This is the
+existing JSON Schema subset, including its ordered diagnostics and exceptions.
+Construction performs no I/O; schema files are read afresh for each check.
+Update orchestration, network, installation and recovery remain with their
+existing owners. These moves qualify source behavior only; archive, installed,
+Runtime and connected-host acceptance remain separate.

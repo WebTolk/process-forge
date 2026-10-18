@@ -10,7 +10,8 @@ import tempfile
 from pathlib import Path
 
 from evolve_smoke_helpers import init_project, run_pf, write_candidate
-from processforge import load_yaml_document, validate_update_instance_against_schema
+from processforge import load_yaml_document
+from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,7 +80,7 @@ def main() -> int:
                 encoding="utf-8"
             )
         )
-        schema_errors = validate_update_instance_against_schema(
+        schema_errors = UpdateSchemaChecks(ROOT).validate(
             package,
             schema,
             schema,

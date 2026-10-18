@@ -49,7 +49,8 @@ def check_pruning(pf, root: Path) -> None:
         forbidden.update({project / name, project / "application" / name})
     for index in range(200):
         marker(project, f".pf/artifacts/batch-{index}/fixture/package.json")
-    generic = pf.list_project_files(project)
+    from processforge_core.project.detection import ProjectDetectionService
+    generic = ProjectDetectionService().files(project)
     expected = pf.project_available_paths(project, generic)
     actual, visited = guarded_paths(pf, project, forbidden)
     assert actual == expected, (actual - expected, expected - actual)
@@ -66,7 +67,7 @@ def check_pruning(pf, root: Path) -> None:
     assert inventory == sorted(inventory, key=lambda path: path.relative_to(project).as_posix())
     assert not pf.list_classifier_files(root / "absent")
     # The default classification and inactive-hint paths must use the same walk.
-    with patch.object(pf, "list_project_files", side_effect=AssertionError("generic traversal")):
+    with patch.object(ProjectDetectionService, "files", side_effect=AssertionError("generic traversal")):
         classified = pf.classify_project(project)
         pf.inactive_official_classifier_hints(None, project)
     assert classified["status"] == "unclassified", classified

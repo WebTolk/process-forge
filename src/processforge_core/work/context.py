@@ -147,7 +147,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
         raw = raw_artifacts[i] if isinstance(raw_artifacts, list) and i < len(raw_artifacts) else None
         if isinstance(raw, dict) and raw.get("checksum"):
             item["checksum"] = str(raw["checksum"])
-    outputs = core.normalize_required_outputs(metadata.get("required_outputs"))
+    outputs = ContextContractInputs().normalize_required_outputs(metadata.get("required_outputs"))
     for output in outputs:
         if output.get("path"):
             output["path"] = portable_path(output["path"])

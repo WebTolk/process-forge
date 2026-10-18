@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "removed_monolith_definitions": 19,
+  "retained_monolith_definitions_with_only_expected_call_changes": 884,
+  "exact_moved_algorithms": 18,
+  "existing_common_values_prefix_preserved": true,
+  "existing_context_inputs_and_driver_definitions_preserved": true,
+  "external_consumer_modules_with_only_expected_changes": 10,
+  "original_future_annotations_preserved": true,
+  "parity": {
+    "total": 242,
+    "native_exceptions": 43,
+    "sha256": "148eb5563d82f9cbfd041c5dbbbdd3f7e2be14ecc04e8863df493da4312a1dbe"
+  },
+  "smokes": {
+    "passed": true,
+    "count": 10,
+    "sha256": "aa50fd51dbf4d0ae689d04f870c902e176cf4f24d61854741f9cc3db1a81c0b4"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "bdf67dbc2e4299e4846fbeaa05e7c4a1c631db0180b2736f7f6a74ed85a73c1b",
+    "src/processforge_core/work/context.py": "a58a0a41f067b733f4828d996d73a81d71b09a7d9b279b86d3faf8da368c5a02",
+    "tools/pf_runtime/host.py": "e232cb049f4b1b428f7a4ec689f883acbbebaeac78580a451b25739de9546be9",
+    "tools/smoke_classifier_inventory_pruning.py": "c075fd2f1b7156ff0a60f39fee799655d519557f0657ffa9f4502fd6377f32e8",
+    "tools/smoke_cli_audit_f0608.py": "4777cb1214309b2d62e087de729bada5665344368cb6639342a75b8dc38d013d",
+    "tools/smoke_docs_current_code_contract.py": "0a65aadb5fdcc271fadde3fbebce396cc2b9d575ce9e0d00b5b9166808214918",
+    "tools/smoke_expected_report_containment.py": "c9c3d5126d5a6089aed244723472470310f1c96ee855e8453c4638951ac76ca0",
+    "tools/smoke_prepared_execution_context.py": "e5741c92cc9e13215fef1354822f078af98b8ddd6430e7aa4f4cd7ed3e2b4e32",
+    "tools/smoke_project_classification_data_driven.py": "072c848fa99dbfa1804f88aa3f382e62167a2f81d13c6f3010d5f40b69d1873c",
+    "tools/smoke_remediation_knowledge_builder_contract.py": "468f5bf1f4820695abf6fb6e86c9d3ff7851da3790e9efac6c004033408095e4",
+    "tools/smoke_worker_environment_secret_redaction.py": "c89f10c77757c35733bfc4594ed0961e628841e97c3410218d15ee39252c220e",
+    "docs/concepts/python-core-structure.md": "3288fda0c3720d4db09d4366e063a6fe2df828cd69fa5c7a2159426b09aa509b",
+    "docs/ru/concepts/python-core-structure.md": "8cd4de8c89c9b43ec262badd0c1e34876741aeef1501892a1e340441d3adfb39",
+    "src/processforge_core/work/outputs.py": "dfd1e20b19ddd0bcff3de35c802f31d5ff0850f95241b99492f362043fb9a8c2",
+    "src/processforge_core/project/detection.py": "60001dc4337f1e5c63002bc428b1f366f1f4ef45e93e2a8c10bfd302f18ae7fa",
+    "src/processforge_core/common/values.py": "be5c4c03411482af110fb38b1d2aef9cc223754d81e8632cc485dabe09ae14f6",
+    "src/processforge_core/runtime/environment.py": "8cb985ae19b4a33fc92cf7e2bf63fe35df8b951e5b703c90dad10308402e812a",
+    "src/processforge_core/maintenance/schema_checks.py": "5c27d092f2cfdf1102b082159de30accfa59af4fd7ca34d91bc6a3d45f97895b",
+    "checksums/processforge.sha256": "cf6c9ab282af83022adc385a4bdfb5008fc3b5cc4a0b0fe62c5317af028194bf"
+  },
+  "inventory": {
+    "rows_before": 1336,
+    "rows_after": 1340,
+    "changed_rows": 14,
+    "new_rows": 4,
+    "untouched_rows": 1322,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "limits": [
+    "Source-only; no archive/install/Runtime/connected-host or ZIP-content qualification.",
+    "Archive-based remediation knowledge-builder smoke deliberately excluded; its direct canonical validator call is compiled and exact moved validation is covered.",
+    "Existing native symlink probes may be unavailable; their actual SKIP output remains in the smoke receipt."
+  ]
+}

@@ -190,13 +190,15 @@ def assignment_example() -> dict:
 
 def check_assignment_required_outputs(parser_module) -> None:
     data = assignment_example()
-    outputs = parser_module.normalize_required_outputs(data.get("required_outputs"))
+    from processforge_core.work.context_documents import ContextContractInputs
+    outputs = ContextContractInputs().normalize_required_outputs(data.get("required_outputs"))
     if not outputs:
         raise AssertionError("front-matter required_outputs did not normalize to records")
     for item in outputs:
         if not all(str(item.get(key, "")).strip() for key in ("id", "path", "type")):
             raise AssertionError(f"normalized required output is not explicit: {item!r}")
-    if parser_module.normalize_required_outputs({"report": {"path": "x"}}):
+    from processforge_core.work.context_documents import ContextContractInputs
+    if ContextContractInputs().normalize_required_outputs({"report": {"path": "x"}}):
         raise AssertionError("id-keyed required_outputs must not be accepted")
 
 

@@ -37,14 +37,16 @@ def main() -> int:
             }
         }
 
-        persisted, inherit = pf.build_worker_environment(driver, variables)
+        from processforge_core.runtime.environment import WorkerEnvironmentPolicy
+        persisted, inherit = WorkerEnvironmentPolicy().build(driver, variables)
         assert inherit is True
         assert inherited_key not in persisted
         assert persisted["PF_TEST_EXPLICIT_VALUE"] == "explicit-value"
         assert persisted["PF_RUN_ID"] == "run-a"
         assert inherited_value not in json.dumps(persisted, sort_keys=True)
 
-        launch_env = pf.materialize_worker_launch_environment(
+        from processforge_core.runtime.environment import WorkerEnvironmentPolicy
+        launch_env = WorkerEnvironmentPolicy().materialize(
             {"environment": persisted, "environment_inherit": inherit}
         )
         assert launch_env[inherited_key] == inherited_value

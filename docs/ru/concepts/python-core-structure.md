@@ -148,6 +148,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/coordination.py` | ProjectCoordinationReader: прежние defaults, нормализация режимов и актуальное чтение project/workplace coordination. |
 | `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Общие канонические текстовые шаблоны/предикаты и прежние evolve findings, redaction и рекурсивное преобразование значений. |
 | `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy: прежние trust/URL/env/source проверки, валидация реестра и стабильная сортировка. |
+| `src/processforge_core/work/outputs.py` | WorkOutputPolicy: прежние пути выходов и отчётов, containment и разбор waiver. |
+| `src/processforge_core/project/detection.py` | ProjectDetectionService: актуальный общий список файлов и прежние правила обнаружения платформы. |
+| `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy: placeholders, сохраняемое явное окружение и наследование только при запуске. |
+| `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks: существующее подмножество JSON Schema и актуальное чтение схем с явным корнем дистрибутива. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
@@ -565,7 +569,7 @@ merge policy не делает полный компилятор контекс�
 обработка непустой строки `exists` сохранены.
 
 `common.paths.path_matches_pattern` — общий примитив для этой policy,
-`detection_group_matches` и `platform_detection_matches`. Он сохраняет нормализацию
+`ProjectDetectionService.group_matches` и `matches`. Он сохраняет нормализацию
 обратных слешей и проверки стандартным `fnmatch.fnmatch` сначала полного пути,
 затем его `Path(...).name`, включая платформенную семантику сравнения. `rel` не
 изменён. Два старых определения классификатора и старое определение matcher
@@ -699,3 +703,38 @@ defaults, формой remote/artifact URL, env-reference и source checks, пр
 владельцев. Новые scanner/trust/authorization/update правила не добавлены.
 Перенос сохраняет модульные аннотации и внешние контракты 1.2.0; доказательства
 относятся к квалифицированному срезу исходников.
+
+## Выходы Work, обнаружение платформы, окружение воркера и схемы
+
+`work.outputs.WorkOutputPolicy` владеет `waivers`, `path`, `task_path`,
+`expected_report` и `default_report`. Нормализация использует существующий
+`ContextContractInputs`. Сохранены проверки traversal, drive и абсолютных путей
+до разрешения, containment, исходные ошибки и значения по умолчанию.
+Нормализация required outputs вызывает прежнего владельца Core напрямую.
+Готовность обязательных выходов, optional capabilities и lifecycle остаются
+у существующих владельцев. Host и остальные потребители вызывают политику
+на прежних местах защитных проверок.
+
+`project.detection.ProjectDetectionService` владеет `files`, `group_matches`
+и `matches`, используя канонические `common.paths` и `common.values.list_value`.
+Общий список файлов сохраняет прежние исключения компонентов пути и отличается
+от обхода классификатора. Сохранены порядок файлов, пределы чтения, буквальный
+поиск при ошибке regex и наблюдение актуальной файловой системы. Кеш разобранных
+данных или проверка свежести только по метаданным не добавлены. Чтение и активация
+классификаторов остаются у прежних владельцев.
+
+`runtime.environment.WorkerEnvironmentPolicy` владеет `minimal`, `build`,
+`materialize` и `expand`, переиспользуя reserved keys из `runtime.drivers`.
+Сохраняемые данные команды содержат прежние значения PF и явную конфигурацию;
+окружение хоста наследуется только при запуске. Рекурсия placeholders,
+преобразования, отказы по reserved keys и исходные ошибки сохранены. Создание
+процесса, состояние попытки, сбор результата и восстановление остаются
+у существующих владельцев.
+
+`maintenance.schema_checks.UpdateSchemaChecks(distribution_root)` владеет
+`type_matches`, `resolve_ref`, `validate`, `append` и `require`. Это прежнее
+подмножество JSON Schema с исходным порядком сообщений и исключениями.
+Конструктор не выполняет I/O; каждая проверка заново читает файлы схем.
+Координация обновлений, сеть, установка и восстановление остаются у прежних
+владельцев. Приёмка относится к исходникам; архив, установленный Core, Runtime
+и реально подключённый хост проверяются отдельно.

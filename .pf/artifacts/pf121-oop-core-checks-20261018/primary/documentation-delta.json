@@ -1,0 +1,11 @@
+{
+  "reason": "One stale Russian documentation reference corrected to the canonical method names after initial checks. Product Python bytes unchanged; only the one-second existing documentation check repeated. Initial receipts retained locally.",
+  "path": "docs/ru/concepts/python-core-structure.md",
+  "before_sha256": "8ecb9885a0b9748b5f5ba5225f9ad565b50f2a175c0dfc055522c1294ab577ee",
+  "after_sha256": "8cd4de8c89c9b43ec262badd0c1e34876741aeef1501892a1e340441d3adfb39",
+  "existing_check": "smoke_docs_current_code_contract",
+  "exit_code": 0,
+  "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+  "seconds": 1.138,
+  "passed": true
+}

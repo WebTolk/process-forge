@@ -151,6 +151,16 @@ from processforge_core.maintenance.source_contracts import (
 _project_coordination_reader = ProjectCoordinationReader()
 _evolve_privacy_policy = EvolvePrivacyPolicy()
 _update_source_contract_policy = UpdateSourceContractPolicy()
+from processforge_core.common.values import list_value
+from processforge_core.work.outputs import WorkOutputPolicy
+from processforge_core.project.detection import ProjectDetectionService
+from processforge_core.runtime.environment import WorkerEnvironmentPolicy
+from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
+
+_work_output_policy = WorkOutputPolicy()
+_project_detection_service = ProjectDetectionService()
+_worker_environment_policy = WorkerEnvironmentPolicy()
+_update_schema_checks = UpdateSchemaChecks(ROOT)
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -1191,7 +1201,7 @@ def planned_registry_upsert(
         data = {"schema_version": 1, collection_key: []}
         entries = data[collection_key]
     result = upsert_resource(entries, entry)
-    require_json_schema_document(data, schema_name, f"registry {path.name}")
+    _update_schema_checks.require(data, schema_name, f"registry {path.name}")
     return ensure_trailing_newline(dump_yaml(data)).encode("utf-8"), result, data
 
 
@@ -3377,17 +3387,6 @@ def command_error_route(args: argparse.Namespace) -> int:
     return 0
 
 
-def list_project_files(project_root: Path) -> list[Path]:
-    if not project_root.exists():
-        return []
-    ignored_dirs = {".git", ".idea", ".serena", "__pycache__", "runtime", "cache"}
-    files: list[Path] = []
-    for path in project_root.rglob("*"):
-        if any(part in ignored_dirs for part in path.relative_to(project_root).parts):
-            continue
-        if path.is_file():
-            files.append(path)
-    return sorted(files, key=lambda item: item.relative_to(project_root).as_posix())
 
 
 def list_classifier_files(project_root: Path) -> list[Path]:
@@ -3644,7 +3643,7 @@ def detect_project(
     workplace_manifest: Path | None = None,
     explicit_classifier_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
-    files = list_project_files(project_root)
+    files = _project_detection_service.files(project_root)
     top_dirs = sorted(
         {
             item.parts[0]
@@ -3769,63 +3768,14 @@ def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, pro
     return sorted(set(item for item in matched if item))
 
 
-def detection_group_matches(values: Any, available: set[str], *, all_required: bool) -> bool:
-    patterns = list_value(values)
-    if not patterns:
-        return False
-    checks = [any(path_matches_pattern(item, pattern) for item in available) for pattern in patterns]
-    return all(checks) if all_required else any(checks)
 
 
-def platform_detection_matches(contract: dict[str, Any], project_root: Path) -> bool:
-    detection = contract.get("detection") if isinstance(contract.get("detection"), dict) else {}
-    if not detection:
-        return False
-    files = list_project_files(project_root)
-    rel_files = {rel(path, project_root) for path in files}
-    directories = {
-        item.as_posix()
-        for path in files
-        for item in [path.relative_to(project_root).parent]
-        if item.as_posix() != "."
-    }
-    directories.update(path.name for path in project_root.iterdir() if path.is_dir() and path.name not in {".git", ".idea", ".serena"})
-    dir_rules = detection.get("directories") if isinstance(detection.get("directories"), dict) else {}
-    file_rules = detection.get("files") if isinstance(detection.get("files"), dict) else {}
-    matched = False
-    if detection_group_matches(dir_rules.get("any"), directories, all_required=False):
-        matched = True
-    if detection_group_matches(dir_rules.get("all"), directories, all_required=True):
-        matched = True
-    if detection_group_matches(file_rules.get("any"), rel_files, all_required=False):
-        matched = True
-    if detection_group_matches(file_rules.get("all"), rel_files, all_required=True):
-        matched = True
-    contains_rules = detection.get("file_contains") if isinstance(detection.get("file_contains"), list) else []
-    for rule in contains_rules:
-        if not isinstance(rule, dict) or not rule.get("pattern"):
-            continue
-        candidate_patterns = list_value(rule.get("files")) or ["*"]
-        candidate_files = [path for path in files if any(path_matches_pattern(rel(path, project_root), pattern) for pattern in candidate_patterns)]
-        for path in candidate_files[:200]:
-            text = path.read_text(encoding="utf-8", errors="ignore")[:200000]
-            try:
-                if re.search(str(rule["pattern"]), text):
-                    matched = True
-                    break
-            except re.error:
-                if str(rule["pattern"]) in text:
-                    matched = True
-                    break
-        if matched:
-            break
-    return matched
 
 
 def platform_ids_from_detection_rules(workplace_manifest: Path | None, project_root: Path) -> list[str]:
     matched: list[str] = []
     for contract_id, entry in platform_contract_manifest_index(workplace_manifest, project_root).items():
-        if platform_detection_matches(entry["contract"], project_root):
+        if _project_detection_service.matches(entry["contract"], project_root):
             matched.append(contract_id.removeprefix("platform."))
     return sorted(set(matched))
 
@@ -4126,20 +4076,6 @@ def load_platform_contract(workplace_manifest: Path | None, contract_id: str, pr
     return {"id": normalized_id, "requires": {}, "includes": {}}, registry_entry, "missing", "missing"
 
 
-def list_value(value: Any) -> list[str]:
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, list):
-        output: list[str] = []
-        for item in value:
-            if isinstance(item, str):
-                output.append(item)
-            elif isinstance(item, dict):
-                item_id = item.get("id") or item.get("package") or item.get("template") or item.get("capability")
-                if item_id:
-                    output.append(str(item_id))
-        return output
-    return []
 
 
 def normalize_platform_ref(value: Any, *, default_required: bool = True) -> dict[str, Any] | None:
@@ -11106,56 +11042,23 @@ def normalize_context_artifacts(value: Any) -> list[dict[str, Any]]:
     return _context_contract_inputs.normalize_context_artifacts(value)
 
 
-def normalize_required_outputs(value: Any) -> list[dict[str, Any]]:
-    return _context_contract_inputs.normalize_required_outputs(value)
 
 
-def parse_required_output_waivers(value: Any) -> dict[str, str]:
-    waivers: dict[str, str] = {}
-    for item in as_list(value):
-        text = str(item or "").strip()
-        if not text:
-            continue
-        output_id, sep, reason = text.partition(":")
-        output_id = safe_id(output_id, "output")
-        reason = reason.strip() if sep else ""
-        if not reason:
-            raise SystemExit(f"FAIL: required output waiver needs '<id>:<reason>': {text}")
-        waivers[output_id] = reason
-    return waivers
 
 
-def project_output_path(project_root: Path, raw_path: str) -> Path:
-    """Resolve a declared project output before any content is read or written."""
-    value = str(raw_path).strip().replace("\\", "/")
-    if not value or value in {".", "./"} or "\x00" in value or ":" in value or PureWindowsPath(value).drive or value.startswith("/") or ".." in value.split("/"):
-        raise ValueError("output path must be project-relative without traversal")
-    root = project_root.resolve()
-    target = (root / value).resolve()
-    if not target.is_relative_to(root) or target == root:
-        raise ValueError("output path escapes project root")
-    return target
 
 
-def task_output_path(project_root: Path, output: dict[str, Any]) -> Path | None:
-    raw_path = str(output.get("path") or "").strip()
-    if not raw_path:
-        return None
-    try:
-        return project_output_path(project_root, raw_path)
-    except (OSError, ValueError):
-        return None
 
 
 def required_output_checks(project_root: Path, task: dict[str, Any], waivers: dict[str, str] | None = None, enforce_missing: bool = True) -> list[Check]:
     waiver_map = waivers or {}
     checks: list[Check] = []
-    for output in normalize_required_outputs(task.get("required_outputs")):
+    for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
         output_id = safe_id(str(output.get("id") or "output"), "output")
         if not bool(output.get("required", True)):
             checks.append(check("PASS", f"required output optional: {output_id}"))
             continue
-        out_path = task_output_path(project_root, output)
+        out_path = _work_output_policy.task_path(project_root, output)
         if out_path is None:
             if output_id in waiver_map:
                 checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
@@ -11175,7 +11078,7 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
     expected_artifact = _context_contract_inputs.normalize_assignment_path(str(expected.get("artifact") or ""))
     if expected_artifact:
         try:
-            expected_path = project_output_path(project_root, expected_artifact)
+            expected_path = _work_output_policy.path(project_root, expected_artifact)
         except (OSError, ValueError):
             checks.append(check("FAIL", "expected report path is outside project output scope"))
             return checks
@@ -12588,7 +12491,7 @@ def build_process_create_plan(
     existing_session: bool,
 ) -> tuple[AuthoringPlan, dict[str, Path]]:
     flow_root = require_flow_root(project_root)
-    require_json_schema_document(
+    _update_schema_checks.require(
         answers,
         "process-authoring-answers.schema.json",
         "process authoring answers",
@@ -12683,7 +12586,7 @@ def build_process_create_plan(
     def validate_process_plan(_plan: AuthoringPlan, staged: dict[Path, Path] | None) -> None:
         candidate_path = staged[target_process] if staged is not None else None
         candidate = load_yaml_document(candidate_path) if candidate_path is not None else draft
-        require_json_schema_document(
+        _update_schema_checks.require(
             candidate,
             "process-definition.schema.json",
             f"process {process_id}",
@@ -13147,7 +13050,7 @@ def command_process_doctor(args: argparse.Namespace) -> int:
     process = resolved.process
     companion_root = resolved.root if resolved.origin == "official" else project_root
     checks: list[Check] = []
-    append_json_schema_checks(
+    _update_schema_checks.append(
         checks,
         process,
         "process-definition.schema.json",
@@ -13773,7 +13676,7 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         "kind": "mixed",
         "scope": "workplace",
     }
-    require_json_schema_document(
+    _update_schema_checks.require(
         package_manifest,
         "package-manifest.schema.json",
         f"knowledge package {package_id}",
@@ -13829,7 +13732,7 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
     if not package_manifest_path.is_file():
         raise SystemExit("FAIL: package manifest missing: " + str(package_manifest_path))
     package = read_yaml_file(package_manifest_path)
-    require_json_schema_document(
+    _update_schema_checks.require(
         package,
         "package-manifest.schema.json",
         f"knowledge package {package_id}",
@@ -13888,7 +13791,7 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
             "policy": {"allow_stage": True, "allow_apply": True, "backup_before_apply": True, "install_path": f"packages/{package_id}"},
         }
     ]
-    require_json_schema_document(
+    _update_schema_checks.require(
         package,
         "package-manifest.schema.json",
         f"released knowledge package {package_id}",
@@ -15034,7 +14937,7 @@ def validate_process_route_map(project_root: Path) -> list[Check]:
     data = load_process_route_map(project_root)
     routes = data.get("routes") if isinstance(data.get("routes"), list) else []
     checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
-    append_json_schema_checks(checks, data, "process-route-map.schema.json", "process route map")
+    _update_schema_checks.append(checks, data, "process-route-map.schema.json", "process route map")
     seen: set[str] = set()
     for route in routes:
         if not isinstance(route, dict):
@@ -15567,52 +15470,10 @@ def normalize_workplace_manifest(path: Path | None) -> Path | None:
 
 
 
-def minimal_platform_environment() -> dict[str, str]:
-    if os.name != "nt":
-        return {}
-    names = ["SystemRoot", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP"]
-    return {name: value for name in names if (value := os.environ.get(name))}
 
 
-def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) -> tuple[dict[str, str], bool]:
-    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
-    inherit = bool(env_spec.get("inherit", True))
-    # Persist only PF-owned and explicitly configured values. Inherited host
-    # environment may contain credentials and is materialized only at launch.
-    env = {} if inherit else minimal_platform_environment()
-    env.update(
-        {
-            "PF_RUN_ID": variables["run_id"],
-            "PF_TASK_ID": variables["task_id"],
-            "PF_AGENT_RUN_DIR": variables["agent_run_dir"],
-            "PF_AGENT_EXIT_PATH": variables["exit_path"],
-            "PF_AGENT_MODEL": variables["agent_model"],
-            "PF_AGENT_REASONING_EFFORT": variables["agent_reasoning_effort"],
-            "PF_PROJECT_ROOT": variables["project_root"],
-            "PF_RUNTIME_DRIVER_ID": variables["driver_id"],
-            "PF_WORKSPACE_ACCESS_FILE": variables["workspace_access_path"],
-            "PF_WORKER_RUN_ID": variables["run_id"],
-            "PF_WORKER_TASK_ID": variables["task_id"],
-            "PF_WORKER_ATTEMPT": variables["attempt"],
-            "PF_PREPARED_INPUT_FILE": variables.get("prepared_input_path", ""),
-            "PF_PREPARED_INPUT_SHA256": variables.get("prepared_input_checksum", ""),
-        }
-    )
-    explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
-    reserved = sorted(str(key) for key in explicit if str(key) in RESERVED_WORKER_ENV_KEYS)
-    if reserved:
-        raise SystemExit("FAIL: runtime driver cannot override reserved ProcessForge environment variables: " + ", ".join(reserved))
-    expanded = expand_runtime_value(explicit, variables)
-    env.update({str(key): str(value) for key, value in expanded.items()})
-    return env, inherit
 
 
-def materialize_worker_launch_environment(command_spec: dict[str, Any]) -> dict[str, str]:
-    inherit = bool(command_spec.get("environment_inherit", False))
-    env = os.environ.copy() if inherit else minimal_platform_environment()
-    persisted = command_spec.get("environment") if isinstance(command_spec.get("environment"), dict) else {}
-    env.update({str(key): str(value) for key, value in persisted.items()})
-    return env
 
 
 
@@ -15668,17 +15529,8 @@ def json_read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def expected_report_artifact(task: dict[str, Any]) -> str:
-    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
-    value = str(expected.get("artifact") or "")
-    if value:
-        return _context_contract_inputs.normalize_assignment_path(value)
-    task_id = safe_id(str(task.get("id") or "task"), "task")
-    return default_expected_report_artifact(task_id)
 
 
-def default_expected_report_artifact(worker_id: str) -> str:
-    return f".pf/artifacts/{safe_id(worker_id, 'worker')}-report.md"
 
 
 def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str, Path]:
@@ -15717,20 +15569,6 @@ def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> 
         yield
 
 
-def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
-    if isinstance(value, str):
-        def replace(match: re.Match[str]) -> str:
-            key = match.group(1)
-            if key not in variables:
-                raise SystemExit(f"FAIL: unsupported runtime placeholder: {{{key}}}")
-            return variables[key]
-
-        return re.sub(r"\{([a-zA-Z0-9_]+)\}", replace, value)
-    if isinstance(value, list):
-        return [str(expand_runtime_value(item, variables)) for item in value]
-    if isinstance(value, dict):
-        return {str(key): expand_runtime_value(item, variables) for key, item in value.items()}
-    return value
 
 
 def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg: str | None = None) -> dict[str, Any]:
@@ -15844,10 +15682,10 @@ def build_worker_process_command(
     capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
     prompt_path = worker_prompt_path(project_root, run_id, task_id)
     try:
-        report_path = project_output_path(project_root, expected_report_artifact(task))
-        for output in normalize_required_outputs(task.get("required_outputs")):
+        report_path = _work_output_policy.path(project_root, _work_output_policy.expected_report(task))
+        for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
             if output.get("path"):
-                project_output_path(project_root, str(output["path"]))
+                _work_output_policy.path(project_root, str(output["path"]))
     except (OSError, ValueError) as exc:
         raise SystemExit(f"FAIL: invalid worker output path: {exc}") from exc
     variables = {
@@ -15875,8 +15713,8 @@ def build_worker_process_command(
         "agent_sandbox": worker_sandbox_for_task(task),
     }
     io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
-    stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
-    stderr_path = Path(str(expand_runtime_value(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
+    stdout_path = Path(str(_worker_environment_policy.expand(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
+    stderr_path = Path(str(_worker_environment_policy.expand(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
     if not stdout_path.is_absolute():
         stdout_path = (project_root / stdout_path).resolve()
     if not stderr_path.is_absolute():
@@ -15884,7 +15722,7 @@ def build_worker_process_command(
     paths["stdout"] = stdout_path
     paths["stderr"] = stderr_path
     heartbeat = driver.get("heartbeat") if isinstance(driver.get("heartbeat"), dict) else {}
-    heartbeat_path = Path(str(expand_runtime_value(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
+    heartbeat_path = Path(str(_worker_environment_policy.expand(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
     if not heartbeat_path.is_absolute():
         heartbeat_path = (project_root / heartbeat_path).resolve()
     paths["heartbeat"] = heartbeat_path
@@ -15897,14 +15735,14 @@ def build_worker_process_command(
         }
     )
     command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
-    executable = executable_override or str(expand_runtime_value(command_spec.get("executable") or "", variables))
-    args = expand_runtime_value(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
+    executable = executable_override or str(_worker_environment_policy.expand(command_spec.get("executable") or "", variables))
+    args = _worker_environment_policy.expand(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
     if variables["agent_model"]:
         model_args_raw = command_spec.get("model_args") if "model_args" in command_spec else ["--model", "{agent_model}"]
         if not isinstance(model_args_raw, list):
             raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
-        args.extend(expand_runtime_value(model_args_raw, variables))
-    env, inherit_env = build_worker_environment(driver, variables)
+        args.extend(_worker_environment_policy.expand(model_args_raw, variables))
+    env, inherit_env = _worker_environment_policy.build(driver, variables)
     if driver.get("prepared_lifecycle_wrapper") is True and executable:
         if not prepared_input:
             raise SystemExit("FAIL: prepared_input_required")
@@ -15912,7 +15750,7 @@ def build_worker_process_command(
                 "--prepared-sha256", variables["prepared_input_checksum"], "--heartbeat", str(paths["heartbeat"]),
                 "--exit-path", str(paths["exit"]), "--", executable, *args]
         executable = sys.executable
-    working_directory = str(expand_runtime_value(driver.get("working_directory") or "{project_root}", variables))
+    working_directory = str(_worker_environment_policy.expand(driver.get("working_directory") or "{project_root}", variables))
     command = {
         "schema_version": 1,
         "run_id": run_id,
@@ -15985,7 +15823,7 @@ def write_agent_run_state(
         "max_retries": driver_limits["max_retries"],
         "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
         "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
-        "expected_report_path": expected_report_artifact(task),
+        "expected_report_path": _work_output_policy.expected_report(task),
         "stdout_path": rel(paths["stdout"], project_root),
         "stderr_path": rel(paths["stderr"], project_root),
         "heartbeat_path": rel(paths["heartbeat"], project_root),
@@ -16310,7 +16148,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
             return 1
         timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
         command_spec = command.get("command") if isinstance(command.get("command"), dict) else {}
-        env = materialize_worker_launch_environment(command_spec)
+        env = _worker_environment_policy.materialize(command_spec)
         cwd = command_spec.get("working_directory") or str(project_root)
         paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
         paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
@@ -16416,26 +16254,26 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         print(f"FAIL: worker run is not collectible: {task_id} status={state.get('status', 'unknown')}")
         return 1
     missing: list[str] = []
-    for output in normalize_required_outputs(task.get("required_outputs")):
+    for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
         if not bool(output.get("required", True)):
             continue
         raw_path = output.get("path") if isinstance(output, dict) else ""
-        out_path = task_output_path(project_root, output)
+        out_path = _work_output_policy.task_path(project_root, output)
         if out_path is None or not out_path.is_file():
             missing.append(_context_contract_inputs.normalize_assignment_path(str(raw_path)))
     try:
-        report_path = project_output_path(project_root, expected_report_artifact(task))
+        report_path = _work_output_policy.path(project_root, _work_output_policy.expected_report(task))
     except (OSError, ValueError) as exc:
         print(f"FAIL: invalid expected report path: {exc}")
         return 1
     if not report_path.is_file():
-        missing.append(expected_report_artifact(task))
+        missing.append(_work_output_policy.expected_report(task))
     paths = worker_run_paths(project_root, run_id, task_id)
     lines = [
         f"# Worker Run Collection: {task_id}",
         "",
         f"- status: `{state.get('status', 'unknown')}`",
-        f"- expected_report: `{expected_report_artifact(task)}`",
+        f"- expected_report: `{_work_output_policy.expected_report(task)}`",
         f"- missing_outputs: `{len(missing)}`",
     ]
     for item in missing:
@@ -16460,7 +16298,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         report_raw = prepared_input.bounded_read(report_path, 2 * 1024 * 1024)
         report_content = report_raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
         receipt_path, receipt = prepared_input.collection_receipt(project_root, task, state, sys.modules[__name__])
-        report_record = next(item for item in receipt["outputs"] if item["path"] == expected_report_artifact(task))
+        report_record = next(item for item in receipt["outputs"] if item["path"] == _work_output_policy.expected_report(task))
         if prepared_input.digest(report_raw) != report_record["checksum"]:
             raise ValueError("collected_output_changed")
     except (OSError, ValueError, RuntimeError) as exc:
@@ -16486,7 +16324,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         return 0
     report_hash = sha256_text(report_content)
     attempt = str(state.get("attempt") or 1)
-    expected_report = expected_report_artifact(task)
+    expected_report = _work_output_policy.expected_report(task)
     session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
     envelope = {
         "provider": "processforge",
@@ -16527,11 +16365,11 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
     governed = "process_execution" in run or "process_execution" in task
     status = 0
     if not governed:
-        status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False, completion_id=receipt["receipt_id"]))
+        status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[_work_output_policy.expected_report(task)], dry_run=False, completion_id=receipt["receipt_id"]))
         print(output, end="")
         if status:
             return status
-    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": expected_report_artifact(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
+    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
     prepared_input.write_once(completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]})
     if governed:
         print(f"COLLECTED: {task_id}; governed stage transition remains required")
@@ -17278,7 +17116,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         forbidden = _context_contract_inputs.assignment_scope_items(raw_worker.get("forbidden_files"))
         read_allowed = _context_contract_inputs.assignment_scope_items(raw_worker.get("allowed_read_files"))
         workspace_access = normalize_workspace_access(raw_worker.get("workspace_access"))
-        outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
+        outputs = _context_contract_inputs.normalize_required_outputs(raw_worker.get("required_outputs"))
         writer = bool(raw_worker.get("writer", True))
         driver_id = str(raw_worker.get("runtime_driver") or default_driver)
         if "model" in raw_worker:
@@ -17342,7 +17180,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_in
     allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
     allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
     forbidden_files = _context_contract_inputs.assignment_scope_items(task.get("forbidden_files"))
-    required_outputs = normalize_required_outputs(task.get("required_outputs"))
+    required_outputs = _context_contract_inputs.normalize_required_outputs(task.get("required_outputs"))
     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
     prepared_instructions = [
@@ -17504,9 +17342,9 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
                 "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
                 "allowed_read_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
                 "forbidden_files": _context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
-                "required_outputs": normalize_required_outputs(worker.get("required_outputs")),
+                "required_outputs": _context_contract_inputs.normalize_required_outputs(worker.get("required_outputs")),
                 "workspace_access": normalize_workspace_access(worker.get("workspace_access")),
-                "expected_report_artifact": str(worker.get("expected_report_artifact") or default_expected_report_artifact(worker_id)),
+                "expected_report_artifact": str(worker.get("expected_report_artifact") or _work_output_policy.default_report(worker_id)),
                 "depends_on": sorted(worker_dependency_set(worker)),
             }
         )
@@ -17763,7 +17601,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     owner=str(worker.get("owner") or task_id),
                     role=str(worker.get("role") or "worker"),
                     writer="true" if bool(worker.get("writer", True)) else "false",
-                    required_output=normalize_required_outputs(worker.get("required_outputs")),
+                    required_output=_context_contract_inputs.normalize_required_outputs(worker.get("required_outputs")),
                     expected_report_language=str(worker.get("expected_report_language") or "en"),
                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
                     force_with_handoff=bool(plan.get("allow_write_scope_overlap", False) or as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
@@ -18086,7 +17924,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
     context_artifacts = normalize_context_artifacts(getattr(args, "context_artifact", []))
     required_sources = _context_contract_inputs.assignment_scope_items(getattr(args, "required_source", []))
     forbidden_files = _context_contract_inputs.assignment_scope_items([*as_list(getattr(args, "forbidden_file", [])), *as_list(getattr(args, "forbidden_glob", []))])
-    required_outputs = normalize_required_outputs(getattr(args, "required_output", []))
+    required_outputs = _context_contract_inputs.normalize_required_outputs(getattr(args, "required_output", []))
     if getattr(args, "execution_mode", None):
         task["execution_mode"] = normalize_execution_mode(args.execution_mode)
         if task["execution_mode"]["kind"] == "implementation":
@@ -18226,7 +18064,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
     if getattr(args, "dry_run", False):
         print(f"DRY-RUN: would complete task {task_id}")
         return 0
-    waivers = parse_required_output_waivers(getattr(args, "waive_required_output", []))
+    waivers = _work_output_policy.waivers(getattr(args, "waive_required_output", []))
     output_failures = [item.message for item in required_output_checks(project_root, task, waivers) if item.level == "FAIL"]
     if output_failures:
         raise SystemExit("FAIL: task required outputs are not complete: " + "; ".join(output_failures))
@@ -18250,10 +18088,10 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
 def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> str:
     """Fingerprint the task declaration and its declared verification inputs."""
     inputs: list[dict[str, Any]] = []
-    for output in normalize_required_outputs(task.get("required_outputs")):
+    for output in _context_contract_inputs.normalize_required_outputs(task.get("required_outputs")):
         if not bool(output.get("required", True)):
             continue
-        path = task_output_path(project_root, output)
+        path = _work_output_policy.task_path(project_root, output)
         item = {"id": str(output.get("id") or "output"), "path": rel(path, project_root) if path else "", "status": "missing"}
         if path and path.is_file():
             item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
@@ -18261,7 +18099,7 @@ def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> s
     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     expected_path = str(expected.get("artifact") or "")
     if expected_path:
-        path = task_output_path(project_root, {"path": expected_path})
+        path = _work_output_policy.task_path(project_root, {"path": expected_path})
         item = {"id": "expected-report", "path": _context_contract_inputs.normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
         if path and path.is_file():
             item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
@@ -18952,186 +18790,14 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
 
 
 
-def update_schema_type_matches(value: Any, expected: str) -> bool:
-    if expected == "object":
-        return isinstance(value, dict)
-    if expected == "array":
-        return isinstance(value, list)
-    if expected == "string":
-        return isinstance(value, str)
-    if expected == "integer":
-        return isinstance(value, int) and not isinstance(value, bool)
-    if expected == "number":
-        return isinstance(value, (int, float)) and not isinstance(value, bool)
-    if expected == "boolean":
-        return isinstance(value, bool)
-    if expected == "null":
-        return value is None
-    return True
 
 
-def update_resolve_schema_ref(schema: dict[str, Any], ref: str) -> dict[str, Any]:
-    if not ref.startswith("#/"):
-        raise ValueError(f"unsupported external ref {ref}")
-    node: Any = schema
-    for part in ref[2:].split("/"):
-        node = node[part]
-    if not isinstance(node, dict):
-        raise ValueError(f"ref {ref} does not resolve to schema object")
-    return node
 
 
-def validate_update_instance_against_schema(value: Any, node: dict[str, Any], root_schema: dict[str, Any], path: str) -> list[str]:
-    errors: list[str] = []
-    if "$ref" in node:
-        return validate_update_instance_against_schema(value, update_resolve_schema_ref(root_schema, str(node["$ref"])), root_schema, path)
-
-    all_of = node.get("allOf")
-    if isinstance(all_of, list):
-        for alternative in all_of:
-            if isinstance(alternative, dict):
-                errors.extend(
-                    validate_update_instance_against_schema(
-                        value,
-                        alternative,
-                        root_schema,
-                        path,
-                    )
-                )
-
-    any_of = node.get("anyOf")
-    if isinstance(any_of, list):
-        matches = sum(
-            1
-            for alternative in any_of
-            if isinstance(alternative, dict)
-            and not validate_update_instance_against_schema(value, alternative, root_schema, path)
-        )
-        if matches == 0:
-            errors.append(f"{path}: expected at least one anyOf alternative")
-
-    one_of = node.get("oneOf")
-    if isinstance(one_of, list):
-        matches = sum(
-            1
-            for alternative in one_of
-            if isinstance(alternative, dict)
-            and not validate_update_instance_against_schema(value, alternative, root_schema, path)
-        )
-        if matches != 1:
-            errors.append(f"{path}: expected exactly one oneOf alternative, got {matches}")
-
-    excluded = node.get("not")
-    if isinstance(excluded, dict) and not validate_update_instance_against_schema(
-        value,
-        excluded,
-        root_schema,
-        path,
-    ):
-        errors.append(f"{path}: matched forbidden not schema")
-
-    conditional = node.get("if")
-    if isinstance(conditional, dict):
-        condition_matches = not validate_update_instance_against_schema(
-            value,
-            conditional,
-            root_schema,
-            path,
-        )
-        branch = node.get("then") if condition_matches else node.get("else")
-        if isinstance(branch, dict):
-            errors.extend(
-                validate_update_instance_against_schema(
-                    value,
-                    branch,
-                    root_schema,
-                    path,
-                )
-            )
-
-    expected_type = node.get("type")
-    if isinstance(expected_type, list):
-        if not any(update_schema_type_matches(value, item) for item in expected_type):
-            errors.append(f"{path}: expected one of {expected_type}, got {type(value).__name__}")
-            return errors
-    elif isinstance(expected_type, str) and not update_schema_type_matches(value, expected_type):
-        errors.append(f"{path}: expected {expected_type}, got {type(value).__name__}")
-        return errors
-
-    if "const" in node and value != node["const"]:
-        errors.append(f"{path}: expected const {node['const']!r}")
-    if "enum" in node and value not in node["enum"]:
-        errors.append(f"{path}: expected one of {node['enum']!r}")
-    if "minimum" in node and isinstance(value, (int, float)) and value < node["minimum"]:
-        errors.append(f"{path}: expected minimum {node['minimum']}")
-    if "minLength" in node and isinstance(value, str) and len(value) < node["minLength"]:
-        errors.append(f"{path}: expected minLength {node['minLength']}")
-    if "minItems" in node and isinstance(value, list) and len(value) < node["minItems"]:
-        errors.append(f"{path}: expected minItems {node['minItems']}")
-    if "uniqueItems" in node and node["uniqueItems"] is True and isinstance(value, list):
-        normalized = [json.dumps(item, ensure_ascii=False, sort_keys=True) for item in value]
-        if len(normalized) != len(set(normalized)):
-            errors.append(f"{path}: expected uniqueItems")
-    if "minProperties" in node and isinstance(value, dict) and len(value) < node["minProperties"]:
-        errors.append(f"{path}: expected minProperties {node['minProperties']}")
-    if "pattern" in node and isinstance(value, str) and not re.fullmatch(str(node["pattern"]), value):
-        errors.append(f"{path}: does not match pattern {node['pattern']!r}")
-
-    if isinstance(value, dict):
-        required = node.get("required", [])
-        if isinstance(required, list):
-            for key in required:
-                if key not in value:
-                    errors.append(f"{path}: missing required key {key}")
-        properties = node.get("properties", {})
-        if isinstance(properties, dict):
-            for key, child_schema in properties.items():
-                if key in value and isinstance(child_schema, dict):
-                    errors.extend(validate_update_instance_against_schema(value[key], child_schema, root_schema, f"{path}.{key}"))
-        additional = node.get("additionalProperties", True)
-        if additional is False and isinstance(properties, dict):
-            for key in value:
-                if key not in properties:
-                    errors.append(f"{path}: unexpected key {key}")
-        elif isinstance(additional, dict) and isinstance(properties, dict):
-            for key, child_schema in value.items():
-                if key not in properties:
-                    errors.extend(validate_update_instance_against_schema(child_schema, additional, root_schema, f"{path}.{key}"))
-
-    if isinstance(value, list):
-        items_schema = node.get("items")
-        if isinstance(items_schema, dict):
-            for index, item in enumerate(value):
-                errors.extend(validate_update_instance_against_schema(item, items_schema, root_schema, f"{path}[{index}]"))
-
-    return errors
 
 
-def append_json_schema_checks(checks: list[Check], data: Any, schema_name: str, label: str) -> None:
-    schema_path = ROOT / "schemas" / schema_name
-    try:
-        schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        checks.append(check("FAIL", f"{label} schema {schema_name} could not be loaded: {exc}"))
-        return
-    try:
-        errors = validate_update_instance_against_schema(data, schema, schema, "$")
-    except (KeyError, ValueError) as exc:
-        checks.append(check("FAIL", f"{label} schema {schema_name} is unsupported: {exc}"))
-        return
-    for message in errors:
-        checks.append(check("FAIL", f"{label} schema validation failed: {message}"))
-    if not errors:
-        checks.append(check("PASS", f"{label} matches {schema_name}"))
 
 
-def require_json_schema_document(data: Any, schema_name: str, label: str) -> None:
-    """Fail an apply/release precondition when a governed document is invalid."""
-    checks: list[Check] = []
-    append_json_schema_checks(checks, data, schema_name, label)
-    failures = [item.message for item in checks if item.level == "FAIL"]
-    if failures:
-        raise SystemExit("FAIL: " + "; ".join(failures))
 
 
 def load_doctor_yaml(
@@ -19150,7 +18816,7 @@ def load_doctor_yaml(
         checks.append(check("FAIL", f"{label} must be a non-empty YAML object"))
         return None
     checks.append(check("PASS", f"{label} is valid YAML"))
-    append_json_schema_checks(checks, data, schema_name, label)
+    _update_schema_checks.append(checks, data, schema_name, label)
     return data
 
 
@@ -19389,7 +19055,7 @@ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> lis
     checks: list[Check] = []
     if not data:
         return [check("FAIL", f"{path} missing or invalid")]
-    append_json_schema_checks(checks, data, "update-site-overrides.schema.json", str(path))
+    _update_schema_checks.append(checks, data, "update-site-overrides.schema.json", str(path))
     overrides = data.get("overrides")
     if not isinstance(overrides, list):
         checks.append(check("FAIL", f"{path} overrides must be a list"))
@@ -19583,7 +19249,7 @@ def command_update_entity_sources_list(args: argparse.Namespace) -> int:
 
 def validate_normalized_update_manifest_data(data: dict[str, Any], path: Path) -> list[Check]:
     checks: list[Check] = []
-    append_json_schema_checks(checks, data, "normalized-update-manifest.schema.json", str(path))
+    _update_schema_checks.append(checks, data, "normalized-update-manifest.schema.json", str(path))
     if data.get("schema_version") != 1:
         checks.append(check("FAIL", f"{path} schema_version must be 1"))
     product = data.get("product") if isinstance(data.get("product"), dict) else {}
@@ -20428,7 +20094,7 @@ def command_update_doctor(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
     checks: list[Check] = []
     candidates = read_update_candidates(workplace_root)
-    append_json_schema_checks(checks, candidates, "update-candidates.schema.json", str(update_candidates_path(workplace_root)))
+    _update_schema_checks.append(checks, candidates, "update-candidates.schema.json", str(update_candidates_path(workplace_root)))
     notifications = {}
     if update_notifications_path(workplace_root).is_file():
         try:
@@ -20436,7 +20102,7 @@ def command_update_doctor(args: argparse.Namespace) -> int:
         except json.JSONDecodeError:
             notifications = {}
     if notifications:
-        append_json_schema_checks(checks, notifications, "update-notifications.schema.json", str(update_notifications_path(workplace_root)))
+        _update_schema_checks.append(checks, notifications, "update-notifications.schema.json", str(update_notifications_path(workplace_root)))
     staged_root = update_runtime_root(workplace_root) / "staged"
     checks.append(check("PASS" if staged_root.exists() or candidates.get("candidates") is not None else "WARN", "update runtime state readable"))
     return print_checks(checks)
@@ -20977,7 +20643,7 @@ def build_knowledge_resource_add_plan(
     resource_id = str(resource["id"])
     result = upsert_resource(resources, resource)
     manifest["package_root"] = package_root.root_id
-    require_json_schema_document(
+    _update_schema_checks.require(
         manifest,
         "package-manifest.schema.json",
         f"knowledge package {package_id}",
@@ -20987,7 +20653,7 @@ def build_knowledge_resource_add_plan(
         workplace_root,
         package_root.root_id,
     )
-    require_json_schema_document(
+    _update_schema_checks.require(
         index,
         "knowledge-resource-index.schema.json",
         f"knowledge package {package_id} resource index",
@@ -21954,7 +21620,7 @@ def upsert_registry_entry(path: Path, collection_key: str, entry: dict[str, Any]
         schema_path = ROOT / "schemas" / schema_name
         try:
             schema = json.loads(schema_path.read_text(encoding="utf-8"))
-            errors = validate_update_instance_against_schema(data, schema, schema, "$")
+            errors = _update_schema_checks.validate(data, schema, schema, "$")
         except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
             raise SystemExit(f"FAIL: registry schema validation unavailable for {path}: {exc}") from exc
         if errors:
@@ -22621,7 +22287,7 @@ def build_platform_authoring_plan(
     if contract_path.exists() and not force:
         raise SystemExit(f"FAIL: platform contract already exists: {contract_path}")
     contract = platform_contract_from_values(values)
-    require_json_schema_document(
+    _update_schema_checks.require(
         contract,
         "platform-contract.schema.json",
         f"platform {values['contract_id']} contract",
@@ -22711,7 +22377,7 @@ def build_platform_authoring_plan(
         candidate = contract
         if staged is not None:
             candidate = load_yaml_document(staged[contract_path])
-        require_json_schema_document(
+        _update_schema_checks.require(
             candidate,
             "platform-contract.schema.json",
             f"platform {values['contract_id']} staged contract",

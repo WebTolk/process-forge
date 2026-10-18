@@ -45,7 +45,8 @@ def main() -> int:
             task["required_outputs"][0]["path"] = report_rel
             core.save_task(project, task)
             with patch.object(Path, "read_text", guarded_read), patch.object(Path, "read_bytes", guarded_bytes):
-                assert core.task_output_path(project, {"path": report_rel}) is None
+                from processforge_core.work.outputs import WorkOutputPolicy
+                assert WorkOutputPolicy().task_path(project, {"path": report_rel}) is None
                 assert any(item.level == "FAIL" for item in core.required_output_checks(project, task))
                 assert core.task_verification_fingerprint(project, task).startswith("sha256:")
                 with contextlib.redirect_stdout(io.StringIO()):

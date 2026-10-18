@@ -18,7 +18,8 @@ def check_flow_state_markers(pf, root: Path) -> None:
     assert classified["project_types"] == [], classified
     assert classified["inactive_classifier_hints"] == [], classified
     assert pf.inactive_official_classifier_hints(None, project) == []
-    assert receipt in pf.list_project_files(project), "generic inventory must retain PF evidence"
+    from processforge_core.project.detection import ProjectDetectionService
+    assert receipt in ProjectDetectionService().files(project), "generic inventory must retain PF evidence"
     assert not any(path == ".pf" or path.startswith(".pf/") for path in pf.project_available_paths(project))
 
     (project / "main.py").write_text("pass\n", encoding="utf-8")
@@ -58,7 +59,8 @@ def check_marker_parity(pf, root: Path) -> None:
         receipt.parent.mkdir(parents=True)
         receipt.write_text("{}\n", encoding="utf-8")
         actual = pf.classify_project(project)
-        with patch.object(pf, "list_classifier_files", pf.list_project_files):
+        from processforge_core.project.detection import ProjectDetectionService
+        with patch.object(pf, "list_classifier_files", ProjectDetectionService().files):
             previous = pf.classify_project(project)
         assert actual == previous, (actual, previous)
         assert actual["loaded_classifiers"] == ["fixture.parity"], actual
