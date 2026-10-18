@@ -1,0 +1,36 @@
+{
+  "observed_at": "2026-10-18T05:15:58.854446+00:00",
+  "status": "passed",
+  "version": "1.2.0",
+  "source": {
+    "commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+    "dirty": false,
+    "tree": "4e0255cb70b9bfbe9007ed4b78908e841c070b95",
+    "vcs": "git"
+  },
+  "archive": "processforge-1.2.0.zip",
+  "archive_bytes": 2538757,
+  "archive_sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+  "sidecar": "processforge-1.2.0.manifest.json",
+  "sidecar_sha256": "f56162602030be36115a39283d71f5ac5dad1533b0659b69ee186b41901db8ac",
+  "entries": 1309,
+  "managed_files": 1308,
+  "all_sidecar_entry_hashes_verified": true,
+  "all_payload_bytes_equal_clean_source": true,
+  "accepted_dev_delta": [
+    "checksums/processforge.sha256",
+    "processforge-core.manifest.json",
+    "updates/processforge-update-index.yaml"
+  ],
+  "runtime_code_bytes_equal_accepted_dev": true,
+  "non_generated_entries": 1308,
+  "unchanged_non_generated_entries": 1306,
+  "core_manifest_changed_payload_entries": [
+    "checksums/processforge.sha256",
+    "updates/processforge-update-index.yaml"
+  ],
+  "private_or_derived_archive_entries": [],
+  "sidecar_outside_zip": true,
+  "source_date_epoch_is_commit_timestamp": true,
+  "full_source_and_consumer_qualification": "Required separately; this receipt is identity/parity only"
+}

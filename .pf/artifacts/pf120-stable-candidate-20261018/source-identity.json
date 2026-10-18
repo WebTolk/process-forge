@@ -1,0 +1,16 @@
+{
+  "version": "1.2.0",
+  "source": {
+    "commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+    "tree": "4e0255cb70b9bfbe9007ed4b78908e841c070b95",
+    "dirty": false,
+    "vcs": "git"
+  },
+  "clean_detached_worktree": true,
+  "line_endings": "LF for canonical package",
+  "outside_pf_payload_diff_from_accepted_dev_source": [
+    "checksums/processforge.sha256",
+    "updates/processforge-update-index.yaml"
+  ],
+  "checksum_inventory_sha256": "2c9d4ed59a2cd2967cf5ef25d1453c901585caa9b776ebe3120f7eaa107a2a89"
+}

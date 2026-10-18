@@ -1,0 +1,42 @@
+{
+  "status": "passed",
+  "source_commit": "c4d66496464179750aa0448d11e4d2e797c2d2ff",
+  "suite": "supervisor-stress",
+  "timeout_scale": 2,
+  "all_suite_cases_in_order": true,
+  "passed": 6,
+  "failed": 0,
+  "elapsed_seconds": 157.93275540001923,
+  "cases": [
+    {
+      "name": "smoke_supervisor_final_drain",
+      "status": "PASS",
+      "elapsed_seconds": 22.07
+    },
+    {
+      "name": "smoke_process_supervisor_lifecycle",
+      "status": "PASS",
+      "elapsed_seconds": 9.08
+    },
+    {
+      "name": "smoke_process_supervisor",
+      "status": "PASS",
+      "elapsed_seconds": 12.75
+    },
+    {
+      "name": "smoke_shell_launched_agents_supervisor_fix",
+      "status": "PASS",
+      "elapsed_seconds": 13.92
+    },
+    {
+      "name": "smoke_shell_agent_heartbeat_contract",
+      "status": "PASS",
+      "elapsed_seconds": 30.48
+    },
+    {
+      "name": "smoke_full_shell_agents_supervisor",
+      "status": "PASS",
+      "elapsed_seconds": 68.47
+    }
+  ]
+}

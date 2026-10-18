@@ -1,0 +1,10 @@
+{
+  "label": "canonical-pack",
+  "started_at": "2026-10-18T04:49:21.199508+00:00",
+  "finished_at": "2026-10-18T04:49:34.420250+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 13.220688099972904,
+  "raw_sha256": "be85c21aea5a8dbba01de55557d41dcc2e5065189dccd515c9730dc00f53bab8",
+  "raw_bytes": 207,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/canonical-pack.log"
+}

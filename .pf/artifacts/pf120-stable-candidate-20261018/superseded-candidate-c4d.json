@@ -1,0 +1,24 @@
+{
+  "observed_at": "2026-10-18T04:32:23.321153+00:00",
+  "status": "superseded_incomplete",
+  "candidate_source": "c4d66496464179750aa0448d11e4d2e797c2d2ff",
+  "candidate_zip_sha256": "4bcd22509ff15bd4c46febd078e3da596da0f0bf6a9eeb4104b2b75ce6aaaa12",
+  "native_partial_receipt": {
+    "label": "archive-public-full",
+    "started_at": "2026-10-18T04:19:23.567655+00:00",
+    "finished_at": "2026-10-18T04:31:33.375452+00:00",
+    "exit_code": 4294967295,
+    "elapsed_seconds": 729.8077282999875,
+    "raw_sha256": "0e1fe6ce430aaca6b157790786ed2b579f376db1102277f5659ab695fe75aa29",
+    "raw_bytes": 2796,
+    "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/baseline-c4d/archive-public-full.log"
+  },
+  "reason": "Source local update index still1.1.0 while release VERSION1.2.0",
+  "intentional_owned_qualifier_stop": true,
+  "remaining_original_qualifier_processes": 0,
+  "source_full_baseline": "274PASS plus3 public checks",
+  "stress_baseline": "6PASS",
+  "consumer_full_pass_claimed": false,
+  "all_baseline_bytes_and_receipts_preserved": true,
+  "required_next": "Separate narrow metadata correction, new commit/archive/hash and complete qualification"
+}

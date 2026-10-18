@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "product": {
+    "id": "processforge",
+    "name": "ProcessForge"
+  },
+  "generated_at": "2026-10-18T04:49:51.405664Z",
+  "channels": {
+    "stable": {
+      "latest": "1.2.0"
+    }
+  },
+  "subjects": [
+    {
+      "type": "processforge_core",
+      "id": "processforge",
+      "name": "ProcessForge",
+      "versions": [
+        {
+          "version": "1.2.0",
+          "channels": [
+            "stable"
+          ],
+          "stability": "stable",
+          "prerelease": false,
+          "released_at": "2026-10-17",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.2.0",
+            "commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.2.0"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.zip",
+              "size": 2538757,
+              "sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "core",
+              "summary": "Intermediate concrete-reader, lifecycle and composition refactoring checkpoint"
+            },
+            {
+              "area": "journals",
+              "summary": "Separate local SQLite event and hook journals; explicit legacy-history cutover"
+            },
+            {
+              "area": "context",
+              "summary": "Bounded safe YAML reuse and shared compact Work metadata reads"
+            },
+            {
+              "area": "runtime",
+              "summary": "Scheduler health separated from task outcomes; bounded recovery and staging cleanup"
+            },
+            {
+              "area": "hooks",
+              "summary": "Opt-in automatic Garage hooks and governed Forge lifecycle"
+            }
+          ],
+          "migration": {
+            "required": true,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.2.0/docs/releases/1.2.0-migration.md"
+          }
+        }
+      ]
+    }
+  ]
+}

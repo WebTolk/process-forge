@@ -1,0 +1,17 @@
+# Primary review: canonical 1.2.0 candidate
+
+Result: PASS within the artifact-preparation scope. Reviewed 2026-10-18T05:41:28.448232+00:00 after implementation and complete mandatory qualification. This is primary review; immutable capsule forbids subagents, so no independent review is claimed.
+
+Exact source `f975d3a7f54100c310bf3dced0f0bbbc256a7738`, tree `4e0255cb70b9bfbe9007ed4b78908e841c070b95`, ZIP `6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca`. Clean source and every archive/sidecar entry match. Relative to accepted dev8ea152b, only the local update index, its checksum and generated Core provenance change. The remaining1306 non-generated entries, including executable runtime code, are identical.
+
+Closed finding: `self-update-check` reported local CURRENT/LATEST1.1.0 while VERSION was1.2.0. A separate terminal Work delivered the two-file metadata correction in this exact source commit. Six native source/archive cases now verify version/default-current/default-latest1.2.0 and explicit previous1.1.0 discovery/migration. Historical records and official endpoint were preserved. See iteration-03-local-update-index.md and the correction handoff. The source full suite alone had not covered this relationship; the added release-preparation gate records that limit.
+
+All274 source commands ran in native catalogue order, with3 public checks; all6 supervisor-stress cases passed. Exact ZIP passed native full extracted-archive qualification after source/stress, with no selected-only or skip profile. Consumer proof is its native outer full success; successful inner stdout and temporary per-case report are not retained by that CLI. No source result substitutes for consumer or installed acceptance.
+
+Promotion review: five exact follow-up files, two QA checksum entries, strict single-version/channel/prerelease/yanked/immutable-URL/hash/size checks. Six existing positive checks pass and seven malformed feeds reject as expected. Proposed feed, sidecar and patch bind to this exact archive. Patch apply-check and whitespace pass. Historical1.1.0 metadata remains preserved. Source binding uses the literal commit; the actual public tag and HTTPS readback remain future publication checks. The actual native sidecar upload SHA is separate from possible Git text normalization of the historical copy.
+
+Actual public1.1.0 CLI discovers the proposed1.2.0 URL/SHA with migration_required=true in an isolated file-provider fixture. Generic update apply and Core apply refuse without confirmation before mutation; fixture/Core tree hashes remain unchanged. The explicitly waived old1.1.0 discrepancy was not reopened.
+
+Publication order matches maintainer policy: explicit approval, exact tag, immutable ZIP/sidecar plus hash readback, metadata commit/channel, previous-client HTTPS discovery. No live product/channel/device changes occurred in this parent scope. Scope and lifecycle remain native PF; approved prior stage artifacts and terminal correction/dev Work are preserved.
+
+Residual limits: this is an intermediate OOP checkpoint, qualified on Windows/current Python and native fixtures. It does not establish Linux/macOS/all-Python or new real provider-worker/device acceptance. Bounded shutdown history, partial metrics and optional fixture limits remain explicit in release notes. Previous actual connected-host evidence belongs to installed8ea152b; it is not renamed as fresh installed acceptance of f975d3a.

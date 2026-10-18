@@ -1,0 +1,10 @@
+{
+  "label": "promotion-checksum",
+  "started_at": "2026-10-18T04:51:05.620854+00:00",
+  "finished_at": "2026-10-18T04:51:06.464672+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.8437289000139572,
+  "raw_sha256": "3de22b720cb66cb7a18225ff56f193b04d1768ef93d84ade54309630668e1564",
+  "raw_bytes": 35,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/promotion-checksum.log"
+}

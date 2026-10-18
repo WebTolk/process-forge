@@ -1,0 +1,10 @@
+{
+  "label": "promotion-sidecar-outside",
+  "started_at": "2026-10-18T04:51:06.251557+00:00",
+  "finished_at": "2026-10-18T04:51:06.754705+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.5030902000144124,
+  "raw_sha256": "96d51feb01f7231f7dcb6b0a3a4231a5b3bc37218eeb8edabad6033197cb3315",
+  "raw_bytes": 71,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/promotion-sidecar-outside.log"
+}

@@ -1,0 +1,36 @@
+{
+  "observed_at": "2026-10-18T05:45:16.592575+00:00",
+  "status": "passed",
+  "doctors": [
+    {
+      "label": "task-doctor",
+      "exit_code": 0,
+      "status_counts": {
+        "PASS": 15
+      },
+      "native_result": "exit0",
+      "evidence": "task-doctor.json"
+    },
+    {
+      "label": "run-doctor",
+      "exit_code": 0,
+      "status_counts": {
+        "PASS": 22
+      },
+      "native_result": "exit0",
+      "evidence": "run-doctor.json"
+    },
+    {
+      "label": "continuation-doctor",
+      "exit_code": 0,
+      "status_counts": {
+        "PASS": 111
+      },
+      "native_result": "exit0",
+      "evidence": "continuation-doctor.json"
+    }
+  ],
+  "run_completed": true,
+  "assignment_done": true,
+  "blockers": []
+}

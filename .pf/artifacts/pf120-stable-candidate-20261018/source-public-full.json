@@ -1,0 +1,10 @@
+{
+  "label": "source-public-full",
+  "started_at": "2026-10-18T04:45:15.918233+00:00",
+  "finished_at": "2026-10-18T05:12:24.706616+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1628.788345900015,
+  "raw_sha256": "cc9b732321aeb2c3c5829a0a245e6abadfad3c5b629809eca71d6286a46ce7be",
+  "raw_bytes": 101436,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/source-public-full.log"
+}

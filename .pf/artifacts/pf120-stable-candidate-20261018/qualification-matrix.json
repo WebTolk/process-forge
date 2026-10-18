@@ -1,0 +1,56 @@
+{
+  "observed_at": "2026-10-18T05:41:28.448232+00:00",
+  "status": "passed",
+  "source_commit": "f975d3a7f54100c310bf3dced0f0bbbc256a7738",
+  "source_tree": "4e0255cb70b9bfbe9007ed4b78908e841c070b95",
+  "archive_sha256": "6b4d3b8b5996c3cd26002884823066e973ef508ecc340ea651deaff6594c19ca",
+  "sidecar_sha256": "f56162602030be36115a39283d71f5ac5dad1533b0659b69ee186b41901db8ac",
+  "gates": [
+    {
+      "id": "source-full-public",
+      "status": "passed",
+      "native_commands": 274,
+      "public_checks": 3,
+      "evidence": "source-full-results.json"
+    },
+    {
+      "id": "supervisor-stress",
+      "status": "passed",
+      "native_cases": 6,
+      "evidence": "supervisor-stress-results.json"
+    },
+    {
+      "id": "archive-full-consumer",
+      "status": "passed",
+      "evidence": "archive-consumer-results.json"
+    },
+    {
+      "id": "archive-composition-and-provenance",
+      "status": "passed",
+      "entries": 1309,
+      "evidence": "archive-identity.json"
+    },
+    {
+      "id": "promotion-metadata",
+      "status": "passed",
+      "positive_checks": 6,
+      "expected_rejections": 7,
+      "evidence": "metadata-qualification.json"
+    },
+    {
+      "id": "source-archive-local-version-coherence",
+      "status": "passed",
+      "cases": 6,
+      "evidence": "local-version-coherence.json"
+    },
+    {
+      "id": "previous-client-discovery-and-confirmation",
+      "status": "passed",
+      "evidence": "previous-client-discovery.json"
+    }
+  ],
+  "baseline_c4d_excluded_from_final_acceptance": true,
+  "review_kind": "primary review; subagents forbidden by immutable capsule",
+  "public_tag_assets_channel_and_https_acceptance": "not performed; requires explicit maintainer approval",
+  "new_device_apply_runtime_restart_or_actual_host_acceptance": false
+}

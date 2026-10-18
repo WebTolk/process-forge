@@ -1,0 +1,10 @@
+{
+  "label": "source-release-catalog",
+  "started_at": "2026-10-18T04:02:35.637971+00:00",
+  "finished_at": "2026-10-18T04:02:37.229939+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.5918990999925882,
+  "raw_sha256": "0524e7be3f7b0b45feb5f7d85dd3dd2266ae6bd0621feb4e8767661cc37d30b9",
+  "raw_bytes": 18119,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/baseline-c4d/source-release-catalog.log"
+}

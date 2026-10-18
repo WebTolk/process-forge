@@ -1,0 +1,10 @@
+{
+  "label": "promotion-stable-links",
+  "started_at": "2026-10-18T04:51:05.767561+00:00",
+  "finished_at": "2026-10-18T04:51:06.011733+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 0.24410890002036467,
+  "raw_sha256": "cae1fae9975f3ca2cb5eec4ec32c2e9bf9e508d5a0ca37322570f91a1391a63d",
+  "raw_bytes": 69,
+  "raw_retained": ".pf/tmp/pf120-stable-candidate-20261018/promotion-stable-links.log"
+}
