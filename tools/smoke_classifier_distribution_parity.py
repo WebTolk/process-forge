@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import tempfile
+import shutil
 from pathlib import Path
 
 from smoke_domain_neutral_core_helpers import load_processforge
@@ -114,6 +115,24 @@ project_classifiers:
         (workplace_project / "app.py").write_text("print('fixture')\n", encoding="utf-8")
         workplace_result = pf.classify_project(workplace_project, workplace_manifest=manifest)
         assert workplace_result["matched_rules"][0]["source"] == "workplace.yaml", workplace_result
+
+        nested_workplace = distribution_a / ".pf" / "tmp" / "nested-workplace"
+        shutil.copytree(workplace, nested_workplace)
+        nested_manifest = nested_workplace / "workplace.yaml"
+        nested_result = pf.classify_project(workplace_project, workplace_manifest=nested_manifest)
+        assert nested_result["matched_rules"][0]["source"] == "workplace.yaml", nested_result
+        assert classification_semantics(nested_result) == classification_semantics(workplace_result)
+
+        contained_classifier = make_distribution(nested_workplace / "core", "fixture.contained")
+        for distributed_classifier in (contained_classifier, classifier_b):
+            result = pf.classify_project(
+                workplace_project, workplace_manifest=nested_manifest,
+                explicit_classifier_paths=[distributed_classifier],
+            )
+            assert result["matched_rules"][0]["source"] == expected_source, result
+        assert pf.project_classifier_source_label(
+            local_classifier, project, workplace_manifest=nested_manifest
+        ) == ".pf/project-classifiers/local.yaml"
 
     print("PASS: smoke_classifier_distribution_parity")
 

@@ -3699,9 +3699,15 @@ def processforge_distribution_root_for_path(path: Path) -> Path | None:
     return None
 
 
-def project_classifier_source_label(path: Path, project_root: Path) -> str:
+def project_classifier_source_label(
+    path: Path, project_root: Path, *, workplace_manifest: Path | None = None
+) -> str:
     """Render classifier provenance stably across source and installed layouts."""
     distribution_root = processforge_distribution_root_for_path(path)
+    if workplace_manifest is not None and distribution_root is not None:
+        workplace_root = workplace_manifest.parent.resolve()
+        if path_is_relative_to(path, workplace_root) and not path_is_relative_to(distribution_root, workplace_root):
+            distribution_root = None
     if path_is_relative_to(path, project_root):
         if distribution_root and distribution_root == project_root.resolve():
             return rel(path, distribution_root)
@@ -3833,7 +3839,7 @@ def classify_project(
                     "classifier": classifier_id,
                     "rule": str(rule.get("id") or "rule"),
                     "confidence": rule_confidence,
-                    "source": project_classifier_source_label(path, project_root),
+                    "source": project_classifier_source_label(path, project_root, workplace_manifest=workplace_manifest),
                 }
             )
     inactive_hints = inactive_official_classifier_hints(workplace_manifest, project_root, files) if not matched_rules else []
