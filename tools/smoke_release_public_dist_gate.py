@@ -19,6 +19,31 @@ def failures(root: Path) -> list[str]:
 
 
 def main() -> int:
+    accepted = (
+        "On Windows PowerShell:\n\n```powershell\npython bin/pf.py version\n```",
+        "В Windows PowerShell:\n\n```powershell\npython bin/pf.py version\n```",
+        "The CLI does not require PF Runtime,\nPowerShell or Git.",
+        "Файловый режим не требует PF Runtime,\nPowerShell или Git.",
+        "Node.js, PHP or PowerShell is not a general CLI dependency.",
+        "Node.js, PHP и PowerShell не являются общими зависимостями CLI.",
+        "Invoke Python directly without activating\nPowerShell scripts or changing execution policy.",
+        "Вызывайте Python напрямую, без активации сценариев\nPowerShell и изменения политики исполнения.",
+    )
+    rejected = (
+        "Run install.ps1",
+        "PowerShell is not required, but run legacy.PS1",
+        "Run tools/setup.ps1 --apply",
+        "[Legacy installer](install.Ps1)",
+        "```powershell\npowershell -File install.ps1\n```",
+    )
+    for text in accepted:
+        assert not processforge.forbidden_powershell_reference(text), text
+    for text in rejected:
+        assert processforge.forbidden_powershell_reference(text), text
+    for name in ("getting-started/installation.md", "known-limitations.md", "requirements.md"):
+        for language in ("", "ru"):
+            path = ROOT / "docs" / language / name
+            assert not processforge.forbidden_powershell_reference(path.read_text(encoding="utf-8")), path
     with tempfile.TemporaryDirectory(prefix="pf-public-dist-") as raw:
         root = Path(raw)
         (root / "VERSION").write_text("1.1.0\n", encoding="utf-8")
@@ -29,7 +54,7 @@ def main() -> int:
         assert not failures(root), failures(root)
         (dist / "processforge-1.0.9.zip").write_text("stale", encoding="utf-8")
         assert any("processforge-1.0.9.zip" in message for message in failures(root)), failures(root)
-    print("PASS: public release gate accepts only current generated dist artifacts")
+    print("PASS: public gate accepts current EN/RU Python guidance, rejects wrappers and stale dist artifacts")
     return 0
 
 

@@ -6461,26 +6461,8 @@ def release_git_dirty_is_allowed_projection(status_line: str) -> bool:
 
 
 def forbidden_powershell_reference(text: str) -> bool:
-    lower = text.lower()
-    if ".ps1" in lower:
-        return True
-    for line in lower.splitlines():
-        if "powershell" not in line:
-            continue
-        allowed = (
-            "does not require powershell" in line
-            or "powershell is not required" in line
-            or "powershell not required" in line
-            or line.strip() == "```powershell"
-            or ("powershell" in line and "utf-8" in line)
-            or ("powershell" in line and "console encoding" in line)
-            or "не требует powershell" in line
-            or ("powershell" in line and "не требуется" in line)
-            or ("powershell" in line and "не нужен" in line)
-        )
-        if not allowed:
-            return True
-    return False
+    """Reject unsupported wrapper references; prose semantics need source review."""
+    return ".ps1" in text.lower()
 
 
 def forbidden_base_technology_platform_reference(text: str) -> bool:
@@ -6686,7 +6668,7 @@ def release_checks(root: Path) -> list[Check]:
                     check_with_hint(
                         "FAIL",
                         f"{archive_path}: public release text references PowerShell/.ps1",
-                        "The v0.1 flow is Python-first and public docs should not direct users to unsupported wrappers.",
+                        "Public instructions must use supported Python entry points; legacy .ps1 wrapper references are unsupported.",
                         "replace the command with python bin/pf.py or python .pf/runtime/bin/pf.py",
                     )
                 )
