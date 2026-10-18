@@ -1,0 +1,4 @@
+{
+  "source": "def rel(path: Path, root: Path) -> str:\r\n    try:\r\n        return path.relative_to(root).as_posix()\r\n    except ValueError:\r\n        return path.as_posix()",
+  "ast": "FunctionDef(name='rel', args=arguments(args=[arg(arg='path', annotation=Name(id='Path', ctx=Load())), arg(arg='root', annotation=Name(id='Path', ctx=Load()))]), body=[Try(body=[Return(value=Call(func=Attribute(value=Call(func=Attribute(value=Name(id='path', ctx=Load()), attr='relative_to', ctx=Load()), args=[Name(id='root', ctx=Load())]), attr='as_posix', ctx=Load())))], handlers=[ExceptHandler(type=Name(id='ValueError', ctx=Load()), body=[Return(value=Call(func=Attribute(value=Name(id='path', ctx=Load()), attr='as_posix', ctx=Load())))])])], returns=Name(id='str', ctx=Load()))"
+}

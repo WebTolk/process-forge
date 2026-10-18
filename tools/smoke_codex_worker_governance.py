@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import processforge as pf
+from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from codex_exec_worker import codex_config_args, managed_hook_trust_args, prompt_payload
 
 
@@ -46,7 +47,7 @@ def main() -> int:
         writable = task(writer=True, code=True, artifacts=True)
         pf.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
 
-        driver = pf.default_runtime_driver_documents()["codex-exec"]
+        driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
         command, _paths = pf.build_worker_process_command(project, writable, driver)
         environment = command["command"]["environment"]
         if environment.get("PF_CODEX_SANDBOX") != "workspace-write":

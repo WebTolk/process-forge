@@ -2,17 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-
-def _as_list(value: Any) -> list[Any]:
-    return value if isinstance(value, list) else []
+from processforge_core.common.values import as_list, string_list
 
 
-def _string_list(value: Any) -> list[str]:
-    if isinstance(value, list):
-        return [str(item) for item in value if str(item).strip()]
-    if isinstance(value, str) and value.strip():
-        return [item.strip() for item in value.split(",") if item.strip()]
-    return []
+
+
 
 
 class ProcessArtifactDeclarationPolicy:
@@ -22,7 +16,7 @@ class ProcessArtifactDeclarationPolicy:
         definitions = process.get("artifact_definitions")
         if isinstance(definitions, dict):
             return {str(key) for key in definitions.keys()}
-        return {str(item.get("id")) for item in _as_list(definitions) if isinstance(item, dict) and item.get("id")}
+        return {str(item.get("id")) for item in as_list(definitions) if isinstance(item, dict) and item.get("id")}
 
     def declared_ids(self, process: dict[str, Any]) -> set[str]:
         ids = self.defined_ids(process)
@@ -38,7 +32,7 @@ class ProcessArtifactDeclarationPolicy:
 
     def produced_ids(self, process: dict[str, Any]) -> set[str]:
         produced: set[str] = set()
-        for stage in _as_list(process.get("stages")):
+        for stage in as_list(process.get("stages")):
             if isinstance(stage, dict):
-                produced.update(str(item) for item in _string_list(stage.get("produced_artifacts")))
+                produced.update(str(item) for item in string_list(stage.get("produced_artifacts")))
         return produced

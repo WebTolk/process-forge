@@ -1,0 +1,1498 @@
+{
+  "status": "passed",
+  "total": 245,
+  "passed": 245,
+  "native_exception_cases": 20,
+  "groups": {
+    "artifacts": 12,
+    "authoring": 31,
+    "boundary": 8,
+    "drivers": 58,
+    "evolve": 52,
+    "primitives": 42,
+    "sites": 42
+  },
+  "source_sha256": {
+    "tools/processforge.py": "7c78ee188aa37c96a6d72bbfa81fb76a34cb8d61e9de21a9b3fadf54cb200ab5",
+    "src/processforge_core/common/checks.py": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+    "src/processforge_core/common/ids.py": "ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8",
+    "src/processforge_core/common/values.py": "6eccd5af14370433f8e49611f3a38f262a5f2a86ce9447f30ccfb51a3bde509c",
+    "src/processforge_core/process_catalog/authoring.py": "e2b4791ae5200d9a3404f654676fdfd13cabc4b5c3bc542ae7f2a2c9bafcc127",
+    "src/processforge_core/process_catalog/evolution.py": "84fbfa98942a73a392c03ca8ceb3da39461e2b0e75dc7963a9d33bb45169a50f",
+    "src/processforge_core/runtime/drivers.py": "b273cb7da6197b94596e62323dfca551eeb22664fc7d4d474968e3c62de12d25",
+    "src/processforge_core/maintenance/sites.py": "4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7",
+    "src/processforge_core/process_catalog/artifacts.py": "3c12bf127fc08105bddc2332cd6c21f8ad2118ef2af479948f211f101f9b7bd3"
+  },
+  "checks": [
+    {
+      "group": "primitives",
+      "case": "safe_id:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:7",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:8",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "safe_id:9",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:4",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:6",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:7",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:8",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "title_from_id:9",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "as_list:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "string_list:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "check-uppercase",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "primitives",
+      "case": "check-native-error",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "boundary",
+      "case": "mutable Check fields/repr",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "evolve",
+      "case": "defaults:False",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:10",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:False:11",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "defaults:True",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:10",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "normalize:True:11",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:10",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:11",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:False:12",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:10",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:11",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "evolve",
+      "case": "validate:True:12",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "defaults:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "defaults:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "defaults:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "defaults:3",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "normalize:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "build:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "transitions:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "transitions:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "transitions:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "transitions:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "transitions:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "transitions:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "boundaries:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "boundaries:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "boundaries:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "boundaries:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "authoring",
+      "case": "boundaries:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "boundary",
+      "case": "transition return shared alias",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "boundary",
+      "case": "authoring fresh defaults",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "boundary",
+      "case": "evolve fresh defaults",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "drivers",
+      "case": "documents",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "registry",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:0:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:0:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:1:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:1:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:2:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:2:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:3:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:3:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:4:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:4:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:5",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:5:None",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:5:python",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:6:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:6:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:7",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:7:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:7:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:8",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:8:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:8:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:9",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:9:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:9:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:10",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:10",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:10:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:10:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:11",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:11",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:11:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:11:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "limits:12",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "drivers",
+      "case": "validate:12",
+      "passed": true,
+      "outcome": "exception"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:12:None",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "readiness:12:python",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "placeholders:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "placeholders:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "placeholders:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "drivers",
+      "case": "placeholders:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "boundary",
+      "case": "driver fresh defaults",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:5",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_source_kind:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_source_id:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "update_site_policy:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "location:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "record:6",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "override:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "override:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "override:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "override:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "override:4",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "sites",
+      "case": "subject-policy-merge",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "boundary",
+      "case": "site shallow policy alias/mutation",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "sites",
+      "case": "stable-key",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "defined_ids:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "declared_ids:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "produced_ids:0",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "defined_ids:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "declared_ids:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "produced_ids:1",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "defined_ids:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "declared_ids:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "produced_ids:2",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "defined_ids:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "declared_ids:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "artifacts",
+      "case": "produced_ids:3",
+      "passed": true,
+      "outcome": "result"
+    },
+    {
+      "group": "boundary",
+      "case": "direct Core no CLI/Host imports",
+      "passed": true,
+      "outcome": "contract"
+    },
+    {
+      "group": "boundary",
+      "case": "copied normal Core without repo/CLI/Host",
+      "passed": true,
+      "outcome": "contract"
+    }
+  ]
+}

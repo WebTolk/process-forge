@@ -81,6 +81,32 @@ from processforge_core.sqlite_storage import JournalError
 from processforge_core.configuration.parameters import ParameterMergePolicy
 from processforge_core.configuration.resolution import ConfigurationResolver
 
+from processforge_core.common.checks import Check, check
+from processforge_core.common.ids import safe_id, title_from_id
+from processforge_core.common.values import string_list
+from processforge_core.process_catalog.authoring import ProcessAuthoringDefinitionBuilder
+from processforge_core.process_catalog.evolution import (
+    EVOLVE_MODES,
+    EVOLVE_TIMINGS,
+    EVOLVE_SCOPES,
+    EVOLVE_CANDIDATE_TARGETS,
+    ProcessEvolutionPolicy,
+)
+from processforge_core.runtime.drivers import (
+    RESERVED_WORKER_ENV_KEYS,
+    RUNTIME_DRIVER_PLACEHOLDERS,
+    RuntimeDriverDefinitionPolicy,
+)
+from processforge_core.maintenance.sites import (
+    UPDATE_SOURCE_PUBLIC_KEYS,
+    UPDATE_SOURCE_LOCAL_KEYS,
+    UpdateSitePolicy,
+)
+
+_process_evolution_policy = ProcessEvolutionPolicy()
+_process_authoring_definition_builder = ProcessAuthoringDefinitionBuilder()
+_runtime_driver_definition_policy = RuntimeDriverDefinitionPolicy()
+_update_site_policy = UpdateSitePolicy()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -275,22 +301,6 @@ DIRECTOR_OFFICE_DEFAULTS = {
     "runtime_path": ".pf/director/runtime",
 }
 
-RESERVED_WORKER_ENV_KEYS = {
-    "PF_RUN_ID",
-    "PF_TASK_ID",
-    "PF_AGENT_RUN_DIR",
-    "PF_AGENT_EXIT_PATH",
-    "PF_AGENT_MODEL",
-    "PF_AGENT_REASONING_EFFORT",
-    "PF_PROJECT_ROOT",
-    "PF_RUNTIME_DRIVER_ID",
-    "PF_WORKSPACE_ACCESS_FILE",
-    "PF_WORKER_RUN_ID",
-    "PF_WORKER_TASK_ID",
-    "PF_WORKER_ATTEMPT",
-    "PF_PREPARED_INPUT_FILE",
-    "PF_PREPARED_INPUT_SHA256",
-}
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
 GLOBAL_AGENT_SECTION_END = "<!-- PROCESSFORGE:END -->"
@@ -493,21 +503,6 @@ LOCAL_PATH_PATTERNS = [
     re.compile("/" + "srv" + "/"),
 ]
 
-EVOLVE_MODES = {"disabled", "optional", "required"}
-EVOLVE_TIMINGS = {"end_of_stage", "end_of_task", "end_of_run"}
-EVOLVE_SCOPES = {"project", "workplace", "package", "platform", "core"}
-EVOLVE_CANDIDATE_TARGETS = {
-    "knowledge_package",
-    "template_package",
-    "process_definition",
-    "delivery_profile",
-    "project_rule",
-    "workplace_rule",
-    "platform_contract",
-    "core_docs",
-    "core_schema",
-    "regression_check",
-}
 EVOLVE_APPLICABILITY_SCOPES = {"project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"}
 EVOLVE_GENERALIZATION_LEVELS = {
     "narrow_observation",
@@ -548,10 +543,6 @@ DEFAULT_PATH_CONSTANTS = {
 PATH_CONSTANT_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 
 
-@dataclass
-class Check:
-    level: str
-    message: str
 
 
 @dataclass
@@ -1207,9 +1198,6 @@ class PackageRootResolution:
     entry: dict[str, Any] | None = None
 
 
-def safe_id(value: str, default: str = "project") -> str:
-    cleaned = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
-    return cleaned or default
 
 
 def rel(path: Path, root: Path) -> str:
@@ -1858,193 +1846,8 @@ def dict_entries_from_answers(container: Any, item_label: str, scope: str) -> li
     return entries
 
 
-def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
-    return {
-        "manual": {
-            "schema_version": 1,
-            "id": "manual",
-            "title": "Manual Worker Execution",
-            "kind": "manual",
-            "behavior": {
-                "create_worker_prompt": True,
-                "create_capsule": True,
-                "do_not_start_process": True,
-            },
-        },
-        "generic-shell": {
-            "schema_version": 1,
-            "id": "generic-shell",
-            "title": "Generic Shell Runtime",
-            "kind": "shell",
-            "prepared_lifecycle_wrapper": True,
-            "command": {
-                "executable": "{executable}",
-                "args": ["{worker_prompt_path}", "{capsule_path}"],
-            },
-            "working_directory": "{project_root}",
-            "environment": {"inherit": True, "variables": {}},
-            "io": {
-                "stdin": "none",
-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
-            },
-            "heartbeat": {
-                "mode": "file",
-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
-                "optional": True,
-            },
-            "limits": {"timeout_seconds": 3600, "max_retries": 0},
-            "security": {
-                "allow_shell": False,
-                "require_explicit_executable": True,
-                "allow_network": False,
-            },
-        },
-        "codex-exec": {
-            "schema_version": 1,
-            "id": "codex-exec",
-            "title": "Codex Exec Worker",
-            "kind": "shell",
-            "command": {
-                "executable": "{python_executable}",
-                "args": [
-                    "{processforge_root}/tools/codex_exec_worker.py",
-                    "--worker-prompt",
-                    "{worker_prompt_path}",
-                    "--capsule",
-                    "{capsule_path}",
-                    "--workspace-access",
-                    "{workspace_access_path}",
-                    "--output",
-                    "{expected_report_path}",
-                    "--heartbeat",
-                    "{heartbeat_path}",
-                ],
-                "model_args": [],
-            },
-            "working_directory": "{project_root}",
-            "environment": {
-                "inherit": True,
-                "variables": {
-                    "PF_CODEX_REASONING_EFFORT": "{agent_reasoning_effort}",
-                    "PF_CODEX_SANDBOX": "{agent_sandbox}",
-                    "PF_CODEX_MEMORIES": "false",
-                },
-            },
-            "io": {
-                "stdin": "none",
-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
-            },
-            "heartbeat": {
-                "mode": "file",
-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
-                "optional": True,
-            },
-            "limits": {"timeout_seconds": 3600, "max_retries": 0},
-            "security": {
-                "allow_shell": False,
-                "require_explicit_executable": False,
-                "allow_network": True,
-                "network_reason": "Codex CLI requires network access to reach its configured model provider.",
-            },
-        },
-        "test-echo-worker": {
-            "schema_version": 1,
-            "id": "test-echo-worker",
-            "title": "Test Echo Worker",
-            "kind": "shell",
-            "command": {
-                "executable": "{python_executable}",
-                "args": [
-                    "{processforge_root}/tools/test_workers/echo_worker.py",
-                    "--capsule",
-                    "{capsule_path}",
-                    "--output",
-                    "{expected_report_path}",
-                    "--heartbeat",
-                    "{heartbeat_path}",
-                ],
-            },
-            "working_directory": "{project_root}",
-            "environment": {"inherit": True, "variables": {}},
-            "io": {
-                "stdin": "none",
-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
-            },
-            "heartbeat": {
-                "mode": "file",
-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
-                "optional": True,
-            },
-            "limits": {"timeout_seconds": 30, "max_retries": 0},
-            "security": {
-                "allow_shell": False,
-                "require_explicit_executable": False,
-                "allow_network": False,
-            },
-        },
-        "test-shell-agent": {
-            "schema_version": 1,
-            "id": "test-shell-agent",
-            "title": "Test Shell Agent",
-            "kind": "shell",
-            "command": {
-                "executable": "{python_executable}",
-                "args": [
-                    "{processforge_root}/tools/test_agents/pf_shell_agent.py",
-                    "--capsule",
-                    "{capsule_path}",
-                    "--worker-prompt",
-                    "{worker_prompt_path}",
-                    "--output",
-                    "{expected_report_path}",
-                    "--heartbeat",
-                    "{heartbeat_path}",
-                    "--mode",
-                    "success",
-                ],
-                "model_args": ["--model", "{agent_model}"],
-            },
-            "working_directory": "{project_root}",
-            "environment": {
-                "inherit": False,
-                "variables": {},
-            },
-            "io": {
-                "stdin": "none",
-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
-            },
-            "heartbeat": {
-                "mode": "file",
-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
-                "optional": False,
-            },
-            "limits": {"timeout_seconds": 30, "max_retries": 0},
-            "security": {
-                "allow_shell": False,
-                "require_explicit_executable": False,
-                "allow_network": False,
-            },
-        },
-    }
 
 
-def default_runtime_driver_registry() -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "runtime_drivers": [
-            {
-                "id": driver_id,
-                "path": f"../runtime-drivers/{driver_id}.yaml",
-                "status": "available",
-                "builtin": True,
-            }
-            for driver_id in ["manual", "generic-shell", "codex-exec", "test-echo-worker", "test-shell-agent"]
-        ],
-    }
 
 
 def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str]:
@@ -2337,7 +2140,7 @@ Run `project-onboard` for a concrete project.
             {"schema_version": 1, "profile": profile, "process_packs": active_process_packs}
         ),
         root / "registries" / "agents.yaml": dump_yaml({"schema_version": 1, "agents": []}),
-        root / "registries" / "runtime-drivers.yaml": dump_yaml(default_runtime_driver_registry()),
+        root / "registries" / "runtime-drivers.yaml": dump_yaml(_runtime_driver_definition_policy.default_registry()),
         root / "registries" / "update-sources.yaml": dump_yaml(
             {
                 "schema_version": 1,
@@ -2365,7 +2168,7 @@ Run `project-onboard` for a concrete project.
         root / "reviews" / "workplace-bootstrap-review.md": bootstrap_review,
         root / "handoffs" / "workplace-ready-handoff.md": workplace_handoff,
     }
-    for driver_id, driver in default_runtime_driver_documents().items():
+    for driver_id, driver in _runtime_driver_definition_policy.default_documents().items():
         files[root / "runtime-drivers" / f"{driver_id}.yaml"] = dump_yaml(driver)
     return files
 
@@ -2898,8 +2701,6 @@ def command_workplace_setup_status(args: argparse.Namespace) -> int:
     return 0
 
 
-def check(level: str, message: str) -> Check:
-    return Check(level.upper(), message)
 
 
 def print_checks(checks: list[Check]) -> int:
@@ -12626,604 +12427,28 @@ def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 
 
-def string_list(value: Any) -> list[str]:
-    if isinstance(value, list):
-        return [str(item) for item in value if str(item).strip()]
-    if isinstance(value, str) and value.strip():
-        return [item.strip() for item in value.split(",") if item.strip()]
-    return []
 
 
-def default_evolve_block(*, answers: bool = False) -> dict[str, Any]:
-    block: dict[str, Any] = {
-        "enabled": True,
-        "mode": "optional",
-        "timing": "end_of_run",
-        "default_scope": "project",
-        "candidate_targets": [
-            "knowledge_package",
-            "template_package",
-            "process_definition",
-        ],
-        "extraction_hints": [
-            "reusable rule",
-            "missing knowledge",
-            "template improvement",
-            "regression check",
-            "process improvement",
-            "Split candidates when an observation contains project-specific and platform-general parts.",
-            "Default to the narrowest safe scope and require evidence before parent-platform promotion.",
-        ],
-        "candidate_targeting": {
-            "default_scope": "project",
-            "require_applicability": True,
-            "require_target": True,
-            "ask_target_layer": True,
-            "ask_applicability": True,
-            "ask_not_applicable": True,
-            "ask_generalization_level": True,
-            "default_to_narrowest_scope": True,
-        },
-        "required_outputs": ["evolution-report"],
-        "privacy": {
-            "default_sensitivity": "internal",
-            "export_requires_sanitization": True,
-            "allow_private_paths": False,
-        },
-        "apply_policy": {
-            "auto_apply_global": False,
-            "create_candidates_only": True,
-        },
-    }
-    if answers:
-        block["decision"] = {
-            "value": "enabled",
-            "reason": "This process may produce reusable knowledge.",
-        }
-        block["prompts"] = [
-            "What reusable knowledge may appear during this process?",
-            "Which outputs are candidates for shared packages?",
-            "What must remain project-private?",
-        ]
-    return block
 
 
-def normalize_evolve_block(raw: Any, *, answers: bool = False) -> dict[str, Any]:
-    block = default_evolve_block(answers=answers)
-    if isinstance(raw, dict):
-        block.update({key: value for key, value in raw.items() if value not in (None, "")})
-        privacy = default_evolve_block(answers=answers)["privacy"]
-        if isinstance(raw.get("privacy"), dict):
-            privacy.update(raw["privacy"])
-        block["privacy"] = privacy
-        apply_policy = default_evolve_block(answers=answers)["apply_policy"]
-        if isinstance(raw.get("apply_policy"), dict):
-            apply_policy.update(raw["apply_policy"])
-        block["apply_policy"] = apply_policy
-        targeting = default_evolve_block(answers=answers)["candidate_targeting"]
-        if isinstance(raw.get("candidate_targeting"), dict):
-            targeting.update(raw["candidate_targeting"])
-        block["candidate_targeting"] = targeting
-        if answers:
-            decision = default_evolve_block(answers=True)["decision"]
-            if isinstance(raw.get("decision"), dict):
-                decision.update(raw["decision"])
-            block["decision"] = decision
-    enabled = bool(block.get("enabled", True))
-    block["enabled"] = enabled
-    if not enabled:
-        block["mode"] = "disabled"
-        decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
-        reason = str(block.get("reason") or decision.get("reason") or "").strip()
-        if reason:
-            block["reason"] = reason
-        if answers:
-            decision["value"] = "disabled"
-            block["decision"] = decision
-        for optional_key in ["timing", "default_scope", "candidate_targets", "candidate_targeting", "extraction_hints", "required_outputs", "privacy", "apply_policy", "prompts"]:
-            if optional_key in block and optional_key not in {"privacy", "apply_policy"}:
-                block.pop(optional_key, None)
-    else:
-        block["mode"] = str(block.get("mode") or "optional")
-        block["timing"] = str(block.get("timing") or "end_of_run")
-        block["default_scope"] = str(block.get("default_scope") or "project")
-        block["candidate_targets"] = string_list(block.get("candidate_targets")) or default_evolve_block()["candidate_targets"]
-        block["extraction_hints"] = string_list(block.get("extraction_hints")) or default_evolve_block()["extraction_hints"]
-        if not isinstance(block.get("candidate_targeting"), dict):
-            block["candidate_targeting"] = default_evolve_block()["candidate_targeting"]
-        block["required_outputs"] = string_list(block.get("required_outputs")) or ["evolution-report"]
-        if answers:
-            block["prompts"] = string_list(block.get("prompts")) or default_evolve_block(answers=True)["prompts"]
-            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
-            decision["value"] = "enabled"
-            decision.setdefault("reason", "This process may produce reusable knowledge.")
-            block["decision"] = decision
-    return block
 
 
-def validate_evolve_block(process_id: str, block: Any, *, hard: bool) -> list[Check]:
-    checks: list[Check] = []
-    level = "FAIL" if hard else "WARN"
-    if not isinstance(block, dict):
-        checks.append(check(level, f"{process_id} evolve declared"))
-        return checks
-    enabled = block.get("enabled")
-    checks.append(check("PASS" if isinstance(enabled, bool) else level, f"{process_id} evolve.enabled explicit"))
-    mode = str(block.get("mode") or "")
-    checks.append(check("PASS" if mode in EVOLVE_MODES else level, f"{process_id} evolve.mode valid"))
-    if enabled is False:
-        decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
-        reason = str(block.get("reason") or decision.get("reason") or "")
-        checks.append(check("PASS" if mode == "disabled" else level, f"{process_id} disabled evolve uses disabled mode"))
-        checks.append(check("PASS" if reason.strip() else "FAIL", f"{process_id} disabled evolve has reason"))
-        return checks
-    checks.append(check("PASS" if str(block.get("timing") or "") in EVOLVE_TIMINGS else level, f"{process_id} evolve.timing valid"))
-    checks.append(check("PASS" if str(block.get("default_scope") or "") in EVOLVE_SCOPES else level, f"{process_id} evolve.default_scope valid"))
-    targets = string_list(block.get("candidate_targets"))
-    bad_targets = sorted(set(targets) - EVOLVE_CANDIDATE_TARGETS)
-    checks.append(check("PASS" if targets and not bad_targets else level, f"{process_id} evolve.candidate_targets valid"))
-    checks.append(check("PASS" if string_list(block.get("required_outputs")) else level, f"{process_id} evolve.required_outputs declared"))
-    targeting = block.get("candidate_targeting") if isinstance(block.get("candidate_targeting"), dict) else {}
-    checks.append(check("PASS" if targeting.get("require_target") is True and targeting.get("require_applicability") is True else level, f"{process_id} evolve candidate targeting requires target/applicability"))
-    checks.append(check("PASS" if targeting.get("default_to_narrowest_scope") is True else level, f"{process_id} evolve defaults to narrowest safe scope"))
-    privacy = block.get("privacy") if isinstance(block.get("privacy"), dict) else {}
-    apply_policy = block.get("apply_policy") if isinstance(block.get("apply_policy"), dict) else {}
-    checks.append(check("PASS" if privacy.get("export_requires_sanitization") is True and privacy.get("allow_private_paths") is False else level, f"{process_id} evolve privacy boundary declared"))
-    checks.append(check("PASS" if apply_policy.get("auto_apply_global") is False and apply_policy.get("create_candidates_only") is True else level, f"{process_id} evolve apply policy creates candidates only"))
-    return checks
 
 
 def candidate_id_from_data(data: dict[str, Any], fallback: str = "candidate") -> str:
     return safe_id(str(data.get("id") or data.get("candidate_id") or fallback), "candidate")
 
 
-def title_from_id(value: str) -> str:
-    return " ".join(part.capitalize() for part in safe_id(value, "item").split("-"))
 
 
-def default_process_authoring_answers(process_id: str, title: str, description: str = "") -> dict[str, Any]:
-    process_id = safe_id(process_id, "new-process")
-    title = title or title_from_id(process_id)
-    return {
-        "schema_version": 1,
-        "process": {
-            "id": process_id,
-            "name": title,
-            "version": "1.0.0",
-            "status": "draft",
-            "kind": "project_process",
-            "scope": "project",
-            "description": description or f"Guide repeatable work for {title}.",
-        },
-        "run_model": {
-            "supports_multiple_tasks": False,
-            "default_task_loop": {
-                "enabled": False,
-                "iteration_kinds": ["work", "debug", "fix", "review", "handoff"],
-            },
-        },
-        "execution_mode": "single_agent",
-        "execution_mode_questions": {},
-        "coordination_requirements": {
-            "mode": "simple_allowed",
-            "director_inbox": {"required": False, "optional": False},
-            "error_workflow": {"mode": "none"},
-            "simple_mode_behavior": "disable_director_features",
-        },
-        "error_handling": {
-            "enabled": False,
-            "mode": "none",
-            "fallback_if_no_director": "needs_operator",
-        },
-        "evolve": default_evolve_block(answers=True),
-        "roles": [
-            {"id": "author", "title": "Author", "responsibility": "Creates the main work artifacts."},
-            {"id": "reviewer", "title": "Reviewer", "responsibility": "Checks quality gates before handoff."},
-        ],
-        "stages": [
-            {
-                "id": "intake",
-                "title": "Intake",
-                "description": "Capture objective, constraints, and expected outputs.",
-                "required_role": "author",
-                "produced_artifacts": ["brief"],
-                "exit_gates": ["brief-approved"],
-                "handoff_required": False,
-            },
-            {
-                "id": "work",
-                "title": "Work",
-                "description": "Create the requested outputs.",
-                "required_role": "author",
-                "required_inputs": ["brief"],
-                "produced_artifacts": ["work-output"],
-                "entry_gates": ["brief-approved"],
-                "exit_gates": ["work-ready-for-review"],
-                "handoff_required": False,
-            },
-            {
-                "id": "review",
-                "title": "Review",
-                "description": "Validate the output and record risks.",
-                "required_role": "reviewer",
-                "required_inputs": ["work-output"],
-                "produced_artifacts": ["review-notes"],
-                "entry_gates": ["work-ready-for-review"],
-                "exit_gates": ["review-passed"],
-                "handoff_required": False,
-            },
-            {
-                "id": "handoff",
-                "title": "Handoff",
-                "description": "Summarize delivered state and next steps.",
-                "required_role": "author",
-                "required_inputs": ["review-notes"],
-                "produced_artifacts": ["handoff"],
-                "entry_gates": ["review-passed"],
-                "exit_gates": ["handoff-created"],
-                "handoff_required": True,
-            },
-        ],
-        "artifacts": [
-            {"id": "brief", "title": "Brief", "owner_role": "author", "template": "artifact-template"},
-            {"id": "work-output", "title": "Work Output", "owner_role": "author", "template": "artifact-template"},
-            {"id": "review-notes", "title": "Review Notes", "owner_role": "reviewer", "template": "review-template"},
-            {"id": "handoff", "title": "Handoff", "owner_role": "author", "template": "handoff-template"},
-        ],
-        "evidence_definitions": [
-            {"id": "review-attestation", "title": "Review attestation", "kind": "attestation"},
-        ],
-        "gates": [
-            {"id": "brief-approved", "description": "Brief is explicit enough to start work.", "blocking": True, "required_artifact": "brief"},
-            {"id": "work-ready-for-review", "description": "Work output exists and is ready for review.", "blocking": True, "required_artifact": "work-output"},
-            {"id": "review-passed", "description": "Review has no blocking failures.", "blocking": True, "required_artifact": "review-notes"},
-            {"id": "handoff-created", "description": "Handoff artifact exists.", "blocking": True, "required_artifact": "handoff"},
-        ],
-        "required_capabilities": ["process_coordination", "artifact_review", "reporting"],
-        "required_packages": ["process-forge-core"],
-        "required_templates": ["artifact-template", "review-template", "handoff-template"],
-        "allowed_tools": ["processforge-cli", "validator"],
-        "forbidden_actions": ["write_private_absolute_paths_to_public_files", "skip_blocking_review"],
-    }
 
 
-def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = "new-process", fallback_title: str = "") -> dict[str, Any]:
-    base = default_process_authoring_answers(fallback_id, fallback_title or title_from_id(fallback_id))
-    if not raw:
-        return base
-    process = raw.get("process") if isinstance(raw.get("process"), dict) else {}
-    if not process and ("id" in raw or "name" in raw or "title" in raw):
-        process = raw
-    process_id = safe_id(str(process.get("id") or raw.get("id") or fallback_id), "new-process")
-    base["process"].update(
-        {
-            "id": process_id,
-            "name": str(process.get("name") or process.get("title") or raw.get("name") or raw.get("title") or title_from_id(process_id)),
-            "version": str(process.get("version") or raw.get("version") or "1.0.0"),
-            "status": str(process.get("status") or raw.get("status") or "draft"),
-            "kind": str(process.get("kind") or raw.get("kind") or base["process"]["kind"]),
-            "scope": str(process.get("scope") or raw.get("scope") or base["process"]["scope"]),
-            "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
-        }
-    )
-    for key in [
-        "run_model",
-        "execution_mode",
-        "execution_mode_questions",
-        "coordination_requirements",
-        "error_handling",
-        "roles",
-        "stages",
-        "artifacts",
-        "artifact_definitions",
-        "evidence_definitions",
-        "gates",
-        "hooks",
-        "evolve",
-        "evolution_policy",
-        "expected_artifacts",
-        "process_transitions",
-        "agent_requirements",
-        "responsibility_boundaries",
-        "subagent_policy",
-        "runtime_requirements",
-        "runtime_execution_boundary",
-        "stage_completion",
-        "run_completion",
-        "metadata",
-    ]:
-        if key in raw:
-            base[key] = raw[key]
-    if "artifact_definitions" in raw and "artifacts" not in raw:
-        base["artifacts"] = raw["artifact_definitions"]
-    base["evolve"] = normalize_evolve_block(base.get("evolve"), answers=True)
-    for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
-        if key in raw:
-            base[key] = string_list(raw[key])
-    base["process_transitions"] = normalize_process_transitions(base.get("process_transitions"), process_id)
-    return base
 
 
-def normalize_process_transitions(value: Any, source_process: str) -> list[dict[str, Any]]:
-    """Materialize legacy authoring-route shorthand as schema-valid transitions."""
-    if isinstance(value, list):
-        return [item for item in value if isinstance(item, dict)]
-    if not isinstance(value, dict):
-        return []
-
-    shared_return = {
-        key: value[key]
-        for key in ["offline_agent_policy", "continuation_capsule_required", "post_handoff_run_owner"]
-        if key in value
-    }
-    transitions: list[dict[str, Any]] = []
-    for route in as_list(value.get("routes")):
-        if not isinstance(route, dict):
-            continue
-        target_process = safe_id(str(route.get("to_process") or route.get("target_process") or ""), "")
-        if not target_process:
-            continue
-        transition: dict[str, Any] = {
-            "id": safe_id(str(route.get("id") or f"{source_process}-to-{target_process}"), "transition"),
-            "from_process": source_process,
-            "to_process": target_process,
-            "mode": str(route.get("mode") or "wait_for_result"),
-        }
-        if route.get("required_role"):
-            transition["requires_agent"] = {"required_role": str(route["required_role"])}
-        if route.get("input_artifacts"):
-            transition["input_contract"] = {"artifacts": string_list(route["input_artifacts"])}
-        if route.get("expected_output_artifacts"):
-            transition["output_contract"] = {"artifacts": string_list(route["expected_output_artifacts"])}
-        if shared_return:
-            transition["return"] = shared_return
-        transitions.append(transition)
-    return transitions
 
 
-def materialize_process_responsibility_boundaries(value: Any) -> dict[str, list[str]]:
-    if not isinstance(value, dict):
-        return {}
-    if all(
-        isinstance(items, list) and all(isinstance(item, str) for item in items)
-        for items in value.values()
-    ):
-        return {str(key): list(items) for key, items in value.items()}
-
-    output: dict[str, list[str]] = {}
-
-    def add(role: str, message: str) -> None:
-        text = message.strip()
-        if text:
-            output.setdefault(role, []).append(text)
-
-    role_fields = {
-        "coordinator_role": "coordinator",
-        "execution_inspector_role": "execution_inspector",
-        "worker_role": "worker",
-    }
-    for field, role in role_fields.items():
-        if value.get(field):
-            add(role, f"Assigned role: {value[field]}.")
-    if isinstance(value.get("needs_agent_director"), bool):
-        add(
-            "director",
-            "Required by this process." if value["needs_agent_director"] else "Not required by this process.",
-        )
-    if isinstance(value.get("needs_execution_inspector"), bool):
-        add(
-            "execution_inspector",
-            "Required by this process." if value["needs_execution_inspector"] else "Not required by this process.",
-        )
-    list_fields = {
-        "director_decisions": "director",
-        "inspector_checks": "execution_inspector",
-        "worker_actions": "worker",
-        "automatic_cli_checks": "cli_tools",
-    }
-    consumed = {*role_fields, "needs_agent_director", "needs_execution_inspector", *list_fields}
-    for field, role in list_fields.items():
-        for item in string_list(value.get(field)):
-            add(role, item)
-    for key, items in value.items():
-        if key in consumed:
-            continue
-        if isinstance(items, list):
-            for item in items:
-                if isinstance(item, str):
-                    add(str(key), item)
-    return output
 
 
-def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
-    process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
-    process_id = safe_id(str(process.get("id", "new-process")), "new-process")
-    roles: list[dict[str, Any]] = []
-    for item in as_list(answers.get("roles")):
-        if isinstance(item, dict):
-            role_id = safe_id(str(item.get("id") or item.get("title") or "role"), "role")
-            responsibility = str(item.get("responsibility") or "")
-            roles.append(
-                {
-                    "id": role_id,
-                    "title": str(item.get("title") or title_from_id(role_id)),
-                    "kind": str(item.get("kind") or "primary_agent"),
-                    "responsibility": responsibility,
-                    "responsibilities": string_list(item.get("responsibilities")) or ([responsibility] if responsibility else [f"Owns {title_from_id(role_id)} responsibilities."]),
-                }
-            )
-    if not roles:
-        roles = [{"id": "author", "title": "Author", "responsibility": "Creates process artifacts."}]
-    role_ids = {item["id"] for item in roles}
-
-    artifacts: list[dict[str, Any]] = []
-    for item in as_list(answers.get("artifacts")):
-        if isinstance(item, dict):
-            artifact_id = safe_id(str(item.get("id") or item.get("title") or "artifact"), "artifact")
-            owner_role = safe_id(str(item.get("owner_role") or roles[0]["id"]), roles[0]["id"])
-            if owner_role not in role_ids:
-                owner_role = roles[0]["id"]
-            artifacts.append(
-                {
-                    "id": artifact_id,
-                    "title": str(item.get("title") or title_from_id(artifact_id)),
-                    "owner_role": owner_role,
-                    "type": str(item.get("type") or "markdown"),
-                    "required": bool(item.get("required", True)),
-                    "template": str(item.get("template") or "artifact-template"),
-                    "path_hint": str(item.get("path_hint") or f".pf/artifacts/{artifact_id}.md"),
-                    "lifecycle": string_list(item.get("lifecycle")) or ["draft", "ready_for_review", "approved"],
-                }
-            )
-    artifact_ids = {item["id"] for item in artifacts}
-
-    gates: list[dict[str, Any]] = []
-    for item in as_list(answers.get("gates")):
-        if isinstance(item, dict):
-            gate_id = safe_id(str(item.get("id") or item.get("description") or "gate"), "gate")
-            gate: dict[str, Any] = {
-                "id": gate_id,
-                "description": str(item.get("description") or title_from_id(gate_id)),
-                "type": str(item.get("type") or ("artifact_exists" if item.get("required_artifact") else "checklist")),
-                "blocking": bool(item.get("blocking", True)),
-                "required": bool(item.get("required", item.get("blocking", True))),
-            }
-            if item.get("required_artifact"):
-                gate["required_artifact"] = safe_id(str(item.get("required_artifact")), "artifact")
-            gates.append(gate)
-    gate_ids = {item["id"] for item in gates}
-
-    stages: list[dict[str, Any]] = []
-    handoff_note_required = False
-    for item in as_list(answers.get("stages")):
-        if isinstance(item, dict):
-            stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
-            produced = [safe_id(value, "artifact") for value in string_list(item.get("produced_artifacts"))]
-            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates") or item.get("gates"))]
-            if not produced and artifact_ids:
-                produced = [sorted(artifact_ids)[0]]
-            if not exits and gate_ids:
-                exits = [sorted(gate_ids)[0]]
-            role_id = safe_id(str(item.get("required_role") or roles[0]["id"]), roles[0]["id"])
-            if role_id not in role_ids:
-                role_id = roles[0]["id"]
-            if bool(item.get("handoff_required", False)):
-                handoff_note_required = True
-            stages.append(
-                {
-                    "id": stage_id,
-                    "title": str(item.get("title") or title_from_id(stage_id)),
-                    "goal": str(item.get("goal") or item.get("description") or item.get("title") or title_from_id(stage_id)),
-                    "description": str(item.get("description") or ""),
-                    "actor": str(item.get("actor") or "primary_agent"),
-                    "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
-                    "produced_artifacts": produced,
-                    "required_artifacts": [safe_id(value, "artifact") for value in string_list(item.get("required_artifacts"))],
-                    "required_evidence": [safe_id(value, "evidence") for value in string_list(item.get("required_evidence"))],
-                    "required_role": role_id,
-                    "required_capabilities": string_list(item.get("required_capabilities")),
-                    "parameters": item.get("parameters") if isinstance(item.get("parameters"), dict) else {},
-                    "allowed_tools": string_list(item.get("allowed_tools")),
-                    "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
-                    "exit_gates": exits,
-                    "automation_bindings": as_list(item.get("automation_bindings")) or as_list(item.get("technical_obligations")),
-                }
-            )
-    if not artifacts:
-        artifacts = [
-            {
-                "id": "brief",
-                "title": "Brief",
-                "owner_role": roles[0]["id"],
-                "type": "markdown",
-                "required": True,
-                "template": "artifact-template",
-                "path_hint": ".pf/artifacts/brief.md",
-                "lifecycle": ["draft", "ready_for_review", "approved"],
-            }
-        ]
-        artifact_ids = {"brief"}
-    if not gates:
-        gates = [{"id": "brief-approved", "description": "Brief is approved.", "blocking": True, "required_artifact": "brief"}]
-        gate_ids = {"brief-approved"}
-    if not stages:
-        stages = [{"id": "intake", "title": "Intake", "goal": "Capture scope.", "description": "Capture scope.", "actor": "primary_agent", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "gates": list(gate_ids)}]
-        handoff_note_required = True
-
-    run_model = answers.get("run_model") if isinstance(answers.get("run_model"), dict) else {}
-    output = {
-        "schema_version": 1,
-        "id": process_id,
-        "name": str(process.get("name") or title_from_id(process_id)),
-        "kind": str(process.get("kind") or "project_process"),
-        "scope": str(process.get("scope") or "project"),
-        "version": str(process.get("version") or "1.0.0"),
-        "status": str(process.get("status") or "draft"),
-        "description": str(process.get("description") or ""),
-        "purpose": str(process.get("purpose") or process.get("description") or ""),
-        "execution_mode": str(answers.get("execution_mode") or process.get("execution_mode") or "single_agent"),
-        "execution_mode_questions": answers.get("execution_mode_questions") if isinstance(answers.get("execution_mode_questions"), dict) else {},
-        "coordination_requirements": answers.get("coordination_requirements") if isinstance(answers.get("coordination_requirements"), dict) else default_process_authoring_answers(process_id, "").get("coordination_requirements", {}),
-        "error_handling": answers.get("error_handling") if isinstance(answers.get("error_handling"), dict) else default_process_authoring_answers(process_id, "").get("error_handling", {}),
-        "run_model": run_model,
-        "required_capabilities": string_list(answers.get("required_capabilities")),
-        "hooks": answers.get("hooks") if isinstance(answers.get("hooks"), dict) else {
-            "emit": [
-                {"event": "process.created", "required": True},
-                {"event": "process.started", "required": True},
-                {"event": "stage.started", "required": True},
-                {"event": "stage.completed", "required": True},
-                {"event": "artifact.created", "required": True},
-                {"event": "review.completed", "required": True},
-                {"event": "process.completed", "required": True},
-            ],
-            "tracking": {"include": ["process_id", "stage_id", "artifact_refs", "assignment_id", "run_id", "task_id", "status"]},
-        },
-        "roles": roles,
-        "stages": stages,
-        "artifact_definitions": artifacts,
-        "evidence_definitions": [
-            {
-                "id": safe_id(str(item.get("id") or item.get("title") or "evidence"), "evidence"),
-                "title": str(item.get("title") or title_from_id(safe_id(str(item.get("id") or "evidence"), "evidence"))),
-                "kind": str(item.get("kind") or "attestation"),
-                **({"artifact": safe_id(str(item.get("artifact")), "artifact")} if item.get("artifact") else {}),
-                **({"description": str(item.get("description"))} if item.get("description") else {}),
-            }
-            for item in as_list(answers.get("evidence_definitions"))
-            if isinstance(item, dict)
-        ],
-        "gates": gates,
-        "required_packages": string_list(answers.get("required_packages")) or ["process-forge-core"],
-        "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
-        "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
-        "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
-        "evolve": normalize_evolve_block(answers.get("evolve")),
-        "stage_completion": answers.get("stage_completion") if isinstance(answers.get("stage_completion"), dict) else {"handoff_note_required": handoff_note_required},
-        "run_completion": answers.get("run_completion") if isinstance(answers.get("run_completion"), dict) else {"summary_required": True, "handoff_artifact_required": handoff_note_required},
-        "evolution_policy": answers.get("evolution_policy") if isinstance(answers.get("evolution_policy"), dict) else {
-            "active_run_upgrade": {"default": "manual_only"},
-            "safe_changes": ["add_optional_stage", "add_non_blocking_gate"],
-            "blocked_changes": ["remove_existing_required_artifact", "weaken_blocking_gate_without_review"],
-            "requires_approval": ["change_stage_order", "change_required_artifact_lifecycle"],
-        },
-    }
-    for key in [
-        "expected_artifacts",
-        "process_transitions",
-        "agent_requirements",
-        "subagent_policy",
-        "runtime_requirements",
-        "runtime_execution_boundary",
-        "metadata",
-    ]:
-        if key in answers:
-            output[key] = answers[key]
-    if "responsibility_boundaries" in answers:
-        output["responsibility_boundaries"] = materialize_process_responsibility_boundaries(
-            answers["responsibility_boundaries"]
-        )
-    return output
 
 
 def render_authoring_questions(answers: dict[str, Any]) -> str:
@@ -13283,7 +12508,7 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
     checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "authoring data contains no secret-like values"))
     for key in ["schema_version", "id", "name", "version", "status", "description", "stages", "roles", "artifact_definitions", "gates", "evolution_policy"]:
         checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
-    checks.extend(validate_evolve_block(str(process.get("id") or "process"), process.get("evolve"), hard=bool(answers and "evolve" in answers)))
+    checks.extend(_process_evolution_policy.validate_block(str(process.get("id") or "process"), process.get("evolve"), hard=bool(answers and "evolve" in answers)))
     if answers is not None and answers and "evolve" not in answers:
         checks.append(check("FAIL", "authoring answers include explicit evolve decision"))
     execution_mode = str(process.get("execution_mode") or "single_agent")
@@ -13380,7 +12605,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
-    answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
+    answers = _process_authoring_definition_builder.normalize(raw_answers, fallback_id, args.title or "")
     if args.description:
         answers["process"]["description"] = args.description
     if getattr(args, "scope", None):
@@ -13388,7 +12613,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
     if getattr(args, "kind", None):
         answers["process"]["kind"] = args.kind
     process_id = safe_id(str(answers["process"]["id"]), "new-process")
-    draft = process_from_authoring_answers(answers)
+    draft = _process_authoring_definition_builder.build(answers)
     paths = process_authoring_paths(project_root, process_id)
     planned = [paths["answers"], paths["draft"], paths["questions"], paths["log"]]
     if getattr(args, "dry_run", False):
@@ -13618,7 +12843,7 @@ def build_process_create_plan(
     if output_root == "core" and not allow_core:
         raise SystemExit("FAIL: writing process-authoring output to processes/core requires --core")
 
-    draft = process_from_authoring_answers(answers)
+    draft = _process_authoring_definition_builder.build(answers)
     draft.setdefault("catalog", {})
     if isinstance(draft["catalog"], dict):
         draft["catalog"].setdefault("role", "canonical")
@@ -13810,7 +13035,7 @@ def command_process_create(args: argparse.Namespace) -> int:
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
-    answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
+    answers = _process_authoring_definition_builder.normalize(raw_answers, fallback_id, args.title or "")
     process_id = safe_id(str(answers["process"]["id"]), "new-process")
     output = answers.get("output") if isinstance(answers.get("output"), dict) else {}
     output_root = safe_id(str(getattr(args, "output_root", "") or output.get("process_root") or "user"), "user")
@@ -13901,7 +13126,7 @@ def validate_process_contract(
     checks.append(check("PASS" if coordination.get("mode") in PROCESS_COORDINATION_MODES else ("FAIL" if hard else "WARN"), f"{process_id} coordination_requirements.mode declared"))
     error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
     checks.append(check("PASS" if error_handling.get("mode") in ERROR_WORKFLOW_MODES and "enabled" in error_handling else ("FAIL" if hard else "WARN"), f"{process_id} error_handling declared"))
-    checks.extend(validate_evolve_block(process_id, process.get("evolve"), hard=hard))
+    checks.extend(_process_evolution_policy.validate_block(process_id, process.get("evolve"), hard=hard))
     checks.append(check("PASS" if isinstance(process.get("responsibility_boundaries"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} responsibility_boundaries declared"))
     if process.get("execution_mode") in {"single_agent_with_subagents", "orchestrated_agents"}:
         checks.append(check("PASS" if isinstance(process.get("subagent_policy"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} subagent_policy declared"))
@@ -14750,7 +13975,7 @@ def command_evolve_run(args: argparse.Namespace) -> int:
     process_id = str(getattr(args, "process", None) or "task-batch-execution")
     process = read_yaml_file(process_definition_path(project_root, process_id))
     evolve = process.get("evolve") if isinstance(process.get("evolve"), dict) else {}
-    checks = validate_evolve_block(process_id, evolve, hard=True)
+    checks = _process_evolution_policy.validate_block(process_id, evolve, hard=True)
     failures = [item.message for item in checks if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: process evolve declaration invalid: " + "; ".join(failures))
@@ -15207,7 +14432,7 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
     process = read_yaml_file(process_path)
     process_id = safe_id(str(process.get("id") or process_path.stem), "process")
     answers = process_to_authoring_answers(process)
-    draft = process_from_authoring_answers(answers)
+    draft = _process_authoring_definition_builder.build(answers)
     unsupported = process_unsupported_fields(process)
     paths = process_backfill_paths(project_root, process_id)
     planned = [paths["answers"], paths["draft"], paths["source"], paths["semantic_map"], paths["unsupported"], paths["import_report"]]
@@ -16665,29 +15890,6 @@ def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
     return run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
 
 
-RUNTIME_DRIVER_PLACEHOLDERS = {
-    "attempt",
-    "prepared_input_path",
-    "project_root",
-    "processforge_root",
-    "run_id",
-    "task_id",
-    "agent_run_dir",
-    "driver_id",
-    "capsule_path",
-    "worker_prompt_path",
-    "workspace_access_path",
-    "expected_report_path",
-    "python_executable",
-    "executable",
-    "stdout_path",
-    "stderr_path",
-    "heartbeat_path",
-    "exit_path",
-    "agent_model",
-    "agent_reasoning_effort",
-    "agent_sandbox",
-}
 
 AGENT_RUN_STATUSES = {
     "planned",
@@ -16791,7 +15993,7 @@ def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None =
     path = registered_runtime_driver_path(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
     if path is not None:
         return load_runtime_driver_by_path(path)
-    builtin = default_runtime_driver_documents().get(driver_id)
+    builtin = _runtime_driver_definition_policy.default_documents().get(driver_id)
     if builtin:
         result = json.loads(json.dumps(builtin))
         result["_source_path"] = "builtin"
@@ -16825,48 +16027,13 @@ def runtime_driver_id_list(*, workplace_manifest: Path | None = None, project_ro
             path = runtime_driver_entry_path(registry_path, entry)
             status = str(entry.get("status") or ("available" if path and path.is_file() else "missing"))
             found[driver_id] = (driver_id, status, source)
-    for driver_id in default_runtime_driver_documents():
+    for driver_id in _runtime_driver_definition_policy.default_documents():
         found.setdefault(driver_id, (driver_id, "available", "builtin"))
     return sorted(found.values())
 
 
-def driver_placeholder_errors(value: Any, label: str) -> list[str]:
-    errors: list[str] = []
-    if isinstance(value, str):
-        for match in re.findall(r"\{([a-zA-Z0-9_]+)\}", value):
-            if match not in RUNTIME_DRIVER_PLACEHOLDERS:
-                errors.append(f"{label}: unsupported placeholder {{{match}}}")
-    elif isinstance(value, list):
-        for index, item in enumerate(value):
-            errors.extend(driver_placeholder_errors(item, f"{label}[{index}]"))
-    elif isinstance(value, dict):
-        for key, item in value.items():
-            errors.extend(driver_placeholder_errors(item, f"{label}.{key}"))
-    return errors
 
 
-def parse_runtime_driver_limits(driver: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
-    raw_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
-    parsed: dict[str, int] = {}
-    errors: list[str] = []
-    defaults = {"timeout_seconds": 30, "max_retries": 0}
-    minimums = {"timeout_seconds": 1, "max_retries": 0}
-    for key, default in defaults.items():
-        raw_value = raw_limits.get(key, default)
-        if isinstance(raw_value, bool):
-            errors.append(f"limits.{key}: expected integer, got boolean")
-            parsed[key] = default
-            continue
-        try:
-            value = int(raw_value)
-        except (TypeError, ValueError):
-            errors.append(f"limits.{key}: expected integer, got {raw_value!r}")
-            parsed[key] = default
-            continue
-        if value < minimums[key]:
-            errors.append(f"limits.{key}: expected >= {minimums[key]}, got {value}")
-        parsed[key] = value
-    return parsed, errors
 
 
 def minimal_platform_environment() -> dict[str, str]:
@@ -16917,62 +16084,8 @@ def materialize_worker_launch_environment(command_spec: dict[str, Any]) -> dict[
     return env
 
 
-def runtime_driver_start_readiness_checks(driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
-    checks: list[Check] = []
-    kind = str(driver.get("kind") or "")
-    if kind != "shell":
-        return checks
-    command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
-    raw_executable = str(command.get("executable") or "")
-    security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
-    resolved_executable = executable_override or ("" if raw_executable == "{executable}" else raw_executable)
-    if security.get("require_explicit_executable") is True and raw_executable == "{executable}" and not executable_override:
-        checks.append(check("FAIL", "start readiness executable override required for {executable}"))
-    elif not resolved_executable:
-        checks.append(check("FAIL", "start readiness executable resolves to empty value"))
-    else:
-        checks.append(check("PASS", f"start readiness executable: {resolved_executable}"))
-    return checks
 
 
-def validate_runtime_driver_document(driver: dict[str, Any], executable_override: str | None = None, include_start_readiness: bool = False) -> list[Check]:
-    checks: list[Check] = []
-    driver_id = str(driver.get("id") or "")
-    kind = str(driver.get("kind") or "")
-    checks.append(check("PASS" if driver.get("schema_version") else "FAIL", "schema_version present"))
-    checks.append(check("PASS" if driver_id else "FAIL", "id present"))
-    checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
-    if "prepared_lifecycle_wrapper" in driver:
-        checks.append(check("PASS" if type(driver["prepared_lifecycle_wrapper"]) is bool else "FAIL", "prepared_lifecycle_wrapper is boolean"))
-    security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
-    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
-    explicit_env = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
-    reserved_env = sorted(str(key) for key in explicit_env if str(key) in RESERVED_WORKER_ENV_KEYS)
-    checks.append(check("FAIL" if reserved_env else "PASS", "reserved ProcessForge env vars not overridden" + (f": {', '.join(reserved_env)}" if reserved_env else "")))
-    if kind == "shell":
-        command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
-        executable = str(command.get("executable") or "")
-        args = command.get("args") if isinstance(command.get("args"), list) else []
-        model_args = command.get("model_args") if "model_args" in command else []
-        checks.append(check("PASS" if executable else "FAIL", "shell command executable present"))
-        checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
-        checks.append(check("PASS" if isinstance(model_args, list) else "FAIL", "shell command model_args list when present"))
-        checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
-        network_reason = str(security.get("network_reason") or "").strip()
-        checks.append(check("PASS" if security.get("allow_network") is not True or network_reason else "FAIL", "allow_network explicit reason when enabled"))
-    if kind == "manual":
-        behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
-        checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
-    limits, limit_errors = parse_runtime_driver_limits(driver)
-    for error in limit_errors:
-        checks.append(check("FAIL", error))
-    if not limit_errors:
-        checks.append(check("PASS", f"limits valid: timeout_seconds={limits['timeout_seconds']} max_retries={limits['max_retries']}"))
-    for error in driver_placeholder_errors(driver, "driver"):
-        checks.append(check("FAIL", error))
-    if include_start_readiness:
-        checks.extend(runtime_driver_start_readiness_checks(driver, executable_override))
-    return checks
 
 
 def command_runtime_driver_list(args: argparse.Namespace) -> int:
@@ -16991,7 +16104,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
         require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
     driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
-    return print_checks(validate_runtime_driver_document(driver, getattr(args, "executable", None), include_start_readiness=True))
+    return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
 
 
 def command_runtime_driver_describe(args: argparse.Namespace) -> int:
@@ -17096,7 +16209,7 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
     if driver_arg and runtime_driver_ref_is_direct_path(driver_arg):
         driver = copy.deepcopy(driver)
         driver["_driver_ref"] = normalized_runtime_driver_ref(driver_arg, project_root)
-    failures = [item.message for item in validate_runtime_driver_document(driver) if item.level == "FAIL"]
+    failures = [item.message for item in _runtime_driver_definition_policy.validate(driver) if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
     return driver
@@ -17290,7 +16403,7 @@ def build_worker_process_command(
             "shell": False,
         },
         "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
-        "limits": parse_runtime_driver_limits(driver)[0],
+        "limits": _runtime_driver_definition_policy.parse_limits(driver)[0],
     }
     driver_ref = driver.get("_driver_ref")
     if isinstance(driver_ref, str) and driver_ref.strip():
@@ -17316,7 +16429,7 @@ def write_agent_run_state(
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     paths = paths or worker_run_paths(project_root, run_id, task_id)
-    driver_limits, limit_errors = parse_runtime_driver_limits(driver)
+    driver_limits, limit_errors = _runtime_driver_definition_policy.parse_limits(driver)
     if limit_errors:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
     previous_state = json_read(paths["status"])
@@ -17529,7 +16642,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     driver = runtime_driver_for_task(project_root, task, driver_arg)
     start_failures = [
         item.message
-        for item in validate_runtime_driver_document(driver, executable_override, include_start_readiness=True)
+        for item in _runtime_driver_definition_policy.validate(driver, executable_override, include_start_readiness=True)
         if item.level == "FAIL"
     ]
     if start_failures:
@@ -20287,34 +19400,7 @@ UPDATE_SUBJECT_TYPES = {
     "package",
 }
 
-UPDATE_SOURCE_PUBLIC_KEYS = [
-    "id",
-    "type",
-    "provider",
-    "priority",
-    "manifest_url",
-    "changelog_url",
-    "channel",
-    "path",
-    "owner",
-    "repo",
-    "api_base_url",
-    "channels",
-    "include_prereleases",
-    "asset_patterns",
-    "trust",
-    "policy",
-    "provider_capabilities",
-]
 
-UPDATE_SOURCE_LOCAL_KEYS = [
-    "auth_ref",
-    "auth",
-    "headers_env",
-    "query_env",
-    "custom_headers_env",
-    "channel_override",
-]
 
 SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
 ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
@@ -20361,28 +19447,10 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) and not yaml_error(data) else {}
 
 
-def update_location(source: dict[str, Any], provider_key: str) -> str:
-    return str(source.get("manifest_url") or "")
 
 
-def update_source_kind(source: dict[str, Any]) -> str:
-    manifest_url = update_location(source, "provider")
-    parsed = urlparse(manifest_url)
-    scheme = parsed.scheme.lower()
-    if scheme == "file" or not scheme:
-        return "local_file"
-    if scheme in {"http", "https"}:
-        return "http"
-    return scheme or "unknown"
 
 
-def update_site_source_id(source: dict[str, Any]) -> str:
-    raw = source.get("id")
-    if isinstance(raw, str) and raw.strip():
-        return raw
-    manifest_url = update_location(source, "provider")
-    digest = hashlib.sha256(manifest_url.encode("utf-8")).hexdigest()[:12] if manifest_url else "missing"
-    return f"manifest-{digest}"
 
 
 def source_requires_https(source: dict[str, Any], defaults: dict[str, Any] | None = None) -> bool:
@@ -20785,9 +19853,9 @@ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False)
                     str(source.get("id", "")),
                     str(bool(source.get("enabled", False))).lower(),
                     str(source.get("priority", "")),
-                    update_source_kind(source),
+                    _update_site_policy.source_kind(source),
                     channels,
-                    update_location(source, "provider"),
+                    _update_site_policy.location(source, "provider"),
                 ]
             )
         )
@@ -20966,8 +20034,6 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
     return records
 
 
-def update_site_stable_key(subject_type: str, subject_id: str, source_id: str) -> str:
-    return f"{subject_type}:{subject_id}:{source_id}"
 
 
 def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
@@ -20982,7 +20048,7 @@ def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
         subject = item.get("subject") if isinstance(item.get("subject"), dict) else {}
         update_site_id = item.get("update_site_id") or item.get("source_id")
         if not key and isinstance(update_site_id, str) and subject.get("type") and subject.get("id"):
-            key = update_site_stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
+            key = _update_site_policy.stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
         if not key and isinstance(item.get("subject_id"), str):
             key = str(item.get("subject_id"))
         if not key and isinstance(item.get("subject"), dict) and subject.get("type") and subject.get("id"):
@@ -21046,69 +20112,6 @@ def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str],
     return result
 
 
-def derived_update_site_record(
-    workplace_root: Path,
-    subject_type: str,
-    subject_id: str,
-    subject_scope: str,
-    installed_version: str,
-    manifest_path: Path,
-    site: dict[str, Any],
-    overrides: dict[str, dict[str, Any]],
-    *,
-    parent: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    source_id = update_site_source_id(site)
-    site_id = update_site_stable_key(subject_type, subject_id, source_id)
-    source = {key: site[key] for key in UPDATE_SOURCE_PUBLIC_KEYS if key in site}
-    source["id"] = source_id
-    source["type"] = update_source_kind(source)
-    if "channel" not in source:
-        channels = site.get("channels")
-        if isinstance(channels, list) and channels:
-            source["channel"] = str(channels[0])
-    enabled = bool(site.get("enabled", True))
-    preserved = {key: site[key] for key in UPDATE_SOURCE_LOCAL_KEYS if key in site}
-    override = overrides.get(site_id, {}) or overrides.get(subject_id, {}) or overrides.get(f"{subject_type}:{subject_id}", {})
-    if isinstance(override, dict):
-        if "enabled" in override or "disabled" in override:
-            enabled = bool(override.get("enabled", not bool(override.get("disabled"))))
-        if isinstance(override.get("channels"), list):
-            source["channels"] = override.get("channels")
-        if isinstance(override.get("channel"), str):
-            source["channel"] = override.get("channel")
-            source["channels"] = [override.get("channel")]
-        if isinstance(override.get("manifest_url"), str):
-            source["manifest_url"] = override.get("manifest_url")
-        if not isinstance(source.get("policy"), dict):
-            source["policy"] = {}
-        if isinstance(override.get("pin_version"), str):
-            source["policy"]["pin_version"] = override.get("pin_version")
-        if "allow_major" in override:
-            source["policy"]["allow_major"] = bool(override.get("allow_major"))
-        if "auto_apply" in override:
-            source["policy"]["auto_apply"] = bool(override.get("auto_apply"))
-        preserved_override = override.get("preserved_local") if isinstance(override.get("preserved_local"), dict) else {}
-        for key in UPDATE_SOURCE_LOCAL_KEYS:
-            if key in override:
-                preserved[key] = override[key]
-        preserved.update(preserved_override)
-
-    subject: dict[str, Any] = {"type": subject_type, "id": subject_id, "scope": subject_scope}
-    if installed_version:
-        subject["installed_version"] = installed_version
-    if parent:
-        subject["parent"] = parent
-    record: dict[str, Any] = {
-        "site_id": site_id,
-        "subject": subject,
-        "source": source,
-        "manifest_path": rel(manifest_path, workplace_root),
-        "enabled": enabled,
-    }
-    if preserved:
-        record["preserved_local"] = preserved
-    return record
 
 
 def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], list[Check]]:
@@ -21129,12 +20132,12 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
                 label = f"{rel(record['manifest_path'], workplace_root)}.update_sites[{index}]"
                 append_update_source_checks(checks, site, label, provider_key="type")
                 if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
-                    source_id = update_site_source_id(site)
+                    source_id = _update_site_policy.source_id(site)
                     if source_id in seen:
                         checks.append(check("FAIL", f"{label} duplicate update site id {source_id}"))
                     seen.add(source_id)
                     sites.append(
-                        derived_update_site_record(
+                        _update_site_policy.record(
                             workplace_root,
                             record["type"],
                             record["id"],
@@ -21166,7 +20169,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
                     append_update_source_checks(checks, site, label, provider_key="type")
                     if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
                         sites.append(
-                            derived_update_site_record(
+                            _update_site_policy.record(
                                 workplace_root,
                                 "knowledge_resource",
                                 resource_subject_id,
@@ -21205,7 +20208,7 @@ def print_derived_update_sites(data: dict[str, Any], *, subject_type: str = "all
                     str(subject.get("type", "")),
                     str(subject.get("id", "")),
                     str(source.get("type", "")),
-                    update_location(source, "type"),
+                    _update_site_policy.location(source, "type"),
                     str(site.get("manifest_path", "")),
                 ]
             )
@@ -21526,7 +20529,7 @@ def load_yaml_or_json_text(text: str) -> dict[str, Any]:
 
 def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
-    location = update_location(source, "provider")
+    location = _update_site_policy.location(source, "provider")
     if not location:
         return {}, ["missing manifest_url"]
     parsed = urlparse(location)
@@ -21561,7 +20564,7 @@ def normalize_manifest_versions(raw: dict[str, Any], site: dict[str, Any], chann
     subject_id = str(manifest_subject.get("id") or subject.get("id") or "")
     source = site.get("source") if isinstance(site.get("source"), dict) else site
     source_id = str(source.get("id") or site.get("site_id") or "update-site")
-    manifest_url = update_location(source, "provider")
+    manifest_url = _update_site_policy.location(source, "provider")
     site_changelog = str(source.get("changelog_url") or "")
     versions: list[dict[str, Any]] = []
 
@@ -21650,13 +20653,6 @@ def update_candidate_id(subject_type: str, subject_id: str, available_version: s
     return f"candidate-{safe_id(subject_type)}-{safe_id(subject_id)}-{safe_id(available_version)}-{digest}"
 
 
-def update_site_policy(source: dict[str, Any], installed_subject: dict[str, Any] | None = None) -> dict[str, Any]:
-    policy: dict[str, Any] = {}
-    if isinstance(source.get("policy"), dict):
-        policy.update(source["policy"])
-    if installed_subject and isinstance(installed_subject.get("update_policy"), dict):
-        policy.update(installed_subject["update_policy"])
-    return policy
 
 
 def installed_subjects_by_key(workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
@@ -21721,7 +20717,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
         warnings.extend(compare_warnings)
         if not selected:
             continue
-        source_policy = update_site_policy(source, installed_subject)
+        source_policy = _update_site_policy.policy(source, installed_subject)
         pinned = source_policy.get("pin_version")
         if isinstance(pinned, str) and pinned.strip() and str(selected.get("version")) != pinned:
             conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by pin_version {pinned}"})

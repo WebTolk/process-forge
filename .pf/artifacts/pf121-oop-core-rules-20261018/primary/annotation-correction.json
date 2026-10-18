@@ -1,0 +1,11 @@
+{
+  "role": "primary-after-collected-evolution",
+  "run_id": "garage-p121-core-rules-evolution-implement-exact-mutable-check-dataclass",
+  "assignment_id": "p121-core-rules-evolution-implement-exact-mutable-check-dataclass-plus-c",
+  "context_id": "p121-core-rules-evolution-implement-exact-mutable-check-dataclass-plus-c-capsule",
+  "path": "src/processforge_core/common/checks.py",
+  "previous_sha256": "4b135f054d1f3b1b88c1a88ba3c8a5f5942155b216110de8aedcf2256c5e018c",
+  "sha256": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+  "change": "Restore original module future annotations for Check fields and check signature; exact class/function body AST unchanged. Native writer finished and collected; no concurrent writer.",
+  "validation": "passed: original Check/check annotations and dataclass field metadata equal, full bounded 245/245 comparison repeated in 1 second; prior ten smoke receipts retained without rerunning unaffected checks."
+}

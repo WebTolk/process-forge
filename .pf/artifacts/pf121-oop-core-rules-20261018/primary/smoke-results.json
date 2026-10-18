@@ -1,0 +1,105 @@
+{
+  "started_at": "2026-10-18T18:22:01.359164+00:00",
+  "executor": "primary",
+  "python": "3.14.3",
+  "reason": "The known restricted-worker fixture limitation is avoided by running only affected unchanged existing smokes in primary-owned scratch. No ACL, dependency or test changes.",
+  "scratch": ".pf/tmp/p121-core-rules/primary/checks",
+  "source_hashes": {
+    "tools/processforge.py": "7c78ee188aa37c96a6d72bbfa81fb76a34cb8d61e9de21a9b3fadf54cb200ab5",
+    "tools/smoke_codex_worker_governance.py": "b3f8cd951a10bd012c0092a84e30b54482e3a6f087d5e35cd9b4f7e108dec9dd",
+    "tools/smoke_prepared_execution_context.py": "91c8a7e1b416aa1ef6e1b603bda002a26b12dd6349d8a2a8367777b14f59c867",
+    "src/processforge_core/common/checks.py": "4b135f054d1f3b1b88c1a88ba3c8a5f5942155b216110de8aedcf2256c5e018c",
+    "src/processforge_core/common/ids.py": "ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8",
+    "src/processforge_core/common/values.py": "6eccd5af14370433f8e49611f3a38f262a5f2a86ce9447f30ccfb51a3bde509c",
+    "src/processforge_core/process_catalog/artifacts.py": "3c12bf127fc08105bddc2332cd6c21f8ad2118ef2af479948f211f101f9b7bd3",
+    "src/processforge_core/process_catalog/authoring.py": "e2b4791ae5200d9a3404f654676fdfd13cabc4b5c3bc542ae7f2a2c9bafcc127",
+    "src/processforge_core/process_catalog/evolution.py": "84fbfa98942a73a392c03ca8ceb3da39461e2b0e75dc7963a9d33bb45169a50f",
+    "src/processforge_core/runtime/drivers.py": "b273cb7da6197b94596e62323dfca551eeb22664fc7d4d474968e3c62de12d25",
+    "src/processforge_core/maintenance/sites.py": "4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7"
+  },
+  "checks": [
+    {
+      "name": "smoke_process_authoring_materialization_parity",
+      "exit_code": 0,
+      "duration_seconds": 5.249,
+      "stdout": "PASS: process-authoring materialization parity smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_authoring_materializes_evolve",
+      "exit_code": 0,
+      "duration_seconds": 5.248,
+      "stdout": "PASS: process-authoring materializes evolve smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_authoring_evolve_questions",
+      "exit_code": 0,
+      "duration_seconds": 0.132,
+      "stdout": "PASS: process-authoring evolve questions smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_process_authoring_evolve_targeting",
+      "exit_code": 0,
+      "duration_seconds": 4.141,
+      "stdout": "PASS: process authoring evolve targeting smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_runtime_driver_registry",
+      "exit_code": 0,
+      "duration_seconds": 13.062,
+      "stdout": "PASS: runtime driver registry smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "exit_code": 0,
+      "duration_seconds": 0.675,
+      "stdout": "PASS: Codex worker sandbox and prepared input governance\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_prepared_execution_context",
+      "exit_code": 0,
+      "duration_seconds": 37.273,
+      "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_update_sites_schema",
+      "exit_code": 0,
+      "duration_seconds": 2.524,
+      "stdout": "PASS: unified update-site schema smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_update_candidate_discovery",
+      "exit_code": 0,
+      "duration_seconds": 2.971,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "smoke_builtin_process_catalog",
+      "exit_code": 0,
+      "duration_seconds": 1.758,
+      "stdout": "PASS: built-in process catalog smoke\n",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "source_stable": true,
+  "finished_at": "2026-10-18T18:23:14.401506+00:00",
+  "passed": true
+}

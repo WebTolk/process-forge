@@ -129,6 +129,11 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for matching existing classifier rules; registry, traversal and activation remain legacy responsibilities. |
 | `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
 | `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; full validators and companion-file I/O remain legacy responsibilities. |
+| `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder for existing defaults, answer normalization and process materialization, using concrete evolution rules. |
+| `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy for existing evolve defaults, normalization and ordered validation checks. |
+| `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy for existing builtin documents, registry defaults, placeholders, limits and document readiness checks. |
+| `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy for existing source identity, derived site records, overrides and policy merging, without I/O. |
+| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
@@ -550,10 +555,11 @@ from the monolith; consumers import the owning Core modules explicitly.
 instance methods `defined_ids(process)`, `declared_ids(process)` and
 `produced_ids(process)`. Authoring validation, process contract validation and
 builtin catalog reporting in `tools/processforge.py` call the owner directly;
-the three old artifact-ID definitions are removed. Private value-shaping helpers
+the three old artifact-ID definitions are removed. Shared `common.values` helpers
 preserve list-only handling, string-list conversion/filter order, comma-separated
 strings, dict/list distinctions, ID truthiness, duplicate handling and native
-exception order. The generic monolith helpers keep their other consumers.
+exception order. Remaining monolith consumers import canonical shared primitives;
+the two temporally distinct monolith `as_list` definitions remain in place.
 
 Both policies are stateless, perform no I/O and have no monolith callback or
 import. Classifier registry loading, tree walking and activation remain in the
@@ -562,3 +568,38 @@ registration and activation also retain their existing legacy ownership. These
 pure policy extractions do not fully migrate classification or validation,
 complete any OOP epic, or establish archive, installed-Core, Runtime or
 connected-host acceptance.
+
+## Process authoring, evolution, driver documents and update sites
+
+`process_catalog.authoring.ProcessAuthoringDefinitionBuilder` owns `defaults`,
+`normalize`, `build`, `normalize_transitions` and
+`materialize_responsibility_boundaries`. Its normal constructor uses the concrete
+`process_catalog.evolution.ProcessEvolutionPolicy`, whose methods are
+`default_block`, `normalize_block` and `validate_block`. Both preserve fresh
+defaults, the existing shallow sharing and deep-copy locations, unknown fields,
+disabled handling and ordered checks. Transition routes retain their shared
+return mapping. Full authoring/schema validation and durable publication retain
+their legacy responsibilities.
+
+`runtime.drivers.RuntimeDriverDefinitionPolicy` owns `default_documents`,
+`default_registry`, `placeholder_errors`, `parse_limits`, `start_readiness` and
+`validate`, together with the existing reserved environment keys and placeholders.
+Document readiness performs no executable probing. Defaults remain fresh on each
+call; validation messages, ordering, native errors and existing argument
+normalization are preserved. Runtime process execution, registry I/O and worker
+lifecycle retain their existing owners.
+
+`maintenance.sites.UpdateSitePolicy` owns `location`, `source_kind`, `source_id`,
+`stable_key`, `record` and `policy`. It retains ordered source-key lists, raw
+nonblank IDs, override precedence, shallow policy mutation and borrowed channel,
+parent and local-data values. It uses `common.paths.rel` and performs no I/O.
+Update discovery, schema validation, network access, installation and recovery
+remain with their existing owners.
+
+Shared primitives have one canonical owner: `common.checks.Check` remains a
+mutable dataclass and `check` uppercases its level; `common.ids` owns `safe_id`
+and `title_from_id`; `common.values` owns strict-list `as_list` and the existing
+`string_list` conversion. All known consumers use the concrete owners or these
+imports. The obsolete internal definitions are removed without wrappers.
+These moves preserve external 1.2.0 contracts and establish bounded source-only
+evidence; they do not complete the OOP epics or qualify other delivery layers.

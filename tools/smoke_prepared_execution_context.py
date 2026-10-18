@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from smoke_conversation_completeness import setup_basic_project, pf
 from garage_search_smoke_support import register_fixture_resource, select_fixture_resource
 import processforge as core
+from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 
 
 RUN_ID = "prepared-run"
@@ -78,7 +79,7 @@ def schema_check(document: dict[str, Any]) -> None:
 
 
 def make_shell_driver(project: Path) -> Path:
-    driver = copy.deepcopy(core.default_runtime_driver_documents()["generic-shell"])
+    driver = copy.deepcopy(RuntimeDriverDefinitionPolicy().default_documents()["generic-shell"])
     driver["id"] = "prepared-offline-fixture"
     driver["security"]["require_explicit_executable"] = False
     driver["environment"]["inherit"] = False

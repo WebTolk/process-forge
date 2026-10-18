@@ -1,0 +1,2922 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index e553ca3..a55ac27 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-509e18a67f19c2fb2a1a4ffecd46cdeb0b11e032e5ff1c2c72e2284f2dcf34ce  docs/concepts/python-core-structure.md
++c53c3562a7b383d6d67aff6c5a8848bf564544d4496c44b53bac7113ca0724a5  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-be5ea4e276ca0410c30a5233d957fe0f73e8cc9bdb1e070e39398221b4991dd0  docs/ru/concepts/python-core-structure.md
++61f3840afc42edb2e19a91f5990aa0215d39b492d233e48f7a65e3b987bf6c0c  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -674,11 +674,13 @@ c91c1fd8c8dffaef89739e51bb7bbcbe11b7919ca049a28cbdf7e2d6f2c6a219  src/processfor
+ bf1510c900cfdf5c92dbc41000034cb17c244525729fbbd7406a64c763507e19  src/processforge_core/chat/__init__.py
+ 42dda46bb946bc5e91de924ea20d9064eb34d29ddfb29dfcf3920d4768477aa0  src/processforge_core/chat/transcripts.py
+ d553b81a7da4b3f02101e0beefa9dfa787767ff774c0c86513d5d1ca28286909  src/processforge_core/common/__init__.py
++19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432  src/processforge_core/common/checks.py
+ ab7b6b4e9970e4e5bf3c22352354052fb5f45b33432d6b96f41a211b1619535e  src/processforge_core/common/digests.py
+-4d58e8f050ee6c7aa442abe042277b72122e4dfe07dc6b948081034eee46a90e  src/processforge_core/common/ids.py
++ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processforge_core/common/ids.py
+ 929ab865d31a4b72f5ae8728f513d8514add9cf4ab98c4f7c0269c0178ecabdf  src/processforge_core/common/ndjson.py
+ 19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56  src/processforge_core/common/paths.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
++6eccd5af14370433f8e49611f3a38f262a5f2a86ce9447f30ccfb51a3bde509c  src/processforge_core/common/values.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+ 85105a5f90b9a60f7cf8b9049f17a54f0b5937cb265425924e415fa9fb8cd33a  src/processforge_core/completion/__init__.py
+ 539739a814d91e34a0d7a0c273b89507a3ed8b030973372f482872d926dbcc22  src/processforge_core/completion/documents.py
+@@ -716,6 +718,7 @@ ecf6d5f79b7defc6673e03348c172a4d5c20a84158a013a2ff2b0b3071ccaf55  src/processfor
+ 53cf905f795a6925dfab941a9e82b8f4fff8dcf4ccf97490aa7dbebfbc5bb532  src/processforge_core/evidence/validation.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
++4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7  src/processforge_core/maintenance/sites.py
+ 4eebb2407446439a008273923d6b9317cc08b6845c6d89cf826f6ab609114dfe  src/processforge_core/maintenance/temporary_files.py
+ 646b38abbe1a8ead93d00b1fc84e75555073dea8efbca0fbbb2987443d7c1756  src/processforge_core/maintenance/update.py
+ c6d8cf6128923402c8bd0856b6cc6d6cfaadb30e9a19e78a74ccb72927e60307  src/processforge_core/operations/__init__.py
+@@ -730,9 +733,11 @@ d050e9412b2d190474c36f4a527628a3c55e8cfbb812a78c02ec6ca33a970532  src/processfor
+ 949a55a8e8430d58e431604ce83cadaec052457f8de724b37e5c472ffc760eab  src/processforge_core/prepared/resources.py
+ f9cb908c5a31295837d2782865a9eae6835f873710ab74d0480f9b8b7c06762d  src/processforge_core/prepared/snapshot_read.py
+ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processforge_core/process_catalog/__init__.py
+-7ab9b30545e08e4db688760be8099ccae707c2ebd6621492b65d1449ece8a2a6  src/processforge_core/process_catalog/artifacts.py
++3c12bf127fc08105bddc2332cd6c21f8ad2118ef2af479948f211f101f9b7bd3  src/processforge_core/process_catalog/artifacts.py
++e2b4791ae5200d9a3404f654676fdfd13cabc4b5c3bc542ae7f2a2c9bafcc127  src/processforge_core/process_catalog/authoring.py
+ 80dd26391dfd5af0b62a7fd0e2062af32d6245b2b8c4e75ac9e971ae6e8b1cad  src/processforge_core/process_catalog/catalog_read.py
+ e5936d407aa0793795c8aa1b774acd3f76dc58205e15c0b1b1d18b8b336416ac  src/processforge_core/process_catalog/definition_read.py
++84fbfa98942a73a392c03ca8ceb3da39461e2b0e75dc7963a9d33bb45169a50f  src/processforge_core/process_catalog/evolution.py
+ 6a402ffb55914f53690be41619c9cf1bb312b4bf95b02526920cf8e39182b3a7  src/processforge_core/process_catalog/models.py
+ dd11b217014f4896c9101be12396bdf8452c6601230398c36a8218ddb20a7049  src/processforge_core/process_catalog/official_read.py
+ d7825e9222392321ad8e4e1991e215c97a632f10d3674f9071000f6109669527  src/processforge_core/process_catalog/pin.py
+@@ -772,6 +777,7 @@ f1d8caeddb95a678d3254829f144bda3acd334e5b6fff1d48663e6b131127f19  src/processfor
+ cbd7d0c29a26719ded5471eee83bfdbaa837abfeb1b575ae04690bc0cbd59e59  src/processforge_core/resources/snapshot.py
+ bff728e23d056f8b20e789cafc04cd40b8e76c883e8cc400299efa822c247a51  src/processforge_core/resources/versioning.py
+ 670e292e6448728f65ec2f8ffbd5241fe7ae39029f20832b9d235260e46f65cb  src/processforge_core/runtime/__init__.py
++b273cb7da6197b94596e62323dfca551eeb22664fc7d4d474968e3c62de12d25  src/processforge_core/runtime/drivers.py
+ d95f20647297326251bf9b1622a4bc580bf5a4a9876331a4e049b48ae7494c77  src/processforge_core/runtime/metrics.py
+ c4d7c2bf6daf5bdd014478e72f8f1164b0ec627ed43c5cf904225ed611578e76  src/processforge_core/runtime_service_state.py
+ 74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572  src/processforge_core/sqlite_storage.py
+@@ -988,7 +994,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-8cb03ae180d361fbdc0e1870313483f40f2794cc3bd45eec92dfadfaaf40d30e  tools/processforge.py
++43a719f858316ad346e22ae3e55909f8611c0c989734b6c31c9c85d5741541e4  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+@@ -1018,7 +1024,7 @@ b6c5e96a44b0b0ce3144e02a6cfbe1cea8aa368d86473e1406ae7810b5754cb1  tools/smoke_cl
+ d353381ae07d25025d70675216eaf18199f9e27daa0b048ca2236fb780e5e291  tools/smoke_codex_exec_worker.py
+ b049d0d95cf4663d5055928bcc4f7421598040072c96040f691563b8c7859acc  tools/smoke_codex_integration.py
+ 071b5db6137ddf144098bc712ee5ae812e63650fbec9c79e09229393c23351b6  tools/smoke_codex_lifecycle_identity.py
+-296e6a761f991000e7f165efebd69698c52b5890b8ebf7fc0690f83f8d6ef238  tools/smoke_codex_worker_governance.py
++b3f8cd951a10bd012c0092a84e30b54482e3a6f087d5e35cd9b4f7e108dec9dd  tools/smoke_codex_worker_governance.py
+ 8f03c3e1c64d3e61cf92509c5553bc7e65f22944e5deb608cdd729b12090c3e7  tools/smoke_completion_document_service.py
+ 5001968957b5376053214e4a57530b42d0d39236ea210ed8ee023ef6c3eb33a1  tools/smoke_completion_intent_builder.py
+ 1be8a1d0e1fc82456430d0ddf1b720dfaad1979da3cb27b0f2c346cbd8f92c80  tools/smoke_completion_intent_read_service.py
+@@ -1125,7 +1131,7 @@ dfa025882ae1f90cecd4862caff28922949581b2f080b54b70db73836e15cfb9  tools/smoke_or
+ 10385c3daae274f5f5a1de0427c1f4ca1ea60bf413a585d66883e24bdfb4c638  tools/smoke_parameter_freshness.py
+ 6bc94c982ff5963e427effbb43a0b87d3d8a7a38590745841b22e667922b8ed1  tools/smoke_pf_project_process_refs_follow_layout.py
+ c726a515ef7c9694064c52756ecff5b454a6327ce029f4e8cf4006ae32ac1b73  tools/smoke_platform_create_include_levels.py
+-a1cab56847508262aec8f073b311ba70f40b3063aa67c07b1c78d31b11699769  tools/smoke_prepared_execution_context.py
++91c8a7e1b416aa1ef6e1b603bda002a26b12dd6349d8a2a8367777b14f59c867  tools/smoke_prepared_execution_context.py
+ dcf7d9751f42ffa9e2aa13e44805987e8b1511b0001238d7e5a10f4c528e6d36  tools/smoke_prepared_execution_recovery.py
+ 2c2bdf4522a18bd59a3f91df39c947c3bc5f0a67a15fe267fdac991aace4696e  tools/smoke_process_authoring_evolve_questions.py
+ 267efa3b551acd467c1a5edb447166178065a16214f81246854cba5a0aefc742  tools/smoke_process_authoring_evolve_targeting.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index 975b5b2..fdfe0b3 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -129,6 +129,11 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for matching existing classifier rules; registry, traversal and activation remain legacy responsibilities. |
+ | `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
+ | `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; full validators and companion-file I/O remain legacy responsibilities. |
++| `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder for existing defaults, answer normalization and process materialization, using concrete evolution rules. |
++| `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy for existing evolve defaults, normalization and ordered validation checks. |
++| `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy for existing builtin documents, registry defaults, placeholders, limits and document readiness checks. |
++| `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy for existing source identity, derived site records, overrides and policy merging, without I/O. |
++| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title and list/string-list primitives. |
+ | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
+ | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
+ | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
+@@ -550,10 +555,11 @@ from the monolith; consumers import the owning Core modules explicitly.
+ instance methods `defined_ids(process)`, `declared_ids(process)` and
+ `produced_ids(process)`. Authoring validation, process contract validation and
+ builtin catalog reporting in `tools/processforge.py` call the owner directly;
+-the three old artifact-ID definitions are removed. Private value-shaping helpers
++the three old artifact-ID definitions are removed. Shared `common.values` helpers
+ preserve list-only handling, string-list conversion/filter order, comma-separated
+ strings, dict/list distinctions, ID truthiness, duplicate handling and native
+-exception order. The generic monolith helpers keep their other consumers.
++exception order. Remaining monolith consumers import canonical shared primitives;
++the two temporally distinct monolith `as_list` definitions remain in place.
+ 
+ Both policies are stateless, perform no I/O and have no monolith callback or
+ import. Classifier registry loading, tree walking and activation remain in the
+@@ -562,3 +568,38 @@ registration and activation also retain their existing legacy ownership. These
+ pure policy extractions do not fully migrate classification or validation,
+ complete any OOP epic, or establish archive, installed-Core, Runtime or
+ connected-host acceptance.
++
++## Process authoring, evolution, driver documents and update sites
++
++`process_catalog.authoring.ProcessAuthoringDefinitionBuilder` owns `defaults`,
++`normalize`, `build`, `normalize_transitions` and
++`materialize_responsibility_boundaries`. Its normal constructor uses the concrete
++`process_catalog.evolution.ProcessEvolutionPolicy`, whose methods are
++`default_block`, `normalize_block` and `validate_block`. Both preserve fresh
++defaults, the existing shallow sharing and deep-copy locations, unknown fields,
++disabled handling and ordered checks. Transition routes retain their shared
++return mapping. Full authoring/schema validation and durable publication retain
++their legacy responsibilities.
++
++`runtime.drivers.RuntimeDriverDefinitionPolicy` owns `default_documents`,
++`default_registry`, `placeholder_errors`, `parse_limits`, `start_readiness` and
++`validate`, together with the existing reserved environment keys and placeholders.
++Document readiness performs no executable probing. Defaults remain fresh on each
++call; validation messages, ordering, native errors and existing argument
++normalization are preserved. Runtime process execution, registry I/O and worker
++lifecycle retain their existing owners.
++
++`maintenance.sites.UpdateSitePolicy` owns `location`, `source_kind`, `source_id`,
++`stable_key`, `record` and `policy`. It retains ordered source-key lists, raw
++nonblank IDs, override precedence, shallow policy mutation and borrowed channel,
++parent and local-data values. It uses `common.paths.rel` and performs no I/O.
++Update discovery, schema validation, network access, installation and recovery
++remain with their existing owners.
++
++Shared primitives have one canonical owner: `common.checks.Check` remains a
++mutable dataclass and `check` uppercases its level; `common.ids` owns `safe_id`
++and `title_from_id`; `common.values` owns strict-list `as_list` and the existing
++`string_list` conversion. All known consumers use the concrete owners or these
++imports. The obsolete internal definitions are removed without wrappers.
++These moves preserve external 1.2.0 contracts and establish bounded source-only
++evidence; they do not complete the OOP epics or qualify other delivery layers.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index d9f0886..5a9b60e 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -137,6 +137,11 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/project/classification.py` | ProjectClassifierRulePolicy без состояния для проверки прежних правил классификации; реестры, обход и активация сохраняют legacy-владельцев. |
+ | `src/processforge_core/common/paths.py` | Общий примитив path_matches_pattern для классификации и обнаружения вместе с неизменённым helper rel. |
+ | `src/processforge_core/process_catalog/artifacts.py` | ProcessArtifactDeclarationPolicy без состояния для defined, declared и produced ID артефактов; полные валидаторы и I/O companion-файлов сохраняют legacy-владельцев. |
++| `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder: прежние значения по умолчанию, нормализация ответов и построение процесса с конкретными правилами evolve. |
++| `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy: прежние значения evolve по умолчанию, нормализация и упорядоченные проверки. |
++| `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy: прежние встроенные документы, реестр, placeholders, limits и проверки готовности документа. |
++| `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy: прежние идентификаторы источников, записи сайтов, переопределения и слияние политик без I/O. |
++| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
+ | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
+ | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
+ | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
+@@ -563,10 +568,12 @@ merge policy не делает полный компилятор контекс
+ методами экземпляра `defined_ids(process)`, `declared_ids(process)` и
+ `produced_ids(process)`. Проверка authoring, контракта процесса и отчёт builtin
+ catalog в `tools/processforge.py` вызывают владельца напрямую; три старых
+-определения сбора ID артефактов удалены. Приватные helpers сохраняют обработку
++определения сбора ID артефактов удалены. Общие функции `common.values` сохраняют обработку
+ только списков, порядок преобразования и фильтрации string-list, строки через
+ запятую, различия dict/list, истинность ID, обработку дубликатов и прежний порядок
+-исключений. Общие helpers монолита остаются для других потребителей.
++исключений. Остальные потребители монолита импортируют общие примитивы из
++модулей-владельцев; два определения `as_list` с разным временем действия остаются
++в монолите.
+ 
+ Обе policy не хранят состояние, не выполняют I/O и не импортируют монолит и не
+ вызывают его через callbacks. Загрузка реестров классификаторов, обход дерева и
+@@ -575,3 +582,38 @@ companion-файлов, регистрация каталога и актива
+ legacy-владельцев. Выделение чистых policy не означает полного переноса
+ классификации или валидации, завершения OOP-эпиков или приёмки архива,
+ установленного Core, Runtime либо подключённых хостов.
++
++## Построение процессов, evolve, документы драйверов и update-site
++
++`process_catalog.authoring.ProcessAuthoringDefinitionBuilder` владеет методами
++`defaults`, `normalize`, `build`, `normalize_transitions` и
++`materialize_responsibility_boundaries`. Обычный конструктор использует конкретный
++`process_catalog.evolution.ProcessEvolutionPolicy` с методами `default_block`,
++`normalize_block` и `validate_block`. Сохранены новые значения по умолчанию при
++каждом вызове, прежние ссылки на вложенные данные и места глубокого копирования,
++неизвестные поля, обработка отключённого evolve и порядок проверок. Маршруты
++переходов сохраняют общий словарь возврата. Полная проверка authoring и схем,
++а также надёжная публикация остаются у прежних владельцев.
++
++`runtime.drivers.RuntimeDriverDefinitionPolicy` владеет методами
++`default_documents`, `default_registry`, `placeholder_errors`, `parse_limits`,
++`start_readiness` и `validate`, а также прежними наборами зарезервированных
++переменных среды и placeholders. Готовность документа проверяется без поиска
++исполняемого файла. Сохранены свежие словари, сообщения и порядок проверки,
++исходные ошибки и прежняя нормализация аргументов. Запуск процессов Runtime,
++чтение реестра и жизненный цикл воркеров сохраняют существующих владельцев.
++
++`maintenance.sites.UpdateSitePolicy` владеет методами `location`, `source_kind`,
++`source_id`, `stable_key`, `record` и `policy`. Сохранены порядок ключей источника,
++пробелы в непустом ID, приоритет переопределений, изменение общего вложенного
++словаря политики и заимствованные значения каналов, родителя и локальных данных.
++Класс использует `common.paths.rel` и не выполняет I/O. Поиск обновлений,
++проверка схем, сеть, установка и восстановление остаются у прежних владельцев.
++
++Общие примитивы имеют единственного владельца: `common.checks.Check` остаётся
++изменяемым dataclass, а `check` переводит уровень в верхний регистр;
++`common.ids` содержит `safe_id` и `title_from_id`, `common.values` — строгий
++списочный `as_list` и прежний `string_list`. Все найденные потребители используют
++конкретные классы или эти импорты. Прежние внутренние определения удалены без
++обёрток. Перенос сохраняет внешние контракты 1.2.0 и подтверждён для исходников;
++он не завершает OOP-эпики и не квалифицирует другие слои поставки.
+diff --git a/src/processforge_core/common/checks.py b/src/processforge_core/common/checks.py
+new file mode 100644
+index 0000000..7eba817
+--- /dev/null
++++ b/src/processforge_core/common/checks.py
+@@ -0,0 +1,15 @@
++"""Shared check values and construction."""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++
++
++@dataclass
++class Check:
++    level: str
++    message: str
++
++
++def check(level: str, message: str) -> Check:
++    return Check(level.upper(), message)
+diff --git a/src/processforge_core/common/ids.py b/src/processforge_core/common/ids.py
+index 386b34f..9ac56db 100644
+--- a/src/processforge_core/common/ids.py
++++ b/src/processforge_core/common/ids.py
+@@ -9,6 +9,10 @@ def safe_id(value: str, default: str = "project") -> str:
+     return cleaned or default
+ 
+ 
++def title_from_id(value: str) -> str:
++    return " ".join(part.capitalize() for part in safe_id(value, "item").split("-"))
++
++
+ def opaque_identity_digest(identity: str) -> str:
+     """Return a filesystem-safe key without normalizing the opaque identity."""
+ 
+diff --git a/src/processforge_core/common/values.py b/src/processforge_core/common/values.py
+new file mode 100644
+index 0000000..8a27095
+--- /dev/null
++++ b/src/processforge_core/common/values.py
+@@ -0,0 +1,15 @@
++from __future__ import annotations
++
++from typing import Any
++
++
++def as_list(value: Any) -> list[Any]:
++    return value if isinstance(value, list) else []
++
++
++def string_list(value: Any) -> list[str]:
++    if isinstance(value, list):
++        return [str(item) for item in value if str(item).strip()]
++    if isinstance(value, str) and value.strip():
++        return [item.strip() for item in value.split(",") if item.strip()]
++    return []
+diff --git a/src/processforge_core/maintenance/sites.py b/src/processforge_core/maintenance/sites.py
+new file mode 100644
+index 0000000..b5d9eee
+--- /dev/null
++++ b/src/processforge_core/maintenance/sites.py
+@@ -0,0 +1,138 @@
++from __future__ import annotations
++
++import hashlib
++from pathlib import Path
++from typing import Any
++from urllib.parse import urlparse
++
++from processforge_core.common.paths import rel
++
++
++UPDATE_SOURCE_PUBLIC_KEYS = [
++    "id",
++    "type",
++    "provider",
++    "priority",
++    "manifest_url",
++    "changelog_url",
++    "channel",
++    "path",
++    "owner",
++    "repo",
++    "api_base_url",
++    "channels",
++    "include_prereleases",
++    "asset_patterns",
++    "trust",
++    "policy",
++    "provider_capabilities",
++]
++
++
++UPDATE_SOURCE_LOCAL_KEYS = [
++    "auth_ref",
++    "auth",
++    "headers_env",
++    "query_env",
++    "custom_headers_env",
++    "channel_override",
++]
++
++
++class UpdateSitePolicy:
++    def location(self, source: dict[str, Any], provider_key: str) -> str:
++        return str(source.get("manifest_url") or "")
++
++    def source_kind(self, source: dict[str, Any]) -> str:
++        manifest_url = self.location(source, "provider")
++        parsed = urlparse(manifest_url)
++        scheme = parsed.scheme.lower()
++        if scheme == "file" or not scheme:
++            return "local_file"
++        if scheme in {"http", "https"}:
++            return "http"
++        return scheme or "unknown"
++
++    def source_id(self, source: dict[str, Any]) -> str:
++        raw = source.get("id")
++        if isinstance(raw, str) and raw.strip():
++            return raw
++        manifest_url = self.location(source, "provider")
++        digest = hashlib.sha256(manifest_url.encode("utf-8")).hexdigest()[:12] if manifest_url else "missing"
++        return f"manifest-{digest}"
++
++    def stable_key(self, subject_type: str, subject_id: str, source_id: str) -> str:
++        return f"{subject_type}:{subject_id}:{source_id}"
++
++    def record(
++        self,
++        workplace_root: Path,
++        subject_type: str,
++        subject_id: str,
++        subject_scope: str,
++        installed_version: str,
++        manifest_path: Path,
++        site: dict[str, Any],
++        overrides: dict[str, dict[str, Any]],
++        *,
++        parent: dict[str, Any] | None = None,
++    ) -> dict[str, Any]:
++        source_id = self.source_id(site)
++        site_id = self.stable_key(subject_type, subject_id, source_id)
++        source = {key: site[key] for key in UPDATE_SOURCE_PUBLIC_KEYS if key in site}
++        source["id"] = source_id
++        source["type"] = self.source_kind(source)
++        if "channel" not in source:
++            channels = site.get("channels")
++            if isinstance(channels, list) and channels:
++                source["channel"] = str(channels[0])
++        enabled = bool(site.get("enabled", True))
++        preserved = {key: site[key] for key in UPDATE_SOURCE_LOCAL_KEYS if key in site}
++        override = overrides.get(site_id, {}) or overrides.get(subject_id, {}) or overrides.get(f"{subject_type}:{subject_id}", {})
++        if isinstance(override, dict):
++            if "enabled" in override or "disabled" in override:
++                enabled = bool(override.get("enabled", not bool(override.get("disabled"))))
++            if isinstance(override.get("channels"), list):
++                source["channels"] = override.get("channels")
++            if isinstance(override.get("channel"), str):
++                source["channel"] = override.get("channel")
++                source["channels"] = [override.get("channel")]
++            if isinstance(override.get("manifest_url"), str):
++                source["manifest_url"] = override.get("manifest_url")
++            if not isinstance(source.get("policy"), dict):
++                source["policy"] = {}
++            if isinstance(override.get("pin_version"), str):
++                source["policy"]["pin_version"] = override.get("pin_version")
++            if "allow_major" in override:
++                source["policy"]["allow_major"] = bool(override.get("allow_major"))
++            if "auto_apply" in override:
++                source["policy"]["auto_apply"] = bool(override.get("auto_apply"))
++            preserved_override = override.get("preserved_local") if isinstance(override.get("preserved_local"), dict) else {}
++            for key in UPDATE_SOURCE_LOCAL_KEYS:
++                if key in override:
++                    preserved[key] = override[key]
++            preserved.update(preserved_override)
++
++        subject: dict[str, Any] = {"type": subject_type, "id": subject_id, "scope": subject_scope}
++        if installed_version:
++            subject["installed_version"] = installed_version
++        if parent:
++            subject["parent"] = parent
++        record: dict[str, Any] = {
++            "site_id": site_id,
++            "subject": subject,
++            "source": source,
++            "manifest_path": rel(manifest_path, workplace_root),
++            "enabled": enabled,
++        }
++        if preserved:
++            record["preserved_local"] = preserved
++        return record
++
++    def policy(self, source: dict[str, Any], installed_subject: dict[str, Any] | None = None) -> dict[str, Any]:
++        policy: dict[str, Any] = {}
++        if isinstance(source.get("policy"), dict):
++            policy.update(source["policy"])
++        if installed_subject and isinstance(installed_subject.get("update_policy"), dict):
++            policy.update(installed_subject["update_policy"])
++        return policy
+diff --git a/src/processforge_core/process_catalog/artifacts.py b/src/processforge_core/process_catalog/artifacts.py
+index bb449ad..b7104e8 100644
+--- a/src/processforge_core/process_catalog/artifacts.py
++++ b/src/processforge_core/process_catalog/artifacts.py
+@@ -2,17 +2,11 @@ from __future__ import annotations
+ 
+ from typing import Any
+ 
++from processforge_core.common.values import as_list, string_list
++
+ 
+-def _as_list(value: Any) -> list[Any]:
+-    return value if isinstance(value, list) else []
+ 
+ 
+-def _string_list(value: Any) -> list[str]:
+-    if isinstance(value, list):
+-        return [str(item) for item in value if str(item).strip()]
+-    if isinstance(value, str) and value.strip():
+-        return [item.strip() for item in value.split(",") if item.strip()]
+-    return []
+ 
+ 
+ class ProcessArtifactDeclarationPolicy:
+@@ -22,7 +16,7 @@ class ProcessArtifactDeclarationPolicy:
+         definitions = process.get("artifact_definitions")
+         if isinstance(definitions, dict):
+             return {str(key) for key in definitions.keys()}
+-        return {str(item.get("id")) for item in _as_list(definitions) if isinstance(item, dict) and item.get("id")}
++        return {str(item.get("id")) for item in as_list(definitions) if isinstance(item, dict) and item.get("id")}
+ 
+     def declared_ids(self, process: dict[str, Any]) -> set[str]:
+         ids = self.defined_ids(process)
+@@ -38,7 +32,7 @@ class ProcessArtifactDeclarationPolicy:
+ 
+     def produced_ids(self, process: dict[str, Any]) -> set[str]:
+         produced: set[str] = set()
+-        for stage in _as_list(process.get("stages")):
++        for stage in as_list(process.get("stages")):
+             if isinstance(stage, dict):
+-                produced.update(str(item) for item in _string_list(stage.get("produced_artifacts")))
++                produced.update(str(item) for item in string_list(stage.get("produced_artifacts")))
+         return produced
+diff --git a/src/processforge_core/process_catalog/authoring.py b/src/processforge_core/process_catalog/authoring.py
+new file mode 100644
+index 0000000..d93b32a
+--- /dev/null
++++ b/src/processforge_core/process_catalog/authoring.py
+@@ -0,0 +1,452 @@
++from __future__ import annotations
++
++from typing import Any
++
++from processforge_core.common.ids import safe_id, title_from_id
++from processforge_core.common.values import as_list, string_list
++from processforge_core.process_catalog.evolution import ProcessEvolutionPolicy
++
++
++class ProcessAuthoringDefinitionBuilder:
++    def __init__(self) -> None:
++        self._evolution = ProcessEvolutionPolicy()
++
++    def defaults(self, process_id: str, title: str, description: str = "") -> dict[str, Any]:
++        process_id = safe_id(process_id, "new-process")
++        title = title or title_from_id(process_id)
++        return {
++            "schema_version": 1,
++            "process": {
++                "id": process_id,
++                "name": title,
++                "version": "1.0.0",
++                "status": "draft",
++                "kind": "project_process",
++                "scope": "project",
++                "description": description or f"Guide repeatable work for {title}.",
++            },
++            "run_model": {
++                "supports_multiple_tasks": False,
++                "default_task_loop": {
++                    "enabled": False,
++                    "iteration_kinds": ["work", "debug", "fix", "review", "handoff"],
++                },
++            },
++            "execution_mode": "single_agent",
++            "execution_mode_questions": {},
++            "coordination_requirements": {
++                "mode": "simple_allowed",
++                "director_inbox": {"required": False, "optional": False},
++                "error_workflow": {"mode": "none"},
++                "simple_mode_behavior": "disable_director_features",
++            },
++            "error_handling": {
++                "enabled": False,
++                "mode": "none",
++                "fallback_if_no_director": "needs_operator",
++            },
++            "evolve": self._evolution.default_block(answers=True),
++            "roles": [
++                {"id": "author", "title": "Author", "responsibility": "Creates the main work artifacts."},
++                {"id": "reviewer", "title": "Reviewer", "responsibility": "Checks quality gates before handoff."},
++            ],
++            "stages": [
++                {
++                    "id": "intake",
++                    "title": "Intake",
++                    "description": "Capture objective, constraints, and expected outputs.",
++                    "required_role": "author",
++                    "produced_artifacts": ["brief"],
++                    "exit_gates": ["brief-approved"],
++                    "handoff_required": False,
++                },
++                {
++                    "id": "work",
++                    "title": "Work",
++                    "description": "Create the requested outputs.",
++                    "required_role": "author",
++                    "required_inputs": ["brief"],
++                    "produced_artifacts": ["work-output"],
++                    "entry_gates": ["brief-approved"],
++                    "exit_gates": ["work-ready-for-review"],
++                    "handoff_required": False,
++                },
++                {
++                    "id": "review",
++                    "title": "Review",
++                    "description": "Validate the output and record risks.",
++                    "required_role": "reviewer",
++                    "required_inputs": ["work-output"],
++                    "produced_artifacts": ["review-notes"],
++                    "entry_gates": ["work-ready-for-review"],
++                    "exit_gates": ["review-passed"],
++                    "handoff_required": False,
++                },
++                {
++                    "id": "handoff",
++                    "title": "Handoff",
++                    "description": "Summarize delivered state and next steps.",
++                    "required_role": "author",
++                    "required_inputs": ["review-notes"],
++                    "produced_artifacts": ["handoff"],
++                    "entry_gates": ["review-passed"],
++                    "exit_gates": ["handoff-created"],
++                    "handoff_required": True,
++                },
++            ],
++            "artifacts": [
++                {"id": "brief", "title": "Brief", "owner_role": "author", "template": "artifact-template"},
++                {"id": "work-output", "title": "Work Output", "owner_role": "author", "template": "artifact-template"},
++                {"id": "review-notes", "title": "Review Notes", "owner_role": "reviewer", "template": "review-template"},
++                {"id": "handoff", "title": "Handoff", "owner_role": "author", "template": "handoff-template"},
++            ],
++            "evidence_definitions": [
++                {"id": "review-attestation", "title": "Review attestation", "kind": "attestation"},
++            ],
++            "gates": [
++                {"id": "brief-approved", "description": "Brief is explicit enough to start work.", "blocking": True, "required_artifact": "brief"},
++                {"id": "work-ready-for-review", "description": "Work output exists and is ready for review.", "blocking": True, "required_artifact": "work-output"},
++                {"id": "review-passed", "description": "Review has no blocking failures.", "blocking": True, "required_artifact": "review-notes"},
++                {"id": "handoff-created", "description": "Handoff artifact exists.", "blocking": True, "required_artifact": "handoff"},
++            ],
++            "required_capabilities": ["process_coordination", "artifact_review", "reporting"],
++            "required_packages": ["process-forge-core"],
++            "required_templates": ["artifact-template", "review-template", "handoff-template"],
++            "allowed_tools": ["processforge-cli", "validator"],
++            "forbidden_actions": ["write_private_absolute_paths_to_public_files", "skip_blocking_review"],
++        }
++
++    def normalize(self, raw: dict[str, Any], fallback_id: str = "new-process", fallback_title: str = "") -> dict[str, Any]:
++        base = self.defaults(fallback_id, fallback_title or title_from_id(fallback_id))
++        if not raw:
++            return base
++        process = raw.get("process") if isinstance(raw.get("process"), dict) else {}
++        if not process and ("id" in raw or "name" in raw or "title" in raw):
++            process = raw
++        process_id = safe_id(str(process.get("id") or raw.get("id") or fallback_id), "new-process")
++        base["process"].update(
++            {
++                "id": process_id,
++                "name": str(process.get("name") or process.get("title") or raw.get("name") or raw.get("title") or title_from_id(process_id)),
++                "version": str(process.get("version") or raw.get("version") or "1.0.0"),
++                "status": str(process.get("status") or raw.get("status") or "draft"),
++                "kind": str(process.get("kind") or raw.get("kind") or base["process"]["kind"]),
++                "scope": str(process.get("scope") or raw.get("scope") or base["process"]["scope"]),
++                "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
++            }
++        )
++        for key in [
++            "run_model",
++            "execution_mode",
++            "execution_mode_questions",
++            "coordination_requirements",
++            "error_handling",
++            "roles",
++            "stages",
++            "artifacts",
++            "artifact_definitions",
++            "evidence_definitions",
++            "gates",
++            "hooks",
++            "evolve",
++            "evolution_policy",
++            "expected_artifacts",
++            "process_transitions",
++            "agent_requirements",
++            "responsibility_boundaries",
++            "subagent_policy",
++            "runtime_requirements",
++            "runtime_execution_boundary",
++            "stage_completion",
++            "run_completion",
++            "metadata",
++        ]:
++            if key in raw:
++                base[key] = raw[key]
++        if "artifact_definitions" in raw and "artifacts" not in raw:
++            base["artifacts"] = raw["artifact_definitions"]
++        base["evolve"] = self._evolution.normalize_block(base.get("evolve"), answers=True)
++        for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
++            if key in raw:
++                base[key] = string_list(raw[key])
++        base["process_transitions"] = self.normalize_transitions(base.get("process_transitions"), process_id)
++        return base
++
++    def build(self, answers: dict[str, Any]) -> dict[str, Any]:
++        process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
++        process_id = safe_id(str(process.get("id", "new-process")), "new-process")
++        roles: list[dict[str, Any]] = []
++        for item in as_list(answers.get("roles")):
++            if isinstance(item, dict):
++                role_id = safe_id(str(item.get("id") or item.get("title") or "role"), "role")
++                responsibility = str(item.get("responsibility") or "")
++                roles.append(
++                    {
++                        "id": role_id,
++                        "title": str(item.get("title") or title_from_id(role_id)),
++                        "kind": str(item.get("kind") or "primary_agent"),
++                        "responsibility": responsibility,
++                        "responsibilities": string_list(item.get("responsibilities")) or ([responsibility] if responsibility else [f"Owns {title_from_id(role_id)} responsibilities."]),
++                    }
++                )
++        if not roles:
++            roles = [{"id": "author", "title": "Author", "responsibility": "Creates process artifacts."}]
++        role_ids = {item["id"] for item in roles}
++
++        artifacts: list[dict[str, Any]] = []
++        for item in as_list(answers.get("artifacts")):
++            if isinstance(item, dict):
++                artifact_id = safe_id(str(item.get("id") or item.get("title") or "artifact"), "artifact")
++                owner_role = safe_id(str(item.get("owner_role") or roles[0]["id"]), roles[0]["id"])
++                if owner_role not in role_ids:
++                    owner_role = roles[0]["id"]
++                artifacts.append(
++                    {
++                        "id": artifact_id,
++                        "title": str(item.get("title") or title_from_id(artifact_id)),
++                        "owner_role": owner_role,
++                        "type": str(item.get("type") or "markdown"),
++                        "required": bool(item.get("required", True)),
++                        "template": str(item.get("template") or "artifact-template"),
++                        "path_hint": str(item.get("path_hint") or f".pf/artifacts/{artifact_id}.md"),
++                        "lifecycle": string_list(item.get("lifecycle")) or ["draft", "ready_for_review", "approved"],
++                    }
++                )
++        artifact_ids = {item["id"] for item in artifacts}
++
++        gates: list[dict[str, Any]] = []
++        for item in as_list(answers.get("gates")):
++            if isinstance(item, dict):
++                gate_id = safe_id(str(item.get("id") or item.get("description") or "gate"), "gate")
++                gate: dict[str, Any] = {
++                    "id": gate_id,
++                    "description": str(item.get("description") or title_from_id(gate_id)),
++                    "type": str(item.get("type") or ("artifact_exists" if item.get("required_artifact") else "checklist")),
++                    "blocking": bool(item.get("blocking", True)),
++                    "required": bool(item.get("required", item.get("blocking", True))),
++                }
++                if item.get("required_artifact"):
++                    gate["required_artifact"] = safe_id(str(item.get("required_artifact")), "artifact")
++                gates.append(gate)
++        gate_ids = {item["id"] for item in gates}
++
++        stages: list[dict[str, Any]] = []
++        handoff_note_required = False
++        for item in as_list(answers.get("stages")):
++            if isinstance(item, dict):
++                stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
++                produced = [safe_id(value, "artifact") for value in string_list(item.get("produced_artifacts"))]
++                exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates") or item.get("gates"))]
++                if not produced and artifact_ids:
++                    produced = [sorted(artifact_ids)[0]]
++                if not exits and gate_ids:
++                    exits = [sorted(gate_ids)[0]]
++                role_id = safe_id(str(item.get("required_role") or roles[0]["id"]), roles[0]["id"])
++                if role_id not in role_ids:
++                    role_id = roles[0]["id"]
++                if bool(item.get("handoff_required", False)):
++                    handoff_note_required = True
++                stages.append(
++                    {
++                        "id": stage_id,
++                        "title": str(item.get("title") or title_from_id(stage_id)),
++                        "goal": str(item.get("goal") or item.get("description") or item.get("title") or title_from_id(stage_id)),
++                        "description": str(item.get("description") or ""),
++                        "actor": str(item.get("actor") or "primary_agent"),
++                        "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
++                        "produced_artifacts": produced,
++                        "required_artifacts": [safe_id(value, "artifact") for value in string_list(item.get("required_artifacts"))],
++                        "required_evidence": [safe_id(value, "evidence") for value in string_list(item.get("required_evidence"))],
++                        "required_role": role_id,
++                        "required_capabilities": string_list(item.get("required_capabilities")),
++                        "parameters": item.get("parameters") if isinstance(item.get("parameters"), dict) else {},
++                        "allowed_tools": string_list(item.get("allowed_tools")),
++                        "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
++                        "exit_gates": exits,
++                        "automation_bindings": as_list(item.get("automation_bindings")) or as_list(item.get("technical_obligations")),
++                    }
++                )
++        if not artifacts:
++            artifacts = [
++                {
++                    "id": "brief",
++                    "title": "Brief",
++                    "owner_role": roles[0]["id"],
++                    "type": "markdown",
++                    "required": True,
++                    "template": "artifact-template",
++                    "path_hint": ".pf/artifacts/brief.md",
++                    "lifecycle": ["draft", "ready_for_review", "approved"],
++                }
++            ]
++            artifact_ids = {"brief"}
++        if not gates:
++            gates = [{"id": "brief-approved", "description": "Brief is approved.", "blocking": True, "required_artifact": "brief"}]
++            gate_ids = {"brief-approved"}
++        if not stages:
++            stages = [{"id": "intake", "title": "Intake", "goal": "Capture scope.", "description": "Capture scope.", "actor": "primary_agent", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "gates": list(gate_ids)}]
++            handoff_note_required = True
++
++        run_model = answers.get("run_model") if isinstance(answers.get("run_model"), dict) else {}
++        output = {
++            "schema_version": 1,
++            "id": process_id,
++            "name": str(process.get("name") or title_from_id(process_id)),
++            "kind": str(process.get("kind") or "project_process"),
++            "scope": str(process.get("scope") or "project"),
++            "version": str(process.get("version") or "1.0.0"),
++            "status": str(process.get("status") or "draft"),
++            "description": str(process.get("description") or ""),
++            "purpose": str(process.get("purpose") or process.get("description") or ""),
++            "execution_mode": str(answers.get("execution_mode") or process.get("execution_mode") or "single_agent"),
++            "execution_mode_questions": answers.get("execution_mode_questions") if isinstance(answers.get("execution_mode_questions"), dict) else {},
++            "coordination_requirements": answers.get("coordination_requirements") if isinstance(answers.get("coordination_requirements"), dict) else self.defaults(process_id, "").get("coordination_requirements", {}),
++            "error_handling": answers.get("error_handling") if isinstance(answers.get("error_handling"), dict) else self.defaults(process_id, "").get("error_handling", {}),
++            "run_model": run_model,
++            "required_capabilities": string_list(answers.get("required_capabilities")),
++            "hooks": answers.get("hooks") if isinstance(answers.get("hooks"), dict) else {
++                "emit": [
++                    {"event": "process.created", "required": True},
++                    {"event": "process.started", "required": True},
++                    {"event": "stage.started", "required": True},
++                    {"event": "stage.completed", "required": True},
++                    {"event": "artifact.created", "required": True},
++                    {"event": "review.completed", "required": True},
++                    {"event": "process.completed", "required": True},
++                ],
++                "tracking": {"include": ["process_id", "stage_id", "artifact_refs", "assignment_id", "run_id", "task_id", "status"]},
++            },
++            "roles": roles,
++            "stages": stages,
++            "artifact_definitions": artifacts,
++            "evidence_definitions": [
++                {
++                    "id": safe_id(str(item.get("id") or item.get("title") or "evidence"), "evidence"),
++                    "title": str(item.get("title") or title_from_id(safe_id(str(item.get("id") or "evidence"), "evidence"))),
++                    "kind": str(item.get("kind") or "attestation"),
++                    **({"artifact": safe_id(str(item.get("artifact")), "artifact")} if item.get("artifact") else {}),
++                    **({"description": str(item.get("description"))} if item.get("description") else {}),
++                }
++                for item in as_list(answers.get("evidence_definitions"))
++                if isinstance(item, dict)
++            ],
++            "gates": gates,
++            "required_packages": string_list(answers.get("required_packages")) or ["process-forge-core"],
++            "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
++            "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
++            "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
++            "evolve": self._evolution.normalize_block(answers.get("evolve")),
++            "stage_completion": answers.get("stage_completion") if isinstance(answers.get("stage_completion"), dict) else {"handoff_note_required": handoff_note_required},
++            "run_completion": answers.get("run_completion") if isinstance(answers.get("run_completion"), dict) else {"summary_required": True, "handoff_artifact_required": handoff_note_required},
++            "evolution_policy": answers.get("evolution_policy") if isinstance(answers.get("evolution_policy"), dict) else {
++                "active_run_upgrade": {"default": "manual_only"},
++                "safe_changes": ["add_optional_stage", "add_non_blocking_gate"],
++                "blocked_changes": ["remove_existing_required_artifact", "weaken_blocking_gate_without_review"],
++                "requires_approval": ["change_stage_order", "change_required_artifact_lifecycle"],
++            },
++        }
++        for key in [
++            "expected_artifacts",
++            "process_transitions",
++            "agent_requirements",
++            "subagent_policy",
++            "runtime_requirements",
++            "runtime_execution_boundary",
++            "metadata",
++        ]:
++            if key in answers:
++                output[key] = answers[key]
++        if "responsibility_boundaries" in answers:
++            output["responsibility_boundaries"] = self.materialize_responsibility_boundaries(
++                answers["responsibility_boundaries"]
++            )
++        return output
++
++    def normalize_transitions(self, value: Any, source_process: str) -> list[dict[str, Any]]:
++        """Materialize legacy authoring-route shorthand as schema-valid transitions."""
++        if isinstance(value, list):
++            return [item for item in value if isinstance(item, dict)]
++        if not isinstance(value, dict):
++            return []
++
++        shared_return = {
++            key: value[key]
++            for key in ["offline_agent_policy", "continuation_capsule_required", "post_handoff_run_owner"]
++            if key in value
++        }
++        transitions: list[dict[str, Any]] = []
++        for route in as_list(value.get("routes")):
++            if not isinstance(route, dict):
++                continue
++            target_process = safe_id(str(route.get("to_process") or route.get("target_process") or ""), "")
++            if not target_process:
++                continue
++            transition: dict[str, Any] = {
++                "id": safe_id(str(route.get("id") or f"{source_process}-to-{target_process}"), "transition"),
++                "from_process": source_process,
++                "to_process": target_process,
++                "mode": str(route.get("mode") or "wait_for_result"),
++            }
++            if route.get("required_role"):
++                transition["requires_agent"] = {"required_role": str(route["required_role"])}
++            if route.get("input_artifacts"):
++                transition["input_contract"] = {"artifacts": string_list(route["input_artifacts"])}
++            if route.get("expected_output_artifacts"):
++                transition["output_contract"] = {"artifacts": string_list(route["expected_output_artifacts"])}
++            if shared_return:
++                transition["return"] = shared_return
++            transitions.append(transition)
++        return transitions
++
++    def materialize_responsibility_boundaries(self, value: Any) -> dict[str, list[str]]:
++        if not isinstance(value, dict):
++            return {}
++        if all(
++            isinstance(items, list) and all(isinstance(item, str) for item in items)
++            for items in value.values()
++        ):
++            return {str(key): list(items) for key, items in value.items()}
++
++        output: dict[str, list[str]] = {}
++
++        def add(role: str, message: str) -> None:
++            text = message.strip()
++            if text:
++                output.setdefault(role, []).append(text)
++
++        role_fields = {
++            "coordinator_role": "coordinator",
++            "execution_inspector_role": "execution_inspector",
++            "worker_role": "worker",
++        }
++        for field, role in role_fields.items():
++            if value.get(field):
++                add(role, f"Assigned role: {value[field]}.")
++        if isinstance(value.get("needs_agent_director"), bool):
++            add(
++                "director",
++                "Required by this process." if value["needs_agent_director"] else "Not required by this process.",
++            )
++        if isinstance(value.get("needs_execution_inspector"), bool):
++            add(
++                "execution_inspector",
++                "Required by this process." if value["needs_execution_inspector"] else "Not required by this process.",
++            )
++        list_fields = {
++            "director_decisions": "director",
++            "inspector_checks": "execution_inspector",
++            "worker_actions": "worker",
++            "automatic_cli_checks": "cli_tools",
++        }
++        consumed = {*role_fields, "needs_agent_director", "needs_execution_inspector", *list_fields}
++        for field, role in list_fields.items():
++            for item in string_list(value.get(field)):
++                add(role, item)
++        for key, items in value.items():
++            if key in consumed:
++                continue
++            if isinstance(items, list):
++                for item in items:
++                    if isinstance(item, str):
++                        add(str(key), item)
++        return output
+diff --git a/src/processforge_core/process_catalog/evolution.py b/src/processforge_core/process_catalog/evolution.py
+new file mode 100644
+index 0000000..2eeffcf
+--- /dev/null
++++ b/src/processforge_core/process_catalog/evolution.py
+@@ -0,0 +1,161 @@
++"""Process evolution document defaults, normalization and validation."""
++
++from typing import Any
++
++from processforge_core.common.checks import Check, check
++from processforge_core.common.values import string_list
++
++
++EVOLVE_MODES = {"disabled", "optional", "required"}
++EVOLVE_TIMINGS = {"end_of_stage", "end_of_task", "end_of_run"}
++EVOLVE_SCOPES = {"project", "workplace", "package", "platform", "core"}
++EVOLVE_CANDIDATE_TARGETS = {
++    "knowledge_package",
++    "template_package",
++    "process_definition",
++    "delivery_profile",
++    "project_rule",
++    "workplace_rule",
++    "platform_contract",
++    "core_docs",
++    "core_schema",
++    "regression_check",
++}
++
++
++class ProcessEvolutionPolicy:
++    def default_block(self, *, answers: bool = False) -> dict[str, Any]:
++        block: dict[str, Any] = {
++            "enabled": True,
++            "mode": "optional",
++            "timing": "end_of_run",
++            "default_scope": "project",
++            "candidate_targets": [
++                "knowledge_package",
++                "template_package",
++                "process_definition",
++            ],
++            "extraction_hints": [
++                "reusable rule",
++                "missing knowledge",
++                "template improvement",
++                "regression check",
++                "process improvement",
++                "Split candidates when an observation contains project-specific and platform-general parts.",
++                "Default to the narrowest safe scope and require evidence before parent-platform promotion.",
++            ],
++            "candidate_targeting": {
++                "default_scope": "project",
++                "require_applicability": True,
++                "require_target": True,
++                "ask_target_layer": True,
++                "ask_applicability": True,
++                "ask_not_applicable": True,
++                "ask_generalization_level": True,
++                "default_to_narrowest_scope": True,
++            },
++            "required_outputs": ["evolution-report"],
++            "privacy": {
++                "default_sensitivity": "internal",
++                "export_requires_sanitization": True,
++                "allow_private_paths": False,
++            },
++            "apply_policy": {
++                "auto_apply_global": False,
++                "create_candidates_only": True,
++            },
++        }
++        if answers:
++            block["decision"] = {
++                "value": "enabled",
++                "reason": "This process may produce reusable knowledge.",
++            }
++            block["prompts"] = [
++                "What reusable knowledge may appear during this process?",
++                "Which outputs are candidates for shared packages?",
++                "What must remain project-private?",
++            ]
++        return block
++
++    def normalize_block(self, raw: Any, *, answers: bool = False) -> dict[str, Any]:
++        block = self.default_block(answers=answers)
++        if isinstance(raw, dict):
++            block.update({key: value for key, value in raw.items() if value not in (None, "")})
++            privacy = self.default_block(answers=answers)["privacy"]
++            if isinstance(raw.get("privacy"), dict):
++                privacy.update(raw["privacy"])
++            block["privacy"] = privacy
++            apply_policy = self.default_block(answers=answers)["apply_policy"]
++            if isinstance(raw.get("apply_policy"), dict):
++                apply_policy.update(raw["apply_policy"])
++            block["apply_policy"] = apply_policy
++            targeting = self.default_block(answers=answers)["candidate_targeting"]
++            if isinstance(raw.get("candidate_targeting"), dict):
++                targeting.update(raw["candidate_targeting"])
++            block["candidate_targeting"] = targeting
++            if answers:
++                decision = self.default_block(answers=True)["decision"]
++                if isinstance(raw.get("decision"), dict):
++                    decision.update(raw["decision"])
++                block["decision"] = decision
++        enabled = bool(block.get("enabled", True))
++        block["enabled"] = enabled
++        if not enabled:
++            block["mode"] = "disabled"
++            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
++            reason = str(block.get("reason") or decision.get("reason") or "").strip()
++            if reason:
++                block["reason"] = reason
++            if answers:
++                decision["value"] = "disabled"
++                block["decision"] = decision
++            for optional_key in ["timing", "default_scope", "candidate_targets", "candidate_targeting", "extraction_hints", "required_outputs", "privacy", "apply_policy", "prompts"]:
++                if optional_key in block and optional_key not in {"privacy", "apply_policy"}:
++                    block.pop(optional_key, None)
++        else:
++            block["mode"] = str(block.get("mode") or "optional")
++            block["timing"] = str(block.get("timing") or "end_of_run")
++            block["default_scope"] = str(block.get("default_scope") or "project")
++            block["candidate_targets"] = string_list(block.get("candidate_targets")) or self.default_block()["candidate_targets"]
++            block["extraction_hints"] = string_list(block.get("extraction_hints")) or self.default_block()["extraction_hints"]
++            if not isinstance(block.get("candidate_targeting"), dict):
++                block["candidate_targeting"] = self.default_block()["candidate_targeting"]
++            block["required_outputs"] = string_list(block.get("required_outputs")) or ["evolution-report"]
++            if answers:
++                block["prompts"] = string_list(block.get("prompts")) or self.default_block(answers=True)["prompts"]
++                decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
++                decision["value"] = "enabled"
++                decision.setdefault("reason", "This process may produce reusable knowledge.")
++                block["decision"] = decision
++        return block
++
++    def validate_block(self, process_id: str, block: Any, *, hard: bool) -> list[Check]:
++        checks: list[Check] = []
++        level = "FAIL" if hard else "WARN"
++        if not isinstance(block, dict):
++            checks.append(check(level, f"{process_id} evolve declared"))
++            return checks
++        enabled = block.get("enabled")
++        checks.append(check("PASS" if isinstance(enabled, bool) else level, f"{process_id} evolve.enabled explicit"))
++        mode = str(block.get("mode") or "")
++        checks.append(check("PASS" if mode in EVOLVE_MODES else level, f"{process_id} evolve.mode valid"))
++        if enabled is False:
++            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
++            reason = str(block.get("reason") or decision.get("reason") or "")
++            checks.append(check("PASS" if mode == "disabled" else level, f"{process_id} disabled evolve uses disabled mode"))
++            checks.append(check("PASS" if reason.strip() else "FAIL", f"{process_id} disabled evolve has reason"))
++            return checks
++        checks.append(check("PASS" if str(block.get("timing") or "") in EVOLVE_TIMINGS else level, f"{process_id} evolve.timing valid"))
++        checks.append(check("PASS" if str(block.get("default_scope") or "") in EVOLVE_SCOPES else level, f"{process_id} evolve.default_scope valid"))
++        targets = string_list(block.get("candidate_targets"))
++        bad_targets = sorted(set(targets) - EVOLVE_CANDIDATE_TARGETS)
++        checks.append(check("PASS" if targets and not bad_targets else level, f"{process_id} evolve.candidate_targets valid"))
++        checks.append(check("PASS" if string_list(block.get("required_outputs")) else level, f"{process_id} evolve.required_outputs declared"))
++        targeting = block.get("candidate_targeting") if isinstance(block.get("candidate_targeting"), dict) else {}
++        checks.append(check("PASS" if targeting.get("require_target") is True and targeting.get("require_applicability") is True else level, f"{process_id} evolve candidate targeting requires target/applicability"))
++        checks.append(check("PASS" if targeting.get("default_to_narrowest_scope") is True else level, f"{process_id} evolve defaults to narrowest safe scope"))
++        privacy = block.get("privacy") if isinstance(block.get("privacy"), dict) else {}
++        apply_policy = block.get("apply_policy") if isinstance(block.get("apply_policy"), dict) else {}
++        checks.append(check("PASS" if privacy.get("export_requires_sanitization") is True and privacy.get("allow_private_paths") is False else level, f"{process_id} evolve privacy boundary declared"))
++        checks.append(check("PASS" if apply_policy.get("auto_apply_global") is False and apply_policy.get("create_candidates_only") is True else level, f"{process_id} evolve apply policy creates candidates only"))
++        return checks
+diff --git a/src/processforge_core/runtime/drivers.py b/src/processforge_core/runtime/drivers.py
+new file mode 100644
+index 0000000..26f56aa
+--- /dev/null
++++ b/src/processforge_core/runtime/drivers.py
+@@ -0,0 +1,335 @@
++"""Runtime driver definitions and document validation policy."""
++
++from __future__ import annotations
++
++import re
++from typing import Any
++
++from processforge_core.common.checks import Check, check
++
++
++RESERVED_WORKER_ENV_KEYS = {
++    "PF_RUN_ID",
++    "PF_TASK_ID",
++    "PF_AGENT_RUN_DIR",
++    "PF_AGENT_EXIT_PATH",
++    "PF_AGENT_MODEL",
++    "PF_AGENT_REASONING_EFFORT",
++    "PF_PROJECT_ROOT",
++    "PF_RUNTIME_DRIVER_ID",
++    "PF_WORKSPACE_ACCESS_FILE",
++    "PF_WORKER_RUN_ID",
++    "PF_WORKER_TASK_ID",
++    "PF_WORKER_ATTEMPT",
++    "PF_PREPARED_INPUT_FILE",
++    "PF_PREPARED_INPUT_SHA256",
++}
++
++
++RUNTIME_DRIVER_PLACEHOLDERS = {
++    "attempt",
++    "prepared_input_path",
++    "project_root",
++    "processforge_root",
++    "run_id",
++    "task_id",
++    "agent_run_dir",
++    "driver_id",
++    "capsule_path",
++    "worker_prompt_path",
++    "workspace_access_path",
++    "expected_report_path",
++    "python_executable",
++    "executable",
++    "stdout_path",
++    "stderr_path",
++    "heartbeat_path",
++    "exit_path",
++    "agent_model",
++    "agent_reasoning_effort",
++    "agent_sandbox",
++}
++
++
++class RuntimeDriverDefinitionPolicy:
++    """Build and validate runtime driver documents without executing drivers."""
++
++    def default_documents(self) -> dict[str, dict[str, Any]]:
++        return {
++            "manual": {
++                "schema_version": 1,
++                "id": "manual",
++                "title": "Manual Worker Execution",
++                "kind": "manual",
++                "behavior": {
++                    "create_worker_prompt": True,
++                    "create_capsule": True,
++                    "do_not_start_process": True,
++                },
++            },
++            "generic-shell": {
++                "schema_version": 1,
++                "id": "generic-shell",
++                "title": "Generic Shell Runtime",
++                "kind": "shell",
++                "prepared_lifecycle_wrapper": True,
++                "command": {
++                    "executable": "{executable}",
++                    "args": ["{worker_prompt_path}", "{capsule_path}"],
++                },
++                "working_directory": "{project_root}",
++                "environment": {"inherit": True, "variables": {}},
++                "io": {
++                    "stdin": "none",
++                    "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
++                    "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
++                },
++                "heartbeat": {
++                    "mode": "file",
++                    "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
++                    "optional": True,
++                },
++                "limits": {"timeout_seconds": 3600, "max_retries": 0},
++                "security": {
++                    "allow_shell": False,
++                    "require_explicit_executable": True,
++                    "allow_network": False,
++                },
++            },
++            "codex-exec": {
++                "schema_version": 1,
++                "id": "codex-exec",
++                "title": "Codex Exec Worker",
++                "kind": "shell",
++                "command": {
++                    "executable": "{python_executable}",
++                    "args": [
++                        "{processforge_root}/tools/codex_exec_worker.py",
++                        "--worker-prompt",
++                        "{worker_prompt_path}",
++                        "--capsule",
++                        "{capsule_path}",
++                        "--workspace-access",
++                        "{workspace_access_path}",
++                        "--output",
++                        "{expected_report_path}",
++                        "--heartbeat",
++                        "{heartbeat_path}",
++                    ],
++                    "model_args": [],
++                },
++                "working_directory": "{project_root}",
++                "environment": {
++                    "inherit": True,
++                    "variables": {
++                        "PF_CODEX_REASONING_EFFORT": "{agent_reasoning_effort}",
++                        "PF_CODEX_SANDBOX": "{agent_sandbox}",
++                        "PF_CODEX_MEMORIES": "false",
++                    },
++                },
++                "io": {
++                    "stdin": "none",
++                    "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
++                    "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
++                },
++                "heartbeat": {
++                    "mode": "file",
++                    "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
++                    "optional": True,
++                },
++                "limits": {"timeout_seconds": 3600, "max_retries": 0},
++                "security": {
++                    "allow_shell": False,
++                    "require_explicit_executable": False,
++                    "allow_network": True,
++                    "network_reason": "Codex CLI requires network access to reach its configured model provider.",
++                },
++            },
++            "test-echo-worker": {
++                "schema_version": 1,
++                "id": "test-echo-worker",
++                "title": "Test Echo Worker",
++                "kind": "shell",
++                "command": {
++                    "executable": "{python_executable}",
++                    "args": [
++                        "{processforge_root}/tools/test_workers/echo_worker.py",
++                        "--capsule",
++                        "{capsule_path}",
++                        "--output",
++                        "{expected_report_path}",
++                        "--heartbeat",
++                        "{heartbeat_path}",
++                    ],
++                },
++                "working_directory": "{project_root}",
++                "environment": {"inherit": True, "variables": {}},
++                "io": {
++                    "stdin": "none",
++                    "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
++                    "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
++                },
++                "heartbeat": {
++                    "mode": "file",
++                    "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
++                    "optional": True,
++                },
++                "limits": {"timeout_seconds": 30, "max_retries": 0},
++                "security": {
++                    "allow_shell": False,
++                    "require_explicit_executable": False,
++                    "allow_network": False,
++                },
++            },
++            "test-shell-agent": {
++                "schema_version": 1,
++                "id": "test-shell-agent",
++                "title": "Test Shell Agent",
++                "kind": "shell",
++                "command": {
++                    "executable": "{python_executable}",
++                    "args": [
++                        "{processforge_root}/tools/test_agents/pf_shell_agent.py",
++                        "--capsule",
++                        "{capsule_path}",
++                        "--worker-prompt",
++                        "{worker_prompt_path}",
++                        "--output",
++                        "{expected_report_path}",
++                        "--heartbeat",
++                        "{heartbeat_path}",
++                        "--mode",
++                        "success",
++                    ],
++                    "model_args": ["--model", "{agent_model}"],
++                },
++                "working_directory": "{project_root}",
++                "environment": {
++                    "inherit": False,
++                    "variables": {},
++                },
++                "io": {
++                    "stdin": "none",
++                    "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
++                    "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
++                },
++                "heartbeat": {
++                    "mode": "file",
++                    "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
++                    "optional": False,
++                },
++                "limits": {"timeout_seconds": 30, "max_retries": 0},
++                "security": {
++                    "allow_shell": False,
++                    "require_explicit_executable": False,
++                    "allow_network": False,
++                },
++            },
++        }
++
++    def default_registry(self) -> dict[str, Any]:
++        return {
++            "schema_version": 1,
++            "runtime_drivers": [
++                {
++                    "id": driver_id,
++                    "path": f"../runtime-drivers/{driver_id}.yaml",
++                    "status": "available",
++                    "builtin": True,
++                }
++                for driver_id in ["manual", "generic-shell", "codex-exec", "test-echo-worker", "test-shell-agent"]
++            ],
++        }
++
++    def placeholder_errors(self, value: Any, label: str) -> list[str]:
++        errors: list[str] = []
++        if isinstance(value, str):
++            for match in re.findall(r"\{([a-zA-Z0-9_]+)\}", value):
++                if match not in RUNTIME_DRIVER_PLACEHOLDERS:
++                    errors.append(f"{label}: unsupported placeholder {{{match}}}")
++        elif isinstance(value, list):
++            for index, item in enumerate(value):
++                errors.extend(self.placeholder_errors(item, f"{label}[{index}]"))
++        elif isinstance(value, dict):
++            for key, item in value.items():
++                errors.extend(self.placeholder_errors(item, f"{label}.{key}"))
++        return errors
++
++    def parse_limits(self, driver: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
++        raw_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
++        parsed: dict[str, int] = {}
++        errors: list[str] = []
++        defaults = {"timeout_seconds": 30, "max_retries": 0}
++        minimums = {"timeout_seconds": 1, "max_retries": 0}
++        for key, default in defaults.items():
++            raw_value = raw_limits.get(key, default)
++            if isinstance(raw_value, bool):
++                errors.append(f"limits.{key}: expected integer, got boolean")
++                parsed[key] = default
++                continue
++            try:
++                value = int(raw_value)
++            except (TypeError, ValueError):
++                errors.append(f"limits.{key}: expected integer, got {raw_value!r}")
++                parsed[key] = default
++                continue
++            if value < minimums[key]:
++                errors.append(f"limits.{key}: expected >= {minimums[key]}, got {value}")
++            parsed[key] = value
++        return parsed, errors
++
++    def start_readiness(self, driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
++        checks: list[Check] = []
++        kind = str(driver.get("kind") or "")
++        if kind != "shell":
++            return checks
++        command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
++        raw_executable = str(command.get("executable") or "")
++        security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
++        resolved_executable = executable_override or ("" if raw_executable == "{executable}" else raw_executable)
++        if security.get("require_explicit_executable") is True and raw_executable == "{executable}" and not executable_override:
++            checks.append(check("FAIL", "start readiness executable override required for {executable}"))
++        elif not resolved_executable:
++            checks.append(check("FAIL", "start readiness executable resolves to empty value"))
++        else:
++            checks.append(check("PASS", f"start readiness executable: {resolved_executable}"))
++        return checks
++
++    def validate(self, driver: dict[str, Any], executable_override: str | None = None, include_start_readiness: bool = False) -> list[Check]:
++        checks: list[Check] = []
++        driver_id = str(driver.get("id") or "")
++        kind = str(driver.get("kind") or "")
++        checks.append(check("PASS" if driver.get("schema_version") else "FAIL", "schema_version present"))
++        checks.append(check("PASS" if driver_id else "FAIL", "id present"))
++        checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
++        if "prepared_lifecycle_wrapper" in driver:
++            checks.append(check("PASS" if type(driver["prepared_lifecycle_wrapper"]) is bool else "FAIL", "prepared_lifecycle_wrapper is boolean"))
++        security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
++        env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
++        explicit_env = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
++        reserved_env = sorted(str(key) for key in explicit_env if str(key) in RESERVED_WORKER_ENV_KEYS)
++        checks.append(check("FAIL" if reserved_env else "PASS", "reserved ProcessForge env vars not overridden" + (f": {', '.join(reserved_env)}" if reserved_env else "")))
++        if kind == "shell":
++            command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
++            executable = str(command.get("executable") or "")
++            args = command.get("args") if isinstance(command.get("args"), list) else []
++            model_args = command.get("model_args") if "model_args" in command else []
++            checks.append(check("PASS" if executable else "FAIL", "shell command executable present"))
++            checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
++            checks.append(check("PASS" if isinstance(model_args, list) else "FAIL", "shell command model_args list when present"))
++            checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
++            network_reason = str(security.get("network_reason") or "").strip()
++            checks.append(check("PASS" if security.get("allow_network") is not True or network_reason else "FAIL", "allow_network explicit reason when enabled"))
++        if kind == "manual":
++            behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
++            checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
++        limits, limit_errors = self.parse_limits(driver)
++        for error in limit_errors:
++            checks.append(check("FAIL", error))
++        if not limit_errors:
++            checks.append(check("PASS", f"limits valid: timeout_seconds={limits['timeout_seconds']} max_retries={limits['max_retries']}"))
++        for error in self.placeholder_errors(driver, "driver"):
++            checks.append(check("FAIL", error))
++        if include_start_readiness:
++            checks.extend(self.start_readiness(driver, executable_override))
++        return checks
+diff --git a/tools/processforge.py b/tools/processforge.py
+index 496b037..6a71f24 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -81,6 +81,32 @@ from processforge_core.sqlite_storage import JournalError
+ from processforge_core.configuration.parameters import ParameterMergePolicy
+ from processforge_core.configuration.resolution import ConfigurationResolver
+ 
++from processforge_core.common.checks import Check, check
++from processforge_core.common.ids import safe_id, title_from_id
++from processforge_core.common.values import string_list
++from processforge_core.process_catalog.authoring import ProcessAuthoringDefinitionBuilder
++from processforge_core.process_catalog.evolution import (
++    EVOLVE_MODES,
++    EVOLVE_TIMINGS,
++    EVOLVE_SCOPES,
++    EVOLVE_CANDIDATE_TARGETS,
++    ProcessEvolutionPolicy,
++)
++from processforge_core.runtime.drivers import (
++    RESERVED_WORKER_ENV_KEYS,
++    RUNTIME_DRIVER_PLACEHOLDERS,
++    RuntimeDriverDefinitionPolicy,
++)
++from processforge_core.maintenance.sites import (
++    UPDATE_SOURCE_PUBLIC_KEYS,
++    UPDATE_SOURCE_LOCAL_KEYS,
++    UpdateSitePolicy,
++)
++
++_process_evolution_policy = ProcessEvolutionPolicy()
++_process_authoring_definition_builder = ProcessAuthoringDefinitionBuilder()
++_runtime_driver_definition_policy = RuntimeDriverDefinitionPolicy()
++_update_site_policy = UpdateSitePolicy()
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -275,22 +301,6 @@ DIRECTOR_OFFICE_DEFAULTS = {
+     "runtime_path": ".pf/director/runtime",
+ }
+ 
+-RESERVED_WORKER_ENV_KEYS = {
+-    "PF_RUN_ID",
+-    "PF_TASK_ID",
+-    "PF_AGENT_RUN_DIR",
+-    "PF_AGENT_EXIT_PATH",
+-    "PF_AGENT_MODEL",
+-    "PF_AGENT_REASONING_EFFORT",
+-    "PF_PROJECT_ROOT",
+-    "PF_RUNTIME_DRIVER_ID",
+-    "PF_WORKSPACE_ACCESS_FILE",
+-    "PF_WORKER_RUN_ID",
+-    "PF_WORKER_TASK_ID",
+-    "PF_WORKER_ATTEMPT",
+-    "PF_PREPARED_INPUT_FILE",
+-    "PF_PREPARED_INPUT_SHA256",
+-}
+ 
+ GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
+ GLOBAL_AGENT_SECTION_END = "<!-- PROCESSFORGE:END -->"
+@@ -493,21 +503,6 @@ LOCAL_PATH_PATTERNS = [
+     re.compile("/" + "srv" + "/"),
+ ]
+ 
+-EVOLVE_MODES = {"disabled", "optional", "required"}
+-EVOLVE_TIMINGS = {"end_of_stage", "end_of_task", "end_of_run"}
+-EVOLVE_SCOPES = {"project", "workplace", "package", "platform", "core"}
+-EVOLVE_CANDIDATE_TARGETS = {
+-    "knowledge_package",
+-    "template_package",
+-    "process_definition",
+-    "delivery_profile",
+-    "project_rule",
+-    "workplace_rule",
+-    "platform_contract",
+-    "core_docs",
+-    "core_schema",
+-    "regression_check",
+-}
+ EVOLVE_APPLICABILITY_SCOPES = {"project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"}
+ EVOLVE_GENERALIZATION_LEVELS = {
+     "narrow_observation",
+@@ -548,10 +543,6 @@ DEFAULT_PATH_CONSTANTS = {
+ PATH_CONSTANT_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
+ 
+ 
+-@dataclass
+-class Check:
+-    level: str
+-    message: str
+ 
+ 
+ @dataclass
+@@ -1207,9 +1198,6 @@ class PackageRootResolution:
+     entry: dict[str, Any] | None = None
+ 
+ 
+-def safe_id(value: str, default: str = "project") -> str:
+-    cleaned = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+-    return cleaned or default
+ 
+ 
+ def rel(path: Path, root: Path) -> str:
+@@ -1858,193 +1846,8 @@ def dict_entries_from_answers(container: Any, item_label: str, scope: str) -> li
+     return entries
+ 
+ 
+-def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
+-    return {
+-        "manual": {
+-            "schema_version": 1,
+-            "id": "manual",
+-            "title": "Manual Worker Execution",
+-            "kind": "manual",
+-            "behavior": {
+-                "create_worker_prompt": True,
+-                "create_capsule": True,
+-                "do_not_start_process": True,
+-            },
+-        },
+-        "generic-shell": {
+-            "schema_version": 1,
+-            "id": "generic-shell",
+-            "title": "Generic Shell Runtime",
+-            "kind": "shell",
+-            "prepared_lifecycle_wrapper": True,
+-            "command": {
+-                "executable": "{executable}",
+-                "args": ["{worker_prompt_path}", "{capsule_path}"],
+-            },
+-            "working_directory": "{project_root}",
+-            "environment": {"inherit": True, "variables": {}},
+-            "io": {
+-                "stdin": "none",
+-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+-            },
+-            "heartbeat": {
+-                "mode": "file",
+-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+-                "optional": True,
+-            },
+-            "limits": {"timeout_seconds": 3600, "max_retries": 0},
+-            "security": {
+-                "allow_shell": False,
+-                "require_explicit_executable": True,
+-                "allow_network": False,
+-            },
+-        },
+-        "codex-exec": {
+-            "schema_version": 1,
+-            "id": "codex-exec",
+-            "title": "Codex Exec Worker",
+-            "kind": "shell",
+-            "command": {
+-                "executable": "{python_executable}",
+-                "args": [
+-                    "{processforge_root}/tools/codex_exec_worker.py",
+-                    "--worker-prompt",
+-                    "{worker_prompt_path}",
+-                    "--capsule",
+-                    "{capsule_path}",
+-                    "--workspace-access",
+-                    "{workspace_access_path}",
+-                    "--output",
+-                    "{expected_report_path}",
+-                    "--heartbeat",
+-                    "{heartbeat_path}",
+-                ],
+-                "model_args": [],
+-            },
+-            "working_directory": "{project_root}",
+-            "environment": {
+-                "inherit": True,
+-                "variables": {
+-                    "PF_CODEX_REASONING_EFFORT": "{agent_reasoning_effort}",
+-                    "PF_CODEX_SANDBOX": "{agent_sandbox}",
+-                    "PF_CODEX_MEMORIES": "false",
+-                },
+-            },
+-            "io": {
+-                "stdin": "none",
+-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+-            },
+-            "heartbeat": {
+-                "mode": "file",
+-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+-                "optional": True,
+-            },
+-            "limits": {"timeout_seconds": 3600, "max_retries": 0},
+-            "security": {
+-                "allow_shell": False,
+-                "require_explicit_executable": False,
+-                "allow_network": True,
+-                "network_reason": "Codex CLI requires network access to reach its configured model provider.",
+-            },
+-        },
+-        "test-echo-worker": {
+-            "schema_version": 1,
+-            "id": "test-echo-worker",
+-            "title": "Test Echo Worker",
+-            "kind": "shell",
+-            "command": {
+-                "executable": "{python_executable}",
+-                "args": [
+-                    "{processforge_root}/tools/test_workers/echo_worker.py",
+-                    "--capsule",
+-                    "{capsule_path}",
+-                    "--output",
+-                    "{expected_report_path}",
+-                    "--heartbeat",
+-                    "{heartbeat_path}",
+-                ],
+-            },
+-            "working_directory": "{project_root}",
+-            "environment": {"inherit": True, "variables": {}},
+-            "io": {
+-                "stdin": "none",
+-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+-            },
+-            "heartbeat": {
+-                "mode": "file",
+-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+-                "optional": True,
+-            },
+-            "limits": {"timeout_seconds": 30, "max_retries": 0},
+-            "security": {
+-                "allow_shell": False,
+-                "require_explicit_executable": False,
+-                "allow_network": False,
+-            },
+-        },
+-        "test-shell-agent": {
+-            "schema_version": 1,
+-            "id": "test-shell-agent",
+-            "title": "Test Shell Agent",
+-            "kind": "shell",
+-            "command": {
+-                "executable": "{python_executable}",
+-                "args": [
+-                    "{processforge_root}/tools/test_agents/pf_shell_agent.py",
+-                    "--capsule",
+-                    "{capsule_path}",
+-                    "--worker-prompt",
+-                    "{worker_prompt_path}",
+-                    "--output",
+-                    "{expected_report_path}",
+-                    "--heartbeat",
+-                    "{heartbeat_path}",
+-                    "--mode",
+-                    "success",
+-                ],
+-                "model_args": ["--model", "{agent_model}"],
+-            },
+-            "working_directory": "{project_root}",
+-            "environment": {
+-                "inherit": False,
+-                "variables": {},
+-            },
+-            "io": {
+-                "stdin": "none",
+-                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+-                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+-            },
+-            "heartbeat": {
+-                "mode": "file",
+-                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+-                "optional": False,
+-            },
+-            "limits": {"timeout_seconds": 30, "max_retries": 0},
+-            "security": {
+-                "allow_shell": False,
+-                "require_explicit_executable": False,
+-                "allow_network": False,
+-            },
+-        },
+-    }
+ 
+ 
+-def default_runtime_driver_registry() -> dict[str, Any]:
+-    return {
+-        "schema_version": 1,
+-        "runtime_drivers": [
+-            {
+-                "id": driver_id,
+-                "path": f"../runtime-drivers/{driver_id}.yaml",
+-                "status": "available",
+-                "builtin": True,
+-            }
+-            for driver_id in ["manual", "generic-shell", "codex-exec", "test-echo-worker", "test-shell-agent"]
+-        ],
+-    }
+ 
+ 
+ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str]:
+@@ -2337,7 +2140,7 @@ Run `project-onboard` for a concrete project.
+             {"schema_version": 1, "profile": profile, "process_packs": active_process_packs}
+         ),
+         root / "registries" / "agents.yaml": dump_yaml({"schema_version": 1, "agents": []}),
+-        root / "registries" / "runtime-drivers.yaml": dump_yaml(default_runtime_driver_registry()),
++        root / "registries" / "runtime-drivers.yaml": dump_yaml(_runtime_driver_definition_policy.default_registry()),
+         root / "registries" / "update-sources.yaml": dump_yaml(
+             {
+                 "schema_version": 1,
+@@ -2365,7 +2168,7 @@ Run `project-onboard` for a concrete project.
+         root / "reviews" / "workplace-bootstrap-review.md": bootstrap_review,
+         root / "handoffs" / "workplace-ready-handoff.md": workplace_handoff,
+     }
+-    for driver_id, driver in default_runtime_driver_documents().items():
++    for driver_id, driver in _runtime_driver_definition_policy.default_documents().items():
+         files[root / "runtime-drivers" / f"{driver_id}.yaml"] = dump_yaml(driver)
+     return files
+ 
+@@ -2898,8 +2701,6 @@ def command_workplace_setup_status(args: argparse.Namespace) -> int:
+     return 0
+ 
+ 
+-def check(level: str, message: str) -> Check:
+-    return Check(level.upper(), message)
+ 
+ 
+ def print_checks(checks: list[Check]) -> int:
+@@ -12626,604 +12427,28 @@ def as_list(value: Any) -> list[Any]:
+     return value if isinstance(value, list) else []
+ 
+ 
+-def string_list(value: Any) -> list[str]:
+-    if isinstance(value, list):
+-        return [str(item) for item in value if str(item).strip()]
+-    if isinstance(value, str) and value.strip():
+-        return [item.strip() for item in value.split(",") if item.strip()]
+-    return []
+ 
+ 
+-def default_evolve_block(*, answers: bool = False) -> dict[str, Any]:
+-    block: dict[str, Any] = {
+-        "enabled": True,
+-        "mode": "optional",
+-        "timing": "end_of_run",
+-        "default_scope": "project",
+-        "candidate_targets": [
+-            "knowledge_package",
+-            "template_package",
+-            "process_definition",
+-        ],
+-        "extraction_hints": [
+-            "reusable rule",
+-            "missing knowledge",
+-            "template improvement",
+-            "regression check",
+-            "process improvement",
+-            "Split candidates when an observation contains project-specific and platform-general parts.",
+-            "Default to the narrowest safe scope and require evidence before parent-platform promotion.",
+-        ],
+-        "candidate_targeting": {
+-            "default_scope": "project",
+-            "require_applicability": True,
+-            "require_target": True,
+-            "ask_target_layer": True,
+-            "ask_applicability": True,
+-            "ask_not_applicable": True,
+-            "ask_generalization_level": True,
+-            "default_to_narrowest_scope": True,
+-        },
+-        "required_outputs": ["evolution-report"],
+-        "privacy": {
+-            "default_sensitivity": "internal",
+-            "export_requires_sanitization": True,
+-            "allow_private_paths": False,
+-        },
+-        "apply_policy": {
+-            "auto_apply_global": False,
+-            "create_candidates_only": True,
+-        },
+-    }
+-    if answers:
+-        block["decision"] = {
+-            "value": "enabled",
+-            "reason": "This process may produce reusable knowledge.",
+-        }
+-        block["prompts"] = [
+-            "What reusable knowledge may appear during this process?",
+-            "Which outputs are candidates for shared packages?",
+-            "What must remain project-private?",
+-        ]
+-    return block
+ 
+ 
+-def normalize_evolve_block(raw: Any, *, answers: bool = False) -> dict[str, Any]:
+-    block = default_evolve_block(answers=answers)
+-    if isinstance(raw, dict):
+-        block.update({key: value for key, value in raw.items() if value not in (None, "")})
+-        privacy = default_evolve_block(answers=answers)["privacy"]
+-        if isinstance(raw.get("privacy"), dict):
+-            privacy.update(raw["privacy"])
+-        block["privacy"] = privacy
+-        apply_policy = default_evolve_block(answers=answers)["apply_policy"]
+-        if isinstance(raw.get("apply_policy"), dict):
+-            apply_policy.update(raw["apply_policy"])
+-        block["apply_policy"] = apply_policy
+-        targeting = default_evolve_block(answers=answers)["candidate_targeting"]
+-        if isinstance(raw.get("candidate_targeting"), dict):
+-            targeting.update(raw["candidate_targeting"])
+-        block["candidate_targeting"] = targeting
+-        if answers:
+-            decision = default_evolve_block(answers=True)["decision"]
+-            if isinstance(raw.get("decision"), dict):
+-                decision.update(raw["decision"])
+-            block["decision"] = decision
+-    enabled = bool(block.get("enabled", True))
+-    block["enabled"] = enabled
+-    if not enabled:
+-        block["mode"] = "disabled"
+-        decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+-        reason = str(block.get("reason") or decision.get("reason") or "").strip()
+-        if reason:
+-            block["reason"] = reason
+-        if answers:
+-            decision["value"] = "disabled"
+-            block["decision"] = decision
+-        for optional_key in ["timing", "default_scope", "candidate_targets", "candidate_targeting", "extraction_hints", "required_outputs", "privacy", "apply_policy", "prompts"]:
+-            if optional_key in block and optional_key not in {"privacy", "apply_policy"}:
+-                block.pop(optional_key, None)
+-    else:
+-        block["mode"] = str(block.get("mode") or "optional")
+-        block["timing"] = str(block.get("timing") or "end_of_run")
+-        block["default_scope"] = str(block.get("default_scope") or "project")
+-        block["candidate_targets"] = string_list(block.get("candidate_targets")) or default_evolve_block()["candidate_targets"]
+-        block["extraction_hints"] = string_list(block.get("extraction_hints")) or default_evolve_block()["extraction_hints"]
+-        if not isinstance(block.get("candidate_targeting"), dict):
+-            block["candidate_targeting"] = default_evolve_block()["candidate_targeting"]
+-        block["required_outputs"] = string_list(block.get("required_outputs")) or ["evolution-report"]
+-        if answers:
+-            block["prompts"] = string_list(block.get("prompts")) or default_evolve_block(answers=True)["prompts"]
+-            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+-            decision["value"] = "enabled"
+-            decision.setdefault("reason", "This process may produce reusable knowledge.")
+-            block["decision"] = decision
+-    return block
+-
+-
+-def validate_evolve_block(process_id: str, block: Any, *, hard: bool) -> list[Check]:
+-    checks: list[Check] = []
+-    level = "FAIL" if hard else "WARN"
+-    if not isinstance(block, dict):
+-        checks.append(check(level, f"{process_id} evolve declared"))
+-        return checks
+-    enabled = block.get("enabled")
+-    checks.append(check("PASS" if isinstance(enabled, bool) else level, f"{process_id} evolve.enabled explicit"))
+-    mode = str(block.get("mode") or "")
+-    checks.append(check("PASS" if mode in EVOLVE_MODES else level, f"{process_id} evolve.mode valid"))
+-    if enabled is False:
+-        decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+-        reason = str(block.get("reason") or decision.get("reason") or "")
+-        checks.append(check("PASS" if mode == "disabled" else level, f"{process_id} disabled evolve uses disabled mode"))
+-        checks.append(check("PASS" if reason.strip() else "FAIL", f"{process_id} disabled evolve has reason"))
+-        return checks
+-    checks.append(check("PASS" if str(block.get("timing") or "") in EVOLVE_TIMINGS else level, f"{process_id} evolve.timing valid"))
+-    checks.append(check("PASS" if str(block.get("default_scope") or "") in EVOLVE_SCOPES else level, f"{process_id} evolve.default_scope valid"))
+-    targets = string_list(block.get("candidate_targets"))
+-    bad_targets = sorted(set(targets) - EVOLVE_CANDIDATE_TARGETS)
+-    checks.append(check("PASS" if targets and not bad_targets else level, f"{process_id} evolve.candidate_targets valid"))
+-    checks.append(check("PASS" if string_list(block.get("required_outputs")) else level, f"{process_id} evolve.required_outputs declared"))
+-    targeting = block.get("candidate_targeting") if isinstance(block.get("candidate_targeting"), dict) else {}
+-    checks.append(check("PASS" if targeting.get("require_target") is True and targeting.get("require_applicability") is True else level, f"{process_id} evolve candidate targeting requires target/applicability"))
+-    checks.append(check("PASS" if targeting.get("default_to_narrowest_scope") is True else level, f"{process_id} evolve defaults to narrowest safe scope"))
+-    privacy = block.get("privacy") if isinstance(block.get("privacy"), dict) else {}
+-    apply_policy = block.get("apply_policy") if isinstance(block.get("apply_policy"), dict) else {}
+-    checks.append(check("PASS" if privacy.get("export_requires_sanitization") is True and privacy.get("allow_private_paths") is False else level, f"{process_id} evolve privacy boundary declared"))
+-    checks.append(check("PASS" if apply_policy.get("auto_apply_global") is False and apply_policy.get("create_candidates_only") is True else level, f"{process_id} evolve apply policy creates candidates only"))
+-    return checks
++
++
+ 
+ 
+ def candidate_id_from_data(data: dict[str, Any], fallback: str = "candidate") -> str:
+     return safe_id(str(data.get("id") or data.get("candidate_id") or fallback), "candidate")
+ 
+ 
+-def title_from_id(value: str) -> str:
+-    return " ".join(part.capitalize() for part in safe_id(value, "item").split("-"))
+ 
+ 
+-def default_process_authoring_answers(process_id: str, title: str, description: str = "") -> dict[str, Any]:
+-    process_id = safe_id(process_id, "new-process")
+-    title = title or title_from_id(process_id)
+-    return {
+-        "schema_version": 1,
+-        "process": {
+-            "id": process_id,
+-            "name": title,
+-            "version": "1.0.0",
+-            "status": "draft",
+-            "kind": "project_process",
+-            "scope": "project",
+-            "description": description or f"Guide repeatable work for {title}.",
+-        },
+-        "run_model": {
+-            "supports_multiple_tasks": False,
+-            "default_task_loop": {
+-                "enabled": False,
+-                "iteration_kinds": ["work", "debug", "fix", "review", "handoff"],
+-            },
+-        },
+-        "execution_mode": "single_agent",
+-        "execution_mode_questions": {},
+-        "coordination_requirements": {
+-            "mode": "simple_allowed",
+-            "director_inbox": {"required": False, "optional": False},
+-            "error_workflow": {"mode": "none"},
+-            "simple_mode_behavior": "disable_director_features",
+-        },
+-        "error_handling": {
+-            "enabled": False,
+-            "mode": "none",
+-            "fallback_if_no_director": "needs_operator",
+-        },
+-        "evolve": default_evolve_block(answers=True),
+-        "roles": [
+-            {"id": "author", "title": "Author", "responsibility": "Creates the main work artifacts."},
+-            {"id": "reviewer", "title": "Reviewer", "responsibility": "Checks quality gates before handoff."},
+-        ],
+-        "stages": [
+-            {
+-                "id": "intake",
+-                "title": "Intake",
+-                "description": "Capture objective, constraints, and expected outputs.",
+-                "required_role": "author",
+-                "produced_artifacts": ["brief"],
+-                "exit_gates": ["brief-approved"],
+-                "handoff_required": False,
+-            },
+-            {
+-                "id": "work",
+-                "title": "Work",
+-                "description": "Create the requested outputs.",
+-                "required_role": "author",
+-                "required_inputs": ["brief"],
+-                "produced_artifacts": ["work-output"],
+-                "entry_gates": ["brief-approved"],
+-                "exit_gates": ["work-ready-for-review"],
+-                "handoff_required": False,
+-            },
+-            {
+-                "id": "review",
+-                "title": "Review",
+-                "description": "Validate the output and record risks.",
+-                "required_role": "reviewer",
+-                "required_inputs": ["work-output"],
+-                "produced_artifacts": ["review-notes"],
+-                "entry_gates": ["work-ready-for-review"],
+-                "exit_gates": ["review-passed"],
+-                "handoff_required": False,
+-            },
+-            {
+-                "id": "handoff",
+-                "title": "Handoff",
+-                "description": "Summarize delivered state and next steps.",
+-                "required_role": "author",
+-                "required_inputs": ["review-notes"],
+-                "produced_artifacts": ["handoff"],
+-                "entry_gates": ["review-passed"],
+-                "exit_gates": ["handoff-created"],
+-                "handoff_required": True,
+-            },
+-        ],
+-        "artifacts": [
+-            {"id": "brief", "title": "Brief", "owner_role": "author", "template": "artifact-template"},
+-            {"id": "work-output", "title": "Work Output", "owner_role": "author", "template": "artifact-template"},
+-            {"id": "review-notes", "title": "Review Notes", "owner_role": "reviewer", "template": "review-template"},
+-            {"id": "handoff", "title": "Handoff", "owner_role": "author", "template": "handoff-template"},
+-        ],
+-        "evidence_definitions": [
+-            {"id": "review-attestation", "title": "Review attestation", "kind": "attestation"},
+-        ],
+-        "gates": [
+-            {"id": "brief-approved", "description": "Brief is explicit enough to start work.", "blocking": True, "required_artifact": "brief"},
+-            {"id": "work-ready-for-review", "description": "Work output exists and is ready for review.", "blocking": True, "required_artifact": "work-output"},
+-            {"id": "review-passed", "description": "Review has no blocking failures.", "blocking": True, "required_artifact": "review-notes"},
+-            {"id": "handoff-created", "description": "Handoff artifact exists.", "blocking": True, "required_artifact": "handoff"},
+-        ],
+-        "required_capabilities": ["process_coordination", "artifact_review", "reporting"],
+-        "required_packages": ["process-forge-core"],
+-        "required_templates": ["artifact-template", "review-template", "handoff-template"],
+-        "allowed_tools": ["processforge-cli", "validator"],
+-        "forbidden_actions": ["write_private_absolute_paths_to_public_files", "skip_blocking_review"],
+-    }
+ 
+ 
+-def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = "new-process", fallback_title: str = "") -> dict[str, Any]:
+-    base = default_process_authoring_answers(fallback_id, fallback_title or title_from_id(fallback_id))
+-    if not raw:
+-        return base
+-    process = raw.get("process") if isinstance(raw.get("process"), dict) else {}
+-    if not process and ("id" in raw or "name" in raw or "title" in raw):
+-        process = raw
+-    process_id = safe_id(str(process.get("id") or raw.get("id") or fallback_id), "new-process")
+-    base["process"].update(
+-        {
+-            "id": process_id,
+-            "name": str(process.get("name") or process.get("title") or raw.get("name") or raw.get("title") or title_from_id(process_id)),
+-            "version": str(process.get("version") or raw.get("version") or "1.0.0"),
+-            "status": str(process.get("status") or raw.get("status") or "draft"),
+-            "kind": str(process.get("kind") or raw.get("kind") or base["process"]["kind"]),
+-            "scope": str(process.get("scope") or raw.get("scope") or base["process"]["scope"]),
+-            "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
+-        }
+-    )
+-    for key in [
+-        "run_model",
+-        "execution_mode",
+-        "execution_mode_questions",
+-        "coordination_requirements",
+-        "error_handling",
+-        "roles",
+-        "stages",
+-        "artifacts",
+-        "artifact_definitions",
+-        "evidence_definitions",
+-        "gates",
+-        "hooks",
+-        "evolve",
+-        "evolution_policy",
+-        "expected_artifacts",
+-        "process_transitions",
+-        "agent_requirements",
+-        "responsibility_boundaries",
+-        "subagent_policy",
+-        "runtime_requirements",
+-        "runtime_execution_boundary",
+-        "stage_completion",
+-        "run_completion",
+-        "metadata",
+-    ]:
+-        if key in raw:
+-            base[key] = raw[key]
+-    if "artifact_definitions" in raw and "artifacts" not in raw:
+-        base["artifacts"] = raw["artifact_definitions"]
+-    base["evolve"] = normalize_evolve_block(base.get("evolve"), answers=True)
+-    for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
+-        if key in raw:
+-            base[key] = string_list(raw[key])
+-    base["process_transitions"] = normalize_process_transitions(base.get("process_transitions"), process_id)
+-    return base
+-
+-
+-def normalize_process_transitions(value: Any, source_process: str) -> list[dict[str, Any]]:
+-    """Materialize legacy authoring-route shorthand as schema-valid transitions."""
+-    if isinstance(value, list):
+-        return [item for item in value if isinstance(item, dict)]
+-    if not isinstance(value, dict):
+-        return []
+ 
+-    shared_return = {
+-        key: value[key]
+-        for key in ["offline_agent_policy", "continuation_capsule_required", "post_handoff_run_owner"]
+-        if key in value
+-    }
+-    transitions: list[dict[str, Any]] = []
+-    for route in as_list(value.get("routes")):
+-        if not isinstance(route, dict):
+-            continue
+-        target_process = safe_id(str(route.get("to_process") or route.get("target_process") or ""), "")
+-        if not target_process:
+-            continue
+-        transition: dict[str, Any] = {
+-            "id": safe_id(str(route.get("id") or f"{source_process}-to-{target_process}"), "transition"),
+-            "from_process": source_process,
+-            "to_process": target_process,
+-            "mode": str(route.get("mode") or "wait_for_result"),
+-        }
+-        if route.get("required_role"):
+-            transition["requires_agent"] = {"required_role": str(route["required_role"])}
+-        if route.get("input_artifacts"):
+-            transition["input_contract"] = {"artifacts": string_list(route["input_artifacts"])}
+-        if route.get("expected_output_artifacts"):
+-            transition["output_contract"] = {"artifacts": string_list(route["expected_output_artifacts"])}
+-        if shared_return:
+-            transition["return"] = shared_return
+-        transitions.append(transition)
+-    return transitions
+-
+-
+-def materialize_process_responsibility_boundaries(value: Any) -> dict[str, list[str]]:
+-    if not isinstance(value, dict):
+-        return {}
+-    if all(
+-        isinstance(items, list) and all(isinstance(item, str) for item in items)
+-        for items in value.values()
+-    ):
+-        return {str(key): list(items) for key, items in value.items()}
+ 
+-    output: dict[str, list[str]] = {}
+ 
+-    def add(role: str, message: str) -> None:
+-        text = message.strip()
+-        if text:
+-            output.setdefault(role, []).append(text)
+ 
+-    role_fields = {
+-        "coordinator_role": "coordinator",
+-        "execution_inspector_role": "execution_inspector",
+-        "worker_role": "worker",
+-    }
+-    for field, role in role_fields.items():
+-        if value.get(field):
+-            add(role, f"Assigned role: {value[field]}.")
+-    if isinstance(value.get("needs_agent_director"), bool):
+-        add(
+-            "director",
+-            "Required by this process." if value["needs_agent_director"] else "Not required by this process.",
+-        )
+-    if isinstance(value.get("needs_execution_inspector"), bool):
+-        add(
+-            "execution_inspector",
+-            "Required by this process." if value["needs_execution_inspector"] else "Not required by this process.",
+-        )
+-    list_fields = {
+-        "director_decisions": "director",
+-        "inspector_checks": "execution_inspector",
+-        "worker_actions": "worker",
+-        "automatic_cli_checks": "cli_tools",
+-    }
+-    consumed = {*role_fields, "needs_agent_director", "needs_execution_inspector", *list_fields}
+-    for field, role in list_fields.items():
+-        for item in string_list(value.get(field)):
+-            add(role, item)
+-    for key, items in value.items():
+-        if key in consumed:
+-            continue
+-        if isinstance(items, list):
+-            for item in items:
+-                if isinstance(item, str):
+-                    add(str(key), item)
+-    return output
+ 
+ 
+-def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
+-    process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
+-    process_id = safe_id(str(process.get("id", "new-process")), "new-process")
+-    roles: list[dict[str, Any]] = []
+-    for item in as_list(answers.get("roles")):
+-        if isinstance(item, dict):
+-            role_id = safe_id(str(item.get("id") or item.get("title") or "role"), "role")
+-            responsibility = str(item.get("responsibility") or "")
+-            roles.append(
+-                {
+-                    "id": role_id,
+-                    "title": str(item.get("title") or title_from_id(role_id)),
+-                    "kind": str(item.get("kind") or "primary_agent"),
+-                    "responsibility": responsibility,
+-                    "responsibilities": string_list(item.get("responsibilities")) or ([responsibility] if responsibility else [f"Owns {title_from_id(role_id)} responsibilities."]),
+-                }
+-            )
+-    if not roles:
+-        roles = [{"id": "author", "title": "Author", "responsibility": "Creates process artifacts."}]
+-    role_ids = {item["id"] for item in roles}
+-
+-    artifacts: list[dict[str, Any]] = []
+-    for item in as_list(answers.get("artifacts")):
+-        if isinstance(item, dict):
+-            artifact_id = safe_id(str(item.get("id") or item.get("title") or "artifact"), "artifact")
+-            owner_role = safe_id(str(item.get("owner_role") or roles[0]["id"]), roles[0]["id"])
+-            if owner_role not in role_ids:
+-                owner_role = roles[0]["id"]
+-            artifacts.append(
+-                {
+-                    "id": artifact_id,
+-                    "title": str(item.get("title") or title_from_id(artifact_id)),
+-                    "owner_role": owner_role,
+-                    "type": str(item.get("type") or "markdown"),
+-                    "required": bool(item.get("required", True)),
+-                    "template": str(item.get("template") or "artifact-template"),
+-                    "path_hint": str(item.get("path_hint") or f".pf/artifacts/{artifact_id}.md"),
+-                    "lifecycle": string_list(item.get("lifecycle")) or ["draft", "ready_for_review", "approved"],
+-                }
+-            )
+-    artifact_ids = {item["id"] for item in artifacts}
+-
+-    gates: list[dict[str, Any]] = []
+-    for item in as_list(answers.get("gates")):
+-        if isinstance(item, dict):
+-            gate_id = safe_id(str(item.get("id") or item.get("description") or "gate"), "gate")
+-            gate: dict[str, Any] = {
+-                "id": gate_id,
+-                "description": str(item.get("description") or title_from_id(gate_id)),
+-                "type": str(item.get("type") or ("artifact_exists" if item.get("required_artifact") else "checklist")),
+-                "blocking": bool(item.get("blocking", True)),
+-                "required": bool(item.get("required", item.get("blocking", True))),
+-            }
+-            if item.get("required_artifact"):
+-                gate["required_artifact"] = safe_id(str(item.get("required_artifact")), "artifact")
+-            gates.append(gate)
+-    gate_ids = {item["id"] for item in gates}
+-
+-    stages: list[dict[str, Any]] = []
+-    handoff_note_required = False
+-    for item in as_list(answers.get("stages")):
+-        if isinstance(item, dict):
+-            stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
+-            produced = [safe_id(value, "artifact") for value in string_list(item.get("produced_artifacts"))]
+-            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates") or item.get("gates"))]
+-            if not produced and artifact_ids:
+-                produced = [sorted(artifact_ids)[0]]
+-            if not exits and gate_ids:
+-                exits = [sorted(gate_ids)[0]]
+-            role_id = safe_id(str(item.get("required_role") or roles[0]["id"]), roles[0]["id"])
+-            if role_id not in role_ids:
+-                role_id = roles[0]["id"]
+-            if bool(item.get("handoff_required", False)):
+-                handoff_note_required = True
+-            stages.append(
+-                {
+-                    "id": stage_id,
+-                    "title": str(item.get("title") or title_from_id(stage_id)),
+-                    "goal": str(item.get("goal") or item.get("description") or item.get("title") or title_from_id(stage_id)),
+-                    "description": str(item.get("description") or ""),
+-                    "actor": str(item.get("actor") or "primary_agent"),
+-                    "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
+-                    "produced_artifacts": produced,
+-                    "required_artifacts": [safe_id(value, "artifact") for value in string_list(item.get("required_artifacts"))],
+-                    "required_evidence": [safe_id(value, "evidence") for value in string_list(item.get("required_evidence"))],
+-                    "required_role": role_id,
+-                    "required_capabilities": string_list(item.get("required_capabilities")),
+-                    "parameters": item.get("parameters") if isinstance(item.get("parameters"), dict) else {},
+-                    "allowed_tools": string_list(item.get("allowed_tools")),
+-                    "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
+-                    "exit_gates": exits,
+-                    "automation_bindings": as_list(item.get("automation_bindings")) or as_list(item.get("technical_obligations")),
+-                }
+-            )
+-    if not artifacts:
+-        artifacts = [
+-            {
+-                "id": "brief",
+-                "title": "Brief",
+-                "owner_role": roles[0]["id"],
+-                "type": "markdown",
+-                "required": True,
+-                "template": "artifact-template",
+-                "path_hint": ".pf/artifacts/brief.md",
+-                "lifecycle": ["draft", "ready_for_review", "approved"],
+-            }
+-        ]
+-        artifact_ids = {"brief"}
+-    if not gates:
+-        gates = [{"id": "brief-approved", "description": "Brief is approved.", "blocking": True, "required_artifact": "brief"}]
+-        gate_ids = {"brief-approved"}
+-    if not stages:
+-        stages = [{"id": "intake", "title": "Intake", "goal": "Capture scope.", "description": "Capture scope.", "actor": "primary_agent", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "gates": list(gate_ids)}]
+-        handoff_note_required = True
+-
+-    run_model = answers.get("run_model") if isinstance(answers.get("run_model"), dict) else {}
+-    output = {
+-        "schema_version": 1,
+-        "id": process_id,
+-        "name": str(process.get("name") or title_from_id(process_id)),
+-        "kind": str(process.get("kind") or "project_process"),
+-        "scope": str(process.get("scope") or "project"),
+-        "version": str(process.get("version") or "1.0.0"),
+-        "status": str(process.get("status") or "draft"),
+-        "description": str(process.get("description") or ""),
+-        "purpose": str(process.get("purpose") or process.get("description") or ""),
+-        "execution_mode": str(answers.get("execution_mode") or process.get("execution_mode") or "single_agent"),
+-        "execution_mode_questions": answers.get("execution_mode_questions") if isinstance(answers.get("execution_mode_questions"), dict) else {},
+-        "coordination_requirements": answers.get("coordination_requirements") if isinstance(answers.get("coordination_requirements"), dict) else default_process_authoring_answers(process_id, "").get("coordination_requirements", {}),
+-        "error_handling": answers.get("error_handling") if isinstance(answers.get("error_handling"), dict) else default_process_authoring_answers(process_id, "").get("error_handling", {}),
+-        "run_model": run_model,
+-        "required_capabilities": string_list(answers.get("required_capabilities")),
+-        "hooks": answers.get("hooks") if isinstance(answers.get("hooks"), dict) else {
+-            "emit": [
+-                {"event": "process.created", "required": True},
+-                {"event": "process.started", "required": True},
+-                {"event": "stage.started", "required": True},
+-                {"event": "stage.completed", "required": True},
+-                {"event": "artifact.created", "required": True},
+-                {"event": "review.completed", "required": True},
+-                {"event": "process.completed", "required": True},
+-            ],
+-            "tracking": {"include": ["process_id", "stage_id", "artifact_refs", "assignment_id", "run_id", "task_id", "status"]},
+-        },
+-        "roles": roles,
+-        "stages": stages,
+-        "artifact_definitions": artifacts,
+-        "evidence_definitions": [
+-            {
+-                "id": safe_id(str(item.get("id") or item.get("title") or "evidence"), "evidence"),
+-                "title": str(item.get("title") or title_from_id(safe_id(str(item.get("id") or "evidence"), "evidence"))),
+-                "kind": str(item.get("kind") or "attestation"),
+-                **({"artifact": safe_id(str(item.get("artifact")), "artifact")} if item.get("artifact") else {}),
+-                **({"description": str(item.get("description"))} if item.get("description") else {}),
+-            }
+-            for item in as_list(answers.get("evidence_definitions"))
+-            if isinstance(item, dict)
+-        ],
+-        "gates": gates,
+-        "required_packages": string_list(answers.get("required_packages")) or ["process-forge-core"],
+-        "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
+-        "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
+-        "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
+-        "evolve": normalize_evolve_block(answers.get("evolve")),
+-        "stage_completion": answers.get("stage_completion") if isinstance(answers.get("stage_completion"), dict) else {"handoff_note_required": handoff_note_required},
+-        "run_completion": answers.get("run_completion") if isinstance(answers.get("run_completion"), dict) else {"summary_required": True, "handoff_artifact_required": handoff_note_required},
+-        "evolution_policy": answers.get("evolution_policy") if isinstance(answers.get("evolution_policy"), dict) else {
+-            "active_run_upgrade": {"default": "manual_only"},
+-            "safe_changes": ["add_optional_stage", "add_non_blocking_gate"],
+-            "blocked_changes": ["remove_existing_required_artifact", "weaken_blocking_gate_without_review"],
+-            "requires_approval": ["change_stage_order", "change_required_artifact_lifecycle"],
+-        },
+-    }
+-    for key in [
+-        "expected_artifacts",
+-        "process_transitions",
+-        "agent_requirements",
+-        "subagent_policy",
+-        "runtime_requirements",
+-        "runtime_execution_boundary",
+-        "metadata",
+-    ]:
+-        if key in answers:
+-            output[key] = answers[key]
+-    if "responsibility_boundaries" in answers:
+-        output["responsibility_boundaries"] = materialize_process_responsibility_boundaries(
+-            answers["responsibility_boundaries"]
+-        )
+-    return output
+ 
+ 
+ def render_authoring_questions(answers: dict[str, Any]) -> str:
+@@ -13283,7 +12508,7 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
+     checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "authoring data contains no secret-like values"))
+     for key in ["schema_version", "id", "name", "version", "status", "description", "stages", "roles", "artifact_definitions", "gates", "evolution_policy"]:
+         checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
+-    checks.extend(validate_evolve_block(str(process.get("id") or "process"), process.get("evolve"), hard=bool(answers and "evolve" in answers)))
++    checks.extend(_process_evolution_policy.validate_block(str(process.get("id") or "process"), process.get("evolve"), hard=bool(answers and "evolve" in answers)))
+     if answers is not None and answers and "evolve" not in answers:
+         checks.append(check("FAIL", "authoring answers include explicit evolve decision"))
+     execution_mode = str(process.get("execution_mode") or "single_agent")
+@@ -13380,7 +12605,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
+     if args.answers and "evolve" not in raw_answers:
+         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
+     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
+-    answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
++    answers = _process_authoring_definition_builder.normalize(raw_answers, fallback_id, args.title or "")
+     if args.description:
+         answers["process"]["description"] = args.description
+     if getattr(args, "scope", None):
+@@ -13388,7 +12613,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
+     if getattr(args, "kind", None):
+         answers["process"]["kind"] = args.kind
+     process_id = safe_id(str(answers["process"]["id"]), "new-process")
+-    draft = process_from_authoring_answers(answers)
++    draft = _process_authoring_definition_builder.build(answers)
+     paths = process_authoring_paths(project_root, process_id)
+     planned = [paths["answers"], paths["draft"], paths["questions"], paths["log"]]
+     if getattr(args, "dry_run", False):
+@@ -13618,7 +12843,7 @@ def build_process_create_plan(
+     if output_root == "core" and not allow_core:
+         raise SystemExit("FAIL: writing process-authoring output to processes/core requires --core")
+ 
+-    draft = process_from_authoring_answers(answers)
++    draft = _process_authoring_definition_builder.build(answers)
+     draft.setdefault("catalog", {})
+     if isinstance(draft["catalog"], dict):
+         draft["catalog"].setdefault("role", "canonical")
+@@ -13810,7 +13035,7 @@ def command_process_create(args: argparse.Namespace) -> int:
+     if args.answers and "evolve" not in raw_answers:
+         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
+     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
+-    answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
++    answers = _process_authoring_definition_builder.normalize(raw_answers, fallback_id, args.title or "")
+     process_id = safe_id(str(answers["process"]["id"]), "new-process")
+     output = answers.get("output") if isinstance(answers.get("output"), dict) else {}
+     output_root = safe_id(str(getattr(args, "output_root", "") or output.get("process_root") or "user"), "user")
+@@ -13901,7 +13126,7 @@ def validate_process_contract(
+     checks.append(check("PASS" if coordination.get("mode") in PROCESS_COORDINATION_MODES else ("FAIL" if hard else "WARN"), f"{process_id} coordination_requirements.mode declared"))
+     error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
+     checks.append(check("PASS" if error_handling.get("mode") in ERROR_WORKFLOW_MODES and "enabled" in error_handling else ("FAIL" if hard else "WARN"), f"{process_id} error_handling declared"))
+-    checks.extend(validate_evolve_block(process_id, process.get("evolve"), hard=hard))
++    checks.extend(_process_evolution_policy.validate_block(process_id, process.get("evolve"), hard=hard))
+     checks.append(check("PASS" if isinstance(process.get("responsibility_boundaries"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} responsibility_boundaries declared"))
+     if process.get("execution_mode") in {"single_agent_with_subagents", "orchestrated_agents"}:
+         checks.append(check("PASS" if isinstance(process.get("subagent_policy"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} subagent_policy declared"))
+@@ -14750,7 +13975,7 @@ def command_evolve_run(args: argparse.Namespace) -> int:
+     process_id = str(getattr(args, "process", None) or "task-batch-execution")
+     process = read_yaml_file(process_definition_path(project_root, process_id))
+     evolve = process.get("evolve") if isinstance(process.get("evolve"), dict) else {}
+-    checks = validate_evolve_block(process_id, evolve, hard=True)
++    checks = _process_evolution_policy.validate_block(process_id, evolve, hard=True)
+     failures = [item.message for item in checks if item.level == "FAIL"]
+     if failures:
+         raise SystemExit("FAIL: process evolve declaration invalid: " + "; ".join(failures))
+@@ -15207,7 +14432,7 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
+     process = read_yaml_file(process_path)
+     process_id = safe_id(str(process.get("id") or process_path.stem), "process")
+     answers = process_to_authoring_answers(process)
+-    draft = process_from_authoring_answers(answers)
++    draft = _process_authoring_definition_builder.build(answers)
+     unsupported = process_unsupported_fields(process)
+     paths = process_backfill_paths(project_root, process_id)
+     planned = [paths["answers"], paths["draft"], paths["source"], paths["semantic_map"], paths["unsupported"], paths["import_report"]]
+@@ -16665,29 +15890,6 @@ def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
+     return run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
+ 
+ 
+-RUNTIME_DRIVER_PLACEHOLDERS = {
+-    "attempt",
+-    "prepared_input_path",
+-    "project_root",
+-    "processforge_root",
+-    "run_id",
+-    "task_id",
+-    "agent_run_dir",
+-    "driver_id",
+-    "capsule_path",
+-    "worker_prompt_path",
+-    "workspace_access_path",
+-    "expected_report_path",
+-    "python_executable",
+-    "executable",
+-    "stdout_path",
+-    "stderr_path",
+-    "heartbeat_path",
+-    "exit_path",
+-    "agent_model",
+-    "agent_reasoning_effort",
+-    "agent_sandbox",
+-}
+ 
+ AGENT_RUN_STATUSES = {
+     "planned",
+@@ -16791,7 +15993,7 @@ def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None =
+     path = registered_runtime_driver_path(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
+     if path is not None:
+         return load_runtime_driver_by_path(path)
+-    builtin = default_runtime_driver_documents().get(driver_id)
++    builtin = _runtime_driver_definition_policy.default_documents().get(driver_id)
+     if builtin:
+         result = json.loads(json.dumps(builtin))
+         result["_source_path"] = "builtin"
+@@ -16825,48 +16027,13 @@ def runtime_driver_id_list(*, workplace_manifest: Path | None = None, project_ro
+             path = runtime_driver_entry_path(registry_path, entry)
+             status = str(entry.get("status") or ("available" if path and path.is_file() else "missing"))
+             found[driver_id] = (driver_id, status, source)
+-    for driver_id in default_runtime_driver_documents():
++    for driver_id in _runtime_driver_definition_policy.default_documents():
+         found.setdefault(driver_id, (driver_id, "available", "builtin"))
+     return sorted(found.values())
+ 
+ 
+-def driver_placeholder_errors(value: Any, label: str) -> list[str]:
+-    errors: list[str] = []
+-    if isinstance(value, str):
+-        for match in re.findall(r"\{([a-zA-Z0-9_]+)\}", value):
+-            if match not in RUNTIME_DRIVER_PLACEHOLDERS:
+-                errors.append(f"{label}: unsupported placeholder {{{match}}}")
+-    elif isinstance(value, list):
+-        for index, item in enumerate(value):
+-            errors.extend(driver_placeholder_errors(item, f"{label}[{index}]"))
+-    elif isinstance(value, dict):
+-        for key, item in value.items():
+-            errors.extend(driver_placeholder_errors(item, f"{label}.{key}"))
+-    return errors
+ 
+ 
+-def parse_runtime_driver_limits(driver: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
+-    raw_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
+-    parsed: dict[str, int] = {}
+-    errors: list[str] = []
+-    defaults = {"timeout_seconds": 30, "max_retries": 0}
+-    minimums = {"timeout_seconds": 1, "max_retries": 0}
+-    for key, default in defaults.items():
+-        raw_value = raw_limits.get(key, default)
+-        if isinstance(raw_value, bool):
+-            errors.append(f"limits.{key}: expected integer, got boolean")
+-            parsed[key] = default
+-            continue
+-        try:
+-            value = int(raw_value)
+-        except (TypeError, ValueError):
+-            errors.append(f"limits.{key}: expected integer, got {raw_value!r}")
+-            parsed[key] = default
+-            continue
+-        if value < minimums[key]:
+-            errors.append(f"limits.{key}: expected >= {minimums[key]}, got {value}")
+-        parsed[key] = value
+-    return parsed, errors
+ 
+ 
+ def minimal_platform_environment() -> dict[str, str]:
+@@ -16917,62 +16084,8 @@ def materialize_worker_launch_environment(command_spec: dict[str, Any]) -> dict[
+     return env
+ 
+ 
+-def runtime_driver_start_readiness_checks(driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
+-    checks: list[Check] = []
+-    kind = str(driver.get("kind") or "")
+-    if kind != "shell":
+-        return checks
+-    command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+-    raw_executable = str(command.get("executable") or "")
+-    security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
+-    resolved_executable = executable_override or ("" if raw_executable == "{executable}" else raw_executable)
+-    if security.get("require_explicit_executable") is True and raw_executable == "{executable}" and not executable_override:
+-        checks.append(check("FAIL", "start readiness executable override required for {executable}"))
+-    elif not resolved_executable:
+-        checks.append(check("FAIL", "start readiness executable resolves to empty value"))
+-    else:
+-        checks.append(check("PASS", f"start readiness executable: {resolved_executable}"))
+-    return checks
+ 
+ 
+-def validate_runtime_driver_document(driver: dict[str, Any], executable_override: str | None = None, include_start_readiness: bool = False) -> list[Check]:
+-    checks: list[Check] = []
+-    driver_id = str(driver.get("id") or "")
+-    kind = str(driver.get("kind") or "")
+-    checks.append(check("PASS" if driver.get("schema_version") else "FAIL", "schema_version present"))
+-    checks.append(check("PASS" if driver_id else "FAIL", "id present"))
+-    checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
+-    if "prepared_lifecycle_wrapper" in driver:
+-        checks.append(check("PASS" if type(driver["prepared_lifecycle_wrapper"]) is bool else "FAIL", "prepared_lifecycle_wrapper is boolean"))
+-    security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
+-    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
+-    explicit_env = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
+-    reserved_env = sorted(str(key) for key in explicit_env if str(key) in RESERVED_WORKER_ENV_KEYS)
+-    checks.append(check("FAIL" if reserved_env else "PASS", "reserved ProcessForge env vars not overridden" + (f": {', '.join(reserved_env)}" if reserved_env else "")))
+-    if kind == "shell":
+-        command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+-        executable = str(command.get("executable") or "")
+-        args = command.get("args") if isinstance(command.get("args"), list) else []
+-        model_args = command.get("model_args") if "model_args" in command else []
+-        checks.append(check("PASS" if executable else "FAIL", "shell command executable present"))
+-        checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
+-        checks.append(check("PASS" if isinstance(model_args, list) else "FAIL", "shell command model_args list when present"))
+-        checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
+-        network_reason = str(security.get("network_reason") or "").strip()
+-        checks.append(check("PASS" if security.get("allow_network") is not True or network_reason else "FAIL", "allow_network explicit reason when enabled"))
+-    if kind == "manual":
+-        behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
+-        checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
+-    limits, limit_errors = parse_runtime_driver_limits(driver)
+-    for error in limit_errors:
+-        checks.append(check("FAIL", error))
+-    if not limit_errors:
+-        checks.append(check("PASS", f"limits valid: timeout_seconds={limits['timeout_seconds']} max_retries={limits['max_retries']}"))
+-    for error in driver_placeholder_errors(driver, "driver"):
+-        checks.append(check("FAIL", error))
+-    if include_start_readiness:
+-        checks.extend(runtime_driver_start_readiness_checks(driver, executable_override))
+-    return checks
+ 
+ 
+ def command_runtime_driver_list(args: argparse.Namespace) -> int:
+@@ -16991,7 +16104,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
+         require_flow_root(project_root)
+     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+     driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
+-    return print_checks(validate_runtime_driver_document(driver, getattr(args, "executable", None), include_start_readiness=True))
++    return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
+ 
+ 
+ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
+@@ -17096,7 +16209,7 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
+     if driver_arg and runtime_driver_ref_is_direct_path(driver_arg):
+         driver = copy.deepcopy(driver)
+         driver["_driver_ref"] = normalized_runtime_driver_ref(driver_arg, project_root)
+-    failures = [item.message for item in validate_runtime_driver_document(driver) if item.level == "FAIL"]
++    failures = [item.message for item in _runtime_driver_definition_policy.validate(driver) if item.level == "FAIL"]
+     if failures:
+         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
+     return driver
+@@ -17290,7 +16403,7 @@ def build_worker_process_command(
+             "shell": False,
+         },
+         "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
+-        "limits": parse_runtime_driver_limits(driver)[0],
++        "limits": _runtime_driver_definition_policy.parse_limits(driver)[0],
+     }
+     driver_ref = driver.get("_driver_ref")
+     if isinstance(driver_ref, str) and driver_ref.strip():
+@@ -17316,7 +16429,7 @@ def write_agent_run_state(
+     task_id = safe_id(str(task.get("id") or "task"), "task")
+     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+     paths = paths or worker_run_paths(project_root, run_id, task_id)
+-    driver_limits, limit_errors = parse_runtime_driver_limits(driver)
++    driver_limits, limit_errors = _runtime_driver_definition_policy.parse_limits(driver)
+     if limit_errors:
+         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
+     previous_state = json_read(paths["status"])
+@@ -17529,7 +16642,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None
+     driver = runtime_driver_for_task(project_root, task, driver_arg)
+     start_failures = [
+         item.message
+-        for item in validate_runtime_driver_document(driver, executable_override, include_start_readiness=True)
++        for item in _runtime_driver_definition_policy.validate(driver, executable_override, include_start_readiness=True)
+         if item.level == "FAIL"
+     ]
+     if start_failures:
+@@ -20287,34 +19400,7 @@ UPDATE_SUBJECT_TYPES = {
+     "package",
+ }
+ 
+-UPDATE_SOURCE_PUBLIC_KEYS = [
+-    "id",
+-    "type",
+-    "provider",
+-    "priority",
+-    "manifest_url",
+-    "changelog_url",
+-    "channel",
+-    "path",
+-    "owner",
+-    "repo",
+-    "api_base_url",
+-    "channels",
+-    "include_prereleases",
+-    "asset_patterns",
+-    "trust",
+-    "policy",
+-    "provider_capabilities",
+-]
+ 
+-UPDATE_SOURCE_LOCAL_KEYS = [
+-    "auth_ref",
+-    "auth",
+-    "headers_env",
+-    "query_env",
+-    "custom_headers_env",
+-    "channel_override",
+-]
+ 
+ SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
+ ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
+@@ -20361,28 +19447,10 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
+     return data if isinstance(data, dict) and not yaml_error(data) else {}
+ 
+ 
+-def update_location(source: dict[str, Any], provider_key: str) -> str:
+-    return str(source.get("manifest_url") or "")
+ 
+ 
+-def update_source_kind(source: dict[str, Any]) -> str:
+-    manifest_url = update_location(source, "provider")
+-    parsed = urlparse(manifest_url)
+-    scheme = parsed.scheme.lower()
+-    if scheme == "file" or not scheme:
+-        return "local_file"
+-    if scheme in {"http", "https"}:
+-        return "http"
+-    return scheme or "unknown"
+ 
+ 
+-def update_site_source_id(source: dict[str, Any]) -> str:
+-    raw = source.get("id")
+-    if isinstance(raw, str) and raw.strip():
+-        return raw
+-    manifest_url = update_location(source, "provider")
+-    digest = hashlib.sha256(manifest_url.encode("utf-8")).hexdigest()[:12] if manifest_url else "missing"
+-    return f"manifest-{digest}"
+ 
+ 
+ def source_requires_https(source: dict[str, Any], defaults: dict[str, Any] | None = None) -> bool:
+@@ -20785,9 +19853,9 @@ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False)
+                     str(source.get("id", "")),
+                     str(bool(source.get("enabled", False))).lower(),
+                     str(source.get("priority", "")),
+-                    update_source_kind(source),
++                    _update_site_policy.source_kind(source),
+                     channels,
+-                    update_location(source, "provider"),
++                    _update_site_policy.location(source, "provider"),
+                 ]
+             )
+         )
+@@ -20966,8 +20034,6 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
+     return records
+ 
+ 
+-def update_site_stable_key(subject_type: str, subject_id: str, source_id: str) -> str:
+-    return f"{subject_type}:{subject_id}:{source_id}"
+ 
+ 
+ def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
+@@ -20982,7 +20048,7 @@ def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
+         subject = item.get("subject") if isinstance(item.get("subject"), dict) else {}
+         update_site_id = item.get("update_site_id") or item.get("source_id")
+         if not key and isinstance(update_site_id, str) and subject.get("type") and subject.get("id"):
+-            key = update_site_stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
++            key = _update_site_policy.stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
+         if not key and isinstance(item.get("subject_id"), str):
+             key = str(item.get("subject_id"))
+         if not key and isinstance(item.get("subject"), dict) and subject.get("type") and subject.get("id"):
+@@ -21046,69 +20112,6 @@ def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str],
+     return result
+ 
+ 
+-def derived_update_site_record(
+-    workplace_root: Path,
+-    subject_type: str,
+-    subject_id: str,
+-    subject_scope: str,
+-    installed_version: str,
+-    manifest_path: Path,
+-    site: dict[str, Any],
+-    overrides: dict[str, dict[str, Any]],
+-    *,
+-    parent: dict[str, Any] | None = None,
+-) -> dict[str, Any]:
+-    source_id = update_site_source_id(site)
+-    site_id = update_site_stable_key(subject_type, subject_id, source_id)
+-    source = {key: site[key] for key in UPDATE_SOURCE_PUBLIC_KEYS if key in site}
+-    source["id"] = source_id
+-    source["type"] = update_source_kind(source)
+-    if "channel" not in source:
+-        channels = site.get("channels")
+-        if isinstance(channels, list) and channels:
+-            source["channel"] = str(channels[0])
+-    enabled = bool(site.get("enabled", True))
+-    preserved = {key: site[key] for key in UPDATE_SOURCE_LOCAL_KEYS if key in site}
+-    override = overrides.get(site_id, {}) or overrides.get(subject_id, {}) or overrides.get(f"{subject_type}:{subject_id}", {})
+-    if isinstance(override, dict):
+-        if "enabled" in override or "disabled" in override:
+-            enabled = bool(override.get("enabled", not bool(override.get("disabled"))))
+-        if isinstance(override.get("channels"), list):
+-            source["channels"] = override.get("channels")
+-        if isinstance(override.get("channel"), str):
+-            source["channel"] = override.get("channel")
+-            source["channels"] = [override.get("channel")]
+-        if isinstance(override.get("manifest_url"), str):
+-            source["manifest_url"] = override.get("manifest_url")
+-        if not isinstance(source.get("policy"), dict):
+-            source["policy"] = {}
+-        if isinstance(override.get("pin_version"), str):
+-            source["policy"]["pin_version"] = override.get("pin_version")
+-        if "allow_major" in override:
+-            source["policy"]["allow_major"] = bool(override.get("allow_major"))
+-        if "auto_apply" in override:
+-            source["policy"]["auto_apply"] = bool(override.get("auto_apply"))
+-        preserved_override = override.get("preserved_local") if isinstance(override.get("preserved_local"), dict) else {}
+-        for key in UPDATE_SOURCE_LOCAL_KEYS:
+-            if key in override:
+-                preserved[key] = override[key]
+-        preserved.update(preserved_override)
+-
+-    subject: dict[str, Any] = {"type": subject_type, "id": subject_id, "scope": subject_scope}
+-    if installed_version:
+-        subject["installed_version"] = installed_version
+-    if parent:
+-        subject["parent"] = parent
+-    record: dict[str, Any] = {
+-        "site_id": site_id,
+-        "subject": subject,
+-        "source": source,
+-        "manifest_path": rel(manifest_path, workplace_root),
+-        "enabled": enabled,
+-    }
+-    if preserved:
+-        record["preserved_local"] = preserved
+-    return record
+ 
+ 
+ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], list[Check]]:
+@@ -21129,12 +20132,12 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any],
+                 label = f"{rel(record['manifest_path'], workplace_root)}.update_sites[{index}]"
+                 append_update_source_checks(checks, site, label, provider_key="type")
+                 if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
+-                    source_id = update_site_source_id(site)
++                    source_id = _update_site_policy.source_id(site)
+                     if source_id in seen:
+                         checks.append(check("FAIL", f"{label} duplicate update site id {source_id}"))
+                     seen.add(source_id)
+                     sites.append(
+-                        derived_update_site_record(
++                        _update_site_policy.record(
+                             workplace_root,
+                             record["type"],
+                             record["id"],
+@@ -21166,7 +20169,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any],
+                     append_update_source_checks(checks, site, label, provider_key="type")
+                     if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
+                         sites.append(
+-                            derived_update_site_record(
++                            _update_site_policy.record(
+                                 workplace_root,
+                                 "knowledge_resource",
+                                 resource_subject_id,
+@@ -21205,7 +20208,7 @@ def print_derived_update_sites(data: dict[str, Any], *, subject_type: str = "all
+                     str(subject.get("type", "")),
+                     str(subject.get("id", "")),
+                     str(source.get("type", "")),
+-                    update_location(source, "type"),
++                    _update_site_policy.location(source, "type"),
+                     str(site.get("manifest_path", "")),
+                 ]
+             )
+@@ -21526,7 +20529,7 @@ def load_yaml_or_json_text(text: str) -> dict[str, Any]:
+ 
+ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
+     warnings: list[str] = []
+-    location = update_location(source, "provider")
++    location = _update_site_policy.location(source, "provider")
+     if not location:
+         return {}, ["missing manifest_url"]
+     parsed = urlparse(location)
+@@ -21561,7 +20564,7 @@ def normalize_manifest_versions(raw: dict[str, Any], site: dict[str, Any], chann
+     subject_id = str(manifest_subject.get("id") or subject.get("id") or "")
+     source = site.get("source") if isinstance(site.get("source"), dict) else site
+     source_id = str(source.get("id") or site.get("site_id") or "update-site")
+-    manifest_url = update_location(source, "provider")
++    manifest_url = _update_site_policy.location(source, "provider")
+     site_changelog = str(source.get("changelog_url") or "")
+     versions: list[dict[str, Any]] = []
+ 
+@@ -21650,13 +20653,6 @@ def update_candidate_id(subject_type: str, subject_id: str, available_version: s
+     return f"candidate-{safe_id(subject_type)}-{safe_id(subject_id)}-{safe_id(available_version)}-{digest}"
+ 
+ 
+-def update_site_policy(source: dict[str, Any], installed_subject: dict[str, Any] | None = None) -> dict[str, Any]:
+-    policy: dict[str, Any] = {}
+-    if isinstance(source.get("policy"), dict):
+-        policy.update(source["policy"])
+-    if installed_subject and isinstance(installed_subject.get("update_policy"), dict):
+-        policy.update(installed_subject["update_policy"])
+-    return policy
+ 
+ 
+ def installed_subjects_by_key(workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
+@@ -21721,7 +20717,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+         warnings.extend(compare_warnings)
+         if not selected:
+             continue
+-        source_policy = update_site_policy(source, installed_subject)
++        source_policy = _update_site_policy.policy(source, installed_subject)
+         pinned = source_policy.get("pin_version")
+         if isinstance(pinned, str) and pinned.strip() and str(selected.get("version")) != pinned:
+             conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by pin_version {pinned}"})
+diff --git a/tools/smoke_codex_worker_governance.py b/tools/smoke_codex_worker_governance.py
+index aff7ad6..7361078 100644
+--- a/tools/smoke_codex_worker_governance.py
++++ b/tools/smoke_codex_worker_governance.py
+@@ -9,6 +9,7 @@ from pathlib import Path
+ from unittest.mock import patch
+ 
+ import processforge as pf
++from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
+ from codex_exec_worker import codex_config_args, managed_hook_trust_args, prompt_payload
+ 
+ 
+@@ -46,7 +47,7 @@ def main() -> int:
+         writable = task(writer=True, code=True, artifacts=True)
+         pf.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
+ 
+-        driver = pf.default_runtime_driver_documents()["codex-exec"]
++        driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
+         command, _paths = pf.build_worker_process_command(project, writable, driver)
+         environment = command["command"]["environment"]
+         if environment.get("PF_CODEX_SANDBOX") != "workspace-write":
+diff --git a/tools/smoke_prepared_execution_context.py b/tools/smoke_prepared_execution_context.py
+index de6a289..20601cd 100644
+--- a/tools/smoke_prepared_execution_context.py
++++ b/tools/smoke_prepared_execution_context.py
+@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "tools"))
+ from smoke_conversation_completeness import setup_basic_project, pf
+ from garage_search_smoke_support import register_fixture_resource, select_fixture_resource
+ import processforge as core
++from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
+ 
+ 
+ RUN_ID = "prepared-run"
+@@ -78,7 +79,7 @@ def schema_check(document: dict[str, Any]) -> None:
+ 
+ 
+ def make_shell_driver(project: Path) -> Path:
+-    driver = copy.deepcopy(core.default_runtime_driver_documents()["generic-shell"])
++    driver = copy.deepcopy(RuntimeDriverDefinitionPolicy().default_documents()["generic-shell"])
+     driver["id"] = "prepared-offline-fixture"
+     driver["security"]["require_explicit_executable"] = False
+     driver["environment"]["inherit"] = False

@@ -137,6 +137,11 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/classification.py` | ProjectClassifierRulePolicy без состояния для проверки прежних правил классификации; реестры, обход и активация сохраняют legacy-владельцев. |
 | `src/processforge_core/common/paths.py` | Общий примитив path_matches_pattern для классификации и обнаружения вместе с неизменённым helper rel. |
 | `src/processforge_core/process_catalog/artifacts.py` | ProcessArtifactDeclarationPolicy без состояния для defined, declared и produced ID артефактов; полные валидаторы и I/O companion-файлов сохраняют legacy-владельцев. |
+| `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder: прежние значения по умолчанию, нормализация ответов и построение процесса с конкретными правилами evolve. |
+| `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy: прежние значения evolve по умолчанию, нормализация и упорядоченные проверки. |
+| `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy: прежние встроенные документы, реестр, placeholders, limits и проверки готовности документа. |
+| `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy: прежние идентификаторы источников, записи сайтов, переопределения и слияние политик без I/O. |
+| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков и списков. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
@@ -563,10 +568,12 @@ merge policy не делает полный компилятор контекс�
 методами экземпляра `defined_ids(process)`, `declared_ids(process)` и
 `produced_ids(process)`. Проверка authoring, контракта процесса и отчёт builtin
 catalog в `tools/processforge.py` вызывают владельца напрямую; три старых
-определения сбора ID артефактов удалены. Приватные helpers сохраняют обработку
+определения сбора ID артефактов удалены. Общие функции `common.values` сохраняют обработку
 только списков, порядок преобразования и фильтрации string-list, строки через
 запятую, различия dict/list, истинность ID, обработку дубликатов и прежний порядок
-исключений. Общие helpers монолита остаются для других потребителей.
+исключений. Остальные потребители монолита импортируют общие примитивы из
+модулей-владельцев; два определения `as_list` с разным временем действия остаются
+в монолите.
 
 Обе policy не хранят состояние, не выполняют I/O и не импортируют монолит и не
 вызывают его через callbacks. Загрузка реестров классификаторов, обход дерева и
@@ -575,3 +582,38 @@ companion-файлов, регистрация каталога и актива�
 legacy-владельцев. Выделение чистых policy не означает полного переноса
 классификации или валидации, завершения OOP-эпиков или приёмки архива,
 установленного Core, Runtime либо подключённых хостов.
+
+## Построение процессов, evolve, документы драйверов и update-site
+
+`process_catalog.authoring.ProcessAuthoringDefinitionBuilder` владеет методами
+`defaults`, `normalize`, `build`, `normalize_transitions` и
+`materialize_responsibility_boundaries`. Обычный конструктор использует конкретный
+`process_catalog.evolution.ProcessEvolutionPolicy` с методами `default_block`,
+`normalize_block` и `validate_block`. Сохранены новые значения по умолчанию при
+каждом вызове, прежние ссылки на вложенные данные и места глубокого копирования,
+неизвестные поля, обработка отключённого evolve и порядок проверок. Маршруты
+переходов сохраняют общий словарь возврата. Полная проверка authoring и схем,
+а также надёжная публикация остаются у прежних владельцев.
+
+`runtime.drivers.RuntimeDriverDefinitionPolicy` владеет методами
+`default_documents`, `default_registry`, `placeholder_errors`, `parse_limits`,
+`start_readiness` и `validate`, а также прежними наборами зарезервированных
+переменных среды и placeholders. Готовность документа проверяется без поиска
+исполняемого файла. Сохранены свежие словари, сообщения и порядок проверки,
+исходные ошибки и прежняя нормализация аргументов. Запуск процессов Runtime,
+чтение реестра и жизненный цикл воркеров сохраняют существующих владельцев.
+
+`maintenance.sites.UpdateSitePolicy` владеет методами `location`, `source_kind`,
+`source_id`, `stable_key`, `record` и `policy`. Сохранены порядок ключей источника,
+пробелы в непустом ID, приоритет переопределений, изменение общего вложенного
+словаря политики и заимствованные значения каналов, родителя и локальных данных.
+Класс использует `common.paths.rel` и не выполняет I/O. Поиск обновлений,
+проверка схем, сеть, установка и восстановление остаются у прежних владельцев.
+
+Общие примитивы имеют единственного владельца: `common.checks.Check` остаётся
+изменяемым dataclass, а `check` переводит уровень в верхний регистр;
+`common.ids` содержит `safe_id` и `title_from_id`, `common.values` — строгий
+списочный `as_list` и прежний `string_list`. Все найденные потребители используют
+конкретные классы или эти импорты. Прежние внутренние определения удалены без
+обёрток. Перенос сохраняет внешние контракты 1.2.0 и подтверждён для исходников;
+он не завершает OOP-эпики и не квалифицирует другие слои поставки.

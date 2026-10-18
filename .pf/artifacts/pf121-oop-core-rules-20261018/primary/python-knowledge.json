@@ -1,0 +1,42 @@
+[
+  {
+    "resource_id": "docs.python:root",
+    "document": "dataclasses.md",
+    "lines": [
+      1,
+      185
+    ],
+    "sha256": "sha256:9c19c5658aedb68dcf49bf6ccdaa676df31c96f3dea5c9d6fb1e0efe551703c8",
+    "application": "Preserve mutable dataclass values and explicit owning-module imports; keep responsibilities simple and normal Core use independent."
+  },
+  {
+    "resource_id": "docs.python-practices:root",
+    "document": "pep20.md",
+    "lines": [
+      1,
+      73
+    ],
+    "sha256": "sha256:9ee7c54f484c758a2e59d242d66326ec7f198de5eadbdf017eaefcf090718d5a",
+    "application": "Preserve mutable dataclass values and explicit owning-module imports; keep responsibilities simple and normal Core use independent."
+  },
+  {
+    "resource_id": "docs.python-peps:root",
+    "document": "pep-0008.md",
+    "lines": [
+      125,
+      219
+    ],
+    "sha256": "sha256:152ee3110c34bfd3a450b94a3930460b8bf3870deb78da4a812d8c5196ac7e3e",
+    "application": "Preserve mutable dataclass values and explicit owning-module imports; keep responsibilities simple and normal Core use independent."
+  },
+  {
+    "resource_id": "docs.python-packaging:root",
+    "document": "index.md",
+    "lines": [
+      1,
+      61
+    ],
+    "sha256": "sha256:918f9cc0427760ce1153ab980d18b79ba019c855830d3509f5ef0a422efd75ee",
+    "application": "Preserve mutable dataclass values and explicit owning-module imports; keep responsibilities simple and normal Core use independent."
+  }
+]
