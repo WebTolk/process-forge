@@ -53,6 +53,12 @@ def fixture(base, name):
 
 def previews(base):
     generated, _, legacy = startup.load_start_source()
+    for instruction in ('For NEW Work, call `pf.work.start`', '`pf.continuation.status`',
+                        'exact run/assignment/context ids', 'explicit apply', '`pf.continuation.resume`',
+                        'Missing or ambiguous selection must not create Work',
+                        'never choose the first or newest assignment',
+                        'pass the returned selectors to every Work call'):
+        assert instruction in generated, instruction
     old = legacy[0].format(project_id='fixture')
     for index,value in enumerate((None, generated, old, '# Custom START\nUSER DATA\n')):
         for count in (0,1,3):

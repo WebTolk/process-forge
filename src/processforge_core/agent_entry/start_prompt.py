@@ -8,8 +8,16 @@ from .contract import BOM, EntryError, SOURCE_ROOT, decode_json, digest, text_by
 
 WORK_GUIDANCE = """## Governed Work
 
-Call `pf.work.start` with the objective. If it returns `process_choice_required`,
-choose an offered process and retry with `process_id`. Follow `pf.work.state`:
+For NEW Work, call `pf.work.start` with the objective and an explicit authorized
+`scope_intent`; the objective alone grants no file or action permissions. If it returns
+`process_choice_required`, choose only an offered process and retry with
+`process_id`; ask the user if the objective cannot disambiguate the choice.
+For existing Work, discover candidates with `pf.continuation.status` or read
+the named continuation. Select exact run/assignment/context ids, create a
+continuation with explicit apply if needed, then call `pf.continuation.resume`.
+Missing or ambiguous selection must not create Work. Follow PF's returned
+identity; never choose the first or newest assignment. Without a bound session,
+pass the returned selectors to every Work call. Follow `pf.work.state`:
 read the returned assignment and immutable Execution Context Package, check
 identity, scope and readiness, satisfy the current stage, then use
 `pf.work.transition` with outcome and evidence until PF returns `run_completed`.

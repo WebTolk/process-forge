@@ -594,8 +594,7 @@ class RuntimeProcess:
             except (Exception, SystemExit):
                 report = temporary_files.failed_observation(config)
             try:
-                with temporary_files.report_destination(project_root, create=True) as (path, _descriptor):
-                    write_json_atomic(path, report)
+                temporary_files.write_report(project_root, report, atomic_writer=write_json_atomic)
             except (Exception, SystemExit):
                 result["error"] = "temporary_files_report_write_failed"
                 continue

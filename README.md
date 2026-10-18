@@ -227,7 +227,10 @@ Start a work session:
 Use ProcessForge for this work.
 
 Read root AGENTS.md (or .pf/AGENTS.md in an unmigrated project), verify current
-context with pf.context, then start or reuse governed work through pf.work.start.
+context with pf.context. For new work, use pf.work.start with an explicit
+authorized scope_intent. To continue existing work, discover continuations,
+select exact Run, assignment and context identities, then pf.continuation.resume.
+Never infer the target from an objective or the newest assignment.
 Use the returned Run, assignment and capsule identities; inspect pf.work.state,
 record evidence through pf.work.transition, and continue until run_completed.
 Handle process_choice_required using the returned choices. Keep artifacts and

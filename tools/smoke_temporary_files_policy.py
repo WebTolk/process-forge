@@ -38,8 +38,7 @@ def old_file(path, now, age=7200):
 
 
 def publish(root, report):
-    with temporary.report_destination(root, create=True) as (path, _):
-        service.write_json_atomic(path, report)
+    temporary.write_report(root, report, atomic_writer=service.write_json_atomic)
     return root / ".pf/runtime/maintenance/temporary-files.json"
 
 
@@ -208,6 +207,113 @@ def runtime_fixture(roots, config):
     return runtime
 
 
+def posix_report_checks(base):
+    if os.name == "nt":
+        print("SKIP: POSIX descriptor-relative report substitution regressions require POSIX")
+        return
+    report = temporary._base(TemporaryFilesConfig(), time.time())
+    original_directory = temporary._directory
+    # Swap each ancestor after opening it, before child mkdir or publication.
+    # Exercise the Runtime call so discarding its descriptor is also detected.
+    for index, parts in enumerate(((".pf",), (".pf", "runtime"), (".pf", "runtime", "maintenance"))):
+        root = fixture(base, f"posix-write-{index}")
+        target = root.joinpath(*parts)
+        moved = target.with_name(target.name + "-pinned")
+        outside = base / f"posix-write-outside-{index}"
+        outside.mkdir()
+        (outside / "sentinel").write_bytes(b"untouched")
+        runtime = runtime_fixture([root], PFConfig())
+        swapped = False
+
+        @contextmanager
+        def substitute(path, parent=None):
+            nonlocal swapped
+            with original_directory(path, parent) as descriptor:
+                if path == target:
+                    target.rename(moved)
+                    target.symlink_to(outside, target_is_directory=True)
+                    swapped = True
+                yield descriptor
+
+        with patch.object(temporary, "_directory", substitute), \
+             patch.object(temporary, "observation_age", return_value=None), \
+             patch.object(temporary, "observe", return_value=report), \
+             patch.object(service, "write_json_atomic", side_effect=AssertionError("POSIX absolute writer used")):
+            assert runtime.observe_temporary_files([root]) == {}
+        assert swapped
+        destination = moved.joinpath(*(".pf", "runtime", "maintenance")[len(parts):], "temporary-files.json")
+        assert json.loads(destination.read_bytes()) == report
+        assert [p.name for p in destination.parent.iterdir()] == ["temporary-files.json"]
+        assert {p.name: p.read_bytes() for p in outside.iterdir()} == {"sentinel": b"untouched"}
+        target.unlink()
+        moved.rename(target)
+
+    root = fixture(base, "posix-read")
+    path = publish(root, report)
+    moved = path.parent.with_name("maintenance-pinned")
+    outside = base / "posix-read-outside"
+    outside.mkdir()
+    # A distinct valid report makes an absolute lstat/open mismatch detectable.
+    (outside / path.name).write_text(json.dumps(dict(report, state="off")), encoding="utf-8")
+
+    @contextmanager
+    def substitute_read(project_root, *, create=False):
+        with destination_context(project_root, create=create) as destination:
+            path.parent.rename(moved)
+            path.parent.symlink_to(outside, target_is_directory=True)
+            try:
+                yield destination
+            finally:
+                path.parent.unlink()
+                moved.rename(path.parent)
+
+    destination_context = temporary.report_destination
+    with patch.object(temporary, "report_destination", substitute_read):
+        assert temporary._read_report(root)["state"] == "notify"
+
+    # Failed replace cleans its own staging through the descriptor, even when
+    # the absolute destination has been substituted in the meantime.
+    original = path.read_bytes()
+
+    def failed_replace(source, destination, *, src_dir_fd, dst_dir_fd):
+        assert src_dir_fd == dst_dir_fd and src_dir_fd is not None
+        assert "/" not in source and destination == path.name
+        path.parent.rename(moved)
+        path.parent.symlink_to(outside, target_is_directory=True)
+        raise OSError("publication denied")
+
+    try:
+        with patch.object(temporary.os, "replace", side_effect=failed_replace):
+            try:
+                publish(root, dict(report, state="off"))
+            except OSError as exc:
+                assert str(exc) == "publication denied"
+            else:
+                raise AssertionError("failed replace was hidden")
+        assert (moved / path.name).read_bytes() == original
+        assert [p.name for p in moved.iterdir()] == [path.name], "staging leaked from pinned directory"
+        assert [p.name for p in outside.iterdir()] == [path.name]
+    finally:
+        path.parent.unlink()
+        moved.rename(path.parent)
+
+    # Both report reads and child directory opens reject links rather than
+    # falling back to absolute traversal.
+    path.unlink()
+    path.symlink_to(outside / path.name)
+    assert temporary.last_summary(root, TemporaryFilesConfig())["reason"] == "report_invalid"
+    path.unlink()
+    maintenance = path.parent
+    maintenance.rmdir()
+    maintenance.symlink_to(outside, target_is_directory=True)
+    try:
+        publish(root, report)
+    except OSError:
+        pass
+    else:
+        raise AssertionError("linked maintenance directory accepted")
+
+
 def scheduler_checks(base):
     roots = [fixture(base, "bad-project"), fixture(base, "good-project")]
     config = PFConfig()
@@ -246,7 +352,7 @@ def scheduler_checks(base):
         assert restarted.observe_temporary_files(roots) == {}
         assert all(row["last_result"] == "deferred" for row in restarted._temporary_files_results.values())
     failing = runtime_fixture([fixture(base, "write-error")], config)
-    with patch.object(service, "write_json_atomic", side_effect=OSError("private writer exception")):
+    with patch.object(temporary, "write_report", side_effect=OSError("private writer exception")):
         errors = failing.observe_temporary_files(list(failing.known_project_roots()))
     assert list(errors.values()) == ["temporary_files_report_write_failed"]
     invalid = runtime_fixture([fixture(base, "invalid-config")], config)
@@ -266,6 +372,7 @@ def main():
         base = Path(raw).resolve()
         root, config, report = observation_checks(base)
         report_checks(root, config, report)
+        posix_report_checks(base)
         scheduler_checks(base)
         contract = load_contract()
         assert block_span(contract.raw, contract) == (0, len(contract.raw))

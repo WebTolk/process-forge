@@ -9,6 +9,7 @@ import os
 from pathlib import Path, PurePosixPath
 import stat
 import time
+import uuid
 
 from ..configuration.models import TemporaryFilesConfig
 
@@ -67,6 +68,8 @@ def _directory(path: Path, parent: int | None = None):
         finally:
             close(handle)
     else:
+        if not hasattr(os, "O_DIRECTORY") or not hasattr(os, "O_NOFOLLOW"):
+            raise OSError("safe_directory_operations_unavailable")
         descriptor = os.open(path.name if parent is not None else path,
                              os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
         try:
@@ -160,7 +163,7 @@ def observe(project_root: Path, config: TemporaryFilesConfig, *, now: float | No
 
 @contextmanager
 def report_destination(project_root: Path, *, create: bool = False):
-    """Pin report ancestors; publication reuses the Runtime atomic writer."""
+    """Pin report ancestors; POSIX operations must use the returned descriptor."""
     root = Path(project_root).absolute()
     with ExitStack() as stack:
         descriptor = stack.enter_context(_directory(root))
@@ -169,11 +172,42 @@ def report_destination(project_root: Path, *, create: bool = False):
             directory = directory / name
             if create and name != ".pf":
                 try:
-                    directory.mkdir()
+                    if os.name == "nt":
+                        directory.mkdir()
+                    else:
+                        os.mkdir(name, dir_fd=descriptor)
                 except FileExistsError:
                     pass
             descriptor = stack.enter_context(_directory(directory, descriptor))
         yield directory / "temporary-files.json", descriptor
+
+
+def write_report(project_root: Path, report: dict, *, atomic_writer) -> None:
+    """Publish beside the pinned destination; preserve the Windows writer."""
+    with report_destination(project_root, create=True) as (path, parent):
+        if os.name == "nt":
+            atomic_writer(path, report)
+            return
+        if parent is None:
+            raise OSError("unsafe_directory")
+        staging = f".{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+        created = False
+        try:
+            # O_EXCL rejects preexisting links; unsupported dir_fd/NOFOLLOW
+            # primitives fail closed without falling back to absolute paths.
+            fd = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                         0o666, dir_fd=parent)
+            created = True
+            with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                stream.write(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+            os.replace(staging, path.name, src_dir_fd=parent, dst_dir_fd=parent)
+        except BaseException:
+            if created:
+                try:
+                    os.unlink(staging, dir_fd=parent)
+                except (OSError, NotImplementedError):
+                    pass  # Cleanup denial must not mask the publication error.
+            raise
 
 
 def _valid_candidate(value) -> bool:
@@ -191,10 +225,15 @@ def _valid_candidate(value) -> bool:
 
 def _read_report(project_root: Path) -> dict:
     with report_destination(project_root) as (path, parent):
-        info = path.lstat()
+        if os.name != "nt" and parent is None:
+            raise OSError("unsafe_directory")
+        info = (path.lstat() if os.name == "nt"
+                else os.stat(path.name, dir_fd=parent, follow_symlinks=False))
         if _linked(info) or not stat.S_ISREG(info.st_mode):
             raise ValueError("report_invalid")
-        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
+        if os.name != "nt":
+            flags |= os.O_NOFOLLOW
         fd = os.open(path.name if parent is not None else path, flags, dir_fd=parent)
         with os.fdopen(fd, "rb") as stream:
             opened = os.fstat(stream.fileno())

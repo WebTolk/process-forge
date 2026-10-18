@@ -312,6 +312,7 @@ python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --k
 python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
 python .pf/runtime/bin/pf.py run-summary --project-root . --run <run-id> --apply
 python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
+python .pf/runtime/bin/pf.py run-complete --project-root . --run <run-id> --apply
 python .pf/runtime/bin/pf.py session-end --project-root .
 ```
 

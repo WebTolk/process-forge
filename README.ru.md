@@ -254,8 +254,10 @@ ProcessForge, тяжёлые зеркала документации, общие
 Выполни работу через ProcessForge.
 
 Прочитай корневой AGENTS.md (в старом проекте без него — .pf/AGENTS.md),
-проверь контекст через pf.context, затем создай или продолжи работу через
-pf.work.start. Используй возвращённые Run, assignment и capsule, проверяй
+проверь контекст через pf.context. Для новой работы вызови pf.work.start с
+явным разрешённым scope_intent. Для продолжения найди continuation, выбери
+точные Run, assignment и context и вызови pf.continuation.resume. Не выбирай
+задачу по сходству цели или дате. Используй возвращённые Run, assignment и capsule, проверяй
 pf.work.state, передавай результаты через pf.work.transition до run_completed.
 При process_choice_required выбирай из предложенных процессов. Артефакты
 и передачи сохраняй в пределах области задачи.
