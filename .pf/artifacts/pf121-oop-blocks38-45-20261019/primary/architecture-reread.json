@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-19T20:24:19.257557+00:00",
+  "reader": "primary",
+  "applies_to": [
+    "primary",
+    "consumers",
+    "support",
+    "init-caller"
+  ],
+  "sources": [
+    {
+      "path": ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md",
+      "sha256": "728b1fa837377cf8be32b549af8fd1d005ff9332f76409da45510d46f31ee01d",
+      "lines": 82,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md",
+      "sha256": "016a7485060bc39cdd448ccb38087954550f89f2b84e52959bdc52de6a9f15a4",
+      "lines": 13,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/adr.md",
+      "sha256": "076acfe9c8df09f9408556d144840e60ac4a594b064bfe9ada3981e7e39cb550",
+      "lines": 174,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/direction.md",
+      "sha256": "23d68db7ffe463d1e63ea96acaff6104256c8e658d9baee9e4cfc9fa3445ba14",
+      "lines": 101,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/domain.md",
+      "sha256": "c90fe925601522e0f45fb13c282547d7f17e87d958d6c718d7345599557ab649",
+      "lines": 97,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/progressive-oop-boundary-20261010/decision.md",
+      "sha256": "63c68bd61176d5cd3ab1e27791d3cc43657f2d750dac162b15e4da55e43e616b",
+      "lines": 17,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-02.md",
+      "sha256": "c6462768f3aac61ca77c9268e7b32be00193719e5a9dda3896c99c231336d647",
+      "lines": 19,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-03.md",
+      "sha256": "38d1fd36d54a9c4cf5de0c9fef212dafca034c98b27622ddd64e5c8fbc1f0522",
+      "lines": 17,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-05.md",
+      "sha256": "26ceb97ab62124026378cb40815fc966cd883a20a6c7635a8595ad33e047f274",
+      "lines": 19,
+      "full_body_reread_after_implementation": true
+    }
+  ],
+  "comparison": "primary/architecture-reread.md",
+  "python_digest": ".pf/artifacts/pf121-oop-blocks18-37-20261019/primary/python-knowledge.md",
+  "source_only": true
+}

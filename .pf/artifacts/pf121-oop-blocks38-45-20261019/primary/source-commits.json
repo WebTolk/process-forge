@@ -1,0 +1,184 @@
+{
+  "baseline": "cd1da53b3bf7ed94bce32d25daa3280222d7b367",
+  "commits": [
+    {
+      "block": 39,
+      "commit": "ee85d9df236de958a5be34d4e82f84a78568f83d",
+      "title": "Move project launcher templates to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/runtime_launchers.py",
+        "tools/processforge.py"
+      ],
+      "cumulative_blocks": [
+        39
+      ]
+    },
+    {
+      "block": 41,
+      "commit": "cb712a0e818fff2d12d0c49e55729cdc1ef05598",
+      "title": "Move official profile pack selection to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/process_catalog/profile_packs.py",
+        "tools/processforge.py"
+      ],
+      "cumulative_blocks": [
+        39,
+        41
+      ]
+    },
+    {
+      "block": 40,
+      "commit": "811f3469dc4384c4efa6574c71d1e27b8dd025b1",
+      "title": "Move workplace file and term generation to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/workplace_templates.py",
+        "src/processforge_core/project/workplace_terms.py",
+        "tools/processforge.py",
+        "tools/smoke_workplace_configuration.py"
+      ],
+      "cumulative_blocks": [
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "block": 38,
+      "commit": "9c9e2551a2f80ef29ac15aa5c4b8ea75fb8b2744",
+      "title": "Move project file generation and discovery to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/common/markdown.py",
+        "src/processforge_core/project/file_templates.py",
+        "src/processforge_core/project/initialization.py",
+        "src/processforge_core/project/initialization_discovery.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/processforge.py",
+        "tools/smoke_classifier_distribution_parity.py",
+        "tools/smoke_classifier_inventory_pruning.py",
+        "tools/smoke_domain_pack_can_classify_after_install.py",
+        "tools/smoke_no_hardcoded_file_project_detection.py",
+        "tools/smoke_project_classification_data_driven.py",
+        "tools/smoke_project_init_entry.py",
+        "tools/smoke_project_onboard_platform_selection.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "block": 42,
+      "commit": "44309ac0a9929b42ade43e10b6d064b6896efaed",
+      "title": "Move event recording and hook dispatch to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/agents/hook_dispatch.py",
+        "src/processforge_core/agents/process_events.py",
+        "src/processforge_core/bootstrap.py",
+        "src/processforge_core/composition.py",
+        "src/processforge_core/process_execution.py",
+        "src/processforge_core/project/configuration_inputs.py",
+        "src/processforge_core/work/continuation.py",
+        "tools/pf_runtime/host.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/pf_runtime/service.py",
+        "tools/processforge.py",
+        "tools/smoke_continuation_work.py",
+        "tools/smoke_core_work_state.py",
+        "tools/smoke_diagnostics.py",
+        "tools/smoke_egress_work.py",
+        "tools/smoke_hook_sqlite_runtime.py",
+        "tools/smoke_prepared_execution_recovery.py",
+        "tools/smoke_process_event_concurrency.py",
+        "tools/smoke_temporary_files_policy.py",
+        "tools/smoke_verification_current_work_state.py",
+        "tools/smoke_work_capsule_contract_parity.py",
+        "tools/smoke_work_completion_recovery.py",
+        "tools/smoke_work_evidence_freshness.py",
+        "tools/smoke_work_resource_binding.py",
+        "tools/smoke_work_start_scope.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ]
+    },
+    {
+      "block": 43,
+      "commit": "b24ea9f9c6477e7ec696cfd65f327daf756cbb9f",
+      "title": "Move chat transcript writing to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/chat/writer.py",
+        "tools/pf_runtime/host.py",
+        "tools/processforge.py",
+        "tools/smoke_session_identity_roundtrip.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ]
+    },
+    {
+      "block": 44,
+      "commit": "a7e64f9e5e73692b9e059722eaf20540031354db",
+      "title": "Move release manifest policy to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/common/release_identity.py",
+        "src/processforge_core/maintenance/release_manifest.py",
+        "tools/processforge.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ]
+    },
+    {
+      "block": 45,
+      "commit": "7ce3fadcfc3e27ede5e5870276808ef86f4cd98c",
+      "title": "Move release command planning to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "docs/concepts/python-core-structure.md",
+        "docs/ru/concepts/python-core-structure.md",
+        "src/processforge_core/common/release_identity.py",
+        "src/processforge_core/maintenance/release_commands.py",
+        "src/processforge_core/maintenance/release_plan.py",
+        "tools/processforge.py",
+        "tools/smoke_agent_entry_release.py",
+        "tools/smoke_release_test_extracted_archive.py",
+        "tools/smoke_remediation_aggregate_gates.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ]
+    }
+  ],
+  "status": "complete"
+}

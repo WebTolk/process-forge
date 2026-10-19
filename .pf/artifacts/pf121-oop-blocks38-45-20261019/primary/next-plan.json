@@ -1,0 +1,101 @@
+{
+  "at": "2026-10-19T20:40:46.261119+00:00",
+  "baseline_candidate": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+  "future_campaign": "pf121-oop-blocks46-53-20261020",
+  "provisional_until_review_delivery_and_native_closure": true,
+  "roles": {
+    "a": {
+      "blocks": [
+        46,
+        47
+      ],
+      "functions": [
+        "validate_resource_id",
+        "contained_resource_path",
+        "workspace_registry_specs",
+        "workplace_registry_entry",
+        "load_workplace_path_constants",
+        "expand_path_constants"
+      ],
+      "support": [
+        "RESOURCE_ID_PATTERN",
+        "WINDOWS_RESERVED_DEVICE_BASENAMES",
+        "PATH_CONSTANT_PATTERN"
+      ],
+      "paths": [
+        "src/processforge_core/resources/identity.py",
+        "src/processforge_core/resources/workplace_catalog.py",
+        "src/processforge_core/resources/snapshot.py",
+        "src/processforge_core/resources/index_checks.py",
+        "src/processforge_core/configuration/specializations.py"
+      ],
+      "responsibility": "Unify actual duplicated rootless resource identity/containment and workplace catalog rules, then close Main duplicates and reuse already canonical WorkplaceRegistryReader path constants. Extract shared rootless identity/catalog ownership from WorkspacePathReferenceReader only where needed; migrate its real Core consumers without dummy roots, alias wrappers, altered errors or constructor fields. Keep existing path-constant algorithms in WorkplaceRegistryReader; do not duplicate them. Unify the two resource identity declarations in the actual canonical owner, preserving their existing pattern and mutable set type; reuse already canonical work.context_documents.PATH_CONSTANT_PATTERN instead of copying it."
+    },
+    "b": {
+      "blocks": [
+        48,
+        49
+      ],
+      "functions": [
+        "resolve_project_parameters",
+        "resolve_assignment_parameters"
+      ],
+      "support": [
+        "PROJECT_OVERRIDE_MODES"
+      ],
+      "paths": [
+        "src/processforge_core/configuration/project_parameters.py",
+        "src/processforge_core/configuration/assignment_parameters.py",
+        "src/processforge_core/project/overrides.py"
+      ],
+      "responsibility": "Move existing project and assignment parameter orchestration with concrete parameter-source, specialization, override, platform and document owners. Preserve ordered provenance/conflicts/current reads and unknown fields. Move the exact existing mutable PROJECT_OVERRIDE_MODES set to its cohesive existing project/overrides.py owner, without changing that reader methods/constructor or inventing a module for one constant; primary migrates all Main consumers. Assignment definition lookup reuses ProcessCatalogReadService(project_root, distribution_root=actual_root).resolve_definition(process_id): Main resolve_process_definition already composes exactly that context/service; no callback or copied lookup implementation. Explicit distribution roots and cold constructors."
+    },
+    "c": {
+      "blocks": [
+        50,
+        51
+      ],
+      "functions": [
+        "package_manifest_path_for_write",
+        "build_resource_index",
+        "write_package_manifest_and_index",
+        "ensure_private_resource_path"
+      ],
+      "paths": [
+        "src/processforge_core/resources/package_write.py",
+        "src/processforge_core/resources/private_paths.py"
+      ],
+      "responsibility": "Move existing package-manifest/index write composition and private resource registry entry publication. Reuse ProjectPackageCatalogReader, KnowledgeResourceIndexService, ResourceRecordService, canonical YAML/text/clock and WorkplaceRegistryWriter. Preserve same in-place package_root mutation, file order, root fallback mkdir/errors, live root selection, timestamp point and returned path/value identities. No indexing scheduler or new search/index functionality."
+    },
+    "d2": {
+      "blocks": [
+        52,
+        53
+      ],
+      "functions": [
+        "render_task_index",
+        "render_run_summary",
+        "platform_contract_from_values"
+      ],
+      "paths": [
+        "src/processforge_core/presentation/work_summaries.py",
+        "src/processforge_core/project/platform_documents.py"
+      ],
+      "responsibility": "Move the existing Work task-index/run-summary Markdown renderer. Add the exact pure platform_contract_from_values method to the existing cohesive PlatformDocumentBuilder in project/platform_documents.py; do not invent another wrapper builder or new module for the same responsibility. Its existing build method remains byte/AST unchanged. Preserve sorting, exact strings/bytes, live assignment reads, missing/unknown values, shared list identity and dictionary layout. Use concrete WorkPaths/documents; no Main callbacks. Main argparse value mapping/install arguments remain unselected interface responsibilities. Primary alone closes optional task-index composition in ProcessExecutionService and callers, preserving missing-renderer fakes."
+    }
+  },
+  "primary_responsibility": "Exact Main/consumer/optional task-index composition closure, focused affected existing checks, post-task architecture reread, independent review, separate coherent source commits and both-dev parallel token-backed delivery/readback. Do not create new subsystem or implement future product tasks.",
+  "deadline_utc": "2026-10-20T05:00:00Z",
+  "architecture_sources": [
+    ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md",
+    ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md",
+    ".pf/artifacts/pf-framework-architecture-20261005/adr.md",
+    ".pf/artifacts/pf-framework-architecture-20261005/direction.md",
+    ".pf/artifacts/pf-framework-architecture-20261005/domain.md",
+    ".pf/artifacts/progressive-oop-boundary-20261010/decision.md",
+    ".pf/artifacts/python-framework-20261005/oop-02.md",
+    ".pf/artifacts/python-framework-20261005/oop-03.md",
+    ".pf/artifacts/python-framework-20261005/oop-05.md"
+  ],
+  "retained_topology": "primary orchestrates and codes; one independent reviewer after implementation; four native code executors a/b/c/d2"
+}

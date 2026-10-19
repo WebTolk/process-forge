@@ -1,0 +1,730 @@
+{
+  "at": "2026-10-19T20:56:45.558512+00:00",
+  "status": "PASS_SOURCE_CODE_DOCS_DELIVERED",
+  "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+  "baseline": "cd1da53b3bf7ed94bce32d25daa3280222d7b367",
+  "blocks": [
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45
+  ],
+  "source_commits": [
+    {
+      "block": 39,
+      "commit": "ee85d9df236de958a5be34d4e82f84a78568f83d",
+      "title": "Move project launcher templates to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/runtime_launchers.py",
+        "tools/processforge.py"
+      ],
+      "cumulative_blocks": [
+        39
+      ]
+    },
+    {
+      "block": 41,
+      "commit": "cb712a0e818fff2d12d0c49e55729cdc1ef05598",
+      "title": "Move official profile pack selection to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/process_catalog/profile_packs.py",
+        "tools/processforge.py"
+      ],
+      "cumulative_blocks": [
+        39,
+        41
+      ]
+    },
+    {
+      "block": 40,
+      "commit": "811f3469dc4384c4efa6574c71d1e27b8dd025b1",
+      "title": "Move workplace file and term generation to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/workplace_templates.py",
+        "src/processforge_core/project/workplace_terms.py",
+        "tools/processforge.py",
+        "tools/smoke_workplace_configuration.py"
+      ],
+      "cumulative_blocks": [
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "block": 38,
+      "commit": "9c9e2551a2f80ef29ac15aa5c4b8ea75fb8b2744",
+      "title": "Move project file generation and discovery to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/common/markdown.py",
+        "src/processforge_core/project/file_templates.py",
+        "src/processforge_core/project/initialization.py",
+        "src/processforge_core/project/initialization_discovery.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/processforge.py",
+        "tools/smoke_classifier_distribution_parity.py",
+        "tools/smoke_classifier_inventory_pruning.py",
+        "tools/smoke_domain_pack_can_classify_after_install.py",
+        "tools/smoke_no_hardcoded_file_project_detection.py",
+        "tools/smoke_project_classification_data_driven.py",
+        "tools/smoke_project_init_entry.py",
+        "tools/smoke_project_onboard_platform_selection.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "block": 42,
+      "commit": "44309ac0a9929b42ade43e10b6d064b6896efaed",
+      "title": "Move event recording and hook dispatch to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/agents/hook_dispatch.py",
+        "src/processforge_core/agents/process_events.py",
+        "src/processforge_core/bootstrap.py",
+        "src/processforge_core/composition.py",
+        "src/processforge_core/process_execution.py",
+        "src/processforge_core/project/configuration_inputs.py",
+        "src/processforge_core/work/continuation.py",
+        "tools/pf_runtime/host.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/pf_runtime/service.py",
+        "tools/processforge.py",
+        "tools/smoke_continuation_work.py",
+        "tools/smoke_core_work_state.py",
+        "tools/smoke_diagnostics.py",
+        "tools/smoke_egress_work.py",
+        "tools/smoke_hook_sqlite_runtime.py",
+        "tools/smoke_prepared_execution_recovery.py",
+        "tools/smoke_process_event_concurrency.py",
+        "tools/smoke_temporary_files_policy.py",
+        "tools/smoke_verification_current_work_state.py",
+        "tools/smoke_work_capsule_contract_parity.py",
+        "tools/smoke_work_completion_recovery.py",
+        "tools/smoke_work_evidence_freshness.py",
+        "tools/smoke_work_resource_binding.py",
+        "tools/smoke_work_start_scope.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ]
+    },
+    {
+      "block": 43,
+      "commit": "b24ea9f9c6477e7ec696cfd65f327daf756cbb9f",
+      "title": "Move chat transcript writing to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/chat/writer.py",
+        "tools/pf_runtime/host.py",
+        "tools/processforge.py",
+        "tools/smoke_session_identity_roundtrip.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ]
+    },
+    {
+      "block": 44,
+      "commit": "a7e64f9e5e73692b9e059722eaf20540031354db",
+      "title": "Move release manifest policy to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/common/release_identity.py",
+        "src/processforge_core/maintenance/release_manifest.py",
+        "tools/processforge.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ]
+    },
+    {
+      "block": 45,
+      "commit": "7ce3fadcfc3e27ede5e5870276808ef86f4cd98c",
+      "title": "Move release command planning to Core",
+      "paths": [
+        "checksums/processforge.sha256",
+        "docs/concepts/python-core-structure.md",
+        "docs/ru/concepts/python-core-structure.md",
+        "src/processforge_core/common/release_identity.py",
+        "src/processforge_core/maintenance/release_commands.py",
+        "src/processforge_core/maintenance/release_plan.py",
+        "tools/processforge.py",
+        "tools/smoke_agent_entry_release.py",
+        "tools/smoke_release_test_extracted_archive.py",
+        "tools/smoke_remediation_aggregate_gates.py"
+      ],
+      "cumulative_blocks": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ]
+    }
+  ],
+  "source_files": [
+    {
+      "path": "checksums/processforge.sha256",
+      "git_lf_sha256": "9a11bd6a102dc38d2821b575b2476e0253b24515511eadd1ef37838f27770d4a"
+    },
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "git_lf_sha256": "4d372f83296ac24cffef1f573a86c2c639de42bb58bd01da3e842eee44c93620"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "git_lf_sha256": "57110d73b759488a7c60b3e6e5596ab1977a87497173683c09a5f6403eb591b3"
+    },
+    {
+      "path": "src/processforge_core/agents/hook_dispatch.py",
+      "git_lf_sha256": "640b17e3fd261c9dad138baf84f0bafe552c6db1829e6147dde68f447b6e7ab6"
+    },
+    {
+      "path": "src/processforge_core/agents/process_events.py",
+      "git_lf_sha256": "c2b0939f1443adcaefd704409267a8e1c4854e5968399098b39871bb9f6c25f2"
+    },
+    {
+      "path": "src/processforge_core/bootstrap.py",
+      "git_lf_sha256": "82f835c700611a091414f8c00314c896f3c9c82cdca42d7b24b53ce2168ebf32"
+    },
+    {
+      "path": "src/processforge_core/chat/writer.py",
+      "git_lf_sha256": "54251f9ccc0d46c33863b4f327b7a5305e6dfeebbcac91f40b301bbfbf3bbe77"
+    },
+    {
+      "path": "src/processforge_core/common/markdown.py",
+      "git_lf_sha256": "1ff6003f2d7f4980313aa95e6c9595eade840703089faeb2a82c8f8c2dfcf708"
+    },
+    {
+      "path": "src/processforge_core/common/release_identity.py",
+      "git_lf_sha256": "47f1b5ae7289ea2800bf4b06a84b980da4c9e32ce8701c812bdc26833554a95f"
+    },
+    {
+      "path": "src/processforge_core/composition.py",
+      "git_lf_sha256": "15d8160564a382fd6f76c4fc7d767172f031e91920dbff00f7b5fa06469fa5b3"
+    },
+    {
+      "path": "src/processforge_core/maintenance/release_commands.py",
+      "git_lf_sha256": "482e86a46948c7064d7fd42825f791f536683769fd7a4ccaecb22817aaa3a2f5"
+    },
+    {
+      "path": "src/processforge_core/maintenance/release_manifest.py",
+      "git_lf_sha256": "7fd3436566791a00f04c29a8c6fd8f3810c10793d26b4117cb8a479bc1f861b0"
+    },
+    {
+      "path": "src/processforge_core/maintenance/release_plan.py",
+      "git_lf_sha256": "9e5a44b13cdb1ed02b60144b46fb00fd4d25fbb567074e663e0a85bbeabd4a54"
+    },
+    {
+      "path": "src/processforge_core/process_catalog/profile_packs.py",
+      "git_lf_sha256": "9e80334c4e78f1b5c06fcd296b60950d617806ab7d7a54c94a76cc56b98e0257"
+    },
+    {
+      "path": "src/processforge_core/process_execution.py",
+      "git_lf_sha256": "0324ee67685a5c29e8507f47e9fd8029975bca1821e9dfbfb129acba16f3f4ce"
+    },
+    {
+      "path": "src/processforge_core/project/configuration_inputs.py",
+      "git_lf_sha256": "5980f94be4d3e50af533dba480b9efac109c339768c5636371831cd27a7c8e3e"
+    },
+    {
+      "path": "src/processforge_core/project/file_templates.py",
+      "git_lf_sha256": "6d33250aa6508efed55ac7186a792034fbb50bf6922898f4d78255d925bba294"
+    },
+    {
+      "path": "src/processforge_core/project/initialization.py",
+      "git_lf_sha256": "8f7e43ffd723ed3e889996a5b0e1bcbd49876108aeed6c64ce904b80c39737d4"
+    },
+    {
+      "path": "src/processforge_core/project/initialization_discovery.py",
+      "git_lf_sha256": "92f41eaae563a694a5aa43be1333ef3a0530b73efa8c3bac561854c9e4df1f66"
+    },
+    {
+      "path": "src/processforge_core/project/runtime_launchers.py",
+      "git_lf_sha256": "3643616d49c307b4c4b795fe6fce6457ea627595d9f02a2b3d4b0361a6fc2380"
+    },
+    {
+      "path": "src/processforge_core/project/workplace_templates.py",
+      "git_lf_sha256": "a7ea3bddfa51a3cb17bd85399880b04dd3bf4b7d5494516702a3ee9b665a8340"
+    },
+    {
+      "path": "src/processforge_core/project/workplace_terms.py",
+      "git_lf_sha256": "f7af46eaa9d03ae4e8b0d4aa18e8c766a429a02ea0435eafadef6b9387b8e61a"
+    },
+    {
+      "path": "src/processforge_core/work/continuation.py",
+      "git_lf_sha256": "aaf17ec0173b351c11824de60f5946d11041071b2c3ac163654b7a530e598458"
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "git_lf_sha256": "be7d29c1f96efbc4494e551ec40c0f496bd5c27ee01ddc1d4c12b9a64a761b4e"
+    },
+    {
+      "path": "tools/pf_runtime/mcp_server.py",
+      "git_lf_sha256": "f0fae5fa5b189aa12d2976d4fac8aaef04939bad4f5cd29e31fea4b289dd5bc7"
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "git_lf_sha256": "4aae1914382ab05758ec37375f25237394ad9237faef5e72fee40705c10bfc06"
+    },
+    {
+      "path": "tools/processforge.py",
+      "git_lf_sha256": "a411f329d8d9d6bea9e4cb0a2bb080b0250418d34c1a428cb30f16b036407edc"
+    },
+    {
+      "path": "tools/smoke_agent_entry_release.py",
+      "git_lf_sha256": "6c3a2b62173c41d15ce8c103b73689ae9f95c6998943a758239bbad4daa4e01f"
+    },
+    {
+      "path": "tools/smoke_classifier_distribution_parity.py",
+      "git_lf_sha256": "2e4074c20de410125e8ae900490eb62e6068d3d0f2853c22caf176e128be8a0c"
+    },
+    {
+      "path": "tools/smoke_classifier_inventory_pruning.py",
+      "git_lf_sha256": "9a727f5b13dd4c0bd2fd71b18f3c13ffba4f257740d553b25f4d89648331343c"
+    },
+    {
+      "path": "tools/smoke_continuation_work.py",
+      "git_lf_sha256": "53977ff36dfe95ec0ce8bb59de929b097a2c01d7a028a5178e4cb7f4ed81a35e"
+    },
+    {
+      "path": "tools/smoke_core_work_state.py",
+      "git_lf_sha256": "c84a42ad337a54aaccd8bf9fe12fdffd92c1c20103dd1d04fd371a1cef8a257c"
+    },
+    {
+      "path": "tools/smoke_diagnostics.py",
+      "git_lf_sha256": "3ca4f4b0fa823048682cbc0ac419116992fb0cbd59d8e47cba131e6e3cd8d349"
+    },
+    {
+      "path": "tools/smoke_domain_pack_can_classify_after_install.py",
+      "git_lf_sha256": "4875141e1643e51ce6072d4cd4fd8f7db5da588433a63eff02f5ae4e40745cb9"
+    },
+    {
+      "path": "tools/smoke_egress_work.py",
+      "git_lf_sha256": "b14746099354d7ee236998424d23fa1ee243bdfb670c49c4a11652e0256723ae"
+    },
+    {
+      "path": "tools/smoke_hook_sqlite_runtime.py",
+      "git_lf_sha256": "434c4451fffaccd1c3d9fe4aaeeb0550176479bd83b7c4b9bd001cda9779f064"
+    },
+    {
+      "path": "tools/smoke_no_hardcoded_file_project_detection.py",
+      "git_lf_sha256": "9fe4ddf64feee10b835ec1480ccb206998bb42be69b1aa7fb78d70a33f43b780"
+    },
+    {
+      "path": "tools/smoke_prepared_execution_recovery.py",
+      "git_lf_sha256": "de867358a670c0faabe9766f964de50aa8cde0cfe10f6c0ad1cab09961d8d98b"
+    },
+    {
+      "path": "tools/smoke_process_event_concurrency.py",
+      "git_lf_sha256": "f18f1891f396b37233ccbedc7e88aec4e3d25aa7f1955c027c0e43783bbbe2ba"
+    },
+    {
+      "path": "tools/smoke_project_classification_data_driven.py",
+      "git_lf_sha256": "fe4fdccf4e5a674f682c5ed99c3ec05648f4897f0e2f50a220101fdc282d599c"
+    },
+    {
+      "path": "tools/smoke_project_init_entry.py",
+      "git_lf_sha256": "57784fcbb2e897021cb7cd49d108a3eeebff3f3ddd66b177b67a93eb4b74ca42"
+    },
+    {
+      "path": "tools/smoke_project_onboard_platform_selection.py",
+      "git_lf_sha256": "1f5e218396fa468a04b011369952ee0defe91436a9433a294e0438920ef7ef25"
+    },
+    {
+      "path": "tools/smoke_release_test_extracted_archive.py",
+      "git_lf_sha256": "1ee357f48d9f40f872dcdbf9702021af6927e5b3545599beda8dc3958a746c69"
+    },
+    {
+      "path": "tools/smoke_remediation_aggregate_gates.py",
+      "git_lf_sha256": "03564b5ec85194ed49e095986fac3d1e92e643ba20e8dcd715aa7b9092c4de23"
+    },
+    {
+      "path": "tools/smoke_session_identity_roundtrip.py",
+      "git_lf_sha256": "e09ca9152a8e113d411840d74623664e049c037fc18f9d3e76dd38196c094c99"
+    },
+    {
+      "path": "tools/smoke_temporary_files_policy.py",
+      "git_lf_sha256": "be7df283dd27f875c9bc4b2f2e443cbcd75702f65314528b04d09d57fa8a4800"
+    },
+    {
+      "path": "tools/smoke_verification_current_work_state.py",
+      "git_lf_sha256": "6eec6db552aa82a84f203b5d89e4dc1f14cdcdc181913a77f305456d9f83315d"
+    },
+    {
+      "path": "tools/smoke_work_capsule_contract_parity.py",
+      "git_lf_sha256": "22bf5e8c7701ac78296891110a2ffd371568b0669e27d8b81ed78081a0d823f8"
+    },
+    {
+      "path": "tools/smoke_work_completion_recovery.py",
+      "git_lf_sha256": "08cdf82699e7c8066fc12e58fe6a8293e685e9875c42a887c036e81433b1ab49"
+    },
+    {
+      "path": "tools/smoke_work_evidence_freshness.py",
+      "git_lf_sha256": "a41db71981e10502e3cf794af4fc6fc3fb784fa4fade2fd65ea6c795bd5c851b"
+    },
+    {
+      "path": "tools/smoke_work_resource_binding.py",
+      "git_lf_sha256": "629a6405802b5c10a071300baf02ba058e37cf0d218c21ce7cc841172aedb53a"
+    },
+    {
+      "path": "tools/smoke_work_start_scope.py",
+      "git_lf_sha256": "2c361c490d7baf1ab9133f10ede2acba288921beff324ed0e9c64c4aabde97b5"
+    },
+    {
+      "path": "tools/smoke_workplace_configuration.py",
+      "git_lf_sha256": "93533d48ab48b8669f764fea25db93502ee9b048cfe720a3cb4ce4afbe4b59b8"
+    }
+  ],
+  "moved_main_bindings": {
+    "functions": 22,
+    "classes": 1,
+    "declarations": 4
+  },
+  "new_core_modules": 15,
+  "independent_review": {
+    "status": "pass",
+    "open_source_findings": 0,
+    "report": "public-review.md",
+    "report_sha256": "51059a2173d934b8b41d1558ccc6e3ae66425441fef52e9856b2a836c8e8f096",
+    "source_only": true
+  },
+  "existing_checks": [
+    {
+      "id": "configuration-live-policy",
+      "status": "pass",
+      "seconds": 12.644,
+      "corrected_attempt": null
+    },
+    {
+      "id": "core-constructor-adapters",
+      "status": "pass",
+      "seconds": 0.964,
+      "corrected_attempt": null
+    },
+    {
+      "id": "diagnostic-required-journal",
+      "status": "pass",
+      "seconds": 1.277,
+      "corrected_attempt": null
+    },
+    {
+      "id": "prepared-terminal-admission",
+      "status": "pass",
+      "seconds": 1.621,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_classifier_distribution_parity",
+      "status": "pass",
+      "seconds": 1.47,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_continuation_work",
+      "status": "pass",
+      "seconds": 58.849,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_hook_sqlite_runtime",
+      "status": "pass",
+      "seconds": 13.35,
+      "corrected_attempt": "smoke_hook_sqlite_runtime-r1"
+    },
+    {
+      "id": "smoke_mcp_action_tools",
+      "status": "pass",
+      "seconds": 0.505,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_process_event_concurrency",
+      "status": "pass",
+      "seconds": 10.699,
+      "corrected_attempt": "smoke_process_event_concurrency-r1"
+    },
+    {
+      "id": "smoke_project_classification_data_driven",
+      "status": "pass",
+      "seconds": 1.394,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_project_init_entry",
+      "status": "pass",
+      "seconds": 64.557,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_release_test_extracted_archive",
+      "status": "pass",
+      "seconds": 0.532,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_remediation_aggregate_gates",
+      "status": "pass",
+      "seconds": 1.0,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_session_identity_roundtrip",
+      "status": "pass",
+      "seconds": 27.061,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_temporary_files_policy",
+      "status": "pass",
+      "seconds": 3.03,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_work_completion_recovery",
+      "status": "pass",
+      "seconds": 42.851,
+      "corrected_attempt": null
+    },
+    {
+      "id": "smoke_workplace_configuration",
+      "status": "pass",
+      "seconds": 16.851,
+      "corrected_attempt": null
+    }
+  ],
+  "checks_repeated_only_after_failures": [
+    "smoke_hook_sqlite_runtime",
+    "smoke_process_event_concurrency"
+  ],
+  "platform_limits": [
+    "Native Windows file-symlink case unavailable; reparse attributes checked.",
+    "POSIX descriptor-relative report substitution requires POSIX."
+  ],
+  "architecture": [
+    {
+      "path": ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md",
+      "sha256": "728b1fa837377cf8be32b549af8fd1d005ff9332f76409da45510d46f31ee01d",
+      "lines": 82,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md",
+      "sha256": "016a7485060bc39cdd448ccb38087954550f89f2b84e52959bdc52de6a9f15a4",
+      "lines": 13,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/adr.md",
+      "sha256": "076acfe9c8df09f9408556d144840e60ac4a594b064bfe9ada3981e7e39cb550",
+      "lines": 174,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/direction.md",
+      "sha256": "23d68db7ffe463d1e63ea96acaff6104256c8e658d9baee9e4cfc9fa3445ba14",
+      "lines": 101,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/domain.md",
+      "sha256": "c90fe925601522e0f45fb13c282547d7f17e87d958d6c718d7345599557ab649",
+      "lines": 97,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/progressive-oop-boundary-20261010/decision.md",
+      "sha256": "63c68bd61176d5cd3ab1e27791d3cc43657f2d750dac162b15e4da55e43e616b",
+      "lines": 17,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-02.md",
+      "sha256": "c6462768f3aac61ca77c9268e7b32be00193719e5a9dda3896c99c231336d647",
+      "lines": 19,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-03.md",
+      "sha256": "38d1fd36d54a9c4cf5de0c9fef212dafca034c98b27622ddd64e5c8fbc1f0522",
+      "lines": 17,
+      "full_body_reread_after_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-05.md",
+      "sha256": "26ceb97ab62124026378cb40815fc966cd883a20a6c7635a8595ad33e047f274",
+      "lines": 19,
+      "full_body_reread_after_implementation": true
+    }
+  ],
+  "evidence_notes": [
+    {
+      "id": "E001",
+      "kind": "non_blocking_evidence_limit",
+      "path": ".pf/artifacts/pf121-oop-blocks38-45-20261019/primary/review-inputs/d2/report.md",
+      "observation": "The frozen Russian prose contains 2671 literal question marks and no Cyrillic characters. This is actual source text, not a console decoding artifact.",
+      "effect": "Do not rely on its Russian narrative. D2 technical review used pinned readable proof.json/exports.json, original decorated declaration and complete actual source; no source defect remains.",
+      "required_source_correction": null
+    },
+    {
+      "id": "E002",
+      "kind": "historical_evidence_lineage",
+      "observation": "Early support and executor-c evidence records pre-final raw hashes for initialization_discovery.py and hook_dispatch.py; these are not represented as final byte-identical evidence.",
+      "resolution": "Final source-prefixes.json pins 92f41eaae563a694a5aa43be1333ef3a0530b73efa8c3bac561854c9e4df1f66 and 640b17e3fd261c9dad138baf84f0bafe552c6db1829e6147dde68f447b6e7ab6. Current candidate source and canonical imports were inspected directly; complete original algorithms and subsequent focused results were reviewed. No successful tests/parity were rerun.",
+      "required_source_correction": null
+    }
+  ],
+  "readability_supplement": {
+    "at": "2026-10-19T20:40:37.934389+00:00",
+    "reviewed_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+    "source_changed": false,
+    "purpose": "Add readable ASCII clarification; preserve all original frozen evidence.",
+    "path": ".pf/artifacts/pf121-oop-blocks38-45-20261019/primary/review-inputs/d2/report-clarification.md",
+    "sha256": "ac9ef84379c043bd584631c772e9f5df6c05668f38dc19750db1be1339251991",
+    "worker_READY": "msg_9705a59fd69a4a0e8aca938a64db680c"
+  },
+  "delivery": {
+    "at": "2026-10-19 20:45:05 UTC",
+    "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+    "ref": "refs/heads/dev",
+    "parallel_push": true,
+    "remotes": {
+      "origin": {
+        "provider": "GitHub",
+        "push_exit": 0,
+        "readback": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      "gitverse": {
+        "provider": "GitVerse",
+        "auth": "existing token-backed helper; credentials not recorded",
+        "push_exit": 0,
+        "readback": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      }
+    },
+    "source_only": true,
+    "independent_review": "primary/review-acceptance.json"
+  },
+  "native_children": {
+    "at": "2026-10-19T20:53:49.572449+00:00",
+    "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+    "child_works_completed": 8,
+    "children": [
+      {
+        "role": "a",
+        "run_id": "garage-p121-oop8-a-20261019-implement-the-two-coherent-existing-refactor",
+        "assignment_id": "p121-oop8-a-20261019-implement-the-two-coherent-existing-refactor-blocks",
+        "context_id": "p121-oop8-a-20261019-implement-the-two-coherent-existing-refactor-blocks-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "b",
+        "run_id": "garage-p121-oop8-b-20261019-implement-the-two-coherent-existing-refactor",
+        "assignment_id": "p121-oop8-b-20261019-implement-the-two-coherent-existing-refactor-blocks",
+        "context_id": "p121-oop8-b-20261019-implement-the-two-coherent-existing-refactor-blocks-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "c",
+        "run_id": "garage-p121-oop8-c-20261019-implement-the-two-coherent-existing-refactor",
+        "assignment_id": "p121-oop8-c-20261019-implement-the-two-coherent-existing-refactor-blocks",
+        "context_id": "p121-oop8-c-20261019-implement-the-two-coherent-existing-refactor-blocks-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "d2",
+        "run_id": "garage-p121-oop8-d2-20261019-implement-the-two-coherent-existing-refacto",
+        "assignment_id": "p121-oop8-d2-20261019-implement-the-two-coherent-existing-refactor-block",
+        "context_id": "p121-oop8-d2-20261019-implement-the-two-coherent-existing-refactor-block-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "consumers",
+        "run_id": "garage-p121-oop8-consumers-20261019-exact-primary-integration-of-all-sel",
+        "assignment_id": "p121-oop8-consumers-20261019-exact-primary-integration-of-all-selected-m",
+        "context_id": "p121-oop8-consumers-20261019-exact-primary-integration-of-all-selected-m-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "support",
+        "run_id": "garage-p121-oop8-support-20261019-primary-exact-canonical-support-eight",
+        "assignment_id": "p121-oop8-support-20261019-primary-exact-canonical-support-eight-existin",
+        "context_id": "p121-oop8-support-20261019-primary-exact-canonical-support-eight-existin-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "init-caller",
+        "run_id": "garage-p121-oop8-init-caller-20261019-close-the-one-additional-existing",
+        "assignment_id": "p121-oop8-init-caller-20261019-close-the-one-additional-existing-direct",
+        "context_id": "p121-oop8-init-caller-20261019-close-the-one-additional-existing-direct-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      },
+      {
+        "role": "review",
+        "run_id": "garage-p121-oop8-review-20261019-independent-clean-context-review-of-fin",
+        "assignment_id": "p121-oop8-review-20261019-independent-clean-context-review-of-finished-s",
+        "context_id": "p121-oop8-review-20261019-independent-clean-context-review-of-finished-s-capsule",
+        "action": "run_completed",
+        "run_status": "completed",
+        "assignment_status": "done",
+        "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+      }
+    ],
+    "all_five_native_attempts_exit_zero_and_checked_out": true,
+    "primary_root_closure_recorded_separately": true
+  },
+  "full_frozen_native_evidence_retained_locally": true,
+  "general_oop_epics_closed": false,
+  "archive_install_runtime_connected_host_qualified": false
+}

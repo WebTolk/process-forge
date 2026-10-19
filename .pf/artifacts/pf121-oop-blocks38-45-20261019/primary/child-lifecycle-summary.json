@@ -1,0 +1,89 @@
+{
+  "at": "2026-10-19T20:53:49.572449+00:00",
+  "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+  "child_works_completed": 8,
+  "children": [
+    {
+      "role": "a",
+      "run_id": "garage-p121-oop8-a-20261019-implement-the-two-coherent-existing-refactor",
+      "assignment_id": "p121-oop8-a-20261019-implement-the-two-coherent-existing-refactor-blocks",
+      "context_id": "p121-oop8-a-20261019-implement-the-two-coherent-existing-refactor-blocks-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "b",
+      "run_id": "garage-p121-oop8-b-20261019-implement-the-two-coherent-existing-refactor",
+      "assignment_id": "p121-oop8-b-20261019-implement-the-two-coherent-existing-refactor-blocks",
+      "context_id": "p121-oop8-b-20261019-implement-the-two-coherent-existing-refactor-blocks-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "c",
+      "run_id": "garage-p121-oop8-c-20261019-implement-the-two-coherent-existing-refactor",
+      "assignment_id": "p121-oop8-c-20261019-implement-the-two-coherent-existing-refactor-blocks",
+      "context_id": "p121-oop8-c-20261019-implement-the-two-coherent-existing-refactor-blocks-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "d2",
+      "run_id": "garage-p121-oop8-d2-20261019-implement-the-two-coherent-existing-refacto",
+      "assignment_id": "p121-oop8-d2-20261019-implement-the-two-coherent-existing-refactor-block",
+      "context_id": "p121-oop8-d2-20261019-implement-the-two-coherent-existing-refactor-block-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "consumers",
+      "run_id": "garage-p121-oop8-consumers-20261019-exact-primary-integration-of-all-sel",
+      "assignment_id": "p121-oop8-consumers-20261019-exact-primary-integration-of-all-selected-m",
+      "context_id": "p121-oop8-consumers-20261019-exact-primary-integration-of-all-selected-m-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "support",
+      "run_id": "garage-p121-oop8-support-20261019-primary-exact-canonical-support-eight",
+      "assignment_id": "p121-oop8-support-20261019-primary-exact-canonical-support-eight-existin",
+      "context_id": "p121-oop8-support-20261019-primary-exact-canonical-support-eight-existin-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "init-caller",
+      "run_id": "garage-p121-oop8-init-caller-20261019-close-the-one-additional-existing",
+      "assignment_id": "p121-oop8-init-caller-20261019-close-the-one-additional-existing-direct",
+      "context_id": "p121-oop8-init-caller-20261019-close-the-one-additional-existing-direct-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    {
+      "role": "review",
+      "run_id": "garage-p121-oop8-review-20261019-independent-clean-context-review-of-fin",
+      "assignment_id": "p121-oop8-review-20261019-independent-clean-context-review-of-finished-s",
+      "context_id": "p121-oop8-review-20261019-independent-clean-context-review-of-finished-s-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    }
+  ],
+  "all_five_native_attempts_exit_zero_and_checked_out": true,
+  "primary_root_closure_recorded_separately": true
+}

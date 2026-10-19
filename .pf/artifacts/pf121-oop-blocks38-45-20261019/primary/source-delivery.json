@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-19 20:45:05 UTC",
+  "source_commit": "831a7afc2b7794c5e29cae140f89ec6d0cda5186",
+  "ref": "refs/heads/dev",
+  "parallel_push": true,
+  "remotes": {
+    "origin": {
+      "provider": "GitHub",
+      "push_exit": 0,
+      "readback": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    },
+    "gitverse": {
+      "provider": "GitVerse",
+      "auth": "existing token-backed helper; credentials not recorded",
+      "push_exit": 0,
+      "readback": "831a7afc2b7794c5e29cae140f89ec6d0cda5186"
+    }
+  },
+  "source_only": true,
+  "independent_review": "primary/review-acceptance.json"
+}
