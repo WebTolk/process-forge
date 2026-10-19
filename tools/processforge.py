@@ -390,6 +390,7 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
+from processforge_core.project.capability_resolution import ProjectCapabilityResolution
 from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
 from processforge_core.project.overrides import ProjectOverrideReader
 from processforge_core.project.scan_policy import ProjectScanPolicy
@@ -397,6 +398,7 @@ from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
 from processforge_core.agents.telemetry import TelemetryEventService
+from processforge_core.resources.registries import WorkplaceRegistryReader
 from processforge_core.project.setup_answers import WorkplaceSetupAnswers
 import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
@@ -404,6 +406,8 @@ import processforge_core.common.yaml_io as _core_common_yaml_io
 import processforge_core.maintenance.release_sources as _core_maintenance_release_sources
 import processforge_core.project.overrides as _core_project_overrides
 import processforge_core.project.scan_policy as _core_project_scan_policy
+import processforge_core.resources.buckets as _core_resources_buckets
+import processforge_core.resources.registries as _core_resources_registries
 import processforge_core.work.consistency as _core_work_consistency
 
 
@@ -657,19 +661,6 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
 
 
 
-DEFAULT_PATH_CONSTANTS = {
-    "PF_WORKPLACE": ".",
-    "PF_DISTRIBUTION": "distributions/processforge",
-    "PF_KNOWLEDGE": "knowledge",
-    "PF_TEMPLATES": "reusable-templates",
-    "PF_TOOLS": "tools",
-    "PF_MCP": "mcp",
-    "PF_PLATFORM_CONTRACTS": "platform-contracts",
-    "PF_SPECIALIZATIONS": "specializations",
-    "PF_PROCESS_TEMPLATES": "process-templates",
-    "PF_RUNTIME": "runtime",
-    "PF_CACHE": "cache",
-}
 
 PATH_CONSTANT_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 
@@ -1293,7 +1284,7 @@ def normalize_path_string(value: str) -> str:
 
 def load_workplace_path_constants(workplace_manifest: Path | None, workplace_root: Path | None = None) -> dict[str, str]:
     root = workplace_root or (workplace_manifest.parent if workplace_manifest else Path(".").resolve())
-    constants = dict(DEFAULT_PATH_CONSTANTS)
+    constants = dict(_core_resources_registries.DEFAULT_PATH_CONSTANTS)
     if workplace_manifest and workplace_manifest.is_file():
         data = load_yaml_document(workplace_manifest)
         raw_constants = data.get("path_constants") if isinstance(data, dict) else None
@@ -1758,7 +1749,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
     workplace_coordination["director_office_enabled"] = bool(coordination_answers.get("director_office_enabled", False))
     workplace_coordination["default_project_mode"] = _project_coordination_reader.workplace_mode(coordination_answers.get("default_project_mode", "simple"))
     workplace_coordination["director"].update({key: value for key, value in director_answers.items() if value not in (None, "")})
-    path_constants = dict(DEFAULT_PATH_CONSTANTS)
+    path_constants = dict(_core_resources_registries.DEFAULT_PATH_CONSTANTS)
     answer_constants = paths_answers.get("path_constants")
     if isinstance(answer_constants, dict):
         for key, value in answer_constants.items():
@@ -2529,7 +2520,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         checks.append(check("PASS" if path.is_dir() else "WARN", f"{rel_dir}/ {'found' if path.is_dir() else 'missing'}"))
 
     if manifest.is_file():
-        knowledge_roots = load_workplace_registry(manifest, "knowledge_roots", "knowledge-roots.yaml")
+        knowledge_roots = _workplace_registry_reader.load_workplace_registry(manifest, "knowledge_roots", "knowledge-roots.yaml")
         knowledge_entries = knowledge_roots.get("knowledge_roots") if isinstance(knowledge_roots, dict) else []
         local_docs = next((item for item in knowledge_entries if isinstance(item, dict) and str(item.get("id")) == "local-docs"), None) if isinstance(knowledge_entries, list) else None
         if not local_docs:
@@ -2542,7 +2533,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
                 )
             )
         else:
-            local_docs_path = resolve_registry_relative_path(root, str(local_docs.get("path", "")), manifest)
+            local_docs_path = _workplace_registry_reader.resolve_registry_relative_path(root, str(local_docs.get("path", "")), manifest)
             checks.append(
                 check("PASS", "knowledge_roots.local-docs configured")
                 if local_docs_path.is_dir()
@@ -2554,7 +2545,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
                 )
             )
 
-        platforms_registry = load_workplace_registry(manifest, "platforms", "platforms.yaml")
+        platforms_registry = _workplace_registry_reader.load_workplace_registry(manifest, "platforms", "platforms.yaml")
         platform_entries = platforms_registry.get("platforms") if isinstance(platforms_registry, dict) else []
         platform_ids = [
             str(item.get("id") or item.get("package_id"))
@@ -3246,29 +3237,6 @@ def registry_text(workplace_manifest: Path, registry_name: str) -> str:
     return ""
 
 
-def load_workplace_registry(workplace_manifest: Path | None, registry_key: str, default_name: str) -> dict[str, Any]:
-    if not workplace_manifest or not workplace_manifest.is_file():
-        return {}
-    path = resolve_registry_path(workplace_manifest, registry_key, default_name)
-    return load_yaml_document(path)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest: Path | None = None) -> Path:
-    constants = load_workplace_path_constants(workplace_manifest, base) if workplace_manifest else load_workplace_path_constants(None, base)
-    resolution = resolve_path_with_constants(raw_path, base, constants)
-    return path_resolution_to_path(resolution)
 
 
 
@@ -3303,34 +3271,31 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
 
 
 
-RESOURCE_GROUP_KEYS = ("knowledge_packages", "tools", "mcp", "templates")
-RESOURCE_BUCKET_KEYS = ("requires", "recommends", "optional", "excludes")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
 
 
 
 
-def default_resource_buckets() -> dict[str, dict[str, list[str]]]:
-    return {bucket: {key: [] for key in RESOURCE_GROUP_KEYS} for bucket in RESOURCE_BUCKET_KEYS}
 
 
-def resource_bucket(data: dict[str, Any] | None, bucket: str, key: str) -> list[str]:
-    if not isinstance(data, dict):
-        return []
-    bucket_data = data.get(bucket) if isinstance(data.get(bucket), dict) else {}
-    return list_value(bucket_data.get(key)) if isinstance(bucket_data, dict) else []
 
 
-def merge_resource_buckets(target: dict[str, dict[str, list[str]]], resources: dict[str, Any] | None) -> None:
-    for bucket in RESOURCE_BUCKET_KEYS:
-        for key in RESOURCE_GROUP_KEYS:
-            values = resource_bucket(resources, bucket, key)
-            if values:
-                target[bucket][key].extend(values)
 
 
-def dedupe_sorted(values: list[str]) -> list[str]:
-    return sorted({str(item) for item in values if str(item)})
 
 
 
@@ -3369,143 +3334,12 @@ def load_specialization(workplace_manifest: Path | None, specialization_id: str,
 
 
 
-def resource_profile_capability_provider(specialization_id: str, resources: dict[str, Any]) -> dict[str, Any]:
-    provider: dict[str, Any] = {"specialization": specialization_id}
-    for key in RESOURCE_GROUP_KEYS:
-        values: set[str] = set()
-        for bucket in ["requires", "recommends", "optional"]:
-            values.update(resource_bucket(resources, bucket, key))
-        provider[key] = dedupe_sorted(list(values))
-    return provider
 
 
-def active_registry_capability_providers(
-    workplace_manifest: Path | None,
-    activated: dict[str, set[str]],
-) -> tuple[set[str], dict[str, list[dict[str, Any]]]]:
-    capabilities: set[str] = set()
-    providers: dict[str, list[dict[str, Any]]] = {}
-    registry_specs = [
-        ("tools", "tools", "tool", "tools"),
-        ("mcp", "mcp_servers", "mcp", "mcp"),
-        ("templates", "templates", "template", "templates"),
-        ("templates", "template_roots", "template", "templates"),
-    ]
-    for registry_key, collection_key, provider_key, resource_key in registry_specs:
-        registry = load_workplace_registry(workplace_manifest, registry_key, f"{registry_key}.yaml")
-        entries = registry.get(collection_key) if isinstance(registry, dict) else None
-        if not isinstance(entries, list):
-            continue
-        active_ids = activated.get(resource_key, set())
-        for entry in entries:
-            if not isinstance(entry, dict):
-                continue
-            resource_id = str(entry.get("id") or "")
-            if not resource_id or resource_id not in active_ids:
-                continue
-            if str(entry.get("status") or "available") in {"disabled", "missing"}:
-                continue
-            provided = _CapabilityRegistryReader.values(entry)
-            capabilities.update(provided)
-            for capability in provided:
-                providers.setdefault(capability, []).append({"provider": "registry", provider_key: resource_id})
-    pack_capabilities, pack_providers = official_pack_capability_providers(workplace_manifest)
-    capabilities.update(pack_capabilities)
-    for capability, items in pack_providers.items():
-        providers.setdefault(capability, []).extend(items)
-    return capabilities, providers
 
 
-def build_execution_route(project_root: Path, process_id: str | None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    route: dict[str, Any] = {
-        "process": process_id or "",
-        "stages": [],
-        "required_capabilities": [],
-        "capability_requirements": [],
-        "required_artifacts": [],
-        "required_evidence": [],
-        "acceptance_criteria": [],
-    }
-    if not process_id:
-        return route, []
-    try:
-        process_ref = resolve_process_definition(project_root, process_id)
-    except SystemExit:
-        return route, []
-    process = process_ref.process if isinstance(process_ref.process, dict) else {}
-    route["process"] = str(process.get("id") or process_ref.process_id or process_id)
-    top_required_capabilities = [str(item) for item in as_list(process.get("required_capabilities")) if str(item)]
-    capability_requirements: list[dict[str, Any]] = [
-        {"capability": item, "required_by": f"process:{route['process']}"}
-        for item in top_required_capabilities
-    ]
-    required_artifacts: set[str] = set(str(item) for item in as_list(process.get("required_artifacts")) if str(item))
-    required_evidence: set[str] = set(str(item) for item in as_list(process.get("required_evidence")) if str(item))
-    acceptance = process.get("acceptance") if isinstance(process.get("acceptance"), dict) else {}
-    if acceptance:
-        required_evidence.update(str(item) for item in as_list(acceptance.get("requires")) if str(item))
-        route["acceptance_criteria"] = [str(item) for item in as_list(acceptance.get("criteria")) if str(item)]
-    stages: list[dict[str, Any]] = []
-    for stage in process.get("stages", []) if isinstance(process.get("stages"), list) else []:
-        if not isinstance(stage, dict):
-            continue
-        stage_id = str(stage.get("id") or "stage")
-        stage_capabilities = [str(item) for item in as_list(stage.get("required_capabilities")) if str(item)]
-        stage_artifacts = [str(item) for item in as_list(stage.get("required_artifacts")) if str(item)]
-        stage_evidence = [str(item) for item in as_list(stage.get("required_evidence")) if str(item)]
-        required_artifacts.update(stage_artifacts)
-        required_evidence.update(stage_evidence)
-        for capability in stage_capabilities:
-            capability_requirements.append({"capability": capability, "required_by": f"{route['process']}:{stage_id}"})
-        stages.append(
-            {
-                "id": stage_id,
-                "required_capabilities": stage_capabilities,
-                "required_artifacts": stage_artifacts,
-                "required_evidence": stage_evidence,
-                "exit_gates": [str(item) for item in as_list(stage.get("exit_gates")) if str(item)],
-            }
-        )
-    route["stages"] = stages
-    route["capability_requirements"] = capability_requirements
-    route["required_capabilities"] = dedupe_sorted([item["capability"] for item in capability_requirements])
-    route["required_artifacts"] = dedupe_sorted(list(required_artifacts))
-    route["required_evidence"] = dedupe_sorted(list(required_evidence))
-    return route, []
 
 
-def build_capability_resolution(
-    execution_route: dict[str, Any],
-    provided_capabilities: set[str],
-    capability_providers: dict[str, list[dict[str, Any]]],
-    activated: dict[str, set[str]],
-) -> dict[str, list[dict[str, Any]]]:
-    satisfied: list[dict[str, Any]] = []
-    unsatisfied: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
-    for requirement in execution_route.get("capability_requirements", []) if isinstance(execution_route.get("capability_requirements"), list) else []:
-        if not isinstance(requirement, dict):
-            continue
-        capability = str(requirement.get("capability") or "")
-        required_by = str(requirement.get("required_by") or execution_route.get("process") or "")
-        if not capability or (capability, required_by) in seen:
-            continue
-        seen.add((capability, required_by))
-        if capability in provided_capabilities:
-            provider = dict((capability_providers.get(capability) or [{"provider": "active_resource_profile"}])[0])
-            for key in RESOURCE_GROUP_KEYS:
-                provider[key] = [item for item in as_list(provider.get(key)) if item in activated.get(key, set())]
-            satisfied.append({"capability": capability, "required_by": required_by, "satisfied_by": provider})
-        else:
-            unsatisfied.append(
-                {
-                    "capability": capability,
-                    "required_by": required_by,
-                    "reason": "selected resource profile does not provide required capability",
-                    "suggested_fix": "select or update a specialization/platform binding that provides this capability",
-                }
-            )
-    return {"satisfied": satisfied, "unsatisfied": unsatisfied}
 
 
 def resolve_specialization_context(
@@ -3531,8 +3365,8 @@ def resolve_specialization_context(
         "mcp": set(platform_resolution.get("recommended_mcp", [])),
         "templates": set(platform_resolution.get("recommended_templates", [])),
     }
-    optional = {key: set() for key in RESOURCE_GROUP_KEYS}
-    excluded = {key: set() for key in RESOURCE_GROUP_KEYS}
+    optional = {key: set() for key in _core_resources_buckets.RESOURCE_GROUP_KEYS}
+    excluded = {key: set() for key in _core_resources_buckets.RESOURCE_GROUP_KEYS}
     reasons: list[dict[str, Any]] = []
     conflicts: list[dict[str, Any]] = []
     selected_specializations: list[dict[str, Any]] = []
@@ -3571,22 +3405,22 @@ def resolve_specialization_context(
                 spec, overlay_notes = _project_override_reader.apply_specialization_overlay(spec, overlay, mode)
                 for note in overlay_notes:
                     reasons.append({"source": "project_override", "target": specialization_id, "reason": note})
-        resources = default_resource_buckets()
-        merge_resource_buckets(resources, spec.get("resources") if isinstance(spec.get("resources"), dict) else {})
+        resources = _core_resources_buckets.default_resource_buckets()
+        _core_resources_buckets.merge_resource_buckets(resources, spec.get("resources") if isinstance(spec.get("resources"), dict) else {})
         spec_capabilities = set(str(item) for item in as_list(spec.get("provides_capabilities")) if str(item))
         matched_bindings: list[dict[str, Any]] = []
         for binding in spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []:
             if isinstance(binding, dict) and _project_platform_selection_service.binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
                 matched_bindings.append(binding)
-                merge_resource_buckets(resources, binding.get("resources") if isinstance(binding.get("resources"), dict) else {})
+                _core_resources_buckets.merge_resource_buckets(resources, binding.get("resources") if isinstance(binding.get("resources"), dict) else {})
                 spec_capabilities.update(str(item) for item in as_list(binding.get("provides_capabilities")) if str(item))
-        for key in RESOURCE_GROUP_KEYS:
+        for key in _core_resources_buckets.RESOURCE_GROUP_KEYS:
             required[key].update(resources["requires"][key])
             recommended[key].update(resources["recommends"][key])
             optional[key].update(resources["optional"][key])
             excluded[key].update(resources["excludes"][key])
         provided_capabilities.update(spec_capabilities)
-        provider = resource_profile_capability_provider(specialization_id, resources)
+        provider = _project_capability_resolution.resource_profile_capability_provider(specialization_id, resources)
         for capability in spec_capabilities:
             capability_providers.setdefault(capability, []).append(dict(provider))
         selected_specializations.append(
@@ -3607,7 +3441,7 @@ def resolve_specialization_context(
                     }
                     for binding in matched_bindings
                 ],
-                "provides_capabilities": dedupe_sorted(list(spec_capabilities)),
+                "provides_capabilities": _core_resources_buckets.dedupe_sorted(list(spec_capabilities)),
                 "sha256": _project_override_reader.sha256_optional_file(spec.get("__manifest_path") if isinstance(spec.get("__manifest_path"), Path) else None),
             }
         )
@@ -3626,7 +3460,7 @@ def resolve_specialization_context(
             base_path = spec.get("__manifest_path") if isinstance(spec, dict) and isinstance(spec.get("__manifest_path"), Path) else None
         applied = _project_override_reader.resolved_override_record(project_root, entry, base_path)
         applied_overrides.append(applied)
-        if kind in RESOURCE_GROUP_KEYS:
+        if kind in _core_resources_buckets.RESOURCE_GROUP_KEYS:
             if mode == "disable":
                 excluded[kind].add(target)
                 reasons.append({"source": "project_override", "target": target, "reason": f"{kind} disabled"})
@@ -3637,41 +3471,41 @@ def resolve_specialization_context(
         elif kind == "specializations":
             reasons.append({"source": "project_override", "target": target, "reason": f"specialization {mode} recorded"})
     activated = {}
-    for key in RESOURCE_GROUP_KEYS:
+    for key in _core_resources_buckets.RESOURCE_GROUP_KEYS:
         recommended[key] -= required[key]
         activated_set = required[key].union(recommended[key]).union(optional[key])
         activated[key] = _project_override_reader.apply_resource_excludes(required[key], activated_set, excluded[key], conflicts, "project/specialization", key)
-    registry_capabilities, registry_providers = active_registry_capability_providers(workplace_manifest, activated)
+    registry_capabilities, registry_providers = _project_capability_resolution.active_registry_capability_providers(workplace_manifest, activated)
     provided_capabilities.update(registry_capabilities)
     for capability, providers in registry_providers.items():
         capability_providers.setdefault(capability, []).extend(providers)
     effective_fingerprints = {f"{item['kind']}:{item['target']}": item["effective_fingerprint"] for item in applied_overrides}
-    execution_route, route_conflicts = build_execution_route(project_root, process_id)
+    execution_route, route_conflicts = _project_capability_resolution.build_execution_route(project_root, process_id)
     conflicts.extend(route_conflicts)
-    capability_resolution = build_capability_resolution(execution_route, provided_capabilities, capability_providers, activated)
+    capability_resolution = _project_capability_resolution.build_capability_resolution(execution_route, provided_capabilities, capability_providers, activated)
     for item in capability_resolution["unsatisfied"]:
         conflicts.append({"id": item["capability"], "kind": "capability", "source": item["required_by"], "reason": item["reason"]})
     active_resource_profile = {
         "selected_platform": [_platform_contract_reader.contract_id(item) for item in platform_ids],
         "platform_stack": platform_resolution.get("platform_stack", []),
         "selected_specializations": selected_specializations,
-        "available_knowledge_packages": dedupe_sorted(list(required["knowledge_packages"].union(recommended["knowledge_packages"]).union(optional["knowledge_packages"]))),
-        "activated_knowledge_packages": dedupe_sorted(list(activated["knowledge_packages"])),
-        "excluded_knowledge_packages": dedupe_sorted(list(excluded["knowledge_packages"])),
-        "available_tools": dedupe_sorted(list(required["tools"].union(recommended["tools"]).union(optional["tools"]))),
-        "activated_tools": dedupe_sorted(list(activated["tools"])),
-        "excluded_tools": dedupe_sorted(list(excluded["tools"])),
-        "available_mcp": dedupe_sorted(list(required["mcp"].union(recommended["mcp"]).union(optional["mcp"]))),
-        "activated_mcp": dedupe_sorted(list(activated["mcp"])),
-        "excluded_mcp": dedupe_sorted(list(excluded["mcp"])),
-        "activated_templates": dedupe_sorted(list(activated["templates"])),
-        "excluded_templates": dedupe_sorted(list(excluded["templates"])),
-        "provided_capabilities": dedupe_sorted(list(provided_capabilities)),
+        "available_knowledge_packages": _core_resources_buckets.dedupe_sorted(list(required["knowledge_packages"].union(recommended["knowledge_packages"]).union(optional["knowledge_packages"]))),
+        "activated_knowledge_packages": _core_resources_buckets.dedupe_sorted(list(activated["knowledge_packages"])),
+        "excluded_knowledge_packages": _core_resources_buckets.dedupe_sorted(list(excluded["knowledge_packages"])),
+        "available_tools": _core_resources_buckets.dedupe_sorted(list(required["tools"].union(recommended["tools"]).union(optional["tools"]))),
+        "activated_tools": _core_resources_buckets.dedupe_sorted(list(activated["tools"])),
+        "excluded_tools": _core_resources_buckets.dedupe_sorted(list(excluded["tools"])),
+        "available_mcp": _core_resources_buckets.dedupe_sorted(list(required["mcp"].union(recommended["mcp"]).union(optional["mcp"]))),
+        "activated_mcp": _core_resources_buckets.dedupe_sorted(list(activated["mcp"])),
+        "excluded_mcp": _core_resources_buckets.dedupe_sorted(list(excluded["mcp"])),
+        "activated_templates": _core_resources_buckets.dedupe_sorted(list(activated["templates"])),
+        "excluded_templates": _core_resources_buckets.dedupe_sorted(list(excluded["templates"])),
+        "provided_capabilities": _core_resources_buckets.dedupe_sorted(list(provided_capabilities)),
         "applied_project_overrides": applied_overrides,
         "effective_resources": [
             {"kind": key, "id": item, "status": "activated"}
-            for key in RESOURCE_GROUP_KEYS
-            for item in dedupe_sorted(list(activated[key]))
+            for key in _core_resources_buckets.RESOURCE_GROUP_KEYS
+            for item in _core_resources_buckets.dedupe_sorted(list(activated[key]))
         ],
         "effective_fingerprints": effective_fingerprints,
         "resolution_reasons": reasons,
@@ -6221,15 +6055,10 @@ def resolve_workplace_manifest(local_manifest: Path) -> Path | None:
     return workplace
 
 
-def resolve_registry_path(workplace_manifest: Path, registry_key: str, default_name: str) -> Path:
-    workplace = load_yaml_document(workplace_manifest)
-    registries = workplace.get("registries", {}) if isinstance(workplace, dict) and isinstance(workplace.get("registries"), dict) else {}
-    raw_path = str(registries.get(registry_key) or f"registries/{default_name}")
-    return resolve_registry_relative_path(workplace_manifest.parent, raw_path, workplace_manifest)
 
 
 def distribution_registry_entries(workplace_manifest: Path) -> list[dict[str, Any]]:
-    registry = resolve_registry_path(workplace_manifest, "distributions", "distributions.yaml")
+    registry = _workplace_registry_reader.resolve_registry_path(workplace_manifest, "distributions", "distributions.yaml")
     data = load_yaml_document(registry)
     entries = data.get("distributions") if isinstance(data, dict) else None
     return [item for item in entries if isinstance(item, dict)] if isinstance(entries, list) else []
@@ -6242,7 +6071,7 @@ def resolve_distribution_path(workplace_manifest: Path, distribution_id: str = "
         raw_path = entry.get("path")
         if not raw_path:
             return None
-        return resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
+        return _workplace_registry_reader.resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
     return None
 
 
@@ -6817,7 +6646,7 @@ def workplace_registry_entry(workplace_manifest: Path | None, registry: str, ref
     if not spec or not workplace_manifest:
         return None
     registry_key, default_name, collection_key = spec
-    data = load_workplace_registry(workplace_manifest, registry_key, default_name)
+    data = _workplace_registry_reader.load_workplace_registry(workplace_manifest, registry_key, default_name)
     entries = data.get(collection_key) if isinstance(data, dict) else None
     if not isinstance(entries, list):
         return None
@@ -6830,7 +6659,7 @@ def workplace_registry_entry(workplace_manifest: Path | None, registry: str, ref
 def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, workplace_manifest: Path | None = None) -> dict[str, Any]:
     from processforge_core.resources.snapshot import WorkspacePathReferenceReader
 
-    manifest = normalize_workplace_manifest(workplace_manifest or _ProjectMetadataReader(project_root).workplace_manifest())
+    manifest = _workplace_registry_reader.normalize_workplace_manifest(workplace_manifest or _ProjectMetadataReader(project_root).workplace_manifest())
     return WorkspacePathReferenceReader(
         project_root, manifest.parent if manifest else None, workplace_manifest=manifest,
     ).resolve(path_ref)
@@ -9395,24 +9224,6 @@ def active_official_pack_records(workplace_manifest: Path | None) -> list[tuple[
     return _OfficialProcessPackReader(workplace_manifest, distribution_root=ROOT).active_records()
 
 
-def official_pack_capability_providers(
-    workplace_manifest: Path | None,
-) -> tuple[set[str], dict[str, list[dict[str, Any]]]]:
-    capabilities: set[str] = set()
-    providers: dict[str, list[dict[str, Any]]] = {}
-    for _path, manifest in active_official_pack_records(workplace_manifest):
-        pack_id = str(manifest.get("id") or "")
-        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
-        declared = {str(item) for item in as_list(provided.get("capabilities")) if str(item)}
-        for tool in as_list(provided.get("tools")):
-            if isinstance(tool, dict):
-                declared.update(_CapabilityRegistryReader.values(tool))
-        capabilities.update(declared)
-        for capability in declared:
-            providers.setdefault(capability, []).append(
-                {"provider": "active_process_pack", "process_pack": pack_id}
-            )
-    return capabilities, providers
 
 
 def official_process_definition_refs(
@@ -12017,13 +11828,6 @@ AGENT_RUN_START_SKIP_STATUSES = {"running", "completed", "failed", "timed_out", 
 
 
 
-def normalize_workplace_manifest(path: Path | None) -> Path | None:
-    if path is None:
-        return None
-    candidate = path.expanduser().resolve()
-    if candidate.is_dir():
-        candidate = candidate / "workplace.yaml"
-    return candidate
 
 
 
@@ -12062,7 +11866,7 @@ def command_runtime_driver_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
         _run_task_inputs.require_flow_root(project_root)
-    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
+    workplace_manifest = _workplace_registry_reader.normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     for driver_id, status, source in _runtime_driver_catalog_reader.ids(workplace_manifest=workplace_manifest, project_root=project_root):
         print(f"{driver_id}\t{status}\t{source}")
     return 0
@@ -12072,7 +11876,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
         _run_task_inputs.require_flow_root(project_root)
-    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
+    workplace_manifest = _workplace_registry_reader.normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
 
@@ -12081,7 +11885,7 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
         _run_task_inputs.require_flow_root(project_root)
-    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
+    workplace_manifest = _workplace_registry_reader.normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     driver.pop("_source_path", None)
     print(dump_yaml(driver))
@@ -14631,7 +14435,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         if workplace and workplace.is_file():
             workplace_manifest_path = workplace
             checks.append(check("PASS", "workplace manifest is reachable"))
-            registry = resolve_registry_path(workplace, "distributions", "distributions.yaml")
+            registry = _workplace_registry_reader.resolve_registry_path(workplace, "distributions", "distributions.yaml")
             checks.append(check("PASS" if registry.is_file() else "FAIL", "workplace distributions registry is reachable"))
             distribution_root = resolve_distribution_path(workplace, "processforge")
         else:
@@ -17211,9 +17015,9 @@ def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -
     checks.append(check("PASS" if isinstance(data, dict) and data.get("kind") == "processforge.specialization" else "FAIL", "specialization kind valid"))
     checks.append(check("PASS" if data.get("id") == normalized_id else "FAIL", "specialization id matches requested id"))
     checks.append(check("PASS" if is_public_path_safe(path.read_text(encoding="utf-8", errors="replace")) else "FAIL", "specialization has no private absolute paths"))
-    for bucket in RESOURCE_BUCKET_KEYS:
-        for key in RESOURCE_GROUP_KEYS:
-            values = resource_bucket(data.get("resources") if isinstance(data.get("resources"), dict) else {}, bucket, key)
+    for bucket in _core_resources_buckets.RESOURCE_BUCKET_KEYS:
+        for key in _core_resources_buckets.RESOURCE_GROUP_KEYS:
+            values = _core_resources_buckets.resource_bucket(data.get("resources") if isinstance(data.get("resources"), dict) else {}, bucket, key)
             checks.append(check("PASS", f"resources.{bucket}.{key} valid list") if all(isinstance(item, str) for item in values) else check("FAIL", f"resources.{bucket}.{key} valid list"))
     bindings = data.get("platform_bindings") if isinstance(data.get("platform_bindings"), list) else []
     for index, binding in enumerate(bindings):
@@ -17222,9 +17026,9 @@ def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -
             continue
         checks.append(check("PASS" if list_value(binding.get("platforms")) or list_value(binding.get("platform_stack_includes")) else "WARN", f"platform_bindings[{index}] has platform selector"))
         resources = binding.get("resources") if isinstance(binding.get("resources"), dict) else {}
-        for bucket in RESOURCE_BUCKET_KEYS:
-            for key in RESOURCE_GROUP_KEYS:
-                values = resource_bucket(resources, bucket, key)
+        for bucket in _core_resources_buckets.RESOURCE_BUCKET_KEYS:
+            for key in _core_resources_buckets.RESOURCE_GROUP_KEYS:
+                values = _core_resources_buckets.resource_bucket(resources, bucket, key)
                 checks.append(check("PASS", f"platform_bindings[{index}].resources.{bucket}.{key} valid list") if all(isinstance(item, str) for item in values) else check("FAIL", f"platform_bindings[{index}].resources.{bucket}.{key} valid list"))
     return checks
 
@@ -17263,7 +17067,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
         "description": args.description or "A workplace-defined specialist resource profile that selects resources data-driven.",
         "scope": {"owner": "workspace", "visibility": "local"},
         "applies_to": {"project_types": [], "roles": [], "tags": []},
-        "resources": default_resource_buckets(),
+        "resources": _core_resources_buckets.default_resource_buckets(),
         "provides_capabilities": [],
         "platform_bindings": [],
         "tool_policy": {"allowed_tools": [], "disallowed_tools": []},
@@ -17290,7 +17094,7 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
         "platform_stack_includes": [_platform_contract_reader.contract_id(item) for item in getattr(args, "platform_stack_includes", [])],
         "applies_to_project_types": [str(item) for item in getattr(args, "project_type", [])],
         "tags": [],
-        "resources": default_resource_buckets(),
+        "resources": _core_resources_buckets.default_resource_buckets(),
         "provides_capabilities": [str(item) for item in getattr(args, "provides_capability", [])],
     }
     legacy_process_filters = [str(item) for item in getattr(args, "process", [])]
@@ -18336,11 +18140,13 @@ def main(argv: list[str] | None = None) -> int:
 # Concrete owners retain the distribution root and existing request-scoped readers.
 _release_source_policy = ReleaseSourcePolicy()
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
+_project_capability_resolution = ProjectCapabilityResolution(ROOT)
 _project_classifier_sources = ProjectClassifierSourceReader(ROOT)
 _project_override_reader = ProjectOverrideReader(ROOT)
 _project_scan_policy = ProjectScanPolicy()
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
+_workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
 _workplace_setup_answers = WorkplaceSetupAnswers()
 
 
