@@ -127,7 +127,9 @@ def resolved_process(project_root: Path, process_id: str, core: Any) -> dict[str
 
         from processforge_core.process_catalog.official_read import OfficialProcessPackReader
 
-        workplace_manifest = core.resolve_project_workplace_manifest(resolved_project_root)
+        from processforge_core.project.coordination_state import ProjectCoordinationStateService
+
+        workplace_manifest = ProjectCoordinationStateService().resolve_project_workplace_manifest(resolved_project_root)
         context = ProcessCatalogContext(
             project_root=resolved_project_root,
             flow_root=core.locate_flow_root(resolved_project_root),
@@ -466,10 +468,11 @@ def route_project(project_ref: str, workplace_root: Path, core: Any) -> dict[str
     manifest = core.locate_flow_root(project_root) / "process-forge.yaml"
     if not manifest.is_file():
         raise SystemExit(f"FAIL: project is not ProcessForge-onboarded: {project_root}")
-    coordination = core.effective_project_coordination(project_root, str(workplace_root))
-    project_key = core.project_id(project_root)
     from processforge_core.agents.telemetry import TelemetryEventService
+    from processforge_core.project.coordination_state import ProjectCoordinationStateService
 
+    coordination = ProjectCoordinationStateService().effective_project_coordination(project_root, str(workplace_root))
+    project_key = core.project_id(project_root)
     return {
         "project_id": project_key,
         "project_root": str(project_root),
@@ -483,7 +486,9 @@ def hook_configuration(project_root: Path, workplace_root: Path, core: Any):
     from processforge_core.agents.hook_admission import collect_hooks
 
     configuration = core.project_configuration(project_root, workplace_root)
-    coordination = core.effective_project_coordination(project_root, str(workplace_root))
+    from processforge_core.project.coordination_state import ProjectCoordinationStateService
+
+    coordination = ProjectCoordinationStateService().effective_project_coordination(project_root, str(workplace_root))
     return configuration, collect_hooks(str(coordination["effective_mode"]), configuration.config)
 
 

@@ -350,14 +350,15 @@ class AdapterTests(NormalizedTests):
         from pf_cli.commands.work import WorkStateCommand
         service = fixture()
         manifest = Path('workplace/workplace.yaml')
-        with patch.object(core, 'resolve_project_workplace_manifest', return_value=manifest), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
+        from processforge_core.project.coordination_state import ProjectCoordinationStateService
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        with patch.object(ProjectCoordinationStateService, 'resolve_project_workplace_manifest', return_value=manifest), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
             self.assertIs(core.process_execution_service(Path('fixture')), service)
             factory.assert_called_once_with(Path('fixture'), manifest.parent, core)
         output = io.StringIO()
         records = []
         arguments = SimpleNamespace(project_root='fixture', json=True)
-        from processforge_core.work.consistency import RunTaskInputReader
-
         with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(RunTaskInputReader, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
             from processforge_core.work.consistency import RunTaskInputReader
 

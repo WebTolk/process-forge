@@ -226,7 +226,9 @@ def consumer_failures(scratch):
     with ExitStack() as stack:
         stack.enter_context(patch.object(core, "capability_records", forbidden_reverse, create=True))
         stack.enter_context(patch.object(CapabilityRegistryReader, "read", return_value=Providers()))
-        stack.enter_context(patch.object(core, "resolve_project_workplace_manifest", return_value=None))
+        from processforge_core.project.coordination_state import ProjectCoordinationStateService
+
+        stack.enter_context(patch.object(ProjectCoordinationStateService, "resolve_project_workplace_manifest", return_value=None))
         stack.enter_context(patch.object(core._ProjectSnapshotSourcesReader, "read", return_value=[]))
         raises(ProviderFailure, "capability provider failure", lambda: core.build_project_context_snapshot(project))
         assert events == ["required"], events

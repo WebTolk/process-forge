@@ -159,6 +159,7 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
 
         from ..composition import build_prepared_registry_resource_reader
 
+        from processforge_core.project.coordination_state import ProjectCoordinationStateService
         from processforge_core.work.workspace_refs import WorkspaceAccessReferenceService
 
         registry_reader = build_prepared_registry_resource_reader(
@@ -166,7 +167,7 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
                 matcher=lambda: WorkspaceAccessReferenceService().workspace_ref_matches_resource,
                 fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
             ),
-            workplace_manifest=lambda: core.resolve_project_workplace_manifest,
+            workplace_manifest=lambda: ProjectCoordinationStateService().resolve_project_workplace_manifest,
             path_resolver=lambda: core.resolve_workspace_path_ref,
             revoked_statuses=lambda: REVOKED_STATUSES,
             fail=lambda: _fail,

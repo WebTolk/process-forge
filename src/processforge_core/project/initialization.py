@@ -219,7 +219,9 @@ def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
             project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
             project_answers["platforms"] = [str(item.get("id") or item.get("platform") or "") for item in platforms if isinstance(item, dict) and str(item.get("id") or item.get("platform") or "")]
             answers["project"] = project_answers
-            files = core.build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else core.resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
+            from processforge_core.project.coordination_state import ProjectCoordinationStateService
+
+            files = core.build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else ProjectCoordinationStateService().resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
             return core.execute_project_initialization({"project_root": project_root, "project_type": project_answers.get("type"), "force": False, "command": "project-init-repair", "agent_entry_plan": entry_plan}, files)
         return apply("repair", apply_requested=True, execute=restore)
     if action == "install_codex_hooks":

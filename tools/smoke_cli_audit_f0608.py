@@ -194,16 +194,18 @@ def write_coordination_fixture(root: Path) -> tuple[Path, Path]:
 
 def smoke_presence_and_public_mode(root: Path) -> None:
     empty = root / "empty-workplace"
-    assert pf.active_organized_project_sessions(empty) == []
+    from processforge_core.project.coordination_state import ProjectCoordinationStateService
+
+    assert ProjectCoordinationStateService().active_organized_project_sessions(empty) == []
     workplace, project = write_coordination_fixture(root)
-    active = pf.active_organized_project_sessions(workplace)
+    active = ProjectCoordinationStateService().active_organized_project_sessions(workplace)
     assert len(active) == 1 and active[0]["agent_id"] == "agent-1", active
 
     offline = workplace / "runtime" / "agent-presence" / "agent-1" / "offline.json"
     offline.write_text(json.dumps({"status": "offline", "project_root": str(project)}), encoding="utf-8")
     corrupt = workplace / "runtime" / "agent-presence" / "agent-1" / "corrupt.json"
     corrupt.write_text("{not-json", encoding="utf-8")
-    assert len(pf.active_organized_project_sessions(workplace)) == 1
+    assert len(ProjectCoordinationStateService().active_organized_project_sessions(workplace)) == 1
 
     args = type("Args", (), {"workplace": str(workplace), "director_enabled": "false", "director_office_enabled": None, "force": False, "json": True})()
     try:
