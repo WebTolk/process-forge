@@ -13,6 +13,10 @@ import processforge as core
 from pf_runtime import host
 from smoke_conversation_completeness import setup_worker_project, transcript, worker_envelope
 
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
+
 
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-report-containment-") as raw:
@@ -40,7 +44,7 @@ def main() -> int:
             return read_bytes(path)
 
         for report_rel in paths:
-            task = core.load_task(project, task_id)
+            task = _worker_assignment_service.load(project, task_id)
             task["expected_report"]["artifact"] = report_rel
             task["required_outputs"][0]["path"] = report_rel
             core.save_task(project, task)

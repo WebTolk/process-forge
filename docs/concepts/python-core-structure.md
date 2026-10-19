@@ -109,6 +109,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/platform_validation.py` | Existing ordered platform semantic validation. |
 | `src/processforge_core/common/policies.py` | Shared policy entry and identifier matching primitives. |
 | `src/processforge_core/project/requirements.py` | Existing platform dependency preflight and registry ID reads. |
+| `src/processforge_core/resources/records.py` | Existing resource defaults, public references and normalization. |
+| `src/processforge_core/resources/package_checks.py` | Existing ordered knowledge package doctor. |
+| `src/processforge_core/resources/index_checks.py` | Existing resource index/path_ref/project checks. |
+| `src/processforge_core/work/worker_assignment.py` | Strict assignment reads and exact worker launch prompt rendering. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -1009,3 +1013,30 @@ Constructors perform no I/O or retain project documents. All actual callers use
 these owners in the same source slice; authoring publication/transactions and
 unselected recovery paths remain with their earlier owners. This source refactor
 does not complete the OOP epics or archive/install/Runtime/connected-host gates.
+
+## Resource records, package/index checks and worker assignment prompts
+
+`resources.records.ResourceRecordService` owns the existing load/index defaults,
+registered-root references, public path_ref projection and record normalization.
+The exact HEAVY_RESOURCE_KINDS set lives with it. Canonical path readers and
+ResourceSnapshotRules remain the algorithm owners; nested aliases, private-path
+hiding, first-root precedence, unknown fields and the currently ignored
+register_private_path argument retain their behavior without new writes.
+
+`resources.package_checks.KnowledgePackageValidationService(distribution_root)`
+owns the existing package doctor, including its separate manifest/schema read,
+resource/index/privacy/navigation/dependency/policy checks in the original order.
+`resources.index_checks.KnowledgeResourceIndexService(distribution_root)` owns
+index-path selection, path_ref registry findings and project resource index checks.
+It reuses existing containment/ID validation, package catalog and registry owners;
+package.yaml early return and optional project-local index semantics are unchanged.
+The exact shared path_is_relative_to lives in existing common.paths.
+
+`work.worker_assignment.WorkerAssignmentService` owns strict full assignment
+loading and the existing worker launch prompt text. Missing/YAML refusals,
+safe-ID/path ordering, prepared-input branches, counts/sections and final newline
+are unchanged. All six existing Host/smoke consumers use the Core reader;
+their other logic and assertions are preserved. Constructors perform no I/O or
+retain project documents. Preparation/launch policy, index writes/timestamps,
+unselected authoring and lifecycle/recovery stay with their existing owners.
+This source slice does not complete OOP epics or later delivery qualifications.

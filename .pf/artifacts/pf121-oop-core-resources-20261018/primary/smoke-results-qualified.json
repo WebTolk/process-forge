@@ -1,0 +1,124 @@
+{
+  "started_at": "2026-10-19T01:53:05.554878+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "7369831ae5580cf97dc03e007d5531b3505b7b98d22da8d76555a8198750fb1e",
+    "docs/concepts/python-core-structure.md": "959c777a3797d559a726b64b1006574afa70ef67d60c7753763a95a2a613217d",
+    "docs/ru/concepts/python-core-structure.md": "30f619565d1fff8dff2f4dd30dce266e4fbf01941f7a996f7950d0ab933520f5",
+    "src/processforge_core/resources/records.py": "5a90f8e43c564f88a88a50b32b7ba8801c91b446888cb05623f23defa4d57855",
+    "src/processforge_core/resources/package_checks.py": "72db3d06b5624f88189093fdafe7e06bfd227da24b565bbd3c3fc8a003836110",
+    "src/processforge_core/resources/index_checks.py": "577f08d82d84197d91b299492caccb99578b36c252ab7b0b83350598a9490ef0",
+    "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff",
+    "src/processforge_core/work/worker_assignment.py": "f22efd43e3aba13da36f2f3ac6adc01f0145141d929f372dd1c327ab2424af22",
+    "tools/pf_runtime/host.py": "18b1cf9411f78297047b099658227f36d778a1a17460894dbda49be6e71d7c61",
+    "tools/smoke_continuation_work.py": "8cf11ac07384d6dd1f54d14e014912f17c9d1d35093c673e06ff3e5a71c4cbcb",
+    "tools/smoke_expected_report_containment.py": "e013a8e08b247b14271c807c849373ab093a2f5f7c2637ee241a63f36cf847c0",
+    "tools/smoke_prepared_execution_context.py": "e692f6210d42da2c190fa19cde5c6a08e9651431f06d0b88221a12faccd0ec08",
+    "tools/smoke_prepared_execution_recovery.py": "86e3705adebbcad60337ba0f00a88c5b76937d031b114d6ebcbfeb95e209e7e3",
+    "tools/smoke_process_run_task_batch.py": "133b7d182b9dae2ff1f9df7f8e81f9102502c0483ee7ab9198906485ea9f2c84",
+    "tools/pf_runtime/service.py": "837bad737c107a1a621937a3aad5d968a9e6a0fabee23283ab4abd82473861e7",
+    "tools/smoke_codex_worker_governance.py": "8ff2f0583713574dab72e9c3ae38fae528676aa4cc196c762dead5aeede34876",
+    "tools/smoke_project_local_package_index_detection.py": "634c851ea9999dd199dfa75281e85d8793db6ceb46fb5a3a925e247b5fd5cbee"
+  },
+  "checks": [
+    {
+      "name": "smoke_continuation_work",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 27.117,
+      "stdout": "PASS: continuation identity, wait readiness, sessions, CLI/MCP, permissions and cancellation recovery\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_expected_report_containment",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 10.197,
+      "stdout": "SKIP: symlink creation unavailable\nPASS: report traversal, absolute and symlink escapes rejected before reads; valid collection works\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_prepared_execution_context",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 36.324,
+      "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_prepared_execution_recovery",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 30.067,
+      "stdout": "Terminal admission: 71/71 cases passed\nPASS: equivalent Windows extended paths accepted; redirects refused\nPASS: semantic refusal, both supervisor branches, explicit recovery/new attempt, transient errors, proof and final drain\nPASS: historical capture, explicit current guards, proof tamper/identity/read denial and drain recovery\nPASS: offline governed execution, collection invariance, source MCP reconnect and transition\nPASS: actual process death, dead-owner lock and exactly-once receipt recovery\nPASS: real directory redirect refused without private-byte publication\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_process_run_task_batch",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 48.426,
+      "stdout": "PASS: smoke_process_run_task_batch\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_resource_indexing_policy_acceptance",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.314,
+      "stdout": "PASS: resource indexing policy acceptance smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.456,
+      "stdout": "PASS: Codex worker sandbox and prepared input governance\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_local_package_index_detection",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.388,
+      "stdout": "PASS: project-local package index detection\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.0,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "retained_successes_from": {
+    "path": ".pf/artifacts/pf121-oop-core-resources-20261018/primary/smoke-results-final.json",
+    "sha256": "1ce6b895ebe7b10c51f01ccbbbae1f681aaf44a765fa8ed01b8170c180df122a",
+    "names": [
+      "smoke_continuation_work",
+      "smoke_expected_report_containment",
+      "smoke_prepared_execution_context"
+    ]
+  },
+  "previous_failed_attempts": [
+    {
+      "name": "smoke_prepared_execution_context",
+      "exit_code": 1,
+      "reason": "Core import before bootstrap; resolved by operation-local imports."
+    },
+    {
+      "name": "smoke_prepared_execution_recovery",
+      "exit_code": 1,
+      "reason": "Removed internal mock target; resolved by canonical Core mock binding."
+    }
+  ],
+  "bootstrap_resolution": ".pf/artifacts/pf121-oop-core-resources-20261018/primary/bootstrap-resolution.json",
+  "consumer_binding_resolution": ".pf/artifacts/pf121-oop-core-resources-20261018/primary/consumer-binding-resolution.json",
+  "profile": "Nine affected existing source scripts; three passed results retained, failed/unrun cases continue. No Runtime/service/ZIP qualification.",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-19T02:27:30.369151+00:00"
+}

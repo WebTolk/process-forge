@@ -21,6 +21,10 @@ from garage_search_smoke_support import register_fixture_resource, select_fixtur
 import processforge as core
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
+
 
 RUN_ID = "prepared-run"
 SCHEMA_PATH = ROOT / "schemas" / "prepared-input.schema.json"
@@ -63,7 +67,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def prepared_paths(project: Path, task: str) -> tuple[dict[str, Path], dict[str, Any], dict[str, Any]]:
-    task_doc = core.load_task(project, task)
+    task_doc = _worker_assignment_service.load(project, task)
     from processforge_core.work.paths import WorkPaths
     paths = WorkPaths().worker_run(project, RUN_ID, task)
     state = read_json(paths["status"])
@@ -288,7 +292,7 @@ def main() -> int:
 
         status, output = call(project, "intent-task", "prepare")
         require(status == 0, output)
-        original_task = copy.deepcopy(core.load_task(project, "intent-task"))
+        original_task = copy.deepcopy(_worker_assignment_service.load(project, "intent-task"))
         changed_task = copy.deepcopy(original_task)
         changed_task["objective"] = str(changed_task.get("objective") or "") + " changed"
         core.save_task(project, changed_task)

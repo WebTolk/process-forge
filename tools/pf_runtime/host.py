@@ -19,10 +19,11 @@ from pathlib import Path
 from typing import Any
 
 from . import RUNTIME_PROTOCOL_VERSION
-from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from .provider_adapters import AdapterRegistry, WorkerBinding, worker_input_summary
 from .builtin_provider_adapters import DEFAULT_ADAPTER_REGISTRY
 from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministic_derived_key
+
+
 
 
 # One Runtime process may serve several concurrent loopback requests.  This
@@ -350,7 +351,9 @@ def stage_obligations_payload(project_root: Path, core: Any) -> dict[str, Any]:
         readiness = str(row.get("readiness") or "invalid")
         freshness = "current" if readiness == "ready" else readiness
         try:
-            task = core.load_task(project_root, str(row.get("task_id") or ""))
+            from processforge_core.work.worker_assignment import WorkerAssignmentService
+            _worker_assignment_service = WorkerAssignmentService()
+            task = _worker_assignment_service.load(project_root, str(row.get("task_id") or ""))
             for output in row.get("required_outputs") if isinstance(row.get("required_outputs"), list) else []:
                 if isinstance(output, dict):
                     current = output_fact(project_root, {"id": output.get("id"), "path": output.get("path")}, core)
@@ -958,7 +961,9 @@ def _worker_session_authorized(envelope: dict[str, Any], project_root: Path, cor
     if binding.content_hash != "sha256:" + hashlib.sha256(binding.content.encode("utf-8")).hexdigest():
         return False
     try:
-        task = core.load_task(project_root, binding.task_id)
+        from processforge_core.work.worker_assignment import WorkerAssignmentService
+        _worker_assignment_service = WorkerAssignmentService()
+        task = _worker_assignment_service.load(project_root, binding.task_id)
         if str(task.get("run_id") or "") != binding.run_id:
             return False
         participant = policy.worker_participant(envelope, task)
@@ -1301,6 +1306,7 @@ def project_for_session(args: argparse.Namespace, workplace_root: Path, core: An
 def command_project_state(args: argparse.Namespace, core: Any) -> int:
     workplace_root = resolve_workplace(args, None, core)
     payload = project_state_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
+    from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return 0
 
@@ -1352,6 +1358,7 @@ def active_execution_records(project_root: Path, core: Any) -> list[dict[str, An
 def command_work_state(args: argparse.Namespace, core: Any) -> int:
     workplace_root = resolve_workplace(args, None, core)
     payload = work_state_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
+    from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return 0
 
@@ -1423,6 +1430,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
 def command_resolve(args: argparse.Namespace, core: Any) -> int:
     workplace_root = resolve_workplace(args, None, core)
     payload = resolve_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
+    from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return 0
 
@@ -1460,6 +1468,7 @@ def command_tick(args: argparse.Namespace, core: Any) -> int:
         raise SystemExit("FAIL: runtime-host tick requires at least one --project-root")
     workplace_root = resolve_workplace(args, project_roots[0], core)
     payload, status = tick_payload(workplace_root, project_roots, core, director=getattr(args, "director", False), inspector=getattr(args, "inspector", False), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None), wait_ttl=getattr(args, "wait_ttl", 3600), lease_ttl=getattr(args, "lease_ttl", 3600))
+    from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return status
 
@@ -1520,6 +1529,7 @@ def command_rebuild_projections(args: argparse.Namespace, core: Any) -> int:
         }
         for project_root in project_roots
     ]
+    from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
     print(json.dumps({"projections": outputs}, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml({"projections": outputs}))
     return 0
 

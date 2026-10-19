@@ -20,6 +20,10 @@ from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import fixture, stage_evidence
 from smoke_garage_mode_not_promoted_by_session import call_mcp, cli
 
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
+
 
 def records(project):
     return {str(p.relative_to(project)): p.read_bytes() for folder in ("assignments", "runs", "contexts/assignment-capsules")
@@ -174,7 +178,7 @@ def main():
         assert continuation.request('cancel_work', **cancel, apply=True)['already_applied']
         assert core.event_runtime_paths(project)[0].read_bytes() == events
         assert capsule.read_bytes() == capsule_bytes
-        task = core.load_task(project,selectors['assignment_id'])
+        task = _worker_assignment_service.load(project,selectors['assignment_id'])
         assert task['stage'] == 'build' and task['stage_status'] != 'completed'
         assert continuation.request('resume',continuation_id='resume-exact')['reason'] == 'work_is_terminal'
         assert service.state(session_id='session-one')['reason'] == 'work_is_terminal'

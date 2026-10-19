@@ -114,6 +114,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/platform_validation.py` | Прежняя упорядоченная семантическая проверка платформ. |
 | `src/processforge_core/common/policies.py` | Общие функции policy entries и сопоставления ID. |
 | `src/processforge_core/project/requirements.py` | Прежняя проверка зависимостей платформ и чтение ID реестров. |
+| `src/processforge_core/resources/records.py` | Прежние defaults, публичные ссылки и нормализация ресурсов. |
+| `src/processforge_core/resources/package_checks.py` | Прежняя упорядоченная диагностика пакетов знаний. |
+| `src/processforge_core/resources/index_checks.py` | Прежние проверки индексов, path_ref и ресурсов проекта. |
+| `src/processforge_core/work/worker_assignment.py` | Строгое чтение Assignment и прежний текст worker launch prompt. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -1022,3 +1026,29 @@ WorkplaceRegistryWriter. Read не записывает; write сохраняе�
 Все фактические потребители переведены в этом срезе. Publication/транзакции
 авторинга и невыбранные recovery-пути сохраняют прежних владельцев. Source-only
 рефакторинг не завершает OOP-эпики и приёмку архива/установки/Runtime/connected host.
+
+## Ресурсы, проверки пакетов и worker assignment prompt
+
+`resources.records.ResourceRecordService` владеет прежними load/index defaults,
+ссылками на зарегистрированные корни, публичным path_ref и нормализацией записей.
+Точный набор HEAVY_RESOURCE_KINDS расположен рядом. Алгоритмы путей и snapshot
+переиспользуют готовых владельцев. Ссылки на вложенные поля, скрытие приватных
+путей, приоритет первого корня, unknown fields и неиспользуемый register_private_path
+сохраняют прежнее поведение без новых записей.
+
+`resources.package_checks.KnowledgePackageValidationService(distribution_root)`
+владеет прежним doctor пакета, отдельным повторным чтением манифеста/схемы,
+проверками ресурсов, индекса, приватности, navigation/dependencies/policy в прежнем
+порядке. `resources.index_checks.KnowledgeResourceIndexService(distribution_root)`
+владеет выбором пути индекса, проверкой path_ref в реестрах и индексами ресурсов
+проекта через готовые containment/ID/package/registry owners. Ранний возврат для
+package.yaml и необязательность локального индекса сохранены. Общая точная
+path_is_relative_to находится в существующем common.paths.
+
+`work.worker_assignment.WorkerAssignmentService` владеет строгим полным чтением
+Assignment и прежним текстом worker launch prompt. Отказы missing/YAML, порядок
+safe ID/путей, ветви prepared input, счётчики, разделы и newline сохранены.
+Все шесть прежних Host/smoke потребителей используют Core reader; их остальная
+логика и assertions не меняются. Конструкторы не читают и не удерживают документы.
+Preparation/launch policy, запись индекса/timestamps, невыбранный authoring и
+lifecycle/recovery сохраняют владельцев. OOP-эпики и последующая приёмка открыты.

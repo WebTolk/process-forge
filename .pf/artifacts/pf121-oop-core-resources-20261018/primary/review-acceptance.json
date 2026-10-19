@@ -1,0 +1,26 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-resources-20261018/review/report.md",
+  "review_sha256": "cb5b9c6cff405f0c38a974236f69841e3192ae668b2301d3319ccb8c6b50cc11",
+  "product_sha256": {
+    "tools/processforge.py": "7369831ae5580cf97dc03e007d5531b3505b7b98d22da8d76555a8198750fb1e",
+    "docs/concepts/python-core-structure.md": "959c777a3797d559a726b64b1006574afa70ef67d60c7753763a95a2a613217d",
+    "docs/ru/concepts/python-core-structure.md": "30f619565d1fff8dff2f4dd30dce266e4fbf01941f7a996f7950d0ab933520f5",
+    "src/processforge_core/resources/records.py": "5a90f8e43c564f88a88a50b32b7ba8801c91b446888cb05623f23defa4d57855",
+    "src/processforge_core/resources/package_checks.py": "72db3d06b5624f88189093fdafe7e06bfd227da24b565bbd3c3fc8a003836110",
+    "src/processforge_core/resources/index_checks.py": "577f08d82d84197d91b299492caccb99578b36c252ab7b0b83350598a9490ef0",
+    "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff",
+    "src/processforge_core/work/worker_assignment.py": "f22efd43e3aba13da36f2f3ac6adc01f0145141d929f372dd1c327ab2424af22",
+    "tools/pf_runtime/host.py": "18b1cf9411f78297047b099658227f36d778a1a17460894dbda49be6e71d7c61",
+    "tools/smoke_continuation_work.py": "8cf11ac07384d6dd1f54d14e014912f17c9d1d35093c673e06ff3e5a71c4cbcb",
+    "tools/smoke_expected_report_containment.py": "e013a8e08b247b14271c807c849373ab093a2f5f7c2637ee241a63f36cf847c0",
+    "tools/smoke_prepared_execution_context.py": "e692f6210d42da2c190fa19cde5c6a08e9651431f06d0b88221a12faccd0ec08",
+    "tools/smoke_prepared_execution_recovery.py": "86e3705adebbcad60337ba0f00a88c5b76937d031b114d6ebcbfeb95e209e7e3",
+    "tools/smoke_process_run_task_batch.py": "133b7d182b9dae2ff1f9df7f8e81f9102502c0483ee7ab9198906485ea9f2c84",
+    "tools/pf_runtime/service.py": "837bad737c107a1a621937a3aad5d968a9e6a0fabee23283ab4abd82473861e7",
+    "tools/smoke_codex_worker_governance.py": "8ff2f0583713574dab72e9c3ae38fae528676aa4cc196c762dead5aeede34876",
+    "tools/smoke_project_local_package_index_detection.py": "634c851ea9999dd199dfa75281e85d8793db6ceb46fb5a3a925e247b5fd5cbee",
+    "checksums/processforge.sha256": "5663d4d2415f0ee872176a88c861ffee6bac0e453b2b7502d783bfcaaa932ab0"
+  },
+  "scope": "Accepted final source only. No archive/install/Runtime/connected-host/ZIP acceptance; OOP epics remain open."
+}

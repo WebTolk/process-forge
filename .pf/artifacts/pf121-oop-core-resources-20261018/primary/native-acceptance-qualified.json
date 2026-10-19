@@ -1,0 +1,82 @@
+{
+  "status": "passed",
+  "complete_algorithms": 12,
+  "synthetic_cases": 20,
+  "new_bootstrap_static_checks": 1,
+  "new_binding_static_checks": 1,
+  "roles": {
+    "records": {
+      "algorithms": [
+        "default_load_policy",
+        "default_index_policy",
+        "path_ref_for_known_root",
+        "public_resource_path_ref",
+        "normalize_resource_record"
+      ],
+      "products": {
+        "src/processforge_core/resources/records.py": "5a90f8e43c564f88a88a50b32b7ba8801c91b446888cb05623f23defa4d57855"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "00416084820467968b5aab1447b054846b07ed2e6477f72e0b9137deb981a92c",
+      "report_sha256": "50ff83b544165ab79350f0a2cb1d13c084a353c2417e52e89afd7e15564e8d55",
+      "prior_owner_count": 7
+    },
+    "doctor": {
+      "algorithms": [
+        "knowledge_package_doctor_checks"
+      ],
+      "products": {
+        "src/processforge_core/resources/package_checks.py": "72db3d06b5624f88189093fdafe7e06bfd227da24b565bbd3c3fc8a003836110"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "cbb540537f6449ac92b2b1fb11cc854501ac139f6bc37e1200df1a2e9aee5532",
+      "report_sha256": "47bf9d9ad4135dd5e6b52398a30cc0fc35b6726e178329e4bbc18feba4b7fcc5",
+      "prior_owner_count": 17
+    },
+    "indexes": {
+      "algorithms": [
+        "resource_index_path_for_package",
+        "resource_path_ref_missing",
+        "project_knowledge_resource_index_checks",
+        "path_is_relative_to"
+      ],
+      "products": {
+        "src/processforge_core/resources/index_checks.py": "577f08d82d84197d91b299492caccb99578b36c252ab7b0b83350598a9490ef0",
+        "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "2f65371dbc61b27559967a5bdb01fd1f47e4dd7de17c71f4268a68b2f245f271",
+      "report_sha256": "e9013634fc186a5afcc6fa2ea110ebd11c9f295d7867931d8f512ace5d17835a",
+      "prior_owner_count": 17
+    },
+    "prompts": {
+      "algorithms": [
+        "load_task",
+        "render_worker_launch_prompt"
+      ],
+      "products": {
+        "src/processforge_core/work/worker_assignment.py": "f22efd43e3aba13da36f2f3ac6adc01f0145141d929f372dd1c327ab2424af22",
+        "tools/pf_runtime/host.py": "18b1cf9411f78297047b099658227f36d778a1a17460894dbda49be6e71d7c61",
+        "tools/pf_runtime/service.py": "837bad737c107a1a621937a3aad5d968a9e6a0fabee23283ab4abd82473861e7",
+        "tools/smoke_codex_worker_governance.py": "8ff2f0583713574dab72e9c3ae38fae528676aa4cc196c762dead5aeede34876",
+        "tools/smoke_continuation_work.py": "8cf11ac07384d6dd1f54d14e014912f17c9d1d35093c673e06ff3e5a71c4cbcb",
+        "tools/smoke_expected_report_containment.py": "e013a8e08b247b14271c807c849373ab093a2f5f7c2637ee241a63f36cf847c0",
+        "tools/smoke_prepared_execution_context.py": "e692f6210d42da2c190fa19cde5c6a08e9651431f06d0b88221a12faccd0ec08",
+        "tools/smoke_prepared_execution_recovery.py": "86e3705adebbcad60337ba0f00a88c5b76937d031b114d6ebcbfeb95e209e7e3",
+        "tools/smoke_process_run_task_batch.py": "133b7d182b9dae2ff1f9df7f8e81f9102502c0483ee7ab9198906485ea9f2c84",
+        "tools/smoke_project_local_package_index_detection.py": "634c851ea9999dd199dfa75281e85d8793db6ceb46fb5a3a925e247b5fd5cbee"
+      },
+      "native_synthetic_cases": 5,
+      "retained_without_reexecution": true,
+      "new_bootstrap_static_check": true,
+      "proof_sha256": "836c33a756fdd0602254ed7ebdf49710bbb4f0521170a9f005b8c3357a03985f",
+      "report_sha256": "9715a1611f7aeee0e85f56884d2b251b9335591746202fe6977389936c7810b0",
+      "prior_owner_count": 6,
+      "artifact_role": "prompts-bound",
+      "new_binding_static_check": true
+    }
+  },
+  "initial_native_acceptance_sha256": "2e2b3f11c8da9fcebcf5edd118024f2fc2a376178569bec0972aac490edaf640",
+  "bootstrap_native_acceptance_sha256": "4dbeb90ef6c5f2f10998c42c03e096b534abc51fe12b32b8455764e075e088e0",
+  "scope": "All successful complete algorithm, bootstrap and Core parity proof retained; only three test mock/import targets corrected with unchanged assertions/fixtures."
+}

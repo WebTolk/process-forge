@@ -1,0 +1,675 @@
+{
+  "passed": true,
+  "total": 98,
+  "native_exceptions": 6,
+  "groups": {
+    "annotations": 12,
+    "constants": 1,
+    "policies": 16,
+    "references": 12,
+    "records": 18,
+    "paths": 3,
+    "indexes": 15,
+    "doctor": 6,
+    "assignment": 6,
+    "prompt": 7,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "path_is_relative_to",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "default_load_policy",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "default_index_policy",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "path_ref_for_known_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "public_resource_path_ref",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "normalize_resource_record",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "resource_index_path_for_package",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "resource_path_ref_missing",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "knowledge_package_doctor_checks",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "project_knowledge_resource_index_checks",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "load_task",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "render_worker_launch_prompt",
+      "passed": true
+    },
+    {
+      "group": "constants",
+      "case": "heavy kinds exact",
+      "passed": true
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-source_tree",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f5936ad151b418da1e554883ecdb6bd4b0b9e3773bc015def884537ea712fe86"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-source_tree",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "0a190b7f054d6d53f254460a91e83a13246e5da0e92f260dcfa52d45e89313da"
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-documentation",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4d5bb58e1878634846e67bf2310eb139cfbebc21a135c3494baf40e7ca12f56d"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-documentation",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "814b48db473a1f6f1880b20dfabac43946fc5900dd70f43726c621d01e83b6e6"
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-article",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "81aa636e65246a663df8663fa79549b405b9a540b1906107ad4729aa20b5c21d"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-article",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d00f7be1fed212ee074b74d0fcafd320c323805165ae1d9a873b1624c050be13"
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-article_collection",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "556ab62a51e18e7044bce0cf07ec61dec31111c73664c6e8232790771ed4fed7"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-article_collection",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2047983cc1d3ee777b246b342137ae592f0f5b277746918a856362c6e462cc97"
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-reference",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2a739c94ee8ca22bef6e11cc0de7e8541a9d340b5acfafbb554eeb67cc23dc8d"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-reference",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6f5ad2e23dd9281a5988e72edeecfaed60d39bea8ec55ef6295c04bf0d60cf22"
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-unknown",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "02ca9673319ca7d42a59e5fbd1b83caa5610ec687f036f28e7fc26a0752f915d"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-unknown",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "87347df4e67c49f1aa54923eb6eb27f70bca423a137fcde2e0cf3b8213fa2a38"
+    },
+    {
+      "group": "policies",
+      "case": "default_load_policy-",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "83c51efc52a59d312fc4c8b462938f7def88be3dd01b908fba3a05883c3a838c"
+    },
+    {
+      "group": "policies",
+      "case": "default_index_policy-",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "057ec7b703ce075139bd3b49422024036028fd832ad15fd59b3c6aa4a43ae3ab"
+    },
+    {
+      "group": "policies",
+      "case": "explicit-load",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b4832ec1c28a633b957209417d91a652917d873461621bb7b5a78651efa31f7d"
+    },
+    {
+      "group": "policies",
+      "case": "explicit-index",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "62a29f3e7a656e404df87ee271a50c3675fbd8d2caf312d2c7ac3c3fbaab082d"
+    },
+    {
+      "group": "references",
+      "case": "known-docs",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f916e8d48c899aaebd1b639ab3f82a621eef06340bfda9bdfd9a7be543f4ce8c"
+    },
+    {
+      "group": "references",
+      "case": "known-docs/a.md",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2bd62c029cd946d9df7aa8f64311eb6180d0feab10e8de8b6e4bd05c9dbb2227"
+    },
+    {
+      "group": "references",
+      "case": "known-docs-other/a.md",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "155fad87b5a85c4925f86d30880689178d72b16ea3b3f03d3ad3a0f9ca2e7faf"
+    },
+    {
+      "group": "references",
+      "case": "known-${PF_DOCS}/a.md",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "669c354512c6fe0ef6bc5a8f863d9f399f5d5a372968e9fde02afec4f423eaed"
+    },
+    {
+      "group": "references",
+      "case": "known-${UNKNOWN}/x",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6f7eb074b98f7dbb2ab06ecd17b202f9912bfd342a7cc41b9bc7c63bbc59b35c"
+    },
+    {
+      "group": "references",
+      "case": "known-workspace\\docs\\a.md",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "bb983a8b8783b7d7e74a7ebf952a7db21a8005c8c44c80d6ee7f3ecaca4d110e"
+    },
+    {
+      "group": "references",
+      "case": "known-templates/a.md",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "953ac720ff335b2237a4b6ffd04f3c4a7888f63135eb5ddf719e907974bea9a3"
+    },
+    {
+      "group": "references",
+      "case": "public-36",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2a29cef3ef8fbede0e3abf439133fb46300ebe02ecae472589154dc316e96f76"
+    },
+    {
+      "group": "references",
+      "case": "public-37",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "19ece8a9ee3b0eceb7e29c345c0df5c21560f80c91b964352fe2668a00e45351"
+    },
+    {
+      "group": "references",
+      "case": "public-38",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "afe6d96c01eef0bef9f518ae2a7061525815969cba861b389fd41104a8730518"
+    },
+    {
+      "group": "references",
+      "case": "public-39",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "aaa26b95028c28f2be660762d692653f537e29143aff62c6a0f175cebcd9da48"
+    },
+    {
+      "group": "references",
+      "case": "public-40",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5dbb977b3ebc9eda4bb12a00445dfb47b3f8e1173358dec5137327a86eb581ab"
+    },
+    {
+      "group": "records",
+      "case": "normalize-41",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a46556ee0260f3a30d4d5b5a764c10a9af5643ed165ede531463e11121c08981"
+    },
+    {
+      "group": "records",
+      "case": "normalize-42",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2cf8ed3301f7dc98b7ef2fc9475186f9f7442943707319abc646e48d71f34dbd"
+    },
+    {
+      "group": "records",
+      "case": "normalize-43",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c064742235ef7df3858064dc3240a7ceaba79ba129ba0c7ef32ca4d68dda75a7"
+    },
+    {
+      "group": "records",
+      "case": "normalize-44",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a4dd9fd1d6302be0f21da5364595312065c06ce473031409f6efe8c7b5cb2c6a"
+    },
+    {
+      "group": "records",
+      "case": "normalize-45",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "9c065240a29d90e6884ddfc749f8fd7d84440fda0014018589d2f1818b9f2872"
+    },
+    {
+      "group": "records",
+      "case": "normalize-46",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a982733894f3bfb3e594b98bcd0168f07eb34004876b8232f3716a6fdb8e1e4d"
+    },
+    {
+      "group": "records",
+      "case": "normalize-47",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "62f3729718a7726cada2e4befb3683a6e7df4d64004f6be340e3b0ea89e517e8"
+    },
+    {
+      "group": "records",
+      "case": "normalize-48",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f5a82539bd7c7c2c2792d167cfca0a2e67c5b179d4d3da4418536ff6d50bb42b"
+    },
+    {
+      "group": "records",
+      "case": "normalize-49",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "876fdccdcf9f286655b18474f65a21e1169fb4b5749a123b8af209bf98837ed4"
+    },
+    {
+      "group": "records",
+      "case": "normalize-50",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8bffdc2f8f607fe38b977745151c215fa3f03e3bd054098cb59710d64a4a1a89"
+    },
+    {
+      "group": "records",
+      "case": "normalize-51",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "12a54d3a06a26f64e23f98d28dd65ec91a1413b37050bfb2f224c0ecd8d16bde"
+    },
+    {
+      "group": "records",
+      "case": "normalize-52",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "80eac92dd2c889cb44ef74e74a5f30111be741587193786002491108754aa445"
+    },
+    {
+      "group": "records",
+      "case": "normalize-53",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "31032739a1a0450d5610ef08aacfccd8ce624a635dd956108cef74c4a068bdc6"
+    },
+    {
+      "group": "records",
+      "case": "normalize-54",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8d032a18bfe905ff0f4dfd9ac6d70dcf00f55c948bd11d7875e18683ec861372"
+    },
+    {
+      "group": "records",
+      "case": "normalize-55",
+      "passed": true,
+      "native_exception": "AttributeError",
+      "observation_sha256": "0bdae635f4abd0dbb1162f79c79b320eca581d02ebbfa20c1ed4b9d95d7a3278"
+    },
+    {
+      "group": "records",
+      "case": "normalize-56",
+      "passed": true,
+      "native_exception": "AttributeError",
+      "observation_sha256": "0e06902eeacdc62b8f73e3d833620585cc2b9a5781af4b77bfa829a040d3349e"
+    },
+    {
+      "group": "records",
+      "case": "ignored register flag no writes",
+      "passed": true
+    },
+    {
+      "group": "records",
+      "case": "shallow borrowed fields",
+      "passed": true
+    },
+    {
+      "group": "paths",
+      "case": "relative-59",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5a6ea592d62c1b552a7bb2e6521496ec0c1efa1751e264df62d9d1370dbd6419"
+    },
+    {
+      "group": "paths",
+      "case": "relative-60",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "edb8130d7a9e4df0f286fdf1e1b67a7b9c06e014bba9aef0273f35981ddf494d"
+    },
+    {
+      "group": "paths",
+      "case": "relative-61",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d1ddb3c4d4fe968d99261fd8976f87b5647fecfca47350cfb4f5318c1c3b1073"
+    },
+    {
+      "group": "indexes",
+      "case": "index-path-../ignored-on-early-return",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7a54d102425c9442efc26e0030beeb87f926b3ffd7478372f08a17d16d4aae44"
+    },
+    {
+      "group": "indexes",
+      "case": "index-path-docs.flat",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a388c4d675de13cf55420e9c91bb7acc8778fa74df7a442ba28657c4547624bd"
+    },
+    {
+      "group": "indexes",
+      "case": "index-path-../escape",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "72b70002fe37770c4ab5375cd12b2ed3708e2ddc5745500f137ecd81a627f2e2"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-65",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "cd2866d48a1d8ce0b317fa9a15c5b0dc5f4667621badaadc6feb1bb236f51ecd"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-66",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "0319d8703e9317865a19e149486da2cab73a83258232364bd02d1bc4329d3b41"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-67",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "16b4424410012c8d7577f9db0c59473085d46d7e4dc15a157ec8507eaf5155fd"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-68",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b48ecd69cc966e9956811c64e9d566f230f328531aae78be476a97ecc2989e41"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-69",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "db9711fa627909958e620744f1ad9b0986aa6abcabf0a49e684a7c974d69a9ef"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-70",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f13f8389e371e639f99921620b08791a08213288abf8b9e8aa192273c63364e7"
+    },
+    {
+      "group": "indexes",
+      "case": "path-ref-71",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "cdf543e587f55cca07f6e2af97a314862574a34e669a69abfe72ab5d7c9ed001"
+    },
+    {
+      "group": "doctor",
+      "case": "missing-package",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a4384f8e0af8baa75e892c50596b24985f4578f43fbffb8bd9d5c44be1f3aa45"
+    },
+    {
+      "group": "doctor",
+      "case": "schema-valid-full-doctor",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "69e7e6224407a26fdf5f7c2e7bb17924729ae476f9d43ea60fc362a09f403deb"
+    },
+    {
+      "group": "doctor",
+      "case": "valid schema reaches navigation and heavy warnings",
+      "passed": true
+    },
+    {
+      "group": "doctor",
+      "case": "index-missing-resource",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "0dc8165a97703eccad776e2df9e73c23d9e4a5a9175e56b37c359778b247752b"
+    },
+    {
+      "group": "doctor",
+      "case": "dependency-missing",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2e4f98f926c7e0843c90d6ea493862a71f9ec1112bd118b5d95b10eb704f0924"
+    },
+    {
+      "group": "doctor",
+      "case": "invalid-yaml-doctor",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6591b46948ad9a94ca7a2fb4f2aeea01cd3065a24b53ac71955c5a5e2cce0cf8"
+    },
+    {
+      "group": "indexes",
+      "case": "project-empty",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "64e64c14a43863b85ab6ff50709adc86d20fd16c40a43455a19ebbd41fadd075"
+    },
+    {
+      "group": "indexes",
+      "case": "project-local-optional",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c3bcd228f6bd6c536871fc4eca004bc9bdbd94fd97374bbd5649811f3f554c57"
+    },
+    {
+      "group": "indexes",
+      "case": "local optional branch reached",
+      "passed": true
+    },
+    {
+      "group": "indexes",
+      "case": "project-local-index-present",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "72211ec5a7a021dc952fbc0878464db4656ee88a29b22247cdcdc26b50ba6174"
+    },
+    {
+      "group": "indexes",
+      "case": "workplace-and-distribution",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d6e0922401e32e753c2b8add85ca34c8e5561e13ed81b631f0f8234a26c39bc7"
+    },
+    {
+      "group": "assignment",
+      "case": "full-unknown-fields",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "73a9c0eeb8ebadc11292bfa880e19ccdf089e64cf56b447ea4330a9757da8fbf"
+    },
+    {
+      "group": "assignment",
+      "case": "full read retains unknown fields",
+      "passed": true
+    },
+    {
+      "group": "prompt",
+      "case": "prepared-85",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4864f70946b43c241dcda3ea86369c3900fdc7361c3fa2b7e29c726e1309284c"
+    },
+    {
+      "group": "prompt",
+      "case": "exact sections and newline 86",
+      "passed": true
+    },
+    {
+      "group": "prompt",
+      "case": "prepared-87",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f3630fdcadb491b4125c4266d0311fbf61a86333a0f8f54be07a3a80e08dec4f"
+    },
+    {
+      "group": "prompt",
+      "case": "exact sections and newline 88",
+      "passed": true
+    },
+    {
+      "group": "prompt",
+      "case": "prepared-89",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2a6b200b9abf586600361dfbaef4cf5a2526cb088aa43f1794296012efdc1915"
+    },
+    {
+      "group": "prompt",
+      "case": "exact sections and newline 90",
+      "passed": true
+    },
+    {
+      "group": "assignment",
+      "case": "same-size-same-mtime-live",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "3d91f5cedf0cf79eb2699daa0e0574f3a6099fa65d6e0c332fc92726cd97baa6"
+    },
+    {
+      "group": "assignment",
+      "case": "fresh title visible",
+      "passed": true
+    },
+    {
+      "group": "assignment",
+      "case": "missing-task",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "944459cf7af0de1cda9332b47f0ef2a8b3465351634e9742db8543c9f8033296"
+    },
+    {
+      "group": "assignment",
+      "case": "strict-yaml-refusal",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "2fb5b99db32cafe16961a405f59933fb9bf579dd41cb6a76be14f8b5f8492ebc"
+    },
+    {
+      "group": "prompt",
+      "case": "missing-task-prompt",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "944459cf7af0de1cda9332b47f0ef2a8b3465351634e9742db8543c9f8033296"
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "7369831ae5580cf97dc03e007d5531b3505b7b98d22da8d76555a8198750fb1e",
+    "docs/concepts/python-core-structure.md": "959c777a3797d559a726b64b1006574afa70ef67d60c7753763a95a2a613217d",
+    "docs/ru/concepts/python-core-structure.md": "30f619565d1fff8dff2f4dd30dce266e4fbf01941f7a996f7950d0ab933520f5",
+    "src/processforge_core/resources/records.py": "5a90f8e43c564f88a88a50b32b7ba8801c91b446888cb05623f23defa4d57855",
+    "src/processforge_core/resources/package_checks.py": "72db3d06b5624f88189093fdafe7e06bfd227da24b565bbd3c3fc8a003836110",
+    "src/processforge_core/resources/index_checks.py": "577f08d82d84197d91b299492caccb99578b36c252ab7b0b83350598a9490ef0",
+    "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff",
+    "src/processforge_core/work/worker_assignment.py": "f22efd43e3aba13da36f2f3ac6adc01f0145141d929f372dd1c327ab2424af22",
+    "tools/pf_runtime/host.py": "4329b12ed68251eabcf46ba91bbc3a65837a0e545e9a130630bf1ebdc464e798",
+    "tools/smoke_continuation_work.py": "8cf11ac07384d6dd1f54d14e014912f17c9d1d35093c673e06ff3e5a71c4cbcb",
+    "tools/smoke_expected_report_containment.py": "e013a8e08b247b14271c807c849373ab093a2f5f7c2637ee241a63f36cf847c0",
+    "tools/smoke_prepared_execution_context.py": "e692f6210d42da2c190fa19cde5c6a08e9651431f06d0b88221a12faccd0ec08",
+    "tools/smoke_prepared_execution_recovery.py": "b98bad4a2be799eb67e370144def0ffe85fa90eb7af45771266bd98c06cb3f1d",
+    "tools/smoke_process_run_task_batch.py": "133b7d182b9dae2ff1f9df7f8e81f9102502c0483ee7ab9198906485ea9f2c84"
+  },
+  "scope": "Bounded real scratch record/package/index/strict assignment/prompt parity and direct/copied Core without transport. Native complete algorithm/data/consumer proofs retained; no Runtime/service/host starts or ZIP checks."
+}

@@ -5,7 +5,10 @@ import tempfile
 from pathlib import Path
 
 from core_boundary_smoke_helpers import write_project
-from processforge import build_project_context_snapshot, project_knowledge_resource_index_checks
+from processforge import build_project_context_snapshot
+from processforge_core.resources.index_checks import KnowledgeResourceIndexService
+
+_knowledge_resource_index_service = KnowledgeResourceIndexService(Path(__file__).resolve().parents[1])
 
 
 def main() -> int:
@@ -36,7 +39,7 @@ resources:
 """,
             encoding="utf-8",
         )
-        checks = project_knowledge_resource_index_checks(project, None, None)
+        checks = _knowledge_resource_index_service.project_checks(project, None, None)
         messages = "\n".join(item.message for item in checks)
         assert "knowledge resource index for project.example missing" not in messages, messages
         assert "optional for project-local package resources" in messages, messages

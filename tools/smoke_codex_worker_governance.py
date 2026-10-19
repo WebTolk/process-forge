@@ -9,6 +9,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import processforge as pf
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from codex_exec_worker import codex_config_args, managed_hook_trust_args, prompt_payload
 
@@ -89,8 +92,8 @@ def main() -> int:
 
         for selected in (writable, readonly):
             for prepared in (None, {"path": ".pf/prepared/fixture.json", "checksum": "sha256:fixture"}):
-                with patch.object(pf, "load_task", return_value=selected):
-                    prompt = pf.render_worker_launch_prompt(project, "governed-worker", prepared_input=prepared)
+                with patch.object(WorkerAssignmentService, "load", return_value=selected):
+                    prompt = _worker_assignment_service.render_prompt(project, "governed-worker", prepared_input=prepared)
                 required = ["PF_PREPARED_INPUT_FILE", "PF_PREPARED_INPUT_SHA256", "Do not bootstrap ProcessForge",
                             "No ProcessForge MCP connection is required", "supplied output delivery contract",
                             "return only its complete content", "For a read-only assignment, do not write the report file yourself",

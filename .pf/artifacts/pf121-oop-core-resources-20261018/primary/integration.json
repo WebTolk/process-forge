@@ -1,0 +1,102 @@
+{
+  "status": "integrated",
+  "removed_functions": [
+    "default_index_policy",
+    "default_load_policy",
+    "knowledge_package_doctor_checks",
+    "load_task",
+    "normalize_resource_record",
+    "path_is_relative_to",
+    "path_ref_for_known_root",
+    "project_knowledge_resource_index_checks",
+    "public_resource_path_ref",
+    "render_worker_launch_prompt",
+    "resource_index_path_for_package",
+    "resource_path_ref_missing"
+  ],
+  "moved_constants": [
+    "HEAVY_RESOURCE_KINDS"
+  ],
+  "migrated_name_consumers": {
+    "default_load_policy": 0,
+    "default_index_policy": 0,
+    "path_ref_for_known_root": 0,
+    "public_resource_path_ref": 0,
+    "normalize_resource_record": 4,
+    "knowledge_package_doctor_checks": 1,
+    "resource_index_path_for_package": 3,
+    "resource_path_ref_missing": 0,
+    "project_knowledge_resource_index_checks": 1,
+    "load_task": 23,
+    "render_worker_launch_prompt": 2
+  },
+  "preflight_all_primary_edits_before_write": true,
+  "external_callers_owned_by_prompts": [
+    {
+      "path": "tools/smoke_continuation_work.py",
+      "name": "load_task",
+      "line": 177,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_expected_report_containment.py",
+      "name": "load_task",
+      "line": 43,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_prepared_execution_context.py",
+      "name": "load_task",
+      "line": 66,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_prepared_execution_context.py",
+      "name": "load_task",
+      "line": 291,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_prepared_execution_recovery.py",
+      "name": "load_task",
+      "line": 177,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_prepared_execution_recovery.py",
+      "name": "load_task",
+      "line": 364,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_prepared_execution_recovery.py",
+      "name": "load_task",
+      "line": 479,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_process_run_task_batch.py",
+      "name": "load_task",
+      "line": 187,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/smoke_process_run_task_batch.py",
+      "name": "load_task",
+      "line": 213,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "load_task",
+      "line": 961,
+      "receiver": "core"
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "load_task",
+      "line": 353,
+      "receiver": "core"
+    }
+  ]
+}

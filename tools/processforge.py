@@ -244,6 +244,17 @@ _workplace_registry_writer = WorkplaceRegistryWriter(ROOT)
 _template_catalog_service = TemplateCatalogService(ROOT)
 _platform_contract_validation_service = PlatformContractValidationService(ROOT)
 _platform_dependency_preflight_service = PlatformDependencyPreflightService(ROOT)
+from processforge_core.resources.records import ResourceRecordService
+from processforge_core.resources.package_checks import KnowledgePackageValidationService
+from processforge_core.resources.index_checks import KnowledgeResourceIndexService
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+from processforge_core.common.paths import path_is_relative_to
+from processforge_core.resources.records import HEAVY_RESOURCE_KINDS
+
+_resource_record_service = ResourceRecordService()
+_knowledge_package_validation_service = KnowledgePackageValidationService(ROOT)
+_knowledge_resource_index_service = KnowledgeResourceIndexService(ROOT)
+_worker_assignment_service = WorkerAssignmentService()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -1296,12 +1307,6 @@ def rel(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
-def path_is_relative_to(path: Path, root: Path) -> bool:
-    try:
-        path.resolve().relative_to(root.resolve())
-        return True
-    except ValueError:
-        return False
 
 
 RESOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
@@ -7605,16 +7610,6 @@ def requirements_fingerprints(flow_root: Path, project_root: Path) -> dict[str, 
 
 
 
-HEAVY_RESOURCE_KINDS = {
-    "source_tree",
-    "documentation",
-    "article_collection",
-    "note_collection",
-    "snippet_collection",
-    "example_collection",
-    "dataset",
-    "media_reference",
-}
 
 
 def resource_management_root(workplace_root: Path) -> Path:
@@ -7698,50 +7693,10 @@ def mark_search_index_dirty_after_resource_event(workplace_root: Path, event: di
         return
 
 
-def default_load_policy(kind: str, requested: str | None = None) -> str:
-    if requested:
-        return requested
-    return "on_demand" if kind in HEAVY_RESOURCE_KINDS else "when_relevant"
 
 
-def default_index_policy(kind: str, requested: str | None = None) -> str:
-    if requested:
-        return requested
-    if kind in {"source_tree"}:
-        return "symbols"
-    if kind in {"documentation", "article", "article_collection"}:
-        return "full_text"
-    return "metadata"
 
 
-def path_ref_for_known_root(workplace_root: Path, raw_path: str) -> dict[str, Any] | None:
-    resource_resolution = workplace_path_resolution(workplace_root, raw_path)
-    if resource_resolution.get("errors"):
-        return None
-    resource_resolved = normalize_path_string(str(resource_resolution.get("resolved", ""))).rstrip("/")
-    registry_specs = [
-        ("knowledge_roots", "knowledge-roots.yaml", "knowledge_roots"),
-        ("template_roots", "templates.yaml", "template_roots"),
-        ("package_roots", "package-roots.yaml", "package_roots"),
-    ]
-    for registry_name, registry_file, collection_key in registry_specs:
-        registry = load_yaml_document(workplace_root / "registries" / registry_file)
-        entries = registry.get(collection_key) if isinstance(registry, dict) else None
-        if not isinstance(entries, list):
-            continue
-        for entry in entries:
-            if not isinstance(entry, dict) or not entry.get("id") or not entry.get("path"):
-                continue
-            root_resolution = workplace_path_resolution(workplace_root, str(entry["path"]))
-            if root_resolution.get("errors"):
-                continue
-            root_resolved = normalize_path_string(str(root_resolution.get("resolved", ""))).rstrip("/")
-            if resource_resolved == root_resolved or resource_resolved.startswith(root_resolved + "/"):
-                path_ref: dict[str, Any] = {"registry": registry_name, "id": str(entry["id"])}
-                if resource_resolved != root_resolved:
-                    path_ref["relative_path"] = resource_resolved[len(root_resolved) + 1 :]
-                return path_ref
-    return None
 
 
 def ensure_private_resource_path(workplace_root: Path, resource_id: str, raw_path: str) -> Path:
@@ -7757,53 +7712,8 @@ def ensure_private_resource_path(workplace_root: Path, resource_id: str, raw_pat
     return target
 
 
-def public_resource_path_ref(resource_id: str, raw_path: str | None, source_url: str | None = None, workplace_root: Path | None = None) -> dict[str, Any]:
-    if source_url:
-        return {"registry": "external_resources", "id": resource_id, "url": source_url}
-    if raw_path:
-        if workplace_root:
-            known_ref = path_ref_for_known_root(workplace_root, raw_path)
-            if known_ref:
-                return known_ref
-        if path_string_is_absolute(raw_path) or PATH_CONSTANT_PATTERN.search(raw_path):
-            return {"registry": "private_resource_paths", "id": resource_id}
-        return {"package": "self", "relative_path": raw_path}
-    return {"registry": "external_resources", "id": resource_id}
 
 
-def normalize_resource_record(resource: dict[str, Any], package_id: str, workplace_root: Path | None = None, *, register_private_path: bool = False) -> dict[str, Any]:
-    record = dict(resource)
-    resource_id = safe_id(str(record.get("id") or record.get("title") or "resource"), "resource")
-    kind = str(record.get("kind") or "reference")
-    raw_path = str(record.get("path")) if record.get("path") else None
-    source = record.get("source") if isinstance(record.get("source"), dict) else {}
-    source_url = str(source.get("url") or record.get("url") or "") or None
-    record["id"] = resource_id
-    record["kind"] = kind
-    record["title"] = str(record.get("title") or resource_id.replace("-", " ").title())
-    record["load_policy"] = default_load_policy(kind, str(record.get("load_policy")) if record.get("load_policy") else None)
-    record["index_policy"] = default_index_policy(kind, str(record.get("index_policy")) if record.get("index_policy") else None)
-    if "path_ref" not in record:
-        record["path_ref"] = public_resource_path_ref(resource_id, raw_path, source_url, workplace_root)
-    if raw_path and (path_string_is_absolute(raw_path) or PATH_CONSTANT_PATTERN.search(raw_path)):
-        record["path_status"] = "resolved_private_path_hidden"
-        resolution = workplace_path_resolution(workplace_root, raw_path) if workplace_root else None
-        if resolution and resolution.get("errors"):
-            record["path_resolution"] = {"status": "error", "errors": resolution.get("errors")}
-        elif record.get("path_ref", {}).get("registry") == "private_resource_paths":
-            record["registration_hint"] = "register a knowledge_root/template_root/package_root if this path should be shared by multiple resources"
-    record.pop("path", None)
-    if source_url and "source" not in record:
-        record["source"] = {"type": "url", "url": source_url}
-    if "update_policy" not in record:
-        record["update_policy"] = {"mode": "manual"}
-    versioning, retention, snapshot_behavior = _ResourceSnapshotRules().versioning_policy(record)
-    record.setdefault("versioning", versioning)
-    record.setdefault("retention", retention)
-    record.setdefault("snapshot_behavior", snapshot_behavior)
-    if "package" not in record:
-        record["package"] = package_id
-    return record
 
 
 def resource_id_from_url(url: str, fallback: str = "resource") -> str:
@@ -7838,22 +7748,12 @@ def package_manifest_path_for_write(workplace_root: Path, package_id: str, packa
 
 
 
-def resource_index_path_for_package(manifest_path: Path, workplace_root: Path, package_id: str) -> Path:
-    if manifest_path.name == "package.yaml":
-        return manifest_path.parent / "indexes" / "resource-index.yaml"
-    validated_id = validate_resource_id(package_id, "knowledge package")
-    package_root = workplace_root / "packages"
-    return contained_resource_path(
-        package_root,
-        package_root / validated_id / "indexes" / "resource-index.yaml",
-        "knowledge package",
-    )
 
 
 def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path | None = None, package_root_id: str | None = None) -> dict[str, Any]:
     package_id = str(package_manifest.get("id", "package"))
     resources = [
-        normalize_resource_record(resource, package_id, workplace_root)
+        _resource_record_service.normalize(resource, package_id, workplace_root)
         for resource in package_manifest.get("resources", [])
         if isinstance(resource, dict)
     ]
@@ -7881,7 +7781,7 @@ def write_package_manifest_and_index(workplace_root: Path, package_id: str, pack
     package_manifest["package_root"] = package_root.root_id
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(ensure_trailing_newline(dump_yaml(package_manifest)), encoding="utf-8")
-    index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
+    index_path = _knowledge_resource_index_service.index_path(manifest_path, workplace_root, package_id)
     index_path.parent.mkdir(parents=True, exist_ok=True)
     index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(package_manifest, workplace_root, package_root.root_id))), encoding="utf-8")
     return manifest_path, index_path, package_root
@@ -7889,30 +7789,6 @@ def write_package_manifest_and_index(workplace_root: Path, package_id: str, pack
 
 
 
-def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) -> str | None:
-    path_ref = resource.get("path_ref")
-    if not isinstance(path_ref, dict):
-        return "missing path_ref"
-    registry = str(path_ref.get("registry") or "")
-    ref_id = str(path_ref.get("id") or "")
-    if not registry or not ref_id:
-        return None if path_ref.get("package") else "path_ref must include registry/id or package/relative_path"
-    known = {
-        "knowledge_roots": ("knowledge-roots.yaml", "knowledge_roots"),
-        "package_roots": ("package-roots.yaml", "package_roots"),
-        "templates": ("templates.yaml", "templates"),
-        "tools": ("tools.yaml", "tools"),
-        "mcp": ("mcp.yaml", "mcp_servers"),
-        "private_resource_paths": ("private-resource-paths.yaml", "private_resource_paths"),
-    }
-    if registry in {"external_resources"}:
-        return None
-    if registry not in known:
-        return f"unknown path_ref registry {registry}"
-    registry_file, collection_key = known[registry]
-    if ref_id not in _platform_dependency_preflight_service.registry_ids(workplace_root, registry_file, collection_key):
-        return f"path_ref target missing: {registry}/{ref_id}"
-    return None
 
 
 def workspace_registry_specs() -> dict[str, tuple[str, str, str]]:
@@ -8008,159 +7884,8 @@ def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]
     return paths["workspace_access"]
 
 
-def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> list[Check]:
-    manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="read")
-    checks: list[Check] = []
-    if not manifest_path.is_file():
-        return [
-            check_with_hint(
-                "FAIL",
-                f"package {package_id} manifest missing",
-                "The package id cannot be resolved through registries/package-roots.yaml.",
-                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
-            )
-        ]
-    for warning in package_root.warnings:
-        level = "WARN" if warning.startswith("WARN:") else "FAIL"
-        checks.append(
-            check_with_hint(
-                level,
-                warning,
-                "The package_root resolver found a registry/path issue.",
-                "check registries/package-roots.yaml and pass --package-root when multiple roots contain the same package id",
-            )
-        )
-    checks.append(check("PASS", f"package {package_id} resolved through package root {package_root.root_id}"))
-    loaded = _update_document_reader.doctor_yaml(
-        manifest_path,
-        "package-manifest.schema.json",
-        f"package {package_id} manifest",
-        checks,
-    )
-    if loaded is None:
-        return checks
-    manifest = loaded
-    resources = manifest.get("resources") if isinstance(manifest.get("resources"), list) else []
-    for resource in resources:
-        if not isinstance(resource, dict):
-            checks.append(check("FAIL", f"package {package_id} contains non-object resource"))
-            continue
-        resource_id = str(resource.get("id", "resource"))
-        normalized = normalize_resource_record(resource, package_id, workplace_root)
-        missing = resource_path_ref_missing(workplace_root, normalized)
-        checks.append(
-            check("PASS", f"{package_id}:{resource_id} path_ref resolved")
-            if not missing
-            else check_with_hint(
-                "FAIL",
-                f"{package_id}:{resource_id} path_ref - {missing}",
-                "Public resource records must resolve through a known registry instead of embedding private paths.",
-                "update the resource to use path_ref.registry and path_ref.id from the workplace registries",
-            )
-        )
-        kind = str(resource.get("kind") or "reference")
-        if kind in HEAVY_RESOURCE_KINDS and not resource.get("load_policy"):
-            checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should declare load_policy"))
-        elif kind in HEAVY_RESOURCE_KINDS and str(resource.get("load_policy")) in {"always_index", "session_start", "project_init"}:
-            checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should normally use on_demand"))
-    index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
-    if index_path.is_file():
-        index = load_yaml_document(index_path)
-        checks.append(check("PASS" if not yaml_error(index) else "FAIL", f"{rel(index_path, workplace_root)} is valid YAML"))
-        indexed_ids = {str(item.get("id")) for item in index.get("resources", []) if isinstance(item, dict)}
-        for resource in resources:
-            if isinstance(resource, dict) and str(resource.get("id")) not in indexed_ids:
-                checks.append(check("WARN", f"{package_id}:{resource.get('id')} missing from resource index"))
-    else:
-        checks.append(check("WARN", f"{rel(index_path, workplace_root)} missing; run knowledge-index-refresh --apply"))
-    text = manifest_path.read_text(encoding="utf-8", errors="replace")
-    checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", f"package {package_id} manifest has no private absolute paths"))
-    navigation = manifest.get("navigation") if isinstance(manifest.get("navigation"), dict) else {}
-    if navigation:
-        checks.append(check("PASS", f"package {package_id} navigation configured"))
-        allowed_sections = {"source_code", "development_articles", "documentation", "api_reference", "usage_rules"}
-        for section in navigation:
-            checks.append(check("PASS" if str(section) in allowed_sections else "WARN", f"navigation section recognized: {section}"))
-    elif package_id.startswith("docs."):
-        checks.append(check("WARN", f"package {package_id} navigation configured"))
-    dependencies = _project_package_catalog_reader.dependencies(manifest)
-    package_index = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml")
-    for dependency_id in dependencies:
-        checks.append(
-            check("PASS", f"required knowledge package dependency available: {dependency_id}")
-            if dependency_id in package_index
-            else check_with_hint(
-                "FAIL",
-                f"required knowledge package dependency available: {dependency_id}",
-                "The package manifest declares this dependency generically.",
-                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {dependency_id} --package-root global --title \"{dependency_id}\" --apply",
-            )
-        )
-    package_policy = _context_contract_inputs.documents.policy("package-id-policy.yaml", distribution_root=ROOT)
-    for entry in policy_entries(package_policy, "package_id_rules"):
-        if policy_id_matches(package_id, entry):
-            level = str(entry.get("level", "WARN")).upper()
-            checks.append(
-                check_with_hint(
-                    "FAIL" if level == "FAIL" else "WARN",
-                    str(entry.get("message", f"package id policy matched: {package_id}")),
-                    str(entry.get("why", "The package id matched a data-driven package id policy.")),
-                    str(entry.get("fix", "update the package id or policy manifest")),
-                )
-            )
-    return checks
 
 
-def project_knowledge_resource_index_checks(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None) -> list[Check]:
-    checks: list[Check] = []
-    checked = 0
-    flow_root = locate_flow_root(project_root)
-    for manifest_path in _project_package_catalog_reader.candidates(project_root, distribution_root, workplace_manifest):
-        manifest = load_yaml_document(manifest_path)
-        if not manifest or yaml_error(manifest):
-            continue
-        resources = manifest.get("resources")
-        if not isinstance(resources, list) or not resources:
-            continue
-        checked += 1
-        package_id = str(manifest.get("id", manifest_path.stem))
-        root_for_index = manifest_path.parent.parent if manifest_path.parent.name == "packages" else project_root
-        if distribution_root:
-            try:
-                manifest_path.relative_to(distribution_root)
-                root_for_index = distribution_root
-            except ValueError:
-                pass
-        index_path = resource_index_path_for_package(manifest_path, root_for_index, package_id)
-        project_local_package = path_is_relative_to(manifest_path, flow_root / "packages")
-        if index_path.is_file():
-            checks.append(check("PASS", f"knowledge resource index for {package_id} found"))
-        elif project_local_package:
-            checks.append(check("PASS", f"knowledge resource index for {package_id} optional for project-local package resources"))
-        else:
-            checks.append(
-                check_with_hint(
-                    "WARN",
-                    f"knowledge resource index for {package_id} missing",
-                    f"Expected resource index: {rel(index_path, project_root)}",
-                    f"python bin/pf.py knowledge-resource-index-build --project-root . --package {package_id} --apply",
-                )
-            )
-        for resource in resources:
-            if not isinstance(resource, dict):
-                checks.append(check("FAIL", f"{package_id} contains non-object resource"))
-                continue
-            normalized = normalize_resource_record(resource, package_id)
-            if "path" in resource and Path(str(resource.get("path"))).is_absolute():
-                checks.append(check("FAIL", f"{package_id}:{resource.get('id', 'resource')} exposes an absolute path instead of path_ref"))
-            if "path_ref" not in normalized:
-                checks.append(check("FAIL", f"{package_id}:{resource.get('id', 'resource')} missing path_ref"))
-            kind = str(resource.get("kind") or "reference")
-            if kind in HEAVY_RESOURCE_KINDS and not resource.get("load_policy"):
-                checks.append(check("WARN", f"{package_id}:{resource.get('id', 'resource')} heavy resource should declare load_policy"))
-    if checked == 0:
-        checks.append(check("PASS", "knowledge resource indexes checked (no package resources declared)"))
-    return checks
 
 
 def project_context_snapshot_paths(project_root: Path) -> tuple[Path, Path]:
@@ -10951,11 +10676,6 @@ def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_
     write_run_artifact_bundle(project_root, run, include_summary_handoff=include_summary_handoff)
 
 
-def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
-    path = _work_paths.assignment_document(project_root, task_id)
-    if not path.is_file():
-        raise SystemExit(f"FAIL: task/assignment not found: {safe_id(task_id, 'task')}")
-    return read_yaml_file(path)
 
 
 def save_task(project_root: Path, task: dict[str, Any]) -> None:
@@ -14000,7 +13720,7 @@ def worker_run_work_is_terminal(project_root: Path, task: dict[str, Any]) -> boo
 
 
 def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None, model_arg: str | None = None, reasoning_effort_arg: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     if worker_run_work_is_terminal(project_root, task):
         raise SystemExit("FAIL: work_is_terminal")
     agent_model = _context_contract_inputs.normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
@@ -14030,7 +13750,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         print(output, end="")
         if status:
             raise SystemExit(status)
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     from processforge_core.work.context import validate_execution_contract
     prepared_capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
     validation = validate_execution_contract(project_root, _work_paths.assignment_document(project_root, task_id), task,
@@ -14070,7 +13790,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     prompt_path = _work_paths.worker_prompt(project_root, run_id, task_id)
     prepared_input.local_file(project_root, rel(prompt_path, project_root))
     prompt_path.parent.mkdir(parents=True, exist_ok=True)
-    prompt_path.write_text(render_worker_launch_prompt(project_root, task_id, prepared_input=reference), encoding="utf-8")
+    prompt_path.write_text(_worker_assignment_service.render_prompt(project_root, task_id, prepared_input=reference), encoding="utf-8")
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     paths["root"].mkdir(parents=True, exist_ok=True)
     # A deliberate prepare is a new attempt.  An old durable exit contract
@@ -14088,10 +13808,10 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        task = load_task(project_root, task_id)
+        task = _worker_assignment_service.load(project_root, task_id)
         if any(not intent.with_suffix(".applied.json").is_file() for intent in
                (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
             print("FAIL: cancellation_recovery_pending")
@@ -14114,12 +13834,12 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     detach = bool(getattr(args, "detach", False))
     proc: subprocess.Popen[bytes] | None = None
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        task = load_task(project_root, task_id)
+        task = _worker_assignment_service.load(project_root, task_id)
         if any(not intent.with_suffix(".applied.json").is_file() for intent in
                (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
             print("FAIL: cancellation_recovery_pending")
@@ -14220,7 +13940,7 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
         state = load_agent_run_state(project_root, run_id, task_id)
@@ -14238,7 +13958,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     state = load_agent_run_state(project_root, run_id, task_id)
     if not state:
@@ -14264,10 +13984,10 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        return _collect_worker_run_locked(project_root, load_task(project_root, task_id))
+        return _collect_worker_run_locked(project_root, _worker_assignment_service.load(project_root, task_id))
 
 
 def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
@@ -14485,7 +14205,7 @@ def historical_worker_capture(project_root: Path, run_id: str, task_id: str) -> 
 
     try:
         with worker_run_lifecycle_lock(project_root, run_id, task_id):
-            task = load_task(project_root, task_id)
+            task = _worker_assignment_service.load(project_root, task_id)
             state = load_agent_run_state(project_root, run_id, task_id)
             return CapturedAttemptReader(project_root).read(task, state, run_id=run_id) is not None
     except (OSError, ValueError, RuntimeError, SystemExit):
@@ -14499,7 +14219,7 @@ def worker_collection_recovery_required(project_root: Path, run_id: str, task_id
 
     try:
         with worker_run_lifecycle_lock(project_root, run_id, task_id):
-            task = load_task(project_root, task_id)
+            task = _worker_assignment_service.load(project_root, task_id)
             state = load_agent_run_state(project_root, run_id, task_id)
             observation = CollectionRecoveryStore(project_root).read(task, state, run_id=run_id)
             return ({"task_id": task_id, "attempt": str(observation.attempt), "reason": observation.reason}
@@ -14582,7 +14302,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
         task_rows: list[tuple[str, dict[str, Any], dict[str, Any] | None, str]] = []
         for item in tasks:
             task_id = safe_id(str(item.get("id") or "task"), "task")
-            task = load_task(project_root, task_id)
+            task = _worker_assignment_service.load(project_root, task_id)
             worker = workers.get(task_id)
             state = load_agent_run_state(project_root, run_id, task_id)
             # A prepared run records the concrete driver as durable Inspector
@@ -15007,98 +14727,6 @@ def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -
 
 
 
-def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_input: dict[str, str] | None = None) -> str:
-    task_id = safe_id(task_id, "task")
-    task = load_task(project_root, task_id)
-    run_id = str(task.get("run_id") or "")
-    capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
-    workspace_access = rel(_work_paths.worker_run(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
-    requested_workspace_access = _context_contract_inputs.normalize_workspace_access(task.get("workspace_access"))
-    allowed_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_files"))
-    allowed_read_files = _context_contract_inputs.assignment_scope_items(task.get("allowed_read_files"))
-    forbidden_files = _context_contract_inputs.assignment_scope_items(task.get("forbidden_files"))
-    required_outputs = _context_contract_inputs.normalize_required_outputs(task.get("required_outputs"))
-    expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
-    subagent_policy = _context_contract_inputs.normalize_subagent_policy(task.get("subagent_policy"))
-    prepared_instructions = [
-        "Read the prepared input identified by PF_PREPARED_INPUT_FILE and verify PF_PREPARED_INPUT_SHA256 before working.",
-        "The orchestrator has already resolved the process, scope, inputs and resource permissions for this attempt.",
-        "Do not bootstrap ProcessForge, start another Work, reselect the process or rebuild context.",
-        "Use inline inputs and only explicitly declared file references. Metadata-only resources do not permit reading their bodies.",
-        "No ProcessForge MCP connection is required to execute this prepared assignment.",
-    ]
-    if not prepared_input:
-        prepared_instructions.append("This prompt alone is not launch-ready; the orchestrator must prepare the attempt manifest first.")
-    lines = [
-        "# Worker Launch Prompt",
-        "",
-        "You are a worker agent.",
-        "You are not the orchestrator.",
-        "Use only the assigned task and the provided assignment capsule.",
-        "Use the immutable prepared execution input; do not rebuild project context.",
-        "Do not edit files outside allowed_files.",
-        "Do not read files outside allowed_read_files unless explicitly allowed.",
-        "External resource bodies require explicit grants in the prepared input; metadata and pointers do not grant permission.",
-        "Do not read an extra mutable workspace_access_file; the prepared input is authoritative.",
-        "Do not copy private paths into public project artifacts, assignments, capsules, or reports.",
-        "Respect forbidden_files.",
-        "Produce required_outputs.",
-        "Deliver expected_report according to the supplied output delivery contract.",
-        "If the final response is captured as the report, return only its complete content.",
-        "For a read-only assignment, do not write the report file yourself.",
-        "Stop and report if scope is insufficient.",
-        "Invoke subagents only when subagent_policy.allow is true.",
-        "When subagent reports are required, write them only under subagent_policy.reports_dir.",
-        *prepared_instructions,
-        "",
-        "## Assignment",
-        "",
-        f"- task_id: `{task_id}`",
-        f"- run_id: `{run_id}`",
-        f"- assignment: `{rel(_work_paths.assignment_document(project_root, task_id), project_root)}`",
-        f"- capsule: `{capsule}`",
-        f"- workspace_access_file: `{workspace_access}`",
-        f"- prepared_input_file: `{(prepared_input or {}).get('path', 'pending preparation')}`",
-        f"- prepared_input_checksum: `{(prepared_input or {}).get('checksum', 'pending preparation')}`",
-        "- worker_may_rebuild_context: `false`",
-        "",
-        "## workspace_access",
-        "",
-        f"- knowledge_resources: `{len(requested_workspace_access['knowledge_resources'])}`",
-        f"- templates: `{len(requested_workspace_access['templates'])}`",
-        f"- tools: `{len(requested_workspace_access['tools'])}`",
-        f"- mcp: `{len(requested_workspace_access['mcp'])}`",
-        "",
-        "## allowed_files",
-        "",
-        *[f"- `{item}`" for item in allowed_files],
-        "",
-        "## allowed_read_files",
-        "",
-        *[f"- `{item}`" for item in allowed_read_files],
-        "",
-        "## forbidden_files",
-        "",
-        *[f"- `{item}`" for item in forbidden_files],
-        "",
-        "## required_outputs",
-        "",
-    ]
-    for output in required_outputs:
-        lines.append(f"- `{output.get('id')}` -> `{output.get('path', '')}`")
-    lines.extend(["", "## expected_report", "", f"- `{expected_report.get('artifact', '')}`"])
-    lines.extend(
-        [
-            "",
-            "## subagent_policy",
-            "",
-            f"- allow: `{str(subagent_policy.get('allow')).lower()}`",
-            f"- max_subagents: `{subagent_policy.get('max_subagents')}`",
-            f"- require_reports: `{str(subagent_policy.get('require_reports')).lower()}`",
-            f"- reports_dir: `{subagent_policy.get('reports_dir')}`",
-        ]
-    )
-    return "\n".join(lines).rstrip() + "\n"
 
 
 def write_orchestration_summary(project_root: Path, plan: dict[str, Any]) -> None:
@@ -15294,7 +14922,7 @@ def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) ->
         path = _work_paths.assignment_document(project_root, task_id)
         if not path.is_file():
             continue
-        task = load_task(project_root, task_id)
+        task = _worker_assignment_service.load(project_root, task_id)
         overlap_check = overlap_allowed_check(validate_assignment_scope_overlaps(project_root, task, assignment_path=path), "plan.allow_write_scope_overlap")
         non_overlap = task.get("non_overlap") if isinstance(task.get("non_overlap"), dict) else {}
         non_overlap.update(
@@ -15349,12 +14977,12 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = str(task.get("run_id") or "")
     output = Path(args.output).expanduser() if getattr(args, "output", None) else _work_paths.worker_prompt(project_root, run_id, task_id)
     if not output.is_absolute():
         output = (project_root / output).resolve()
-    prompt = render_worker_launch_prompt(project_root, task_id)
+    prompt = _worker_assignment_service.render_prompt(project_root, task_id)
     if not args.apply or getattr(args, "dry_run", False):
         print_plan("worker-launch-prompt create dry run", [output], project_root)
         return 0
@@ -15450,7 +15078,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             if status:
                 print(output, end="")
                 return status
-        task = load_task(project_root, task_id)
+        task = _worker_assignment_service.load(project_root, task_id)
         task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
         task["runtime_driver"] = str(worker.get("runtime_driver") or default_driver)
         agent_model = _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model)
@@ -15865,7 +15493,7 @@ def command_task_list(args: argparse.Namespace) -> int:
 def command_task_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with registry_file_lock(_work_paths.run_document(project_root, run_id)):
         return _command_task_start_locked(args)
@@ -15874,7 +15502,7 @@ def command_task_start(args: argparse.Namespace) -> int:
 def _command_task_start_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     require_official_process_active(project_root, task_process_id(task))
     task["status"] = "in_progress"
     save_task(project_root, task)
@@ -15888,7 +15516,7 @@ def _command_task_start_locked(args: argparse.Namespace) -> int:
 def command_task_complete(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with registry_file_lock(_work_paths.run_root(project_root, run_id) / "run.yaml", stale_after_seconds=0 if getattr(args, "completion_id", None) else 300):
         return _command_task_complete_locked(args)
@@ -15897,7 +15525,7 @@ def command_task_complete(args: argparse.Namespace) -> int:
 def _command_task_complete_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     if getattr(args, "dry_run", False):
         print(f"DRY-RUN: would complete task {task_id}")
         return 0
@@ -15929,7 +15557,7 @@ def command_task_doctor(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     checks = validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": _work_output_policy.fingerprint(project_root, task)})
     return result
 
@@ -15937,7 +15565,7 @@ def command_task_doctor(args: argparse.Namespace) -> int:
 def command_iteration_add(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     kind = safe_id(args.kind, "work")
     if kind not in ITERATION_KINDS:
         raise SystemExit(f"FAIL: invalid iteration kind: {kind}")
@@ -15970,7 +15598,7 @@ def command_iteration_add(args: argparse.Namespace) -> int:
 def command_iteration_complete(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    task = load_task(project_root, task_id)
+    task = _worker_assignment_service.load(project_root, task_id)
     status = args.status
     if status not in ITERATION_STATUSES:
         raise SystemExit(f"FAIL: invalid iteration status: {status}")
@@ -16500,7 +16128,7 @@ Fix:
     if report_section_has_items(resource_report, "## Missing Recommended Platform Resources"):
         checks.append(check("WARN", "recommended platform resources are missing from workplace registries"))
     checks.extend(public_snapshot_path_checks(project_root))
-    checks.extend(project_knowledge_resource_index_checks(project_root, distribution_root, workplace_manifest_path))
+    checks.extend(_knowledge_resource_index_service.project_checks(project_root, distribution_root, workplace_manifest_path))
 
     for rel_path in [
         "runtime/bin/pf.py",
@@ -17843,7 +17471,7 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
     package_root = _project_package_catalog_reader.resolve_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
     emit_package_root_resolution_event(workplace_root, "knowledge-add-url", package_id, package_root)
     resource_id = safe_id(args.id or resource_id_from_url(args.url, "article"), "resource")
-    resource = normalize_resource_record(
+    resource = _resource_record_service.normalize(
         {
             "id": resource_id,
             "kind": args.kind,
@@ -17952,7 +17580,7 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
     data = load_yaml_document(Path(args.resource_file).expanduser().resolve())
     if not data or yaml_error(data):
         raise SystemExit(f"FAIL: resource file is missing or invalid: {args.resource_file}")
-    resource = normalize_resource_record(data, package_id, workplace_root, register_private_path=args.apply)
+    resource = _resource_record_service.normalize(data, package_id, workplace_root, register_private_path=args.apply)
     resource_id = str(resource["id"])
     slug, proposal_path = write_resource_proposal(
         workplace_root,
@@ -18078,7 +17706,7 @@ def build_knowledge_resource_add_plan(
         manifest["resources"] = resources
     if not isinstance(resources, list):
         raise SystemExit("FAIL: knowledge package resources must be a list")
-    resource = normalize_resource_record(
+    resource = _resource_record_service.normalize(
         raw_resource,
         package_id,
         workplace_root,
@@ -18102,7 +17730,7 @@ def build_knowledge_resource_add_plan(
         "knowledge-resource-index.schema.json",
         f"knowledge package {package_id} resource index",
     )
-    index_path = resource_index_path_for_package(
+    index_path = _knowledge_resource_index_service.index_path(
         manifest_path,
         workplace_root,
         package_id,
@@ -18303,7 +17931,7 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
     package_root_id = getattr(args, "package_root", None)
     manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="read" if args.dry_run else "write")
     emit_package_root_resolution_event(workplace_root, "knowledge-index-refresh", package_id, package_root)
-    index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
+    index_path = _knowledge_resource_index_service.index_path(manifest_path, workplace_root, package_id)
     slug, proposal_path = write_resource_proposal(
         workplace_root,
         "knowledge-index-refresh",
@@ -18344,7 +17972,7 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
 def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
-    checks = knowledge_package_doctor_checks(workplace_root, package_id, getattr(args, "package_root", None))
+    checks = _knowledge_package_validation_service.doctor(workplace_root, package_id, getattr(args, "package_root", None))
     return print_checks(checks)
 
 

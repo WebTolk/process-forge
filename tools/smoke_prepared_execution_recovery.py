@@ -30,6 +30,10 @@ from smoke_prepared_execution_context import (
     pf, require, setup_basic_project,
 )
 
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
+
 
 def terminal_worker_admission() -> None:
     failures = []
@@ -77,7 +81,7 @@ def terminal_worker_admission() -> None:
             stdout = io.StringIO()
             with ExitStack() as stack:
                 stack.enter_context(patch.object(core, 'require_flow_root'))
-                stack.enter_context(patch.object(core, 'load_task', return_value=task))
+                stack.enter_context(patch.object(WorkerAssignmentService, 'load', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
                 stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name not in {"build_worker_process_command", "runtime_driver_for_task"}}))
                 stack.enter_context(patch.object(WorkerCommandBuilder, "build", spies["build_worker_process_command"]))
@@ -116,7 +120,7 @@ def terminal_worker_admission() -> None:
             before = files()
             with ExitStack() as stack:
                 stack.enter_context(patch.object(core, 'require_flow_root'))
-                stack.enter_context(patch.object(core, 'load_task', return_value=task))
+                stack.enter_context(patch.object(WorkerAssignmentService, 'load', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
                 stack.enter_context(patch.object(core, 'existing_running_worker_run', return_value=None))
                 stack.enter_context(patch.object(core, 'load_agent_run_state', return_value={'status': 'failed', 'attempt': 1}))
@@ -140,7 +144,7 @@ def terminal_worker_admission() -> None:
             intent.write_text('pending\n', encoding='utf-8')
             try:
                 stdout = io.StringIO()
-                with patch.object(core, 'require_flow_root'), patch.object(core, 'load_task', return_value=task), \
+                with patch.object(core, 'require_flow_root'), patch.object(WorkerAssignmentService, 'load', return_value=task), \
                      patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()), \
                      patch.object(core, 'prepare_worker_run', side_effect=AssertionError('unexpected prepare')), redirect_stdout(stdout):
                     code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
@@ -174,7 +178,7 @@ def terminal_worker_admission() -> None:
 
 
 def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
-    task = core.load_task(project, task_id)
+    task = _worker_assignment_service.load(project, task_id)
     from processforge_core.work.paths import WorkPaths
     paths = WorkPaths().worker_run(project, run_id, task_id)
     from processforge_core.common.json_io import json_read
@@ -361,7 +365,7 @@ def prepared_attempt_type_checks(project: Path, task: dict, state: dict, run_id:
 
 
 def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: Path) -> None:
-    task = core.load_task(project, task_id)
+    task = _worker_assignment_service.load(project, task_id)
     from processforge_core.work.paths import WorkPaths
     paths = WorkPaths().worker_run(project, run_id, task_id)
     state_raw = paths['status'].read_bytes()
@@ -476,7 +480,7 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
                 argparse.Namespace(project_root=str(project), run=run_id, profile=None, driver=None,
                     interval=0, max_ticks=1, final_drain_timeout=0.1))
         require(code == 1 and 'RECOVERY-REQUIRED:' in output and 'FINAL-DRAIN: pending=' in output, output)
-        require(core.load_task(project, task_id)['status'] == task['status'], 'refusal completed parent Work')
+        require(_worker_assignment_service.load(project, task_id)['status'] == task['status'], 'refusal completed parent Work')
 
         source.write_bytes(original_source)
         with patch('pf_runtime.host.ingest_event', return_value={'accepted': False, 'chat_message_ids': []}):

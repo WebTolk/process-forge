@@ -14,6 +14,10 @@ import processforge as core
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
@@ -184,7 +188,7 @@ def missing_path_workflow(project: Path, run_id: str) -> None:
        "--title", "Missing output path", "--process", "task-batch-execution",
        "--required-output", "id=report,path=report.md,type=markdown,required=true", "--apply")
     # task-create rejects missing paths; emulate an existing file-first assignment.
-    task = core.load_task(project, task_id)
+    task = _worker_assignment_service.load(project, task_id)
     task["required_outputs"][0].pop("path")
     core.save_task(project, task)
     task_path = project / ".pf" / "assignments" / f"{task_id}.yaml"
@@ -210,7 +214,7 @@ def missing_path_workflow(project: Path, run_id: str) -> None:
 
     pf("task-complete", "--project-root", str(project), "--task", task_id,
        "--summary", "Missing path explicitly waived.", "--waive-required-output", "report:accepted", "--apply")
-    task = core.load_task(project, task_id)
+    task = _worker_assignment_service.load(project, task_id)
     if task["status"] != "done" or task["result"]["waivers"] != {"report": "accepted"}:
         raise AssertionError(f"waived result was not persisted: {task['result']!r}")
     run_task = next(item for item in core.load_run(project, run_id)["tasks"] if item["id"] == task_id)

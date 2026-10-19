@@ -15,3 +15,11 @@ def path_matches_pattern(path: str, pattern: str) -> bool:
     normalized = path.replace("\\", "/")
     name = Path(normalized).name
     return fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(name, pattern)
+
+
+def path_is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+        return True
+    except ValueError:
+        return False
