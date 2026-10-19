@@ -11,3 +11,4 @@ Run status: `draft`
 | 5 | `pf-health-readiness-statistics-20261019` | `open` | `.pf/assignments/pf-health-readiness-statistics-20261019.yaml` |
 | 6 | `pf-context-refresh-indexing-separation-20261019` | `open` | `.pf/assignments/pf-context-refresh-indexing-separation-20261019.yaml` |
 | 7 | `pf-monitor-uptime-format-20261019` | `open` | `.pf/assignments/pf-monitor-uptime-format-20261019.yaml` |
+| 8 | `pf-forge-project-init-agent-hooks-20261019` | `open` | `.pf/assignments/pf-forge-project-init-agent-hooks-20261019.yaml` |
