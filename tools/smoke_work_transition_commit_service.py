@@ -157,7 +157,7 @@ class WorkTransitionCommitTests(unittest.TestCase):
         self.assertEqual(ProcessExecutionService.__match_args__, ("project_root", "workplace_root", "core"))
         parameters = inspect.signature(ProcessExecutionService).parameters
         self.assertEqual(list(parameters),
-                         ["project_root", "workplace_root", "core", "observer", "records", "context", "definitions", "snapshots", "work_metadata"])
+                         ["project_root", "workplace_root", "core", "observer", "records", "context", "definitions", "snapshots", "work_metadata", "output_checks", "verification_fingerprint"])
         self.assertEqual(parameters["work_metadata"].kind, inspect.Parameter.KEYWORD_ONLY)
         self.assertIsNone(parameters["work_metadata"].default)
         ops = RecordingOperations()
