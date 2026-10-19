@@ -17,10 +17,12 @@ def check_flow_state_markers(pf, root: Path) -> None:
     classified = pf.classify_project(project, explicit_classifier_paths=[classifier])
     assert classified["project_types"] == [], classified
     assert classified["inactive_classifier_hints"] == [], classified
-    assert pf.inactive_official_classifier_hints(None, project) == []
+    from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+
+    assert ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).inactive_official_classifier_hints(None, project) == []
     from processforge_core.project.detection import ProjectDetectionService
     assert receipt in ProjectDetectionService().files(project), "generic inventory must retain PF evidence"
-    assert not any(path == ".pf" or path.startswith(".pf/") for path in pf.project_available_paths(project))
+    assert not any(path == ".pf" or path.startswith(".pf/") for path in ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_available_paths(project))
 
     (project / "main.py").write_text("pass\n", encoding="utf-8")
     python_only = pf.classify_project(project, explicit_classifier_paths=[classifier])
@@ -44,6 +46,7 @@ def check_marker_parity(pf, root: Path) -> None:
         marker.parent.mkdir(parents=True)
         marker.write_text("fixture\n", encoding="utf-8")
         flow = project / ".pf"
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
         import processforge_core.common.yaml_io as _core_common_yaml_io
 
         _core_common_yaml_io.write_yaml_file(flow / "project-classifiers" / "fixture.yaml", {
@@ -62,7 +65,7 @@ def check_marker_parity(pf, root: Path) -> None:
         receipt.write_text("{}\n", encoding="utf-8")
         actual = pf.classify_project(project)
         from processforge_core.project.detection import ProjectDetectionService
-        with patch.object(pf, "list_classifier_files", ProjectDetectionService().files):
+        with patch.object(ProjectClassifierSourceReader, "list_classifier_files", ProjectDetectionService().files):
             previous = pf.classify_project(project)
         assert actual == previous, (actual, previous)
         assert actual["loaded_classifiers"] == ["fixture.parity"], actual

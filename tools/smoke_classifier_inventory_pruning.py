@@ -29,7 +29,9 @@ def guarded_paths(pf, project: Path, forbidden: set[Path]) -> tuple[set[str], se
         return scandir(path)
 
     with patch.object(os, "scandir", guarded):
-        paths = pf.project_available_paths(project)
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+
+        paths = ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_available_paths(project)
     return paths, visited
 
 
@@ -51,7 +53,9 @@ def check_pruning(pf, root: Path) -> None:
         marker(project, f".pf/artifacts/batch-{index}/fixture/package.json")
     from processforge_core.project.detection import ProjectDetectionService
     generic = ProjectDetectionService().files(project)
-    expected = pf.project_available_paths(project, generic)
+    from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+
+    expected = ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_available_paths(project, generic)
     actual, visited = guarded_paths(pf, project, forbidden)
     assert actual == expected, (actual - expected, expected - actual)
     assert visited == {project / relative for relative in (
@@ -61,20 +65,22 @@ def check_pruning(pf, root: Path) -> None:
     assert "empty-marker" in actual and "cache" in actual and "runtime" in actual
     assert "application/.pf/fixture.marker" in actual
     assert ".pf-copy/composer.json" in actual
-    assert product in pf.list_classifier_files(project)
+    assert product in ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).list_classifier_files(project)
     assert any(path.is_relative_to(project / ".pf") for path in generic)
-    inventory = pf.list_classifier_files(project)
+    inventory = ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).list_classifier_files(project)
     assert inventory == sorted(inventory, key=lambda path: path.relative_to(project).as_posix())
-    assert not pf.list_classifier_files(root / "absent")
+    assert not ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).list_classifier_files(root / "absent")
     # The default classification and inactive-hint paths must use the same walk.
     with patch.object(ProjectDetectionService, "files", side_effect=AssertionError("generic traversal")):
         classified = pf.classify_project(project)
-        pf.inactive_official_classifier_hints(None, project)
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+
+        ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).inactive_official_classifier_hints(None, project)
     assert classified["status"] == "unclassified", classified
     product.unlink()
-    assert "application/frontend/package.json" not in pf.project_available_paths(project)
+    assert "application/frontend/package.json" not in ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_available_paths(project)
     marker(project, "package.json")
-    assert "package.json" in pf.project_available_paths(project)
+    assert "package.json" in ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_available_paths(project)
 
 
 def check_links(pf, root: Path) -> None:

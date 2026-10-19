@@ -130,7 +130,9 @@ project_classifiers:
                 explicit_classifier_paths=[distributed_classifier],
             )
             assert result["matched_rules"][0]["source"] == expected_source, result
-        assert pf.project_classifier_source_label(
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+
+        assert ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_classifier_source_label(
             local_classifier, project, workplace_manifest=nested_manifest
         ) == ".pf/project-classifiers/local.yaml"
 

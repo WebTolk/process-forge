@@ -390,6 +390,7 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
+from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
 from processforge_core.agents.telemetry import TelemetryEventService
@@ -2956,192 +2957,18 @@ def command_error_route(args: argparse.Namespace) -> int:
 
 
 
-def list_classifier_files(project_root: Path) -> list[Path]:
-    """Walk product markers without entering flow state or excluded trees."""
-    flow_root = locate_flow_root(project_root)
-    ignored_names = {".git", ".idea", ".serena", "__pycache__", "runtime", "cache"}
-    files: list[Path] = []
-    for directory, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
-        parent = Path(directory)
-        retained = []
-        for name in dirnames:
-            path = parent / name
-            if name in ignored_names or path == flow_root:
-                continue
-            try:
-                info = path.lstat()
-            except OSError:
-                continue
-            # Windows junctions are reparse points but need not be symlinks.
-            # Neither may reintroduce flow state through an alias or cycle.
-            if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
-                continue
-            retained.append(name)
-        dirnames[:] = retained
-        for name in filenames:
-            path = parent / name
-            if name not in ignored_names and path.is_file():
-                files.append(path)
-    return sorted(files, key=lambda item: item.relative_to(project_root).as_posix())
 
 
-def project_classifier_registry_documents(
-    workplace_manifest: Path | None,
-    project_root: Path,
-) -> list[tuple[dict[str, Any], Path]]:
-    documents: list[tuple[dict[str, Any], Path]] = []
-    if workplace_manifest and workplace_manifest.is_file():
-        registry = load_workplace_registry(workplace_manifest, "project_classifiers", "project-classifiers.yaml")
-        documents.append((registry, workplace_manifest.parent))
-    flow_registry = locate_flow_root(project_root) / "registries" / "project-classifiers.yaml"
-    if flow_registry.is_file():
-        data = load_yaml_document(flow_registry)
-        if isinstance(data, dict) and not yaml_error(data):
-            documents.append((data, flow_registry.parent.parent))
-    for manifest_path, manifest in active_official_pack_records(workplace_manifest):
-        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
-        declared_ids = {str(item) for item in as_list(provided.get("project_classifiers")) if str(item)}
-        registry_path = manifest_path.parent / "project-classifiers" / "registry-entry.yaml"
-        registry = load_yaml_document(registry_path)
-        if not isinstance(registry, dict) or yaml_error(registry):
-            continue
-        entries = [
-            entry
-            for entry in as_list(registry.get("project_classifiers"))
-            if isinstance(entry, dict)
-            and (not declared_ids or str(entry.get("id") or "") in declared_ids)
-        ]
-        documents.append(
-            (
-                {"schema_version": 1, "project_classifiers": entries},
-                manifest_path.parent,
-            )
-        )
-    return documents
 
 
-def project_classifier_paths(
-    workplace_manifest: Path | None,
-    project_root: Path,
-    explicit_paths: list[Path] | None = None,
-) -> list[Path]:
-    candidates = [path.expanduser().resolve() for path in explicit_paths or []]
-    for registry, base in project_classifier_registry_documents(workplace_manifest, project_root):
-        entries = registry.get("project_classifiers")
-        if not isinstance(entries, list):
-            continue
-        for entry in entries:
-            if not isinstance(entry, dict) or str(entry.get("status", "active")) not in {"active", "enabled", "configured"}:
-                continue
-            raw_path = entry.get("path")
-            if raw_path:
-                candidates.append(resolve_registry_relative_path(base, str(raw_path), workplace_manifest))
-    unique: list[Path] = []
-    seen: set[Path] = set()
-    for path in candidates:
-        resolved = path.resolve()
-        if resolved not in seen and resolved.is_file():
-            seen.add(resolved)
-            unique.append(resolved)
-    return unique
 
 
-def project_available_paths(project_root: Path, files: list[Path] | None = None) -> set[str]:
-    """Product markers for classification, excluding PF's own flow state."""
-    source_files = files if files is not None else list_classifier_files(project_root)
-    flow_root = locate_flow_root(project_root)
-    # Receipts and captured fixtures are not application manifests. Classifier
-    # definitions in the flow registry are loaded separately and remain usable.
-    source_files = [path for path in source_files if not path.is_relative_to(flow_root)]
-    available_paths = {rel(path, project_root) for path in source_files}
-    for path in source_files:
-        parent = path.relative_to(project_root).parent
-        while parent != Path("."):
-            available_paths.add(parent.as_posix())
-            parent = parent.parent
-    available_paths.update(
-        path.name
-        for path in project_root.iterdir()
-        if path.is_dir() and path != flow_root and path.name not in {".git", ".idea", ".serena"}
-    )
-    return available_paths
 
 
-def processforge_distribution_root_for_path(path: Path) -> Path | None:
-    """Return the nearest ProcessForge distribution owning ``path``."""
-    resolved = path.resolve()
-    for candidate in (resolved.parent, *resolved.parents):
-        if looks_like_processforge_distribution(candidate):
-            return candidate
-    return None
 
 
-def project_classifier_source_label(
-    path: Path, project_root: Path, *, workplace_manifest: Path | None = None
-) -> str:
-    """Render classifier provenance stably across source and installed layouts."""
-    distribution_root = processforge_distribution_root_for_path(path)
-    if workplace_manifest is not None and distribution_root is not None:
-        workplace_root = workplace_manifest.parent.resolve()
-        if path_is_relative_to(path, workplace_root) and not path_is_relative_to(distribution_root, workplace_root):
-            distribution_root = None
-    if path_is_relative_to(path, project_root):
-        if distribution_root and distribution_root == project_root.resolve():
-            return rel(path, distribution_root)
-        return rel(path, project_root)
-    if distribution_root:
-        return rel(path, distribution_root)
-    return path.name
 
 
-def inactive_official_classifier_hints(workplace_manifest: Path | None, project_root: Path, files: list[Path] | None = None) -> list[str]:
-    active_ids = active_process_pack_ids(workplace_manifest)
-    available_paths = project_available_paths(project_root, files)
-    hints: list[str] = []
-    seen: set[str] = set()
-    for manifest_path, manifest in official_pack_manifest_records():
-        pack_id = str(manifest.get("id") or "")
-        if not pack_id or pack_id in active_ids:
-            continue
-        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
-        declared_ids = {str(item) for item in as_list(provided.get("project_classifiers")) if str(item)}
-        if not declared_ids:
-            continue
-        registry_path = manifest_path.parent / "project-classifiers" / "registry-entry.yaml"
-        registry = load_yaml_document(registry_path)
-        if not isinstance(registry, dict) or yaml_error(registry):
-            continue
-        for entry in as_list(registry.get("project_classifiers")):
-            if not isinstance(entry, dict) or str(entry.get("status", "active")) not in {"active", "enabled", "configured"}:
-                continue
-            classifier_id = str(entry.get("id") or "")
-            if classifier_id and classifier_id not in declared_ids:
-                continue
-            raw_path = entry.get("path")
-            if not raw_path:
-                continue
-            classifier_path = resolve_registry_relative_path(manifest_path.parent, str(raw_path), workplace_manifest)
-            classifier = load_yaml_document(classifier_path)
-            if (
-                not isinstance(classifier, dict)
-                or yaml_error(classifier)
-                or classifier.get("kind") != "processforge.project_classifier"
-                or str(classifier.get("status", "active")) != "active"
-            ):
-                continue
-            for rule in classifier.get("rules", []) if isinstance(classifier.get("rules"), list) else []:
-                if not isinstance(rule, dict) or not _project_classifier_rule_policy.matches(rule, available_paths):
-                    continue
-                key = f"{pack_id}:{classifier_id or classifier.get('id')}"
-                if key in seen:
-                    continue
-                seen.add(key)
-                hints.append(
-                    f"{pack_id} could classify this project via {classifier.get('id') or classifier_id}; "
-                    f"activate with `python bin/pf.py pack-activate --id {pack_id} --workplace <workplace-root> --apply`, "
-                    "then rerun project-context-refresh."
-                )
-    return hints
 
 
 def classify_project(
@@ -3149,8 +2976,8 @@ def classify_project(
     workplace_manifest: Path | None = None,
     explicit_classifier_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
-    files = list_classifier_files(project_root)
-    available_paths = project_available_paths(project_root, files)
+    files = _project_classifier_sources.list_classifier_files(project_root)
+    available_paths = _project_classifier_sources.project_available_paths(project_root, files)
     project_types: set[str] = set()
     platforms: set[str] = set()
     tags: set[str] = set()
@@ -3158,7 +2985,7 @@ def classify_project(
     confidence_rank = {"low": 1, "medium": 2, "high": 3}
     confidence = "low"
     loaded: list[str] = []
-    for path in project_classifier_paths(workplace_manifest, project_root, explicit_classifier_paths):
+    for path in _project_classifier_sources.project_classifier_paths(workplace_manifest, project_root, explicit_classifier_paths):
         classifier = load_yaml_document(path)
         if (
             not isinstance(classifier, dict)
@@ -3189,10 +3016,10 @@ def classify_project(
                     "classifier": classifier_id,
                     "rule": str(rule.get("id") or "rule"),
                     "confidence": rule_confidence,
-                    "source": project_classifier_source_label(path, project_root, workplace_manifest=workplace_manifest),
+                    "source": _project_classifier_sources.project_classifier_source_label(path, project_root, workplace_manifest=workplace_manifest),
                 }
             )
-    inactive_hints = inactive_official_classifier_hints(workplace_manifest, project_root, files) if not matched_rules else []
+    inactive_hints = _project_classifier_sources.inactive_official_classifier_hints(workplace_manifest, project_root, files) if not matched_rules else []
     return {
         "status": "classified" if matched_rules else "unclassified",
         "project_types": sorted(project_types),
@@ -18865,6 +18692,7 @@ def main(argv: list[str] | None = None) -> int:
 
 # Concrete owners retain the distribution root and existing request-scoped readers.
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
+_project_classifier_sources = ProjectClassifierSourceReader(ROOT)
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
 _workplace_setup_answers = WorkplaceSetupAnswers()
