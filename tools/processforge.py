@@ -390,6 +390,7 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
+from processforge_core.chat.export import ChatExportService
 from processforge_core.agents.hook_policy import HookDispatchPolicy
 from processforge_core.project.capability_resolution import ProjectCapabilityResolution
 from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
@@ -7337,22 +7338,8 @@ def sha256_text(value: str) -> str:
     return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def redact_chat_content(content: str, max_chars: int = 20000) -> tuple[str, str]:
-    redacted = content
-    redaction = "none"
-    for pattern in SECRET_VALUE_PATTERNS:
-        redacted, count = pattern.subn("<redacted>", redacted)
-        if count:
-            redaction = "redacted"
-    if len(redacted) > max_chars:
-        redacted = redacted[:max_chars]
-        redaction = "truncated" if redaction == "none" else "redacted_truncated"
-    return redacted, redaction
 
 
-def chat_participant(participant_id: str, role: str, participant_type: str | None = None) -> dict[str, Any]:
-    inferred_type = participant_type or ("human" if participant_id in {"operator", "user"} else ("subagent" if participant_id.startswith("subagent") else "agent"))
-    return {"id": participant_id, "type": inferred_type, "role": role}
 
 
 def append_chat_message(
@@ -7377,7 +7364,7 @@ def append_chat_message(
     transcript = chat_transcript_path(project_root, session_id)
     transcript.parent.mkdir(parents=True, exist_ok=True)
     requested_message_id = message_id or f"msg_{uuid.uuid4().hex}"
-    redacted_content, redaction = redact_chat_content(content)
+    redacted_content, redaction = _chat_export_service.redact_chat_content(content)
     lock = transcript.with_suffix(transcript.suffix + ".lock")
     deadline = time.monotonic() + 20.0
     descriptor: int | None = None
@@ -7423,7 +7410,7 @@ def append_chat_message(
         "turn_id": turn_id or f"turn_{len(prior_records) + 1}",
         "parent_message_id": parent_message_id,
         "timestamp": _core_common_clock.now_utc(),
-        "participant": chat_participant(participant_id, participant_role, participant_type),
+        "participant": _chat_export_service.chat_participant(participant_id, participant_role, participant_type),
         "message": {
             "role": message_role,
             "content_type": "text/markdown",
@@ -7478,29 +7465,6 @@ def load_chat_messages(project_root: Path, session_id: str) -> list[dict[str, An
     return ChatTranscriptReader(project_root).messages(session_id)
 
 
-def chat_export_messages(messages: list[dict[str, Any]], *, include_content: bool) -> list[dict[str, Any]]:
-    exported: list[dict[str, Any]] = []
-    for item in messages:
-        body = item.get("message") if isinstance(item.get("message"), dict) else {}
-        exported_item = {
-            "message_id": item.get("message_id"),
-            "session_id": item.get("session_id"),
-            "turn_id": item.get("turn_id"),
-            "timestamp": item.get("timestamp"),
-            "participant": item.get("participant"),
-            "message": {
-                "role": body.get("role"),
-                "content_hash": body.get("content_hash"),
-                "redaction": body.get("redaction", "none"),
-            },
-        }
-        if include_content:
-            exported_item["message"]["content"] = body.get("content", "")
-            exported_item["message"]["content_mode"] = "full" if body.get("redaction") == "none" else body.get("redaction", "redacted")
-        else:
-            exported_item["message"]["content_mode"] = "metadata_only"
-        exported.append(exported_item)
-    return exported
 
 
 def write_workplace_context_snapshot(project_root: Path, snapshot: dict[str, Any]) -> Path:
@@ -13999,7 +13963,7 @@ def command_chat_export(args: argparse.Namespace) -> int:
     chat_payload = {
         "included": True,
         "mode": "full" if args.include_content else "metadata_only",
-        "messages": chat_export_messages(messages, include_content=args.include_content),
+        "messages": _chat_export_service.chat_export_messages(messages, include_content=args.include_content),
     }
     payload = _hook_dispatch_policy.wtaicc_outbox_payload(event, chat=chat_payload)
     outbox_root = locate_flow_root(project_root) / "runtime" / "hooks" / "outbox" / "wtaicc"
@@ -17932,6 +17896,7 @@ def main(argv: list[str] | None = None) -> int:
 # Concrete owners retain the distribution root and existing request-scoped readers.
 _release_source_policy = ReleaseSourcePolicy()
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
+_chat_export_service = ChatExportService()
 _hook_dispatch_policy = HookDispatchPolicy(hooks=_hook_configuration_reader, documents=_yaml_documents)
 _project_capability_resolution = ProjectCapabilityResolution(ROOT)
 _project_classifier_sources = ProjectClassifierSourceReader(ROOT)

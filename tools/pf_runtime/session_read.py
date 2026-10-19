@@ -249,11 +249,13 @@ def session_chat_payload(
         end = matching[0]
     start = max(0, end - page_limit)
     page = messages[start:end]
+    from processforge_core.chat.export import ChatExportService
+
     return {
         "schema_version": 1,
         "kind": "pf.session_chat",
         "session_id": session_id,
-        "messages": core.chat_export_messages(page, include_content=True),
+        "messages": ChatExportService().chat_export_messages(page, include_content=True),
         "page": {"limit": page_limit, "before": boundary or None, "next_before": str(messages[start].get("message_id") or "") if start > 0 and page else None},
     }
 

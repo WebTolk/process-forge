@@ -143,7 +143,9 @@ def check_core_chat(workplace: Path, project: Path, root: Path) -> None:
         assert core.load_chat_messages(project, "Case-Session") == expected
         core.load_chat_messages = legacy_dependency
         chat = session_chat_payload(workplace, core, session_id="Case-Session")
-        assert chat["messages"] == core.chat_export_messages(expected, include_content=True)
+        from processforge_core.chat.export import ChatExportService
+
+        assert chat["messages"] == ChatExportService().chat_export_messages(expected, include_content=True)
     finally:
         for name, value in originals.items():
             setattr(core, name, value)
