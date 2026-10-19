@@ -394,6 +394,7 @@ from processforge_core.project.capability_resolution import ProjectCapabilityRes
 from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
 from processforge_core.project.overrides import ProjectOverrideReader
 from processforge_core.project.scan_policy import ProjectScanPolicy
+from processforge_core.maintenance.release_provenance import ReleaseGitProvenance
 from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
@@ -404,6 +405,7 @@ from processforge_core.project.setup_answers import WorkplaceSetupAnswers
 import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
 import processforge_core.common.yaml_io as _core_common_yaml_io
+import processforge_core.maintenance.release_provenance as _core_maintenance_release_provenance
 import processforge_core.maintenance.release_sources as _core_maintenance_release_sources
 import processforge_core.project.overrides as _core_project_overrides
 import processforge_core.project.scan_policy as _core_project_scan_policy
@@ -5510,66 +5512,11 @@ def command_version(args: argparse.Namespace) -> int:
     return 0
 
 
-HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
-ZIP_MINIMUM_EPOCH = 315532800
 
 
-def git_release_output(root: Path, *args: str) -> str:
-    result = subprocess.run(
-        ["git", *args],
-        cwd=root,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip()
-        raise SystemExit(f"FAIL: git {' '.join(args)} failed: {detail}")
-    return result.stdout.rstrip("\r\n")
 
 
-def release_git_provenance(root: Path) -> dict[str, Any]:
-    if not (root / ".git").exists():
-        raise SystemExit("FAIL: release-pack requires a Git source checkout for release manifest provenance")
-    dirty = git_release_output(root, "status", "--porcelain=v1", "--untracked-files=all").splitlines()
-    blocking_dirty = [line for line in dirty if not _release_source_policy.release_git_dirty_is_allowed_projection(line)]
-    if blocking_dirty:
-        sample = ", ".join(line.strip() for line in blocking_dirty[:20])
-        suffix = f"; +{len(blocking_dirty) - 20} more" if len(blocking_dirty) > 20 else ""
-        raise SystemExit(f"FAIL: release-pack requires clean git source before publishing: {sample}{suffix}")
-    commit = git_release_output(root, "rev-parse", "HEAD")
-    tree = git_release_output(root, "rev-parse", "HEAD^{tree}")
-    if not HEX40_RE.fullmatch(commit) or not HEX40_RE.fullmatch(tree):
-        raise SystemExit("FAIL: release-pack could not capture valid git commit/tree provenance")
-    commit_epoch_text = git_release_output(root, "show", "-s", "--format=%ct", "HEAD")
-    try:
-        commit_epoch = int(commit_epoch_text)
-    except ValueError as exc:
-        raise SystemExit(f"FAIL: invalid git commit timestamp: {commit_epoch_text}") from exc
-    source_epoch_text = os.environ.get("SOURCE_DATE_EPOCH")
-    if source_epoch_text:
-        try:
-            source_epoch = int(source_epoch_text)
-        except ValueError as exc:
-            raise SystemExit(f"FAIL: invalid SOURCE_DATE_EPOCH: {source_epoch_text}") from exc
-    else:
-        source_epoch = commit_epoch
-    if source_epoch < ZIP_MINIMUM_EPOCH:
-        raise SystemExit("FAIL: release-pack source date is before the ZIP timestamp lower bound 1980-01-01")
-    generated_at = datetime.fromtimestamp(source_epoch, timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    return {
-        "source_date_epoch": source_epoch,
-        "generated_at": generated_at,
-        "source": {
-            "vcs": "git",
-            "commit": commit,
-            "tree": tree,
-            "dirty": False,
-        },
-    }
 
 
 def official_release_pack_entries(root: Path) -> list[dict[str, Any]]:
@@ -5705,7 +5652,7 @@ def command_release_pack(args: argparse.Namespace) -> int:
         if len(files) > 50:
             print(f"... {len(files) - 50} more files")
         return 0
-    provenance = release_git_provenance(root)
+    provenance = _release_git_provenance.release_git_provenance(root)
     from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 
     core_manifest = release_core_manifest(files, version=RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
@@ -5772,16 +5719,16 @@ def validate_release_manifest_contract(
     source_epoch = build.get("source_date_epoch")
     generated_at = build.get("generated_at")
     expected_generated_at = None
-    if isinstance(source_epoch, int) and source_epoch >= ZIP_MINIMUM_EPOCH:
+    if isinstance(source_epoch, int) and source_epoch >= _core_maintenance_release_provenance.ZIP_MINIMUM_EPOCH:
         expected_generated_at = datetime.fromtimestamp(source_epoch, timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    checks.append(check("PASS" if isinstance(source_epoch, int) and source_epoch >= ZIP_MINIMUM_EPOCH else "FAIL", "release manifest source_date_epoch is valid"))
+    checks.append(check("PASS" if isinstance(source_epoch, int) and source_epoch >= _core_maintenance_release_provenance.ZIP_MINIMUM_EPOCH else "FAIL", "release manifest source_date_epoch is valid"))
     checks.append(check("PASS" if generated_at == expected_generated_at else "FAIL", "release manifest generated_at matches source_date_epoch"))
     checks.append(check("PASS" if build.get("deterministic") is True else "FAIL", "release manifest declares deterministic build"))
 
     source = data.get("source") if isinstance(data.get("source"), dict) else {}
     checks.append(check("PASS" if source.get("vcs") == "git" else "FAIL", "release manifest source vcs is git"))
-    checks.append(check("PASS" if isinstance(source.get("commit"), str) and HEX40_RE.fullmatch(source["commit"]) else "FAIL", "release manifest source commit is 40 lowercase hex"))
-    checks.append(check("PASS" if isinstance(source.get("tree"), str) and HEX40_RE.fullmatch(source["tree"]) else "FAIL", "release manifest source tree is 40 lowercase hex"))
+    checks.append(check("PASS" if isinstance(source.get("commit"), str) and _core_maintenance_release_provenance.HEX40_RE.fullmatch(source["commit"]) else "FAIL", "release manifest source commit is 40 lowercase hex"))
+    checks.append(check("PASS" if isinstance(source.get("tree"), str) and _core_maintenance_release_provenance.HEX40_RE.fullmatch(source["tree"]) else "FAIL", "release manifest source tree is 40 lowercase hex"))
     checks.append(check("PASS" if source.get("dirty") is False else "FAIL", "release manifest source dirty is false"))
 
     archive_data = data.get("archive") if isinstance(data.get("archive"), dict) else {}
@@ -18063,6 +18010,7 @@ _project_capability_resolution = ProjectCapabilityResolution(ROOT)
 _project_classifier_sources = ProjectClassifierSourceReader(ROOT)
 _project_override_reader = ProjectOverrideReader(ROOT)
 _project_scan_policy = ProjectScanPolicy()
+_release_git_provenance = ReleaseGitProvenance(source_policy=_release_source_policy)
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
 _workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
