@@ -405,6 +405,7 @@ from processforge_core.agents.session_metadata import SessionMetadataWriter
 from processforge_core.runtime.supervisor_inputs import SupervisorInputService
 from processforge_core.runtime.supervisor_inputs import SupervisorStateInputs
 from processforge_core.agents.telemetry import TelemetryEventService
+from processforge_core.runtime.observation_inputs import WorkerObservationInputService
 from processforge_core.resources.registries import WorkplaceRegistryReader
 from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
 from processforge_core.project.setup_answers import WorkplaceSetupAnswers
@@ -418,6 +419,7 @@ import processforge_core.project.overrides as _core_project_overrides
 import processforge_core.project.scan_policy as _core_project_scan_policy
 import processforge_core.resources.buckets as _core_resources_buckets
 import processforge_core.resources.registries as _core_resources_registries
+import processforge_core.runtime.observation_inputs as _core_runtime_observation_inputs
 import processforge_core.work.consistency as _core_work_consistency
 
 
@@ -10770,7 +10772,7 @@ def agent_session_id(agent_id: str) -> str:
 
 
 def ttl_expired(presence: dict[str, Any], *, now: datetime | None = None) -> bool:
-    timestamp = parse_runtime_timestamp(presence.get("last_seen_at"))
+    timestamp = _worker_observation_inputs.parse_runtime_timestamp(presence.get("last_seen_at"))
     if timestamp is None:
         return True
     ttl = int(presence.get("heartbeat_ttl_seconds") or 300)
@@ -11109,7 +11111,7 @@ def command_agent_lease_doctor(args: argparse.Namespace) -> int:
         checks.append(check("PASS" if lease.get("agent_id") else "FAIL", f"{path.name} agent_id present"))
         checks.append(check("PASS" if lease.get("status") in LEASE_STATUSES else "FAIL", f"{path.name} status valid"))
         if str(lease.get("status")) == "active":
-            expires = parse_runtime_timestamp(lease.get("expires_at"))
+            expires = _worker_observation_inputs.parse_runtime_timestamp(lease.get("expires_at"))
             checks.append(check("PASS" if expires and expires > datetime.now(timezone.utc) else "WARN", f"{path.name} active lease not expired"))
     if not checks:
         checks.append(check("PASS", "no leases present"))
@@ -11123,7 +11125,7 @@ def mark_expired_agent_leases(workplace_root: Path) -> int:
         lease = load_yaml_document(path)
         if str(lease.get("status")) != "active":
             continue
-        expires = parse_runtime_timestamp(lease.get("expires_at"))
+        expires = _worker_observation_inputs.parse_runtime_timestamp(lease.get("expires_at"))
         if expires and expires <= now:
             lease["status"] = "stale"
             lease["updated_at"] = _core_common_clock.now_utc()
@@ -11364,7 +11366,7 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
                 if required_specializations.issubset({_specialization_catalog_reader.resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
             ]
         if not agents:
-            created = parse_runtime_timestamp(handoff.get("created_at"))
+            created = _worker_observation_inputs.parse_runtime_timestamp(handoff.get("created_at"))
             if created and datetime.now(timezone.utc) > created + timedelta(seconds=int(args.wait_ttl or 3600)):
                 handoff["status"] = "needs_operator"
                 handoff["director_reason"] = "required agent unavailable past wait ttl"
@@ -11612,7 +11614,6 @@ def supervisor_root(project_root: Path) -> Path:
 
 
 
-DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] = {}
 
 
 @contextlib.contextmanager
@@ -11638,25 +11639,6 @@ def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> 
 
 
 
-def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, task_id: str, state: dict[str, Any]) -> bool:
-    if str(state.get("status") or "") != "running":
-        return False
-    paths = _work_paths.worker_run(project_root, run_id, task_id)
-    if paths["exit"].is_file():
-        return True
-    pid = state.get("pid")
-    if not isinstance(pid, int):
-        return True
-    command = json_read(paths["command"])
-    started_at = str(state.get("started_at") or "")
-    started_dt = parse_runtime_timestamp(started_at)
-    timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
-    if started_dt and datetime.now(timezone.utc) > started_dt + timedelta(seconds=timeout_seconds):
-        return True
-    proc = DETACHED_WORKER_PROCESSES.get(worker_process_key(project_root, run_id, task_id))
-    if proc is not None:
-        return proc.poll() is not None
-    return not process_pid_running(pid)
 
 
 def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallback_driver_ref: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]] | None:
@@ -11667,7 +11649,7 @@ def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallba
     if str(state.get("status") or "") != "running":
         return None
     driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state, fallback_driver_ref)
-    observed = observe_worker_run(project_root, task, driver, state) if worker_run_state_requires_reconciliation(project_root, run_id, task_id, state) else state
+    observed = observe_worker_run(project_root, task, driver, state) if _worker_observation_inputs.worker_run_state_requires_reconciliation(project_root, run_id, task_id, state) else state
     if str(observed.get("status") or "") == "running":
         return observed, driver, paths
     return None
@@ -11764,18 +11746,8 @@ def load_agent_run_state(project_root: Path, run_id: str, task_id: str) -> dict[
     return json_read(_work_paths.worker_run(project_root, run_id, task_id)["status"])
 
 
-def worker_process_key(project_root: Path, run_id: str, task_id: str) -> tuple[str, str, str]:
-    return (str(project_root.resolve()), safe_id(run_id, "run"), safe_id(task_id, "task"))
 
 
-def parse_runtime_timestamp(value: Any) -> datetime | None:
-    if not value:
-        return None
-    try:
-        text = str(value).replace("Z", "+00:00")
-        return datetime.fromisoformat(text)
-    except ValueError:
-        return None
 
 
 def terminate_worker_pid(pid: int) -> None:
@@ -11788,20 +11760,6 @@ def terminate_worker_pid(pid: int) -> None:
             return
 
 
-def process_pid_running(pid: int) -> bool:
-    if os.name == "nt":
-        result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=False)
-        # tasklist uses a Windows console code page even when Python uses UTF-8.
-        # Only the CSV PID column is relevant; localized names/messages are not.
-        rows = csv.reader((result.stdout or b"").decode("ascii", errors="replace").splitlines())
-        return any(len(row) > 1 and row[1].strip() == str(pid) for row in rows)
-    try:
-        os.kill(pid, 0)
-        return True
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
 
 
 def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[str, Any] | str, state: dict[str, Any]) -> dict[str, Any]:
@@ -11828,13 +11786,13 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         finished_at = str(exit_marker.get("finished_at") or _core_common_clock.now_utc())
         failure_reason = str(exit_marker.get("failure_reason") or "") or None
         state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
-        DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
+        _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id), None)
         emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
         return state
-    started_dt = parse_runtime_timestamp(started_at)
+    started_dt = _worker_observation_inputs.parse_runtime_timestamp(started_at)
     timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
     timed_out = bool(started_dt and datetime.now(timezone.utc) > started_dt + timedelta(seconds=timeout_seconds))
-    proc = DETACHED_WORKER_PROCESSES.get(worker_process_key(project_root, run_id, task_id))
+    proc = _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id))
     exit_code: int | None = proc.poll() if proc else None
     if timed_out and exit_code is None:
         if proc and proc.poll() is None:
@@ -11846,8 +11804,8 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": -1, "finished_at": finished_at, "status": "timed_out"})
         return state
     if exit_code is None:
-        if proc is None and not process_pid_running(pid):
-            lost_observed_at = parse_runtime_timestamp(state.get("lost_observed_at"))
+        if proc is None and not _worker_observation_inputs.process_pid_running(pid):
+            lost_observed_at = _worker_observation_inputs.parse_runtime_timestamp(state.get("lost_observed_at"))
             if lost_observed_at is None:
                 observed_at = _core_common_clock.now_utc()
                 state = write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, failure_reason="pid not alive; waiting for durable exit contract", command=command, paths=paths)
@@ -11868,28 +11826,16 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     final_status = "completed" if exit_code == 0 else "failed"
     state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
     _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-    DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
+    _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id), None)
     emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     return state
 
 
-def worker_run_work_is_terminal(project_root: Path, task: dict[str, Any]) -> bool:
-    from processforge_core.process_execution import TERMINAL_ASSIGNMENT_STATUSES, TERMINAL_RUN_STATUSES
-
-    status = str(task.get("status") or "")
-    if status == "cancelled" or ("process_execution" in task and status in TERMINAL_ASSIGNMENT_STATUSES):
-        return True
-    run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    path = _work_paths.run_root(project_root, run_id) / "run.yaml"
-    run = load_yaml_document(path) if path.is_file() else {}
-    if "process_execution" not in task and "process_execution" not in run:
-        return False
-    return status in TERMINAL_ASSIGNMENT_STATUSES or str(run.get("status") or "") in TERMINAL_RUN_STATUSES
 
 
 def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None, model_arg: str | None = None, reasoning_effort_arg: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = _worker_assignment_service.load(project_root, task_id)
-    if worker_run_work_is_terminal(project_root, task):
+    if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
         raise SystemExit("FAIL: work_is_terminal")
     agent_model = _context_contract_inputs.normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
     agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
@@ -11984,7 +11930,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
                (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
             print("FAIL: cancellation_recovery_pending")
             return 1
-        if worker_run_work_is_terminal(project_root, task):
+        if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
         running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
@@ -12012,7 +11958,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
                (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
             print("FAIL: cancellation_recovery_pending")
             return 1
-        if worker_run_work_is_terminal(project_root, task):
+        if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
         running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
@@ -12081,7 +12027,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
         _core_common_json_io.json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
         if detach:
-            DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
+            _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES[_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id)] = proc
             emit_process_event(project_root, "worker.run.started", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
             print(f"RUNNING: {task_id} pid={proc.pid}")
             return 0
@@ -12112,7 +12058,7 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
         state = load_agent_run_state(project_root, run_id, task_id)
-        if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+        if state and _worker_observation_inputs.worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
             driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
             state = observe_worker_run(project_root, task, driver, state)
     if not state:
@@ -12161,7 +12107,7 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
 def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
     task_id, run_id = task["id"], task["run_id"]
     state = load_agent_run_state(project_root, run_id, task_id)
-    if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+    if state and _worker_observation_inputs.worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
         driver = _runtime_driver_selection_service.for_worker_state(project_root, task, state)
         state = observe_worker_run(project_root, task, driver, state)
     if not state:
@@ -17677,6 +17623,7 @@ _run_task_inputs = RunTaskInputReader()
 _session_metadata_writer = SessionMetadataWriter(inputs=_context_contract_inputs)
 _supervisor_input_service = SupervisorInputService(ROOT, documents=_yaml_documents, inputs=_context_contract_inputs, work_paths=_work_paths)
 _supervisor_state_inputs = SupervisorStateInputs(documents=_yaml_documents, inputs=_context_contract_inputs, work_paths=_work_paths)
+_worker_observation_inputs = WorkerObservationInputService()
 _workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
 _workplace_resource_events = WorkplaceResourceEventJournal(documents=_yaml_documents, telemetry=_telemetry_event_service)
 _workplace_setup_answers = WorkplaceSetupAnswers()

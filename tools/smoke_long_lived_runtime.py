@@ -158,7 +158,9 @@ def pid_liveness_checks() -> None:
     with patch.object(core.os, "name", "nt"):
         for output, expected, label in cases:
             with patch.object(core.subprocess, "run", return_value=SimpleNamespace(stdout=output, returncode=0)) as probe:
-                if core.process_pid_running(4321) is not expected:
+                from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+                if WorkerObservationInputService().process_pid_running(4321) is not expected:
                     raise AssertionError(f"PID liveness mismatch: {label}")
                 argv = probe.call_args.args[0]
                 if argv != ["tasklist", "/FI", "PID eq 4321", "/FO", "CSV", "/NH"]:
@@ -168,7 +170,9 @@ def pid_liveness_checks() -> None:
     with patch.object(core.os, "name", "posix"):
         for outcome, expected in ((None, True), (ProcessLookupError(), False), (PermissionError(), True)):
             with patch.object(core.os, "kill", side_effect=outcome):
-                if core.process_pid_running(4321) is not expected:
+                from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+                if WorkerObservationInputService().process_pid_running(4321) is not expected:
                     raise AssertionError("POSIX process probe behavior changed")
     print("PASS: localized tasklist bytes and exact PID column; POSIX behavior preserved")
 

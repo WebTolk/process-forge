@@ -195,7 +195,9 @@ def main():
             else:
                 raise AssertionError("old service received unsafe fallback")
             call.assert_not_called()
-        with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json", return_value=(200, {})) as call, patch.object(core, "process_pid_running", return_value=False), patch.object(service, "cleanup_stale_runtime"):
+        from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+        with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json", return_value=(200, {})) as call, patch.object(WorkerObservationInputService, "process_pid_running", return_value=False), patch.object(service, "cleanup_stale_runtime"):
             inspection["state"]["capabilities"] = {"guarded_shutdown": 1}
             with redirect_stdout(io.StringIO()):
                 assert service.command_stop(args, core) == 0

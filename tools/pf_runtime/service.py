@@ -232,9 +232,11 @@ def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
     pid = lock.get("pid")
     instance_id = str(lock.get("instance_id") or "")
     matching = bool(instance_id and instance_id == str(state.get("instance_id") or "") and pid == state.get("pid"))
-    pid_running = isinstance(pid, int) and core.process_pid_running(pid)
+    from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+    pid_running = isinstance(pid, int) and WorkerObservationInputService().process_pid_running(pid)
     state_pid = state.get("pid")
-    state_pid_running = isinstance(state_pid, int) and core.process_pid_running(state_pid)
+    state_pid_running = isinstance(state_pid, int) and WorkerObservationInputService().process_pid_running(state_pid)
     endpoint = str(state.get("endpoint") or "")
     ready = False
     if matching and pid_running and endpoint:
@@ -286,9 +288,11 @@ def terminate_owned_process(pid: int, core: Any, timeout: float) -> bool:
     except OSError:
         pass
     deadline = time.monotonic() + max(0.0, timeout)
-    while core.process_pid_running(pid) and time.monotonic() < deadline:
+    from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+    while WorkerObservationInputService().process_pid_running(pid) and time.monotonic() < deadline:
         time.sleep(0.05)
-    return not core.process_pid_running(pid)
+    return not WorkerObservationInputService().process_pid_running(pid)
 
 
 @contextlib.contextmanager
@@ -1011,9 +1015,11 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
         raise SystemExit(f"FAIL: runtime stop request failed: {code} {body}")
     pid = state.get("pid")
     deadline = time.monotonic() + float(getattr(args, "timeout", 10.0) or 10.0)
-    while isinstance(pid, int) and core.process_pid_running(pid) and time.monotonic() < deadline:
+    from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+    while isinstance(pid, int) and WorkerObservationInputService().process_pid_running(pid) and time.monotonic() < deadline:
         time.sleep(0.1)
-    if isinstance(pid, int) and core.process_pid_running(pid):
+    if isinstance(pid, int) and WorkerObservationInputService().process_pid_running(pid):
         raise SystemExit(f"FAIL: runtime did not stop before timeout: pid={pid}")
     cleanup_stale_runtime(workplace_root, core)
     print("RUNTIME: stopped")
