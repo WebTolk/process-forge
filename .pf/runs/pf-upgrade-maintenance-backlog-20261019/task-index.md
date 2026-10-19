@@ -9,3 +9,4 @@ Run status: `draft`
 | 3 | `pf-maintenance-sqlite-journals-20261019` | `open` | `.pf/assignments/pf-maintenance-sqlite-journals-20261019.yaml` |
 | 4 | `pf-windows-monitor-launch-20261019` | `open` | `.pf/assignments/pf-windows-monitor-launch-20261019.yaml` |
 | 5 | `pf-health-readiness-statistics-20261019` | `open` | `.pf/assignments/pf-health-readiness-statistics-20261019.yaml` |
+| 6 | `pf-context-refresh-indexing-separation-20261019` | `open` | `.pf/assignments/pf-context-refresh-indexing-separation-20261019.yaml` |
