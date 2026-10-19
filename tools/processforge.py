@@ -53,6 +53,7 @@ def _bootstrap_repo_src() -> Path:
 
 ROOT = _bootstrap_repo_src()
 
+from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.project.runtime_launchers import ProjectRuntimeLauncherBuilder
 
 from processforge_core.agents.presence import AgentPresenceReader
@@ -1874,7 +1875,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
                 ],
             }
         ]
-    active_process_packs = official_pack_registry_entries_for_profile(profile)
+    active_process_packs = _official_pack_profiles.official_pack_registry_entries_for_profile(profile)
 
     agents = f"""# ProcessForge Workplace Layer
 
@@ -8527,22 +8528,6 @@ def official_pack_manifest_records(root: Path | None = None) -> list[tuple[Path,
     return read_official_packs(root or ROOT)
 
 
-def official_pack_registry_entries_for_profile(profile: str) -> list[dict[str, Any]]:
-    selected: list[dict[str, Any]] = []
-    for _path, manifest in official_pack_manifest_records():
-        activation = manifest.get("activation") if isinstance(manifest.get("activation"), dict) else {}
-        profiles = {str(item) for item in as_list(activation.get("profiles")) if str(item)}
-        if profile not in profiles:
-            continue
-        selected.append(
-            {
-                "id": str(manifest["id"]),
-                "origin": "official",
-                "status": "active",
-                "version": str(manifest.get("version") or ""),
-            }
-        )
-    return selected
 
 
 def workplace_process_pack_registry(workplace_manifest: Path | None) -> dict[str, Any]:
@@ -17227,6 +17212,7 @@ _workspace_access_references = WorkspaceAccessReferenceService()
 
 # Concrete Core ownership for the next existing responsibilities.
 _project_runtime_launchers = ProjectRuntimeLauncherBuilder()
+_official_pack_profiles = OfficialPackProfileReader(ROOT)
 
 if __name__ == "__main__":
     sys.exit(main())
