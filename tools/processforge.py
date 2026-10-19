@@ -278,6 +278,17 @@ _project_session_read_service = ProjectSessionReadService()
 _specialization_catalog_reader = SpecializationCatalogReader(ROOT)
 _knowledge_candidate_validation_service = KnowledgeCandidateValidationService()
 _update_transfer_service = UpdateTransferService(ROOT)
+from processforge_core.authoring.journals import AuthoringJournalStore
+from processforge_core.configuration.parameter_sources import ParameterSourceService
+from processforge_core.project.report_read import ReportProjectionReader
+from processforge_core.project.initialization_inputs import ProjectInitializationInputs
+from processforge_core.project.initialization_inputs import PROCESSFORGE_CORE_PROJECT_TYPES
+from processforge_core.project.initialization_inputs import META_PROJECT_TYPES
+
+_authoring_journal_store = AuthoringJournalStore()
+_parameter_source_service = ParameterSourceService()
+_report_projection_reader = ReportProjectionReader()
+_project_initialization_inputs = ProjectInitializationInputs()
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -385,8 +396,6 @@ PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
 RELEASE_ARCHIVE_VERSION = "1.2.0"
-PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
-META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
 DEFAULT_SCAN_POLICY = {
     "enabled": True,
     "exclude_roles": ["distribution_root", "workplace_root", "knowledge_root", "runtime_root", "package_cache"],
@@ -697,19 +706,8 @@ def authoring_failure_point(phase: str, plan: AuthoringPlan, write: AuthoringWri
 
 
 
-def write_authoring_journal_data(path: Path, journal: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-    try:
-        temporary.write_text(ensure_trailing_newline(dump_yaml(journal)), encoding="utf-8")
-        os.replace(temporary, path)
-    finally:
-        if temporary.exists():
-            temporary.unlink()
 
 
-def write_authoring_journal(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
-    write_authoring_journal_data(_authoring_input_service.journal_path(plan), journal)
 
 
 
@@ -781,7 +779,7 @@ def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path
                 "last_error": None,
             }
         )
-    write_authoring_journal(plan, journal)
+    _authoring_journal_store.write(plan, journal)
     authoring_failure_point("after_journal_prepare", plan)
     staged: dict[Path, Path] = {}
     for index, write in enumerate([*plan.authoritative_writes, *plan.registry_writes]):
@@ -805,7 +803,7 @@ def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path
                 "published": False,
             }
         )
-        write_authoring_journal(plan, journal)
+        _authoring_journal_store.write(plan, journal)
         authoring_failure_point(f"after_staged_item:{index + 1}", plan, write)
     return journal, staged
 
@@ -824,7 +822,7 @@ def validate_staged_authoring_plan(
     for callback in plan.validation_callbacks:
         callback(plan, staged)
     journal["state"] = "prepared"
-    write_authoring_journal(plan, journal)
+    _authoring_journal_store.write(plan, journal)
 
 
 
@@ -852,7 +850,7 @@ def publish_authoring_write(
         os.replace(temporary, write.destination)
     record["published"] = True
     journal["completed"].append(str(write.destination))
-    write_authoring_journal(plan, journal)
+    _authoring_journal_store.write(plan, journal)
 
 
 def authoring_restore_record(record: dict[str, Any], transaction_id: str) -> list[str]:
@@ -915,7 +913,7 @@ def remove_authoring_created_directories(journal: dict[str, Any]) -> list[str]:
 
 def rollback_authoring_plan(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
     journal["state"] = "rolling_back"
-    write_authoring_journal(plan, journal)
+    _authoring_journal_store.write(plan, journal)
     errors: list[str] = []
     for record in reversed(journal.get("writes", [])):
         if not record.get("published"):
@@ -927,7 +925,7 @@ def rollback_authoring_plan(plan: AuthoringPlan, journal: dict[str, Any]) -> Non
     journal["state"] = "rolled_back" if ok else "recovery_required"
     journal["rollback_verified"] = ok
     journal["recovery_errors"] = errors
-    write_authoring_journal(plan, journal)
+    _authoring_journal_store.write(plan, journal)
     if not ok:
         raise RuntimeError(
             f"authoring rollback could not be verified; recovery required: {_authoring_input_service.journal_path(plan)}"
@@ -946,14 +944,14 @@ def commit_authoring_plan(
         authoring_failure_point("before_first_entity_publish", plan)
         for index, write in enumerate(entity_writes):
             journal["next_operation"] = str(write.destination)
-            write_authoring_journal(plan, journal)
+            _authoring_journal_store.write(plan, journal)
             publish_authoring_write(plan, write, records[index], staged, journal)
             authoring_failure_point(f"after_entity_publish:{index + 1}", plan, write)
         authoring_failure_point("before_first_registry_publish", plan)
         offset = len(entity_writes)
         for index, write in enumerate(registry_writes):
             journal["next_operation"] = str(write.destination)
-            write_authoring_journal(plan, journal)
+            _authoring_journal_store.write(plan, journal)
             publish_authoring_write(plan, write, records[offset + index], staged, journal)
             authoring_failure_point(f"after_registry_publish:{index + 1}", plan, write)
         authoring_failure_point("before_commit_verification", plan)
@@ -966,7 +964,7 @@ def commit_authoring_plan(
         journal["state"] = "committed"
         journal["committed_at"] = now_utc()
         journal.pop("next_operation", None)
-        write_authoring_journal(plan, journal)
+        _authoring_journal_store.write(plan, journal)
     except BaseException:
         rollback_authoring_plan(plan, journal)
         raise
@@ -1072,24 +1070,24 @@ def run_post_commit_effect_records(
         record["attempts"] = int(record.get("attempts") or 0) + 1
         record["last_error"] = None
         journal["state"] = "committed_audit_pending"
-        write_authoring_journal_data(journal_path, journal)
+        _authoring_journal_store.write_data(journal_path, journal)
         try:
             execute_authoring_effect(record, plan)
         except BaseException as exc:
             record["state"] = "failed"
             record["last_error"] = str(exc)
             journal["state"] = "committed_audit_pending"
-            write_authoring_journal_data(journal_path, journal)
+            _authoring_journal_store.write_data(journal_path, journal)
             raise
         record["state"] = "succeeded"
-        write_authoring_journal_data(journal_path, journal)
+        _authoring_journal_store.write_data(journal_path, journal)
     journal["state"] = "committed_audit_complete"
     journal["post_commit_completed"] = [
         str(record.get("label") or record.get("effect_id"))
         for record in journal.get("post_commit_effects", [])
         if isinstance(record, dict) and record.get("executable") and record.get("state") == "succeeded"
     ]
-    write_authoring_journal_data(journal_path, journal)
+    _authoring_journal_store.write_data(journal_path, journal)
 
 
 def run_post_commit_effects(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
@@ -1148,7 +1146,7 @@ def recover_authoring_transaction(journal_path: Path, *, apply: bool = True) -> 
         data["state"] = "recovery_required"
         data["rollback_verified"] = False
         data["recovery_errors"] = validation_errors
-        write_authoring_journal_data(journal_path, data)
+        _authoring_journal_store.write_data(journal_path, data)
         return "recovery_required"
     if state in {"committed", "committed_audit_pending"}:
         run_post_commit_effect_records(data, journal_path, None)
@@ -1165,7 +1163,7 @@ def recover_authoring_transaction(journal_path: Path, *, apply: bool = True) -> 
     data["state"] = "rolled_back" if ok else "recovery_required"
     data["rollback_verified"] = ok
     data["recovery_errors"] = errors
-    write_authoring_journal_data(journal_path, data)
+    _authoring_journal_store.write_data(journal_path, data)
     return str(data["state"])
 
 
@@ -1275,22 +1273,10 @@ def contained_resource_path(root: Path, target: Path, resource_kind: str = "reso
     return resolved_target
 
 
-def project_types_from_manifest(manifest_data: dict[str, Any]) -> list[str]:
-    project = manifest_data.get("project") if isinstance(manifest_data.get("project"), dict) else {}
-    raw_type = project.get("type") or project.get("types") or project.get("project_type")
-    if isinstance(raw_type, str):
-        return [safe_id(raw_type)]
-    if isinstance(raw_type, list):
-        return [safe_id(str(item)) for item in raw_type if item]
-    return []
 
 
-def project_type_allows_processforge_core(manifest_data: dict[str, Any]) -> bool:
-    return bool(set(project_types_from_manifest(manifest_data)).intersection(PROCESSFORGE_CORE_PROJECT_TYPES))
 
 
-def project_type_is_meta_workspace(manifest_data: dict[str, Any]) -> bool:
-    return bool(set(project_types_from_manifest(manifest_data)).intersection(META_PROJECT_TYPES))
 
 
 def looks_like_processforge_distribution(path: Path) -> bool:
@@ -3418,26 +3404,8 @@ def detect_project(
 
 
 
-def project_mode(project_root: Path, answers: dict[str, Any]) -> str:
-    project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
-    requested = str(project_answers.get("mode") or "auto")
-    if requested in {"greenfield", "brownfield"}:
-        return requested
-    if not project_root.exists():
-        return "greenfield"
-    visible = [path for path in project_root.iterdir() if path.name not in {".git", ".idea", ".serena"}]
-    return "greenfield" if not visible else "brownfield"
 
 
-def project_defaults(project_root: Path, answers: dict[str, Any], detected: dict[str, Any]) -> dict[str, Any]:
-    project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
-    project_id = safe_id(str(project_answers.get("id") or project_root.name), "project")
-    project_name = str(project_answers.get("name") or project_root.name or "ProcessForge Project")
-    detected_kind = detected["project_kind"][0] if detected["project_kind"] else "unknown"
-    project_type = str(project_answers.get("type") or project_answers.get("type_hint") or detected_kind)
-    if project_type == "auto":
-        project_type = detected_kind
-    return {"id": project_id, "name": project_name, "type": project_type}
 
 
 def project_runtime_launcher_files(flow_root: Path) -> dict[Path, str]:
@@ -4206,9 +4174,9 @@ def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], r
 def build_project_files(project_root: Path, workplace_manifest: Path, answers: dict[str, Any]) -> dict[Path, str]:
     flow_root = project_root / PROJECT_FLOW_ROOT
     detected = detect_project(project_root, workplace_manifest)
-    defaults = project_defaults(project_root, answers, detected)
+    defaults = _project_initialization_inputs.defaults(project_root, answers, detected)
     detected["platforms"] = _project_platform_selection_service.selected(detected, answers, defaults["type"], workplace_manifest, project_root)
-    mode = project_mode(project_root, answers)
+    mode = _project_initialization_inputs.mode(project_root, answers)
     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
     project_coordination = _project_coordination_reader.project_defaults(coordination_answers.get("mode", "inherit"))
     if isinstance(coordination_answers.get("director"), dict):
@@ -6848,27 +6816,10 @@ def distribution_checks(distribution_root: Path | None) -> list[Check]:
     return checks
 
 
-def report_has_missing_required_capabilities(path: Path) -> bool:
-    return report_section_has_items(path, "## Missing Required Capabilities")
 
 
-def report_section_items(path: Path, marker: str) -> list[str]:
-    if not path.is_file():
-        return []
-    text = path.read_text(encoding="utf-8", errors="replace")
-    if marker not in text:
-        return []
-    section = text.split(marker, 1)[1].split("\n## ", 1)[0]
-    items: list[str] = []
-    for line in section.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- ") and stripped != "- None.":
-            items.append(stripped[2:].strip())
-    return items
 
 
-def report_section_has_items(path: Path, marker: str) -> bool:
-    return bool(report_section_items(path, marker))
 
 
 def active_capability_waivers(project_root: Path) -> dict[str, list[dict[str, Any]]]:
@@ -6906,14 +6857,6 @@ def active_capability_waivers(project_root: Path) -> dict[str, list[dict[str, An
     return active
 
 
-def capability_waiver_help() -> str:
-    return """create .pf/artifacts/capability-waivers.yaml with explicit evidence, for example:
-schema_version: 1
-capability_waivers:
-  - capability: filesystem.read
-    status: active
-    reason: runtime access verified; registry provider declaration is pending
-    evidence: .pf/artifacts/delivery-report.md"""
 
 
 def public_snapshot_path_checks(project_root: Path) -> list[Check]:
@@ -7089,7 +7032,7 @@ def project_source_inventory_exclusion(path: Path, project_root: Path, roles: li
         if fnmatch.fnmatch(rel_path, str(pattern)) or fnmatch.fnmatch("/" + rel_path, str(pattern).removeprefix("**")):
             return {"reason": "default_exclude", "pattern": str(pattern)}
     exclude_roles = set(policy.get("exclude_roles", []))
-    allow_pf_core = project_type_allows_processforge_core(manifest_data)
+    allow_pf_core = _project_initialization_inputs.allows_core(manifest_data)
     for role in roles:
         role_name = str(role.get("role"))
         if role_name not in exclude_roles:
@@ -7185,72 +7128,12 @@ SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
 
 
 
-def parameter_source_record(source_id: str, layer: str, parameters: dict[str, Any], *, path: Path | None = None, project_root: Path | None = None, private: bool = False, display_path: str | None = None) -> dict[str, Any]:
-    record: dict[str, Any] = {
-        "id": source_id,
-        "layer": layer,
-        "keys": sorted(str(key) for key in parameters),
-        "private": private,
-    }
-    if path:
-        # Private workplace sources may contribute metadata to a public
-        # snapshot, but never their absolute filesystem location. Callers can
-        # supply a more specific stable marker through `display_path`.
-        record["path"] = display_path or (
-            rel(path, project_root)
-            if project_root and path_is_relative_to(path, project_root)
-            else "<private-source-ref>"
-            if private
-            else str(path)
-        )
-        record["checksum"] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
-    return record
 
 
-def workplace_parameter_paths(workplace_manifest: Path | None) -> list[Path]:
-    if not workplace_manifest or not workplace_manifest.is_file():
-        return []
-    workplace_root = workplace_manifest.parent
-    workplace_data = load_yaml_document(workplace_manifest)
-    registries = workplace_data.get("registries") if isinstance(workplace_data.get("registries"), dict) else {}
-    paths: list[Path] = []
-    raw_registry = registries.get("parameters") if isinstance(registries, dict) else None
-    if raw_registry:
-        paths.append(resolve_registry_relative_path(workplace_root, str(raw_registry), workplace_manifest))
-    default_path = workplace_root / "registries" / "parameters.yaml"
-    if default_path not in paths:
-        paths.append(default_path)
-    return paths
 
 
-def add_parameter_source(
-    result: dict[str, Any],
-    *,
-    source_id: str,
-    layer: str,
-    parameters: dict[str, Any],
-    path: Path | None = None,
-    project_root: Path | None = None,
-    private: bool = False,
-    display_path: str | None = None,
-) -> None:
-    if not parameters:
-        return
-    result["sources"].append(parameter_source_record(source_id, layer, parameters, path=path, project_root=project_root, private=private, display_path=display_path))
-    result["resolved_parameters"] = ParameterMergePolicy().merge_maps(result["resolved_parameters"], parameters, source_id, provenance=result["provenance"])
 
 
-def process_parameters_from_path(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
-    data = load_yaml_document(path)
-    stages = data.get("stages") if isinstance(data.get("stages"), list) else []
-    stage_parameters: dict[str, dict[str, Any]] = {}
-    for stage in stages:
-        if not isinstance(stage, dict) or not stage.get("id"):
-            continue
-        params = parameter_payload(stage)
-        if params:
-            stage_parameters[str(stage["id"])] = params
-    return parameter_payload(data), stage_parameters
 
 
 def resolve_project_parameters(
@@ -7273,7 +7156,7 @@ def resolve_project_parameters(
     }
     if workplace_manifest and workplace_manifest.is_file():
         workplace_data = load_yaml_document(workplace_manifest)
-        add_parameter_source(
+        _parameter_source_service.add(
             result,
             source_id="workplace-manifest",
             layer="workplace",
@@ -7283,9 +7166,9 @@ def resolve_project_parameters(
             private=True,
             display_path="<private-workplace-manifest-ref>",
         )
-        for index, path in enumerate(workplace_parameter_paths(workplace_manifest)):
+        for index, path in enumerate(_parameter_source_service.workplace_paths(workplace_manifest)):
             data = load_yaml_document(path)
-            add_parameter_source(
+            _parameter_source_service.add(
                 result,
                 source_id=f"workplace-parameters-{index + 1}",
                 layer="workplace",
@@ -7297,7 +7180,7 @@ def resolve_project_parameters(
             )
     for contract in platform_resolution.get("contracts", []) if isinstance(platform_resolution.get("contracts"), list) else []:
         if isinstance(contract, dict):
-            add_parameter_source(
+            _parameter_source_service.add(
                 result,
                 source_id=f"platform:{contract.get('id', 'unknown')}",
                 layer="platform",
@@ -7316,7 +7199,7 @@ def resolve_project_parameters(
             overlay = load_project_override_document(project_root, override_entry)
             if overlay:
                 spec, _overlay_notes = apply_specialization_overlay(spec, overlay, mode)
-        add_parameter_source(
+        _parameter_source_service.add(
             result,
             source_id=f"specialization:{specialization_id}",
             layer="specialization",
@@ -7327,24 +7210,24 @@ def resolve_project_parameters(
         )
         for binding_index, binding in enumerate(spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []):
             if isinstance(binding, dict) and _project_platform_selection_service.binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
-                add_parameter_source(
+                _parameter_source_service.add(
                     result,
                     source_id=f"specialization:{specialization_id}:binding:{binding_index + 1}",
                     layer="specialization",
                     parameters=parameter_payload(binding),
                 )
-    add_parameter_source(result, source_id="project-manifest", layer="project", parameters=parameter_payload(manifest_data), path=flow_root / "process-forge.yaml", project_root=project_root)
+    _parameter_source_service.add(result, source_id="project-manifest", layer="project", parameters=parameter_payload(manifest_data), path=flow_root / "process-forge.yaml", project_root=project_root)
     project_parameters = flow_root / "parameters.yaml"
-    add_parameter_source(result, source_id="project-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_parameters)), path=project_parameters, project_root=project_root)
+    _parameter_source_service.add(result, source_id="project-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_parameters)), path=project_parameters, project_root=project_root)
     local_config = flow_root / "process-forge.local.yaml"
     local_data = load_yaml_document(local_config)
     local_overrides = local_data.get("overrides") if isinstance(local_data.get("overrides"), dict) else {}
-    add_parameter_source(result, source_id="project-local-overrides", layer="project", parameters=parameter_payload(local_overrides), path=local_config, project_root=project_root, private=True)
+    _parameter_source_service.add(result, source_id="project-local-overrides", layer="project", parameters=parameter_payload(local_overrides), path=local_config, project_root=project_root, private=True)
     project_local_parameters = flow_root / "parameters.local.yaml"
-    add_parameter_source(result, source_id="project-local-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_local_parameters)), path=project_local_parameters, project_root=project_root, private=True)
+    _parameter_source_service.add(result, source_id="project-local-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_local_parameters)), path=project_local_parameters, project_root=project_root, private=True)
     for index, path in enumerate(process_paths):
-        parameters, _stage_parameters = process_parameters_from_path(path)
-        add_parameter_source(result, source_id=f"process:{path.stem}:{index + 1}", layer="process", parameters=parameters, path=path, project_root=project_root)
+        parameters, _stage_parameters = _parameter_source_service.process_parameters(path)
+        _parameter_source_service.add(result, source_id=f"process:{path.stem}:{index + 1}", layer="process", parameters=parameters, path=path, project_root=project_root)
     if result["conflicts"]:
         result["status"] = "conflict"
     return result
@@ -7366,13 +7249,13 @@ def resolve_assignment_parameters(project_root: Path, snapshot: dict[str, Any], 
     if process_id:
         try:
             process_path = resolve_process_definition(project_root, process_id).path
-            process_parameters, stage_parameters = process_parameters_from_path(process_path)
-            add_parameter_source(result, source_id=f"assignment-process:{process_id}", layer="process", parameters=process_parameters, path=process_path, project_root=project_root)
+            process_parameters, stage_parameters = _parameter_source_service.process_parameters(process_path)
+            _parameter_source_service.add(result, source_id=f"assignment-process:{process_id}", layer="process", parameters=process_parameters, path=process_path, project_root=project_root)
             if stage_id and stage_id in stage_parameters:
-                add_parameter_source(result, source_id=f"assignment-stage:{process_id}:{stage_id}", layer="stage", parameters=stage_parameters[stage_id], path=process_path, project_root=project_root)
+                _parameter_source_service.add(result, source_id=f"assignment-stage:{process_id}:{stage_id}", layer="stage", parameters=stage_parameters[stage_id], path=process_path, project_root=project_root)
         except SystemExit:
             result["conflicts"].append({"id": process_id, "kind": "process", "reason": "assignment process parameters could not be loaded"})
-    add_parameter_source(result, source_id="assignment", layer="task", parameters=parameter_payload(assignment_metadata))
+    _parameter_source_service.add(result, source_id="assignment", layer="task", parameters=parameter_payload(assignment_metadata))
     if result["conflicts"]:
         result["status"] = "conflict"
     return result
@@ -7380,14 +7263,6 @@ def resolve_assignment_parameters(project_root: Path, snapshot: dict[str, Any], 
 
 
 
-def requirements_fingerprints(flow_root: Path, project_root: Path) -> dict[str, str]:
-    result: dict[str, str] = {}
-    for key, path in {
-        "process_forge_yaml": flow_root / "process-forge.yaml",
-        "process_forge_local_yaml": flow_root / "process-forge.local.yaml",
-    }.items():
-        result[key] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
-    return result
 
 
 
@@ -7881,7 +7756,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         for item in manifest_platform_contracts
         if isinstance(item, dict) and (item.get("platform") or item.get("id"))
     ]
-    meta_project_without_selection = project_type_is_meta_workspace(manifest_data) and not manifest_platform_ids
+    meta_project_without_selection = _project_initialization_inputs.is_meta_workspace(manifest_data) and not manifest_platform_ids
     if not manifest_platform_ids and not meta_project_without_selection:
         manifest_platform_ids = classification["platforms"]
     platform_resolution = _platform_contract_resolver.resolve(workplace_manifest_path, manifest_platform_ids, project_root=project_root)
@@ -7889,7 +7764,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     if meta_project_without_selection:
         platform_selection = {
             "status": "not_applicable",
-            "reason": f"Project type {project_types_from_manifest(manifest_data)[0]} does not select one platform stack by default.",
+            "reason": f"Project type {_project_initialization_inputs.types_from_manifest(manifest_data)[0]} does not select one platform stack by default.",
         }
     elif manifest_platform_ids:
         platform_selection = {"status": "selected", "reason": "Project manifest or detection selected platform contracts."}
@@ -8041,7 +7916,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         parameter_conflicts=parameter_resolution["conflicts"],
     )
     snapshot_id = f"ctx-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
-    requirements = requirements_fingerprints(flow_root, project_root)
+    requirements = _parameter_source_service.requirements_fingerprints(flow_root, project_root)
     source_fingerprints = {
         "workplace_manifest": next((item.get("checksum") for item in sources if item.get("id") == "workplace_manifest"), "missing"),
         "package_roots_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "package-roots.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "package-roots.yaml").is_file() else "missing",
@@ -12091,13 +11966,6 @@ def command_platform_parity_check(args: argparse.Namespace) -> int:
 
 
 
-def resource_report_status(project_root: Path, kind: str, resource_id: str) -> tuple[str, str]:
-    report = locate_flow_root(project_root) / "reviews" / "parity" / "resources" / f"{safe_id(kind + '-' + resource_id, 'resource')}.md"
-    if not report.is_file():
-        return "SKIP", ""
-    text = report.read_text(encoding="utf-8", errors="replace")
-    match = re.search("Result:" + r"\s+`(PASS|WARN|SKIP|FAIL)`", text)
-    return (match.group(1) if match else "WARN"), rel(report, project_root)
 
 
 def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
@@ -12115,7 +11983,7 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
         ("platform", "platform-contract-example-parent", command_platform_parity_check),
     ]:
         code = func(argparse.Namespace(project_root=str(project_root), template=resource_id, package=resource_id, platform=resource_id))
-        status, review = resource_report_status(project_root, kind, resource_id)
+        status, review = _report_projection_reader.resource_status(project_root, kind, resource_id)
         if code:
             status = "FAIL"
         resource_rows.append({"id": resource_id, "kind": kind, "result": status, "review": review})
@@ -15687,7 +15555,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
 
     checks.extend(distribution_checks(distribution_root))
     scan_policy = scan_policy_from_manifest(manifest_data)
-    if looks_like_processforge_distribution(project_root) and not project_type_allows_processforge_core(manifest_data):
+    if looks_like_processforge_distribution(project_root) and not _project_initialization_inputs.allows_core(manifest_data):
         checks.append(
             check_with_hint(
                 "FAIL",
@@ -15709,7 +15577,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         if not path_is_relative_to(role_path, project_root):
             continue
         same_as_project = role_path.resolve() == project_root.resolve()
-        if same_as_project and role_name == "distribution_root" and project_type_allows_processforge_core(manifest_data):
+        if same_as_project and role_name == "distribution_root" and _project_initialization_inputs.allows_core(manifest_data):
             checks.append(check("PASS", "ProcessForge distribution root allowed by explicit project type"))
             continue
         if same_as_project:
@@ -15775,7 +15643,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
     package_exists = any((flow_root / "packages").glob("project.*.yaml")) if (flow_root / "packages").is_dir() else False
     checks.append(check("PASS" if package_exists else ("WARN" if auto_workplace_mode else "FAIL"), "project package draft exists"))
     resource_report = flow_root / "artifacts" / "global-resource-matching-report.md"
-    missing_capabilities = report_section_items(resource_report, "## Missing Required Capabilities")
+    missing_capabilities = _report_projection_reader.section_items(resource_report, "## Missing Required Capabilities")
     capability_waivers = active_capability_waivers(project_root) if missing_capabilities else {}
     unwaived_capabilities = [capability for capability in missing_capabilities if capability not in capability_waivers]
     waived_capabilities = [capability for capability in missing_capabilities if capability in capability_waivers]
@@ -15786,7 +15654,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
                 "required capability registry declarations are missing: " + ", ".join(unwaived_capabilities),
                 "ProcessForge capability resolution is registry-driven. This means no active provider declared the capability; it does not prove the runtime lacked actual access.",
                 "register the capability provider in the workplace, rerun project-onboard or project-context-refresh, then rerun doctor-project",
-                capability_waiver_help(),
+                _report_projection_reader.waiver_help(),
             )
         )
     elif waived_capabilities:
@@ -15798,19 +15666,19 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         )
     elif resource_report.is_file():
         checks.append(check("PASS", "required capabilities are resolved or built in"))
-    if report_section_has_items(resource_report, "## Missing Required Platform Contracts"):
+    if _report_projection_reader.section_has_items(resource_report, "## Missing Required Platform Contracts"):
         checks.append(check("FAIL", """required platform contract is missing from workplace registry
 Why:
   The selected project type requires platform knowledge and rules.
 Fix:
   python bin/pf.py platform-contract-install --workplace <workplace-root> --id <platform> --apply"""))
-    if report_section_has_items(resource_report, "## Missing Required Platform Resources"):
+    if _report_projection_reader.section_has_items(resource_report, "## Missing Required Platform Resources"):
         checks.append(check("FAIL", """required platform resources are missing from workplace registries
 Why:
   A platform contract declared required packages, tools, MCP providers, or templates that are not registered.
 Fix:
   Register the missing resource in the workplace registry, then rerun project-onboard or project-context-refresh."""))
-    if report_section_has_items(resource_report, "## Missing Recommended Platform Resources"):
+    if _report_projection_reader.section_has_items(resource_report, "## Missing Recommended Platform Resources"):
         checks.append(check("WARN", "recommended platform resources are missing from workplace registries"))
     checks.extend(public_snapshot_path_checks(project_root))
     checks.extend(_knowledge_resource_index_service.project_checks(project_root, distribution_root, workplace_manifest_path))

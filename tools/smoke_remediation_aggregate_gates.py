@@ -11,6 +11,8 @@ from pathlib import Path
 
 import processforge
 
+from processforge_core.project.report_read import ReportProjectionReader
+
 
 def authoring_args(project_root: Path) -> argparse.Namespace:
     return argparse.Namespace(project_root=str(project_root))
@@ -43,14 +45,14 @@ def test_authoring_aggregate_exit(root: Path) -> None:
     original_template = processforge.command_template_parity_check
     original_package = processforge.command_knowledge_package_parity_check
     original_platform = processforge.command_platform_parity_check
-    original_status = processforge.resource_report_status
+    original_status = ReportProjectionReader.resource_status
     try:
         processforge.command_process_parity_check_all = lambda _args: 0
         processforge.command_template_parity_check = lambda _args: 1
         processforge.command_knowledge_package_parity_check = lambda _args: 0
         processforge.command_platform_parity_check = lambda _args: 0
-        processforge.resource_report_status = (
-            lambda _project, kind, _resource: ("FAIL", "fixture-review.md")
+        ReportProjectionReader.resource_status = (
+            lambda _self, _project, kind, _resource: ("FAIL", "fixture-review.md")
             if kind == "template"
             else ("PASS", "fixture-review.md")
         )
@@ -66,7 +68,7 @@ def test_authoring_aggregate_exit(root: Path) -> None:
         processforge.command_template_parity_check = original_template
         processforge.command_knowledge_package_parity_check = original_package
         processforge.command_platform_parity_check = original_platform
-        processforge.resource_report_status = original_status
+        ReportProjectionReader.resource_status = original_status
 
 
 def fake_result(command: processforge.ReleaseCommand, *, fail: bool = False) -> processforge.ReleaseCommandResult:

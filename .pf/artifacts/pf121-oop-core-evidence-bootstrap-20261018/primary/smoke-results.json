@@ -1,0 +1,86 @@
+{
+  "started_at": "2026-10-19T04:07:17.905348+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "a7b42339507e26f6dd80c441a8f1c7b3661cdc650eb837620d9094f0a304657b",
+    "docs/concepts/python-core-structure.md": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+    "docs/ru/concepts/python-core-structure.md": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+    "src/processforge_core/authoring/journals.py": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+    "src/processforge_core/configuration/parameter_sources.py": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+    "src/processforge_core/work/context.py": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+    "src/processforge_core/project/report_read.py": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+    "tools/smoke_remediation_aggregate_gates.py": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+    "src/processforge_core/project/initialization_inputs.py": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+    "src/processforge_core/project/initialization.py": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419"
+  },
+  "checks": [
+    {
+      "name": "smoke_authoring_crash_recovery",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.445,
+      "stdout": "PASS: authoring crash-recovery smoke completed.\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_remediation_transactional_authoring",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 10.622,
+      "stdout": "PROPOSAL: runtime/resource-management/proposals/platform-audit-replay-0001-platform-audit.yaml\nPASS: transactional platform/knowledge authoring smoke completed.\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_parameter_cascade_resolution",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.224,
+      "stdout": "PASS: smoke_parameter_cascade_resolution\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_parameter_assignment_capsule",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.203,
+      "stdout": "PASS: smoke_parameter_assignment_capsule\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_parameter_freshness",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.232,
+      "stdout": "PASS: smoke_parameter_freshness\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_remediation_aggregate_gates",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.378,
+      "stdout": "PASS: remediation aggregate gates\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_init_entry",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 24.735,
+      "stdout": "PASS: init/repair shared entry, legacy status, user bytes/START/pins, no-write refusals, budgets, interruption and source stdio MCP\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.048,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Eight affected existing scripts: authoring recovery/transactions, parameter cascade/capsule/freshness, aggregate report mock, initialization entry and documentation. This bounded source assurance does not qualify installed Runtime/release/archive/ZIP. Complete read/path/check/transfer/default/copy proofs are retained separately.",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-19T04:08:00.802749+00:00"
+}

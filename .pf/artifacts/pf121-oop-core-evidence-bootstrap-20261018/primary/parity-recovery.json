@@ -1,0 +1,14 @@
+{
+  "status": "qualified_source_only",
+  "time": "2026-10-19T04:07:05.736070+00:00",
+  "original_script_sha256": "d085a3ec1ed5b0b4b4b9d2f517c728d760691b13f491fc216345d601840763ec",
+  "original_failure_private_sha256": "9892bad3f0fb52ecb3fd0f10a2e986440ad4c19599cc5b231c61cf1a59cd7a7d",
+  "direct_success_private_sha256": "5209f12c0a52b15c30bc32747a5d764fd0ce9a0aad8ec321792c69107b048aaa",
+  "qualified_copy_private_sha256": "5209f12c0a52b15c30bc32747a5d764fd0ce9a0aad8ec321792c69107b048aaa",
+  "reason": "Copied fixture omitted existing processforge_platforms dependency of the unselected agent-entry migration import. Added only that existing package to scratch and repeated only the failed copied import; no product changes.",
+  "retained_success_boundary": "Original invocation reached the final copied-import assertion. Every earlier comparison and direct import passed; their count is recovered from literal loop/control flow of that immutable script. Per-case runtime observation hashes and the exact native-exception total were not saved before the final failure, and are not fabricated. Complete native owner proofs remain retained separately.",
+  "failed_import_repeated": 1,
+  "successful_scenarios_repeated": 0,
+  "original_script": ".pf/tmp/p121-core-evidence-bootstrap/primary/parity.py",
+  "recovery_script": ".pf/tmp/p121-core-evidence-bootstrap/primary/qualify-parity.py"
+}

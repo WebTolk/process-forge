@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "scope": "All ten affected Git-delivered product blobs match inventory. Raw working-tree hashes remain separately pinned. No archive qualification.",
+  "entries": {
+    "tools/processforge.py": "cdbeb73158a5daffe1891e670488ae7c6e7b362324d2584f084288d81a5db7c8",
+    "docs/concepts/python-core-structure.md": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+    "docs/ru/concepts/python-core-structure.md": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+    "src/processforge_core/authoring/journals.py": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+    "src/processforge_core/configuration/parameter_sources.py": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+    "src/processforge_core/work/context.py": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+    "src/processforge_core/project/report_read.py": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+    "tools/smoke_remediation_aggregate_gates.py": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+    "src/processforge_core/project/initialization_inputs.py": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+    "src/processforge_core/project/initialization.py": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "source_hashes": {
+    "tools/processforge.py": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+    "docs/concepts/python-core-structure.md": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+    "docs/ru/concepts/python-core-structure.md": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+    "src/processforge_core/authoring/journals.py": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+    "src/processforge_core/configuration/parameter_sources.py": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+    "src/processforge_core/work/context.py": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+    "src/processforge_core/project/report_read.py": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+    "tools/smoke_remediation_aggregate_gates.py": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+    "src/processforge_core/project/initialization_inputs.py": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+    "src/processforge_core/project/initialization.py": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419"
+  },
+  "checks": [
+    {
+      "name": "smoke_project_coordination_modes",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 9.994,
+      "stdout": "PASS: project coordination modes smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_garage_hook_policy",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 5.767,
+      "stdout": "",
+      "stderr": "test_disabled_garage_never_reaches_any_persistence (__main__.PolicyTests.test_disabled_garage_never_reaches_any_persistence) ... ok\ntest_dispatch_skips_both_transports_and_adapter_work (__main__.PolicyTests.test_dispatch_skips_both_transports_and_adapter_work) ... ok\ntest_enable_mid_session_captures_once_without_deferred_payload (__main__.PolicyTests.test_enable_mid_session_captures_once_without_deferred_payload) ... ok\ntest_existing_foreign_or_ambiguous_session_is_not_rebound (__main__.PolicyTests.test_existing_foreign_or_ambiguous_session_is_not_rebound) ... ok\ntest_explicit_core_operations_remain_available_in_garage (__main__.PolicyTests.test_explicit_core_operations_remain_available_in_garage) ... ok\ntest_forge_admits_even_with_false_overrides (__main__.PolicyTests.test_forge_admits_even_with_false_overrides) ... ok\ntest_ignored_generic_cli_is_silent_without_json (__main__.PolicyTests.test_ignored_generic_cli_is_silent_without_json) ... ok\ntest_ignored_stdout_is_neutral (__main__.PolicyTests.test_ignored_stdout_is_neutral) ... ok\ntest_lifecycle_hooks_register_and_end_without_agent_commands (__main__.PolicyTests.test_lifecycle_hooks_register_and_end_without_agent_commands) ... ok\ntest_live_project_override_and_resolver_reset (__main__.PolicyTests.test_live_project_override_and_resolver_reset) ... ok\ntest_resolved_project_mode_inherits_workplace (__main__.PolicyTests.test_resolved_project_mode_inherits_workplace) ... ok\ntest_runtime_rechecks_live_policy_and_does_not_claim_a_bound_start (__main__.PolicyTests.test_runtime_rechecks_live_policy_and_does_not_claim_a_bound_start) ... ok\ntest_typed_inheritance_and_forge_is_mandatory (__main__.PolicyTests.test_typed_inheritance_and_forge_is_mandatory) ... ok\ntest_worker_and_forged_envelopes_never_get_native_enrollment (__main__.PolicyTests.test_worker_and_forged_envelopes_never_get_native_enrollment) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 5.376s\n\nOK\n"
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "status": "passed",
+  "removed_definitions": 17,
+  "moved_constants": 2,
+  "retained_main_definitions": 671,
+  "entire_main_ast_only_expected_delta": true,
+  "exact_constant_asts": true,
+  "actual_consumer_full_ast_raw_boundaries": {
+    "src/processforge_core/work/context.py": {
+      "full_ast_equal": true,
+      "raw_only_declared_changes": true,
+      "assertions_unchanged": true,
+      "fixtures_unchanged": true,
+      "no_eager_bootstrap_regression": true,
+      "before_checksum": "sha256:fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba",
+      "after_checksum": "sha256:bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+      "declared_changes": {
+        "module_imports_added": 1,
+        "call_targets_replaced": [
+          {
+            "line": 411,
+            "source_id": "'assignment-process:' + str(pin.get('process_id') or '')"
+          },
+          {
+            "line": 414,
+            "source_id": "'assignment-stage:' + str(metadata.get('stage') or '')"
+          },
+          {
+            "line": 415,
+            "source_id": "'assignment'"
+          }
+        ]
+      },
+      "scope": "entire consumer module; normalization removes only the one import and three concrete call targets"
+    },
+    "src/processforge_core/project/initialization.py": {
+      "full_ast_equal": true,
+      "raw_only_declared_changes": true,
+      "assertions_unchanged": true,
+      "fixtures_unchanged": true,
+      "no_eager_bootstrap_regression": true
+    },
+    "tools/smoke_remediation_aggregate_gates.py": {
+      "full_ast_equal": true,
+      "raw_only_declared_changes": true,
+      "assertions_unchanged": true,
+      "fixtures_unchanged": true,
+      "no_eager_bootstrap_regression": true
+    }
+  },
+  "classified_unrelated_names": [
+    {
+      "path": "src/processforge_core/project/coordination.py",
+      "line": 89,
+      "node": "Attribute",
+      "expression": "self.project_defaults"
+    },
+    {
+      "path": "src/processforge_core/project/coordination.py",
+      "line": 97,
+      "node": "Attribute",
+      "expression": "self.project_mode"
+    },
+    {
+      "path": "src/processforge_core/project/coordination.py",
+      "line": 59,
+      "node": "Attribute",
+      "expression": "self.project_mode"
+    },
+    {
+      "path": "src/processforge_core/project/coordination.py",
+      "line": 99,
+      "node": "Attribute",
+      "expression": "self.project_defaults"
+    },
+    {
+      "path": "src/processforge_core/project/snapshot_rendering.py",
+      "line": 92,
+      "node": "Constant",
+      "expression": "'project_mode'"
+    },
+    {
+      "path": "tools/smoke_garage_mode_not_promoted_by_session.py",
+      "line": 66,
+      "node": "Constant",
+      "expression": "'project_mode'"
+    }
+  ],
+  "readonly_prior_owner_sha256": {
+    "src/processforge_core/authoring/inputs.py": "a586e9ac589f7c8d1fd9871b71af1b6e33c31d47efba76c56a49ae72dc79df9c",
+    "src/processforge_core/authoring/plans.py": "04b0b27a1998cfe7ebfa9703524838237f3c796ce4c7e916d767145b35272208",
+    "src/processforge_core/common/checks.py": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+    "src/processforge_core/common/digests.py": "66bf62dc67bdaac2b95c651c20fa45bb3b0156161ae834db316dd5ac8343583d",
+    "src/processforge_core/common/ids.py": "ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8",
+    "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff",
+    "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+    "src/processforge_core/common/values.py": "8f6d3372fd162e5a2cbdbf5dedeb3b3295ce194327d44dce2b7fdb684d6a9a8a",
+    "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+    "src/processforge_core/common/yaml_io.py": "543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27",
+    "src/processforge_core/configuration/parameters.py": "c8b0dd01b30012455e35f27cec02681ad50f773461eec196349fac303f246634",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/resources/snapshot.py": "0d470c544fc7ed60a536dac206ad00fe9d9657ad2b3190a477f4644517ad8582",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5"
+  },
+  "native_acceptance_sha256": "8f83ada17bea256b09e624d469399130cba5231cdb70cf42299a20148084b978",
+  "parity": {
+    "total": 99,
+    "native_exceptions": null,
+    "sha256": "d8b447e8cb7eccacb1d3faa998e8a4eba3d8102ec0833459130a67264bd96631"
+  },
+  "smokes": {
+    "original_passed_count": 8,
+    "targeted_current_count": 2,
+    "successful_scenarios_repeated": 0,
+    "sha256": "be28e3e8e4cafd2eb8192cd63f14d6a092fb97f9cd7a88c297627a58d9d2ff74"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+    "docs/concepts/python-core-structure.md": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+    "docs/ru/concepts/python-core-structure.md": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+    "src/processforge_core/authoring/journals.py": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+    "src/processforge_core/configuration/parameter_sources.py": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+    "src/processforge_core/work/context.py": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+    "src/processforge_core/project/report_read.py": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+    "tools/smoke_remediation_aggregate_gates.py": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+    "src/processforge_core/project/initialization_inputs.py": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+    "src/processforge_core/project/initialization.py": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419",
+    "checksums/processforge.sha256": "83c624d2fd30773e4dc82ace6654e82595b46b2bd22e386ab22326f604aea7d6"
+  },
+  "inventory": {
+    "rows_before": 1387,
+    "rows_after": 1391,
+    "changed_rows": 6,
+    "new_rows": 4,
+    "untouched_rows": 1381,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "scope": "Existing journal storage, parameter source provenance/read/merge, report projections and project initialization inputs with three actual consumer migrations. Eleven product files. Unselected preflight/effect/publication/rollback and other legacy consumer responsibilities remain explicit.",
+  "limits": [
+    "Source-only; OOP epics and archive/install/Runtime/connected-host qualification remain open.",
+    "Eight affected existing scripts; no new permanent suite or ZIP checks."
+  ],
+  "scope_aware_name_binding": true,
+  "coordination_entire_ast_equals_original": true,
+  "source_revision_qualification": {
+    "status": "qualified_by_exact_source_delta_and_targeted_checks",
+    "initial_main_raw_sha256": "a7b42339507e26f6dd80c441a8f1c7b3661cdc650eb837620d9094f0a304657b",
+    "final_main_raw_sha256": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+    "exact_delta": "Only three incorrectly migrated LOCAL project_mode reads restored to original inside effective_project_coordination. Complete original function AST and full binding-aware remaining Main AST match. All seven native worker/consumer products and documentation unchanged.",
+    "original_successes_repeated": 0,
+    "targeted_current_checks": [
+      "smoke_project_coordination_modes",
+      "smoke_garage_hook_policy"
+    ],
+    "parity_limit": "Original characterization reached final import; complete fixture passed only failed import. Runtime observation hashes and exact exception total were not checkpointed. See parity-recovery.json.",
+    "old_review": "Cancelled before model invocation; original capsule/pins/failed input capture retained."
+  },
+  "original_verification_sha256": "430ae68e657a29c6f78c31873dabe6e5fbccd604b94e47d6f786872fd84c1eb6"
+}

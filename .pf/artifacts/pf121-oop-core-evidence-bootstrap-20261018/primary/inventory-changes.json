@@ -1,0 +1,74 @@
+{
+  "rows_before": 1387,
+  "rows_after": 1391,
+  "changed_rows": 6,
+  "new_rows": 4,
+  "untouched_rows": 1381,
+  "changes": [
+    {
+      "path": "tools/processforge.py",
+      "previous": "352d9ee6257395ceabc3654147662138a0a79319ad1d0648c51baad3224d0c5f",
+      "sha256": "6b9a5c7da55a906433f53bcfd1c9fe2eb5035c8b7ddc6c8058b38783ab89582e",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "previous": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+      "sha256": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "previous": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+      "sha256": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/authoring/journals.py",
+      "previous": null,
+      "sha256": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/configuration/parameter_sources.py",
+      "previous": null,
+      "sha256": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/work/context.py",
+      "previous": "fe35020bab87314bc9a9c68295e9340ae0f76f50883f693f4ecbc7ec564108ba",
+      "sha256": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/report_read.py",
+      "previous": null,
+      "sha256": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+      "kind": "added"
+    },
+    {
+      "path": "tools/smoke_remediation_aggregate_gates.py",
+      "previous": "26a24538cdd102325c73b8f60517c686a218f77a0c356749f09816f121d80782",
+      "sha256": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/initialization_inputs.py",
+      "previous": null,
+      "sha256": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/project/initialization.py",
+      "previous": "73c2fe7f415b8ff2457706db04058032b5a284f3d4a6bf35ef210c787a8f18dd",
+      "sha256": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419",
+      "kind": "changed"
+    }
+  ],
+  "preserved_known_drift": [
+    ".pf/process-forge.yaml",
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ]
+}

@@ -122,6 +122,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/configuration/specializations.py` | Existing specialization registry/path candidates and manifest index. |
 | `src/processforge_core/evolution/validation.py` | Existing ordered knowledge candidate checks and category constants. |
 | `src/processforge_core/maintenance/transfer.py` | Existing update manifest fetch and artifact transfer. |
+| `src/processforge_core/authoring/journals.py` | Existing authoring journal storage and exact cleanup failures. |
+| `src/processforge_core/configuration/parameter_sources.py` | Existing parameter source provenance, paths, reads and merge composition. |
+| `src/processforge_core/project/report_read.py` | Existing Markdown sections, capability help and resource report projection. |
+| `src/processforge_core/project/initialization_inputs.py` | Existing initial project types, mode and defaults. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -1096,3 +1100,25 @@ existing site/document owners and preserves local copy2/HTTP stream behavior,
 timeouts, warning/error boundaries and destination effects. It adds no retry,
 directory creation or archive inspection. These source-only moves preserve
 external 1.2.0 contracts and leave OOP epics/later delivery acceptance open.
+
+## Journal storage, parameter sources, report projections and project inputs
+
+AuthoringJournalStore owns the original journal data/plan writes, with the same
+mkdir, UUID sibling staging, serialization, replace and finally cleanup. Errors
+and cleanup precedence remain unchanged. Authoring preflight, callback/effect
+execution, publication and rollback retain their existing owners.
+
+ParameterSourceService owns source records, workplace paths, source accumulation,
+process parameter reading and requirements fingerprints. It reuses canonical
+path/YAML/digest/merge owners and preserves private markers, aliases, source order
+and fresh reads. The Work context consumer calls it directly for its three
+selected accumulation steps; unselected Work context responsibilities remain.
+
+ReportProjectionReader owns original Markdown section/boolean parsing, exact
+capability waiver help and resource report status. The aggregate smoke binds its
+mock to this canonical owner with unchanged fixtures/assertions/restoration.
+ProjectInitializationInputs owns existing manifest project types, allowed type
+sets, greenfield/brownfield mode and initial defaults. The initialization consumer
+calls it directly. Coordination project modes/defaults are separate contracts.
+All constructors are cold and roots explicit. This source-only move preserves
+1.2.0 contracts and leaves OOP epics/later qualification open.

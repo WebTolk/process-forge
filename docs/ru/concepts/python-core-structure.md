@@ -127,6 +127,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/configuration/specializations.py` | Прежние registry/path candidates и индекс специализаций. |
 | `src/processforge_core/evolution/validation.py` | Прежние упорядоченные проверки кандидата знаний и категории. |
 | `src/processforge_core/maintenance/transfer.py` | Прежнее получение update manifest и перенос артефакта. |
+| `src/processforge_core/authoring/journals.py` | Прежняя запись журнала авторинга и точные ошибки очистки. |
+| `src/processforge_core/configuration/parameter_sources.py` | Прежние provenance, пути, чтение и merge источников параметров. |
+| `src/processforge_core/project/report_read.py` | Прежние Markdown sections, справка и проекция resource report. |
+| `src/processforge_core/project/initialization_inputs.py` | Прежние исходные типы, режим и defaults проекта. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -1107,3 +1111,25 @@ KnowledgeCandidateValidationService собирает готовые targeting/pr
 site/document owners и сохраняет local copy2/HTTP stream, timeouts, границы
 warnings/errors и эффекты destination. Новых retries, mkdir или проверки архивов
 нет. Внешние контракты 1.2.0 сохранены; OOP-эпики и поздняя приёмка открыты.
+
+## Журналы, источники параметров, проекции отчётов и входы проекта
+
+AuthoringJournalStore владеет прежними data/plan writes журнала: mkdir, UUID
+соседнего временного файла, serialization, replace и finally cleanup сохранены
+в прежнем порядке с тем же приоритетом ошибок. Preflight, callback/effect
+execution, publication и rollback сохраняют существующих владельцев.
+
+ParameterSourceService владеет source records, workplace paths, накоплением
+источников, чтением process parameters и requirements fingerprints. Готовые
+path/YAML/digest/merge owners переиспользованы. Приватные markers, aliases,
+порядок источников и свежие чтения сохранены. Work context вызывает службу
+напрямую в трёх выбранных шагах; остальные обязанности явно не перенесены.
+
+ReportProjectionReader владеет прежним разбором Markdown sections/boolean,
+точной справкой capability waiver и resource report status. Aggregate smoke
+подменяет канонический метод, сохраняя fixtures/assertions/restoration.
+ProjectInitializationInputs владеет manifest project types, наборами разрешённых
+типов, greenfield/brownfield и начальными defaults. Initialization consumer
+вызывает её напрямую. Coordination modes/defaults имеют отдельный контракт.
+Конструкторы холодные, корни явные. Source-only перенос сохраняет 1.2.0;
+OOP-эпики и поздняя квалификация остаются открытыми.

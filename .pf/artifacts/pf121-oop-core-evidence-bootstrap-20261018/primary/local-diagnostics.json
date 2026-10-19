@@ -1,0 +1,9 @@
+{
+  "retained_local": [
+    {
+      "path": ".pf/artifacts/pf121-oop-core-evidence-bootstrap-20261018/primary/operator-report-checkpoint.json",
+      "sha256": "762a5510c1b0beed4febd9bb48fe2eabe95ee4ff75ffd30181e4e59b80e1e9f0",
+      "reason": "raw native environment diagnostics retained locally"
+    }
+  ]
+}

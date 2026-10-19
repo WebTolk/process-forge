@@ -1,0 +1,296 @@
+{
+  "passed": true,
+  "total": 99,
+  "native_exceptions": null,
+  "groups": {
+    "annotations": 17,
+    "journal": 3,
+    "parameters": 23,
+    "reports": 17,
+    "project": 37,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "source_line": 47,
+      "assertion_count": 17,
+      "assertion_kind": "check",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "journal",
+      "source_line": 62,
+      "assertion_count": 1,
+      "assertion_kind": "io_case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "journal",
+      "source_line": 63,
+      "assertion_count": 1,
+      "assertion_kind": "io_case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "journal",
+      "source_line": 64,
+      "assertion_count": 1,
+      "assertion_kind": "io_case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 67,
+      "assertion_count": 7,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 68,
+      "assertion_count": 2,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 69,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 69,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 69,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 70,
+      "assertion_count": 4,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 71,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 71,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 71,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 72,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 72,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 72,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "parameters",
+      "source_line": 72,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 75,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 75,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 75,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 77,
+      "assertion_count": 3,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 77,
+      "assertion_count": 3,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 77,
+      "assertion_count": 3,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 78,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 79,
+      "assertion_count": 1,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "reports",
+      "source_line": 80,
+      "assertion_count": 3,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "project",
+      "source_line": 84,
+      "assertion_count": 21,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "project",
+      "source_line": 86,
+      "assertion_count": 8,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "project",
+      "source_line": 87,
+      "assertion_count": 8,
+      "assertion_kind": "case",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    },
+    {
+      "group": "imports",
+      "source_line": 93,
+      "assertion_count": 2,
+      "assertion_kind": "check",
+      "passed": true,
+      "evidence": "Original invocation reached the final copied-import assertion after all preceding assertions returned. The sole failed import passed after completing its fixture; prior scenarios were not rerun."
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "a7b42339507e26f6dd80c441a8f1c7b3661cdc650eb837620d9094f0a304657b",
+    "docs/concepts/python-core-structure.md": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+    "docs/ru/concepts/python-core-structure.md": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+    "src/processforge_core/authoring/journals.py": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+    "src/processforge_core/configuration/parameter_sources.py": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+    "src/processforge_core/work/context.py": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+    "src/processforge_core/project/report_read.py": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+    "tools/smoke_remediation_aggregate_gates.py": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+    "src/processforge_core/project/initialization_inputs.py": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+    "src/processforge_core/project/initialization.py": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419"
+  },
+  "qualification": "Successful control-flow assertions retained by original final-failure boundary; raw per-case observations/exact exception count were not checkpointed. Only failed copied import rerun with complete fixture. See parity-recovery.json.",
+  "scope": "Bounded source characterization/direct and copied Core with actual consumer modules. No archive/installed/Runtime/connected-host/ZIP qualification.",
+  "original_receipt": ".pf\\artifacts\\pf121-oop-core-evidence-bootstrap-20261018\\primary\\parity-results.json",
+  "original_receipt_sha256": "bc6e1f4217fa1d88d0547e2d91f75dc37ffb541185012189cbc8b5927e4665a9",
+  "qualified_source_hashes": {
+    "tools/processforge.py": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+    "docs/concepts/python-core-structure.md": "ba7e738cd24b1c0532da9531ec5b152f17091b75a45c29d158b3f834d59cbb10",
+    "docs/ru/concepts/python-core-structure.md": "40eb04784b610f58fc0851e8cd57c3c42f10a7c5aee546d4e5bd8b08df2b0a57",
+    "src/processforge_core/authoring/journals.py": "0f44b08f2355c105b6c7e69b5a0252e613208cc0389b58f33c89ffb60433999d",
+    "src/processforge_core/configuration/parameter_sources.py": "dcc88168a38fb6d9eff7358a74318880fcf90d75ee991b179a239a24c71587d1",
+    "src/processforge_core/work/context.py": "bdf8070f23eadd00f271a9801d3bd36c141f56ff6301753f161476691b197ff2",
+    "src/processforge_core/project/report_read.py": "f136919aa8455c87e50f289603817047f09f533e1e98a0f6baa35844d6741130",
+    "tools/smoke_remediation_aggregate_gates.py": "2eeda6427284fb309a567253981496052af7606f81d8d4011e5ec4e49b3a3134",
+    "src/processforge_core/project/initialization_inputs.py": "85477d552de41272ae0c7b2b1f82d7a2131917253af0ac202f059737537c27ca",
+    "src/processforge_core/project/initialization.py": "58c9b3033e3dac7dc86ffb65be3bfd5737742d88678c3871dc1212e259aaf419"
+  },
+  "source_revision_qualification": {
+    "status": "qualified_by_exact_source_delta_and_targeted_checks",
+    "initial_main_raw_sha256": "a7b42339507e26f6dd80c441a8f1c7b3661cdc650eb837620d9094f0a304657b",
+    "final_main_raw_sha256": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+    "exact_delta": "Only three incorrectly migrated LOCAL project_mode reads restored to original inside effective_project_coordination. Complete original function AST and full binding-aware remaining Main AST match. All seven native worker/consumer products and documentation unchanged.",
+    "original_successes_repeated": 0,
+    "targeted_current_checks": [
+      "smoke_project_coordination_modes",
+      "smoke_garage_hook_policy"
+    ],
+    "parity_limit": "Original characterization reached final import; complete fixture passed only failed import. Runtime observation hashes and exact exception total were not checkpointed. See parity-recovery.json.",
+    "old_review": "Cancelled before model invocation; original capsule/pins/failed input capture retained."
+  }
+}

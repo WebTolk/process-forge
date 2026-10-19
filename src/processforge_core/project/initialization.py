@@ -15,6 +15,7 @@ from ..agent_entry.contract import EntryError
 from ..agent_entry import migration as entry_migration
 from ..documents.answers import AnswersDocumentReader
 from .host_integration import optional_host_integration_status
+from .initialization_inputs import ProjectInitializationInputs
 
 
 @dataclass(frozen=True)
@@ -183,7 +184,7 @@ def initialize_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
     planned.extend(f"{core.PROJECT_FLOW_ROOT}/{item}" for item in core.PROJECT_FLOW_DIRS)
     planned.append(".gitignore")
     if apply_requested is not True:
-        return {"action": "initialize", "applied": False, "status": "blocked" if entry_plan["blockers"] else "planned", "mode": core.project_mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if entry_plan["blockers"] else "rerun with apply: true"}
+        return {"action": "initialize", "applied": False, "status": "blocked" if entry_plan["blockers"] else "planned", "mode": ProjectInitializationInputs().mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if entry_plan["blockers"] else "rerun with apply: true"}
     raise ProjectInitializationError("apply_required")
 
 

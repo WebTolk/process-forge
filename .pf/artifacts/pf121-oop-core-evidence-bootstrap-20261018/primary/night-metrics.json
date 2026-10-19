@@ -1,0 +1,12 @@
+{
+  "kind": "source_snapshot_metrics",
+  "night_baseline_ref": "c75797d9a2d206c3ce5b3b6c5968fed092cbcd1e^",
+  "main_definitions_before": 998,
+  "main_definitions_after": 671,
+  "moved_top_level_definitions": 327,
+  "main_lines_before": 25362,
+  "main_lines_after": 19229,
+  "current_main_raw_sha256": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+  "current_product_manifest": "product-manifest-final.json",
+  "scope": "Source metrics; OOP epics and later qualification remain open."
+}

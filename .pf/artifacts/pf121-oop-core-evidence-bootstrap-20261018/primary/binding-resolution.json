@@ -1,0 +1,16 @@
+{
+  "status": "source_correction_complete",
+  "reason": "Three local project_mode reads in effective_project_coordination were incorrectly treated as global function references. Restored exactly those three names; complete function AST equals original.",
+  "changed_path": "tools/processforge.py",
+  "before_raw_sha256": "a7b42339507e26f6dd80c441a8f1c7b3661cdc650eb837620d9094f0a304657b",
+  "after_raw_sha256": "5f1d7478ff28fded49354ca7c49586775e213009dc7b8d80c981d50e43c30def",
+  "fixed_local_name_loads": 3,
+  "coordination_entire_function_ast_equal_original": true,
+  "scope_audit": "symtable census of all locally retained night plans/beforeimages found only this non-global selected-symbol binding; no previous slice had a matching local/free/parameter symbol.",
+  "worker_products_changed": false,
+  "consumer_products_changed": false,
+  "infrastructure_changed": false,
+  "successful_checks_repeated": 0,
+  "historical_review": "review cancelled before model invocation; all capsule pins and failed attempt retained",
+  "later_evidence": "Targeted existing coordination/hook scripts plus fresh native input capture and independent review-final remain required."
+}

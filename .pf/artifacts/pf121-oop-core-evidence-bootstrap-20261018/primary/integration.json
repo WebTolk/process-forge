@@ -1,0 +1,46 @@
+{
+  "status": "integrated",
+  "removed_definitions": [
+    "add_parameter_source",
+    "capability_waiver_help",
+    "parameter_source_record",
+    "process_parameters_from_path",
+    "project_defaults",
+    "project_mode",
+    "project_type_allows_processforge_core",
+    "project_type_is_meta_workspace",
+    "project_types_from_manifest",
+    "report_has_missing_required_capabilities",
+    "report_section_has_items",
+    "report_section_items",
+    "requirements_fingerprints",
+    "resource_report_status",
+    "workplace_parameter_paths",
+    "write_authoring_journal",
+    "write_authoring_journal_data"
+  ],
+  "moved_constants": {
+    "PROCESSFORGE_CORE_PROJECT_TYPES": "project.initialization_inputs",
+    "META_PROJECT_TYPES": "project.initialization_inputs"
+  },
+  "migrated_name_consumers": {
+    "write_authoring_journal_data": 6,
+    "write_authoring_journal": 9,
+    "parameter_source_record": 0,
+    "workplace_parameter_paths": 1,
+    "add_parameter_source": 13,
+    "process_parameters_from_path": 2,
+    "requirements_fingerprints": 1,
+    "report_section_items": 1,
+    "report_section_has_items": 3,
+    "report_has_missing_required_capabilities": 0,
+    "capability_waiver_help": 1,
+    "resource_report_status": 1,
+    "project_types_from_manifest": 1,
+    "project_type_allows_processforge_core": 3,
+    "project_type_is_meta_workspace": 1,
+    "project_mode": 4,
+    "project_defaults": 1
+  },
+  "preflight_all_primary_edits_before_write": true
+}
