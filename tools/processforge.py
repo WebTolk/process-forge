@@ -402,6 +402,7 @@ from processforge_core.agents.telemetry import TelemetryEventService
 from processforge_core.resources.registries import WorkplaceRegistryReader
 from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
 from processforge_core.project.setup_answers import WorkplaceSetupAnswers
+from processforge_core.work.workspace_refs import WorkspaceAccessReferenceService
 import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
 import processforge_core.common.yaml_io as _core_common_yaml_io
@@ -6531,35 +6532,6 @@ def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, 
     ).resolve(path_ref)
 
 
-def workspace_ref_matches_resource(resource: dict[str, Any], requested: Any) -> bool:
-    if isinstance(requested, dict):
-        if requested.get("path_ref") and resource.get("path_ref") == requested.get("path_ref"):
-            return True
-        requested_id = str(requested.get("id") or requested.get("resource_id") or "").strip()
-        requested_package = str(requested.get("package_id") or requested.get("package") or "").strip()
-    else:
-        text = str(requested).strip()
-        if text == "*":
-            return True
-        requested_package, _, requested_id = text.partition(":")
-        if not requested_id:
-            requested_id = requested_package
-            requested_package = ""
-    ids = {
-        str(resource.get("id") or ""),
-        str(resource.get("instance_id") or ""),
-    }
-    for value in list(ids):
-        if ":" in value:
-            ids.add(value.rsplit(":", 1)[-1])
-        if "@" in value:
-            ids.add(value.split("@", 1)[0])
-    package_id = str(resource.get("package_id") or "")
-    ids.add(f"{package_id}:{resource.get('id')}")
-    ids.add(f"{package_id}:{resource.get('instance_id')}")
-    if requested_id not in ids:
-        return False
-    return not requested_package or requested_package == package_id
 
 
 def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) -> dict[str, Any]:
@@ -18016,6 +17988,7 @@ _run_task_inputs = RunTaskInputReader()
 _workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
 _workplace_resource_events = WorkplaceResourceEventJournal(documents=_yaml_documents, telemetry=_telemetry_event_service)
 _workplace_setup_answers = WorkplaceSetupAnswers()
+_workspace_access_references = WorkspaceAccessReferenceService()
 
 
 if __name__ == "__main__":
