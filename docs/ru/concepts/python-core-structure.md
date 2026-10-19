@@ -184,7 +184,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot через конкретные читатели YAML и файловых хешей Core, привязанные к корню проекта. |
 | `src/processforge_core/common/digests.py` | Прежнее чтение SHA256 исходных байтов файла, общее для snapshot, фасадов монолита и maintenance update. |
 | `src/processforge_core/configuration/parameters.py` | ParameterMergePolicy без состояния: прежнее слияние карт параметров и упорядоченный provenance без зависимости от монолита. |
-| `src/processforge_core/project/classification.py` | ProjectClassifierRulePolicy без состояния для проверки прежних правил классификации; реестры, обход и активация сохраняют legacy-владельцев. |
+| `src/processforge_core/project/classification.py` | ProjectClassifierRulePolicy без состояния для прежних правил классификации; конкретные службы источников и обнаружения объединяют чтение реестров, обход и определение проекта. |
 | `src/processforge_core/common/paths.py` | Общий примитив path_matches_pattern для классификации и обнаружения вместе с неизменённым helper rel. |
 | `src/processforge_core/process_catalog/artifacts.py` | ProcessArtifactDeclarationPolicy без состояния для defined, declared и produced ID артефактов; полные валидаторы и I/O companion-файлов сохраняют legacy-владельцев. |
 | `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder: прежние значения по умолчанию, нормализация ответов и построение процесса с конкретными правилами evolve. |

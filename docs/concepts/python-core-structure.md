@@ -176,7 +176,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading through concrete Core YAML and file digest readers, bound to the project root. |
 | `src/processforge_core/common/digests.py` | Existing raw-byte SHA256 file reading, shared by snapshot reads, monolithic facades and maintenance update. |
 | `src/processforge_core/configuration/parameters.py` | Stateless ParameterMergePolicy owning existing parameter-map merging and ordered provenance, without a monolith dependency. |
-| `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for matching existing classifier rules; registry, traversal and activation remain legacy responsibilities. |
+| `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for existing classifier matching; concrete source/discovery services compose registry reads, traversal and detection. |
 | `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
 | `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; contract checks and companion inspection use Core services; authoring publication retains its existing owner. |
 | `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder for existing defaults, answer normalization and process materialization, using concrete evolution rules. |
