@@ -1096,7 +1096,9 @@ def command_doctor(args: argparse.Namespace, core: Any) -> int:
     checks.append(core.check("PASS" if active or not lock_path(workplace_root).exists() else "WARN", "singleton lock is not stale"))
     host_state = host.load_state(workplace_root)
     checks.append(core.check("PASS" if isinstance(host_state.get("projects"), list) else "FAIL", "project handle cache readable"))
-    checks.append(core.check("PASS" if core.workplace_agent_ledger_path(workplace_root).parent.is_dir() else "FAIL", "Agent Ledger path accessible"))
+    from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+    checks.append(core.check("PASS" if AgentWorkplaceRegistry().workplace_agent_ledger_path(workplace_root).parent.is_dir() else "FAIL", "Agent Ledger path accessible"))
     payload = status_payload(workplace_root, core)
     checks.append(core.check("PASS" if payload.get("health") in {"ready", "stopped", "stale"} else "WARN", f"runtime health is {payload.get('health')}"))
     return core.print_checks(checks)

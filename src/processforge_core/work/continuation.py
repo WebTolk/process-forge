@@ -58,11 +58,13 @@ class ContinuationService:
     def _record_reader(self) -> ContinuationRecordReader:
         from ..composition import build_continuation_record_reader
 
+        from processforge_core.agents.registry import AgentWorkplaceRegistry
+
         return build_continuation_record_reader(
             path_resolver=lambda: self._path, selector=lambda: self._id,
             bounded_reader=lambda: bounded_read, yaml_loader=lambda: yaml.safe_load,
             error=lambda: ContinuationError,
-            workplace=lambda: self.workplace, leases_directory=lambda: self.core.workplace_agent_leases_dir,
+            workplace=lambda: self.workplace, leases_directory=lambda: AgentWorkplaceRegistry().workplace_agent_leases_dir,
             control_loader=lambda: self._load,
         )
 

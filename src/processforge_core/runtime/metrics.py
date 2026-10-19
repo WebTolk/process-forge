@@ -142,10 +142,14 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
     rows = {}
     try:
         if name == "sessions":
-            presence_dir = core.workplace_agent_presence_dir(workplace)
+            from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+            presence_dir = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace)
             paths = ((path, workplace) for parts in (("*.json",), ("*", "*.json")) for path in budget.walk(presence_dir, parts, workplace))
         elif name == "leases":
-            paths = ((path, workplace) for path in budget.walk(core.workplace_agent_leases_dir(workplace), ("*.yaml",), workplace))
+            from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+            paths = ((path, workplace) for path in budget.walk(AgentWorkplaceRegistry().workplace_agent_leases_dir(workplace), ("*.yaml",), workplace))
         else:
             def project_paths():
                 for project in roots[:128]:
@@ -167,7 +171,9 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
                     if not isinstance(agent, str) or not agent or not isinstance(session, str) or not session:
                         raise ValueError
                     canonical = core.agent_presence_path(workplace, agent, session)
-                    legacy = core.workplace_agent_presence_dir(workplace) / core.safe_id(agent, "agent") / (core.safe_id(session, "session") + ".json")
+                    from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+                    legacy = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace) / core.safe_id(agent, "agent") / (core.safe_id(session, "session") + ".json")
                     if path not in {canonical, legacy, core.legacy_agent_presence_path(workplace, agent)}:
                         raise ValueError
                     key = (agent, session)

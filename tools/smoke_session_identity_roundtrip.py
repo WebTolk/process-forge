@@ -289,7 +289,9 @@ def main() -> int:
             raise AssertionError("checkout of colliding slug session changed its sibling")
 
         legacy = presence_payload("legacy-agent", "Legacy/Session", project)
-        legacy_path = core.workplace_agent_presence_dir(workplace) / "legacy-agent" / "legacy-session.json"
+        from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+        legacy_path = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace) / "legacy-agent" / "legacy-session.json"
         legacy_path.parent.mkdir(parents=True, exist_ok=True)
         legacy_path.write_text(json.dumps(legacy), encoding="utf-8")
         if core.find_agent_presence(workplace, session_id="Legacy/Session").get("session_id") != "Legacy/Session":
@@ -311,7 +313,7 @@ def main() -> int:
         assert len(core.load_chat_messages(project, "Legacy/Session")) == 2
 
         forged = presence_payload("forged-agent", "other-session", project)
-        forged_path = core.workplace_agent_presence_dir(workplace) / "forged-agent" / "forged-session.json"
+        forged_path = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace) / "forged-agent" / "forged-session.json"
         forged_path.parent.mkdir(parents=True, exist_ok=True)
         forged_path.write_text(json.dumps(forged), encoding="utf-8")
         if core.find_agent_presence(workplace, agent_id="forged-agent", session_id="forged-session"):

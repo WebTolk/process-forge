@@ -390,6 +390,7 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
+from processforge_core.agents.registry import AgentWorkplaceRegistry
 from processforge_core.chat.export import ChatExportService
 from processforge_core.agents.hook_policy import HookDispatchPolicy
 from processforge_core.work.orchestration_config import OrchestrationConfigService
@@ -10653,54 +10654,20 @@ def resolve_workplace_root(value: str | None, *, project_root: Path | None = Non
     raise SystemExit("FAIL: --workplace is required")
 
 
-def workplace_agent_registry_path(workplace_root: Path) -> Path:
-    return workplace_root / "registries" / "agents.yaml"
 
 
-def workplace_agent_ledger_path(workplace_root: Path) -> Path:
-    return workplace_root / "runtime" / "agent-ledger" / "sessions.ndjson"
 
 
-def workplace_agent_presence_dir(workplace_root: Path) -> Path:
-    return AgentPresenceReader(workplace_root).directory
 
 
-def workplace_agent_leases_dir(workplace_root: Path) -> Path:
-    return workplace_root / "runtime" / "agent-leases"
 
 
-def ensure_agent_workplace_dirs(workplace_root: Path) -> None:
-    for path in [
-        workplace_root / "registries",
-        workplace_root / "runtime" / "agent-ledger",
-        workplace_agent_presence_dir(workplace_root),
-        workplace_agent_leases_dir(workplace_root),
-    ]:
-        path.mkdir(parents=True, exist_ok=True)
 
 
-def load_agent_registry(workplace_root: Path) -> dict[str, Any]:
-    path = workplace_agent_registry_path(workplace_root)
-    data = load_yaml_document(path)
-    if yaml_error(data) or not data:
-        return {"schema_version": 1, "agents": []}
-    data.setdefault("schema_version", 1)
-    data.setdefault("agents", [])
-    return data
 
 
-def save_agent_registry(workplace_root: Path, data: dict[str, Any]) -> None:
-    ensure_agent_workplace_dirs(workplace_root)
-    _core_common_yaml_io.write_yaml_file(workplace_agent_registry_path(workplace_root), data)
 
 
-def append_agent_ledger_event(workplace_root: Path, payload: dict[str, Any]) -> None:
-    ensure_agent_workplace_dirs(workplace_root)
-    payload.setdefault("schema_version", 1)
-    payload.setdefault("recorded_at", _core_common_clock.now_utc())
-    path = workplace_agent_ledger_path(workplace_root)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
 
 
 def legacy_agent_presence_path(workplace_root: Path, agent_id: str) -> Path:
@@ -10761,7 +10728,7 @@ def read_agent_presence(workplace_root: Path, agent_id: str) -> dict[str, Any]:
 
 
 def write_agent_presence(workplace_root: Path, payload: dict[str, Any]) -> None:
-    ensure_agent_workplace_dirs(workplace_root)
+    _agent_workplace_registry.ensure_agent_workplace_dirs(workplace_root)
     agent_id = str(payload.get("agent_id") or "agent")
     session_id = str(payload.get("session_id") or agent_session_id(agent_id))
     _core_common_json_io.json_write(agent_presence_path(workplace_root, agent_id, session_id), payload)
@@ -10793,7 +10760,7 @@ def update_stale_agent_presence(workplace_root: Path) -> None:
                     write_current_session_refs(workplace_root, Path(project_ref).expanduser().resolve(), presence)
                 except OSError:
                     pass
-            append_agent_ledger_event(
+            _agent_workplace_registry.append_agent_ledger_event(
                 workplace_root,
                 {
                     "event": "agent.session_expired",
@@ -10823,7 +10790,7 @@ def checked_in_agents(workplace_root: Path, *, role: str | None = None, project_
 def command_agent_register(args: argparse.Namespace) -> int:
     workplace_root = resolve_workplace_root(args.workplace)
     agent_id = safe_id(args.agent, "agent")
-    registry = load_agent_registry(workplace_root)
+    registry = _agent_workplace_registry.load_agent_registry(workplace_root)
     agents = registry.setdefault("agents", [])
     if not isinstance(agents, list):
         agents = []
@@ -10841,14 +10808,14 @@ def command_agent_register(args: argparse.Namespace) -> int:
         existing.update(record)
     else:
         agents.append(record)
-    save_agent_registry(workplace_root, registry)
+    _agent_workplace_registry.save_agent_registry(workplace_root, registry)
     print(f"REGISTERED: {agent_id}")
     return 0
 
 
 def command_agent_list(args: argparse.Namespace) -> int:
     workplace_root = resolve_workplace_root(args.workplace)
-    registry = load_agent_registry(workplace_root)
+    registry = _agent_workplace_registry.load_agent_registry(workplace_root)
     agents = [item for item in registry.get("agents", []) if isinstance(item, dict)]
     if getattr(args, "json", False):
         print(json.dumps({"agents": agents}, ensure_ascii=False, indent=2))
@@ -10865,7 +10832,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
     session_id = args.session or agent_session_id(agent_id)
     project_id = args.project_id or (safe_id(project_root.name, "project") if project_root else "")
     roles = [str(item) for item in as_list(args.role)]
-    registry = load_agent_registry(workplace_root)
+    registry = _agent_workplace_registry.load_agent_registry(workplace_root)
     profile = next((item for item in registry.get("agents", []) if isinstance(item, dict) and item.get("id") == agent_id), {})
     capabilities = [str(item) for item in (as_list(getattr(args, "capability", [])) or as_list(profile.get("capabilities")))]
     supported_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
@@ -10890,7 +10857,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
         "updated_at": now,
     }
     write_agent_presence(workplace_root, presence)
-    append_agent_ledger_event(
+    _agent_workplace_registry.append_agent_ledger_event(
         workplace_root,
         {
             "event": "agent.checked_in",
@@ -10934,7 +10901,7 @@ def command_agent_heartbeat(args: argparse.Namespace) -> int:
         presence["task_id"] = args.task
     write_agent_presence(workplace_root, presence)
     write_current_session_refs(workplace_root, project_root, presence)
-    append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
+    _agent_workplace_registry.append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
     print(f"HEARTBEAT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
@@ -10958,7 +10925,7 @@ def command_agent_checkout(args: argparse.Namespace) -> int:
     presence["finished_at"] = presence["updated_at"]
     write_agent_presence(workplace_root, presence)
     write_current_session_refs(workplace_root, project_root, presence)
-    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": _core_common_clock.now_utc()})
+    _agent_workplace_registry.append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": _core_common_clock.now_utc()})
     print(f"CHECKED_OUT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
@@ -11008,8 +10975,8 @@ def command_agent_ledger_doctor(args: argparse.Namespace) -> int:
     workplace_root = resolve_workplace_root(args.workplace)
     update_stale_agent_presence(workplace_root)
     checks: list[Check] = []
-    registry = workplace_agent_registry_path(workplace_root)
-    ledger = workplace_agent_ledger_path(workplace_root)
+    registry = _agent_workplace_registry.workplace_agent_registry_path(workplace_root)
+    ledger = _agent_workplace_registry.workplace_agent_ledger_path(workplace_root)
     checks.append(check("PASS" if registry.is_file() else "FAIL", "agent registry exists"))
     checks.append(check("PASS" if ledger.is_file() else "FAIL", "agent session ledger exists"))
     if ledger.is_file():
@@ -11026,7 +10993,7 @@ def command_agent_ledger_doctor(args: argparse.Namespace) -> int:
 
 
 def lease_path(workplace_root: Path, lease_id: str) -> Path:
-    return workplace_agent_leases_dir(workplace_root) / f"{safe_id(lease_id, 'lease')}.yaml"
+    return _agent_workplace_registry.workplace_agent_leases_dir(workplace_root) / f"{safe_id(lease_id, 'lease')}.yaml"
 
 
 def load_lease(workplace_root: Path, lease_id: str) -> dict[str, Any]:
@@ -11034,8 +11001,8 @@ def load_lease(workplace_root: Path, lease_id: str) -> dict[str, Any]:
 
 
 def save_lease(workplace_root: Path, lease: dict[str, Any]) -> None:
-    ensure_agent_workplace_dirs(workplace_root)
-    with registry_file_lock(workplace_agent_leases_dir(workplace_root) / "registry"):
+    _agent_workplace_registry.ensure_agent_workplace_dirs(workplace_root)
+    with registry_file_lock(_agent_workplace_registry.workplace_agent_leases_dir(workplace_root) / "registry"):
         _core_common_yaml_io.write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
 
 
@@ -11093,7 +11060,7 @@ def command_agent_lease_revoke(args: argparse.Namespace) -> int:
 
 def command_agent_lease_list(args: argparse.Namespace) -> int:
     workplace_root = resolve_workplace_root(args.workplace)
-    rows = [load_yaml_document(path) for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml"))]
+    rows = [load_yaml_document(path) for path in sorted(_agent_workplace_registry.workplace_agent_leases_dir(workplace_root).glob("*.yaml"))]
     if getattr(args, "json", False):
         print(json.dumps({"leases": rows}, ensure_ascii=False, indent=2))
     else:
@@ -11105,7 +11072,7 @@ def command_agent_lease_list(args: argparse.Namespace) -> int:
 def command_agent_lease_doctor(args: argparse.Namespace) -> int:
     workplace_root = resolve_workplace_root(args.workplace)
     checks: list[Check] = []
-    for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+    for path in sorted(_agent_workplace_registry.workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
         lease = load_yaml_document(path)
         checks.append(check("PASS" if lease.get("id") else "FAIL", f"{path.name} id present"))
         checks.append(check("PASS" if lease.get("agent_id") else "FAIL", f"{path.name} agent_id present"))
@@ -11121,7 +11088,7 @@ def command_agent_lease_doctor(args: argparse.Namespace) -> int:
 def mark_expired_agent_leases(workplace_root: Path) -> int:
     changed = 0
     now = datetime.now(timezone.utc)
-    for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+    for path in sorted(_agent_workplace_registry.workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
         lease = load_yaml_document(path)
         if str(lease.get("status")) != "active":
             continue
@@ -17610,6 +17577,7 @@ def main(argv: list[str] | None = None) -> int:
 # Concrete owners retain the distribution root and existing request-scoped readers.
 _release_source_policy = ReleaseSourcePolicy()
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
+_agent_workplace_registry = AgentWorkplaceRegistry(documents=_yaml_documents)
 _chat_export_service = ChatExportService()
 _hook_dispatch_policy = HookDispatchPolicy(hooks=_hook_configuration_reader, documents=_yaml_documents)
 _orchestration_config_service = OrchestrationConfigService()
