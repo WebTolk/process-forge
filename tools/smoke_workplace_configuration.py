@@ -151,13 +151,14 @@ def main():
         assert set(p.name for p in root.iterdir()) == {"configuration.yaml.lock"}
         # Optional configuration is produced for newly generated workplaces.
         import processforge as core
-        generated = core.build_workplace_files(root, {})
+        from processforge_core.project.workplace_templates import WorkplaceFileBuilder
+        generated = WorkplaceFileBuilder(core.ROOT).build_workplace_files(root, {})
         assert YamlConfigStore._decode(generated[path].encode("utf-8")) == PFConfig()
         template = (ROOT / "templates/workplace-configuration.yaml").read_bytes()
         assert YamlConfigStore._decode(template) == PFConfig()
         # Doctor validates the same model for present/absent/invalid settings.
         fixture = root / "generated"
-        for target, content in core.build_workplace_files(fixture, {}).items():
+        for target, content in WorkplaceFileBuilder(core.ROOT).build_workplace_files(fixture, {}).items():
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
         for raw, expected in ((template, "configuration.yaml valid"), (None, "configuration.yaml absent; defaults apply"), (b"runtime: [", "configuration_yaml_invalid")):
