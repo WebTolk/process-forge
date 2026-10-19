@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "removed_monolith_functions": 9,
+  "retained_monolith_definitions_with_only_expected_call_changes": 730,
+  "entire_monolith_ast_only_expected_delta": true,
+  "three_standalone_asts_exact": true,
+  "prior_values_entire_ast_and_raw_prefix_preserved": true,
+  "readonly_existing_owner_hashes_preserved": {
+    "src/processforge_core/common/checks.py": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+    "src/processforge_core/common/paths.py": "19b5bfecb8506f68a5efe7e5dcca34851b3b638bc14c83cabe89aac324f9ae56",
+    "src/processforge_core/common/text.py": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+    "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+    "src/processforge_core/common/yaml_io.py": "543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27",
+    "src/processforge_core/documents/reader.py": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+    "src/processforge_core/maintenance/schema_checks.py": "5c27d092f2cfdf1102b082159de30accfa59af4fd7ca34d91bc6a3d45f97895b",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/project/platform_policy.py": "e2beaf9cc56934140ad1b653eedb1e8b0a8dd96447ae7c8db489ceb417fcc29e",
+    "src/processforge_core/project/platform_resolution.py": "5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda",
+    "src/processforge_core/project/platform_selection.py": "ace870c7f64d1a77e11e5f1cf8f6d737a93d8bcda8926f49655011f042f99887",
+    "src/processforge_core/project/platforms.py": "b28771560b3efdfdf5bfcac5bcb154fea5a5a7f5504d4a32970b028af9ad31c9",
+    "src/processforge_core/resources/project_packages.py": "87da19314b5acd8ca4ae9df0554205165b224e45a27742633a4e8c241ef29d03",
+    "src/processforge_core/resources/snapshot.py": "0d470c544fc7ed60a536dac206ad00fe9d9657ad2b3190a477f4644517ad8582",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5"
+  },
+  "native_acceptance_sha256": "ed0e5f377836b161ad9f88523b28f3a4cb4d7a35cc43b7bcd2eb8bf4c592dcc4",
+  "parity": {
+    "total": 88,
+    "native_exceptions": 12,
+    "sha256": "3483e9d445b0a4dfbb711c32515807f73a43c07b593be913270aab28b9d79465"
+  },
+  "smokes": {
+    "passed": true,
+    "count": 4,
+    "sha256": "c5cd074b7009e8e70de4328c8e82a56b37bbcd8a8c70dbbde0cbb838b38fdf05"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "9a45906134e4edbeeed48e73f1e47a791831b7a2e2500168526d40afffbb58af",
+    "docs/concepts/python-core-structure.md": "06741b15a9b91e909c4faf0a0d4451a3e1df7dde041bd2e023579a412f50b014",
+    "docs/ru/concepts/python-core-structure.md": "0ffaab84192c6bd97a02e14ae22c1271e652d04887ade1b2833aea7903b0f9a1",
+    "src/processforge_core/project/registry_write.py": "aeb4f46bdfae83dbbe86f1dcdb1ea98c36d1d11c60ce7cbfb25b87d3ef2f94c3",
+    "src/processforge_core/common/values.py": "8f6d3372fd162e5a2cbdbf5dedeb3b3295ce194327d44dce2b7fdb684d6a9a8a",
+    "src/processforge_core/project/templates.py": "86321caa8deb9199e6579ba9cbff3b03fc27a4a1c6f102a358c6d7c3cb964285",
+    "src/processforge_core/project/platform_validation.py": "d7d3ecffbd0d5d4687a71b4cb21fad5dcc881ea4232c15e4f0e10829426b6ede",
+    "src/processforge_core/common/policies.py": "8b9ba9bbb9a778b8ec306b182fd4e277dfbf5b7fc884b506737ea2ab928abb21",
+    "src/processforge_core/project/requirements.py": "08026d4dbcbe0ff0bd71958a16eb1ed98224bad43ce667fc8cd5733637d5a96d",
+    "checksums/processforge.sha256": "3ee160fed784861fc7f766205711fbb27d32623cc68aed042648798e4dad3036"
+  },
+  "inventory": {
+    "rows_before": 1368,
+    "rows_after": 1373,
+    "changed_rows": 4,
+    "new_rows": 5,
+    "untouched_rows": 1364,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "scope": "Existing registry write, template and platform checks only; no write/transaction/lifecycle behavior change. Retained native failures cover stage write, schema cause and cleanup-error precedence; bounded real scratch I/O confirms corrupt input preservation, schema refusal and replace-failure cleanup.",
+  "limits": [
+    "Source-only; OOP epics and archive/install/Runtime/connected-host qualification remain open.",
+    "Four affected existing scripts and direct/copied Core; no service/Runtime start or ZIP checks."
+  ]
+}

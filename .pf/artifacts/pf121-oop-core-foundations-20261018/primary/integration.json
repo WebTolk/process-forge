@@ -1,0 +1,29 @@
+{
+  "status": "integrated",
+  "removed_functions": [
+    "platform_contract_semantic_checks",
+    "platform_dependency_preflight",
+    "policy_entries",
+    "policy_id_matches",
+    "registry_ids_from_workplace",
+    "resolve_template_root",
+    "template_manifest_path",
+    "upsert_registry_entry",
+    "upsert_resource"
+  ],
+  "migrated_name_consumers": {
+    "upsert_registry_entry": 6,
+    "resolve_template_root": 1,
+    "template_manifest_path": 3,
+    "platform_contract_semantic_checks": 1,
+    "platform_dependency_preflight": 1,
+    "registry_ids_from_workplace": 1
+  },
+  "canonical_standalone_imports": {
+    "upsert_resource": "common.values.upsert_resource",
+    "policy_entries": "common.policies.policy_entries",
+    "policy_id_matches": "common.policies.policy_id_matches"
+  },
+  "preflight_all_primary_edits_before_write": true,
+  "external_consumers": []
+}

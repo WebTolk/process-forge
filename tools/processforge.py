@@ -233,6 +233,17 @@ _platform_document_builder = PlatformDocumentBuilder()
 _workplace_registry_validation_service = WorkplaceRegistryValidationService(ROOT)
 _builtin_process_catalog_audit_service = BuiltinProcessCatalogAuditService(ROOT)
 _workplace_setup_proposal_builder = WorkplaceSetupProposalBuilder()
+from processforge_core.project.registry_write import WorkplaceRegistryWriter
+from processforge_core.project.templates import TemplateCatalogService
+from processforge_core.project.platform_validation import PlatformContractValidationService
+from processforge_core.project.requirements import PlatformDependencyPreflightService
+from processforge_core.common.values import upsert_resource
+from processforge_core.common.policies import policy_entries, policy_id_matches
+
+_workplace_registry_writer = WorkplaceRegistryWriter(ROOT)
+_template_catalog_service = TemplateCatalogService(ROOT)
+_platform_contract_validation_service = PlatformContractValidationService(ROOT)
+_platform_dependency_preflight_service = PlatformDependencyPreflightService(ROOT)
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -7167,24 +7178,8 @@ def yaml_error(data: Any) -> str | None:
 
 
 
-def policy_entries(policy: dict[str, Any], key: str) -> list[dict[str, Any]]:
-    values = policy.get(key)
-    if not isinstance(values, list):
-        return []
-    entries: list[dict[str, Any]] = []
-    for item in values:
-        if isinstance(item, str):
-            entries.append({"id": item})
-        elif isinstance(item, dict):
-            entries.append(item)
-    return entries
 
 
-def policy_id_matches(identifier: str, entry: dict[str, Any]) -> bool:
-    if str(entry.get("id", "")) == identifier:
-        return True
-    pattern = entry.get("pattern")
-    return bool(pattern and re.fullmatch(str(pattern), identifier))
 
 
 def fingerprint_record(path: Path, project_root: Path, source_id: str, kind: str, *, private: bool = False, display_path: str | None = None) -> dict[str, Any]:
@@ -7758,7 +7753,7 @@ def ensure_private_resource_path(workplace_root: Path, resource_id: str, raw_pat
         "visibility": "private",
         "status": "available",
     }
-    upsert_registry_entry(target, "private_resource_paths", entry)
+    _workplace_registry_writer.upsert(target, "private_resource_paths", entry)
     return target
 
 
@@ -7879,13 +7874,6 @@ def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path 
     }
 
 
-def upsert_resource(resources: list[Any], resource: dict[str, Any]) -> str:
-    for index, item in enumerate(resources):
-        if isinstance(item, dict) and str(item.get("id")) == str(resource["id"]):
-            resources[index] = resource
-            return "updated"
-    resources.append(resource)
-    return "added"
 
 
 def write_package_manifest_and_index(workplace_root: Path, package_id: str, package_manifest: dict[str, Any], package_root_id: str | None = None) -> tuple[Path, Path, PackageRootResolution]:
@@ -7899,9 +7887,6 @@ def write_package_manifest_and_index(workplace_root: Path, package_id: str, pack
     return manifest_path, index_path, package_root
 
 
-def registry_ids_from_workplace(workplace_root: Path, registry_name: str, collection_key: str) -> set[str]:
-    data = load_yaml_document(workplace_root / "registries" / registry_name)
-    return registry_ids(data, collection_key)
 
 
 def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) -> str | None:
@@ -7925,7 +7910,7 @@ def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) ->
     if registry not in known:
         return f"unknown path_ref registry {registry}"
     registry_file, collection_key = known[registry]
-    if ref_id not in registry_ids_from_workplace(workplace_root, registry_file, collection_key):
+    if ref_id not in _platform_dependency_preflight_service.registry_ids(workplace_root, registry_file, collection_key):
         return f"path_ref target missing: {registry}/{ref_id}"
     return None
 
@@ -18438,147 +18423,6 @@ def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
     return None
 
 
-def platform_contract_semantic_checks(
-    workplace_root: Path,
-    data: dict[str, Any],
-    platform: str,
-    *,
-    platform_resolution: dict[str, Any] | None = None,
-) -> list[Check]:
-    checks: list[Check] = []
-    checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
-    contract_id = _platform_contract_reader.contract_id(str(data.get("id") or platform))
-    for entry in policy_entries(_context_contract_inputs.documents.policy("platform-id-policy.yaml", distribution_root=ROOT), "discouraged_platform_ids"):
-        if policy_id_matches(contract_id, entry):
-            checks.append(
-                check_with_hint(
-                    str(entry.get("user_created_behavior", "WARN")).upper(),
-                    str(entry.get("message", f"platform id discouraged: {contract_id}")),
-                    str(entry.get("why", "The platform id matched a data-driven platform id policy.")),
-                    str(entry.get("fix", "update the platform id or policy manifest")),
-                )
-            )
-    hints = data.get("project_type_hints")
-    if not isinstance(hints, list):
-        applies_to = data.get("applies_to") if isinstance(data.get("applies_to"), dict) else {}
-        hints = applies_to.get("project_type_hints") if isinstance(applies_to.get("project_type_hints"), list) else []
-    checks.append(check("PASS" if isinstance(hints, list) and hints else "WARN", "project_type_hints configured"))
-    requires = data.get("requires") if isinstance(data.get("requires"), dict) else {}
-    checks.append(check("PASS" if requires.get("capabilities") else "WARN", "required capabilities listed"))
-    extends_refs = _platform_contract_policy.extends(data)
-    required_platform_refs = _platform_contract_policy.required_platforms(data)
-    checks.append(check("PASS", "extends entries are valid") if all(ref.get("id") for ref in extends_refs) else check("FAIL", "extends entries are valid"))
-    checks.append(check("PASS", "requires.platforms entries are valid") if all(ref.get("id") for ref in required_platform_refs) else check("FAIL", "requires.platforms entries are valid"))
-    for ref in extends_refs:
-        if ref.get("required") is False:
-            checks.append(
-                check_with_hint(
-                    "FAIL",
-                    f"extends parent is required: {ref['id']}",
-                    "Platform inheritance cannot be optional in the pre-release contract model.",
-                    "set required: true or move the platform reference to requires.platforms if it is only a dependency",
-                )
-            )
-    required_platform_by_id = {str(ref["id"]): bool(ref.get("required", True)) for ref in required_platform_refs}
-    for ref in extends_refs:
-        if required_platform_by_id.get(str(ref["id"])) is False:
-            checks.append(
-                check_with_hint(
-                    "FAIL",
-                    f"child platform cannot weaken required parent dependency: {ref['id']}",
-                    "An inherited parent is required by definition; requires.platforms cannot mark the same parent optional.",
-                    "set requires.platforms[].required: true for the parent platform",
-                )
-            )
-    platform_resolution = platform_resolution or _platform_contract_resolver.resolve(workplace_root / "workplace.yaml", [data.get("id") or platform])
-    for missing in platform_resolution["missing_required_contracts"]:
-        checks.append(
-            check_with_hint(
-                "FAIL",
-                f"required platform available: {missing}",
-                "The platform contract extends or requires a platform that is not registered in the workplace.",
-                f"python bin/pf.py platform-create --workplace <workplace-root> --id {missing} --title \"{missing}\" --apply",
-            )
-        )
-    for cycle in platform_resolution["circular_platforms"]:
-        checks.append(
-            check_with_hint(
-                "FAIL",
-                f"circular platform inheritance detected: {cycle}",
-                "Platform inheritance must resolve to an acyclic parent-first stack.",
-                "remove one extends edge from the cycle and rerun platform-contract-doctor",
-            )
-        )
-    checks.append(check("PASS" if platform_resolution["platform_stack"] else "FAIL", "resolved platform stack valid"))
-    checks.append(check("PASS", "resolved platform stack computed without mutating workplace state"))
-    inherited_required, inherited_recommended = _project_platform_selection_service.resource_findings(workplace_root / "workplace.yaml", platform_resolution)
-    for item in inherited_required:
-        checks.append(
-            check_with_hint(
-                "FAIL",
-                f"required {item['kind']} available through resolved platform stack: {item['id']}",
-                "A platform in the resolved stack marks this resource as required.",
-                "register the missing resource in the workplace registry or package roots before using this platform",
-            )
-        )
-    for item in inherited_recommended:
-        checks.append(
-            check_with_hint(
-                "WARN",
-                f"optional {item['kind']} available through resolved platform stack: {item['id']}",
-                "A platform in the resolved stack recommends this resource, but onboarding can continue.",
-                "register the resource if this platform should provide the optional capability",
-            )
-        )
-    for package_id in list_value(requires.get("knowledge_packages")):
-        manifest = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
-        checks.append(
-            check("PASS", f"required knowledge package available: {package_id}")
-            if manifest
-            else check_with_hint(
-                "FAIL",
-                f"required knowledge package available: {package_id}",
-                "This platform contract marks the package as required.",
-                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
-                "mark it as required: false or move it to includes.knowledge_packages if optional",
-            )
-        )
-    for package_id in _platform_contract_policy.includes(data, "knowledge_packages"):
-        manifest = _project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
-        checks.append(
-            check("PASS", f"optional knowledge package available: {package_id}")
-            if manifest
-            else check_with_hint(
-                "WARN",
-                f"optional knowledge package available: {package_id}",
-                "This platform contract recommends the package, but onboarding can continue.",
-                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
-            )
-        )
-    for template_id in list_value(requires.get("templates")):
-        checks.append(
-            check("PASS", f"required template available: {template_id}")
-            if template_manifest_path(workplace_root, template_id)
-            else check_with_hint(
-                "FAIL",
-                f"required template available: {template_id}",
-                "This platform contract marks the template as required.",
-                f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
-                "move it to includes.templates if optional",
-            )
-        )
-    for template_id in _platform_contract_policy.includes(data, "templates"):
-        checks.append(
-            check("PASS", f"optional template available: {template_id}")
-            if template_manifest_path(workplace_root, template_id)
-            else check_with_hint(
-                "WARN",
-                f"optional template available: {template_id}",
-                "This platform contract recommends the template, but onboarding can continue without it.",
-                f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
-            )
-        )
-    return checks
 
 
 def command_platform_contract_doctor(args: argparse.Namespace) -> int:
@@ -18719,7 +18563,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
         for template_id in list_value(requires.get("templates")):
             checks.append(
                 check("PASS", f"required template available: {template_id}")
-                if template_manifest_path(workplace_root, template_id)
+                if _template_catalog_service.manifest(workplace_root, template_id)
                 else check_with_hint(
                     "FAIL",
                     f"required template available: {template_id}",
@@ -18731,7 +18575,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
         for template_id in _platform_contract_policy.includes(data, "templates"):
             checks.append(
                 check("PASS", f"optional template available: {template_id}")
-                if template_manifest_path(workplace_root, template_id)
+                if _template_catalog_service.manifest(workplace_root, template_id)
                 else check_with_hint(
                     "WARN",
                     f"optional template available: {template_id}",
@@ -18850,31 +18694,6 @@ def command_template_add(args: argparse.Namespace) -> int:
     return 0
 
 
-def resolve_template_root(workplace_root: Path, template_root_id: str | None = None, *, mode: str = "read") -> tuple[str, Path]:
-    registry_path = workplace_root / "registries" / "templates.yaml"
-    data = load_yaml_document(registry_path)
-    roots = data.get("template_roots") if isinstance(data, dict) else None
-    entries = [entry for entry in roots if isinstance(entry, dict)] if isinstance(roots, list) else []
-    if not entries:
-        entries = [{"id": "global", "label": "Global reusable templates", "path": "${PF_TEMPLATES}", "scope": "workplace", "status": "available"}]
-        if mode == "write":
-            upsert_registry_entry(registry_path, "template_roots", entries[0])
-    selected = None
-    if template_root_id:
-        for entry in entries:
-            if str(entry.get("id")) == template_root_id:
-                selected = entry
-                break
-        if selected is None:
-            raise SystemExit(f"FAIL: template root '{template_root_id}' not found in registries/templates.yaml")
-    else:
-        available = [entry for entry in entries if str(entry.get("status", "available")) == "available"]
-        selected = available[0] if available else entries[0]
-    root_id = str(selected.get("id", "global"))
-    root_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(selected.get("path") or "${PF_TEMPLATES}")))
-    if mode == "write":
-        root_path.mkdir(parents=True, exist_ok=True)
-    return root_id, root_path
 
 
 def resolve_platform_root(workplace_root: Path, platform_root_id: str | None = None, *, mode: str = "read") -> tuple[str, Path]:
@@ -18885,7 +18704,7 @@ def resolve_platform_root(workplace_root: Path, platform_root_id: str | None = N
     if not entries:
         entries = [{"id": "global", "label": "Global platform contracts", "path": "${PF_PLATFORM_CONTRACTS}", "scope": "workplace", "status": "available"}]
         if mode == "write":
-            upsert_registry_entry(registry_path, "platform_contract_roots", entries[0])
+            _workplace_registry_writer.upsert(registry_path, "platform_contract_roots", entries[0])
     selected = None
     if platform_root_id:
         for entry in entries:
@@ -18914,7 +18733,7 @@ def command_template_create(args: argparse.Namespace) -> int:
     template_id = str(args.id)
     if not re.fullmatch(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*", template_id):
         raise SystemExit("FAIL: template id must be lowercase and may use dots or dashes")
-    root_id, template_root = resolve_template_root(workplace_root, getattr(args, "template_root", None), mode="write" if args.apply else "read")
+    root_id, template_root = _template_catalog_service.resolve_root(workplace_root, getattr(args, "template_root", None), mode="write" if args.apply else "read")
     target = template_root / template_id
     slug, proposal_path = write_resource_proposal(workplace_root, "template-create", template_id, {"template_id": template_id, "template_root": root_id, "target": rel(target, workplace_root)})
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.started", target={"template_id": template_id}, status="dry_run" if args.dry_run else "started", message="template authoring started"))
@@ -18946,7 +18765,7 @@ def command_template_create(args: argparse.Namespace) -> int:
     write_authoring_text(target / "artifacts" / "template-authoring-report.md", f"# Template Authoring Report\n\n- template: {template_id}\n- template_root: {root_id}")
     write_authoring_text(target / "reviews" / "template-authoring-review.md", "# Template Authoring Review\n\nResult: pass_with_conditions")
     write_authoring_text(target / "handoffs" / "template-ready-handoff.md", f"# Handoff: template-create -> template consumers\n\nTemplate `{template_id}` is ready for review.")
-    upsert_registry_entry(workplace_root / "registries" / "templates.yaml", "templates", {"id": template_id, "title": args.title, "path": rel(target / "template.yaml", workplace_root), "template_root": root_id, "kind": args.kind, "status": "available"})
+    _workplace_registry_writer.upsert(workplace_root / "registries" / "templates.yaml", "templates", {"id": template_id, "title": args.title, "path": rel(target / "template.yaml", workplace_root), "template_root": root_id, "kind": args.kind, "status": "available"})
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.created", target={"template_id": template_id}, status="created", message="template structure created"))
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.registered", target={"template_id": template_id}, status="registered", message="template registry updated"))
     doctor_status, doctor_output = run_command_capture(command_template_doctor, argparse.Namespace(workplace=str(workplace_root), template=template_id))
@@ -18958,26 +18777,13 @@ def command_template_create(args: argparse.Namespace) -> int:
     return doctor_status
 
 
-def template_manifest_path(workplace_root: Path, template_id: str) -> Path | None:
-    _root_id, root_path = resolve_template_root(workplace_root, None, mode="read")
-    candidate = root_path / template_id / "template.yaml"
-    if candidate.is_file():
-        return candidate
-    registry = load_yaml_document(workplace_root / "registries" / "templates.yaml")
-    entries = registry.get("templates") if isinstance(registry, dict) else None
-    if isinstance(entries, list):
-        for entry in entries:
-            if isinstance(entry, dict) and str(entry.get("id")) == template_id and entry.get("path"):
-                path = workplace_root / str(entry["path"])
-                return path if path.is_file() else None
-    return None
 
 
 def command_template_doctor(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     template_id = str(args.template)
     checks: list[Check] = []
-    manifest_path = template_manifest_path(workplace_root, template_id)
+    manifest_path = _template_catalog_service.manifest(workplace_root, template_id)
     checks.append(
         check("PASS", "template manifest found")
         if manifest_path
@@ -19034,64 +18840,6 @@ def command_template_doctor(args: argparse.Namespace) -> int:
     return print_checks(checks)
 
 
-def upsert_registry_entry(path: Path, collection_key: str, entry: dict[str, Any]) -> str:
-    if path.exists() and not path.is_file():
-        raise SystemExit(f"FAIL: registry path is not a file: {path}")
-    if path.is_file():
-        data = load_yaml_document(path)
-        error = yaml_error(data)
-        if error:
-            raise SystemExit(f"FAIL: registry YAML invalid; original preserved: {path}: {error}")
-        if not isinstance(data, dict) or not data:
-            raise SystemExit(f"FAIL: registry must be a non-empty YAML object; original preserved: {path}")
-        if collection_key not in data:
-            entries = []
-            data[collection_key] = entries
-        else:
-            entries = data.get(collection_key)
-        if not isinstance(entries, list):
-            raise SystemExit(
-                f"FAIL: registry collection {collection_key} must be a list; original preserved: {path}"
-            )
-    else:
-        data = {"schema_version": 1, collection_key: []}
-        entries = data[collection_key]
-    result = upsert_resource(entries, entry)
-    registry_schemas = {
-        "distributions.yaml": "distributions-registry.schema.json",
-        "platforms.yaml": "platform-registry.schema.json",
-        "knowledge-roots.yaml": "knowledge-roots-registry.schema.json",
-        "package-roots.yaml": "package-roots-registry.schema.json",
-        "templates.yaml": "template-registry.schema.json",
-        "tools.yaml": "tool-registry.schema.json",
-        "mcp.yaml": "mcp-registry.schema.json",
-        "specializations.yaml": "specialization-registry.schema.json",
-        "project-classifiers.yaml": "project-classifier-registry.schema.json",
-        "runtime-drivers.yaml": "runtime-driver-registry.schema.json",
-        "private-resource-paths.yaml": "private-resource-paths-registry.schema.json",
-        "platform-contract-roots.yaml": "platform-contract-roots-registry.schema.json",
-    }
-    schema_name = registry_schemas.get(path.name)
-    if schema_name:
-        schema_path = ROOT / "schemas" / schema_name
-        try:
-            schema = json.loads(schema_path.read_text(encoding="utf-8"))
-            errors = _update_schema_checks.validate(data, schema, schema, "$")
-        except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
-            raise SystemExit(f"FAIL: registry schema validation unavailable for {path}: {exc}") from exc
-        if errors:
-            raise SystemExit(
-                f"FAIL: registry update rejected; original preserved: {path}: {'; '.join(errors[:8])}"
-            )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-    try:
-        temporary.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
-        os.replace(temporary, path)
-    finally:
-        if temporary.exists():
-            temporary.unlink()
-    return result
 
 
 def command_tool_register(args: argparse.Namespace) -> int:
@@ -19112,7 +18860,7 @@ def command_tool_register(args: argparse.Namespace) -> int:
     if args.dry_run:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
-    result = upsert_registry_entry(workplace_root / "registries" / "tools.yaml", "tools", entry)
+    result = _workplace_registry_writer.upsert(workplace_root / "registries" / "tools.yaml", "tools", entry)
     append_workplace_resource_event(
         workplace_root,
         resource_management_event(
@@ -19149,7 +18897,7 @@ def command_mcp_register(args: argparse.Namespace) -> int:
     if args.dry_run:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
-    result = upsert_registry_entry(workplace_root / "registries" / "mcp.yaml", "mcp_servers", entry)
+    result = _workplace_registry_writer.upsert(workplace_root / "registries" / "mcp.yaml", "mcp_servers", entry)
     append_workplace_resource_event(
         workplace_root,
         resource_management_event(
@@ -19298,7 +19046,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
         "metadata": {"tags": []},
     }
     write_authoring_text(target, dump_yaml(document))
-    upsert_registry_entry(specialization_registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
+    _workplace_registry_writer.upsert(specialization_registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-create", event_type="specialization.created", target={"specialization_id": specialization_id}, status="created", message="specialization created"))
     print(f"SPECIALIZATION: {rel(target, workplace_root)}")
     return print_checks(specialization_doctor_checks(workplace_root, specialization_id))
@@ -19417,26 +19165,6 @@ def command_project_override_doctor(args: argparse.Namespace) -> int:
     return print_checks(checks)
 
 
-def platform_dependency_preflight(
-    workplace_root: Path,
-    required_packages: list[str],
-    required_templates: list[str],
-    required_tools: list[str],
-    required_mcp: list[str],
-) -> None:
-    missing: list[str] = []
-    for package_id in required_packages:
-        if not _project_package_catalog_reader.find_manifests(workplace_root, package_id):
-            missing.append(f"knowledge package {package_id}")
-    for template_id in required_templates:
-        if template_manifest_path(workplace_root, template_id) is None:
-            missing.append(f"template {template_id}")
-    tool_ids = registry_ids_from_workplace(workplace_root, "tools.yaml", "tools")
-    mcp_ids = registry_ids_from_workplace(workplace_root, "mcp.yaml", "mcp_servers")
-    missing.extend(f"tool {item}" for item in required_tools if item not in tool_ids)
-    missing.extend(f"MCP {item}" for item in required_mcp if item not in mcp_ids)
-    if missing:
-        raise SystemExit("FAIL: required platform resources missing: " + ", ".join(missing))
 
 
 def platform_authoring_values(args: argparse.Namespace) -> dict[str, Any]:
@@ -19554,7 +19282,7 @@ def build_platform_authoring_plan(
     if not (workplace_root / "workplace.yaml").is_file():
         raise SystemExit(f"FAIL: workplace is not initialized: {workplace_root}")
     values = platform_authoring_values(args)
-    platform_dependency_preflight(
+    _platform_dependency_preflight_service.check(
         workplace_root,
         values["required_packages"],
         values["required_templates"],
@@ -19709,7 +19437,7 @@ def build_platform_authoring_plan(
         )
         failures = [
             item.message
-            for item in platform_contract_semantic_checks(
+            for item in _platform_contract_validation_service.validate(
                 workplace_root,
                 candidate,
                 values["contract_id"],

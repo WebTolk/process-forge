@@ -1,0 +1,68 @@
+{
+  "rows_before": 1368,
+  "rows_after": 1373,
+  "changed_rows": 4,
+  "new_rows": 5,
+  "untouched_rows": 1364,
+  "changes": [
+    {
+      "path": "tools/processforge.py",
+      "previous": "cef407df043a48177716779d4e3c9229b1b96b1170a727786f2ba5674ff23b05",
+      "sha256": "79a55baa2c47e3663e14f715d3c5a6b06d845b08938d1374c238e47d0fac7e8d",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "previous": "6828d98c57ffbe864b0c878c7778346f555607ac843bef5d0e5a42128ab062d9",
+      "sha256": "06741b15a9b91e909c4faf0a0d4451a3e1df7dde041bd2e023579a412f50b014",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "previous": "eae81c89c3d6b6aa9d66fe627dab6d5fc6ead85c5b1c9b6316e9e92b4bdca063",
+      "sha256": "0ffaab84192c6bd97a02e14ae22c1271e652d04887ade1b2833aea7903b0f9a1",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/registry_write.py",
+      "previous": null,
+      "sha256": "aeb4f46bdfae83dbbe86f1dcdb1ea98c36d1d11c60ce7cbfb25b87d3ef2f94c3",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/common/values.py",
+      "previous": "26c0d3e47ca6b6fcf99d54e3fd6b187799292c34663ac03d392887c657849984",
+      "sha256": "670ffc254d5063641bc00f2c55b23f5886acd9ec89076a34ee87d08b5e825f5f",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/templates.py",
+      "previous": null,
+      "sha256": "86321caa8deb9199e6579ba9cbff3b03fc27a4a1c6f102a358c6d7c3cb964285",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/project/platform_validation.py",
+      "previous": null,
+      "sha256": "d7d3ecffbd0d5d4687a71b4cb21fad5dcc881ea4232c15e4f0e10829426b6ede",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/common/policies.py",
+      "previous": null,
+      "sha256": "8b9ba9bbb9a778b8ec306b182fd4e277dfbf5b7fc884b506737ea2ab928abb21",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/project/requirements.py",
+      "previous": null,
+      "sha256": "08026d4dbcbe0ff0bd71958a16eb1ed98224bad43ce667fc8cd5733637d5a96d",
+      "kind": "added"
+    }
+  ],
+  "preserved_known_drift": [
+    ".pf/process-forge.yaml",
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ]
+}

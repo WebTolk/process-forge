@@ -104,6 +104,11 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/common/yaml_dump.py` | Exact existing YAML scalar and recursive serialization. |
 | `src/processforge_core/process_catalog/audit.py` | Existing ordered builtin process catalog report and flat package index. |
 | `src/processforge_core/project/setup.py` | Existing workplace setup proposal mapping and Markdown. |
+| `src/processforge_core/project/registry_write.py` | Existing schema-checked registry upsert and atomic staging. |
+| `src/processforge_core/project/templates.py` | Existing template root selection and manifest lookup. |
+| `src/processforge_core/project/platform_validation.py` | Existing ordered platform semantic validation. |
+| `src/processforge_core/common/policies.py` | Shared policy entry and identifier matching primitives. |
+| `src/processforge_core/project/requirements.py` | Existing platform dependency preflight and registry ID reads. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -943,8 +948,8 @@ network and timestamp generation retain their earlier owners.
 `project.platform_documents.PlatformDocumentBuilder` owns the existing platform
 document path/byte/note list construction. It preserves every YAML and Markdown
 literal, output order and native lookup failure; it returns data without writing
-files. Full platform authoring preflight/publication and semantic validation
-retain their earlier owners.
+files. Platform authoring publication retains its owner; semantic validation now uses
+PlatformContractValidationService as described below.
 
 `project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
 owns current registry path checks and package-root checks through the existing
@@ -972,5 +977,35 @@ all its prior definitions/data remain unchanged.
 `project.setup.WorkplaceSetupProposalBuilder` owns the existing setup proposal
 mapping and Markdown using ProjectCoordinationReader. Defaults, literal path
 placeholders, list coercions, borrowed fields, ordering and invalid-mode refusals
-are preserved. Constructors perform no I/O; actual setup/registry writes,
-transactions, locks, recovery and later delivery layers retain their owners.
+are preserved. Constructors perform no I/O; actual setup writes, authoring transactions, locks, recovery and later delivery
+layers retain their owners. Registry upsert now belongs to WorkplaceRegistryWriter.
+
+## Registry writes, template lookup and platform validation
+
+`project.registry_write.WorkplaceRegistryWriter(distribution_root)` owns the
+existing registry upsert. It retains schema mapping/validation and original
+refusals, UUID staging beside the destination, os.replace and finally cleanup.
+No locking, retry or new atomic-write behavior is added. The shared upsert_resource
+primitive lives in existing common.values, whose prior implementation is intact.
+
+`project.templates.TemplateCatalogService(distribution_root)` owns existing
+template-root selection and manifest lookup. It reuses WorkspacePathReferenceReader
+and WorkplaceRegistryWriter. Read mode stays read-only; write mode preserves the
+fallback registry upsert before selected-ID validation and the original mkdir
+ordering. Candidate-first lookup, first registry match and original path behavior
+remain unchanged; no new containment or template policy is introduced.
+
+`project.platform_validation.PlatformContractValidationService(distribution_root)`
+owns the complete existing semantic platform checks through concrete contract,
+resolution, selection, package and template owners. Check/message order, repeated
+live reads, required/recommended resources, cycles and falsey resolution fallback
+are preserved. Pure policy_entries/policy_id_matches live in common.policies;
+other Main consumers use those same shared functions.
+
+`project.requirements.PlatformDependencyPreflightService(distribution_root)` owns
+the original dependency preflight and direct workplace registry-ID reads. Missing
+resource order, duplicates, tool/MCP reads and native refusals remain unchanged.
+Constructors perform no I/O or retain project documents. All actual callers use
+these owners in the same source slice; authoring publication/transactions and
+unselected recovery paths remain with their earlier owners. This source refactor
+does not complete the OOP epics or archive/install/Runtime/connected-host gates.

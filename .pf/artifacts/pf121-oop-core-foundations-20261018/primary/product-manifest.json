@@ -1,0 +1,15 @@
+{
+  "baseline_commit": "d935e9bc981c85c4179eb91062c92eabe29ea92f",
+  "files": {
+    "tools/processforge.py": "9a45906134e4edbeeed48e73f1e47a791831b7a2e2500168526d40afffbb58af",
+    "docs/concepts/python-core-structure.md": "06741b15a9b91e909c4faf0a0d4451a3e1df7dde041bd2e023579a412f50b014",
+    "docs/ru/concepts/python-core-structure.md": "0ffaab84192c6bd97a02e14ae22c1271e652d04887ade1b2833aea7903b0f9a1",
+    "src/processforge_core/project/registry_write.py": "aeb4f46bdfae83dbbe86f1dcdb1ea98c36d1d11c60ce7cbfb25b87d3ef2f94c3",
+    "src/processforge_core/common/values.py": "8f6d3372fd162e5a2cbdbf5dedeb3b3295ce194327d44dce2b7fdb684d6a9a8a",
+    "src/processforge_core/project/templates.py": "86321caa8deb9199e6579ba9cbff3b03fc27a4a1c6f102a358c6d7c3cb964285",
+    "src/processforge_core/project/platform_validation.py": "d7d3ecffbd0d5d4687a71b4cb21fad5dcc881ea4232c15e4f0e10829426b6ede",
+    "src/processforge_core/common/policies.py": "8b9ba9bbb9a778b8ec306b182fd4e277dfbf5b7fc884b506737ea2ab928abb21",
+    "src/processforge_core/project/requirements.py": "08026d4dbcbe0ff0bd71958a16eb1ed98224bad43ce667fc8cd5733637d5a96d",
+    "checksums/processforge.sha256": "3ee160fed784861fc7f766205711fbb27d32623cc68aed042648798e4dad3036"
+  }
+}

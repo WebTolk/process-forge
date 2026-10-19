@@ -48,3 +48,12 @@ def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
                 if value:
                     ids.add(str(value))
     return ids
+
+
+def upsert_resource(resources: list[Any], resource: dict[str, Any]) -> str:
+    for index, item in enumerate(resources):
+        if isinstance(item, dict) and str(item.get("id")) == str(resource["id"]):
+            resources[index] = resource
+            return "updated"
+    resources.append(resource)
+    return "added"

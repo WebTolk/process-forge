@@ -109,6 +109,11 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/common/yaml_dump.py` | Точная прежняя сериализация скаляров и рекурсивного YAML. |
 | `src/processforge_core/process_catalog/audit.py` | Прежний отчёт каталога процессов и плоский индекс пакетов. |
 | `src/processforge_core/project/setup.py` | Прежние модель предложения настройки workplace и Markdown. |
+| `src/processforge_core/project/registry_write.py` | Прежнее обновление реестра с проверкой схем и атомарным staging. |
+| `src/processforge_core/project/templates.py` | Прежний выбор корня шаблонов и поиск манифестов. |
+| `src/processforge_core/project/platform_validation.py` | Прежняя упорядоченная семантическая проверка платформ. |
+| `src/processforge_core/common/policies.py` | Общие функции policy entries и сопоставления ID. |
+| `src/processforge_core/project/requirements.py` | Прежняя проверка зависимостей платформ и чтение ID реестров. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -957,8 +962,8 @@ UpdateDocumentReader — путём и мягким чтением staged record
 `project.platform_documents.PlatformDocumentBuilder` владеет прежним построением
 списка путей, байтов и заметок документов платформы. Литералы YAML и Markdown,
 порядок результатов и исходные ошибки обращений сохранены; метод возвращает
-данные и не записывает файлы. Полный preflight/publication авторинга платформ
-и семантическая проверка сохраняют действующих владельцев.
+данные и не записывает файлы. Publication авторинга платформ сохраняет владельца; семантическая проверка
+перенесена в PlatformContractValidationService, описанный ниже.
 
 `project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
 владеет текущими проверками путей реестров и корней пакетов через готовые
@@ -986,5 +991,34 @@ callback с одним аргументом; остальные legacy-зави�
 `project.setup.WorkplaceSetupProposalBuilder` владеет прежним словарём предложения
 настройки и Markdown через ProjectCoordinationReader. Defaults, path placeholders,
 преобразование списков, ссылки на поля, порядок и отказы неверного режима сохранены.
-Конструкторы не выполняют ввод-вывод. Настройка и запись реестров, транзакции,
-блокировки, recovery и последующие слои приёмки сохраняют действующих владельцев.
+Конструкторы не выполняют ввод-вывод. Настройка, транзакции авторинга, блокировки, recovery и последующие слои
+приёмки сохраняют владельцев. Обновление реестра — в WorkplaceRegistryWriter.
+
+## Запись реестров, поиск шаблонов и проверки платформ
+
+`project.registry_write.WorkplaceRegistryWriter(distribution_root)` владеет
+прежним обновлением реестра. Сохранены карта схем, проверки и исходные отказы,
+UUID staging рядом с назначением, os.replace и очистка finally. Новых блокировок,
+повторов или правил атомарности нет. Общий upsert_resource находится в прежнем
+common.values, все существовавшие определения которого сохранены.
+
+`project.templates.TemplateCatalogService(distribution_root)` владеет выбором
+корня шаблонов и поиском манифеста через WorkspacePathReferenceReader и
+WorkplaceRegistryWriter. Read не записывает; write сохраняет fallback upsert
+перед проверкой выбранного ID и прежний порядок mkdir. Приоритет кандидата,
+первое совпадение реестра и прежние правила путей сохранены без новых ограничений.
+
+`project.platform_validation.PlatformContractValidationService(distribution_root)`
+владеет прежней полной семантической проверкой через конкретные владельцы
+контрактов, разрешения платформ, выбора, пакетов и шаблонов. Порядок сообщений,
+повторные чтения, обязательность ресурсов, циклы и falsey fallback сохранены.
+Чистые policy_entries/policy_id_matches находятся в common.policies; остальные
+потребители Main используют эти же общие функции.
+
+`project.requirements.PlatformDependencyPreflightService(distribution_root)`
+владеет прежним preflight зависимостей и прямым чтением ID реестров workplace.
+Порядок отсутствующих ресурсов, дубликаты, чтения tools/MCP и исходные отказы
+сохранены. Конструкторы не читают файлы и не удерживают документы проекта.
+Все фактические потребители переведены в этом срезе. Publication/транзакции
+авторинга и невыбранные recovery-пути сохраняют прежних владельцев. Source-only
+рефакторинг не завершает OOP-эпики и приёмку архива/установки/Runtime/connected host.

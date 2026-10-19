@@ -1,0 +1,560 @@
+{
+  "passed": true,
+  "total": 88,
+  "native_exceptions": 12,
+  "groups": {
+    "annotations": 9,
+    "policy": 10,
+    "list-upsert": 5,
+    "registry": 20,
+    "templates": 18,
+    "semantics": 15,
+    "dependencies": 6,
+    "registry-ids": 3,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "policy_entries",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "policy_id_matches",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "upsert_resource",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "registry_ids_from_workplace",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_contract_semantic_checks",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "resolve_template_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "template_manifest_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "upsert_registry_entry",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "platform_dependency_preflight",
+      "passed": true
+    },
+    {
+      "group": "policy",
+      "case": "entries-9",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "743b5cc2b69ab46fbd2da4fd67105f4a2d28ffecbe214cffcadb8bcf57c26c7d"
+    },
+    {
+      "group": "policy",
+      "case": "entries-10",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7718bc12fa1d5c028e94d326d9c45b4abcd20ca91c7babbefaa6e82217e569c6"
+    },
+    {
+      "group": "policy",
+      "case": "entries-11",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "ed0f0c8388d7eff957d72d20f2abf06fc1a2c323e8d0038ce845bb087e62dbdd"
+    },
+    {
+      "group": "policy",
+      "case": "entries-12",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "edde8bad1cc8d63a357b985f7c86242529dbdb912aa80cf5824f00bc6c9fd64d"
+    },
+    {
+      "group": "policy",
+      "case": "match-13",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "ce29da5b9df0e9ea9798ef5b63ac425bc8246dfbc937a5d055ea6d55f5e69647"
+    },
+    {
+      "group": "policy",
+      "case": "match-14",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6050ee47fe2c968ab35df2523c11d6fde7223a6867da68117c0801b656fc0714"
+    },
+    {
+      "group": "policy",
+      "case": "match-15",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7d2055eebd7a6184d365845caac94e007218a8d81adcd77a3e18abef9761e495"
+    },
+    {
+      "group": "policy",
+      "case": "match-16",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "043cf6e806e4bfcfbad6cd5138e73fb41ce05d9f1078479b610b85becddf2f4b"
+    },
+    {
+      "group": "policy",
+      "case": "match-17",
+      "passed": true,
+      "native_exception": "PatternError",
+      "observation_sha256": "df6144deca65aa2092d4d959d2356d55e46c8b4cf82da7f47362eba621a2f4db"
+    },
+    {
+      "group": "list-upsert",
+      "case": "list-18",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a532abe07fd35fe381098ac83acbc1bcab596cfef0eab498679cc9351b4b125d"
+    },
+    {
+      "group": "list-upsert",
+      "case": "list-19",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b40bb806040c444d3c023441ca78bb722c2eae33fdf64ae82dad531cfd8a3a88"
+    },
+    {
+      "group": "list-upsert",
+      "case": "list-20",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "676eee74cb0c2bc80428628f90cf3ba954568e6f145502e17c07f1639ce07fc4"
+    },
+    {
+      "group": "list-upsert",
+      "case": "list-21",
+      "passed": true,
+      "native_exception": "KeyError",
+      "observation_sha256": "846672c14cd207ac6a7bfae8b77f316706cf24b2fa22b444286e0b42236509c2"
+    },
+    {
+      "group": "policy",
+      "case": "dict borrowed",
+      "passed": true
+    },
+    {
+      "group": "list-upsert",
+      "case": "first replacement borrowed",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "created result old",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "created result new",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "create-custom",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1793a76534cdaf146354cccedf92da3d178f15c72307b8ce0a33467fa06a0ab2"
+    },
+    {
+      "group": "registry",
+      "case": "update-unknowns",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8ef645c6baf7f49b8b2f138ced95f365e45ee4da4f011967d2de5876619ec1c3"
+    },
+    {
+      "group": "registry",
+      "case": "missing-collection",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "849309b9f72ad659c353235ab922b98b7885af5ec43417906d68d597bfd20540"
+    },
+    {
+      "group": "registry",
+      "case": "invalid-yaml preserved old",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "invalid-yaml preserved new",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "invalid-yaml",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "99ecb656177eb76016733eec4521bc898624e5fbd708d37bedddc9889419a5d3"
+    },
+    {
+      "group": "registry",
+      "case": "empty-object preserved old",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "empty-object preserved new",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "empty-object",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "b48737552142b27f6505f1bea0a62edc43b9316b70afff1ae10c4a0fd92cf243"
+    },
+    {
+      "group": "registry",
+      "case": "wrong-collection preserved old",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "wrong-collection preserved new",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "wrong-collection",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "f139779f05c4a5397f71cf15b72f6286df7c05040ec62dda288b320430e9f3d3"
+    },
+    {
+      "group": "registry",
+      "case": "directory-refusal",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "43af86c3f7fe8827e94f509fa44ce90feafbdc08a0b8d0a0d7b50475a2f1428a"
+    },
+    {
+      "group": "registry",
+      "case": "known-schema-success",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4eb12fcd5cda1bd900ecec0cabf023af6908eda325638daf5d016845b87713f6"
+    },
+    {
+      "group": "registry",
+      "case": "known-schema-rejection",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "c576c65e46d9b783dedd4c56d31d0b4f2a52ef3fb027b3a72bb34163e154ded9"
+    },
+    {
+      "group": "registry",
+      "case": "replace failure preserved old",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "replace failure preserved new",
+      "passed": true
+    },
+    {
+      "group": "registry",
+      "case": "replace-failure-cleanup",
+      "passed": true,
+      "native_exception": "OSError",
+      "observation_sha256": "434da272a45eec927b996621f0aa8599e490bbda148f47c62427f65b202921c9"
+    },
+    {
+      "group": "templates",
+      "case": "fallback effect read old",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "fallback effect read new",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "fallback-read",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7d96a9424e486152f6c99a34348107c05ffebb7075b8d4ec9c05551791ed09ce"
+    },
+    {
+      "group": "templates",
+      "case": "unknown side effects read old",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "unknown side effects read new",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "unknown-read",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "a1d146529796d7f4b587ae25d2fb43b3647e3bf17c7d57b1af4891fdf2e2dc5a"
+    },
+    {
+      "group": "templates",
+      "case": "fallback effect write old",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "fallback effect write new",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "fallback-write",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e2943d6db6272ed4f3ec3cf0aa1ceb0476d227ba7b11fa13174b41361b3c2e49"
+    },
+    {
+      "group": "templates",
+      "case": "unknown side effects write old",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "unknown side effects write new",
+      "passed": true
+    },
+    {
+      "group": "templates",
+      "case": "unknown-write",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "aa5d1d2403af79b793c812998d2848063e17fafc1c1af95fdaf4d78f00308dfc"
+    },
+    {
+      "group": "templates",
+      "case": "available-selection",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "3afe1430dc7c295d0ab5e0051e068838a4af6c66c32cf1ae2d5d3f3c71ac9c69"
+    },
+    {
+      "group": "templates",
+      "case": "explicit-disabled",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1781f30699edf509372bdef5ae4b6707e0fc4659982094aa19c5e347bf2e3aa8"
+    },
+    {
+      "group": "templates",
+      "case": "manifest-missing",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c959bcba34e00cf8def73e7015666fdc4f1f92e85b09ae254812b2a6c8123172"
+    },
+    {
+      "group": "templates",
+      "case": "candidate-first",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "dc7784067d646119a09fb2b021700ba94c594b6e996c89ef516774974a1fcf89"
+    },
+    {
+      "group": "templates",
+      "case": "first-match-missing",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "80f54ee1ceb2c0202441c5b6954a4f1ef4bb2d552f3f4cdfada6bab012ffb5c1"
+    },
+    {
+      "group": "templates",
+      "case": "registry-manifest-found",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6ca7329aff6ea9fd5fe3dd894b788eef6d4e79b5eb7cb022957eedee966ad319"
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-empty old",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-empty new",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "semantic-empty",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "38835163585244582dedc651b01b3613040041b824ceaa35586c7a41e1bd9364"
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-references old",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-references new",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "semantic-references",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "66f53de3da43aff054d22abbe819d9d36a43b9d4af1dbf26ebcbde4bfcf7536c"
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-cycles old",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-cycles new",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "semantic-cycles",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1cad724eb03b72e1736784139fa329cd03084d5fabffdde275df8d348ea4c541"
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-real-resolve old",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-real-resolve new",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "semantic-real-resolve",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e8a8657dc9f4a12d088f991c6edc23333e9e13a3e0235e862d827a3696a3f764"
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-falsey-resolution old",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "returned checks semantic-falsey-resolution new",
+      "passed": true
+    },
+    {
+      "group": "semantics",
+      "case": "semantic-falsey-resolution",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e8a8657dc9f4a12d088f991c6edc23333e9e13a3e0235e862d827a3696a3f764"
+    },
+    {
+      "group": "dependencies",
+      "case": "dependencies-none",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c57554a137188d78ab286f5a7019080cff4b7680b612f942422282fe527208ed"
+    },
+    {
+      "group": "dependencies",
+      "case": "dependencies-missing-ordered",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "036f5823d67e748571869667cf4ab20b9612a9d70e20b403c0ce0909eaac7590"
+    },
+    {
+      "group": "dependencies",
+      "case": "dependencies-template-required",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "f6d8b785cc11c8e764134278936cb8ae1fa45772cdc4728fbe2afb176645bc4c"
+    },
+    {
+      "group": "dependencies",
+      "case": "all found return old",
+      "passed": true
+    },
+    {
+      "group": "dependencies",
+      "case": "all found return new",
+      "passed": true
+    },
+    {
+      "group": "dependencies",
+      "case": "all-found",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a9cb278cbb8bd7d550ba2203fb01c60326f2eaec7fab420db33fd8bb1fa2babf"
+    },
+    {
+      "group": "registry-ids",
+      "case": "ids-tools.yaml",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "156e0b26581fffa3ca1b523b594579d9a5ad27cee704b494e49a3523b2e402b9"
+    },
+    {
+      "group": "registry-ids",
+      "case": "ids-mcp.yaml",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "96f7b26f273dc97ff3dc3766ed7f37362039e7a4dba072408e50b51ebd497f8f"
+    },
+    {
+      "group": "registry-ids",
+      "case": "ids-missing.yaml",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5ee03e829655c83864ac5343eb63f1b3904c2e94f1f061b3d2e27c70b9d920be"
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "9a45906134e4edbeeed48e73f1e47a791831b7a2e2500168526d40afffbb58af",
+    "docs/concepts/python-core-structure.md": "06741b15a9b91e909c4faf0a0d4451a3e1df7dde041bd2e023579a412f50b014",
+    "docs/ru/concepts/python-core-structure.md": "0ffaab84192c6bd97a02e14ae22c1271e652d04887ade1b2833aea7903b0f9a1",
+    "src/processforge_core/project/registry_write.py": "aeb4f46bdfae83dbbe86f1dcdb1ea98c36d1d11c60ce7cbfb25b87d3ef2f94c3",
+    "src/processforge_core/common/values.py": "8f6d3372fd162e5a2cbdbf5dedeb3b3295ce194327d44dce2b7fdb684d6a9a8a",
+    "src/processforge_core/project/templates.py": "86321caa8deb9199e6579ba9cbff3b03fc27a4a1c6f102a358c6d7c3cb964285",
+    "src/processforge_core/project/platform_validation.py": "d7d3ecffbd0d5d4687a71b4cb21fad5dcc881ea4232c15e4f0e10829426b6ede",
+    "src/processforge_core/common/policies.py": "8b9ba9bbb9a778b8ec306b182fd4e277dfbf5b7fc884b506737ea2ab928abb21",
+    "src/processforge_core/project/requirements.py": "08026d4dbcbe0ff0bd71958a16eb1ed98224bad43ce667fc8cd5733637d5a96d"
+  },
+  "scope": "Bounded real scratch I/O/default wiring and direct/copied Core; native full AST/signature/trace proofs retained separately. No Runtime/service/host starts or ZIP checks."
+}
