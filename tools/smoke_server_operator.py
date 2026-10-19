@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
 from pf_runtime import service
+import smoke_server_console
 
 
 def put(path, value):
@@ -167,10 +168,12 @@ def main():
                 process.return_value.serve.return_value = 0
                 assert service.command_serve(parsed, core) == 0
             text = stream.getvalue()
-            assert bool(text) == (enabled and stream.isatty())
+            assert bool(text) == stream.isatty()
             if text:
                 assert "ProcessForge" in text and "closing this window stops" in text
+                assert f"App Server Core {core.PROCESSFORGE_VERSION} | PID" in text
                 assert all(ord(char) < 128 for char in text) and "\x1b" not in text
+    assert smoke_server_console.main() == 0
     print("PASS: actual HTTP busy/unknown/inflight/owner/auth guards, force, old capability refusal, launcher and readonly JSON")
     return 0
 

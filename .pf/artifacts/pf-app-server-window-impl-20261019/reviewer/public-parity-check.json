@@ -1,0 +1,24 @@
+{
+  "manifest_records": 1395,
+  "unique_paths": 1395,
+  "public_copy_hashes_verified": 1395,
+  "working_source_hashes_verified_in_read_scope": 1076,
+  "working_source_bodies_not_read_outside_scope": 319,
+  "baseline_config_exceptions": [
+    ".pf/process-forge.yaml"
+  ],
+  "inventory_matches_copy_and_manifest": true,
+  "preexisting_inventory_drift": [
+    {
+      "path": "tools/release_metadata_contract.py",
+      "baseline_release_bytes_equal": true,
+      "release_sha256": "c55c5402dd04e8431f0147ce6886408229a3450a089745965930dfe2950faeff"
+    },
+    {
+      "path": "tools/smoke_stable_update_manifest_points_to_release.py",
+      "baseline_release_bytes_equal": true,
+      "release_sha256": "c6e37e66d35104bdb19181308f17befba559d1734af454062a349246f8ae6658"
+    }
+  ],
+  "issues": []
+}

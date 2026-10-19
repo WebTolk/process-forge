@@ -1,0 +1,89 @@
+{
+  "files": [
+    {
+      "path": ".pf/AGENTS.md",
+      "bytes": 8625,
+      "sha256": "7f1aca7befed20da8a20ddfacc15032a82dcddcb629d86ce80e4df6932d7b6a2"
+    },
+    {
+      "path": "tools/pf_runtime/console.py",
+      "bytes": 2288,
+      "sha256": "03bc0de821e6fc2aae21d2b8ceeeb53ed768c4225022b489025dc43ae6934af9"
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "bytes": 58664,
+      "sha256": "e58f37f16b28635b74734cfc3a5447e53e6985990254799c0564328bd62c8589"
+    },
+    {
+      "path": "tools/pf_cli/parsers/runtime.py",
+      "bytes": 12468,
+      "sha256": "eabb9ce15b652c0a9c8c4dea83bff57d0b172cf49ec5272e833afa91009546e6"
+    },
+    {
+      "path": "tools/pf_runtime/windows_console.py",
+      "bytes": 3912,
+      "sha256": "6b1b290aa25ffcb7339dc889ea17cf74dd1a19277d70f4bb9c0a158d5af0d7cc"
+    },
+    {
+      "path": "tools/pf_runtime/windows_autostart.py",
+      "bytes": 13277,
+      "sha256": "d8672cbcc01540b9d942b279a182beb9c8be509eb9de5dac108e4074a57a8e68"
+    },
+    {
+      "path": "tools/pf_runtime/linux_console.py",
+      "bytes": 8943,
+      "sha256": "9e64c96a2c98b3e21c921e923b1c922c7e6cad01a1e01d8e90be037bbef4dd98"
+    },
+    {
+      "path": "docs/getting-started/installation.md",
+      "bytes": 6194,
+      "sha256": "d10f9d8e52ae278a18b9537f7362141d1d072eb4e689a214046ae24317149503"
+    },
+    {
+      "path": "docs/getting-started/runtime-autostart.md",
+      "bytes": 9269,
+      "sha256": "012f2578d9a8bcf6203a1f3a8d67c2826f2b3c9ce4cb4a08cd6dedf31e01ef40"
+    },
+    {
+      "path": "docs/concepts/runtime-monitor.md",
+      "bytes": 8941,
+      "sha256": "0bf5c4be530ab490cf741ac7796fa2379cd19ef487f51014ec0d2dc422c50565"
+    },
+    {
+      "path": "docs/ru/getting-started/installation.md",
+      "bytes": 9503,
+      "sha256": "5209f6caee6f4e285ffec1eeff73ba4f6208facc0f1ab2df26863ba11a906b37"
+    },
+    {
+      "path": "docs/ru/getting-started/runtime-autostart.md",
+      "bytes": 14348,
+      "sha256": "a8f0041ca1c02671f973e8a8a713a3070282c722b4ef30db806776561bf0faa9"
+    },
+    {
+      "path": "docs/ru/concepts/runtime-monitor.md",
+      "bytes": 15066,
+      "sha256": "1a72eb6a57b8183c19b61c17a14d920cf2b4feb137369bc39aae220455f289b1"
+    },
+    {
+      "path": "tools/smoke_server_operator.py",
+      "bytes": 9722,
+      "sha256": "a8f86c69116c720b891867ea1fc78334ba704f891f4fdb7512791b26c4273bfc"
+    },
+    {
+      "path": "tools/smoke_runtime_mcp_autostart.py",
+      "bytes": 12537,
+      "sha256": "7ca0309ba2a6301da57048658c5988f976cd4ba1648963b3183bcf73f4f3b473"
+    },
+    {
+      "path": "tools/smoke_server_console.py",
+      "bytes": 27943,
+      "sha256": "8b8cc10cb9240f2c4cf3df36a87ef0d29d9b4db97e54b8a1188dcf178bb9ce7e"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "bytes": 152049,
+      "sha256": "483f6e691d7c084c547e6bf946077ffe15184cccedb1e47acc0f28197dff833c"
+    }
+  ]
+}

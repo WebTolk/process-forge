@@ -1,0 +1,35 @@
+[
+  {
+    "i": 1,
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "d71bc3",
+      "wall_time_seconds": 2.770384,
+      "exit_code": 0,
+      "original_token_count": 17,
+      "output": "PASS: ProcessForge structure and JSON Schema validation passed.\r\n"
+    }
+  },
+  {
+    "i": 2,
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "0e4936",
+      "wall_time_seconds": 6.4567296,
+      "exit_code": 0,
+      "original_token_count": 11,
+      "output": "PASS: public cleanliness checks passed.\r\n"
+    }
+  },
+  {
+    "i": 3,
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "b746db",
+      "wall_time_seconds": 2.0068682,
+      "exit_code": 0,
+      "original_token_count": 9,
+      "output": "PASS: checksum inventory matches.\r\n"
+    }
+  }
+]

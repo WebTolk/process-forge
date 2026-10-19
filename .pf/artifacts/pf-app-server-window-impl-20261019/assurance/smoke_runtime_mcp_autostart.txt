@@ -1,0 +1,4 @@
+Command: python -B tools/smoke_runtime_mcp_autostart.py via scoped ordinary-fixture harness
+Exit: 0
+
+PASS: Runtime Task Scheduler minimized/exact-interpreter/refusal previews and Codex MCP contracts (no real scheduler changes).

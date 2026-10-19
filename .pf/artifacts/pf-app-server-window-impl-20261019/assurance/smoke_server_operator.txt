@@ -1,0 +1,10 @@
+Command: python -B tools/smoke_server_operator.py via scoped ordinary-fixture harness
+Exit: 0
+
+...........................
+----------------------------------------------------------------------
+Ran 27 tests in 0.642s
+
+OK
+PASS: 27 server-console checks (desktop APIs mocked; native GUI acceptance excluded).
+PASS: actual HTTP busy/unknown/inflight/owner/auth guards, force, old capability refusal, launcher and readonly JSON

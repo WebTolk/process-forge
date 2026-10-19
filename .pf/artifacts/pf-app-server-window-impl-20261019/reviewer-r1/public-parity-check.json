@@ -1,0 +1,25 @@
+{
+  "old_public_copy_records_verified": 1395,
+  "new_public_copy_records_verified": 1395,
+  "raw_bytes_and_release_hashes_verified": true,
+  "added": [],
+  "removed": [],
+  "changed": [
+    "tools/pf_runtime/console.py",
+    "tools/smoke_server_console.py"
+  ],
+  "inventory_changed_entries": [
+    "tools/pf_runtime/console.py",
+    "tools/smoke_server_console.py"
+  ],
+  "new_inventory_matches_source": true,
+  "permitted_live_source_bodies_verified": 1076,
+  "other_live_source_bodies_not_read": 319,
+  "same_baseline_config_copy": true,
+  "old_report_and_hash_manifest_verified": true,
+  "old_assurance_report_verified": true,
+  "final_v2_frozen_files_verified": 17,
+  "old_manifest_sha256": "21a2c32b82db1f6f87693c1b14abedbd7b5380233abb5f382d6488757aa57d7f",
+  "new_manifest_sha256": "3390081a1fd76cbde972f1b823f9b1406a623dfd23fbb2f04ec8c067c0ecc64d",
+  "original_prepared_source_hashes_unchanged": 8
+}

@@ -1,0 +1,179 @@
+{
+  "checked_at": "2026-10-19T06:36:12.265601+00:00",
+  "assignment_id": "independent-reviewer-for-pf-app-server-server-window-task-20261019-in-1",
+  "context_id": "independent-reviewer-for-pf-app-server-server-window-task-20261019-in-1-capsule",
+  "reviewed_manifest_sha256": "28df18e3aeb23738aa82e26a3f1711f433fa7663a40c9e69363901609f6d3aad",
+  "frozen_file_checks": [
+    {
+      "path": ".pf/AGENTS.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "7f1aca7befed20da8a20ddfacc15032a82dcddcb629d86ce80e4df6932d7b6a2"
+    },
+    {
+      "path": "tools/pf_runtime/console.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "03bc0de821e6fc2aae21d2b8ceeeb53ed768c4225022b489025dc43ae6934af9"
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "e58f37f16b28635b74734cfc3a5447e53e6985990254799c0564328bd62c8589"
+    },
+    {
+      "path": "tools/pf_cli/parsers/runtime.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "eabb9ce15b652c0a9c8c4dea83bff57d0b172cf49ec5272e833afa91009546e6"
+    },
+    {
+      "path": "tools/pf_runtime/windows_console.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "6b1b290aa25ffcb7339dc889ea17cf74dd1a19277d70f4bb9c0a158d5af0d7cc"
+    },
+    {
+      "path": "tools/pf_runtime/windows_autostart.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "d8672cbcc01540b9d942b279a182beb9c8be509eb9de5dac108e4074a57a8e68"
+    },
+    {
+      "path": "tools/pf_runtime/linux_console.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "9e64c96a2c98b3e21c921e923b1c922c7e6cad01a1e01d8e90be037bbef4dd98"
+    },
+    {
+      "path": "docs/getting-started/installation.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "d10f9d8e52ae278a18b9537f7362141d1d072eb4e689a214046ae24317149503"
+    },
+    {
+      "path": "docs/getting-started/runtime-autostart.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "012f2578d9a8bcf6203a1f3a8d67c2826f2b3c9ce4cb4a08cd6dedf31e01ef40"
+    },
+    {
+      "path": "docs/concepts/runtime-monitor.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "0bf5c4be530ab490cf741ac7796fa2379cd19ef487f51014ec0d2dc422c50565"
+    },
+    {
+      "path": "docs/ru/getting-started/installation.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "5209f6caee6f4e285ffec1eeff73ba4f6208facc0f1ab2df26863ba11a906b37"
+    },
+    {
+      "path": "docs/ru/getting-started/runtime-autostart.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "a8f0041ca1c02671f973e8a8a713a3070282c722b4ef30db806776561bf0faa9"
+    },
+    {
+      "path": "docs/ru/concepts/runtime-monitor.md",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "1a72eb6a57b8183c19b61c17a14d920cf2b4feb137369bc39aae220455f289b1"
+    },
+    {
+      "path": "tools/smoke_server_operator.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "a8f86c69116c720b891867ea1fc78334ba704f891f4fdb7512791b26c4273bfc"
+    },
+    {
+      "path": "tools/smoke_runtime_mcp_autostart.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "7ca0309ba2a6301da57048658c5988f976cd4ba1648963b3183bcf73f4f3b473"
+    },
+    {
+      "path": "tools/smoke_server_console.py",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "8b8cc10cb9240f2c4cf3df36a87ef0d29d9b4db97e54b8a1188dcf178bb9ce7e"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "bytes_match": true,
+      "sha256_match": true,
+      "expected_sha256": "483f6e691d7c084c547e6bf946077ffe15184cccedb1e47acc0f28197dff833c"
+    }
+  ],
+  "final_assurance_report_sha256": "ae2402a7f6d66dd2d62700fde311a81c9d61352acac5dca2a0a10a5b8c98630e",
+  "independent_checks": [
+    {
+      "command": "python -B tools/smoke_server_console.py",
+      "exit": 0,
+      "methods": 27
+    },
+    {
+      "command": "python -B .pf/artifacts/pf-app-server-window-impl-20261019/linux/check_linux_console.py",
+      "exit": 0,
+      "methods": 26
+    },
+    {
+      "command": "python -B tools/validate-process-forge-schemas.py --root <frozen-public-copy>",
+      "exit": 0
+    },
+    {
+      "command": "python -B tools/validate-public-cleanliness.py --root <frozen-public-copy>",
+      "exit": 0
+    },
+    {
+      "command": "python -B tools/validate-process-forge-checksums.py --root <frozen-public-copy> --check",
+      "exit": 0
+    }
+  ],
+  "finding_R1": {
+    "severity": "P2",
+    "required": true,
+    "locations": [
+      "tools/pf_runtime/console.py:42",
+      "tools/pf_runtime/console.py:45",
+      "tools/pf_runtime/console.py:57",
+      "tools/pf_runtime/service.py:887",
+      "tools/smoke_server_console.py:80"
+    ],
+    "reproducer": ".pf/tmp/pf-app-server-window-impl-20261019/reviewer/probe_optional_presentation.py",
+    "observed": [
+      {
+        "failure": "write",
+        "exception": "OSError",
+        "serve_calls": 0,
+        "gui_calls": 0
+      },
+      {
+        "failure": "flush",
+        "exception": "OSError",
+        "serve_calls": 0,
+        "gui_calls": 0
+      }
+    ]
+  },
+  "confirmed_symbol_lines": {
+    "tools/pf_runtime/console.py:show_server_console": 26,
+    "tools/pf_runtime/service.py:command_serve": 878,
+    "tools/smoke_server_console.py:test_nontty_none_and_broken_streams_never_invoke_gui": 80
+  },
+  "native_successful_minimization_verified": false,
+  "product_written_by_reviewer": false,
+  "verdict": "fail",
+  "coordination": {
+    "participant": "pf-app-server-window-reviewer",
+    "read_ack": "msg_6bc2b5bc409a4f04b9a0e68b59fb8cdb",
+    "finding": "msg_89ce7a820c264cefa38a50f9e7eaea36",
+    "exact_line_correction": "msg_62b7ce37ff984f2f962ae08339a28861",
+    "result": "msg_71abc194aaae469d934bf955f532ea59",
+    "ledger_checkin": true,
+    "ledger_heartbeat": true,
+    "ledger_checkout": true
+  }
+}

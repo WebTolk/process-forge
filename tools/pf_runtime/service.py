@@ -883,11 +883,8 @@ def command_serve(args: argparse.Namespace, core: Any) -> int:
         runtime = RuntimeProcess(workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0))
     except ConfigurationError as exc:
         raise SystemExit(f"FAIL: {exc.code}") from None
-    if getattr(args, "console", False) and sys.stdout.isatty():
-        from .monitor import banner
-        ascii_only = (sys.stdout.encoding or "").lower().replace("-", "") != "utf8"
-        print("\n".join(banner(ascii_only)), flush=True)
-        print("Foreground Runtime: closing this window stops the server.", flush=True)
+    from .console import show_server_console
+    show_server_console(str(getattr(core, "PROCESSFORGE_VERSION", "")), minimized=bool(getattr(args, "minimized", False)))
     return runtime.serve(int(getattr(args, "port", 0) or 0))
 
 

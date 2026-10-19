@@ -51,7 +51,8 @@ class RuntimeCommandParser:
         runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
 
         runtime_serve = runtime_sub.add_parser("serve", aliases=["run"], help="Run PF Runtime in the foreground for one workplace.")
-        runtime_serve.add_argument("--console", action="store_true", help="Show a foreground banner on an interactive terminal.")
+        runtime_serve.add_argument("--console", action="store_true", help="Show the server banner (automatic on an interactive terminal).")
+        runtime_serve.add_argument("--minimized", action="store_true", help="Minimize a dedicated server console on a supported local desktop.")
         runtime_serve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
         runtime_serve.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
         runtime_serve.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")

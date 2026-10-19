@@ -4,6 +4,16 @@
 Closing it with **Q**, **Esc**, or **Ctrl+C** leaves the server running. It does
 not start, stop, repair, install or configure any service.
 
+The PF App Server window belongs to the foreground Runtime process and is
+separate from this monitor. It automatically shows the PF logo, running Core
+version and PID on a TTY. Closing that server window stops the server; closing
+the monitor does not. `run --minimized` requests minimization only for a verified
+dedicated server window on a supported desktop and does not open the monitor.
+See [server window and autostart](../getting-started/runtime-autostart.md#foreground-server-window)
+for classic Windows console, Linux X11, Windows Terminal/Wayland and headless
+boundaries. A Textual monitor and `autostart_pf_app_server_monitor` are future
+work, not current monitor or configuration features.
+
 From a source checkout (replace the example workplace with your directory):
 
 ```sh
@@ -112,8 +122,10 @@ terminal control characters in text are neutralized.
 Normal exit restores the cursor and terminal mode. Killing the viewer
 unconditionally may prevent terminal restoration, but cannot stop the server.
 Server controls are separate commands: `pf server start|run|status|stop|restart`
-or `python bin/pf-server.py ...`. `run --console` shows a banner only on a real
-terminal; `status --json` uses this same read-only projection. Legacy `runtime`
+or `python bin/pf-server.py ...`. Foreground `run`/`serve` shows the header
+automatically on a TTY; `--console` remains accepted. Redirected or missing stdout
+gets no header or GUI actions. The header does not prove server readiness.
+`status --json` uses this same read-only projection. Legacy `runtime`
 commands remain compatible. These launchers run Python, not a native executable.
 
 `server stop/restart` negotiate guarded shutdown with the current owner. The

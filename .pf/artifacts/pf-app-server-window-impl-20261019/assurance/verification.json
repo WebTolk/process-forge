@@ -1,0 +1,57 @@
+{
+  "status": "frozen",
+  "changed_files": [
+    {
+      "path": "tools/smoke_server_console.py",
+      "sha256": "8b8cc10cb9240f2c4cf3df36a87ef0d29d9b4db97e54b8a1188dcf178bb9ce7e",
+      "lines": 431,
+      "syntax": "pass",
+      "whitespace": "pass"
+    },
+    {
+      "path": "tools/smoke_server_operator.py",
+      "sha256": "a8f86c69116c720b891867ea1fc78334ba704f891f4fdb7512791b26c4273bfc",
+      "lines": 182,
+      "syntax": "pass",
+      "whitespace": "pass"
+    },
+    {
+      "path": "tools/smoke_runtime_mcp_autostart.py",
+      "sha256": "7ca0309ba2a6301da57048658c5988f976cd4ba1648963b3183bcf73f4f3b473",
+      "lines": 229,
+      "syntax": "pass",
+      "whitespace": "pass"
+    }
+  ],
+  "console_methods": 27,
+  "worker_direct_console_exit": 0,
+  "worker_scoped_operator_exit": 0,
+  "worker_scoped_autostart_exit": 0,
+  "worker_scoped_singleton_exit": 1,
+  "singleton_environment_signal": "tasklist exits 1: ERROR: Access denied while child remains alive",
+  "scope": "three declared smoke files; no product-source edits",
+  "native_gui_acceptance": "not_verified",
+  "parent_canonical": {
+    "source": "primary/focused-checks-final.md",
+    "message_id": "msg_3b5323a1f0b54db3a49ffcdf22ad8c7e",
+    "source_read": true,
+    "test_code_substituted": false,
+    "commands": [
+      {
+        "command": "python -B tools/smoke_server_operator.py",
+        "exit": 0,
+        "console_methods": 27
+      },
+      {
+        "command": "python -B tools/smoke_runtime_mcp_autostart.py",
+        "exit": 0
+      },
+      {
+        "command": "python -B tools/smoke_runtime_singleton_orphan.py",
+        "exit": 0
+      }
+    ]
+  },
+  "regression_result": "pass",
+  "overall_result": "pass_with_conditions"
+}

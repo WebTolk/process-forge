@@ -1,0 +1,7 @@
+{
+  "child_alive": true,
+  "tasklist_exit": 1,
+  "tasklist_has_pid": false,
+  "core_detects_child": false,
+  "tasklist_stderr": "ERROR: Access denied"
+}

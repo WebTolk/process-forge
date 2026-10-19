@@ -1,0 +1,17 @@
+{
+  "baseline_commit": "bd0d39b36055bc5ccf7a7bd4ba4639f4c3dfe71f",
+  "preexisting_checksum_drift": [
+    {
+      "path": "tools/release_metadata_contract.py",
+      "matches_pre_task_git": true,
+      "git_release_sha256": "c55c5402dd04e8431f0147ce6886408229a3450a089745965930dfe2950faeff",
+      "source_release_sha256": "c55c5402dd04e8431f0147ce6886408229a3450a089745965930dfe2950faeff"
+    },
+    {
+      "path": "tools/smoke_stable_update_manifest_points_to_release.py",
+      "matches_pre_task_git": true,
+      "git_release_sha256": "c6e37e66d35104bdb19181308f17befba559d1734af454062a349246f8ae6658",
+      "source_release_sha256": "c6e37e66d35104bdb19181308f17befba559d1734af454062a349246f8ae6658"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "red": {
+    "methods": 2,
+    "subcases": 12,
+    "failures": 0,
+    "errors": 12,
+    "error_types": [
+      "OSError",
+      "OSError",
+      "ValueError",
+      "ValueError",
+      "OSError",
+      "OSError",
+      "ValueError",
+      "ValueError",
+      "OSError",
+      "ValueError",
+      "OSError",
+      "ValueError"
+    ],
+    "successful": false
+  },
+  "green": {
+    "methods": 2,
+    "subcases": 12,
+    "failures": 0,
+    "errors": 0,
+    "error_types": [],
+    "successful": true
+  },
+  "all_previous_test_code_ast_unchanged": true,
+  "original_probe_before": [
+    {
+      "failure": "write",
+      "exception": "OSError",
+      "serve_calls": 0,
+      "gui_calls": 0
+    },
+    {
+      "failure": "flush",
+      "exception": "OSError",
+      "serve_calls": 0,
+      "gui_calls": 0
+    }
+  ],
+  "original_probe_after": [
+    {
+      "failure": "write",
+      "return": 17,
+      "serve_calls": 1,
+      "gui_calls": 0
+    },
+    {
+      "failure": "flush",
+      "return": 17,
+      "serve_calls": 1,
+      "gui_calls": 0
+    }
+  ],
+  "runtime_errors": [
+    {
+      "phase": "constructor",
+      "type": "OSError",
+      "same_exception": true
+    },
+    {
+      "phase": "constructor",
+      "type": "ValueError",
+      "same_exception": true
+    },
+    {
+      "phase": "constructor",
+      "type": "RuntimeError",
+      "same_exception": true
+    },
+    {
+      "phase": "serve",
+      "type": "OSError",
+      "same_exception": true
+    },
+    {
+      "phase": "serve",
+      "type": "ValueError",
+      "same_exception": true
+    },
+    {
+      "phase": "serve",
+      "type": "RuntimeError",
+      "same_exception": true
+    }
+  ],
+  "mandatory_operator_log_errors": [
+    {
+      "type": "OSError",
+      "same_exception": true,
+      "singleton_release_called": true
+    },
+    {
+      "type": "ValueError",
+      "same_exception": true,
+      "singleton_release_called": true
+    }
+  ]
+}

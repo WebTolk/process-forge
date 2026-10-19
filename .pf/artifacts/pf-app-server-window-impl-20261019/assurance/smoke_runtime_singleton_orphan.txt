@@ -1,0 +1,12 @@
+Command: python -B tools/smoke_runtime_singleton_orphan.py via scoped ordinary-fixture harness
+Exit: 1
+
+Traceback (most recent call last):
+  File "<project>\.pf\tmp\pf-app-server-window-impl-20261019\assurance\run_scoped.py", line 58, in run
+    code = module.main()
+  File "<project>\tools\smoke_runtime_singleton_orphan.py", line 415, in main
+    expect_rejected(workplace, "new-owner")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<project>\tools\smoke_runtime_singleton_orphan.py", line 35, in expect_rejected
+    raise AssertionError("live orphaned owner was acquired")
+AssertionError: live orphaned owner was acquired

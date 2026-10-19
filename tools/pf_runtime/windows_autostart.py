@@ -51,7 +51,9 @@ def runtime_action(
 ) -> dict[str, str]:
     distribution_root = resolved_root(distribution_root)
     workplace_root = resolved_root(workplace_root)
-    entrypoint = distribution_root / "bin" / "pf.py"
+    # bin/pf.py waits for a child on Windows. Execute the CLI directly so the
+    # scheduled foreground server is the console's sole client and task PID.
+    entrypoint = distribution_root / "tools" / "processforge.py"
     if not entrypoint.is_file():
         raise SystemExit(f"FAIL: ProcessForge entrypoint does not exist: {entrypoint}")
     arguments = subprocess.list2cmdline(
@@ -59,6 +61,7 @@ def runtime_action(
             str(entrypoint),
             "runtime",
             "serve",
+            "--minimized",
             "--workplace",
             str(workplace_root),
             "--port",
