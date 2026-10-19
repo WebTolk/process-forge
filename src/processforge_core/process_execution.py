@@ -23,6 +23,7 @@ from .work.start_documents import WorkStartDocumentBuilder
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .agents.process_events import ProcessEventRecorder
     from .work.metadata import WorkMetadataReadPass
     from .completion.request import WorkCompletionRequestService
     from .work.record_catalog import WorkRecordCatalogService
@@ -192,6 +193,8 @@ class ProcessExecutionService:
     core: Any
     _event_paths: Callable[[Path], tuple[Path, Any]] | None = field(default_factory=lambda: RunTaskInputReader().event_runtime_paths, init=False, repr=False, compare=False)
     _clock: Callable[[], str] = field(default_factory=lambda: _canonical_clock.now_utc, init=False, repr=False, compare=False)
+    # Instance composition preserves the original dataclass field contract.
+    _process_events = None  # type: ProcessEventRecorder | None
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
@@ -768,7 +771,7 @@ class ProcessExecutionService:
     def _bound_work_selection(self, session_id: str) -> dict[str, Any] | None:
         from .work.continuation import ContinuationService
 
-        return ContinuationService(self.project_root, self.workplace_root, self.core).selected(session_id)
+        return ContinuationService(self.project_root, self.workplace_root, self.core, events=self._process_events).selected(session_id)
 
     def _select_work(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> tuple[dict[str, Any], dict[str, Any]] | None:
         return self._work_selection_service().select(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
@@ -997,8 +1000,8 @@ class ProcessExecutionService:
 
         return build_work_event_publisher(
             project_root=self.project_root,
-            has_emitter=lambda: hasattr(self.core, "emit_process_event"),
-            emitter=lambda: self.core.emit_process_event,
+            has_emitter=lambda: self._process_events is not None,
+            emitter=lambda: self._process_events.emit_process_event,
         )
 
     def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None, event_id: str | None = None) -> None:

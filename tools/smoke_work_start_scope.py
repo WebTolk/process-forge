@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.work.scope_conflicts import ScopeConflictService
 from processforge_core.work.context_documents import ContextContractInputs
@@ -159,7 +161,7 @@ def assert_scope_conflict_contract():
 def main():
     assert_scope_conflict_contract()
     with fixture() as (workplace, project, initial):
-        service = ProcessExecutionService(project, workplace, core)
+        service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
         original = records(project)
         capsule = yaml.safe_load((project / ".pf/contexts/assignment-capsules" /
                                   (initial["assignment_id"] + ".capsule.yaml")).read_text(encoding="utf-8"))

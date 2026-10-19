@@ -54,13 +54,16 @@ def _bootstrap_repo_src() -> Path:
 ROOT = _bootstrap_repo_src()
 
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
+from processforge_core.agents.process_events import ProcessEventRecorder
 from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
 from processforge_core.project.file_templates import ProjectFileTemplateBuilder
 from processforge_core.project.initialization_discovery import ProjectResourceMatcher
 from processforge_core.project.runtime_launchers import ProjectRuntimeLauncherBuilder
+from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher
 from processforge_core.project.workplace_templates import WorkplaceFileBuilder
 from processforge_core.project.workplace_terms import WorkplaceTermsBuilder
 import processforge_core.common.markdown as _core_common_markdown
+import processforge_core.project.configuration_inputs as _core_project_configuration_inputs
 import processforge_core.project.initialization_discovery as _core_project_initialization_discovery
 
 from processforge_core.agents.presence import AgentPresenceReader
@@ -303,7 +306,6 @@ _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
 _process_event_journal = ProcessEventJournal()
-_configuration_resolver = ConfigurationResolver()
 _context_contract_inputs = ContextContractInputs()
 _resource_version_policy = ResourceVersionPolicy()
 _project_snapshot_resolved_comparison = ProjectSnapshotResolvedComparison(versions=_resource_version_policy)
@@ -1001,7 +1003,7 @@ def execute_authoring_effect(record: dict[str, Any], plan: AuthoringPlan | None 
         return
     if kind == "process_event":
         project_root = Path(str(payload["project_root"])).expanduser().resolve()
-        emit_process_event(
+        _process_event_recorder.emit_process_event(
             project_root,
             str(payload["event_type"]),
             process_id=str(payload["process_id"]),
@@ -1618,7 +1620,7 @@ def project_codex_integration_install(project_root: Path) -> dict[str, Any]:
 
 def execute_project_codex_integration_repair(project_root: Path) -> dict[str, Any]:
     result = project_codex_integration_install(project_root)
-    emit_process_event(
+    _process_event_recorder.emit_process_event(
         project_root,
         "project.codex_hooks.installed",
         process_id="project-initialization",
@@ -2836,7 +2838,7 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     flow_root = project_root / PROJECT_FLOW_ROOT
     for dirname in PROJECT_FLOW_DIRS:
         (flow_root / dirname).mkdir(parents=True, exist_ok=True)
-    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
+    _process_event_recorder.emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
     protected = {project_root / name for name in entry_targets}
     # Legacy START is not initializer-owned, even for an old caller's file map.
     protected.add(flow_root / "START_AGENT_HERE.md")
@@ -2845,15 +2847,15 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
     from processforge_core.project.host_integration import optional_host_integration_status
     codex_integration = optional_host_integration_status(project_root, sys.modules[__name__])
-    emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
-    emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
+    _process_event_recorder.emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
+    _process_event_recorder.emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
     snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
-    emit_process_event(project_root, "project.snapshot.refreshed", process_id="project-onboarding", process_version="1.0.0", payload={"status": snapshot_status, "paths": {key: rel(value, project_root) for key, value in snapshot_paths.items()}})
-    emit_process_event(project_root, "launcher.project_runtime.created", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/runtime/bin/pf.py"})
-    emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="1.0.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
+    _process_event_recorder.emit_process_event(project_root, "project.snapshot.refreshed", process_id="project-onboarding", process_version="1.0.0", payload={"status": snapshot_status, "paths": {key: rel(value, project_root) for key, value in snapshot_paths.items()}})
+    _process_event_recorder.emit_process_event(project_root, "launcher.project_runtime.created", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/runtime/bin/pf.py"})
+    _process_event_recorder.emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="1.0.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
     doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
     finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
-    emit_process_event(
+    _process_event_recorder.emit_process_event(
         project_root,
         "project.doctor.passed" if doctor_status == 0 else "project.doctor.failed",
         process_id="project-onboarding",
@@ -2868,7 +2870,7 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
             reason="project-onboarding",
             project_roots=[project_root],
         )
-    emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
+    _process_event_recorder.emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
     return {
         "status": "complete" if doctor_status == 0 else "blocked",
         "agent_entry": entry_result["agent_entry"],
@@ -2888,7 +2890,7 @@ def execute_project_repair(project_root: Path, *, workplace: str | None, reason:
     status, paths, snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=workplace)
     doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
     finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
-    emit_process_event(project_root, "context.snapshot.refreshed", process_id="project-initialization", process_version="1.0.0", payload={"status": status, "reason": reason, "paths": {key: rel(path, project_root) for key, path in paths.items()}})
+    _process_event_recorder.emit_process_event(project_root, "context.snapshot.refreshed", process_id="project-initialization", process_version="1.0.0", payload={"status": status, "reason": reason, "paths": {key: rel(path, project_root) for key, path in paths.items()}})
     search_index: dict[str, Any] | None = None
     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, workplace)
     if workplace_manifest:
@@ -5059,7 +5061,7 @@ def project_temporary_files_summary(project_root: Path, *, explicit_workplace: s
 
     try:
         workplace = Path(explicit_workplace).expanduser().resolve() if explicit_workplace else None
-        resolved = project_configuration(project_root, workplace)
+        resolved = _core_project_configuration_inputs.project_configuration_reader.project_configuration(project_root, workplace)
         if resolved.errors:
             return {"status": "unknown", "notification": False, "reason": "configuration_invalid"}
         return last_summary(project_root, resolved.config.runtime.temporary_files)
@@ -5612,12 +5614,6 @@ def write_project_context_snapshot_outputs(project_root: Path, *, explicit_workp
 
 
 
-def project_configuration(project_root: Path, workplace_root: Path | None = None):
-    if workplace_root is None:
-        manifest = _ProjectMetadataReader(project_root).workplace_manifest()
-        workplace_root = manifest.parent.resolve() if manifest else None
-    device_path = workplace_root / "configuration.yaml" if workplace_root is not None else None
-    return _configuration_resolver.resolve(device_path, locate_flow_root(project_root) / "configuration.yaml")
 
 
 def iter_process_events(path: Path):
@@ -5630,21 +5626,10 @@ def process_event_exists(path: Path, event_id: str) -> bool:
 
 
 
-def hook_results_root(project_root: Path) -> Path:
-    return locate_flow_root(project_root) / "runtime" / "hooks" / "results"
 
 
 
 
-def resolve_runtime_config_path(project_root: Path, value: str | None, default: Path) -> Path:
-    if not value:
-        return default
-    path = Path(value)
-    if path.is_absolute():
-        return path
-    if path.parts and path.parts[0] == PROJECT_FLOW_ROOT:
-        return project_root / path
-    return locate_flow_root(project_root) / path
 
 
 def project_id(project_root: Path) -> str:
@@ -5667,107 +5652,21 @@ def project_id(project_root: Path) -> str:
 
 
 
-def write_hook_result(project_root: Path, result: dict[str, Any]) -> Path:
-    results_root = hook_results_root(project_root)
-    results_root.mkdir(parents=True, exist_ok=True)
-    target = results_root / f"{result['delivery_id']}.json"
-    target.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return target
 
 
-def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool = False, outbox: bool = True) -> list[dict[str, Any]]:
-    hooks_config, _all_hooks = _hook_dispatch_policy.hook_targets(project_root)
-    hooks = _hook_dispatch_policy.selected_hooks(project_root, event)
-    actions: list[dict[str, Any]] = []
-    for hook in hooks:
-        hook_id = safe_id(str(hook.get("id", "hook")), "hook")
-        hook_type = str(hook.get("type", "outbox"))
-        delivery_id = "del_" + hashlib.sha256((_hook_dispatch_policy.event_id_value(event) + ":" + hook_id).encode("utf-8")).hexdigest()[:32]
-        action: dict[str, Any] = {"hook": hook_id, "target_id": hook_id, "type": hook_type, "delivery_id": delivery_id}
-        if dry_run:
-            action["status"] = "dry_run"
-            action["mode"] = "dry_run"
-        elif hook_type in {"outbox", "file_outbox", "webhook", "webhook_future"} and outbox:
-            default_outbox = locate_flow_root(project_root) / "runtime" / "hooks" / "outbox"
-            target_root = resolve_runtime_config_path(project_root, str(hook.get("path") or hook.get("outbox") or ""), default_outbox)
-            if hook_id.startswith("wtaicc") and target_root.name != "wtaicc":
-                target_root = target_root / "wtaicc"
-            target_root.mkdir(parents=True, exist_ok=True)
-            delivery = _hook_dispatch_policy.hook_delivery_payload(event, hook, "outbox", delivery_id)
-            payload = _hook_dispatch_policy.wtaicc_outbox_payload(event) if hook_id.startswith("wtaicc") else delivery
-            target = target_root / f"{_hook_dispatch_policy.event_id_value(event)}.{hook_id}.json"
-            target.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            action["status"] = "outbox_written"
-            action["outbox"] = rel(target, project_root)
-            result = {
-                "schema_version": 1,
-                "delivery_id": delivery_id,
-                "target_id": hook_id,
-                "status": "written",
-                "exit_code": 0,
-                "blocking": False,
-                "message": "Outbox payload written",
-                "outbox": rel(target, project_root),
-            }
-            action["result"] = rel(write_hook_result(project_root, result), project_root)
-        elif hook_type == "command":
-            action["status"] = "skipped"
-            action["reason"] = "command hooks require an explicit future runner/executor"
-            result = {
-                "schema_version": 1,
-                "delivery_id": delivery_id,
-                "target_id": hook_id,
-                "status": "skipped",
-                "exit_code": 0,
-                "blocking": bool(hook.get("blocking", False)),
-                "message": action["reason"],
-            }
-            action["result"] = rel(write_hook_result(project_root, result), project_root)
-        elif hook_type == "webhook" and not hooks_config.get("network_send_enabled", False):
-            action["status"] = "skipped"
-            action["reason"] = "network send is disabled by default"
-        else:
-            action["status"] = "skipped"
-            action["reason"] = f"unsupported hook type: {hook_type}"
-        actions.append(action)
-    return actions
 
 
-def admit_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True, workplace_root: Path | None = None) -> bool:
-    if not (event.get("event_id") or event.get("id")):
-        raise JournalError("journal_event_id_required")
-    events_path, _outbox = _run_task_inputs.event_runtime_paths(project_root)
-    inserted = _process_event_journal.append(
-        events_path,
-        event,
-        event_id_value=_hook_dispatch_policy.event_id_value,
-        record=project_configuration(project_root, workplace_root).config.logging.events,
-        queue_dispatch=dispatch and bool(_hook_dispatch_policy.selected_hooks(project_root, event)),
-    )
-    if dispatch:
-        for pending in _process_event_journal.pending_dispatch(events_path, event_id=_hook_dispatch_policy.event_id_value(event)):
-            dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
-            _process_event_journal.complete_dispatch(events_path, _hook_dispatch_policy.event_id_value(pending))
-    return inserted
 
 
-def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True, workplace_root: Path | None = None) -> Path:
-    events_path, _outbox = _run_task_inputs.event_runtime_paths(project_root)
-    admit_process_event(project_root, event, dispatch=dispatch, workplace_root=workplace_root)
-    return events_path
 
 
 def flush_pending_event_dispatches(project_root: Path, *, limit: int = 100) -> None:
     path = _run_task_inputs.event_runtime_paths(project_root)[0]
     for pending in _process_event_journal.pending_dispatch(path, limit=limit):
-        dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
+        _runtime_hook_dispatcher.dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
         _process_event_journal.complete_dispatch(path, _hook_dispatch_policy.event_id_value(pending))
 
 
-def emit_process_event(project_root: Path, event_type: str, **kwargs: Any) -> dict[str, Any]:
-    event = _telemetry_event_service.processforge_event(project_root, event_type, **kwargs)
-    append_process_event(project_root, event)
-    return event
 
 
 
@@ -5854,7 +5753,7 @@ def append_chat_message(
                             "content_mode": "metadata_only",
                         },
                     }
-                    emit_process_event(project_root, "chat.message.recorded", session_id=session_id, assignment_id_value=assignment_id_value, process_id=process_id, stage=stage_id, subject=f"chat/{session_id}/{requested_message_id}", data=core_data, privacy="private", correlation_id=session_id, event_id=event_id)
+                    _process_event_recorder.emit_process_event(project_root, "chat.message.recorded", session_id=session_id, assignment_id_value=assignment_id_value, process_id=process_id, stage=stage_id, subject=f"chat/{session_id}/{requested_message_id}", data=core_data, privacy="private", correlation_id=session_id, event_id=event_id)
                 return existing_path, existing, {}
         line_number = len([line for line in existing_lines if line.strip()]) + 1
         record = {
@@ -5895,7 +5794,7 @@ def append_chat_message(
             event_data["message"]["content_mode"] = "full" if redaction == "none" else redaction
         else:
             event_data["message"]["content_mode"] = "metadata_only"
-        event = emit_process_event(
+        event = _process_event_recorder.emit_process_event(
         project_root,
         "chat.message.recorded",
         session_id=session_id,
@@ -6340,7 +6239,7 @@ def command_session_start(args: argparse.Namespace) -> int:
         print("PROJECT_CONTEXT_BLOCKED: broken snapshot")
         return 1
     _session_metadata_writer.write_session_metadata(project_root, session_id, args.mode, freshness, telemetry_path)
-    emit_process_event(
+    _process_event_recorder.emit_process_event(
         project_root,
         "session.started",
         session_id=session_id,
@@ -6357,7 +6256,7 @@ def command_session_start(args: argparse.Namespace) -> int:
         reasons=stale_reasons,
     )
     if freshness == "stale":
-        emit_process_event(
+        _process_event_recorder.emit_process_event(
             project_root,
             "context.snapshot.stale",
             severity="warn",
@@ -6381,7 +6280,7 @@ def command_session_start(args: argparse.Namespace) -> int:
         status="loaded" if assignment_path and assignment_path.is_file() else "not_provided",
     )
     if assignment_path:
-        emit_process_event(
+        _process_event_recorder.emit_process_event(
             project_root,
             "assignment.started",
             session_id=session_id,
@@ -6400,15 +6299,15 @@ def command_session_start(args: argparse.Namespace) -> int:
     selected_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
     if selected_specializations:
         _telemetry_event_service.append_telemetry_event(telemetry_path, "specialization_switch", selected_specializations=selected_specializations, reason="explicit_session_start")
-        emit_process_event(project_root, "context.snapshot.refreshed", session_id=session_id, payload={"selected_specializations": selected_specializations, "reason": "garage_mode_specialization_switch"}, correlation_id=session_id)
+        _process_event_recorder.emit_process_event(project_root, "context.snapshot.refreshed", session_id=session_id, payload={"selected_specializations": selected_specializations, "reason": "garage_mode_specialization_switch"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="session-start")
-    emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "session-start"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "session-start"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_failed", tool=None, status="skipped")
-    emit_process_event(project_root, "tool.failed", severity="warn", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "tool.failed", severity="warn", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "mcp_check", status="skipped", reason="no required MCP declared")
-    emit_process_event(project_root, "mcp.invoked", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "mcp.invoked", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "fallback_used", status="skipped")
-    emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"status": "fallback skipped"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"status": "fallback skipped"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "conflict_detected", status="none")
     _telemetry_event_service.append_telemetry_event(telemetry_path, "file_scope_checked", status="ok", flow_root=_telemetry_event_service.flow_label(project_root))
     report = render_session_status(project_root, args.mode)
@@ -6418,17 +6317,17 @@ def command_session_start(args: argparse.Namespace) -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(report, encoding="utf-8")
         _telemetry_event_service.append_telemetry_event(telemetry_path, "artifact_written", path=rel(target, project_root))
-        emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"path": rel(target, project_root)}, correlation_id=session_id)
+        _process_event_recorder.emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"path": rel(target, project_root)}, correlation_id=session_id)
         print(f"WROTE: {rel(target, project_root)}")
     else:
         _telemetry_event_service.append_telemetry_event(telemetry_path, "artifact_written", status="skipped", reason="report_only")
     _telemetry_event_service.append_telemetry_event(telemetry_path, "review_requested", status="skipped")
-    emit_process_event(project_root, "review.requested", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "review.requested", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "handoff_created", status="skipped")
-    emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"status": "handoff skipped"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"status": "handoff skipped"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "doctor_run", status="skipped")
     _telemetry_event_service.append_telemetry_event(telemetry_path, "session_end", status="completed")
-    emit_process_event(project_root, "session.ended", session_id=session_id, payload={"mode": args.mode, "status": "completed"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "session.ended", session_id=session_id, payload={"mode": args.mode, "status": "completed"}, correlation_id=session_id)
     print(f"SESSION: {rel(session_path, project_root)}")
     print(f"TELEMETRY: {rel(telemetry_path, project_root)}")
     return 0
@@ -6466,7 +6365,7 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
         return 0
     session_id = _telemetry_event_service.telemetry_session_id("project-context-refresh")
     _session_path, telemetry_path = _session_metadata_writer.session_runtime_paths(project_root, session_id)
-    emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"command": "project-context-refresh", "reason": getattr(args, "reason", None)}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"command": "project-context-refresh", "reason": getattr(args, "reason", None)}, correlation_id=session_id)
     status, paths, snapshot, old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=getattr(args, "workplace", None))
     _telemetry_event_service.append_telemetry_event(telemetry_path, "session_start", mode="project_context_refresh", actor="agent")
     _telemetry_event_service.append_telemetry_event(telemetry_path, "snapshot_check", status="previous_" + ("stale" if old_reasons else "fresh"), reasons=old_reasons)
@@ -6479,22 +6378,22 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
                 _telemetry_event_service.append_telemetry_event(telemetry_path, "capability_check", required=group == "required", **capability)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="project_context_refresh")
     _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="project-context-refresh")
-    emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "project-context-refresh"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "project-context-refresh"}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "mcp_check", status="skipped", reason="no required MCP declared")
-    emit_process_event(project_root, "mcp.invoked", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
+    _process_event_recorder.emit_process_event(project_root, "mcp.invoked", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
     for path in paths.values():
         _telemetry_event_service.append_telemetry_event(telemetry_path, "artifact_written", path=rel(path, project_root))
-        emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"path": rel(path, project_root)}, correlation_id=session_id)
+        _process_event_recorder.emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"path": rel(path, project_root)}, correlation_id=session_id)
     for group, event_type, severity in [
         ("required", "capability.missing", "error"),
         ("optional", "capability.missing", "warn"),
     ]:
         for capability in snapshot.get("capabilities", {}).get(group, []):
             if isinstance(capability, dict) and capability.get("status") == "missing":
-                emit_process_event(project_root, event_type, severity=severity, session_id=session_id, payload={"capability": capability.get("id")}, correlation_id=session_id)
+                _process_event_recorder.emit_process_event(project_root, event_type, severity=severity, session_id=session_id, payload={"capability": capability.get("id")}, correlation_id=session_id)
     _telemetry_event_service.append_telemetry_event(telemetry_path, "session_end", status="completed")
     health = snapshot.get("snapshot", {}).get("health", {}).get("status") if isinstance(snapshot.get("snapshot"), dict) else "pass"
-    emit_process_event(
+    _process_event_recorder.emit_process_event(
         project_root,
         "context.snapshot.refreshed",
         severity="warn" if health == "warn" else ("error" if health == "blocked" else "info"),
@@ -6617,7 +6516,7 @@ def mark_project_context_stale(project_root: Path, *, subject: str, reason: str,
         inbox_path = flow_root / "runtime" / "director" / "inbox" / f"context-stale-{safe_id(subject, 'subject')}.json"
         inbox_path.parent.mkdir(parents=True, exist_ok=True)
         inbox_path.write_text(json.dumps({"type": "context_snapshot_stale", **marker}, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    emit_process_event(project_root, "context.snapshot.stale", severity="warn", payload={"subject": subject, "reason": reason, "source": source})
+    _process_event_recorder.emit_process_event(project_root, "context.snapshot.stale", severity="warn", payload={"subject": subject, "reason": reason, "source": source})
     return marker_path
 
 
@@ -6795,7 +6694,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     missing_required = [item["id"] for item in required_records if item.get("status") == "missing"]
     if missing_required:
         for capability in missing_required:
-            emit_process_event(project_root, "capability.missing", severity="error", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capability": capability})
+            _process_event_recorder.emit_process_event(project_root, "capability.missing", severity="error", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capability": capability})
         raise SystemExit("FAIL: required capabilities missing: " + ", ".join(missing_required))
     flow_root = locate_flow_root(project_root)
     telemetry_rel = rel(flow_root / "runtime" / "telemetry" / f"{assn_id}.ndjson", project_root)
@@ -6897,15 +6796,15 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
             stream.write(ensure_trailing_newline(dump_yaml(capsule)))
     except FileExistsError as exc:
         raise SystemExit("FAIL: immutable_context_exists; create_successor_work") from exc
-    emit_process_event(project_root, "assignment.started", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(assignment, project_root)}, correlation_id=f"assignment-{assn_id}")
-    emit_process_event(project_root, "assignment.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capsule": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
-    emit_process_event(project_root, "artifact.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
+    _process_event_recorder.emit_process_event(project_root, "assignment.started", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(assignment, project_root)}, correlation_id=f"assignment-{assn_id}")
+    _process_event_recorder.emit_process_event(project_root, "assignment.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capsule": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
+    _process_event_recorder.emit_process_event(project_root, "artifact.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
     print(f"WROTE: {rel(capsule_path, project_root)}")
     if optional_records:
         missing_optional = [item["id"] for item in optional_records if item.get("status") == "missing"]
         if missing_optional:
             for capability in missing_optional:
-                emit_process_event(project_root, "capability.missing", severity="warn", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capability": capability}, correlation_id=f"assignment-{assn_id}")
+                _process_event_recorder.emit_process_event(project_root, "capability.missing", severity="warn", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capability": capability}, correlation_id=f"assignment-{assn_id}")
             print("WARN: optional capabilities missing: " + ", ".join(missing_optional))
     return 0
 
@@ -7547,9 +7446,9 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
     _core_common_yaml_io.write_yaml_file(paths["draft"], draft)
     paths["questions"].write_text(_process_authoring_renderer.questions(answers), encoding="utf-8")
     append_authoring_log(paths, "authoring session started")
-    emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    emit_process_event(project_root, "process_authoring.draft.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["draft"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    _process_event_recorder.emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    _process_event_recorder.emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    _process_event_recorder.emit_process_event(project_root, "process_authoring.draft.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["draft"], project_root)}, correlation_id=f"process-authoring-{process_id}")
     print(f"WROTE: {rel(paths['answers'], project_root)}")
     print(f"WROTE: {rel(paths['draft'], project_root)}")
     return 0
@@ -7568,7 +7467,7 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
     paths["logic_review"].write_text(_process_authoring_renderer.logic_review(draft, checks), encoding="utf-8")
     append_authoring_log(paths, "logic review created")
     result = print_checks(checks)
-    emit_process_event(project_root, "process_authoring.logic_review.created", process_id=process_id, subject=process_id, severity="error" if result else "info", payload={"path": rel(paths["logic_review"], project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-authoring-{process_id}")
+    _process_event_recorder.emit_process_event(project_root, "process_authoring.logic_review.created", process_id=process_id, subject=process_id, severity="error" if result else "info", payload={"path": rel(paths["logic_review"], project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-authoring-{process_id}")
     print(f"WROTE: {rel(paths['logic_review'], project_root)}")
     return result
 
@@ -8733,9 +8632,9 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
     _core_common_yaml_io.write_yaml_file(paths["semantic_map"], _process_semantic_policy.map(process, process_path, project_root, unsupported))
     _core_common_yaml_io.write_yaml_file(paths["unsupported"], {"schema_version": 1, "unsupported": unsupported})
     paths["import_report"].write_text(_process_parity_renderer.import_report(process, process_path, paths, project_root, unsupported), encoding="utf-8")
-    emit_process_event(project_root, "authoring_parity.started", process_id=process_id, subject=process_id, payload={"command": "process-authoring-import", "source": rel(process_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
+    _process_event_recorder.emit_process_event(project_root, "authoring_parity.started", process_id=process_id, subject=process_id, payload={"command": "process-authoring-import", "source": rel(process_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
     if unsupported:
-        emit_process_event(project_root, "authoring_parity.warning", process_id=process_id, subject=process_id, severity="warn", payload={"unsupported": unsupported}, correlation_id=f"authoring-parity-{process_id}")
+        _process_event_recorder.emit_process_event(project_root, "authoring_parity.warning", process_id=process_id, subject=process_id, severity="warn", payload={"unsupported": unsupported}, correlation_id=f"authoring-parity-{process_id}")
     print(f"WROTE: {rel(paths['answers'], project_root)}")
     print(f"WROTE: {rel(paths['draft'], project_root)}")
     print(f"WROTE: {rel(paths['semantic_map'], project_root)}")
@@ -8790,9 +8689,9 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
     diff_path.parent.mkdir(parents=True, exist_ok=True)
     review.write_text(_process_parity_renderer.parity_report(process_id, process_path, project_root, status, diffs, unsupported, logic_checks), encoding="utf-8")
     _core_common_yaml_io.write_yaml_file(diff_path, {"schema_version": 1, "process_id": process_id, "result": status, "diffs": diffs, "unsupported": unsupported})
-    emit_process_event(project_root, "authoring_parity.process.checked", process_id=process_id, subject=process_id, severity="error" if status == "FAIL" else ("warn" if status == "WARN" else "info"), payload={"result": status, "review": rel(review, project_root), "semantic_diff": rel(diff_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
+    _process_event_recorder.emit_process_event(project_root, "authoring_parity.process.checked", process_id=process_id, subject=process_id, severity="error" if status == "FAIL" else ("warn" if status == "WARN" else "info"), payload={"result": status, "review": rel(review, project_root), "semantic_diff": rel(diff_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
     if status == "FAIL":
-        emit_process_event(project_root, "authoring_parity.failed", process_id=process_id, subject=process_id, severity="error", payload={"diffs": diffs}, correlation_id=f"authoring-parity-{process_id}")
+        _process_event_recorder.emit_process_event(project_root, "authoring_parity.failed", process_id=process_id, subject=process_id, severity="error", payload={"diffs": diffs}, correlation_id=f"authoring-parity-{process_id}")
     return status, review, diff_path, diffs
 
 
@@ -8851,7 +8750,7 @@ def command_process_parity_check_all(args: argparse.Namespace) -> int:
     )
     index.parent.mkdir(parents=True, exist_ok=True)
     index.write_text(_process_parity_renderer.index(rows, "Process Authoring Parity"), encoding="utf-8")
-    emit_process_event(project_root, "authoring_parity.completed" if not failed else "authoring_parity.failed", severity="error" if failed else ("warn" if warned else "info"), subject="process-parity-check-all", payload={"summary": rel(summary, project_root), "index": rel(index, project_root), "result": "FAIL" if failed else ("WARN" if warned else "PASS")}, correlation_id="authoring-parity-all")
+    _process_event_recorder.emit_process_event(project_root, "authoring_parity.completed" if not failed else "authoring_parity.failed", severity="error" if failed else ("warn" if warned else "info"), subject="process-parity-check-all", payload={"summary": rel(summary, project_root), "index": rel(index, project_root), "result": "FAIL" if failed else ("WARN" if warned else "PASS")}, correlation_id="authoring-parity-all")
     print(f"SUMMARY: {rel(summary, project_root)}")
     print(f"INDEX: {rel(index, project_root)}")
     return 1 if failed else 0
@@ -8886,7 +8785,7 @@ def resource_parity_report(project_root: Path, kind: str, resource_id: str, stat
     else:
         lines.append("- None.")
     report.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    emit_process_event(project_root, "authoring_parity.resource.checked", subject=f"{kind}/{resource_id}", severity="warn" if status in {"WARN", "SKIP"} else ("error" if status == "FAIL" else "info"), payload={"kind": kind, "id": resource_id, "result": status, "review": rel(report, project_root)}, correlation_id=f"authoring-parity-{safe_id(kind + '-' + resource_id, 'resource')}")
+    _process_event_recorder.emit_process_event(project_root, "authoring_parity.resource.checked", subject=f"{kind}/{resource_id}", severity="warn" if status in {"WARN", "SKIP"} else ("error" if status == "FAIL" else "info"), payload={"kind": kind, "id": resource_id, "result": status, "review": rel(report, project_root)}, correlation_id=f"authoring-parity-{safe_id(kind + '-' + resource_id, 'resource')}")
     return report
 
 
@@ -9800,7 +9699,7 @@ def continuation_command(args: argparse.Namespace, operation: str, **request: An
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
-    result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__]).request(operation, **request)
+    result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__], events=_process_event_recorder).request(operation, **request)
     print(json.dumps(result, ensure_ascii=False, indent=2) if getattr(args, "json", False) else dump_yaml(result))
     return 1 if result.get("status") == "blocked" else 0
 
@@ -9984,7 +9883,7 @@ def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     pid = state.get("pid")
-    emit_process_event(
+    _process_event_recorder.emit_process_event(
         project_root,
         event_type,
         process_id=_run_task_inputs.task_process_id(task),
@@ -10112,7 +10011,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         failure_reason = str(exit_marker.get("failure_reason") or "") or None
         state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
         _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id), None)
-        emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+        _process_event_recorder.emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
         return state
     started_dt = _worker_observation_inputs.parse_runtime_timestamp(started_at)
     timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
@@ -10143,7 +10042,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
             failure_reason = "process exited without durable exit contract"
             state = write_agent_run_state(project_root, task, driver, "unknown_exit", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=failure_reason, command=command, paths=paths)
             _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
-            emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+            _process_event_recorder.emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
             return state
         else:
             return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
@@ -10152,7 +10051,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
     _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id), None)
-    emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     return state
 
 
@@ -10237,7 +10136,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     # of a newly launched process.
     paths["exit"].unlink(missing_ok=True)
     write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
-    emit_process_event(project_root, "worker.run.prepared", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "worker.run.prepared", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
     diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
     diagnostics.emit("info", "worker.prepared", {"driver_id": driver.get("id"), "status": state_status}, component="worker")
     return task, driver, paths
@@ -10353,7 +10252,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         _core_common_json_io.json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
         if detach:
             _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES[_core_runtime_observation_inputs.worker_process_key(project_root, run_id, task_id)] = proc
-            emit_process_event(project_root, "worker.run.started", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+            _process_event_recorder.emit_process_event(project_root, "worker.run.started", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
             print(f"RUNNING: {task_id} pid={proc.pid}")
             return 0
     assert proc is not None
@@ -10370,7 +10269,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         finished_at = _core_common_clock.now_utc()
         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
         _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-    emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
     return 0 if final_status == "completed" else 1
 
@@ -10569,9 +10468,9 @@ def emit_worker_completion_event(project_root: Path, event_type: str, receipt_id
     path = _run_task_inputs.event_runtime_paths(project_root)[0]
     if _process_event_journal.contains(path, event_id):
         event = _process_event_journal.get(path, event_id) or _telemetry_event_service.processforge_event(project_root, event_type, event_id=event_id, **kwargs)
-        admit_process_event(project_root, event)
+        _process_event_recorder.admit_process_event(project_root, event)
         return event
-    return emit_process_event(project_root, event_type, event_id=event_id, **kwargs)
+    return _process_event_recorder.emit_process_event(project_root, event_type, event_id=event_id, **kwargs)
 
 
 def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state: dict[str, Any]) -> None:
@@ -10594,7 +10493,7 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     }
     save_task(project_root, task)
     update_run_task_status(project_root, run_id, task_id, "failed")
-    emit_process_event(project_root, "task.failed", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "task.failed", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
 
 
 
@@ -10830,7 +10729,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
         encoding="utf-8",
     )
     result = {"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "recovery_required": recovery_required, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)}
-    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload=result)
+    _process_event_recorder.emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload=result)
     for item in recovery_required:
         print(f"RECOVERY-REQUIRED: {item['task_id']} attempt={item['attempt']} reason={item['reason']}; explicit collect or a new prepared attempt is required")
     print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
@@ -11210,7 +11109,7 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
         print_plan("orchestrator-plan create dry run", [path], project_root)
         return 0
     _core_common_yaml_io.write_yaml_file(path, plan)
-    emit_process_event(project_root, "orchestrator.plan.created", process_id="multi-agent-task-orchestration", subject=run_id, payload={"plan": rel(path, project_root)}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "orchestrator.plan.created", process_id="multi-agent-task-orchestration", subject=run_id, payload={"plan": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
     return 0
 
@@ -11228,7 +11127,7 @@ def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
         _core_common_yaml_io.write_yaml_file(output, _orchestration_config_service.normalized_orchestrator_plan(project_root, plan))
         print(f"WROTE: {rel(output, project_root)}")
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
-    emit_process_event(project_root, "orchestrator.plan.reviewed", process_id="multi-agent-task-orchestration", subject=str(run.get("id") or "run"), payload={"result": "fail" if result else "pass"})
+    _process_event_recorder.emit_process_event(project_root, "orchestrator.plan.reviewed", process_id="multi-agent-task-orchestration", subject=str(run.get("id") or "run"), payload={"result": "fail" if result else "pass"})
     return result
 
 
@@ -11247,7 +11146,7 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
         return 0
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(prompt, encoding="utf-8")
-    emit_process_event(project_root, "worker.launch_prompt.created", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "worker.launch_prompt.created", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(output, project_root)}")
     return 0
 
@@ -11414,7 +11313,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if supervisor_status:
             return supervisor_status
     doctor_status = command_run_doctor(argparse.Namespace(project_root=str(project_root), run=run_id))
-    emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(_work_paths.run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
     return doctor_status
 
@@ -11438,7 +11337,7 @@ def process_execution_service(project_root: Path, explicit_workplace: str | None
 
     manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, explicit_workplace)
     workplace_root = manifest.parent if manifest is not None else None
-    return build_process_execution_service(project_root, workplace_root, sys.modules[__name__])
+    return build_process_execution_service(project_root, workplace_root, sys.modules[__name__], events=_process_event_recorder)
 
 
 def work_resource_service(project_root: Path, explicit_workplace: str | None = None) -> WorkResourceService:
@@ -11482,7 +11381,7 @@ def command_run_create(args: argparse.Namespace) -> int:
     root.mkdir(parents=True, exist_ok=True)
     save_run(project_root, run)
     (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
-    emit_process_event(project_root, "run.created", process_id=run["process"], subject=run_id, payload={"run_id": run_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "run.created", process_id=run["process"], subject=run_id, payload={"run_id": run_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
     return 0
 
@@ -11530,7 +11429,7 @@ def command_run_doctor(args: argparse.Namespace) -> int:
     with registry_file_lock(_work_paths.run_document(project_root, run_id)):
         checks = _run_task_consistency_service.validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
     result = print_checks(checks)
-    emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
     return result
 
 
@@ -11556,7 +11455,7 @@ def _command_run_summary_locked(args: argparse.Namespace) -> int:
     if isinstance(emitted, list) and "run.summary.created" not in emitted:
         emitted.append("run.summary.created")
     save_run_locked(project_root, run, include_summary_handoff=True)
-    emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(summary, project_root)}")
     print(f"WROTE: {rel(handoff, project_root)}")
     return 0
@@ -11591,8 +11490,8 @@ def _command_run_complete_locked(args: argparse.Namespace) -> int:
     if isinstance(emitted, list) and "run.summary.created" not in emitted:
         emitted.append("run.summary.created")
     save_run_locked(project_root, run, include_summary_handoff=True)
-    emit_process_event(project_root, "run.completed", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id}, correlation_id=f"run-{run_id}")
-    emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "run.completed", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id}, correlation_id=f"run-{run_id}")
+    _process_event_recorder.emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
     print(f"COMPLETED: {run_id}")
     return 0
 
@@ -11736,7 +11635,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
     run["tasks"] = tasks
     save_run_locked(project_root, run)
     for event_type in ["task.created", "assignment.created"]:
-        emit_process_event(project_root, event_type, process_id=task["process"], subject=task_id, assignment_id_value=task_id, assignment_path=rel(path, project_root), payload={"run_id": run_id, "task_id": task_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
+        _process_event_recorder.emit_process_event(project_root, event_type, process_id=task["process"], subject=task_id, assignment_id_value=task_id, assignment_path=rel(path, project_root), payload={"run_id": run_id, "task_id": task_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
     return 0
 
@@ -11767,7 +11666,7 @@ def _command_task_start_locked(args: argparse.Namespace) -> int:
     save_task(project_root, task)
     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "in_progress")
     for event_type in ["task.started", "assignment.started"]:
-        emit_process_event(project_root, event_type, process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
+        _process_event_recorder.emit_process_event(project_root, event_type, process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
     print(f"STARTED: {task_id}")
     return 0
 
@@ -11804,7 +11703,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
         if getattr(args, "completion_id", None):
             emit_worker_completion_event(project_root, event_type, args.completion_id, **event_kwargs)
         else:
-            emit_process_event(project_root, event_type, **event_kwargs)
+            _process_event_recorder.emit_process_event(project_root, event_type, **event_kwargs)
     print(f"DONE: {task_id}")
     return 0
 
@@ -11817,7 +11716,7 @@ def command_task_doctor(args: argparse.Namespace) -> int:
     checks = _run_task_consistency_service.validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
     task = _worker_assignment_service.load(project_root, task_id)
-    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": _work_output_policy.fingerprint(project_root, task)})
+    _process_event_recorder.emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": _work_output_policy.fingerprint(project_root, task)})
     return result
 
 
@@ -11849,7 +11748,7 @@ def command_iteration_add(args: argparse.Namespace) -> int:
     if status == "in_progress":
         task["status"] = "debugging" if kind == "debug" else "in_progress"
     save_task(project_root, task)
-    emit_process_event(project_root, "iteration.added", process_id=_run_task_inputs.task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    _process_event_recorder.emit_process_event(project_root, "iteration.added", process_id=_run_task_inputs.task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
     print(f"ADDED: {iter_id}")
     return 0
 
@@ -11878,7 +11777,7 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
         return 0
     task["iterations"] = iterations
     save_task(project_root, task)
-    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=_run_task_inputs.task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    _process_event_recorder.emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=_run_task_inputs.task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
     print(f"UPDATED: {args.iteration}")
     return 0
 
@@ -11903,7 +11802,7 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
         payload={"dry_run": bool(args.dry_run), "outbox": bool(args.outbox), "since": args.since, "source": "hooks-dispatch"},
         privacy="sanitized",
     )
-    actions = dispatch_hooks(project_root, event, dry_run=args.dry_run, outbox=args.outbox or not args.dry_run)
+    actions = _runtime_hook_dispatcher.dispatch_hooks(project_root, event, dry_run=args.dry_run, outbox=args.outbox or not args.dry_run)
     if not actions:
         print("HOOKS: none")
     else:
@@ -11914,9 +11813,9 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
             if "result" in action:
                 print(f"RESULT: {action['result']}")
     if not args.dry_run:
-        append_process_event(project_root, event, dispatch=False)
+        _process_event_recorder.append_process_event(project_root, event, dispatch=False)
         if actions:
-            emit_process_event(project_root, "hook.dispatched", payload={"event_id": _hook_dispatch_policy.event_id_value(event), "actions": actions}, privacy="sanitized", correlation_id=str(event.get("correlation_id")))
+            _process_event_recorder.emit_process_event(project_root, "hook.dispatched", payload={"event_id": _hook_dispatch_policy.event_id_value(event), "actions": actions}, privacy="sanitized", correlation_id=str(event.get("correlation_id")))
         print(f"EVENT: {_hook_dispatch_policy.event_id_value(event)}")
     return 0
 
@@ -12010,8 +11909,8 @@ def command_chat_export(args: argparse.Namespace) -> int:
     stamp = _core_common_clock.now_utc().replace(":", "").replace("-", "").replace("Z", "z")
     target = outbox_root / f"chat-{safe_id(args.session_id, 'session')}-{stamp}.json"
     target.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    append_process_event(project_root, event, dispatch=False)
-    emit_process_event(
+    _process_event_recorder.append_process_event(project_root, event, dispatch=False)
+    _process_event_recorder.emit_process_event(
         project_root,
         "hook.dispatched",
         session_id=args.session_id,
@@ -12181,7 +12080,7 @@ def command_doctor_context(args: argparse.Namespace) -> int:
             checks.append(check("FAIL" if assignment_status != "blocked" else "PASS", "assignment ECP missing"))
 
     result = print_checks(checks)
-    emit_process_event(
+    _process_event_recorder.emit_process_event(
         project_root,
         "gate.failed" if result else "gate.passed",
         severity="error" if result else "info",
@@ -15967,6 +15866,8 @@ _project_file_templates = ProjectFileTemplateBuilder(ROOT, discovery=_project_di
 _workplace_file_builder = WorkplaceFileBuilder(ROOT)
 _workplace_terms = WorkplaceTermsBuilder()
 _official_pack_profiles = OfficialPackProfileReader(ROOT)
+_runtime_hook_dispatcher = RuntimeHookDispatcher(policy=_hook_dispatch_policy, inputs=_context_contract_inputs)
+_process_event_recorder = ProcessEventRecorder(journal=_process_event_journal, inputs=_run_task_inputs, hooks=_hook_dispatch_policy, telemetry=_telemetry_event_service, configuration=_core_project_configuration_inputs.project_configuration_reader, dispatcher=_runtime_hook_dispatcher)
 
 if __name__ == "__main__":
     sys.exit(main())

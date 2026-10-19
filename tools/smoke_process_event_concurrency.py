@@ -13,6 +13,8 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
+from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher
+from processforge_core.agents.process_events import ProcessEventRecorder
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.sqlite_storage import JournalError
 
@@ -20,10 +22,10 @@ from processforge_core.sqlite_storage import JournalError
 def worker(project, index, barrier):
     barrier.wait(timeout=30)
     for number in range(50):
-        core.append_process_event(Path(project), {"event_id": f"evt_{index}_{number}",
+        ProcessEventRecorder().append_process_event(Path(project), {"event_id": f"evt_{index}_{number}",
                                                  "session": {"id": f"session-{index}"},
                                                  "data": {"text": "Журнал 🌍"}}, dispatch=False)
-        core.append_process_event(Path(project), {"event_id": "evt_shared"}, dispatch=False)
+        ProcessEventRecorder().append_process_event(Path(project), {"event_id": "evt_shared"}, dispatch=False)
 
 
 def main():
@@ -76,15 +78,15 @@ def main():
         # Commit-before-dispatch remains recoverable with optional history off.
         hooks = [{"id": "test"}]
         with patch.object(HookDispatchPolicy, "selected_hooks", return_value=hooks), \
-                patch.object(core, "dispatch_hooks", side_effect=OSError("simulated dispatch failure")):
+                patch.object(RuntimeHookDispatcher, "dispatch_hooks", side_effect=OSError("simulated dispatch failure")):
             try:
-                core.append_process_event(project, {"event_id": "evt_dispatch"})
+                ProcessEventRecorder().append_process_event(project, {"event_id": "evt_dispatch"})
             except OSError:
                 pass
             else:
                 raise AssertionError("dispatch failure swallowed")
         assert len(journal.pending_dispatch(path)) == 1
-        with patch.object(core, "dispatch_hooks", return_value=[]) as dispatch:
+        with patch.object(RuntimeHookDispatcher, "dispatch_hooks", return_value=[]) as dispatch:
             core.flush_pending_event_dispatches(project)
             assert dispatch.call_count == 1
         assert not journal.pending_dispatch(path)

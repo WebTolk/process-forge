@@ -16,6 +16,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "src"))
 
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events
 import process_execution_smoke_support as support
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
 from processforge_core.work.context import (
@@ -168,7 +170,7 @@ def main() -> None:
                 write_yaml(assignment_task_path, cli_fields_task)
                 governed_run = register_run_member(clone_governed, support.run(clone_governed, started), governed_fields_task)
                 register_run_member(clone_assignment, support.run(clone_assignment, started), cli_fields_task)
-                governed_relative, governed_checksum = ProcessExecutionService(clone_governed, workplace, core)._write_capsule(
+                governed_relative, governed_checksum = bind_process_events(ProcessExecutionService(clone_governed, workplace, core), ProcessEventRecorder())._write_capsule(
                     governed_run, governed_fields_task, copy.deepcopy(run_doc["process_execution"])
                 )
                 capsule_relative = f".pf/contexts/assignment-capsules/{task['id']}.capsule.yaml"
@@ -488,7 +490,7 @@ def main() -> None:
                 live_process["parameters"] = {"process_source": "catalog-changed"}
                 live_process["stages"][0]["parameters"] = {"stage_source": "catalog-stage-changed"}
                 process_file.write_text(yaml.safe_dump(live_process, allow_unicode=True, sort_keys=False), encoding="utf-8")
-                service = ProcessExecutionService(project, workplace, core)
+                service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
                 current_state = service.state()
                 check(current_state["process"]["version"] == "1.0.0", "state followed changed process catalog instead of pin")
                 pinned_stage = stage_view(active_capsule, active_assignment)

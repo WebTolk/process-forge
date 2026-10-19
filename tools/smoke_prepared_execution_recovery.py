@@ -17,6 +17,7 @@ from unittest.mock import Mock, patch
 import yaml
 
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
 from processforge_core.runtime.command import WorkerCommandBuilder
 from processforge_core.runtime.selection import RuntimeDriverSelectionService
 import processforge_core.prepared.input as prepared_input
@@ -85,7 +86,8 @@ def terminal_worker_admission() -> None:
                 stack.enter_context(patch.object(RunTaskInputReader, 'require_flow_root'))
                 stack.enter_context(patch.object(WorkerAssignmentService, 'load', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
-                stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name not in {"build_worker_process_command", "runtime_driver_for_task"}}))
+                stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name not in {"build_worker_process_command", "runtime_driver_for_task", "emit_process_event"}}))
+                stack.enter_context(patch.object(ProcessEventRecorder, "emit_process_event", spies["emit_process_event"]))
                 stack.enter_context(patch.object(WorkerCommandBuilder, "build", spies["build_worker_process_command"]))
                 stack.enter_context(patch.object(RuntimeDriverSelectionService, "for_task", spies["runtime_driver_for_task"]))
                 stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
@@ -165,7 +167,7 @@ def terminal_worker_admission() -> None:
             task = records(marker=marker)
             before = copy.deepcopy(task)
             saved, updated, emitted = Mock(), Mock(), Mock()
-            with patch.object(core, 'save_task', saved), patch.object(core, 'update_run_task_status', updated), patch.object(core, 'emit_process_event', emitted):
+            with patch.object(core, 'save_task', saved), patch.object(core, 'update_run_task_status', updated), patch.object(ProcessEventRecorder, 'emit_process_event', emitted):
                 core.sync_failed_worker_lifecycle(project, task, {'status': attempt_status, 'failure_reason': 'fixture failure'})
             if marker == 'legacy':
                 assert task['status'] == 'failed' and task['result']['status'] == 'failed'

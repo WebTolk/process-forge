@@ -383,6 +383,9 @@ class RuntimeProcess:
 
         self.workplace_root = workplace_root
         self.core = core
+        from processforge_core.project.configuration_inputs import project_configuration_reader
+
+        self._project_configuration = project_configuration_reader.project_configuration
         self.interval = max(0.25, float(interval))
         self.config_service = configuration if configuration is not None else ConfigService(YamlConfigStore(workplace_root / "configuration.yaml"))
         # Validate before token/state creation. Core models/services have no host discovery.
@@ -596,7 +599,7 @@ class RuntimeProcess:
             result: dict[str, Any] = {"last_run": _core_common_clock.now_utc(), "last_result": "failed"}
             self._temporary_files_results[project_root] = result
             try:
-                resolved = self.core.project_configuration(project_root, self.workplace_root)
+                resolved = self._project_configuration(project_root, self.workplace_root)
                 if resolved.errors:
                     result["error"] = "temporary_files_configuration_invalid"
                     continue

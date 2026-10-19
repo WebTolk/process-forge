@@ -87,7 +87,8 @@ def main() -> int:
         from processforge_core.agents.telemetry import TelemetryEventService
 
         failed_event = TelemetryEventService().processforge_event(root, "task.doctor.failed", assignment_id_value=task, subject=task, payload={"task_id": task, "result": "fail"})
-        core.append_process_event(root, failed_event)
+        from processforge_core.agents.process_events import ProcessEventRecorder
+        ProcessEventRecorder().append_process_event(root, failed_event)
         rebuild(root)
         failed = json.loads((root / ".pf" / "artifacts" / "projections" / "stage-obligations.json").read_text(encoding="utf-8"))
         row = next(item for item in failed["obligations"] if item["projector"] == "verification-state")

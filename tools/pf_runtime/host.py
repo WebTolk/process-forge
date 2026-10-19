@@ -485,7 +485,8 @@ def route_project(project_ref: str, workplace_root: Path, core: Any) -> dict[str
 def hook_configuration(project_root: Path, workplace_root: Path, core: Any):
     from processforge_core.agents.hook_admission import collect_hooks
 
-    configuration = core.project_configuration(project_root, workplace_root)
+    from processforge_core.project.configuration_inputs import project_configuration_reader
+    configuration = project_configuration_reader.project_configuration(project_root, workplace_root)
     from processforge_core.project.coordination_state import ProjectCoordinationStateService
 
     coordination = ProjectCoordinationStateService().effective_project_coordination(project_root, str(workplace_root))
@@ -706,7 +707,8 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
             registered = ledger_session(session_id, workplace_root, core)
             if not registered or str(registered.get("project_id") or "") != handle["project_id"]:
                 raise PermissionError("runtime session registration failed")
-        duplicate = not core.admit_process_event(project_root, event, workplace_root=workplace_root)
+        from processforge_core.agents.process_events import ProcessEventRecorder
+        duplicate = not ProcessEventRecorder().admit_process_event(project_root, event, workplace_root=workplace_root)
         remember_session(state, session_id, handle, str(source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""), core)
         save_state(workplace_root, state, core)
         projection = projection_path(project_root, core)

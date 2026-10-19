@@ -15,6 +15,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events
 from processforge_core.work.continuation import ContinuationService
 from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import fixture, stage_evidence
@@ -32,8 +34,8 @@ def records(project):
 
 def main():
     with fixture() as (workplace, project, empty):
-        service = ProcessExecutionService(project, workplace, core)
-        continuation = ContinuationService(project, workplace, core)
+        service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
+        continuation = ContinuationService(project, workplace, core, events=ProcessEventRecorder())
         assert service.state(assignment_id=empty['assignment_id'])['execution_readiness']['status'] == 'blocked'
         # Explicit scope is captured before creation; required source checks remain enforced.
         source = project / 'input.txt'; source.write_text('immutable input', encoding='utf-8')

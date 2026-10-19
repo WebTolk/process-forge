@@ -20,6 +20,8 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events
 from processforge_core import diagnostics as d
 from processforge_core.process_execution import ProcessExecutionService
 
@@ -136,7 +138,7 @@ def failure_correlation_journal(root):
         assert stderr.getvalue().count("diagnostic_delivery_failed") == 1
     # Same process event/evidence across every profile, using the actual durable writer.
     events, detail_counts = [], []
-    service = ProcessExecutionService(root, root, core)
+    service = bind_process_events(ProcessExecutionService(root, root, core), ProcessEventRecorder())
     for profile in d.PROFILES:
         records = []
         logger = d.Logger(config(profile=profile), sinks=[records.append])
@@ -155,7 +157,7 @@ def failure_correlation_journal(root):
     assert len(events) == 5 and all(item == events[0] for item in events)
     assert detail_counts[0] == detail_counts[-1] == 0 and detail_counts[3] > detail_counts[2] > detail_counts[1]
     # Required journal failures still propagate under off.
-    with patch.object(core, "emit_process_event", side_effect=OSError("required journal unavailable")):
+    with patch.object(ProcessEventRecorder, "emit_process_event", side_effect=OSError("required journal unavailable")):
         with d.operation(d.NullLogger(), "work", "required"):
             rejected(lambda: service._emit("stage.completed", {}, {}, "verify", outcome="completed"))
     records, barrier = [], threading.Barrier(2)

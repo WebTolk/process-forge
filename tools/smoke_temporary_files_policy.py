@@ -24,6 +24,7 @@ from processforge_core.garage import diagnostics_from_check
 from processforge_core.agent_entry.contract import load_contract, block_span
 from pf_runtime import host, service
 import processforge as core
+from processforge_core.project.configuration_inputs import ProjectConfigurationReader
 
 
 def fixture(base, name):
@@ -173,7 +174,7 @@ def report_checks(root, config, report):
     assert temporary.last_summary(root, config)["status"] == "partial"
     publish(root, report)
     resolved = SimpleNamespace(config=PFConfig().with_changes({"runtime.temporary_files.max_age_hours": 1}), errors=())
-    with patch.object(core, "project_configuration", return_value=resolved), \
+    with patch.object(ProjectConfigurationReader, "project_configuration", return_value=resolved), \
          patch.object(core, "_project_context_check_result", return_value={"status": "fresh", "fresh": True}), \
          patch.object(temporary.os, "scandir", side_effect=AssertionError("context scanned scratch")):
         check = core.project_context_check_result(root)
@@ -186,7 +187,7 @@ def report_checks(root, config, report):
     # File-only context lookup reads missing reports without creating Runtime state.
     missing_root = root.parent / "file-only"
     (missing_root / ".pf").mkdir(parents=True)
-    with patch.object(core, "project_configuration", return_value=resolved), \
+    with patch.object(ProjectConfigurationReader, "project_configuration", return_value=resolved), \
          patch.object(temporary.os, "scandir", side_effect=AssertionError("file-only context scanned")):
         assert core.project_temporary_files_summary(missing_root)["reason"] == "report_missing"
     assert not (missing_root / ".pf/runtime").exists()
@@ -195,8 +196,8 @@ def report_checks(root, config, report):
 def runtime_fixture(roots, config):
     runtime = service.RuntimeProcess.__new__(service.RuntimeProcess)
     runtime.workplace_root = roots[0].parent
-    runtime.core = SimpleNamespace(now_utc=lambda: "fixture-time", update_stale_agent_presence=lambda _: None,
-                                   project_configuration=lambda *_: SimpleNamespace(config=config, errors=()))
+    runtime.core = SimpleNamespace(now_utc=lambda: "fixture-time", update_stale_agent_presence=lambda _: None)
+    runtime._project_configuration = lambda *_: SimpleNamespace(config=config, errors=())
     runtime._temporary_files_last_run, runtime._temporary_files_results = {}, {}
     runtime.state_lock = threading.RLock()
     runtime.state = {"status": "ready"}
@@ -356,13 +357,13 @@ def scheduler_checks(base):
         errors = failing.observe_temporary_files(list(failing.known_project_roots()))
     assert list(errors.values()) == ["temporary_files_report_write_failed"]
     invalid = runtime_fixture([fixture(base, "invalid-config")], config)
-    invalid.core.project_configuration = lambda *_: SimpleNamespace(errors=("invalid",))
+    invalid._project_configuration = lambda *_: SimpleNamespace(errors=("invalid",))
     with patch.object(temporary, "observe", side_effect=AssertionError("invalid config scanned")):
         assert list(invalid.observe_temporary_files(invalid.known_project_roots()).values()) == ["temporary_files_configuration_invalid"]
     # Expired per-project cadence uses the current effective configuration.
     for project in roots:
         runtime._temporary_files_last_run[project] -= temporary.PERIOD_SECONDS
-    runtime.core.project_configuration = lambda *_: SimpleNamespace(config=config.with_changes({"runtime.temporary_files.mode": "off"}), errors=())
+    runtime._project_configuration = lambda *_: SimpleNamespace(config=config.with_changes({"runtime.temporary_files.mode": "off"}), errors=())
     assert runtime.observe_temporary_files(roots) == {}
     assert all(temporary._read_report(project)["state"] == "off" for project in roots)
 

@@ -14,6 +14,8 @@ from unittest.mock import patch
 
 import yaml
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events
 
 from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import PROCESS, assignment, call_mcp, fixture, run, state, transition
@@ -200,7 +202,7 @@ def test_saved_gate_and_completion_freshness() -> None:
         require(first.get("next_stage_id") == "build", first)
         require(transition(workplace, project, "change", "build-ready").get("next_stage_id") == "verify", "build")
         gate_file.unlink()
-        readiness = ProcessExecutionService(project, workplace, core).can_complete(run_id=started["run_id"])
+        readiness = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()).can_complete(run_id=started["run_id"])
         completion = next(item for item in readiness.get("blockers", []) if item.get("code") == "run_completion_gate_missing")
         require(completion.get("diagnostic", {}).get("code") == "evidence_file_missing", readiness)
         stopped = transition(workplace, project, "report", "verify-ready")

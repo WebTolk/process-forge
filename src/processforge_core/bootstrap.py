@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from .agents.process_events import ProcessEventRecorder
     from .diagnostics import Logger
     from .work.records import CurrentWorkService
     from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
@@ -26,6 +27,8 @@ class RuntimeBootstrap:
     core: ModuleType
     host: ModuleType
     service: ModuleType
+    # Instance composition preserves the original dataclass field contract.
+    _process_events = None  # type: ProcessEventRecorder | None
 
     def current_work_service(self, project_root: Path) -> CurrentWorkService:
         from .composition import build_current_work_service
@@ -41,7 +44,7 @@ class RuntimeBootstrap:
     ) -> ProcessExecutionService:
         from .composition import build_process_execution_service
 
-        return build_process_execution_service(project_root, workplace_root, self.core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots)
+        return build_process_execution_service(project_root, workplace_root, self.core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots, events=self._process_events)
 
 
 def _repo_root_from(caller_file: str | Path) -> Path:
@@ -97,9 +100,13 @@ def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
     core = _load_legacy_core(repo_root)
     host = importlib.import_module("pf_runtime.host")
     service = importlib.import_module("pf_runtime.service")
-    return RuntimeBootstrap(
+    runtime = RuntimeBootstrap(
         repo_root=repo_root,
         core=core,
         host=host,
         service=service,
     )
+    from .agents.process_events import ProcessEventRecorder
+
+    object.__setattr__(runtime, "_process_events", ProcessEventRecorder())
+    return runtime

@@ -355,7 +355,7 @@ class AdapterTests(NormalizedTests):
 
         with patch.object(ProjectCoordinationStateService, 'resolve_project_workplace_manifest', return_value=manifest), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
             self.assertIs(core.process_execution_service(Path('fixture')), service)
-            factory.assert_called_once_with(Path('fixture'), manifest.parent, core)
+            factory.assert_called_once_with(Path('fixture'), manifest.parent, core, events=core._process_event_recorder)
         output = io.StringIO()
         records = []
         arguments = SimpleNamespace(project_root='fixture', json=True)

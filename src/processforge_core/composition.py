@@ -14,6 +14,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import CurrentWorkService, YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .agents.process_events import ProcessEventRecorder
     from .work.metadata import WorkMetadataReadPass
     from .documents.reader import YamlDocumentReader
     from .completion.request import CompletionIntentReader, CompletionReadinessReader, CompletionStateReader, CompletionTransition, CompletionWorkSelector, WorkCompletionRequestService
@@ -269,13 +270,15 @@ def build_creation_scope_service(project_root: Path, core: Any) -> CreationScope
     )
 
 
-def build_governed_work_bootstrap_service(project_root: Path, workplace_root: Path, core: Any) -> GovernedWorkBootstrapService:
+def build_governed_work_bootstrap_service(project_root: Path, workplace_root: Path, core: Any, *, events: ProcessEventRecorder | None = None) -> GovernedWorkBootstrapService:
     from .work.bootstrap import GovernedWorkBootstrapService
 
     def work_start() -> WorkStart:
         from .process_execution import ProcessExecutionService
 
-        return ProcessExecutionService(project_root, workplace_root, core).start
+        service = ProcessExecutionService(project_root, workplace_root, core)
+        object.__setattr__(service, "_process_events", events)
+        return service.start
 
     return GovernedWorkBootstrapService(
         current_work_summary=lambda: build_current_work_service(project_root).summary(),
@@ -526,6 +529,12 @@ def build_assignment_capsule_publisher(
     )
 
 
+def bind_process_events(service: ProcessExecutionService, events: ProcessEventRecorder | None) -> ProcessExecutionService:
+    """Supply the concrete optional recorder without changing the service constructor."""
+    object.__setattr__(service, "_process_events", events)
+    return service
+
+
 def build_process_execution_service(
     project_root: Path, workplace_root: Path | None, core: Any, *, observer: Logger | None = None,
     records: WorkRecordReadPort | None = None,
@@ -533,6 +542,7 @@ def build_process_execution_service(
     definitions: ProcessDefinitionReadPort | None = None,
     snapshots: ProjectSnapshotReadPort | None = None,
     work_metadata: Callable[[], WorkMetadataReadPass] | None = None,
+    events: ProcessEventRecorder | None = None,
 ) -> ProcessExecutionService:
     from .process_execution import ProcessExecutionService
 
@@ -540,7 +550,8 @@ def build_process_execution_service(
         records = YamlWorkRecordReader(project_root)
         if work_metadata is None:
             work_metadata = lambda: build_work_metadata_read_pass(project_root)
-    return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots, work_metadata=work_metadata)
+    service = ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots, work_metadata=work_metadata)
+    return bind_process_events(service, events)
 
 
 def build_evidence_validation_service(
