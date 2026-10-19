@@ -37,13 +37,19 @@ def main() -> int:
         "```powershell\npowershell -File install.ps1\n```",
     )
     for text in accepted:
-        assert not processforge.forbidden_powershell_reference(text), text
+        from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+        assert not ReleaseSourcePolicy().forbidden_powershell_reference(text), text
     for text in rejected:
-        assert processforge.forbidden_powershell_reference(text), text
+        from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+        assert ReleaseSourcePolicy().forbidden_powershell_reference(text), text
     for name in ("getting-started/installation.md", "known-limitations.md", "requirements.md"):
         for language in ("", "ru"):
             path = ROOT / "docs" / language / name
-            assert not processforge.forbidden_powershell_reference(path.read_text(encoding="utf-8")), path
+            from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+            assert not ReleaseSourcePolicy().forbidden_powershell_reference(path.read_text(encoding="utf-8")), path
     with tempfile.TemporaryDirectory(prefix="pf-public-dist-") as raw:
         root = Path(raw)
         (root / "VERSION").write_text("1.1.0\n", encoding="utf-8")

@@ -152,12 +152,14 @@ def validate_line_ending_canonicalization(validator: ModuleType, release: Module
 
 def validate_current_release_parity(root: Path, validator: ModuleType) -> None:
     release = load_release_module(root)
-    patterns = release.release_ignore_patterns(root)
+    from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+    patterns = ReleaseSourcePolicy().release_ignore_patterns(root)
     shipped_paths = {
         archive_path
-        for archive_path, _source_path in release.release_source_files(root)
-        if not release.release_ignore_match(archive_path, patterns)
-        and not release.release_path_is_forbidden(archive_path)
+        for archive_path, _source_path in ReleaseSourcePolicy().release_source_files(root)
+        if not ReleaseSourcePolicy().release_ignore_match(archive_path, patterns)
+        and not ReleaseSourcePolicy().release_path_is_forbidden(archive_path)
     }
     shipped_paths.discard(validator.PUBLIC_INVENTORY.as_posix())
     checksum_paths = {

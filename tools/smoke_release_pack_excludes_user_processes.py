@@ -9,14 +9,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge import release_path_is_forbidden  # noqa: E402
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 
 def main() -> int:
-    assert release_path_is_forbidden("processes/user/private-flow.yaml") == "private user/custom process definition"
-    assert release_path_is_forbidden("processes/custom/imported-flow.yaml") == "private user/custom process definition"
-    assert release_path_is_forbidden("processes/user/.gitkeep") is None
-    assert release_path_is_forbidden("processes/core/task-batch-execution.yaml") is None
+    from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+    assert ReleaseSourcePolicy().release_path_is_forbidden("processes/user/private-flow.yaml") == "private user/custom process definition"
+    assert ReleaseSourcePolicy().release_path_is_forbidden("processes/custom/imported-flow.yaml") == "private user/custom process definition"
+    assert ReleaseSourcePolicy().release_path_is_forbidden("processes/user/.gitkeep") is None
+    assert ReleaseSourcePolicy().release_path_is_forbidden("processes/core/task-batch-execution.yaml") is None
     print("PASS: release pack excludes user/custom process definitions")
     return 0
 

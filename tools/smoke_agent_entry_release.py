@@ -49,13 +49,15 @@ def main() -> int:
         assert release.release_required_path_exists(source, "AGENTS.md")
 
         root.unlink()
-        assert "AGENTS.md" not in dict(release.release_source_files(source))
+        from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+        assert "AGENTS.md" not in dict(ReleaseSourcePolicy().release_source_files(source))
         assert "AGENTS.md" not in dict(validator.public_file_entries(source))
         assert not release.release_required_path_exists(source, "AGENTS.md")
         assert failures(release, source) == ["release agent entry invalid: AGENTS.md: entry_projection_unavailable"]
         # A valid canonical template and hidden projection still cannot replace the root.
         root.write_bytes(contract.render())
-        assert dict(release.release_source_files(source))["AGENTS.md"] == root
+        assert dict(ReleaseSourcePolicy().release_source_files(source))["AGENTS.md"] == root
         assert dict(validator.public_file_entries(source))["AGENTS.md"] == root
 
         for path in (root, hidden):
@@ -97,7 +99,7 @@ def main() -> int:
         inventory = source / "checksums/processforge.sha256"
         inventory.parent.mkdir()
         inventory.write_text(validator.build_inventory(source), encoding="utf-8")
-        files = release.release_source_files(source)
+        files = ReleaseSourcePolicy().release_source_files(source)
         owned = release.release_core_manifest(files, version=release.RELEASE_ARCHIVE_VERSION, source=None, generated_at="2026-01-01T00:00:00Z")
         archive_path = base / "candidate.zip"
         entries = release.write_release_zip(archive_path, files, 1767225600,
