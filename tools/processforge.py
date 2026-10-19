@@ -60,10 +60,12 @@ from processforge_core.project.initialization_discovery import ProjectDiscoveryR
 from processforge_core.project.file_templates import ProjectFileTemplateBuilder
 from processforge_core.project.initialization_discovery import ProjectResourceMatcher
 from processforge_core.project.runtime_launchers import ProjectRuntimeLauncherBuilder
+from processforge_core.maintenance.release_manifest import ReleaseManifestPolicy
 from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher
 from processforge_core.project.workplace_templates import WorkplaceFileBuilder
 from processforge_core.project.workplace_terms import WorkplaceTermsBuilder
 import processforge_core.common.markdown as _core_common_markdown
+import processforge_core.common.release_identity as _core_common_release_identity
 import processforge_core.project.configuration_inputs as _core_project_configuration_inputs
 import processforge_core.project.initialization_discovery as _core_project_initialization_discovery
 
@@ -444,7 +446,6 @@ PROJECT_FLOW_ROOT = ".pf"
 PROCESSFORGE_VERSION = "1.2.0"
 PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
-RELEASE_NAME = "processforge"
 RELEASE_ARCHIVE_VERSION = "1.2.0"
 
 PROJECT_PRIVATE_GITIGNORE = [
@@ -3757,7 +3758,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
     if clean_first:
         commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
         if (root / ".git").exists():
-            commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
+            commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{_core_common_release_identity.RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
     if public:
         commands = [item for item in commands if item.public_gate]
     return commands
@@ -3979,7 +3980,6 @@ def command_version(args: argparse.Namespace) -> int:
     return 0
 
 
-HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 
@@ -4061,7 +4061,7 @@ def release_manifest_payload(
 ) -> dict[str, Any]:
     return {
         "schema_version": 1,
-        "name": RELEASE_NAME,
+        "name": _core_common_release_identity.RELEASE_NAME,
         "version": RELEASE_ARCHIVE_VERSION,
         "schema_bundle_version": PROCESSFORGE_SCHEMA_BUNDLE_VERSION,
         "release_eligible": True,
@@ -4143,131 +4143,8 @@ def archive_manifest_path(archive_path: Path) -> Path:
     return archive_path.with_suffix(".manifest.json")
 
 
-def release_manifest_path_error(name: str) -> str | None:
-    if not name or "\x00" in name or any(ord(char) < 32 for char in name):
-        return "empty, NUL, or control-character archive path"
-    normalized = name.replace("\\", "/")
-    if "\\" in name:
-        return "archive path contains backslash"
-    if normalized.startswith("/") or re.match(r"^[A-Za-z]:", normalized) or normalized.startswith("//"):
-        return "absolute, drive-qualified, or UNC archive path"
-    parts = normalized.split("/")
-    if any(part in {"", ".", ".."} for part in parts):
-        return "archive path contains empty, current, or parent segment"
-    if Path(normalized).is_absolute():
-        return "absolute archive path"
-    return None
 
 
-def validate_release_manifest_contract(
-    data: Any,
-    archive_path: Path,
-    infos: list[zipfile.ZipInfo],
-) -> list[Check]:
-    checks: list[Check] = []
-    actual_size = archive_path.stat().st_size
-    actual_sha = sha256_file(archive_path)
-    if not isinstance(data, dict):
-        return [check("FAIL", "release manifest v1 is an object")]
-    top_keys = {"schema_version", "name", "version", "schema_bundle_version", "release_eligible", "build", "source", "archive", "official_packs", "files"}
-    unexpected = sorted(set(data) - top_keys)
-    missing = sorted(top_keys - set(data))
-    checks.append(check("PASS" if not unexpected else "FAIL", "release manifest v1 has no unexpected top-level keys"))
-    checks.append(check("PASS" if not missing else "FAIL", "release manifest v1 required keys present"))
-    for key in unexpected[:10]:
-        checks.append(check("FAIL", f"release manifest unexpected key: {key}"))
-    for key in missing[:10]:
-        checks.append(check("FAIL", f"release manifest missing key: {key}"))
-    checks.append(check("PASS" if data.get("schema_version") == 1 else "FAIL", "release manifest schema_version is 1"))
-    checks.append(check("PASS" if data.get("name") == RELEASE_NAME else "FAIL", "release manifest name is processforge"))
-    checks.append(check("PASS" if data.get("release_eligible") is True else "FAIL", "release manifest marks public release eligible"))
-
-    build = data.get("build") if isinstance(data.get("build"), dict) else {}
-    source_epoch = build.get("source_date_epoch")
-    generated_at = build.get("generated_at")
-    expected_generated_at = None
-    if isinstance(source_epoch, int) and source_epoch >= _core_maintenance_release_provenance.ZIP_MINIMUM_EPOCH:
-        expected_generated_at = datetime.fromtimestamp(source_epoch, timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    checks.append(check("PASS" if isinstance(source_epoch, int) and source_epoch >= _core_maintenance_release_provenance.ZIP_MINIMUM_EPOCH else "FAIL", "release manifest source_date_epoch is valid"))
-    checks.append(check("PASS" if generated_at == expected_generated_at else "FAIL", "release manifest generated_at matches source_date_epoch"))
-    checks.append(check("PASS" if build.get("deterministic") is True else "FAIL", "release manifest declares deterministic build"))
-
-    source = data.get("source") if isinstance(data.get("source"), dict) else {}
-    checks.append(check("PASS" if source.get("vcs") == "git" else "FAIL", "release manifest source vcs is git"))
-    checks.append(check("PASS" if isinstance(source.get("commit"), str) and _core_maintenance_release_provenance.HEX40_RE.fullmatch(source["commit"]) else "FAIL", "release manifest source commit is 40 lowercase hex"))
-    checks.append(check("PASS" if isinstance(source.get("tree"), str) and _core_maintenance_release_provenance.HEX40_RE.fullmatch(source["tree"]) else "FAIL", "release manifest source tree is 40 lowercase hex"))
-    checks.append(check("PASS" if source.get("dirty") is False else "FAIL", "release manifest source dirty is false"))
-
-    archive_data = data.get("archive") if isinstance(data.get("archive"), dict) else {}
-    checks.append(check("PASS" if archive_data.get("filename") == archive_path.name else "FAIL", "release manifest archive filename matches sidecar zip"))
-    checks.append(check("PASS" if archive_data.get("format") == "zip" else "FAIL", "release manifest archive format is zip"))
-    checks.append(check("PASS" if archive_data.get("size") == actual_size else "FAIL", "release manifest archive size matches zip bytes"))
-    checks.append(check("PASS" if archive_data.get("sha256") == actual_sha else "FAIL", "release manifest archive sha256 matches zip bytes"))
-    checks.append(check("PASS" if archive_data.get("entry_count") == len(infos) else "FAIL", "release manifest archive entry_count matches physical zip entries"))
-
-    files = data.get("files")
-    if not isinstance(files, list):
-        checks.append(check("FAIL", "release manifest files is a list"))
-        return checks
-    manifest_names = [str(item.get("path")) for item in files if isinstance(item, dict) and item.get("path")]
-    sorted_unique = manifest_names == sorted(manifest_names) and len(manifest_names) == len(set(manifest_names))
-    checks.append(check("PASS" if sorted_unique else "FAIL", "release manifest files are sorted and unique by path"))
-    checks.append(check("PASS" if len(files) == len(infos) else "FAIL", "release manifest files length matches physical zip entries"))
-
-    physical_names = [info.filename for info in infos]
-    unsafe: list[str] = []
-    normalized_seen: set[str] = set()
-    for info in infos:
-        error = release_manifest_path_error(info.filename)
-        normalized = unicodedata.normalize("NFC", info.filename).casefold()
-        if normalized in normalized_seen:
-            error = error or "archive path collides after Unicode/case normalization"
-        normalized_seen.add(normalized)
-        if info.flag_bits & 0x1:
-            error = error or "encrypted archive member"
-        mode = (info.external_attr >> 16) & 0o170000
-        if mode and mode != 0o100000:
-            error = error or "non-regular archive member"
-        if error:
-            unsafe.append(f"{info.filename}: {error}")
-    checks.append(check("PASS" if not unsafe else "FAIL", "release archive physical members are safe regular files"))
-    for item in unsafe[:20]:
-        checks.append(check("FAIL", f"unsafe archive member: {item}"))
-
-    checks.append(check("PASS" if sorted(physical_names) == manifest_names else "FAIL", "release manifest file list matches zip entries"))
-    file_map = {str(item.get("path")): item for item in files if isinstance(item, dict) and item.get("path")}
-    with zipfile.ZipFile(archive_path) as archive:
-        mismatches: list[str] = []
-        for info in infos:
-            item = file_map.get(info.filename)
-            if not isinstance(item, dict):
-                continue
-            content = archive.read(info)
-            if item.get("size") != len(content):
-                mismatches.append(f"{info.filename}: size")
-            if item.get("sha256") != hashlib.sha256(content).hexdigest():
-                mismatches.append(f"{info.filename}: sha256")
-            if not isinstance(item.get("sha256"), str) or not HEX64_RE.fullmatch(str(item.get("sha256"))):
-                mismatches.append(f"{info.filename}: sha256 format")
-    checks.append(check("PASS" if not mismatches else "FAIL", "release manifest file size/hash entries match zip payloads"))
-    for item in mismatches[:20]:
-        checks.append(check("FAIL", f"release manifest file mismatch: {item}"))
-
-    official_packs = data.get("official_packs")
-    if isinstance(official_packs, list):
-        ids = [str(item.get("id")) for item in official_packs if isinstance(item, dict)]
-        valid = ids == sorted(ids) and len(ids) == len(set(ids))
-        for item in official_packs:
-            valid = valid and isinstance(item, dict)
-            if isinstance(item, dict):
-                valid = valid and isinstance(item.get("id"), str) and bool(item.get("id"))
-                valid = valid and isinstance(item.get("version"), str) and bool(item.get("version"))
-                valid = valid and isinstance(item.get("manifest_path"), str) and bool(item.get("manifest_path"))
-                valid = valid and isinstance(item.get("manifest_sha256"), str) and bool(HEX64_RE.fullmatch(item["manifest_sha256"]))
-        checks.append(check("PASS" if valid else "FAIL", "release manifest official_packs are sorted v1 provenance entries"))
-    else:
-        checks.append(check("FAIL", "release manifest official_packs is a list"))
-    return checks
 
 
 def inspect_release_archive(archive_path: Path, manifest_path: Path | None = None) -> list[Check]:
@@ -4286,7 +4163,7 @@ def inspect_release_archive(archive_path: Path, manifest_path: Path | None = Non
             checks.append(check("FAIL", f"forbidden archive entry: {name}"))
         if manifest.is_file():
             data = json.loads(manifest.read_text(encoding="utf-8"))
-            checks.extend(validate_release_manifest_contract(data, archive_path, infos))
+            checks.extend(_release_manifest_policy.validate_release_manifest_contract(data, archive_path, infos))
             manifest_files = data.get("files") if isinstance(data, dict) else None
             manifest_names = sorted(str(item.get("path")) for item in manifest_files if isinstance(item, dict) and item.get("path")) if isinstance(manifest_files, list) else []
             checks.append(check("PASS" if manifest_names == names else "FAIL", "manifest file list matches zip entries"))
@@ -15753,6 +15630,7 @@ _official_pack_profiles = OfficialPackProfileReader(ROOT)
 _runtime_hook_dispatcher = RuntimeHookDispatcher(policy=_hook_dispatch_policy, inputs=_context_contract_inputs)
 _process_event_recorder = ProcessEventRecorder(journal=_process_event_journal, inputs=_run_task_inputs, hooks=_hook_dispatch_policy, telemetry=_telemetry_event_service, configuration=_core_project_configuration_inputs.project_configuration_reader, dispatcher=_runtime_hook_dispatcher)
 _chat_transcript_writer = ChatTranscriptWriter(events=_process_event_recorder, exports=_chat_export_service)
+_release_manifest_policy = ReleaseManifestPolicy(file_digests=FileDigestReader())
 
 if __name__ == "__main__":
     sys.exit(main())
