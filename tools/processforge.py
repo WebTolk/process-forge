@@ -393,6 +393,7 @@ from processforge_subprocess import diagnostic_text, format_command as format_su
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
 from processforge_core.agents.telemetry import TelemetryEventService
+from processforge_core.project.setup_answers import WorkplaceSetupAnswers
 import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
 import processforge_core.common.yaml_io as _core_common_yaml_io
@@ -1672,17 +1673,6 @@ def print_plan(title: str, planned: list[Path], root: Path) -> None:
         print(f"  - {rel(path, root)}")
 
 
-def workplace_defaults(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
-    workplace_answers = answers.get("workplace", {}) if isinstance(answers.get("workplace"), dict) else {}
-    paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
-    os_name = str(workplace_answers.get("os") or platform.system().lower() or "unknown").lower()
-    return {
-        "id": safe_id(str(workplace_answers.get("id") or root.name or "workplace"), "workplace"),
-        "name": str(workplace_answers.get("name") or root.name or "ProcessForge Workplace"),
-        "type": str(workplace_answers.get("type") or "workstation"),
-        "os": os_name,
-        "root": str(paths_answers.get("root") or root),
-    }
 
 
 def build_terms() -> dict[str, Any]:
@@ -1767,23 +1757,6 @@ def build_terms() -> dict[str, Any]:
     }
 
 
-def dict_entries_from_answers(container: Any, item_label: str, scope: str) -> list[dict[str, Any]]:
-    if not isinstance(container, dict):
-        return []
-    entries = []
-    for key, value in container.items():
-        if value in (None, "", "<path>"):
-            continue
-        entries.append(
-            {
-                "id": safe_id(str(key), item_label),
-                "label": str(key).replace("_", " ").title(),
-                "path": str(value),
-                "scope": scope,
-                "status": "available",
-            }
-        )
-    return entries
 
 
 
@@ -1792,7 +1765,7 @@ def dict_entries_from_answers(container: Any, item_label: str, scope: str) -> li
 
 def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str]:
     from processforge_core.configuration import PFConfig
-    defaults = workplace_defaults(root, answers)
+    defaults = _workplace_setup_answers.workplace_defaults(root, answers)
     profile = str(answers.get("profile") or "generic").strip() or "generic"
     paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
     policies_answers = answers.get("policies", {}) if isinstance(answers.get("policies"), dict) else {}
@@ -1871,14 +1844,14 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
         },
     }
 
-    knowledge_entries = dict_entries_from_answers(
+    knowledge_entries = _workplace_setup_answers.dict_entries_from_answers(
         paths_answers.get("knowledge_roots"), "knowledge-root", "workplace"
     )
     for entry in knowledge_entries:
         entry["visibility"] = "private"
         entry["indexing_policy"] = "allowed"
 
-    package_entries = dict_entries_from_answers(paths_answers.get("package_roots"), "package-root", "workplace")
+    package_entries = _workplace_setup_answers.dict_entries_from_answers(paths_answers.get("package_roots"), "package-root", "workplace")
     if not package_entries:
         package_entries = [
             {
@@ -1891,8 +1864,8 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
                 "default": True,
             }
         ]
-    template_entries = dict_entries_from_answers(paths_answers.get("template_roots"), "template-root", "workplace")
-    distribution_entries = dict_entries_from_answers(paths_answers.get("distributions"), "distribution", "workplace")
+    template_entries = _workplace_setup_answers.dict_entries_from_answers(paths_answers.get("template_roots"), "template-root", "workplace")
+    distribution_entries = _workplace_setup_answers.dict_entries_from_answers(paths_answers.get("distributions"), "distribution", "workplace")
     if not distribution_entries:
         distribution_entries = [
             {
@@ -2271,125 +2244,12 @@ def workplace_setup_session_dir(workplace: Path, session_id: str) -> Path:
     return workplace / "setup-sessions" / safe_id(session_id, "setup-session")
 
 
-def default_guided_workplace_answers(workplace: Path, session_id: str) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "session": {"id": safe_id(session_id, "setup-session"), "status": "draft"},
-        "machine_layout": {
-            "processforge_root": "${PROCESSFORGE_ROOT}",
-            "workplace_path": "${PF_WORKPLACE}",
-            "local_docs_path": "${PF_WORKPLACE}/knowledge",
-            "project_roots": ["${PF_WORKPLACE}/projects"],
-        },
-        "agent_environment": {
-            "tools": ["generic"],
-            "instructions_targets": ["AGENTS.md"],
-            "global_agents_policy": "bounded_processforge_section",
-        },
-        "device_discovery": {
-            "enabled": "ask",
-            "read_only": True,
-            "broad_disk_scan": "only_when_allowed",
-            "fallback_scope": [
-                "global AGENTS.md",
-                "configured skills root",
-                "configured docs root",
-                "configured platforms root",
-                "configured toolchains root",
-            ],
-            "outputs": [
-                "device-discovery-report.md",
-                "resource-candidates.yaml",
-                "auto-setup-proposal.md",
-            ],
-        },
-        "privacy_safety": {
-            "local_paths_private_only": True,
-            "public_manifests_use_path_ref": True,
-            "secret_handling": "store secret names only; never store secret values",
-            "update_trust_policy": {
-                "require_https": True,
-                "require_sha256_for_download": True,
-                "require_sha256_for_install": True,
-            },
-        },
-        "resources": {
-            "knowledge_roots": [{"id": "local-docs", "path_ref": "${PF_WORKPLACE}/knowledge", "status": "available"}],
-            "package_roots": [{"id": "global", "path_ref": "${PF_WORKPLACE}/packages", "default": True, "writable": True}],
-            "tools": [],
-            "mcp_servers": [],
-            "templates": [],
-        },
-        "platform_contracts": {
-            "policy": "neutral_or_explicit",
-            "create": [],
-            "notes": "Do not create real platform contracts unless the user explicitly defines them.",
-        },
-        "coordination": {"director_capability": False, "default_project_mode": "simple", "initialize_director_office": False},
-        "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic", "coordination_mode": "inherit", "suggested_run": "first-run"},
-    }
 
 
-def merge_guided_answers(defaults: dict[str, Any], supplied: dict[str, Any]) -> dict[str, Any]:
-    result = dict(defaults)
-    for key, value in supplied.items():
-        if isinstance(value, dict) and isinstance(result.get(key), dict):
-            nested = dict(result[key])
-            nested.update(value)
-            result[key] = nested
-        else:
-            result[key] = value
-    return result
 
 
-def load_guided_workplace_answers(session_dir: Path, answers_path: Path | None = None, *, workplace: Path | None = None, session_id: str = "default") -> dict[str, Any]:
-    defaults = default_guided_workplace_answers(workplace or session_dir, session_id)
-    existing = session_dir / "answers.yaml"
-    source = answers_path if answers_path and answers_path.is_file() else existing if existing.is_file() else None
-    supplied = _AnswersDocumentReader().read(source) if source else {}
-    return merge_guided_answers(defaults, supplied)
 
 
-def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str, Any]) -> dict[str, Any]:
-    machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
-    discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
-    resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
-    privacy = answers.get("privacy_safety") if isinstance(answers.get("privacy_safety"), dict) else {}
-    coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
-    package_roots = {}
-    for item in resources.get("package_roots", []) if isinstance(resources.get("package_roots"), list) else []:
-        if isinstance(item, dict):
-            package_roots[str(item.get("id") or "global")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/packages")
-    knowledge_roots = {}
-    for item in resources.get("knowledge_roots", []) if isinstance(resources.get("knowledge_roots"), list) else []:
-        if isinstance(item, dict):
-            knowledge_roots[str(item.get("id") or "local-docs")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/knowledge")
-    processforge_root = str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")
-    discovery_enabled = str(discovery.get("enabled") or "ask").lower() in {"true", "yes", "enabled", "on"}
-    return {
-        "schema_version": 1,
-        "setup_mode": "guided",
-        "device_discovery": {
-            "enabled": discovery_enabled,
-            "read_only": bool(discovery.get("read_only", True)),
-            "fallback_scope": [str(item) for item in as_list(discovery.get("fallback_scope"))],
-            "approved_before_apply": False,
-        },
-        "workplace": {"id": safe_id(workplace.name or "workplace", "workplace"), "name": workplace.name or "ProcessForge Workplace"},
-        "paths": {
-            "root": str(machine.get("workplace_path") or workplace),
-            "knowledge_roots": knowledge_roots,
-            "package_roots": package_roots,
-            "template_roots": {"global": "${PF_WORKPLACE}/reusable-templates"},
-            "distributions": {"processforge": processforge_root},
-        },
-        "policies": {"shell_is_fallback": True, "local_paths_private_only": bool(privacy.get("local_paths_private_only", True))},
-        "coordination": {
-            "director_enabled": bool(coordination.get("director_capability", False)),
-            "director_office_enabled": bool(coordination.get("initialize_director_office", False)),
-            "default_project_mode": _project_coordination_reader.workplace_mode(coordination.get("default_project_mode", "simple")),
-        },
-    }
 
 
 
@@ -2415,7 +2275,7 @@ def command_workplace_setup_start(args: argparse.Namespace) -> int:
     workplace = Path(args.workplace).expanduser().resolve()
     session_id = safe_id(args.session_id or "default", "setup-session")
     session_dir = workplace_setup_session_dir(workplace, session_id)
-    answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+    answers = _workplace_setup_answers.load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
     planned = [session_dir / "answers.yaml", session_dir / "proposal.yaml", session_dir / "proposal.md", session_dir / "next-steps.md"]
     if not args.apply or args.dry_run:
         print_plan("workplace-setup start dry run", planned, workplace)
@@ -2439,7 +2299,7 @@ def command_workplace_setup_review(args: argparse.Namespace) -> int:
     workplace = Path(args.workplace).expanduser().resolve()
     session_id = safe_id(args.session_id or "default", "setup-session")
     session_dir = workplace_setup_session_dir(workplace, session_id)
-    answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+    answers = _workplace_setup_answers.load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
     proposal, proposal_md = _workplace_setup_proposal_builder.build(session_id, answers)
     review = f"""# Guided Workplace Setup Review
 
@@ -2476,7 +2336,7 @@ def command_workplace_setup_apply(args: argparse.Namespace) -> int:
     workplace = Path(args.workplace).expanduser().resolve()
     session_id = safe_id(args.session_id or "default", "setup-session")
     session_dir = workplace_setup_session_dir(workplace, session_id)
-    answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+    answers = _workplace_setup_answers.load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
     proposal, proposal_md = _workplace_setup_proposal_builder.build(session_id, answers)
     planned = [
         workplace / "workplace.yaml",
@@ -2493,7 +2353,7 @@ def command_workplace_setup_apply(args: argparse.Namespace) -> int:
     _core_common_yaml_io.write_yaml_file(session_dir / "answers.yaml", answers)
     _core_common_yaml_io.write_yaml_file(session_dir / "proposal.yaml", proposal)
     (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
-    init_answers = guided_answers_to_workplace_init_answers(workplace, answers)
+    init_answers = _workplace_setup_answers.guided_answers_to_workplace_init_answers(workplace, answers)
     init_answers_path = session_dir / "workplace-init.answers.yaml"
     _core_common_yaml_io.write_yaml_file(init_answers_path, init_answers)
     status, output = run_command_capture(
@@ -19007,6 +18867,7 @@ def main(argv: list[str] | None = None) -> int:
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
+_workplace_setup_answers = WorkplaceSetupAnswers()
 
 
 if __name__ == "__main__":
