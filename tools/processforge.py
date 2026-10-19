@@ -399,6 +399,7 @@ from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
 from processforge_core.agents.telemetry import TelemetryEventService
 from processforge_core.resources.registries import WorkplaceRegistryReader
+from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
 from processforge_core.project.setup_answers import WorkplaceSetupAnswers
 import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
@@ -998,9 +999,9 @@ def execute_authoring_effect(record: dict[str, Any], plan: AuthoringPlan | None 
         for event in payload.get("events", []) if isinstance(payload.get("events"), list) else []:
             if not isinstance(event, dict):
                 continue
-            append_workplace_resource_event(
+            _workplace_resource_events.append_workplace_resource_event(
                 workplace_root,
-                resource_management_event(
+                _workplace_resource_events.resource_management_event(
                     scope="workplace",
                     command=str(payload["command"]),
                     event_type=str(event["event_type"]),
@@ -1032,9 +1033,9 @@ def execute_authoring_effect(record: dict[str, Any], plan: AuthoringPlan | None 
         for event in payload.get("events", []) if isinstance(payload.get("events"), list) else []:
             if not isinstance(event, dict):
                 continue
-            append_workplace_resource_event(
+            _workplace_resource_events.append_workplace_resource_event(
                 workplace_root,
-                resource_management_event(
+                _workplace_resource_events.resource_management_event(
                     scope="workplace",
                     command=str(payload["command"]),
                     event_type=str(event["event_type"]),
@@ -2127,39 +2128,8 @@ Run `project-onboard` for a concrete project.
     write_file(root / "handoffs" / "workplace-ready-handoff.md", handoff, force=True)
 
 
-def workplace_event(root: Path, event_type: str, *, payload: dict[str, Any] | None = None) -> dict[str, Any]:
-    manifest = root / "workplace.yaml"
-    workplace_id = safe_id(root.name or "workplace", "workplace")
-    if manifest.is_file():
-        data = load_yaml_document(manifest)
-        workplace = data.get("workplace") if isinstance(data, dict) else None
-        if isinstance(workplace, dict) and workplace.get("id"):
-            workplace_id = safe_id(str(workplace["id"]), "workplace")
-    return {
-        "schema_version": 1,
-        "event_id": f"evt_{uuid.uuid4().hex}",
-        "event_type": event_type,
-        "source": "processforge.cli",
-        "subject": workplace_id,
-        "time": _core_common_clock.now_utc(),
-        "correlation_id": f"workplace-init-{workplace_id}",
-        "project": {"flow_root": "workplace", "project_id": workplace_id},
-        "process": {"id": "workplace-initialization", "version": "1.0.0", "stage_id": None, "process_run_id": None},
-        "assignment": {"id": None, "path": None},
-        "actor": {"type": "agent", "id": "processforge-cli", "role": "orchestrator"},
-        "session": {"id": None},
-        "data": payload or {},
-        "severity": "info",
-        "privacy": "private",
-    }
 
 
-def append_workplace_event(root: Path, event_type: str, *, payload: dict[str, Any] | None = None) -> Path:
-    events_path = root / "runtime" / "events" / "events.ndjson"
-    events_path.parent.mkdir(parents=True, exist_ok=True)
-    with events_path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(workplace_event(root, event_type, payload=payload), ensure_ascii=False, sort_keys=True) + "\n")
-    return events_path
 
 
 def command_init_workplace(args: argparse.Namespace) -> int:
@@ -2174,7 +2144,7 @@ def command_init_workplace(args: argparse.Namespace) -> int:
     if not args.apply:
         print_plan("workplace init dry run", list(files) + planned_dirs, root)
         return 0
-    append_workplace_event(root, "workplace.initialization.started", payload={"command": getattr(args, "command", "init-workplace")})
+    _workplace_resource_events.append_workplace_event(root, "workplace.initialization.started", payload={"command": getattr(args, "command", "init-workplace")})
     for directory in planned_dirs:
         directory.mkdir(parents=True, exist_ok=True)
     results: list[WriteResult] = []
@@ -2186,19 +2156,19 @@ def command_init_workplace(args: argparse.Namespace) -> int:
     workplace_coordination = _project_coordination_reader.workplace(root / "workplace.yaml")
     if workplace_coordination.get("director_office_enabled"):
         initialize_director_office(root, workplace_coordination)
-    append_workplace_event(root, "workplace.structure.created", payload={"directories": [rel(path, root) for path in planned_dirs]})
-    append_workplace_event(root, "workplace.path_constants.created", payload={"manifest": "workplace.yaml"})
-    append_workplace_event(root, "workplace.registry.created", payload={"registries": "registries/"})
+    _workplace_resource_events.append_workplace_event(root, "workplace.structure.created", payload={"directories": [rel(path, root) for path in planned_dirs]})
+    _workplace_resource_events.append_workplace_event(root, "workplace.path_constants.created", payload={"manifest": "workplace.yaml"})
+    _workplace_resource_events.append_workplace_event(root, "workplace.registry.created", payload={"registries": "registries/"})
     doctor_status, doctor_output = run_command_capture(command_doctor_workplace, argparse.Namespace(root=str(root)))
     print(doctor_output, end="")
     finalize_workplace_doctor_artifacts(root, doctor_status, doctor_output)
-    append_workplace_event(
+    _workplace_resource_events.append_workplace_event(
         root,
         "workplace.doctor.passed" if doctor_status == 0 else "workplace.doctor.failed",
         payload={"status": "pass" if doctor_status == 0 else "fail"},
     )
     maintenance = search_index_maintenance_for_known_projects(root, reason="workplace-init")
-    append_workplace_event(root, "workplace.initialization.completed", payload={"files": [rel(result.target, root) for result in results], "doctor_status": doctor_status})
+    _workplace_resource_events.append_workplace_event(root, "workplace.initialization.completed", payload={"files": [rel(result.target, root) for result in results], "doctor_status": doctor_status})
     print_search_index_maintenance_summary(maintenance)
     for result in results:
         print(f"{result.status.upper()}: {rel(result.target, root)}")
@@ -2261,7 +2231,7 @@ def command_workplace_setup_start(args: argparse.Namespace) -> int:
         "# Next Steps\n\nReview `proposal.md`, adjust `answers.yaml`, then run `workplace-setup apply` with `--apply`.\n",
         encoding="utf-8",
     )
-    append_workplace_event(workplace, "workplace.setup.started", payload={"session_id": session_id})
+    _workplace_resource_events.append_workplace_event(workplace, "workplace.setup.started", payload={"session_id": session_id})
     print(f"WROTE: {rel(session_dir / 'answers.yaml', workplace)}")
     print(f"WROTE: {rel(session_dir / 'proposal.md', workplace)}")
     return 0
@@ -2299,7 +2269,7 @@ pass_with_conditions
     _core_common_yaml_io.write_yaml_file(session_dir / "proposal.yaml", proposal)
     (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
     (session_dir / "review.md").write_text(ensure_trailing_newline(review), encoding="utf-8")
-    append_workplace_event(workplace, "workplace.setup.reviewed", payload={"session_id": session_id})
+    _workplace_resource_events.append_workplace_event(workplace, "workplace.setup.reviewed", payload={"session_id": session_id})
     print(f"WROTE: {rel(session_dir / 'review.md', workplace)}")
     return 0
 
@@ -2365,7 +2335,7 @@ Inside an onboarded project, read root `AGENTS.md` (explicit `.pf/AGENTS.md` fal
 """
     (session_dir / "apply-report.md").write_text(ensure_trailing_newline(report), encoding="utf-8")
     (session_dir / "next-steps.md").write_text(ensure_trailing_newline(next_steps), encoding="utf-8")
-    append_workplace_event(workplace, "workplace.setup.applied", payload={"session_id": session_id, "doctor_status": status})
+    _workplace_resource_events.append_workplace_event(workplace, "workplace.setup.applied", payload={"session_id": session_id, "doctor_status": status})
     print(output, end="")
     print(f"WROTE: {rel(session_dir / 'apply-report.md', workplace)}")
     print(f"WROTE: {rel(session_dir / 'agent-instructions.md', workplace)}")
@@ -6474,61 +6444,10 @@ def write_resource_management_report(workplace_root: Path, slug: str, title: str
     return target
 
 
-def resource_management_event(
-    *,
-    scope: str,
-    command: str,
-    event_type: str,
-    target: dict[str, Any],
-    status: str,
-    message: str,
-    event_id: str | None = None,
-) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "event_id": event_id or f"evt_{uuid.uuid4().hex}",
-        "event_type": event_type,
-        "occurred_at": _core_common_clock.now_utc(),
-        "scope": scope,
-        "source": {"command": command, "actor_type": "agent"},
-        "target": target,
-        "result": {"status": status, "message": message},
-    }
 
 
-def append_workplace_resource_event(workplace_root: Path, event: dict[str, Any]) -> Path:
-    target = workplace_root / "runtime" / "events" / "events.ndjson"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    event_id = str(event.get("event_id") or "")
-    if event_id and target.is_file():
-        for line in target.read_text(encoding="utf-8", errors="replace").splitlines():
-            try:
-                existing = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(existing, dict) and str(existing.get("event_id") or "") == event_id:
-                return target
-    target.write_text(
-        (target.read_text(encoding="utf-8") if target.is_file() else "")
-        + json.dumps(_telemetry_event_service.redact_telemetry_value(event), ensure_ascii=False, sort_keys=True)
-        + "\n",
-        encoding="utf-8",
-    )
-    mark_search_index_dirty_after_resource_event(workplace_root, event)
-    return target
 
 
-def mark_search_index_dirty_after_resource_event(workplace_root: Path, event: dict[str, Any]) -> None:
-    result = event.get("result") if isinstance(event.get("result"), dict) else {}
-    status = str(result.get("status") or "")
-    if status in {"dry_run", "skipped", "passed", "failed"}:
-        return
-    try:
-        from processforge_core.resources.local_search import ResourceSearchIndex
-
-        ResourceSearchIndex(workplace_root, workplace_root=workplace_root).mark_dirty(reason=str(event.get("event_type") or "resource_event"))
-    except Exception:
-        return
 
 
 
@@ -10079,7 +9998,7 @@ def command_pack_activate(args: argparse.Namespace) -> int:
             "process_packs": sorted(entries, key=lambda item: str(item.get("id") or "")),
         }
         write_yaml_file_atomic(registry_path, document)
-    append_workplace_event(
+    _workplace_resource_events.append_workplace_event(
         workplace,
         "process.pack.activated",
         payload={"pack_id": pack_id, "origin": "official"},
@@ -15694,7 +15613,7 @@ def search_index_maintenance_for_known_projects(
     report_path = write_search_index_maintenance_runtime_report(workplace_root, payload)
     payload["report"] = rel(report_path, workplace_root)
     try:
-        append_workplace_event(
+        _workplace_resource_events.append_workplace_event(
             workplace_root,
             "search.index.maintenance.completed",
             payload={
@@ -15857,9 +15776,9 @@ def write_resource_proposal(workplace_root: Path, command: str, object_id: str, 
 
 def emit_package_root_resolution_event(workplace_root: Path, command: str, package_id: str, package_root: PackageRootResolution) -> None:
     has_unavailable = any("path does not exist" in warning or "cannot" in warning for warning in package_root.warnings)
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command=command,
             event_type="package.root.unavailable" if has_unavailable else "package.root.resolved",
@@ -15903,9 +15822,9 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
             "apply_writes": ["package.yaml", "indexes/resource-index.yaml"],
         },
     )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-url",
             event_type="knowledge.resource.add.requested",
@@ -15923,9 +15842,9 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
     package_existed = _manifest_path.is_file()
     result = upsert_resource(manifest["resources"], resource)
     manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-url",
             event_type="knowledge.resource.added",
@@ -15934,9 +15853,9 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
             message="resource manifest and index updated",
         ),
     )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-url",
             event_type="package.updated" if package_existed else "package.created",
@@ -15945,9 +15864,9 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
             message="package manifest updated through package root" if package_existed else "package manifest created through package root",
         ),
     )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-url",
             event_type="knowledge.package.updated",
@@ -16002,9 +15921,9 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
             "apply_writes": ["package.yaml", "indexes/resource-index.yaml"],
         },
     )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-resource",
             event_type="knowledge.resource.add.requested",
@@ -16015,9 +15934,9 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
     )
     if data.get("path"):
         path_errors = resource.get("path_resolution", {}).get("errors") if isinstance(resource.get("path_resolution"), dict) else []
-        append_workplace_resource_event(
+        _workplace_resource_events.append_workplace_resource_event(
             workplace_root,
-            resource_management_event(
+            _workplace_resource_events.resource_management_event(
                 scope="workplace",
                 command="knowledge-add-resource",
                 event_type="knowledge.resource.path.unresolved" if path_errors else "knowledge.resource.path.resolved",
@@ -16035,9 +15954,9 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
     package_existed = _manifest_path.is_file()
     result = upsert_resource(manifest["resources"], resource)
     manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-resource",
             event_type="package.updated" if package_existed else "package.created",
@@ -16046,9 +15965,9 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
             message="package manifest updated through package root" if package_existed else "package manifest created through package root",
         ),
     )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-add-resource",
             event_type="knowledge.resource.added",
@@ -16351,9 +16270,9 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
         return 0
     index_path.parent.mkdir(parents=True, exist_ok=True)
     index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(manifest, workplace_root, package_root.root_id))), encoding="utf-8")
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="knowledge-index-refresh",
             event_type="package.index.updated",
@@ -16398,7 +16317,7 @@ def command_knowledge_package_create(args: argparse.Namespace) -> int:
     )
     slug, proposal_path = write_resource_proposal(workplace_root, "knowledge-package-create", package_id, {"package_id": package_id, "package_root": package_root.root_id, "target": rel(manifest_path, workplace_root)})
     emit_package_root_resolution_event(workplace_root, "knowledge-package-create", package_id, package_root)
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.started", target={"package_id": package_id, "package_root": package_root.root_id}, status="dry_run" if args.dry_run else "started", message="knowledge package authoring started"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.started", target={"package_id": package_id, "package_root": package_root.root_id}, status="dry_run" if args.dry_run else "started", message="knowledge package authoring started"))
     if args.dry_run:
         for warning in package_root.warnings:
             print(warning)
@@ -16430,12 +16349,12 @@ def command_knowledge_package_create(args: argparse.Namespace) -> int:
     write_authoring_text(package_dir / "artifacts" / "knowledge-package-authoring-report.md", f"# Knowledge Package Authoring Report\n\n- package: {package_id}\n- package_root: {package_root.root_id}")
     write_authoring_text(package_dir / "reviews" / "knowledge-package-authoring-review.md", "# Knowledge Package Authoring Review\n\nResult: pass_with_conditions")
     write_authoring_text(package_dir / "handoffs" / "knowledge-package-ready-handoff.md", f"# Handoff: knowledge-package-create -> knowledge consumers\n\nPackage `{package_id}` is ready for resource additions.")
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.created", target={"package_id": package_id, "package_root": package_root.root_id}, status="created", message="knowledge package created"))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.resource_index.created", target={"package_id": package_id}, status="created", message="resource index created"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.created", target={"package_id": package_id, "package_root": package_root.root_id}, status="created", message="knowledge package created"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.resource_index.created", target={"package_id": package_id}, status="created", message="resource index created"))
     doctor_status, doctor_output = run_command_capture(command_knowledge_package_doctor, argparse.Namespace(workplace=str(workplace_root), package=package_id, package_root=package_root.root_id))
     print(doctor_output, end="")
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.doctor.passed" if doctor_status == 0 else "knowledge_package.doctor.failed", target={"package_id": package_id}, status="passed" if doctor_status == 0 else "failed", message="knowledge package doctor completed"))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.completed", target={"package_id": package_id}, status="completed", message="knowledge package authoring completed"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.doctor.passed" if doctor_status == 0 else "knowledge_package.doctor.failed", target={"package_id": package_id}, status="passed" if doctor_status == 0 else "failed", message="knowledge package doctor completed"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.completed", target={"package_id": package_id}, status="completed", message="knowledge package authoring completed"))
     print(f"PACKAGE: {rel(manifest_path, workplace_root)}")
     return doctor_status
 
@@ -16656,9 +16575,9 @@ def command_docs_import_plan(args: argparse.Namespace) -> int:
     target = resource_management_root(workplace_root) / "documentation-import-plans" / f"{plan_id}.yaml"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(ensure_trailing_newline(dump_yaml(plan)), encoding="utf-8")
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="docs-import-plan",
             event_type="knowledge.resource.add.requested",
@@ -16682,9 +16601,9 @@ def command_template_add(args: argparse.Namespace) -> int:
         template_id,
         {"template_id": template_id, "source": str(source), "target": rel(target_root, workplace_root)},
     )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="template-add",
             event_type="template.add.requested",
@@ -16713,9 +16632,9 @@ def command_template_add(args: argparse.Namespace) -> int:
             ),
             encoding="utf-8",
         )
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="template-add",
             event_type="template.added",
@@ -16770,7 +16689,7 @@ def command_template_create(args: argparse.Namespace) -> int:
     root_id, template_root = _template_catalog_service.resolve_root(workplace_root, getattr(args, "template_root", None), mode="write" if args.apply else "read")
     target = template_root / template_id
     slug, proposal_path = write_resource_proposal(workplace_root, "template-create", template_id, {"template_id": template_id, "template_root": root_id, "target": rel(target, workplace_root)})
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.started", target={"template_id": template_id}, status="dry_run" if args.dry_run else "started", message="template authoring started"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.started", target={"template_id": template_id}, status="dry_run" if args.dry_run else "started", message="template authoring started"))
     if args.dry_run:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
@@ -16800,12 +16719,12 @@ def command_template_create(args: argparse.Namespace) -> int:
     write_authoring_text(target / "reviews" / "template-authoring-review.md", "# Template Authoring Review\n\nResult: pass_with_conditions")
     write_authoring_text(target / "handoffs" / "template-ready-handoff.md", f"# Handoff: template-create -> template consumers\n\nTemplate `{template_id}` is ready for review.")
     _workplace_registry_writer.upsert(workplace_root / "registries" / "templates.yaml", "templates", {"id": template_id, "title": args.title, "path": rel(target / "template.yaml", workplace_root), "template_root": root_id, "kind": args.kind, "status": "available"})
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.created", target={"template_id": template_id}, status="created", message="template structure created"))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.registered", target={"template_id": template_id}, status="registered", message="template registry updated"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.created", target={"template_id": template_id}, status="created", message="template structure created"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.registered", target={"template_id": template_id}, status="registered", message="template registry updated"))
     doctor_status, doctor_output = run_command_capture(command_template_doctor, argparse.Namespace(workplace=str(workplace_root), template=template_id))
     print(doctor_output, end="")
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.doctor.passed" if doctor_status == 0 else "template.doctor.failed", target={"template_id": template_id}, status="passed" if doctor_status == 0 else "failed", message="template doctor completed"))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.completed", target={"template_id": template_id}, status="completed", message="template authoring completed"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.doctor.passed" if doctor_status == 0 else "template.doctor.failed", target={"template_id": template_id}, status="passed" if doctor_status == 0 else "failed", message="template doctor completed"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.completed", target={"template_id": template_id}, status="completed", message="template authoring completed"))
     print(f"TEMPLATE: {rel(target, workplace_root)}")
     print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="template-create"))
     return doctor_status
@@ -16895,9 +16814,9 @@ def command_tool_register(args: argparse.Namespace) -> int:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
     result = _workplace_registry_writer.upsert(workplace_root / "registries" / "tools.yaml", "tools", entry)
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="tool-register",
             event_type="tool.registered",
@@ -16932,9 +16851,9 @@ def command_mcp_register(args: argparse.Namespace) -> int:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
     result = _workplace_registry_writer.upsert(workplace_root / "registries" / "mcp.yaml", "mcp_servers", entry)
-    append_workplace_resource_event(
+    _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
-        resource_management_event(
+        _workplace_resource_events.resource_management_event(
             scope="workplace",
             command="mcp-register",
             event_type="mcp.registered",
@@ -17075,7 +16994,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
     }
     write_authoring_text(target, dump_yaml(document))
     _workplace_registry_writer.upsert(_specialization_catalog_reader.registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-create", event_type="specialization.created", target={"specialization_id": specialization_id}, status="created", message="specialization created"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="specialization-create", event_type="specialization.created", target={"specialization_id": specialization_id}, status="created", message="specialization created"))
     print(f"SPECIALIZATION: {rel(target, workplace_root)}")
     return print_checks(specialization_doctor_checks(workplace_root, specialization_id))
 
@@ -17117,7 +17036,7 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
         data["platform_bindings"] = bindings
     bindings.append(binding)
     write_authoring_text(path, dump_yaml(data))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": _platform_contract_reader.contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
+    _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": _platform_contract_reader.contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
     print(f"UPDATED: {rel(path, workplace_root)}")
     return 0
 
@@ -18147,6 +18066,7 @@ _project_scan_policy = ProjectScanPolicy()
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
 _workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
+_workplace_resource_events = WorkplaceResourceEventJournal(documents=_yaml_documents, telemetry=_telemetry_event_service)
 _workplace_setup_answers = WorkplaceSetupAnswers()
 
 

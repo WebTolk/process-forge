@@ -240,14 +240,16 @@ def test_post_commit_replay(root: Path) -> None:
 
     workplace = root / "post-commit-workplace"
     init_workplace(workplace)
-    original_append = processforge.append_workplace_resource_event
+    from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
+
+    original_append = WorkplaceResourceEventJournal.append_workplace_resource_event
     calls = {"count": 0}
 
-    def flaky_append(workplace_root: Path, event: dict) -> Path:
+    def flaky_append(self, workplace_root: Path, event: dict) -> Path:
         calls["count"] += 1
         if calls["count"] == 2:
             raise RuntimeError("injected audit failure")
-        return original_append(workplace_root, event)
+        return original_append(self, workplace_root, event)
 
     transaction_id = "platform-audit-replay"
     effect_payload = {
@@ -286,7 +288,7 @@ def test_post_commit_replay(root: Path) -> None:
         ],
         validation_callbacks=[],
     )
-    processforge.append_workplace_resource_event = flaky_append
+    WorkplaceResourceEventJournal.append_workplace_resource_event = flaky_append
     try:
         try:
             processforge.execute_authoring_plan(plan)
@@ -295,7 +297,9 @@ def test_post_commit_replay(root: Path) -> None:
         else:
             raise AssertionError("post-commit failure returned success")
     finally:
-        processforge.append_workplace_resource_event = original_append
+        from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
+
+        WorkplaceResourceEventJournal.append_workplace_resource_event = original_append
     journal_path = workplace / "runtime" / "authoring-transactions" / transaction_id / "journal.yaml"
     journal = yaml.safe_load(journal_path.read_text(encoding="utf-8"))
     assert journal["state"] == "committed_audit_pending"
