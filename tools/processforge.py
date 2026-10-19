@@ -400,6 +400,7 @@ from processforge_core.maintenance.release_provenance import ReleaseGitProvenanc
 from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
+from processforge_core.agents.session_metadata import SessionMetadataWriter
 from processforge_core.agents.telemetry import TelemetryEventService
 from processforge_core.resources.registries import WorkplaceRegistryReader
 from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
@@ -7127,7 +7128,7 @@ def write_project_context_snapshot_outputs(project_root: Path, *, explicit_workp
     marker = project_context_stale_marker_path(project_root)
     if marker.is_file():
         marker.unlink()
-    workplace_snapshot = write_workplace_context_snapshot(project_root, snapshot)
+    workplace_snapshot = _session_metadata_writer.write_workplace_context_snapshot(project_root, snapshot)
     report = project_context_report_path(project_root)
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(
@@ -7467,64 +7468,10 @@ def load_chat_messages(project_root: Path, session_id: str) -> list[dict[str, An
 
 
 
-def write_workplace_context_snapshot(project_root: Path, snapshot: dict[str, Any]) -> Path:
-    cache = locate_flow_root(project_root) / "runtime" / "cache"
-    cache.mkdir(parents=True, exist_ok=True)
-    local_config = locate_flow_root(project_root) / "process-forge.local.yaml"
-    payload = {
-        "schema_version": 1,
-        "snapshot": {
-            "id": "workplace-context",
-            "generated_at": _core_common_clock.now_utc(),
-            "privacy": "private",
-        },
-        "project": {"id": project_id(project_root)},
-        "flow": {
-            "root": _telemetry_event_service.flow_label(project_root),
-            "manifest": rel(locate_flow_root(project_root) / "process-forge.yaml", project_root),
-            "local_config": rel(local_config, project_root),
-            "local_config_exists": local_config.is_file(),
-        },
-        "capabilities": snapshot.get("capabilities", {}),
-        "resolved_parameters": snapshot.get("resolved_parameters", {}),
-        "parameter_resolution": snapshot.get("parameter_resolution", {}),
-        "workplace_coordination": snapshot.get("workplace_coordination", {}),
-        "tools": snapshot.get("tools", {}),
-        "mcp": snapshot.get("mcp", {}),
-        "notes": ["Private runtime snapshot may include local availability state."],
-    }
-    target = cache / "workplace-context.snapshot.yaml"
-    target.write_text(ensure_trailing_newline(dump_yaml(payload)), encoding="utf-8")
-    return target
 
 
-def session_runtime_paths(project_root: Path, session_id: str) -> tuple[Path, Path]:
-    runtime = locate_flow_root(project_root) / "runtime"
-    return runtime / "sessions" / f"{session_id}.yaml", runtime / "telemetry" / f"{session_id}.ndjson"
 
 
-def write_session_metadata(project_root: Path, session_id: str, mode: str, snapshot_status: str, telemetry_path: Path) -> Path:
-    session_path, _events_path = session_runtime_paths(project_root, session_id)
-    snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
-    payload = {
-        "schema_version": 1,
-        "session": {
-            "id": session_id,
-            "mode": mode,
-            "actor_type": "human_started_agent",
-            "role": "orchestrator",
-            "started_at": _core_common_clock.now_utc(),
-        },
-        "context": {
-            "project_flow_root": _telemetry_event_service.flow_label(project_root),
-            "snapshot": rel(snapshot_yaml, project_root),
-            "snapshot_status": snapshot_status,
-        },
-        "telemetry": {"events": rel(telemetry_path, project_root)},
-    }
-    session_path.parent.mkdir(parents=True, exist_ok=True)
-    session_path.write_text(ensure_trailing_newline(dump_yaml(payload)), encoding="utf-8")
-    return session_path
 
 
 def build_context_payload(project_root: Path, assignment: Path | None = None) -> tuple[dict[str, Any], dict[str, Any], str, str]:
@@ -7925,7 +7872,7 @@ def command_session_start(args: argparse.Namespace) -> int:
         raise SystemExit(f"FAIL: project root not found: {project_root}")
     _run_task_inputs.require_flow_root(project_root)
     session_id = _telemetry_event_service.telemetry_session_id()
-    session_path, telemetry_path = session_runtime_paths(project_root, session_id)
+    session_path, telemetry_path = _session_metadata_writer.session_runtime_paths(project_root, session_id)
     freshness, stale_reasons, snapshot = project_context_freshness(project_root)
     if args.rebuild_context_if_stale and freshness in {"missing", "stale"}:
         status, paths, snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=getattr(args, "workplace", None))
@@ -7939,7 +7886,7 @@ def command_session_start(args: argparse.Namespace) -> int:
     if check_result.get("status") == "broken" and check_result.get("policy_action") == "block":
         print("PROJECT_CONTEXT_BLOCKED: broken snapshot")
         return 1
-    write_session_metadata(project_root, session_id, args.mode, freshness, telemetry_path)
+    _session_metadata_writer.write_session_metadata(project_root, session_id, args.mode, freshness, telemetry_path)
     emit_process_event(
         project_root,
         "session.started",
@@ -8065,7 +8012,7 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
             print(dump_yaml(proposal), end="")
         return 0
     session_id = _telemetry_event_service.telemetry_session_id("project-context-refresh")
-    _session_path, telemetry_path = session_runtime_paths(project_root, session_id)
+    _session_path, telemetry_path = _session_metadata_writer.session_runtime_paths(project_root, session_id)
     emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"command": "project-context-refresh", "reason": getattr(args, "reason", None)}, correlation_id=session_id)
     status, paths, snapshot, old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=getattr(args, "workplace", None))
     _telemetry_event_service.append_telemetry_event(telemetry_path, "session_start", mode="project_context_refresh", actor="agent")
@@ -17905,6 +17852,7 @@ _project_scan_policy = ProjectScanPolicy()
 _release_git_provenance = ReleaseGitProvenance(source_policy=_release_source_policy)
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
+_session_metadata_writer = SessionMetadataWriter(inputs=_context_contract_inputs)
 _workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
 _workplace_resource_events = WorkplaceResourceEventJournal(documents=_yaml_documents, telemetry=_telemetry_event_service)
 _workplace_setup_answers = WorkplaceSetupAnswers()
