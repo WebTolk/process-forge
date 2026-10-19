@@ -287,9 +287,11 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         request["workplace"] = str(workplace)
         request["command"] = f"mcp:{name}"
         try:
+            from processforge_core.project.file_templates import ProjectFileTemplateBuilder
+
             if name.endswith(".initialize"):
-                return project_initialization.initialize_project(request, core)
-            return project_initialization.repair_project(request, core)
+                return project_initialization.initialize_project(request, core, build_project_files=ProjectFileTemplateBuilder(runtime.repo_root).build_project_files)
+            return project_initialization.repair_project(request, core, build_project_files=ProjectFileTemplateBuilder(runtime.repo_root).build_project_files)
         except project_initialization.ProjectInitializationError as exc:
             raise session_read.SessionReadError(exc.code) from exc
     if name == "pf.workplace_state":

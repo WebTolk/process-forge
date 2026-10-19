@@ -72,7 +72,9 @@ def check_pruning(pf, root: Path) -> None:
     assert not ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).list_classifier_files(root / "absent")
     # The default classification and inactive-hint paths must use the same walk.
     with patch.object(ProjectDetectionService, "files", side_effect=AssertionError("generic traversal")):
-        classified = pf.classify_project(project)
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+        classified = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project)
         from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
 
         ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).inactive_official_classifier_hints(None, project)

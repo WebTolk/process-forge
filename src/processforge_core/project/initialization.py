@@ -17,6 +17,8 @@ from ..documents.answers import AnswersDocumentReader
 from .host_integration import optional_host_integration_status
 from .initialization_inputs import ProjectInitializationInputs
 
+ProjectFileGeneration = Callable[[Path, Path, dict[str, Any]], dict[Path, str]]
+
 
 @dataclass(frozen=True)
 class ProjectInitializationError(Exception):
@@ -162,7 +164,7 @@ def _initialization_request(request: dict[str, Any], core: Any) -> dict[str, Any
     return {"project_root": project_root, "workplace": workplace, "answers": answers, "project_type": str(project_type) if project_type else None, "coordination_mode": str(coordination_mode) if coordination_mode else None, "force": bool(request.get("force", False)), "allow_missing_workplace": bool(request.get("allow_missing_workplace", False)), "command": str(request.get("command") or "project-onboard")}
 
 
-def initialize_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
+def initialize_project(request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration) -> dict[str, Any]:
     """Plan or perform one deterministic initialization workflow for CLI and MCP."""
     normalized = _initialization_request(request, core)
     project_root, workplace = normalized["project_root"], normalized["workplace"]
@@ -177,7 +179,7 @@ def initialize_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
     normalized["agent_entry_plan"] = entry_plan
     if apply_requested is True and entry_plan["blockers"]:
         raise ProjectInitializationError(entry_plan["blockers"][0])
-    files = core.build_project_files(project_root, workplace, normalized["answers"])
+    files = build_project_files(project_root, workplace, normalized["answers"])
     if apply_requested is True:
         return apply("initialize", apply_requested=True, execute=lambda: core.execute_project_initialization(normalized, files))
     planned = [core.rel(path, project_root) for path in files]
@@ -188,7 +190,7 @@ def initialize_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
     raise ProjectInitializationError("apply_required")
 
 
-def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
+def repair_project(request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration) -> dict[str, Any]:
     """Repair deterministic project state only; it never performs onboarding."""
     raw_root = request.get("project_root")
     if not raw_root:
@@ -221,7 +223,7 @@ def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
             answers["project"] = project_answers
             from processforge_core.project.coordination_state import ProjectCoordinationStateService
 
-            files = core.build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else ProjectCoordinationStateService().resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
+            files = build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else ProjectCoordinationStateService().resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
             return core.execute_project_initialization({"project_root": project_root, "project_type": project_answers.get("type"), "force": False, "command": "project-init-repair", "agent_entry_plan": entry_plan}, files)
         return apply("repair", apply_requested=True, execute=restore)
     if action == "install_codex_hooks":

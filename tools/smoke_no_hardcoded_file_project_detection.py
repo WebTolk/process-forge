@@ -24,7 +24,9 @@ def main() -> None:
             path = project / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("fixture\n", encoding="utf-8")
-        detected = pf.detect_project(project)
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+        detected = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).detect_project(project)
         if detected["status"] != "unclassified" or detected["project_kind"] != ["unknown"]:
             raise AssertionError(detected)
         if detected["languages"] or detected["frameworks"] or detected["platforms"]:

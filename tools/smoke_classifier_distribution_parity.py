@@ -73,8 +73,10 @@ def main() -> None:
         classifier_a = make_distribution(distribution_a, "fixture.python")
         classifier_b = make_distribution(distribution_b, "fixture.python")
 
-        result_a = pf.classify_project(project, explicit_classifier_paths=[classifier_a])
-        result_b = pf.classify_project(project, explicit_classifier_paths=[classifier_b])
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+        result_a = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[classifier_a])
+        result_b = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[classifier_b])
         expected_source = CLASSIFIER_RELATIVE_PATH.as_posix()
         assert result_a["matched_rules"][0]["source"] == expected_source, result_a
         assert result_b["matched_rules"][0]["source"] == expected_source, result_b
@@ -82,7 +84,7 @@ def main() -> None:
         assert classifier_a.name != expected_source, "legacy basename label must not satisfy this regression"
 
         classifier_b.write_text(CLASSIFIER_TEMPLATE.format(project_type="fixture.changed"), encoding="utf-8")
-        changed = pf.classify_project(project, explicit_classifier_paths=[classifier_b])
+        changed = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[classifier_b])
         assert changed["project_types"] == ["fixture.changed"], changed
         assert changed["project_types"] != result_b["project_types"], (result_b, changed)
         assert changed["matched_rules"][0]["source"] == expected_source, changed
@@ -90,7 +92,7 @@ def main() -> None:
         local_classifier = project / ".pf" / "project-classifiers" / "local.yaml"
         local_classifier.parent.mkdir(parents=True)
         local_classifier.write_text(CLASSIFIER_TEMPLATE.format(project_type="fixture.local"), encoding="utf-8")
-        local_result = pf.classify_project(project, explicit_classifier_paths=[local_classifier])
+        local_result = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[local_classifier])
         assert local_result["matched_rules"][0]["source"] == ".pf/project-classifiers/local.yaml", local_result
 
         workplace = root / "workplace"
@@ -113,19 +115,21 @@ project_classifiers:
         workplace_project = root / "workplace-project"
         workplace_project.mkdir()
         (workplace_project / "app.py").write_text("print('fixture')\n", encoding="utf-8")
-        workplace_result = pf.classify_project(workplace_project, workplace_manifest=manifest)
+        workplace_result = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(workplace_project, workplace_manifest=manifest)
         assert workplace_result["matched_rules"][0]["source"] == "workplace.yaml", workplace_result
 
         nested_workplace = distribution_a / ".pf" / "tmp" / "nested-workplace"
         shutil.copytree(workplace, nested_workplace)
         nested_manifest = nested_workplace / "workplace.yaml"
-        nested_result = pf.classify_project(workplace_project, workplace_manifest=nested_manifest)
+        nested_result = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(workplace_project, workplace_manifest=nested_manifest)
         assert nested_result["matched_rules"][0]["source"] == "workplace.yaml", nested_result
         assert classification_semantics(nested_result) == classification_semantics(workplace_result)
 
         contained_classifier = make_distribution(nested_workplace / "core", "fixture.contained")
         for distributed_classifier in (contained_classifier, classifier_b):
-            result = pf.classify_project(
+            from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+            from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+            result = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(
                 workplace_project, workplace_manifest=nested_manifest,
                 explicit_classifier_paths=[distributed_classifier],
             )

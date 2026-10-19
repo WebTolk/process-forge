@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 import processforge as core
 from processforge_core.project import initialization
+from processforge_core.project.file_templates import ProjectFileTemplateBuilder
 from processforge_core.agent_entry import migration
 from processforge_core.agent_entry.contract import BOM, block_span, load_contract
 
@@ -199,7 +200,7 @@ def main():
         def interrupted_apply(*args, **kwargs):
             return real_apply(*args, **kwargs, _fault=fail_after_root)
         with patch.object(migration, "apply_entry", interrupted_apply):
-            failed = initialization.initialize_project({"project_root": str(interrupted), "workplace": str(workplace), "apply": True}, core)
+            failed = initialization.initialize_project({"project_root": str(interrupted), "workplace": str(workplace), "apply": True}, core, build_project_files=ProjectFileTemplateBuilder(core.ROOT).build_project_files)
         assert failed["result"]["status"] == "blocked", failed
         receipt = failed["result"]["agent_entry"]
         assert receipt["action"] == "incomplete" and receipt["transaction"]
