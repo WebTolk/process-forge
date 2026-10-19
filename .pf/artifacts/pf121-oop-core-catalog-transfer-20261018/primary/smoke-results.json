@@ -1,0 +1,84 @@
+{
+  "started_at": "2026-10-19T03:34:41.630946+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "39a594c0f523dfbac1cc010db3a9449129461f91ac54c725f93dd8daa5d4e3c5",
+    "docs/concepts/python-core-structure.md": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+    "docs/ru/concepts/python-core-structure.md": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+    "src/processforge_core/project/session_read.py": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+    "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+    "src/processforge_core/configuration/specializations.py": "b256995da80741c0028b1df041cc95e756db44f622760e7b9b78f06bed85ba08",
+    "src/processforge_core/evolution/validation.py": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b",
+    "src/processforge_core/maintenance/transfer.py": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8"
+  },
+  "checks": [
+    {
+      "name": "smoke_specialization_registry",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.095,
+      "stdout": "PASS: smoke_specialization_registry\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_specialization_context_resolution",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.07,
+      "stdout": "PASS: smoke_specialization_context_resolution\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_specialization_override_applies",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.025,
+      "stdout": "PASS: smoke_project_specialization_override_applies\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_evolve_candidate_schema",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.885,
+      "stdout": "PASS: evolve candidate schema smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_evolve_candidate_targeting_schema",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 4.814,
+      "stdout": "PASS: evolve candidate targeting schema smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_update_candidate_discovery",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.502,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_session_start_context_check",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 3.502,
+      "stdout": "PASS: session-start context check smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.27,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Eight affected existing scripts: specialization registry/context/override, candidate schema/targeting, manifest discovery, session context and documentation. This bounded source assurance does not qualify installed Runtime/release/archive/ZIP. Complete read/path/check/transfer/default/copy proofs are retained separately.",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-19T03:34:56.803408+00:00"
+}

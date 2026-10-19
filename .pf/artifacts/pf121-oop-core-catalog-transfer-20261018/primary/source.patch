@@ -1,0 +1,1051 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index 0ab98fa..5375f1c 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-7e11235b2c086508d1cdc533f81c1d833f493356696bdc22d556c36339f3f153  docs/concepts/python-core-structure.md
++e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-9397b8f9c8103d48b6c8c40762a1c3c4cf8b467924ba8d9423d47061c9f05d3a  docs/ru/concepts/python-core-structure.md
++20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -688,7 +688,7 @@ d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074  src/processfor
+ e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2  src/processforge_core/common/record_validation.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
+ 6dba027ab1ddd3fbe64d014ca198ac8ff485784c0eee2c676d096d5a1e737160  src/processforge_core/common/status.py
+-2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576  src/processforge_core/common/text.py
++397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3  src/processforge_core/common/text.py
+ 670ffc254d5063641bc00f2c55b23f5886acd9ec89076a34ee87d08b5e825f5f  src/processforge_core/common/values.py
+ 88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752  src/processforge_core/common/yaml_dump.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+@@ -707,6 +707,7 @@ d9550009cfb927ecbc8fa20ae073e55ad230a732ee64ea7dfff652c8965fe52f  src/processfor
+ c8b0dd01b30012455e35f27cec02681ad50f773461eec196349fac303f246634  src/processforge_core/configuration/parameters.py
+ cf571344eae346a7698870723eef3b7f6089045ec79da1ca861ea6d82fa1c49e  src/processforge_core/configuration/resolution.py
+ c54e686f978a737f933cf952fc22f0f0fce5f9f8df28c883ee8120aa975134d8  src/processforge_core/configuration/service.py
++d418a0e2b2927eb1384ea4247ef366d0c0ad5283a4ddef55058af2cb0e59a04f  src/processforge_core/configuration/specializations.py
+ 94210abf00ab99b982ba9394d5c29c14ade6cb0bca95dcfc5a055835dfc05fe3  src/processforge_core/configuration/storage.py
+ fb6f27bdd50913d0b94fe82766655d58071a35916cddfaee5651ccac3fd560fb  src/processforge_core/configuration/yaml_store.py
+ e915e2318733a880cabb9661c9387912f6bb1905283fe92bbd8a935d750d2321  src/processforge_core/diagnostics.py
+@@ -729,6 +730,7 @@ ecf6d5f79b7defc6673e03348c172a4d5c20a84158a013a2ff2b0b3071ccaf55  src/processfor
+ d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef  src/processforge_core/evolution/__init__.py
+ 0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8  src/processforge_core/evolution/candidates.py
+ f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de  src/processforge_core/evolution/privacy.py
++136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b  src/processforge_core/evolution/validation.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
+ 22e7789dc700242a1540b7791a726400517212d7e35976fe23d67057f7ba027d  src/processforge_core/maintenance/candidate_read.py
+@@ -739,6 +741,7 @@ c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a  src/processfor
+ 4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7  src/processforge_core/maintenance/sites.py
+ d69a03cd163c6ea5f696658863e0cae886624218db292376833dff8f17848a6f  src/processforge_core/maintenance/source_contracts.py
+ 4eebb2407446439a008273923d6b9317cc08b6845c6d89cf826f6ab609114dfe  src/processforge_core/maintenance/temporary_files.py
++19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8  src/processforge_core/maintenance/transfer.py
+ 646b38abbe1a8ead93d00b1fc84e75555073dea8efbca0fbbb2987443d7c1756  src/processforge_core/maintenance/update.py
+ feae84e6799d1f1af66389327e35de2337d086002c019e3253087dddeef4d5fc  src/processforge_core/maintenance/validation.py
+ 64cd8e795d9b63c178ea21fb2b3038d8d2c6326c60d98d25adb1e7bac5cb66dc  src/processforge_core/maintenance/versions.py
+@@ -807,6 +810,7 @@ f0b95163dad744983bd1a4a3d912a458aea619c358780d2bd1d757d870d9aaf9  src/processfor
+ 08026d4dbcbe0ff0bd71958a16eb1ed98224bad43ce667fc8cd5733637d5a96d  src/processforge_core/project/requirements.py
+ a525381e85a1b2a51bb48fb73f5438b74965861dee84f3ff2489e724dcf0ecb5  src/processforge_core/project/resolved_comparison.py
+ 1d41cb83175edd5843e7cc276c33d8970a33547e8e6907972274b7973a417292  src/processforge_core/project/resource_snapshot.py
++2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785  src/processforge_core/project/session_read.py
+ c8df974090b2d40cd2024cfb0474784ed1f898064a5939aa716fce4285376616  src/processforge_core/project/setup.py
+ de067fb47a624cb21f983fb187f332763a4d74693b0660791481544b0f4f3b61  src/processforge_core/project/snapshot.py
+ 244872ac115cf8bb035e3644544c61956fb93bed9052a7b13fca3e10972ac484  src/processforge_core/project/snapshot_rendering.py
+@@ -1052,7 +1056,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-f2223d1e986e282f1061a26b172c492eb56dc2e14ab3f069b1f6a9b1176fd0c7  tools/processforge.py
++352d9ee6257395ceabc3654147662138a0a79319ad1d0648c51baad3224d0c5f  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index dea3cdf..bebf373 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -118,6 +118,10 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/process_catalog/examples.py` | Existing process authoring example document bytes. |
+ | `src/processforge_core/common/status.py` | Shared existing aggregate status projection. |
+ | `src/processforge_core/maintenance/candidate_read.py` | Existing fresh candidate JSON read/find. |
++| `src/processforge_core/project/session_read.py` | Existing session report status, recent files and legacy freshness. |
++| `src/processforge_core/configuration/specializations.py` | Existing specialization registry/path candidates and manifest index. |
++| `src/processforge_core/evolution/validation.py` | Existing ordered knowledge candidate checks and category constants. |
++| `src/processforge_core/maintenance/transfer.py` | Existing update manifest fetch and artifact transfer. |
+ | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
+ | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
+ | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
+@@ -1071,3 +1075,24 @@ raw ID/first match and unknown fields remain unchanged. Two authoring smoke
+ consumers use canonical models/input owners after their existing local bootstrap;
+ assertions, fixtures and failure-injection matrices are preserved. This source
+ slice adds no feature and leaves OOP epics and later delivery layers open.
++
++## Session reads, specialization catalog, candidate validation and update transfer
++
++ProjectSessionReadService owns the original report regex, recent-file ordering
++and legacy context-index substring freshness. It composes current project
++metadata/source readers; modern context freshness and report lifecycles retain
++their owners. common.text owns the shared exact COLON_WS primitive.
++
++SpecializationCatalogReader(distribution_root) owns existing resource IDs,
++registry paths, ordered/deduplicated candidates, manifest index and first-file
++selection. It reuses WorkspacePathReferenceReader containment/validation/path
++constants and current metadata/YAML owners. Candidate status filtering and the
++unfiltered last-wins index remain distinct; unknown fields and live reads remain.
++
++KnowledgeCandidateValidationService composes the existing targeting/privacy
++policies and ordered checks. evolution.validation owns the unchanged category
++set; constructors perform no document reads. UpdateTransferService composes
++existing site/document owners and preserves local copy2/HTTP stream behavior,
++timeouts, warning/error boundaries and destination effects. It adds no retry,
++directory creation or archive inspection. These source-only moves preserve
++external 1.2.0 contracts and leave OOP epics/later delivery acceptance open.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index 84aed1b..9360216 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -123,6 +123,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/process_catalog/examples.py` | Прежние байты документов примера авторинга процессов. |
+ | `src/processforge_core/common/status.py` | Общая прежняя проекция итогового статуса. |
+ | `src/processforge_core/maintenance/candidate_read.py` | Прежнее свежее чтение и поиск JSON кандидатов. |
++| `src/processforge_core/project/session_read.py` | Прежние статусы отчётов, недавние файлы и legacy freshness. |
++| `src/processforge_core/configuration/specializations.py` | Прежние registry/path candidates и индекс специализаций. |
++| `src/processforge_core/evolution/validation.py` | Прежние упорядоченные проверки кандидата знаний и категории. |
++| `src/processforge_core/maintenance/transfer.py` | Прежнее получение update manifest и перенос артефакта. |
+ | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
+ | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
+ | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
+@@ -1082,3 +1086,24 @@ Fallback missing/JSONDecodeError/non-dict, остальные ошибки, raw
+ и unknown fields сохранены. Два authoring smoke используют канонические модели
+ и inputs после прежнего локального bootstrap; assertions, fixtures и матрицы
+ failure injection точны. Новых функций нет; OOP-эпики и поздняя приёмка открыты.
++
++## Чтение сессий, каталог специализаций, кандидаты и перенос обновлений
++
++ProjectSessionReadService владеет прежним regex статуса отчёта, порядком недавних
++файлов и legacy freshness по подстрокам context-index. Он использует готовые
++project metadata/source readers. Современный context freshness и report lifecycle
++сохраняют владельцев; common.text владеет точной общей константой COLON_WS.
++
++SpecializationCatalogReader(distribution_root) владеет прежними resource IDs,
++registry paths, упорядоченными candidates с дедупликацией, manifest index и
++выбором первого файла. Готовый WorkspacePathReferenceReader отвечает за guards,
++containment и path constants; YAML/metadata owners переиспользованы. Фильтр
++статусов candidates и нефильтрованный индекс с последним победителем сохранены
++как разные алгоритмы. Неизвестные поля и повторные свежие чтения не изменены.
++
++KnowledgeCandidateValidationService собирает готовые targeting/privacy policies
++и прежние проверки в исходном порядке; evolution.validation владеет точным набором
++категорий. Конструкторы не читают документы. UpdateTransferService переиспользует
++site/document owners и сохраняет local copy2/HTTP stream, timeouts, границы
++warnings/errors и эффекты destination. Новых retries, mkdir или проверки архивов
++нет. Внешние контракты 1.2.0 сохранены; OOP-эпики и поздняя приёмка открыты.
+diff --git a/src/processforge_core/common/text.py b/src/processforge_core/common/text.py
+index 133faf8..7d659ee 100644
+--- a/src/processforge_core/common/text.py
++++ b/src/processforge_core/common/text.py
+@@ -16,3 +16,6 @@ def check_with_hint(level: str, message: str, why: str, fix: str, alternative: s
+         details.extend(["", "Or:"])
+         details.extend(f"  {line}" if line else "" for line in alternative.splitlines())
+     return check(level, "\n".join(details))
++
++
++COLON_WS = ":" + r"\s*"
+diff --git a/src/processforge_core/configuration/specializations.py b/src/processforge_core/configuration/specializations.py
+new file mode 100644
+index 0000000..0d5f293
+--- /dev/null
++++ b/src/processforge_core/configuration/specializations.py
+@@ -0,0 +1,143 @@
++"""Existing specialization catalog reads through concrete Core owners."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.paths import path_is_relative_to
++from ..common.yaml_io import yaml_error
++from ..maintenance.documents import UpdateDocumentReader
++from ..project.metadata import ProjectMetadataReader
++from ..resources.snapshot import WorkspacePathReferenceReader
++from ..work.context_documents import ContextContractInputs
++
++
++class SpecializationCatalogReader:
++    """Read specialization registries and manifests without retaining documents."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self._update_document_reader = UpdateDocumentReader(distribution_root)
++        self._inputs = ContextContractInputs()
++        self._references = WorkspacePathReferenceReader(distribution_root, None)
++
++    def resource_id(self, raw: str) -> str:
++        return raw if raw.startswith("specialization.") or "." in raw else f"specialization.{raw}"
++
++    def registry_path(self, workplace_root: Path) -> Path:
++        return self._update_document_reader.registry_file(workplace_root, "specializations", "specializations.yaml")
++
++    def path_from_registry_entry(self, workplace_root: Path, entry: dict[str, Any], workplace_manifest: Path | None = None) -> Path | None:
++        raw_path = entry.get("path")
++        if not raw_path:
++            return None
++        manifest = workplace_manifest or (workplace_root / "workplace.yaml")
++        specialization_root = self._references.resolve_registry_relative_path(
++            workplace_root,
++            "${PF_SPECIALIZATIONS}",
++            manifest,
++        )
++        candidate = self._references.resolve_registry_relative_path(
++            workplace_root,
++            str(raw_path),
++            manifest,
++        )
++        return self._references.contained_resource_path(
++            specialization_root,
++            candidate,
++            "specialization",
++        )
++
++    def path_candidates(self, workplace_root: Path | None, specialization_id: str, project_root: Path | None = None) -> list[Path]:
++        normalized_id = self._references.validate_resource_id(
++            self.resource_id(specialization_id),
++            "specialization",
++        )
++        candidates: list[Path] = []
++        if workplace_root:
++            registry = self._inputs.load_yaml_document(self.registry_path(workplace_root))
++            entries = registry.get("specializations") if isinstance(registry, dict) else []
++            if isinstance(entries, list):
++                for entry in entries:
++                    if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
++                        continue
++                    entry_id = self.resource_id(str(entry.get("id") or ""))
++                    if entry_id == normalized_id:
++                        path = self.path_from_registry_entry(workplace_root, entry, workplace_root / "workplace.yaml")
++                        if path:
++                            candidates.append(path)
++            for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
++                candidates.extend(
++                    [
++                        self._references.contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
++                        self._references.contained_resource_path(
++                            root,
++                            root / f"{normalized_id.removeprefix('specialization.')}.yaml",
++                            "specialization",
++                        ),
++                    ]
++                )
++        if project_root:
++            flow_root = ProjectMetadataReader(project_root).flow_root()
++            for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
++                candidates.extend(
++                    [
++                        self._references.contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
++                        self._references.contained_resource_path(
++                            root,
++                            root / f"{normalized_id.removeprefix('specialization.')}.yaml",
++                            "specialization",
++                        ),
++                    ]
++                )
++        unique: list[Path] = []
++        seen: set[Path] = set()
++        for path in candidates:
++            resolved = path.resolve()
++            if resolved not in seen:
++                seen.add(resolved)
++                unique.append(resolved)
++        return unique
++
++    def manifest_index(self, workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
++        workplace_root = workplace_manifest.parent if workplace_manifest and workplace_manifest.is_file() else None
++        index: dict[str, dict[str, Any]] = {}
++        paths: list[Path] = []
++        if workplace_root:
++            registry = self._inputs.load_yaml_document(self.registry_path(workplace_root))
++            entries = registry.get("specializations") if isinstance(registry, dict) else []
++            if isinstance(entries, list):
++                for entry in entries:
++                    if isinstance(entry, dict):
++                        path = self.path_from_registry_entry(workplace_root, entry, workplace_manifest)
++                        if path:
++                            paths.append(path)
++            for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
++                if root.is_dir():
++                    paths.extend(sorted(root.glob("*.yaml")))
++                    paths.extend(sorted(root.glob("*.yml")))
++        if project_root:
++            flow_root = ProjectMetadataReader(project_root).flow_root()
++            for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
++                if root.is_dir():
++                    paths.extend(sorted(root.glob("*.yaml")))
++                    paths.extend(sorted(root.glob("*.yml")))
++        for path in paths:
++            data = self._inputs.load_yaml_document(path)
++            if not isinstance(data, dict) or yaml_error(data) or not data.get("id"):
++                continue
++            normalized_id = self.resource_id(str(data["id"]))
++            source = "project" if project_root and path_is_relative_to(path, ProjectMetadataReader(project_root).flow_root()) else "workplace"
++            record = dict(data)
++            record["id"] = normalized_id
++            record["__manifest_path"] = path
++            record["__source"] = source
++            index[normalized_id] = record
++        return index
++
++    def manifest_path(self, workplace_root: Path, specialization_id: str) -> Path | None:
++        normalized_id = self.resource_id(specialization_id)
++        for candidate in self.path_candidates(workplace_root, normalized_id, None):
++            if candidate.is_file():
++                return candidate
++        return None
+diff --git a/src/processforge_core/evolution/validation.py b/src/processforge_core/evolution/validation.py
+new file mode 100644
+index 0000000..24ec005
+--- /dev/null
++++ b/src/processforge_core/evolution/validation.py
+@@ -0,0 +1,42 @@
++"""Existing knowledge candidate validation composed from concrete Core policies."""
++
++from __future__ import annotations
++
++import json
++from typing import Any
++
++from ..common.checks import Check, check
++from .candidates import KnowledgeCandidateTargetingPolicy
++from .privacy import EvolvePrivacyPolicy
++
++
++EVOLVE_CANDIDATE_CATEGORIES = {
++    "domain",
++    "architecture",
++    "implementation",
++    "assurance",
++    "delivery",
++    "tooling",
++    "process",
++    "resource",
++    "generic",
++}
++
++
++class KnowledgeCandidateValidationService:
++    def __init__(self) -> None:
++        self.targeting_policy = KnowledgeCandidateTargetingPolicy()
++        self.privacy_policy = EvolvePrivacyPolicy()
++
++    def validate(self, data: dict[str, Any]) -> list[Check]:
++        checks: list[Check] = []
++        checks.append(check("PASS" if data.get("kind") == "processforge.knowledge_candidate" else "FAIL", "candidate kind is processforge.knowledge_candidate"))
++        candidate_id = self.targeting_policy.id_from_data(data)
++        checks.append(check("PASS" if candidate_id == str(data.get("id") or data.get("candidate_id")) else "FAIL", "candidate id is portable"))
++        category = str(data.get("category") or "generic")
++        checks.extend(self.targeting_policy.validate(data, strict=True))
++        checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
++        checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
++        findings = self.privacy_policy.findings(json.dumps(data, ensure_ascii=False))
++        checks.append(check("PASS" if not findings else "FAIL", "candidate has no unsanitized private paths or secrets" + (f": {', '.join(findings)}" if findings else "")))
++        return checks
+diff --git a/src/processforge_core/maintenance/transfer.py b/src/processforge_core/maintenance/transfer.py
+new file mode 100644
+index 0000000..14d31af
+--- /dev/null
++++ b/src/processforge_core/maintenance/transfer.py
+@@ -0,0 +1,63 @@
++from __future__ import annotations
++
++from pathlib import Path
++import shutil
++from typing import Any
++from urllib.parse import urlparse
++from urllib.request import urlopen
++
++from .documents import UpdateDocumentReader
++from .sites import UpdateSitePolicy
++
++
++class UpdateTransferService:
++    """Fetch update manifests and copy or download their artifacts."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.site_policy = UpdateSitePolicy()
++        self.documents = UpdateDocumentReader(distribution_root)
++
++    def manifest(self, source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
++        warnings: list[str] = []
++        location = self.site_policy.location(source, "provider")
++        if not location:
++            return {}, ["missing manifest_url"]
++        parsed = urlparse(location)
++        scheme = parsed.scheme.lower()
++        if scheme == "file" or not scheme:
++            path = self.documents.file_url_path(location, workplace_root)
++            data = self.documents.document(path)
++            if not data:
++                return {}, [f"manifest not found or invalid: {path}"]
++            return data, warnings
++        if scheme in {"http", "https"}:
++            try:
++                with urlopen(location, timeout=15) as response:
++                    text = response.read().decode("utf-8")
++            except Exception as exc:
++                return {}, [f"manifest fetch failed: {exc}"]
++            data = self.documents.text(text)
++            if not data:
++                return {}, [f"manifest response invalid: {location}"]
++            return data, warnings
++        return {}, [f"manifest_url scheme is unsupported: {scheme}"]
++
++    def artifact(self, candidate: dict[str, Any], target: Path, workplace_root: Path) -> Path:
++        url = str(candidate.get("download_url") or "")
++        if not url:
++            raise ValueError("candidate has no download_url")
++        parsed = urlparse(url)
++        if parsed.scheme in {"", "file"}:
++            source = self.documents.file_url_path(url, workplace_root)
++            if not source.is_file():
++                raise FileNotFoundError(source)
++            target_name = source.name
++            destination = target / target_name
++            shutil.copy2(source, destination)
++            return destination
++        if parsed.scheme in {"http", "https"}:
++            destination = target / Path(parsed.path).name
++            with urlopen(url, timeout=30) as response, destination.open("wb") as output:
++                shutil.copyfileobj(response, output)
++            return destination
++        raise ValueError(f"unsupported artifact URL scheme: {parsed.scheme}")
+diff --git a/src/processforge_core/project/session_read.py b/src/processforge_core/project/session_read.py
+new file mode 100644
+index 0000000..69127eb
+--- /dev/null
++++ b/src/processforge_core/project/session_read.py
+@@ -0,0 +1,41 @@
++"""Existing session report, recent file and legacy context freshness reads."""
++
++from __future__ import annotations
++
++import re
++from pathlib import Path
++
++from ..common.paths import rel
++from ..common.text import COLON_WS
++from .context_sources import ProjectContextSourcesReader
++from .metadata import ProjectMetadataReader
++
++
++class ProjectSessionReadService:
++    def report_status(self, path: Path) -> str:
++        if not path.is_file():
++            return "missing"
++        text = path.read_text(encoding="utf-8", errors="replace")
++        match = re.search(r"(?m)^status" + COLON_WS + r"([a-z_]+)\s*$", text)
++        return match.group(1) if match else "missing"
++
++    def recent_files(self, root: Path, dirname: str, limit: int = 5, *, rel_root: Path | None = None) -> list[str]:
++        directory = root / dirname
++        if not directory.is_dir():
++            return []
++        files = sorted((path for path in directory.rglob("*") if path.is_file()), key=lambda path: path.stat().st_mtime, reverse=True)
++        return [rel(path, rel_root or root) for path in files[:limit]]
++
++    def legacy_freshness(self, project_root: Path) -> tuple[str, list[str]]:
++        index_path = ProjectMetadataReader(project_root).flow_root() / "contexts" / "context-index.yaml"
++        if not index_path.is_file():
++            return "missing", []
++        text = index_path.read_text(encoding="utf-8", errors="replace")
++        current_sources = ProjectContextSourcesReader(project_root).read()
++        stale: list[str] = []
++        for item in current_sources:
++            path = str(item["path"])
++            fingerprint = str(item.get("fingerprint", "missing"))
++            if path not in text or fingerprint not in text:
++                stale.append(path)
++        return ("fresh" if not stale else "stale"), stale
+diff --git a/tools/processforge.py b/tools/processforge.py
+index e5049d2..b7eb746 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -267,6 +267,17 @@ _authoring_plan_renderer = AuthoringPlanRenderer()
+ _authoring_input_service = AuthoringInputService()
+ _process_authoring_example_builder = ProcessAuthoringExampleBuilder()
+ _update_candidate_reader = UpdateCandidateReader(ROOT)
++from processforge_core.project.session_read import ProjectSessionReadService
++from processforge_core.configuration.specializations import SpecializationCatalogReader
++from processforge_core.evolution.validation import KnowledgeCandidateValidationService
++from processforge_core.maintenance.transfer import UpdateTransferService
++from processforge_core.common.text import COLON_WS
++from processforge_core.evolution.validation import EVOLVE_CANDIDATE_CATEGORIES
++
++_project_session_read_service = ProjectSessionReadService()
++_specialization_catalog_reader = SpecializationCatalogReader(ROOT)
++_knowledge_candidate_validation_service = KnowledgeCandidateValidationService()
++_update_transfer_service = UpdateTransferService(ROOT)
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -633,19 +644,7 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
+     "authoring_parity.completed",
+ ]
+ 
+-COLON_WS = ":" + r"\s*"
+-
+-EVOLVE_CANDIDATE_CATEGORIES = {
+-    "domain",
+-    "architecture",
+-    "implementation",
+-    "assurance",
+-    "delivery",
+-    "tooling",
+-    "process",
+-    "resource",
+-    "generic",
+-}
++
+ 
+ DEFAULT_PATH_CONSTANTS = {
+     "PF_WORKPLACE": ".",
+@@ -3687,8 +3686,6 @@ PROJECT_OVERRIDE_KINDS = {
+ PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
+ 
+ 
+-def specialization_resource_id(raw: str) -> str:
+-    return raw if raw.startswith("specialization.") or "." in raw else f"specialization.{raw}"
+ 
+ 
+ def default_resource_buckets() -> dict[str, dict[str, list[str]]]:
+@@ -3714,123 +3711,16 @@ def dedupe_sorted(values: list[str]) -> list[str]:
+     return sorted({str(item) for item in values if str(item)})
+ 
+ 
+-def specialization_registry_path(workplace_root: Path) -> Path:
+-    return _update_document_reader.registry_file(workplace_root, "specializations", "specializations.yaml")
+ 
+ 
+-def specialization_path_from_registry_entry(workplace_root: Path, entry: dict[str, Any], workplace_manifest: Path | None = None) -> Path | None:
+-    raw_path = entry.get("path")
+-    if not raw_path:
+-        return None
+-    manifest = workplace_manifest or (workplace_root / "workplace.yaml")
+-    specialization_root = resolve_registry_relative_path(
+-        workplace_root,
+-        "${PF_SPECIALIZATIONS}",
+-        manifest,
+-    )
+-    candidate = resolve_registry_relative_path(
+-        workplace_root,
+-        str(raw_path),
+-        manifest,
+-    )
+-    return contained_resource_path(
+-        specialization_root,
+-        candidate,
+-        "specialization",
+-    )
+ 
+ 
+-def specialization_path_candidates(workplace_root: Path | None, specialization_id: str, project_root: Path | None = None) -> list[Path]:
+-    normalized_id = validate_resource_id(
+-        specialization_resource_id(specialization_id),
+-        "specialization",
+-    )
+-    candidates: list[Path] = []
+-    if workplace_root:
+-        registry = load_yaml_document(specialization_registry_path(workplace_root))
+-        entries = registry.get("specializations") if isinstance(registry, dict) else []
+-        if isinstance(entries, list):
+-            for entry in entries:
+-                if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
+-                    continue
+-                entry_id = specialization_resource_id(str(entry.get("id") or ""))
+-                if entry_id == normalized_id:
+-                    path = specialization_path_from_registry_entry(workplace_root, entry, workplace_root / "workplace.yaml")
+-                    if path:
+-                        candidates.append(path)
+-        for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
+-            candidates.extend(
+-                [
+-                    contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
+-                    contained_resource_path(
+-                        root,
+-                        root / f"{normalized_id.removeprefix('specialization.')}.yaml",
+-                        "specialization",
+-                    ),
+-                ]
+-            )
+-    if project_root:
+-        flow_root = locate_flow_root(project_root)
+-        for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
+-            candidates.extend(
+-                [
+-                    contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
+-                    contained_resource_path(
+-                        root,
+-                        root / f"{normalized_id.removeprefix('specialization.')}.yaml",
+-                        "specialization",
+-                    ),
+-                ]
+-            )
+-    unique: list[Path] = []
+-    seen: set[Path] = set()
+-    for path in candidates:
+-        resolved = path.resolve()
+-        if resolved not in seen:
+-            seen.add(resolved)
+-            unique.append(resolved)
+-    return unique
+ 
+ 
+-def specialization_manifest_index(workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
+-    workplace_root = workplace_manifest.parent if workplace_manifest and workplace_manifest.is_file() else None
+-    index: dict[str, dict[str, Any]] = {}
+-    paths: list[Path] = []
+-    if workplace_root:
+-        registry = load_yaml_document(specialization_registry_path(workplace_root))
+-        entries = registry.get("specializations") if isinstance(registry, dict) else []
+-        if isinstance(entries, list):
+-            for entry in entries:
+-                if isinstance(entry, dict):
+-                    path = specialization_path_from_registry_entry(workplace_root, entry, workplace_manifest)
+-                    if path:
+-                        paths.append(path)
+-        for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
+-            if root.is_dir():
+-                paths.extend(sorted(root.glob("*.yaml")))
+-                paths.extend(sorted(root.glob("*.yml")))
+-    if project_root:
+-        flow_root = locate_flow_root(project_root)
+-        for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
+-            if root.is_dir():
+-                paths.extend(sorted(root.glob("*.yaml")))
+-                paths.extend(sorted(root.glob("*.yml")))
+-    for path in paths:
+-        data = load_yaml_document(path)
+-        if not isinstance(data, dict) or yaml_error(data) or not data.get("id"):
+-            continue
+-        normalized_id = specialization_resource_id(str(data["id"]))
+-        source = "project" if project_root and path_is_relative_to(path, locate_flow_root(project_root)) else "workplace"
+-        record = dict(data)
+-        record["id"] = normalized_id
+-        record["__manifest_path"] = path
+-        record["__source"] = source
+-        index[normalized_id] = record
+-    return index
+ 
+ 
+ def load_specialization(workplace_manifest: Path | None, specialization_id: str, project_root: Path | None = None) -> dict[str, Any] | None:
+-    return specialization_manifest_index(workplace_manifest, project_root).get(specialization_resource_id(specialization_id))
++    return _specialization_catalog_reader.manifest_index(workplace_manifest, project_root).get(_specialization_catalog_reader.resource_id(specialization_id))
+ 
+ 
+ 
+@@ -3866,12 +3756,12 @@ def project_override_entries(project_root: Path) -> list[dict[str, Any]]:
+ 
+ 
+ def project_specialization_override_entries(project_root: Path, specialization_id: str) -> list[dict[str, Any]]:
+-    target_id = specialization_resource_id(specialization_id)
++    target_id = _specialization_catalog_reader.resource_id(specialization_id)
+     return [
+         entry
+         for entry in project_override_entries(project_root)
+         if str(entry.get("kind") or "") == "specializations"
+-        and specialization_resource_id(str(entry.get("target") or "")) == target_id
++        and _specialization_catalog_reader.resource_id(str(entry.get("target") or "")) == target_id
+     ]
+ 
+ 
+@@ -4110,7 +4000,7 @@ def resolve_specialization_context(
+     specialization_ids: list[str] | None = None,
+     platform_resolution: dict[str, Any] | None = None,
+ ) -> dict[str, Any]:
+-    selected_ids = [specialization_resource_id(item) for item in (specialization_ids or [])]
++    selected_ids = [_specialization_catalog_reader.resource_id(item) for item in (specialization_ids or [])]
+     platform_resolution = platform_resolution or _platform_contract_resolver.resolve(workplace_manifest, platform_ids, project_root=project_root)
+     required = {
+         "knowledge_packages": set(platform_resolution.get("required_knowledge_packages", [])),
+@@ -4147,7 +4037,7 @@ def resolve_specialization_context(
+                     "reason": "active official process pack knowledge packages merged",
+                 }
+             )
+-    index = specialization_manifest_index(workplace_manifest, project_root)
++    index = _specialization_catalog_reader.manifest_index(workplace_manifest, project_root)
+     for specialization_id in selected_ids:
+         spec = index.get(specialization_id)
+         if not spec:
+@@ -4215,7 +4105,7 @@ def resolve_specialization_context(
+             continue
+         base_path = None
+         if kind == "specializations":
+-            spec = index.get(specialization_resource_id(target))
++            spec = index.get(_specialization_catalog_reader.resource_id(target))
+             base_path = spec.get("__manifest_path") if isinstance(spec, dict) and isinstance(spec.get("__manifest_path"), Path) else None
+         applied = resolved_override_record(project_root, entry, base_path)
+         applied_overrides.append(applied)
+@@ -7413,8 +7303,8 @@ def resolve_project_parameters(
+                 layer="platform",
+                 parameters=parameter_payload(contract),
+             )
+-    index = specialization_manifest_index(workplace_manifest, project_root)
+-    for specialization_id in [specialization_resource_id(item) for item in specialization_ids if str(item)]:
++    index = _specialization_catalog_reader.manifest_index(workplace_manifest, project_root)
++    for specialization_id in [_specialization_catalog_reader.resource_id(item) for item in specialization_ids if str(item)]:
+         spec = index.get(specialization_id)
+         if not isinstance(spec, dict):
+             continue
+@@ -9055,27 +8945,8 @@ def write_context_outputs(project_root: Path, assignment: Path | None = None) ->
+     return status, paths
+ 
+ 
+-def context_report_status(path: Path) -> str:
+-    if not path.is_file():
+-        return "missing"
+-    text = path.read_text(encoding="utf-8", errors="replace")
+-    match = re.search(r"(?m)^status" + COLON_WS + r"([a-z_]+)\s*$", text)
+-    return match.group(1) if match else "missing"
+ 
+ 
+-def context_freshness(project_root: Path) -> tuple[str, list[str]]:
+-    index_path = locate_flow_root(project_root) / "contexts" / "context-index.yaml"
+-    if not index_path.is_file():
+-        return "missing", []
+-    text = index_path.read_text(encoding="utf-8", errors="replace")
+-    current_sources = ProjectContextSourcesReader(project_root).read()
+-    stale: list[str] = []
+-    for item in current_sources:
+-        path = str(item["path"])
+-        fingerprint = str(item.get("fingerprint", "missing"))
+-        if path not in text or fingerprint not in text:
+-            stale.append(path)
+-    return ("fresh" if not stale else "stale"), stale
+ 
+ 
+ def assignment_id(path: Path) -> str:
+@@ -9214,7 +9085,7 @@ def compile_execution_context(
+             },
+             "assignment": {"id": assn_id, "path": rel(assignment, project_root)},
+             "context": {
+-                "freshness": context_freshness(project_root)[0],
++                "freshness": _project_session_read_service.legacy_freshness(project_root)[0],
+                 "conflict_status": status,
+                 "context_status": context_status,
+                 "conflict_report": rel(assignment_conflict_report, project_root),
+@@ -9229,12 +9100,6 @@ def compile_execution_context(
+     return ecp_path, capsule_path, assignment_conflict_report
+ 
+ 
+-def recent_files(root: Path, dirname: str, limit: int = 5, *, rel_root: Path | None = None) -> list[str]:
+-    directory = root / dirname
+-    if not directory.is_dir():
+-        return []
+-    files = sorted((path for path in directory.rglob("*") if path.is_file()), key=lambda path: path.stat().st_mtime, reverse=True)
+-    return [rel(path, rel_root or root) for path in files[:limit]]
+ 
+ 
+ def render_session_status(project_root: Path, mode: str) -> str:
+@@ -9246,14 +9111,14 @@ def render_session_status(project_root: Path, mode: str) -> str:
+     project_name = name_match.group(1).strip() if name_match else project_root.name
+     flow_version = version_match.group(1).strip() if version_match else "unknown"
+     snapshot_freshness, snapshot_stale, _snapshot = project_context_freshness(project_root)
+-    legacy_freshness, legacy_stale = context_freshness(project_root)
++    legacy_freshness, legacy_stale = _project_session_read_service.legacy_freshness(project_root)
+     freshness = snapshot_freshness if snapshot_freshness != "missing" else legacy_freshness
+     stale = snapshot_stale if snapshot_freshness != "missing" else legacy_stale
+-    conflict_status = context_report_status(flow_root / "contexts" / "context-conflict-report.md")
+-    assignments = recent_files(flow_root, "assignments", rel_root=project_root)
+-    artifacts = recent_files(flow_root, "artifacts", rel_root=project_root)
+-    reviews = recent_files(flow_root, "reviews", rel_root=project_root)
+-    adrs = recent_files(flow_root, "adr", rel_root=project_root)
++    conflict_status = _project_session_read_service.report_status(flow_root / "contexts" / "context-conflict-report.md")
++    assignments = _project_session_read_service.recent_files(flow_root, "assignments", rel_root=project_root)
++    artifacts = _project_session_read_service.recent_files(flow_root, "artifacts", rel_root=project_root)
++    reviews = _project_session_read_service.recent_files(flow_root, "reviews", rel_root=project_root)
++    adrs = _project_session_read_service.recent_files(flow_root, "adr", rel_root=project_root)
+ 
+     def markdown_items(items: list[str]) -> str:
+         return "\n".join(f"- {item}" for item in items) if items else "- None."
+@@ -9409,7 +9274,7 @@ def command_session_start(args: argparse.Namespace) -> int:
+         if isinstance(capability, dict):
+             append_telemetry_event(telemetry_path, "capability_check", required=False, **capability)
+     append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="session_start")
+-    selected_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
++    selected_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
+     if selected_specializations:
+         append_telemetry_event(telemetry_path, "specialization_switch", selected_specializations=selected_specializations, reason="explicit_session_start")
+         emit_process_event(project_root, "context.snapshot.refreshed", session_id=session_id, payload={"selected_specializations": selected_specializations, "reason": "garage_mode_specialization_switch"}, correlation_id=session_id)
+@@ -11545,24 +11410,12 @@ def ensure_learning_layout(workplace: Path) -> Path:
+ 
+ 
+ 
+-def validate_knowledge_candidate(data: dict[str, Any]) -> list[Check]:
+-    checks: list[Check] = []
+-    checks.append(check("PASS" if data.get("kind") == "processforge.knowledge_candidate" else "FAIL", "candidate kind is processforge.knowledge_candidate"))
+-    candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data)
+-    checks.append(check("PASS" if candidate_id == str(data.get("id") or data.get("candidate_id")) else "FAIL", "candidate id is portable"))
+-    category = str(data.get("category") or "generic")
+-    checks.extend(_knowledge_candidate_targeting_policy.validate(data, strict=True))
+-    checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
+-    checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
+-    findings = _evolve_privacy_policy.findings(json.dumps(data, ensure_ascii=False))
+-    checks.append(check("PASS" if not findings else "FAIL", "candidate has no unsanitized private paths or secrets" + (f": {', '.join(findings)}" if findings else "")))
+-    return checks
+ 
+ 
+ def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") -> Path:
+     root = ensure_learning_layout(workplace)
+     data = read_yaml_file(source)
+-    failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
++    failures = [item.message for item in _knowledge_candidate_validation_service.validate(data) if item.level == "FAIL"]
+     if failures:
+         raise SystemExit("FAIL: invalid knowledge candidate: " + "; ".join(failures))
+     candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data, source.stem)
+@@ -11782,7 +11635,7 @@ def command_knowledge_hub_import(args: argparse.Namespace) -> int:
+     rows = [item for item in as_list(index.get("candidates")) if isinstance(item, dict)]
+     for candidate in sorted((import_root / "candidates").glob("*.yaml")):
+         data = read_yaml_file(candidate)
+-        failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
++        failures = [item.message for item in _knowledge_candidate_validation_service.validate(data) if item.level == "FAIL"]
+         if failures:
+             raise SystemExit("FAIL: imported candidate invalid: " + "; ".join(failures))
+         candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data, candidate.stem)
+@@ -12484,7 +12337,7 @@ def command_agent_register(args: argparse.Namespace) -> int:
+         "kind": args.kind,
+         "roles": [str(item) for item in as_list(args.role)],
+         "capabilities": [str(item) for item in as_list(args.capability)],
+-        "supports_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", []))],
++        "supports_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", []))],
+     }
+     existing = next((item for item in agents if isinstance(item, dict) and item.get("id") == agent_id), None)
+     if existing:
+@@ -12518,7 +12371,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
+     registry = load_agent_registry(workplace_root)
+     profile = next((item for item in registry.get("agents", []) if isinstance(item, dict) and item.get("id") == agent_id), {})
+     capabilities = [str(item) for item in (as_list(getattr(args, "capability", [])) or as_list(profile.get("capabilities")))]
+-    supported_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
++    supported_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
+     now = now_utc()
+     presence = {
+         "schema_version": 1,
+@@ -12844,8 +12697,8 @@ def command_handoff_create(args: argparse.Namespace) -> int:
+             "mode": str(route.get("mode") or "wait_for_result"),
+             "required_role": _process_route_service.required_role(route),
+             "required_capabilities": [str(item) for item in as_list(route.get("required_capabilities"))],
+-            "required_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("required_specializations"))],
+-            "preferred_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("preferred_specializations"))],
++            "required_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(route.get("required_specializations"))],
++            "preferred_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(route.get("preferred_specializations"))],
+         },
+         "input_artifacts": as_list((route.get("input_contract") if isinstance(route.get("input_contract"), dict) else {}).get("required_artifacts")),
+         "expected_results": as_list((route.get("output_contract") if isinstance(route.get("output_contract"), dict) else {}).get("expected_artifacts")),
+@@ -12883,7 +12736,7 @@ def handoff_available_agents(args: argparse.Namespace, handoff: dict[str, Any],
+     if required:
+         agents = [
+             agent for agent in agents
+-            if required.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
++            if required.issubset({_specialization_catalog_reader.resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+         ]
+     return agents
+ 
+@@ -13013,7 +12866,7 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
+         if required_specializations:
+             agents = [
+                 agent for agent in agents
+-                if required_specializations.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
++                if required_specializations.issubset({_specialization_catalog_reader.resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+             ]
+         if not agents:
+             created = parse_runtime_timestamp(handoff.get("created_at"))
+@@ -15040,7 +14893,7 @@ def command_run_create(args: argparse.Namespace) -> int:
+         "updated_at": now_utc(),
+         "objective": args.objective or "",
+         "platform": getattr(args, "platform", None) or "",
+-        "selected_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
++        "selected_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
+         "scope": {"type": "project", "project_root": "."},
+         "tasks": [],
+         "final_artifacts": [],
+@@ -15208,7 +15061,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
+         "updated_at": now_utc(),
+         "objective": args.objective or "",
+         "platform": getattr(args, "platform", None) or "",
+-        "selected_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
++        "selected_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
+         "order": order,
+         "dependencies": {"blocked_by": [], "blocks": []},
+         "iterations": [],
+@@ -15699,10 +15552,10 @@ def command_doctor_context(args: argparse.Namespace) -> int:
+     checks.append(check("PASS" if context_index.is_file() else ("WARN" if snapshot_yaml.is_file() else "FAIL"), "context index found"))
+     checks.append(check("PASS" if resolved_rules.is_file() else ("WARN" if snapshot_yaml.is_file() else "FAIL"), "resolved rules found"))
+     checks.append(check("PASS" if conflict_report.is_file() else ("WARN" if snapshot_yaml.is_file() else "FAIL"), "conflict report found"))
+-    status = context_report_status(conflict_report)
++    status = _project_session_read_service.report_status(conflict_report)
+     if conflict_report.is_file():
+         checks.append(check("PASS" if status in {"resolved", "warn", "requires_approval"} else "FAIL", f"conflict status is {status}"))
+-    freshness, stale = context_freshness(project_root)
++    freshness, stale = _project_session_read_service.legacy_freshness(project_root)
+     if context_index.is_file():
+         checks.append(check("PASS" if freshness == "fresh" else "FAIL", f"context freshness is {freshness}" + (f": {', '.join(stale)}" if stale else "")))
+     checks.append(check("PASS" if cache.is_file() else "WARN", "context cache found"))
+@@ -15730,7 +15583,7 @@ def command_doctor_context(args: argparse.Namespace) -> int:
+             checks.append(check("PASS", "assignment context status is pass"))
+         checks.append(check("PASS" if assignment_conflict_report.is_file() else "FAIL", "assignment-specific conflict report found"))
+         if assignment_conflict_report.is_file():
+-            checks.append(check("PASS" if context_report_status(assignment_conflict_report) == assignment_status else "FAIL", "assignment conflict report status matches resolver"))
++            checks.append(check("PASS" if _project_session_read_service.report_status(assignment_conflict_report) == assignment_status else "FAIL", "assignment conflict report status matches resolver"))
+         ecp_candidates = sorted((flow_root / "contexts").glob(f"{assignment_id(assignment)}*.ecp.yaml"), key=lambda path: path.stat().st_mtime, reverse=True)
+         ecp = ecp_candidates[0] if ecp_candidates else flow_root / "contexts" / f"{assignment_id(assignment)}.ecp.yaml"
+         if ecp.is_file():
+@@ -16365,30 +16218,6 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
+ 
+ 
+ 
+-def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
+-    warnings: list[str] = []
+-    location = _update_site_policy.location(source, "provider")
+-    if not location:
+-        return {}, ["missing manifest_url"]
+-    parsed = urlparse(location)
+-    scheme = parsed.scheme.lower()
+-    if scheme == "file" or not scheme:
+-        path = _update_document_reader.file_url_path(location, workplace_root)
+-        data = _update_document_reader.document(path)
+-        if not data:
+-            return {}, [f"manifest not found or invalid: {path}"]
+-        return data, warnings
+-    if scheme in {"http", "https"}:
+-        try:
+-            with urlopen(location, timeout=15) as response:
+-                text = response.read().decode("utf-8")
+-        except Exception as exc:
+-            return {}, [f"manifest fetch failed: {exc}"]
+-        data = _update_document_reader.text(text)
+-        if not data:
+-            return {}, [f"manifest response invalid: {location}"]
+-        return data, warnings
+-    return {}, [f"manifest_url scheme is unsupported: {scheme}"]
+ 
+ 
+ 
+@@ -16432,7 +16261,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+             continue
+         source = site.get("source") if isinstance(site.get("source"), dict) else {}
+         effective_channel = str(source.get("channel") or channel)
+-        raw_manifest, warnings = fetch_update_manifest(source, workplace_root)
++        raw_manifest, warnings = _update_transfer_service.manifest(source, workplace_root)
+         if not raw_manifest:
+             conflicts.append({"site_id": site.get("site_id"), "reason": "; ".join(warnings) or "manifest fetch failed"})
+             continue
+@@ -16666,25 +16495,6 @@ def sha256_file(path: Path) -> str:
+     return _file_digests.sha256_file(path)
+ 
+ 
+-def copy_or_download_update_artifact(candidate: dict[str, Any], target: Path, workplace_root: Path) -> Path:
+-    url = str(candidate.get("download_url") or "")
+-    if not url:
+-        raise ValueError("candidate has no download_url")
+-    parsed = urlparse(url)
+-    if parsed.scheme in {"", "file"}:
+-        source = _update_document_reader.file_url_path(url, workplace_root)
+-        if not source.is_file():
+-            raise FileNotFoundError(source)
+-        target_name = source.name
+-        destination = target / target_name
+-        shutil.copy2(source, destination)
+-        return destination
+-    if parsed.scheme in {"http", "https"}:
+-        destination = target / Path(parsed.path).name
+-        with urlopen(url, timeout=30) as response, destination.open("wb") as output:
+-            shutil.copyfileobj(response, output)
+-        return destination
+-    raise ValueError(f"unsupported artifact URL scheme: {parsed.scheme}")
+ 
+ 
+ def safe_extract_zip(archive_path: Path, destination: Path) -> None:
+@@ -16732,7 +16542,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
+     if stage_dir.exists():
+         shutil.rmtree(stage_dir)
+     stage_dir.mkdir(parents=True, exist_ok=True)
+-    artifact_path = copy_or_download_update_artifact(candidate, stage_dir, workplace_root)
++    artifact_path = _update_transfer_service.artifact(candidate, stage_dir, workplace_root)
+     actual_sha = sha256_file(artifact_path)
+     expected_sha = str(candidate.get("sha256") or candidate.get("artifact_sha256") or "")
+     verified = not expected_sha or actual_sha.lower() == expected_sha.lower()
+@@ -18364,7 +18174,7 @@ def command_mcp_register(args: argparse.Namespace) -> int:
+ def command_specialization_list(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+-    index = specialization_manifest_index(workplace_root / "workplace.yaml", project_root)
++    index = _specialization_catalog_reader.manifest_index(workplace_root / "workplace.yaml", project_root)
+     rows = [
+         {
+             "id": item.get("id"),
+@@ -18388,7 +18198,7 @@ def command_specialization_show(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+     data = load_specialization(workplace_root / "workplace.yaml", args.id, project_root)
+     if not data:
+-        raise SystemExit(f"FAIL: specialization not found: {specialization_resource_id(args.id)}")
++        raise SystemExit(f"FAIL: specialization not found: {_specialization_catalog_reader.resource_id(args.id)}")
+     cleaned = {key: value for key, value in data.items() if not str(key).startswith("__")}
+     if getattr(args, "json", False):
+         print(json.dumps(cleaned, ensure_ascii=False, indent=2, sort_keys=True))
+@@ -18397,18 +18207,12 @@ def command_specialization_show(args: argparse.Namespace) -> int:
+     return 0
+ 
+ 
+-def specialization_manifest_path(workplace_root: Path, specialization_id: str) -> Path | None:
+-    normalized_id = specialization_resource_id(specialization_id)
+-    for candidate in specialization_path_candidates(workplace_root, normalized_id, None):
+-        if candidate.is_file():
+-            return candidate
+-    return None
+ 
+ 
+ def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -> list[Check]:
+-    normalized_id = specialization_resource_id(specialization_id)
++    normalized_id = _specialization_catalog_reader.resource_id(specialization_id)
+     checks: list[Check] = []
+-    path = specialization_manifest_path(workplace_root, normalized_id)
++    path = _specialization_catalog_reader.manifest_path(workplace_root, normalized_id)
+     checks.append(
+         check("PASS", "specialization manifest found")
+         if path
+@@ -18459,7 +18263,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     requested_id = validate_resource_id(str(args.id), "specialization")
+     specialization_id = validate_resource_id(
+-        specialization_resource_id(requested_id),
++        _specialization_catalog_reader.resource_id(requested_id),
+         "specialization",
+     )
+     specialization_root = workplace_root / "specializations"
+@@ -18491,7 +18295,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
+         "metadata": {"tags": []},
+     }
+     write_authoring_text(target, dump_yaml(document))
+-    _workplace_registry_writer.upsert(specialization_registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
++    _workplace_registry_writer.upsert(_specialization_catalog_reader.registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
+     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-create", event_type="specialization.created", target={"specialization_id": specialization_id}, status="created", message="specialization created"))
+     print(f"SPECIALIZATION: {rel(target, workplace_root)}")
+     return print_checks(specialization_doctor_checks(workplace_root, specialization_id))
+@@ -18499,8 +18303,8 @@ def command_specialization_create(args: argparse.Namespace) -> int:
+ 
+ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
+     workplace_root = Path(args.workplace).expanduser().resolve()
+-    specialization_id = specialization_resource_id(str(args.specialization))
+-    path = specialization_manifest_path(workplace_root, specialization_id)
++    specialization_id = _specialization_catalog_reader.resource_id(str(args.specialization))
++    path = _specialization_catalog_reader.manifest_path(workplace_root, specialization_id)
+     if not path:
+         raise SystemExit(f"FAIL: specialization not found: {specialization_id}")
+     data = load_yaml_document(path)

@@ -1,0 +1,624 @@
+{
+  "passed": true,
+  "total": 90,
+  "native_exceptions": 10,
+  "groups": {
+    "annotations": 12,
+    "session": 14,
+    "specializations": 23,
+    "candidate": 20,
+    "transfer": 19,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "specialization_resource_id",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "specialization_registry_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "specialization_path_from_registry_entry",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "specialization_path_candidates",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "specialization_manifest_index",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "context_report_status",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "context_freshness",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "recent_files",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_knowledge_candidate",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "fetch_update_manifest",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "copy_or_download_update_artifact",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "specialization_manifest_path",
+      "passed": true
+    },
+    {
+      "group": "session",
+      "case": "missing report",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "65c99f7edf11522c101816ce429f058d61186a22381ecde9e6e40091515bd129"
+    },
+    {
+      "group": "session",
+      "case": "first regex status",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "cc53d8067ff3067923ee424f34b031b0e4015c0b3ad68b8ae4497395e6df3786"
+    },
+    {
+      "group": "session",
+      "case": "replace invalid UTF8 and missing lowercase match",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "65c99f7edf11522c101816ce429f058d61186a22381ecde9e6e40091515bd129"
+    },
+    {
+      "group": "session",
+      "case": "colon whitespace and anchored status",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5e7fc07c6a2bc63155cddb9a2249d4dc2066605af01270569010be9806974585"
+    },
+    {
+      "group": "session",
+      "case": "missing recent directory",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1299546b19c82980dffe91f2318c942469476d3ec113bcad3d9b822af7c6e363"
+    },
+    {
+      "group": "session",
+      "case": "recent slice 5",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5c24a67e970c7408477902c538789ab86b1940d9e1f29aeaf38f94d7b06a8931"
+    },
+    {
+      "group": "session",
+      "case": "recent slice 1",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f750dc8a8b33abfeeb8ef564d9687bad669cbd526e2297c8e693428adb84f1d2"
+    },
+    {
+      "group": "session",
+      "case": "recent slice 0",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8c5f1a14ac3f69a69c7509298986951b85ec6b60dfd3134b5f93f53f4414a960"
+    },
+    {
+      "group": "session",
+      "case": "recent slice -1",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "989631e99ba7920703a2603565a6ccfdd39a0592229dd8fab7e2d2a2a82acef2"
+    },
+    {
+      "group": "session",
+      "case": "explicit rel root",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e74fc3d33fa960b394e0d1782ba298686353d93c5a23cdb1afb72e129421ef7a"
+    },
+    {
+      "group": "session",
+      "case": "legacy index absent",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a10bdf143a074f840be12e5283e8fb857acb9529de6284db07479956d7dd6e38"
+    },
+    {
+      "group": "session",
+      "case": "legacy source substrings fresh",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a9a1c0b839ec6f200f7844fd3c12f78871e2bf1d1f7758c32794f8dbdbc63f2f"
+    },
+    {
+      "group": "session",
+      "case": "same size mtime source mutation stale",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b07cc552e01997a3d475090f710ffde7cc54768c152c6cf9045361cdbf4b4623"
+    },
+    {
+      "group": "session",
+      "case": "created source observed",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7c9ef4c060e993fbee5ca5dd3bbb0742f920948eb1a60f0bf810d6423509d9df"
+    },
+    {
+      "group": "specializations",
+      "case": "raw resource id alpha",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "9f6af2acb306efc4a25d9b764b2506ed0c648a950282926a58eaebea25dc3e5d"
+    },
+    {
+      "group": "specializations",
+      "case": "raw resource id specialization.alpha",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "db859836bca734b7871979c45b835c220632a256d6cad17898ae2e7b5cb7fb78"
+    },
+    {
+      "group": "specializations",
+      "case": "raw resource id other.alpha",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "aa80081632f0a6cf59dde5af23aa15f9653e498b577decdd3e3eb1536593e4bc"
+    },
+    {
+      "group": "specializations",
+      "case": "raw resource id ",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "22358a54318ccc678ea73efcb1aeff721979844a0913e5cea21fcedf33e6db36"
+    },
+    {
+      "group": "specializations",
+      "case": "raw resource id UpperCase",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7eaae14ba705f1a0c72bde944c3558fb27a4721c63fe72c33a3355f77b5bc797"
+    },
+    {
+      "group": "specializations",
+      "case": "default registry path",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f3d7fa53bcec661ce9d4fe8fdd07f16debcf246834c27bcbfcedfce0527a5312"
+    },
+    {
+      "group": "specializations",
+      "case": "empty registry entry path",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1bb1b3b67c3ed1c09bd70f61324903413855ef41daf9da51fee8852d24fc65ed"
+    },
+    {
+      "group": "specializations",
+      "case": "contained entry path",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "7eab88f4d557d1e892663b1a545eeb1ac569324ffe2ad36536db6b38384b7b88"
+    },
+    {
+      "group": "specializations",
+      "case": "entry escape refusal",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "b1ccd0c4095d06b6ecc45a1c6ed8f1c1d4170cccfeafb2e7d48935511d99a683"
+    },
+    {
+      "group": "specializations",
+      "case": "no roots validates first",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "160a3227969ea05f005a9919fb0380c2111fc4266fa569587dde36cd82b0c9b3"
+    },
+    {
+      "group": "specializations",
+      "case": "no roots valid empty",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b0ece7d61ed920dcefab1b698f24a06f00f05aab29031be331b674fc0f110e29"
+    },
+    {
+      "group": "specializations",
+      "case": "default full short root order",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b8ba81a0a7cf1ee87e97601f081ae69201c0597e578e2ac1e642814bcea7ac72"
+    },
+    {
+      "group": "specializations",
+      "case": "registry candidate filter order dedup",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "018c20a8e32bb8fd7cbe9a4b85fc21e95addcb8f19777689f6503401893ffa2f"
+    },
+    {
+      "group": "specializations",
+      "case": "index unfiltered last wins project",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "609ffe867aac3ed3ca82d87c6917b95d8f033e437822cf4ae071350b7c60644d"
+    },
+    {
+      "group": "specializations",
+      "case": "index workplace unknown fields",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "69a185f4e3489c73e25057518ab94567fb477a21d003a837b0de80af3250bc30"
+    },
+    {
+      "group": "specializations",
+      "case": "first manifest file",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d56a411f8da112ec931f1773f88bb05bb20f6024e29776d843ab25630ac15da0"
+    },
+    {
+      "group": "specializations",
+      "case": "no existing manifest",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "0a166777044fcbb608f3bdd7b88ed93a9ea1fa4fee9263f546428917ce5f8023"
+    },
+    {
+      "group": "specializations",
+      "case": "missing workplace manifest still project",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8328f0845f24859401eecbd72245b7b95766079fe1a4998a97c2310c9979f35e"
+    },
+    {
+      "group": "specializations",
+      "case": "same size mtime index fresh read",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "71499a9f497ee713f5c95789aaf4bfec349e1e60e831ff5b85c0f766d870bac1"
+    },
+    {
+      "group": "specializations",
+      "case": "deleted project override observed",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "294af175220ecb2553e47063af78dc3b1550ac64cc33889b8aa8599304fe899c"
+    },
+    {
+      "group": "specializations",
+      "case": "soft malformed document ignored",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "69a185f4e3489c73e25057518ab94567fb477a21d003a837b0de80af3250bc30"
+    },
+    {
+      "group": "specializations",
+      "case": "manifest custom registry path",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8af751a012817409970d084589807e93ec8c1686af38f031f92cdd76c5916fa4"
+    },
+    {
+      "group": "specializations",
+      "case": "nonlist registry entries",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "44e13c102e8aeebdd2c5593afa98e578f46e9a7c15372bafefc8705d69260a8c"
+    },
+    {
+      "group": "candidate",
+      "case": "baseline ordered checks",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "74faa621190a3eb04c60c59c812a1de338b16577526d85cc60499cedb9b3a9dd"
+    },
+    {
+      "group": "candidate",
+      "case": "category ",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "0ef805ca12a02490d1f1062e8642a04c6095c0de301248cc0b819673ef1739d8"
+    },
+    {
+      "group": "candidate",
+      "case": "category None",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "f35fcca09da5a70f215802490fc4b33a8c5c8dcb670aa31201723e504106c763"
+    },
+    {
+      "group": "candidate",
+      "case": "category domain",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "59807725cd13877c1dd5b3d77cbd57e5c04edc82422d9c8ef5b9e3635a884048"
+    },
+    {
+      "group": "candidate",
+      "case": "category architecture",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d2ea6059afb5120b8c62abc5350cf13fa801778ae6581f546d45d5e02af6c99b"
+    },
+    {
+      "group": "candidate",
+      "case": "category implementation",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "ddddbb43639e577de841e3a3d7c0c040bd51ddec405d7039f2e29c5fdecf1495"
+    },
+    {
+      "group": "candidate",
+      "case": "category assurance",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "348d42b5720e617afc16f42a23582c26f23c99e4b41ac8e30ec4889b707b624c"
+    },
+    {
+      "group": "candidate",
+      "case": "category delivery",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b81ee41450ac9718c76d171256cd2c2593030458c71c6d192fd3e5332a95468c"
+    },
+    {
+      "group": "candidate",
+      "case": "category tooling",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "096c0d0bc969b4190b153a9f5ae3eef9c1e88b74ca6715363308a3df3f99f9f6"
+    },
+    {
+      "group": "candidate",
+      "case": "category process",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1d731aca3149304c3040bf6cc8dde729ad992f86dac1e2475bb2e103c72dc2f3"
+    },
+    {
+      "group": "candidate",
+      "case": "category resource",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "564c5c94f549161c8a3394c83b5103f3ef681b6e3d07dd75f6fa4eda234df62f"
+    },
+    {
+      "group": "candidate",
+      "case": "category generic",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "74faa621190a3eb04c60c59c812a1de338b16577526d85cc60499cedb9b3a9dd"
+    },
+    {
+      "group": "candidate",
+      "case": "category unknown",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e4d02828e12b63b5d2ddb6cb2ecc100ea0e6ae8d55ef4e81f28504a61a65f66b"
+    },
+    {
+      "group": "candidate",
+      "case": "empty",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "86cdde81523f173efd10338d282607a81ed6ee69d99bc9c2b799f90d3527bc8a"
+    },
+    {
+      "group": "candidate",
+      "case": "legacy candidate id",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "cdf8c5d5b00a9741f4f1c1c040ae582936843ef72d43cf9a4baccb27f874717b"
+    },
+    {
+      "group": "candidate",
+      "case": "falsey id",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1d4b4324fdf63ed71ce6c7f54df7c26f0d3acff33ce357a12c6f91e4e177ce39"
+    },
+    {
+      "group": "candidate",
+      "case": "private path",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "39499fe160e299e49d6ce28ef188a6427ea58148307f52ccea160f56578653be"
+    },
+    {
+      "group": "candidate",
+      "case": "blank summary",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "575859f84c3a201fecc78c4015331a5be80980a74fe887e587541f6b23b70925"
+    },
+    {
+      "group": "candidate",
+      "case": "nonserializable",
+      "passed": true,
+      "native_exception": "TypeError",
+      "observation_sha256": "20604e764e0624223ebc27eb9182520d6c2619c46c9611a19e34db2dc44055a9"
+    },
+    {
+      "group": "candidate",
+      "case": "not mapping",
+      "passed": true,
+      "native_exception": "AttributeError",
+      "observation_sha256": "6647a52ab82f6d1d747748e3ec09d8f59a2f734f09def1485b1746c7948b061c"
+    },
+    {
+      "group": "transfer",
+      "case": "missing location",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d340b7b039d3c592c3991e191e40590fd7dc87be2c09c999e4026366c269aa7e"
+    },
+    {
+      "group": "transfer",
+      "case": "relative file",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "06920499cd81b0dd9f442e9d1ed0cf7cb6a543073cad0cf9c6a3da243f1490b5"
+    },
+    {
+      "group": "transfer",
+      "case": "file URI",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "2231a14bb9497bd6b48025927213c6a68eb4d812f54ea21c4a07c0abfd8ac353"
+    },
+    {
+      "group": "transfer",
+      "case": "missing file",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "501c0da740f03b10c3a6c1bc40a351d60982994e822523a8758e9e5a353ff777"
+    },
+    {
+      "group": "transfer",
+      "case": "unsupported",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e3e0c2b67e68ed6f18d7de7baca57656a04943604e7d59097c0898712a3a31e6"
+    },
+    {
+      "group": "transfer",
+      "case": "local copy",
+      "passed": true,
+      "native_exception": "ValueError",
+      "observation_sha256": "9fb140e9fe6480ee6d6e7f637d8d46fcf9d49ec7f7432ad6eddbeeac2ee5666d"
+    },
+    {
+      "group": "transfer",
+      "case": "file URI copy",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "82d6e874f51085b4a56ddc71c5ac3e45ea5c220a8c0c0adfceca627322f2d9b7"
+    },
+    {
+      "group": "transfer",
+      "case": "missing URL",
+      "passed": true,
+      "native_exception": "ValueError",
+      "observation_sha256": "614fd9041aa6ee689ac56744de183223acfbdca2502d67057d6324fc264a54e4"
+    },
+    {
+      "group": "transfer",
+      "case": "missing file",
+      "passed": true,
+      "native_exception": "ValueError",
+      "observation_sha256": "fd8203b0768d00c064c990f5d8228127db8ab3e37c625d7896a2a500062addb4"
+    },
+    {
+      "group": "transfer",
+      "case": "unsupported URL",
+      "passed": true,
+      "native_exception": "ValueError",
+      "observation_sha256": "f6d6af7158519064a71d4346586632f039545fed6d95b346edbc0867615da673"
+    },
+    {
+      "group": "transfer",
+      "case": "missing target preserves error",
+      "passed": true,
+      "native_exception": "ValueError",
+      "observation_sha256": "562fa88479c2792eb83ae50485f265333698dc46e1090b5d107452b8ece2ae3c"
+    },
+    {
+      "group": "transfer",
+      "case": "copy bytes preserved",
+      "passed": true
+    },
+    {
+      "group": "transfer",
+      "case": "HTTP manifest read decode parser",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "967127f492ac3d955caf99e2bc6edc674268f0580a95f15cdd9fbfa906b6646b"
+    },
+    {
+      "group": "transfer",
+      "case": "HTTP artifact exact timeout and stream",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4250a86b780a95f38f5a94ca92cdb830ec97b49714de1271e784b2d4df2ab127"
+    },
+    {
+      "group": "transfer",
+      "case": "HTTP output exact bytes",
+      "passed": true
+    },
+    {
+      "group": "transfer",
+      "case": "decode failure becomes warning",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "dc469249ee385c8080c3abb377ed8a492681ce5fab547112dfe035d06788c410"
+    },
+    {
+      "group": "transfer",
+      "case": "HTTP nonmapping response warning",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "329f09a10924bfbcbf2a465cc432d70d5ee0f4a22fd2fdb527898514b5bf87e2"
+    },
+    {
+      "group": "transfer",
+      "case": "manifest network failure caught",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "75088dfee7952879496482a6fc858f714b495aaa7d9e4ab3df659dfc29adc5ee"
+    },
+    {
+      "group": "transfer",
+      "case": "artifact network failure propagates",
+      "passed": true,
+      "native_exception": "OSError",
+      "observation_sha256": "9988926182f41b3a58cfdbf8a7df70c57c71d8792ed6b6382e2df2551af33436"
+    },
+    {
+      "group": "imports",
+      "case": "direct default concrete source composition",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied default concrete source composition",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "39a594c0f523dfbac1cc010db3a9449129461f91ac54c725f93dd8daa5d4e3c5",
+    "docs/concepts/python-core-structure.md": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+    "docs/ru/concepts/python-core-structure.md": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+    "src/processforge_core/project/session_read.py": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+    "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+    "src/processforge_core/configuration/specializations.py": "b256995da80741c0028b1df041cc95e756db44f622760e7b9b78f06bed85ba08",
+    "src/processforge_core/evolution/validation.py": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b",
+    "src/processforge_core/maintenance/transfer.py": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8"
+  },
+  "scope": "Bounded existing live reads/checks/local and stub HTTP transfer parity, exact annotations, default and copied Core; no archive/installed/Runtime/connected-host/ZIP qualification."
+}

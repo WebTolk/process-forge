@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "scope": "Inventory matches all affected Git-delivered LF product blobs. Final source raw hashes remain separately pinned. No archive acceptance.",
+  "matched_product_inventory_entries": {
+    "tools/processforge.py": "352d9ee6257395ceabc3654147662138a0a79319ad1d0648c51baad3224d0c5f",
+    "docs/concepts/python-core-structure.md": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+    "docs/ru/concepts/python-core-structure.md": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+    "src/processforge_core/project/session_read.py": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+    "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+    "src/processforge_core/configuration/specializations.py": "d418a0e2b2927eb1384ea4247ef366d0c0ad5283a4ddef55058af2cb0e59a04f",
+    "src/processforge_core/evolution/validation.py": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b",
+    "src/processforge_core/maintenance/transfer.py": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8"
+  }
+}

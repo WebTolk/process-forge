@@ -1,0 +1,62 @@
+{
+  "rows_before": 1383,
+  "rows_after": 1387,
+  "changed_rows": 4,
+  "new_rows": 4,
+  "untouched_rows": 1379,
+  "changes": [
+    {
+      "path": "tools/processforge.py",
+      "previous": "f2223d1e986e282f1061a26b172c492eb56dc2e14ab3f069b1f6a9b1176fd0c7",
+      "sha256": "352d9ee6257395ceabc3654147662138a0a79319ad1d0648c51baad3224d0c5f",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "previous": "7e11235b2c086508d1cdc533f81c1d833f493356696bdc22d556c36339f3f153",
+      "sha256": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+      "kind": "changed"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "previous": "9397b8f9c8103d48b6c8c40762a1c3c4cf8b467924ba8d9423d47061c9f05d3a",
+      "sha256": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/project/session_read.py",
+      "previous": null,
+      "sha256": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/common/text.py",
+      "previous": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+      "sha256": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+      "kind": "changed"
+    },
+    {
+      "path": "src/processforge_core/configuration/specializations.py",
+      "previous": null,
+      "sha256": "d418a0e2b2927eb1384ea4247ef366d0c0ad5283a4ddef55058af2cb0e59a04f",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/evolution/validation.py",
+      "previous": null,
+      "sha256": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b",
+      "kind": "added"
+    },
+    {
+      "path": "src/processforge_core/maintenance/transfer.py",
+      "previous": null,
+      "sha256": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8",
+      "kind": "added"
+    }
+  ],
+  "preserved_known_drift": [
+    ".pf/process-forge.yaml",
+    "tools/release_metadata_contract.py",
+    "tools/smoke_stable_update_manifest_points_to_release.py"
+  ]
+}

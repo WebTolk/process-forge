@@ -123,6 +123,10 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/process_catalog/examples.py` | Прежние байты документов примера авторинга процессов. |
 | `src/processforge_core/common/status.py` | Общая прежняя проекция итогового статуса. |
 | `src/processforge_core/maintenance/candidate_read.py` | Прежнее свежее чтение и поиск JSON кандидатов. |
+| `src/processforge_core/project/session_read.py` | Прежние статусы отчётов, недавние файлы и legacy freshness. |
+| `src/processforge_core/configuration/specializations.py` | Прежние registry/path candidates и индекс специализаций. |
+| `src/processforge_core/evolution/validation.py` | Прежние упорядоченные проверки кандидата знаний и категории. |
+| `src/processforge_core/maintenance/transfer.py` | Прежнее получение update manifest и перенос артефакта. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -1082,3 +1086,24 @@ Fallback missing/JSONDecodeError/non-dict, остальные ошибки, raw 
 и unknown fields сохранены. Два authoring smoke используют канонические модели
 и inputs после прежнего локального bootstrap; assertions, fixtures и матрицы
 failure injection точны. Новых функций нет; OOP-эпики и поздняя приёмка открыты.
+
+## Чтение сессий, каталог специализаций, кандидаты и перенос обновлений
+
+ProjectSessionReadService владеет прежним regex статуса отчёта, порядком недавних
+файлов и legacy freshness по подстрокам context-index. Он использует готовые
+project metadata/source readers. Современный context freshness и report lifecycle
+сохраняют владельцев; common.text владеет точной общей константой COLON_WS.
+
+SpecializationCatalogReader(distribution_root) владеет прежними resource IDs,
+registry paths, упорядоченными candidates с дедупликацией, manifest index и
+выбором первого файла. Готовый WorkspacePathReferenceReader отвечает за guards,
+containment и path constants; YAML/metadata owners переиспользованы. Фильтр
+статусов candidates и нефильтрованный индекс с последним победителем сохранены
+как разные алгоритмы. Неизвестные поля и повторные свежие чтения не изменены.
+
+KnowledgeCandidateValidationService собирает готовые targeting/privacy policies
+и прежние проверки в исходном порядке; evolution.validation владеет точным набором
+категорий. Конструкторы не читают документы. UpdateTransferService переиспользует
+site/document owners и сохраняет local copy2/HTTP stream, timeouts, границы
+warnings/errors и эффекты destination. Новых retries, mkdir или проверки архивов
+нет. Внешние контракты 1.2.0 сохранены; OOP-эпики и поздняя приёмка открыты.

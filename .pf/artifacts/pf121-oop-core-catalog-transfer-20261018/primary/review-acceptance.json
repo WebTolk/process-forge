@@ -1,0 +1,17 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-catalog-transfer-20261018/review/report.md",
+  "review_sha256": "7094781cbe897766cdcbbb58903fd1d289280e146cebb8d02444d0fd56644ea6",
+  "product_sha256": {
+    "tools/processforge.py": "39a594c0f523dfbac1cc010db3a9449129461f91ac54c725f93dd8daa5d4e3c5",
+    "docs/concepts/python-core-structure.md": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+    "docs/ru/concepts/python-core-structure.md": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+    "src/processforge_core/project/session_read.py": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+    "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+    "src/processforge_core/configuration/specializations.py": "b256995da80741c0028b1df041cc95e756db44f622760e7b9b78f06bed85ba08",
+    "src/processforge_core/evolution/validation.py": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b",
+    "src/processforge_core/maintenance/transfer.py": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8",
+    "checksums/processforge.sha256": "8966f5abd77b76801284ff5be90b197e01d4075fb8b5450c8f5e5b6f2bb2c3e9"
+  },
+  "scope": "Accepted final source only. No archive/install/Runtime/connected-host/ZIP acceptance; OOP epics remain open."
+}

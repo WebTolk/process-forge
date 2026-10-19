@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "complete_algorithms": 12,
+  "synthetic_cases": 19,
+  "roles": {
+    "session": {
+      "algorithms": [
+        "context_report_status",
+        "recent_files",
+        "context_freshness"
+      ],
+      "products": {
+        "src/processforge_core/project/session_read.py": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+        "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3"
+      },
+      "native_synthetic_cases": 4,
+      "proof_sha256": "8c88f027b71d5dcc33edd5934ca683cb1dc5f92cb6931221cefd8c0b30f8a1a6",
+      "report_sha256": "36a37c1f8f8b89d46f2a327ff02a06cbd15c2b3267cbea554e3299a4a8178170",
+      "prior_owner_count": 13
+    },
+    "specializations": {
+      "algorithms": [
+        "specialization_resource_id",
+        "specialization_registry_path",
+        "specialization_path_from_registry_entry",
+        "specialization_path_candidates",
+        "specialization_manifest_index",
+        "specialization_manifest_path"
+      ],
+      "products": {
+        "src/processforge_core/configuration/specializations.py": "b256995da80741c0028b1df041cc95e756db44f622760e7b9b78f06bed85ba08"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "f14d805dde3b29e6ef9e305ad87535530f004a9154a140a5a6078ca47babc821",
+      "report_sha256": "268ced901b9dc404c762e87c51d250e23bee11bca9aacecca1b1aedf89eb7a57",
+      "prior_owner_count": 7
+    },
+    "candidate": {
+      "algorithms": [
+        "validate_knowledge_candidate"
+      ],
+      "products": {
+        "src/processforge_core/evolution/validation.py": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "0a20f422f24e04a027f26406739a26c6b86e7fe3b3398709733c6d36ecb93baa",
+      "report_sha256": "76bda017e925349a4e02473d3e2edad18b3f4a5672576f1aa836d2476fbbfd44",
+      "prior_owner_count": 3
+    },
+    "transfer": {
+      "algorithms": [
+        "fetch_update_manifest",
+        "copy_or_download_update_artifact"
+      ],
+      "products": {
+        "src/processforge_core/maintenance/transfer.py": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "7d311ebeca725ecfed954f3a36008515745384241b5a0dd6ca2b7cc4406cfd3c",
+      "report_sha256": "b8093d8fe594c5eedd9414768a1b06886571fc142ef2b5f411fd73ab01d1859e",
+      "prior_owner_count": 2
+    }
+  },
+  "scope": "Complete retained algorithm, signature, annotation, prior-owner and bounded stub trace proofs inspected at final raw hashes; no synthetic scenarios repeated."
+}

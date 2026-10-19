@@ -16,3 +16,6 @@ def check_with_hint(level: str, message: str, why: str, fix: str, alternative: s
         details.extend(["", "Or:"])
         details.extend(f"  {line}" if line else "" for line in alternative.splitlines())
     return check(level, "\n".join(details))
+
+
+COLON_WS = ":" + r"\s*"

@@ -1,0 +1,77 @@
+{
+  "status": "passed",
+  "removed_definitions": 12,
+  "moved_constants": 2,
+  "retained_main_definitions": 688,
+  "entire_main_ast_only_expected_delta": true,
+  "exact_constant_asts": true,
+  "prior_common_text_entire_ast_raw_prefix_preserved": true,
+  "actual_external_function_consumers": 0,
+  "json_field_references_classified_without_change": [
+    {
+      "path": "tools/smoke_context_freshness_vs_execution_readiness.py",
+      "line": 206,
+      "node": "Constant",
+      "expression": "'context_freshness'"
+    },
+    {
+      "path": "tools/pf_runtime/session_read.py",
+      "line": 200,
+      "node": "Constant",
+      "expression": "'context_freshness'"
+    }
+  ],
+  "readonly_prior_owner_sha256": {
+    "src/processforge_core/common/checks.py": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+    "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff",
+    "src/processforge_core/common/yaml_io.py": "543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27",
+    "src/processforge_core/documents/reader.py": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+    "src/processforge_core/evolution/candidates.py": "0596fe7f9b8affc83c6a061972505f531a8974a823166b47dac6caf4b23d7fa8",
+    "src/processforge_core/evolution/privacy.py": "f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de",
+    "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+    "src/processforge_core/maintenance/sites.py": "4ed0097442f5b28ce62d67823bce071006676eeedf0781f5afaf07b4ff3596b7",
+    "src/processforge_core/project/context_sources.py": "6c0d2224fa7e23408ca6c9b8b3d740b53d7fc4d7c833124f078d84814fc3c4b3",
+    "src/processforge_core/project/metadata.py": "dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e",
+    "src/processforge_core/resources/snapshot.py": "0d470c544fc7ed60a536dac206ad00fe9d9657ad2b3190a477f4644517ad8582",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5"
+  },
+  "native_acceptance_sha256": "b1ffe38aeaaf2b34b956afdbdf35d0a7416e3b104f6f8278e9b60c337d19ab71",
+  "parity": {
+    "total": 90,
+    "native_exceptions": 10,
+    "sha256": "3467da95611880c8c46ae274222ae6345439ab1fb005592f47115c8668470d9c"
+  },
+  "smokes": {
+    "count": 8,
+    "passed": true,
+    "sha256": "9a3e165ea7285725c93b36e1d56911c0e9ad5c59289d490a8940102beefc2b2b"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "39a594c0f523dfbac1cc010db3a9449129461f91ac54c725f93dd8daa5d4e3c5",
+    "docs/concepts/python-core-structure.md": "e6268a0417541363db42f393a99a9bcfe60fe29c677587aa84f725f88f87e62c",
+    "docs/ru/concepts/python-core-structure.md": "20f5735bf28789eab32859344eb5f9dd51efc1ee34da29341a9bdd462b8dd703",
+    "src/processforge_core/project/session_read.py": "2fd131b1640d89a0eca6da9e75e43e0f1fdbbffaa8b29003cd5fec6c4afd7785",
+    "src/processforge_core/common/text.py": "397f8746f7bb6f756703011d86b700cc929fb3e8190e83841537ff73f9cbb1f3",
+    "src/processforge_core/configuration/specializations.py": "b256995da80741c0028b1df041cc95e756db44f622760e7b9b78f06bed85ba08",
+    "src/processforge_core/evolution/validation.py": "136e1a67cf9c735e8a97b7cbf06d20c29ce350888cd866ee2cac8e257c236e2b",
+    "src/processforge_core/maintenance/transfer.py": "19f30f95e35772aa0780e62fbd01ebb9fff475d9800dae3cd5591081552f98a8",
+    "checksums/processforge.sha256": "8966f5abd77b76801284ff5be90b197e01d4075fb8b5450c8f5e5b6f2bb2c3e9"
+  },
+  "inventory": {
+    "rows_before": 1383,
+    "rows_after": 1387,
+    "changed_rows": 4,
+    "new_rows": 4,
+    "untouched_rows": 1379,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "scope": "Existing report/legacy freshness, specialization reads, candidate validation and update transfer. Five worker-owned products plus four primary products, nine total; the frozen brief prose incorrectly said six worker products, its explicit five-path ownership map is authoritative. No source grant was changed.",
+  "limits": [
+    "Source-only; OOP epics and archive/install/Runtime/connected-host qualification remain open.",
+    "Eight affected existing scripts, no new test suite, external network or ZIP check."
+  ]
+}

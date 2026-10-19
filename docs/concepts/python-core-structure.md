@@ -118,6 +118,10 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/process_catalog/examples.py` | Existing process authoring example document bytes. |
 | `src/processforge_core/common/status.py` | Shared existing aggregate status projection. |
 | `src/processforge_core/maintenance/candidate_read.py` | Existing fresh candidate JSON read/find. |
+| `src/processforge_core/project/session_read.py` | Existing session report status, recent files and legacy freshness. |
+| `src/processforge_core/configuration/specializations.py` | Existing specialization registry/path candidates and manifest index. |
+| `src/processforge_core/evolution/validation.py` | Existing ordered knowledge candidate checks and category constants. |
+| `src/processforge_core/maintenance/transfer.py` | Existing update manifest fetch and artifact transfer. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -1071,3 +1075,24 @@ raw ID/first match and unknown fields remain unchanged. Two authoring smoke
 consumers use canonical models/input owners after their existing local bootstrap;
 assertions, fixtures and failure-injection matrices are preserved. This source
 slice adds no feature and leaves OOP epics and later delivery layers open.
+
+## Session reads, specialization catalog, candidate validation and update transfer
+
+ProjectSessionReadService owns the original report regex, recent-file ordering
+and legacy context-index substring freshness. It composes current project
+metadata/source readers; modern context freshness and report lifecycles retain
+their owners. common.text owns the shared exact COLON_WS primitive.
+
+SpecializationCatalogReader(distribution_root) owns existing resource IDs,
+registry paths, ordered/deduplicated candidates, manifest index and first-file
+selection. It reuses WorkspacePathReferenceReader containment/validation/path
+constants and current metadata/YAML owners. Candidate status filtering and the
+unfiltered last-wins index remain distinct; unknown fields and live reads remain.
+
+KnowledgeCandidateValidationService composes the existing targeting/privacy
+policies and ordered checks. evolution.validation owns the unchanged category
+set; constructors perform no document reads. UpdateTransferService composes
+existing site/document owners and preserves local copy2/HTTP stream behavior,
+timeouts, warning/error boundaries and destination effects. It adds no retry,
+directory creation or archive inspection. These source-only moves preserve
+external 1.2.0 contracts and leave OOP epics/later delivery acceptance open.

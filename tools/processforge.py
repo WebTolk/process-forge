@@ -267,6 +267,17 @@ _authoring_plan_renderer = AuthoringPlanRenderer()
 _authoring_input_service = AuthoringInputService()
 _process_authoring_example_builder = ProcessAuthoringExampleBuilder()
 _update_candidate_reader = UpdateCandidateReader(ROOT)
+from processforge_core.project.session_read import ProjectSessionReadService
+from processforge_core.configuration.specializations import SpecializationCatalogReader
+from processforge_core.evolution.validation import KnowledgeCandidateValidationService
+from processforge_core.maintenance.transfer import UpdateTransferService
+from processforge_core.common.text import COLON_WS
+from processforge_core.evolution.validation import EVOLVE_CANDIDATE_CATEGORIES
+
+_project_session_read_service = ProjectSessionReadService()
+_specialization_catalog_reader = SpecializationCatalogReader(ROOT)
+_knowledge_candidate_validation_service = KnowledgeCandidateValidationService()
+_update_transfer_service = UpdateTransferService(ROOT)
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -633,19 +644,7 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "authoring_parity.completed",
 ]
 
-COLON_WS = ":" + r"\s*"
 
-EVOLVE_CANDIDATE_CATEGORIES = {
-    "domain",
-    "architecture",
-    "implementation",
-    "assurance",
-    "delivery",
-    "tooling",
-    "process",
-    "resource",
-    "generic",
-}
 
 DEFAULT_PATH_CONSTANTS = {
     "PF_WORKPLACE": ".",
@@ -3687,8 +3686,6 @@ PROJECT_OVERRIDE_KINDS = {
 PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
 
 
-def specialization_resource_id(raw: str) -> str:
-    return raw if raw.startswith("specialization.") or "." in raw else f"specialization.{raw}"
 
 
 def default_resource_buckets() -> dict[str, dict[str, list[str]]]:
@@ -3714,123 +3711,16 @@ def dedupe_sorted(values: list[str]) -> list[str]:
     return sorted({str(item) for item in values if str(item)})
 
 
-def specialization_registry_path(workplace_root: Path) -> Path:
-    return _update_document_reader.registry_file(workplace_root, "specializations", "specializations.yaml")
 
 
-def specialization_path_from_registry_entry(workplace_root: Path, entry: dict[str, Any], workplace_manifest: Path | None = None) -> Path | None:
-    raw_path = entry.get("path")
-    if not raw_path:
-        return None
-    manifest = workplace_manifest or (workplace_root / "workplace.yaml")
-    specialization_root = resolve_registry_relative_path(
-        workplace_root,
-        "${PF_SPECIALIZATIONS}",
-        manifest,
-    )
-    candidate = resolve_registry_relative_path(
-        workplace_root,
-        str(raw_path),
-        manifest,
-    )
-    return contained_resource_path(
-        specialization_root,
-        candidate,
-        "specialization",
-    )
 
 
-def specialization_path_candidates(workplace_root: Path | None, specialization_id: str, project_root: Path | None = None) -> list[Path]:
-    normalized_id = validate_resource_id(
-        specialization_resource_id(specialization_id),
-        "specialization",
-    )
-    candidates: list[Path] = []
-    if workplace_root:
-        registry = load_yaml_document(specialization_registry_path(workplace_root))
-        entries = registry.get("specializations") if isinstance(registry, dict) else []
-        if isinstance(entries, list):
-            for entry in entries:
-                if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
-                    continue
-                entry_id = specialization_resource_id(str(entry.get("id") or ""))
-                if entry_id == normalized_id:
-                    path = specialization_path_from_registry_entry(workplace_root, entry, workplace_root / "workplace.yaml")
-                    if path:
-                        candidates.append(path)
-        for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
-            candidates.extend(
-                [
-                    contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
-                    contained_resource_path(
-                        root,
-                        root / f"{normalized_id.removeprefix('specialization.')}.yaml",
-                        "specialization",
-                    ),
-                ]
-            )
-    if project_root:
-        flow_root = locate_flow_root(project_root)
-        for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
-            candidates.extend(
-                [
-                    contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
-                    contained_resource_path(
-                        root,
-                        root / f"{normalized_id.removeprefix('specialization.')}.yaml",
-                        "specialization",
-                    ),
-                ]
-            )
-    unique: list[Path] = []
-    seen: set[Path] = set()
-    for path in candidates:
-        resolved = path.resolve()
-        if resolved not in seen:
-            seen.add(resolved)
-            unique.append(resolved)
-    return unique
 
 
-def specialization_manifest_index(workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
-    workplace_root = workplace_manifest.parent if workplace_manifest and workplace_manifest.is_file() else None
-    index: dict[str, dict[str, Any]] = {}
-    paths: list[Path] = []
-    if workplace_root:
-        registry = load_yaml_document(specialization_registry_path(workplace_root))
-        entries = registry.get("specializations") if isinstance(registry, dict) else []
-        if isinstance(entries, list):
-            for entry in entries:
-                if isinstance(entry, dict):
-                    path = specialization_path_from_registry_entry(workplace_root, entry, workplace_manifest)
-                    if path:
-                        paths.append(path)
-        for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
-            if root.is_dir():
-                paths.extend(sorted(root.glob("*.yaml")))
-                paths.extend(sorted(root.glob("*.yml")))
-    if project_root:
-        flow_root = locate_flow_root(project_root)
-        for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
-            if root.is_dir():
-                paths.extend(sorted(root.glob("*.yaml")))
-                paths.extend(sorted(root.glob("*.yml")))
-    for path in paths:
-        data = load_yaml_document(path)
-        if not isinstance(data, dict) or yaml_error(data) or not data.get("id"):
-            continue
-        normalized_id = specialization_resource_id(str(data["id"]))
-        source = "project" if project_root and path_is_relative_to(path, locate_flow_root(project_root)) else "workplace"
-        record = dict(data)
-        record["id"] = normalized_id
-        record["__manifest_path"] = path
-        record["__source"] = source
-        index[normalized_id] = record
-    return index
 
 
 def load_specialization(workplace_manifest: Path | None, specialization_id: str, project_root: Path | None = None) -> dict[str, Any] | None:
-    return specialization_manifest_index(workplace_manifest, project_root).get(specialization_resource_id(specialization_id))
+    return _specialization_catalog_reader.manifest_index(workplace_manifest, project_root).get(_specialization_catalog_reader.resource_id(specialization_id))
 
 
 
@@ -3866,12 +3756,12 @@ def project_override_entries(project_root: Path) -> list[dict[str, Any]]:
 
 
 def project_specialization_override_entries(project_root: Path, specialization_id: str) -> list[dict[str, Any]]:
-    target_id = specialization_resource_id(specialization_id)
+    target_id = _specialization_catalog_reader.resource_id(specialization_id)
     return [
         entry
         for entry in project_override_entries(project_root)
         if str(entry.get("kind") or "") == "specializations"
-        and specialization_resource_id(str(entry.get("target") or "")) == target_id
+        and _specialization_catalog_reader.resource_id(str(entry.get("target") or "")) == target_id
     ]
 
 
@@ -4110,7 +4000,7 @@ def resolve_specialization_context(
     specialization_ids: list[str] | None = None,
     platform_resolution: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    selected_ids = [specialization_resource_id(item) for item in (specialization_ids or [])]
+    selected_ids = [_specialization_catalog_reader.resource_id(item) for item in (specialization_ids or [])]
     platform_resolution = platform_resolution or _platform_contract_resolver.resolve(workplace_manifest, platform_ids, project_root=project_root)
     required = {
         "knowledge_packages": set(platform_resolution.get("required_knowledge_packages", [])),
@@ -4147,7 +4037,7 @@ def resolve_specialization_context(
                     "reason": "active official process pack knowledge packages merged",
                 }
             )
-    index = specialization_manifest_index(workplace_manifest, project_root)
+    index = _specialization_catalog_reader.manifest_index(workplace_manifest, project_root)
     for specialization_id in selected_ids:
         spec = index.get(specialization_id)
         if not spec:
@@ -4215,7 +4105,7 @@ def resolve_specialization_context(
             continue
         base_path = None
         if kind == "specializations":
-            spec = index.get(specialization_resource_id(target))
+            spec = index.get(_specialization_catalog_reader.resource_id(target))
             base_path = spec.get("__manifest_path") if isinstance(spec, dict) and isinstance(spec.get("__manifest_path"), Path) else None
         applied = resolved_override_record(project_root, entry, base_path)
         applied_overrides.append(applied)
@@ -7413,8 +7303,8 @@ def resolve_project_parameters(
                 layer="platform",
                 parameters=parameter_payload(contract),
             )
-    index = specialization_manifest_index(workplace_manifest, project_root)
-    for specialization_id in [specialization_resource_id(item) for item in specialization_ids if str(item)]:
+    index = _specialization_catalog_reader.manifest_index(workplace_manifest, project_root)
+    for specialization_id in [_specialization_catalog_reader.resource_id(item) for item in specialization_ids if str(item)]:
         spec = index.get(specialization_id)
         if not isinstance(spec, dict):
             continue
@@ -9055,27 +8945,8 @@ def write_context_outputs(project_root: Path, assignment: Path | None = None) ->
     return status, paths
 
 
-def context_report_status(path: Path) -> str:
-    if not path.is_file():
-        return "missing"
-    text = path.read_text(encoding="utf-8", errors="replace")
-    match = re.search(r"(?m)^status" + COLON_WS + r"([a-z_]+)\s*$", text)
-    return match.group(1) if match else "missing"
 
 
-def context_freshness(project_root: Path) -> tuple[str, list[str]]:
-    index_path = locate_flow_root(project_root) / "contexts" / "context-index.yaml"
-    if not index_path.is_file():
-        return "missing", []
-    text = index_path.read_text(encoding="utf-8", errors="replace")
-    current_sources = ProjectContextSourcesReader(project_root).read()
-    stale: list[str] = []
-    for item in current_sources:
-        path = str(item["path"])
-        fingerprint = str(item.get("fingerprint", "missing"))
-        if path not in text or fingerprint not in text:
-            stale.append(path)
-    return ("fresh" if not stale else "stale"), stale
 
 
 def assignment_id(path: Path) -> str:
@@ -9214,7 +9085,7 @@ def compile_execution_context(
             },
             "assignment": {"id": assn_id, "path": rel(assignment, project_root)},
             "context": {
-                "freshness": context_freshness(project_root)[0],
+                "freshness": _project_session_read_service.legacy_freshness(project_root)[0],
                 "conflict_status": status,
                 "context_status": context_status,
                 "conflict_report": rel(assignment_conflict_report, project_root),
@@ -9229,12 +9100,6 @@ def compile_execution_context(
     return ecp_path, capsule_path, assignment_conflict_report
 
 
-def recent_files(root: Path, dirname: str, limit: int = 5, *, rel_root: Path | None = None) -> list[str]:
-    directory = root / dirname
-    if not directory.is_dir():
-        return []
-    files = sorted((path for path in directory.rglob("*") if path.is_file()), key=lambda path: path.stat().st_mtime, reverse=True)
-    return [rel(path, rel_root or root) for path in files[:limit]]
 
 
 def render_session_status(project_root: Path, mode: str) -> str:
@@ -9246,14 +9111,14 @@ def render_session_status(project_root: Path, mode: str) -> str:
     project_name = name_match.group(1).strip() if name_match else project_root.name
     flow_version = version_match.group(1).strip() if version_match else "unknown"
     snapshot_freshness, snapshot_stale, _snapshot = project_context_freshness(project_root)
-    legacy_freshness, legacy_stale = context_freshness(project_root)
+    legacy_freshness, legacy_stale = _project_session_read_service.legacy_freshness(project_root)
     freshness = snapshot_freshness if snapshot_freshness != "missing" else legacy_freshness
     stale = snapshot_stale if snapshot_freshness != "missing" else legacy_stale
-    conflict_status = context_report_status(flow_root / "contexts" / "context-conflict-report.md")
-    assignments = recent_files(flow_root, "assignments", rel_root=project_root)
-    artifacts = recent_files(flow_root, "artifacts", rel_root=project_root)
-    reviews = recent_files(flow_root, "reviews", rel_root=project_root)
-    adrs = recent_files(flow_root, "adr", rel_root=project_root)
+    conflict_status = _project_session_read_service.report_status(flow_root / "contexts" / "context-conflict-report.md")
+    assignments = _project_session_read_service.recent_files(flow_root, "assignments", rel_root=project_root)
+    artifacts = _project_session_read_service.recent_files(flow_root, "artifacts", rel_root=project_root)
+    reviews = _project_session_read_service.recent_files(flow_root, "reviews", rel_root=project_root)
+    adrs = _project_session_read_service.recent_files(flow_root, "adr", rel_root=project_root)
 
     def markdown_items(items: list[str]) -> str:
         return "\n".join(f"- {item}" for item in items) if items else "- None."
@@ -9409,7 +9274,7 @@ def command_session_start(args: argparse.Namespace) -> int:
         if isinstance(capability, dict):
             append_telemetry_event(telemetry_path, "capability_check", required=False, **capability)
     append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="session_start")
-    selected_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
+    selected_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
     if selected_specializations:
         append_telemetry_event(telemetry_path, "specialization_switch", selected_specializations=selected_specializations, reason="explicit_session_start")
         emit_process_event(project_root, "context.snapshot.refreshed", session_id=session_id, payload={"selected_specializations": selected_specializations, "reason": "garage_mode_specialization_switch"}, correlation_id=session_id)
@@ -11545,24 +11410,12 @@ def ensure_learning_layout(workplace: Path) -> Path:
 
 
 
-def validate_knowledge_candidate(data: dict[str, Any]) -> list[Check]:
-    checks: list[Check] = []
-    checks.append(check("PASS" if data.get("kind") == "processforge.knowledge_candidate" else "FAIL", "candidate kind is processforge.knowledge_candidate"))
-    candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data)
-    checks.append(check("PASS" if candidate_id == str(data.get("id") or data.get("candidate_id")) else "FAIL", "candidate id is portable"))
-    category = str(data.get("category") or "generic")
-    checks.extend(_knowledge_candidate_targeting_policy.validate(data, strict=True))
-    checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
-    checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
-    findings = _evolve_privacy_policy.findings(json.dumps(data, ensure_ascii=False))
-    checks.append(check("PASS" if not findings else "FAIL", "candidate has no unsanitized private paths or secrets" + (f": {', '.join(findings)}" if findings else "")))
-    return checks
 
 
 def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") -> Path:
     root = ensure_learning_layout(workplace)
     data = read_yaml_file(source)
-    failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
+    failures = [item.message for item in _knowledge_candidate_validation_service.validate(data) if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: invalid knowledge candidate: " + "; ".join(failures))
     candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data, source.stem)
@@ -11782,7 +11635,7 @@ def command_knowledge_hub_import(args: argparse.Namespace) -> int:
     rows = [item for item in as_list(index.get("candidates")) if isinstance(item, dict)]
     for candidate in sorted((import_root / "candidates").glob("*.yaml")):
         data = read_yaml_file(candidate)
-        failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
+        failures = [item.message for item in _knowledge_candidate_validation_service.validate(data) if item.level == "FAIL"]
         if failures:
             raise SystemExit("FAIL: imported candidate invalid: " + "; ".join(failures))
         candidate_id = _knowledge_candidate_targeting_policy.id_from_data(data, candidate.stem)
@@ -12484,7 +12337,7 @@ def command_agent_register(args: argparse.Namespace) -> int:
         "kind": args.kind,
         "roles": [str(item) for item in as_list(args.role)],
         "capabilities": [str(item) for item in as_list(args.capability)],
-        "supports_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", []))],
+        "supports_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", []))],
     }
     existing = next((item for item in agents if isinstance(item, dict) and item.get("id") == agent_id), None)
     if existing:
@@ -12518,7 +12371,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
     registry = load_agent_registry(workplace_root)
     profile = next((item for item in registry.get("agents", []) if isinstance(item, dict) and item.get("id") == agent_id), {})
     capabilities = [str(item) for item in (as_list(getattr(args, "capability", [])) or as_list(profile.get("capabilities")))]
-    supported_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
+    supported_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
     now = now_utc()
     presence = {
         "schema_version": 1,
@@ -12844,8 +12697,8 @@ def command_handoff_create(args: argparse.Namespace) -> int:
             "mode": str(route.get("mode") or "wait_for_result"),
             "required_role": _process_route_service.required_role(route),
             "required_capabilities": [str(item) for item in as_list(route.get("required_capabilities"))],
-            "required_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("required_specializations"))],
-            "preferred_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("preferred_specializations"))],
+            "required_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(route.get("required_specializations"))],
+            "preferred_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(route.get("preferred_specializations"))],
         },
         "input_artifacts": as_list((route.get("input_contract") if isinstance(route.get("input_contract"), dict) else {}).get("required_artifacts")),
         "expected_results": as_list((route.get("output_contract") if isinstance(route.get("output_contract"), dict) else {}).get("expected_artifacts")),
@@ -12883,7 +12736,7 @@ def handoff_available_agents(args: argparse.Namespace, handoff: dict[str, Any], 
     if required:
         agents = [
             agent for agent in agents
-            if required.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+            if required.issubset({_specialization_catalog_reader.resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
         ]
     return agents
 
@@ -13013,7 +12866,7 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
         if required_specializations:
             agents = [
                 agent for agent in agents
-                if required_specializations.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+                if required_specializations.issubset({_specialization_catalog_reader.resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
             ]
         if not agents:
             created = parse_runtime_timestamp(handoff.get("created_at"))
@@ -15040,7 +14893,7 @@ def command_run_create(args: argparse.Namespace) -> int:
         "updated_at": now_utc(),
         "objective": args.objective or "",
         "platform": getattr(args, "platform", None) or "",
-        "selected_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
+        "selected_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
         "scope": {"type": "project", "project_root": "."},
         "tasks": [],
         "final_artifacts": [],
@@ -15208,7 +15061,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         "updated_at": now_utc(),
         "objective": args.objective or "",
         "platform": getattr(args, "platform", None) or "",
-        "selected_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
+        "selected_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
         "order": order,
         "dependencies": {"blocked_by": [], "blocks": []},
         "iterations": [],
@@ -15699,10 +15552,10 @@ def command_doctor_context(args: argparse.Namespace) -> int:
     checks.append(check("PASS" if context_index.is_file() else ("WARN" if snapshot_yaml.is_file() else "FAIL"), "context index found"))
     checks.append(check("PASS" if resolved_rules.is_file() else ("WARN" if snapshot_yaml.is_file() else "FAIL"), "resolved rules found"))
     checks.append(check("PASS" if conflict_report.is_file() else ("WARN" if snapshot_yaml.is_file() else "FAIL"), "conflict report found"))
-    status = context_report_status(conflict_report)
+    status = _project_session_read_service.report_status(conflict_report)
     if conflict_report.is_file():
         checks.append(check("PASS" if status in {"resolved", "warn", "requires_approval"} else "FAIL", f"conflict status is {status}"))
-    freshness, stale = context_freshness(project_root)
+    freshness, stale = _project_session_read_service.legacy_freshness(project_root)
     if context_index.is_file():
         checks.append(check("PASS" if freshness == "fresh" else "FAIL", f"context freshness is {freshness}" + (f": {', '.join(stale)}" if stale else "")))
     checks.append(check("PASS" if cache.is_file() else "WARN", "context cache found"))
@@ -15730,7 +15583,7 @@ def command_doctor_context(args: argparse.Namespace) -> int:
             checks.append(check("PASS", "assignment context status is pass"))
         checks.append(check("PASS" if assignment_conflict_report.is_file() else "FAIL", "assignment-specific conflict report found"))
         if assignment_conflict_report.is_file():
-            checks.append(check("PASS" if context_report_status(assignment_conflict_report) == assignment_status else "FAIL", "assignment conflict report status matches resolver"))
+            checks.append(check("PASS" if _project_session_read_service.report_status(assignment_conflict_report) == assignment_status else "FAIL", "assignment conflict report status matches resolver"))
         ecp_candidates = sorted((flow_root / "contexts").glob(f"{assignment_id(assignment)}*.ecp.yaml"), key=lambda path: path.stat().st_mtime, reverse=True)
         ecp = ecp_candidates[0] if ecp_candidates else flow_root / "contexts" / f"{assignment_id(assignment)}.ecp.yaml"
         if ecp.is_file():
@@ -16365,30 +16218,6 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
 
 
 
-def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
-    warnings: list[str] = []
-    location = _update_site_policy.location(source, "provider")
-    if not location:
-        return {}, ["missing manifest_url"]
-    parsed = urlparse(location)
-    scheme = parsed.scheme.lower()
-    if scheme == "file" or not scheme:
-        path = _update_document_reader.file_url_path(location, workplace_root)
-        data = _update_document_reader.document(path)
-        if not data:
-            return {}, [f"manifest not found or invalid: {path}"]
-        return data, warnings
-    if scheme in {"http", "https"}:
-        try:
-            with urlopen(location, timeout=15) as response:
-                text = response.read().decode("utf-8")
-        except Exception as exc:
-            return {}, [f"manifest fetch failed: {exc}"]
-        data = _update_document_reader.text(text)
-        if not data:
-            return {}, [f"manifest response invalid: {location}"]
-        return data, warnings
-    return {}, [f"manifest_url scheme is unsupported: {scheme}"]
 
 
 
@@ -16432,7 +16261,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
             continue
         source = site.get("source") if isinstance(site.get("source"), dict) else {}
         effective_channel = str(source.get("channel") or channel)
-        raw_manifest, warnings = fetch_update_manifest(source, workplace_root)
+        raw_manifest, warnings = _update_transfer_service.manifest(source, workplace_root)
         if not raw_manifest:
             conflicts.append({"site_id": site.get("site_id"), "reason": "; ".join(warnings) or "manifest fetch failed"})
             continue
@@ -16666,25 +16495,6 @@ def sha256_file(path: Path) -> str:
     return _file_digests.sha256_file(path)
 
 
-def copy_or_download_update_artifact(candidate: dict[str, Any], target: Path, workplace_root: Path) -> Path:
-    url = str(candidate.get("download_url") or "")
-    if not url:
-        raise ValueError("candidate has no download_url")
-    parsed = urlparse(url)
-    if parsed.scheme in {"", "file"}:
-        source = _update_document_reader.file_url_path(url, workplace_root)
-        if not source.is_file():
-            raise FileNotFoundError(source)
-        target_name = source.name
-        destination = target / target_name
-        shutil.copy2(source, destination)
-        return destination
-    if parsed.scheme in {"http", "https"}:
-        destination = target / Path(parsed.path).name
-        with urlopen(url, timeout=30) as response, destination.open("wb") as output:
-            shutil.copyfileobj(response, output)
-        return destination
-    raise ValueError(f"unsupported artifact URL scheme: {parsed.scheme}")
 
 
 def safe_extract_zip(archive_path: Path, destination: Path) -> None:
@@ -16732,7 +16542,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
     if stage_dir.exists():
         shutil.rmtree(stage_dir)
     stage_dir.mkdir(parents=True, exist_ok=True)
-    artifact_path = copy_or_download_update_artifact(candidate, stage_dir, workplace_root)
+    artifact_path = _update_transfer_service.artifact(candidate, stage_dir, workplace_root)
     actual_sha = sha256_file(artifact_path)
     expected_sha = str(candidate.get("sha256") or candidate.get("artifact_sha256") or "")
     verified = not expected_sha or actual_sha.lower() == expected_sha.lower()
@@ -18364,7 +18174,7 @@ def command_mcp_register(args: argparse.Namespace) -> int:
 def command_specialization_list(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
-    index = specialization_manifest_index(workplace_root / "workplace.yaml", project_root)
+    index = _specialization_catalog_reader.manifest_index(workplace_root / "workplace.yaml", project_root)
     rows = [
         {
             "id": item.get("id"),
@@ -18388,7 +18198,7 @@ def command_specialization_show(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     data = load_specialization(workplace_root / "workplace.yaml", args.id, project_root)
     if not data:
-        raise SystemExit(f"FAIL: specialization not found: {specialization_resource_id(args.id)}")
+        raise SystemExit(f"FAIL: specialization not found: {_specialization_catalog_reader.resource_id(args.id)}")
     cleaned = {key: value for key, value in data.items() if not str(key).startswith("__")}
     if getattr(args, "json", False):
         print(json.dumps(cleaned, ensure_ascii=False, indent=2, sort_keys=True))
@@ -18397,18 +18207,12 @@ def command_specialization_show(args: argparse.Namespace) -> int:
     return 0
 
 
-def specialization_manifest_path(workplace_root: Path, specialization_id: str) -> Path | None:
-    normalized_id = specialization_resource_id(specialization_id)
-    for candidate in specialization_path_candidates(workplace_root, normalized_id, None):
-        if candidate.is_file():
-            return candidate
-    return None
 
 
 def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -> list[Check]:
-    normalized_id = specialization_resource_id(specialization_id)
+    normalized_id = _specialization_catalog_reader.resource_id(specialization_id)
     checks: list[Check] = []
-    path = specialization_manifest_path(workplace_root, normalized_id)
+    path = _specialization_catalog_reader.manifest_path(workplace_root, normalized_id)
     checks.append(
         check("PASS", "specialization manifest found")
         if path
@@ -18459,7 +18263,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     requested_id = validate_resource_id(str(args.id), "specialization")
     specialization_id = validate_resource_id(
-        specialization_resource_id(requested_id),
+        _specialization_catalog_reader.resource_id(requested_id),
         "specialization",
     )
     specialization_root = workplace_root / "specializations"
@@ -18491,7 +18295,7 @@ def command_specialization_create(args: argparse.Namespace) -> int:
         "metadata": {"tags": []},
     }
     write_authoring_text(target, dump_yaml(document))
-    _workplace_registry_writer.upsert(specialization_registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
+    _workplace_registry_writer.upsert(_specialization_catalog_reader.registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-create", event_type="specialization.created", target={"specialization_id": specialization_id}, status="created", message="specialization created"))
     print(f"SPECIALIZATION: {rel(target, workplace_root)}")
     return print_checks(specialization_doctor_checks(workplace_root, specialization_id))
@@ -18499,8 +18303,8 @@ def command_specialization_create(args: argparse.Namespace) -> int:
 
 def command_specialization_bind_platform(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
-    specialization_id = specialization_resource_id(str(args.specialization))
-    path = specialization_manifest_path(workplace_root, specialization_id)
+    specialization_id = _specialization_catalog_reader.resource_id(str(args.specialization))
+    path = _specialization_catalog_reader.manifest_path(workplace_root, specialization_id)
     if not path:
         raise SystemExit(f"FAIL: specialization not found: {specialization_id}")
     data = load_yaml_document(path)

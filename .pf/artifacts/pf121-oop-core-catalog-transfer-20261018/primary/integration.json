@@ -1,0 +1,36 @@
+{
+  "status": "integrated",
+  "removed_definitions": [
+    "context_freshness",
+    "context_report_status",
+    "copy_or_download_update_artifact",
+    "fetch_update_manifest",
+    "recent_files",
+    "specialization_manifest_index",
+    "specialization_manifest_path",
+    "specialization_path_candidates",
+    "specialization_path_from_registry_entry",
+    "specialization_registry_path",
+    "specialization_resource_id",
+    "validate_knowledge_candidate"
+  ],
+  "moved_constants": {
+    "COLON_WS": "common.text",
+    "EVOLVE_CANDIDATE_CATEGORIES": "evolution.validation"
+  },
+  "migrated_name_consumers": {
+    "context_report_status": 3,
+    "recent_files": 4,
+    "context_freshness": 3,
+    "specialization_resource_id": 19,
+    "specialization_registry_path": 1,
+    "specialization_path_from_registry_entry": 0,
+    "specialization_path_candidates": 0,
+    "specialization_manifest_index": 4,
+    "specialization_manifest_path": 2,
+    "validate_knowledge_candidate": 2,
+    "fetch_update_manifest": 1,
+    "copy_or_download_update_artifact": 1
+  },
+  "preflight_all_primary_edits_before_write": true
+}
