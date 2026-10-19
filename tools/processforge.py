@@ -391,6 +391,7 @@ from processforge_core.documents.answers import AnswersDocumentReader as _Answer
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+from processforge_core.project.overrides import ProjectOverrideReader
 from processforge_core.project.scan_policy import ProjectScanPolicy
 from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
 from processforge_core.work.consistency import RunTaskConsistencyService
@@ -401,6 +402,7 @@ import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
 import processforge_core.common.yaml_io as _core_common_yaml_io
 import processforge_core.maintenance.release_sources as _core_maintenance_release_sources
+import processforge_core.project.overrides as _core_project_overrides
 import processforge_core.project.scan_policy as _core_project_scan_policy
 import processforge_core.work.consistency as _core_work_consistency
 
@@ -3303,17 +3305,6 @@ def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest
 
 RESOURCE_GROUP_KEYS = ("knowledge_packages", "tools", "mcp", "templates")
 RESOURCE_BUCKET_KEYS = ("requires", "recommends", "optional", "excludes")
-PROJECT_OVERRIDE_KINDS = {
-    "template": "templates",
-    "templates": "templates",
-    "knowledge_package": "knowledge_packages",
-    "knowledge_packages": "knowledge_packages",
-    "tool": "tools",
-    "tools": "tools",
-    "mcp": "mcp",
-    "specialization": "specializations",
-    "specializations": "specializations",
-}
 PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
 
 
@@ -3356,131 +3347,26 @@ def load_specialization(workplace_manifest: Path | None, specialization_id: str,
 
 
 
-def project_overrides_path(project_root: Path) -> Path:
-    return locate_flow_root(project_root) / "project-overrides.yaml"
 
 
-def load_project_overrides(project_root: Path) -> dict[str, Any]:
-    path = project_overrides_path(project_root)
-    data = load_yaml_document(path)
-    if not isinstance(data, dict) or yaml_error(data):
-        return {"schema_version": 1, "kind": "processforge.project_overrides", "overrides": {}}
-    overrides = data.get("overrides")
-    if not isinstance(overrides, dict):
-        data["overrides"] = {}
-    return data
 
 
-def project_override_entries(project_root: Path) -> list[dict[str, Any]]:
-    data = load_project_overrides(project_root)
-    overrides = data.get("overrides") if isinstance(data.get("overrides"), dict) else {}
-    entries: list[dict[str, Any]] = []
-    for raw_kind, items in overrides.items():
-        kind = PROJECT_OVERRIDE_KINDS.get(str(raw_kind), str(raw_kind))
-        for item in items if isinstance(items, list) else []:
-            if isinstance(item, dict) and item.get("target"):
-                record = dict(item)
-                record["kind"] = kind
-                record["source"] = rel(project_overrides_path(project_root), project_root)
-                entries.append(record)
-    return entries
 
 
-def project_specialization_override_entries(project_root: Path, specialization_id: str) -> list[dict[str, Any]]:
-    target_id = _specialization_catalog_reader.resource_id(specialization_id)
-    return [
-        entry
-        for entry in project_override_entries(project_root)
-        if str(entry.get("kind") or "") == "specializations"
-        and _specialization_catalog_reader.resource_id(str(entry.get("target") or "")) == target_id
-    ]
 
 
-def project_override_path(project_root: Path, entry: dict[str, Any]) -> Path | None:
-    raw = entry.get("path") or entry.get("project_package")
-    if not raw:
-        return None
-    path = Path(str(raw))
-    if path.is_absolute():
-        return path
-    return project_root / path
 
 
-def load_project_override_document(project_root: Path, entry: dict[str, Any]) -> dict[str, Any]:
-    path = project_override_path(project_root, entry)
-    if not path or not path.is_file():
-        return {}
-    data = load_yaml_document(path)
-    return data if isinstance(data, dict) and not yaml_error(data) else {}
 
 
-def apply_specialization_overlay(
-    spec: dict[str, Any],
-    overlay: dict[str, Any],
-    mode: str,
-) -> tuple[dict[str, Any], list[str]]:
-    effective = dict(spec)
-    notes: list[str] = []
-    if mode == "replace":
-        effective = dict(overlay)
-        notes.append("replace document applied")
-    else:
-        resources = default_resource_buckets()
-        merge_resource_buckets(resources, spec.get("resources") if isinstance(spec.get("resources"), dict) else {})
-        merge_resource_buckets(resources, overlay.get("resources") if isinstance(overlay.get("resources"), dict) else {})
-        effective["resources"] = resources
-        capabilities = set(str(item) for item in as_list(spec.get("provides_capabilities")) if str(item))
-        capabilities.update(str(item) for item in as_list(overlay.get("provides_capabilities")) if str(item))
-        effective["provides_capabilities"] = dedupe_sorted(list(capabilities))
-        overlay_bindings = overlay.get("platform_bindings") if isinstance(overlay.get("platform_bindings"), list) else []
-        if overlay_bindings:
-            effective["platform_bindings"] = list(as_list(spec.get("platform_bindings"))) + [item for item in overlay_bindings if isinstance(item, dict)]
-        notes.append(f"{mode} overlay applied")
-    for key in ["__source", "__manifest_path"]:
-        if key in spec and key not in effective:
-            effective[key] = spec[key]
-    return effective, notes
 
 
-def sha256_optional_file(path: Path | None) -> str:
-    return "sha256:" + sha256_file(path) if path and path.is_file() else "missing"
 
 
-def effective_fingerprint_for(base_id: str, base_path: Path | None, override_path: Path | None, mode: str) -> str:
-    stable = {
-        "id": base_id,
-        "base_sha256": sha256_optional_file(base_path),
-        "override_sha256": sha256_optional_file(override_path),
-        "mode": mode,
-    }
-    return "sha256:" + hashlib.sha256(json.dumps(stable, sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def resolved_override_record(project_root: Path, entry: dict[str, Any], base_path: Path | None = None) -> dict[str, Any]:
-    override_path = project_override_path(project_root, entry)
-    mode = str(entry.get("mode") or "extension")
-    target = str(entry.get("target") or "")
-    record = {
-        "kind": str(entry.get("kind") or ""),
-        "target": target,
-        "mode": mode,
-        "reason": str(entry.get("reason") or ""),
-        "path": rel(override_path, project_root) if override_path else "",
-        "sha256": sha256_optional_file(override_path),
-        "base_sha256": sha256_optional_file(base_path),
-        "effective_fingerprint": effective_fingerprint_for(target, base_path, override_path, mode),
-    }
-    if isinstance(entry.get("params"), dict):
-        record["params"] = entry["params"]
-    if entry.get("project_package"):
-        record["project_package"] = str(entry["project_package"])
-    return record
 
 
-def apply_resource_excludes(required: set[str], candidates: set[str], excludes: set[str], conflicts: list[dict[str, Any]], source: str, kind: str) -> set[str]:
-    for item in sorted(required.intersection(excludes)):
-        conflicts.append({"id": item, "kind": kind, "source": source, "reason": "cannot exclude required resource"})
-    return candidates - (excludes - required)
 
 
 def resource_profile_capability_provider(specialization_id: str, resources: dict[str, Any]) -> dict[str, Any]:
@@ -3674,15 +3560,15 @@ def resolve_specialization_context(
         if not spec:
             conflicts.append({"id": specialization_id, "kind": "specialization", "reason": "specialization not found"})
             continue
-        specialization_overrides = project_specialization_override_entries(project_root, specialization_id)
+        specialization_overrides = _project_override_reader.project_specialization_override_entries(project_root, specialization_id)
         for override_entry in specialization_overrides:
             mode = str(override_entry.get("mode") or "extension")
             if mode not in PROJECT_OVERRIDE_MODES:
                 conflicts.append({"id": specialization_id, "kind": "specialization", "reason": f"unsupported project override mode: {mode}"})
                 continue
-            overlay = load_project_override_document(project_root, override_entry)
+            overlay = _project_override_reader.load_project_override_document(project_root, override_entry)
             if overlay:
-                spec, overlay_notes = apply_specialization_overlay(spec, overlay, mode)
+                spec, overlay_notes = _project_override_reader.apply_specialization_overlay(spec, overlay, mode)
                 for note in overlay_notes:
                     reasons.append({"source": "project_override", "target": specialization_id, "reason": note})
         resources = default_resource_buckets()
@@ -3722,12 +3608,12 @@ def resolve_specialization_context(
                     for binding in matched_bindings
                 ],
                 "provides_capabilities": dedupe_sorted(list(spec_capabilities)),
-                "sha256": sha256_optional_file(spec.get("__manifest_path") if isinstance(spec.get("__manifest_path"), Path) else None),
+                "sha256": _project_override_reader.sha256_optional_file(spec.get("__manifest_path") if isinstance(spec.get("__manifest_path"), Path) else None),
             }
         )
         reasons.append({"source": specialization_id, "reason": "selected specialization resources merged"})
     applied_overrides: list[dict[str, Any]] = []
-    for entry in project_override_entries(project_root):
+    for entry in _project_override_reader.project_override_entries(project_root):
         kind = str(entry.get("kind") or "")
         target = str(entry.get("target") or "")
         mode = str(entry.get("mode") or "extension")
@@ -3738,7 +3624,7 @@ def resolve_specialization_context(
         if kind == "specializations":
             spec = index.get(_specialization_catalog_reader.resource_id(target))
             base_path = spec.get("__manifest_path") if isinstance(spec, dict) and isinstance(spec.get("__manifest_path"), Path) else None
-        applied = resolved_override_record(project_root, entry, base_path)
+        applied = _project_override_reader.resolved_override_record(project_root, entry, base_path)
         applied_overrides.append(applied)
         if kind in RESOURCE_GROUP_KEYS:
             if mode == "disable":
@@ -3754,7 +3640,7 @@ def resolve_specialization_context(
     for key in RESOURCE_GROUP_KEYS:
         recommended[key] -= required[key]
         activated_set = required[key].union(recommended[key]).union(optional[key])
-        activated[key] = apply_resource_excludes(required[key], activated_set, excluded[key], conflicts, "project/specialization", key)
+        activated[key] = _project_override_reader.apply_resource_excludes(required[key], activated_set, excluded[key], conflicts, "project/specialization", key)
     registry_capabilities, registry_providers = active_registry_capability_providers(workplace_manifest, activated)
     provided_capabilities.update(registry_capabilities)
     for capability, providers in registry_providers.items():
@@ -6631,14 +6517,14 @@ def resolve_project_parameters(
         spec = index.get(specialization_id)
         if not isinstance(spec, dict):
             continue
-        for override_entry in project_specialization_override_entries(project_root, specialization_id):
+        for override_entry in _project_override_reader.project_specialization_override_entries(project_root, specialization_id):
             mode = str(override_entry.get("mode") or "extension")
             if mode not in PROJECT_OVERRIDE_MODES:
                 result["conflicts"].append({"id": specialization_id, "kind": "specialization", "reason": f"unsupported project override mode: {mode}"})
                 continue
-            overlay = load_project_override_document(project_root, override_entry)
+            overlay = _project_override_reader.load_project_override_document(project_root, override_entry)
             if overlay:
-                spec, _overlay_notes = apply_specialization_overlay(spec, overlay, mode)
+                spec, _overlay_notes = _project_override_reader.apply_specialization_overlay(spec, overlay, mode)
         _parameter_source_service.add(
             result,
             source_id=f"specialization:{specialization_id}",
@@ -17434,7 +17320,7 @@ def command_specialization_bind_platform(args: argparse.Namespace) -> int:
 
 def command_project_override_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    entries = project_override_entries(project_root)
+    entries = _project_override_reader.project_override_entries(project_root)
     if getattr(args, "json", False):
         print(json.dumps({"project_overrides": entries}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -17446,14 +17332,14 @@ def command_project_override_list(args: argparse.Namespace) -> int:
 def command_project_override_add(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     flow_root = locate_flow_root(project_root)
-    kind = PROJECT_OVERRIDE_KINDS.get(str(args.kind), str(args.kind))
+    kind = _core_project_overrides.PROJECT_OVERRIDE_KINDS.get(str(args.kind), str(args.kind))
     mode = str(args.mode)
     if kind not in {"templates", "knowledge_packages", "tools", "mcp", "specializations"}:
         raise SystemExit(f"FAIL: unsupported project override kind: {args.kind}")
     if mode not in PROJECT_OVERRIDE_MODES:
         raise SystemExit(f"FAIL: unsupported project override mode: {mode}")
-    path = project_overrides_path(project_root)
-    data = load_project_overrides(project_root)
+    path = _project_override_reader.project_overrides_path(project_root)
+    data = _project_override_reader.load_project_overrides(project_root)
     overrides = data.setdefault("overrides", {})
     entries = overrides.setdefault(kind, [])
     if not isinstance(entries, list):
@@ -17488,15 +17374,15 @@ def command_project_override_add(args: argparse.Namespace) -> int:
 
 def command_project_override_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    path = project_overrides_path(project_root)
+    path = _project_override_reader.project_overrides_path(project_root)
     checks: list[Check] = []
     checks.append(check("PASS", "project overrides file optional") if not path.is_file() else check("PASS", "project overrides file found"))
-    data = load_project_overrides(project_root)
+    data = _project_override_reader.load_project_overrides(project_root)
     checks.append(check("PASS" if data.get("kind") in {None, "processforge.project_overrides"} else "FAIL", "project overrides kind valid"))
-    for entry in project_override_entries(project_root):
+    for entry in _project_override_reader.project_override_entries(project_root):
         mode = str(entry.get("mode") or "")
         checks.append(check("PASS" if mode in PROJECT_OVERRIDE_MODES else "FAIL", f"{entry.get('kind')} {entry.get('target')} mode valid"))
-        override_path = project_override_path(project_root, entry)
+        override_path = _project_override_reader.project_override_path(project_root, entry)
         if override_path:
             checks.append(check("PASS" if path_is_relative_to(override_path, locate_flow_root(project_root)) else "FAIL", f"{entry.get('target')} override path is project-local"))
             checks.append(check("PASS" if override_path.is_file() else "WARN", f"{entry.get('target')} override file exists"))
@@ -18451,6 +18337,7 @@ def main(argv: list[str] | None = None) -> int:
 _release_source_policy = ReleaseSourcePolicy()
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
 _project_classifier_sources = ProjectClassifierSourceReader(ROOT)
+_project_override_reader = ProjectOverrideReader(ROOT)
 _project_scan_policy = ProjectScanPolicy()
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
