@@ -1,0 +1,9 @@
+{
+  "status": "clarified_from_exact_source",
+  "source_reference": "src/processforge_core/composition.py:build_assignment_capsule_publisher",
+  "actual_before": "ensure_trailing_newline=lambda text: service.core.ensure_trailing_newline(text)",
+  "actual_after": "ensure_trailing_newline=lambda text: ensure_trailing_newline(text)",
+  "contract": "The existing one-argument formatter callback runs at the same invocation point. Its argument, call shape and other dependencies are preserved. The brief informal zero-argument factory wording is superseded by the exact pinned source and this narrowly specified attribute replacement.",
+  "scope_changed": false,
+  "capsules_and_brief_changed": false
+}

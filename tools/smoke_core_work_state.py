@@ -28,6 +28,7 @@ from processforge_core import diagnostics as d
 from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service
+from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.work.state import WorkStatePolicy
 
@@ -359,7 +360,7 @@ class AdapterTests(NormalizedTests):
             command = WorkStateCommand(
                 execution_factory=core.process_execution_service,
                 require_flow_root=core.require_flow_root,
-                dump_yaml=core.dump_yaml,
+                dump_yaml=_canonical_dump_yaml,
             )
             self.assertEqual(command.execute(arguments), 0)
         self.assertEqual(json.loads(output.getvalue()), service.state())

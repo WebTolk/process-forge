@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from . import RUNTIME_PROTOCOL_VERSION
+from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from . import host
 
 
@@ -1084,7 +1085,7 @@ def runtime_request(args: argparse.Namespace, core: Any, path: str, payload: dic
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
     code, body = http_json("POST", endpoint.rstrip("/") + path, token=token, payload=payload, timeout=5.0)
-    print(json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(body))
+    print(json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(body))
     return 0 if 200 <= code < 300 else 1
 
 

@@ -98,6 +98,12 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/process_catalog/routes.py` | Current route lookup, validation and required role. |
 | `src/processforge_core/process_catalog/handoffs.py` | Handoff directory/path and soft document read. |
 | `src/processforge_core/maintenance/validation.py` | Existing update override and normalized-manifest checks. |
+| `src/processforge_core/project/platform_documents.py` | Existing platform document model/byte construction. |
+| `src/processforge_core/project/registry_checks.py` | Current registry paths and package-root validation. |
+| `src/processforge_core/common/text.py` | Canonical trailing newline and diagnostic hint formatting. |
+| `src/processforge_core/common/yaml_dump.py` | Exact existing YAML scalar and recursive serialization. |
+| `src/processforge_core/process_catalog/audit.py` | Existing ordered builtin process catalog report and flat package index. |
+| `src/processforge_core/project/setup.py` | Existing workplace setup proposal mapping and Markdown. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -931,3 +937,40 @@ also owns the distinct installed-version projection; UpdateDocumentReader also
 owns staged-record location/soft reading. Existing reader constructors and
 previous methods are unchanged. Discovery, writes, installation, artifact I/O,
 network and timestamp generation retain their earlier owners.
+
+## Platform document building, registry checks and catalog audit
+
+`project.platform_documents.PlatformDocumentBuilder` owns the existing platform
+document path/byte/note list construction. It preserves every YAML and Markdown
+literal, output order and native lookup failure; it returns data without writing
+files. Full platform authoring preflight/publication and semantic validation
+retain their earlier owners.
+
+`project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
+owns current registry path checks and package-root checks through the existing
+WorkspacePathReferenceReader, ContextContractInputs and ProjectPackageCatalogReader.
+Actual workplace roots are operation-local. Alias/default/status/writable rules,
+duplicates, current filesystem observations and warning/check order are unchanged.
+`common.yaml_dump` owns the exact existing format_scalar and recursive dump_yaml;
+all actual Main/Runtime/process-execution formatter consumers use that owner.
+The zero-argument yaml_formatter provider and one-argument formatting callbacks
+retain their earlier shapes. No serializer replacement or Runtime start is added.
+`common.text` owns the original ensure_trailing_newline and check_with_hint
+functions. Capsule publication composition calls the canonical newline and YAML
+formatters from the same one-argument callbacks; the other legacy dependencies stay with
+their existing owners. No publication or failure timing is changed.
+
+`process_catalog.audit.BuiltinProcessCatalogAuditService(distribution_root)` owns
+the ordered builtin catalog report using a per-operation concrete catalog reader,
+contract/authoring/artifact policies and canonical metadata functions. The flat
+sorted root/packages/*.yaml index remains distinct from the broader project
+package index. Public internal skips, official companion roots, counts, repeated
+observations and warning concatenation retain their earlier semantics.
+The pure process_catalog_contexts projection lives in existing service.py;
+all its prior definitions/data remain unchanged.
+
+`project.setup.WorkplaceSetupProposalBuilder` owns the existing setup proposal
+mapping and Markdown using ProjectCoordinationReader. Defaults, literal path
+placeholders, list coercions, borrowed fields, ordering and invalid-mode refusals
+are preserved. Constructors perform no I/O; actual setup/registry writes,
+transactions, locks, recovery and later delivery layers retain their owners.

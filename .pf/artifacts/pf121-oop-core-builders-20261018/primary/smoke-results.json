@@ -1,0 +1,67 @@
+{
+  "started_at": "2026-10-19T00:37:21.302226+00:00",
+  "executor": "primary",
+  "source_hashes": {
+    "tools/processforge.py": "3c388f1570c710c69f633b95b66128ae0f446eaecd37a81054b5eba76b1f7d33",
+    "src/processforge_core/composition.py": "4a4e063a6c5f5516b81a9d96e804f81bb0202050125ff24c1c00699e009d2d93",
+    "docs/concepts/python-core-structure.md": "6828d98c57ffbe864b0c878c7778346f555607ac843bef5d0e5a42128ab062d9",
+    "docs/ru/concepts/python-core-structure.md": "eae81c89c3d6b6aa9d66fe627dab6d5fc6ead85c5b1c9b6316e9e92b4bdca063",
+    "src/processforge_core/project/platform_documents.py": "1f0dd57c6ca9401dddce565cc70529854601b255e732ce89270bf40950018fa3",
+    "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+    "src/processforge_core/process_execution.py": "306ae8189b52848d16a25c7c14ab64aa4d11c86ca0d320bfafa9e26db1776feb",
+    "tools/pf_runtime/host.py": "2eef665adbbcdd4c9a44619f1e2c33e8021b80c31d1beb9b8276da5fcca2b42b",
+    "tools/pf_runtime/service.py": "f14db0028a1d906229ec6dafa6e3afa0df647ff6d13f5052329e7a0b1ce531b5",
+    "tools/smoke_core_work_state.py": "e2f18af9c26e92d5b4258623e7ac812666034725ebc89f52499b8d3b7716a3bf",
+    "src/processforge_core/project/registry_checks.py": "4cd1296407a6f9ddac562e3fa3a7d08c41307dfac92e93ef6c6a13ac327fea82",
+    "src/processforge_core/common/text.py": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+    "src/processforge_core/process_catalog/audit.py": "7173ef568a94dfcb6e98d20eee7b54b6f3dc9dda35087455687e98eef2f7bd23",
+    "src/processforge_core/process_catalog/service.py": "2eb9778ed34e979101e5a4690ba3ae92d8b86eb19968bc65b249100b51fd2d73",
+    "src/processforge_core/project/setup.py": "c8df974090b2d40cd2024cfb0474784ed1f898064a5939aa716fce4285376616"
+  },
+  "checks": [
+    {
+      "name": "smoke_platform_create_include_levels",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.1,
+      "stdout": "PASS: platform-create include levels\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_builtin_process_catalog",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 2.314,
+      "stdout": "PASS: built-in process catalog smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 6.485,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"compatibility containers preserve strict governed and unique Run membership\",\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"signed overlap diagnostics remain advisory; scope grants and immutable bytes stay protected\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_core_work_state",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 1.068,
+      "stdout": "",
+      "stderr": "test_ambiguity_and_context_guard_before_process_read (__main__.FixtureTests.test_ambiguity_and_context_guard_before_process_read) ... ok\ntest_blockers_and_terminal_precedence (__main__.FixtureTests.test_blockers_and_terminal_precedence) ... ok\ntest_completion_and_stage_override (__main__.FixtureTests.test_completion_and_stage_override) ... ok\ntest_differential_original_state (__main__.FixtureTests.test_differential_original_state) ... skipped 'pass --baseline for differential characterization'\ntest_invalid_outcome_remains_incomplete (__main__.FixtureTests.test_invalid_outcome_remains_incomplete) ... ok\ntest_missing_and_explicit_selectors (__main__.FixtureTests.test_missing_and_explicit_selectors) ... ok\ntest_permission_readiness_stays_separate (__main__.FixtureTests.test_permission_readiness_stays_separate) ... ok\ntest_ready_shape_and_unknown_fields_preserved (__main__.FixtureTests.test_ready_shape_and_unknown_fields_preserved) ... ok\ntest_stage_blocked_fallback_and_default_contract_reason (__main__.FixtureTests.test_stage_blocked_fallback_and_default_contract_reason) ... ok\ntest_policy_isolated_import_without_cli_or_host (__main__.PolicyTests.test_policy_isolated_import_without_cli_or_host) ... ok\ntest_policy_no_io_and_no_mutation (__main__.PolicyTests.test_policy_no_io_and_no_mutation) ... ok\ntest_ambient_observer_not_captured_at_construction (__main__.ObserverTests.test_ambient_observer_not_captured_at_construction) ... ok\ntest_noop_does_not_create_project_files (__main__.ObserverTests.test_noop_does_not_create_project_files) ... ok\ntest_original_exception_and_frozen_exception (__main__.ObserverTests.test_original_exception_and_frozen_exception) ... ok\ntest_profiles_noop_result_and_duration (__main__.ObserverTests.test_profiles_noop_result_and_duration) ... ok\ntest_reused_observer_threads_and_missing_work_do_not_leak (__main__.ObserverTests.test_reused_observer_threads_and_missing_work_do_not_leak) ... ok\ntest_sink_failure_preserves_result_and_exception (__main__.ObserverTests.test_sink_failure_preserves_result_and_exception) ... ok\ntest_validation_trace_span (__main__.ObserverTests.test_validation_trace_span) ... ok\ntest_bootstrap_additive_method_preserves_fields (__main__.CompositionTests.test_bootstrap_additive_method_preserves_fields) ... ok\ntest_constructor_and_factory_no_io (__main__.CompositionTests.test_constructor_and_factory_no_io) ... ok\ntest_installed_shaped_package_import_without_cli (__main__.CompositionTests.test_installed_shaped_package_import_without_cli) ... ok\ntest_cli_factory_and_output_parity (__main__.AdapterTests.test_cli_factory_and_output_parity) ... ok\ntest_host_factory_shared_payload_and_denied_guard (__main__.AdapterTests.test_host_factory_shared_payload_and_denied_guard) ... ok\ntest_mcp_factory_selectors_and_guard (__main__.AdapterTests.test_mcp_factory_selectors_and_guard) ... ok\n\n----------------------------------------------------------------------\nRan 24 tests in 0.742s\n\nOK (skipped=1)\n"
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 0.969,
+      "stdout": "PASS: public docs match the current PF contract (730 CLI examples, 723 local links checked)\n",
+      "stderr": ""
+    }
+  ],
+  "profile": "Four affected existing scripts covering platform documents, builtin catalog formats, capsule publication contract and current ownership documentation. Full legacy/new algorithm proof and bounded live registry/catalog/builder and formatter composition wiring are recorded separately. No broad Runtime/scheduler/recovery/release/archive/install/connected-host/ZIP suites or external model orchestration.",
+  "source_stable": true,
+  "passed": true,
+  "finished_at": "2026-10-19T00:37:34.245904+00:00"
+}

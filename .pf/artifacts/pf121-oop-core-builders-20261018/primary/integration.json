@@ -1,0 +1,35 @@
+{
+  "status": "integrated",
+  "removed_functions": [
+    "builtin_process_catalog_report",
+    "check_with_hint",
+    "dump_yaml",
+    "ensure_trailing_newline",
+    "format_scalar",
+    "package_process_index",
+    "package_root_registry_checks",
+    "platform_entity_documents",
+    "process_catalog_contexts",
+    "registry_path_resolution_checks",
+    "render_workplace_setup_proposal"
+  ],
+  "migrated_name_consumers": {
+    "platform_entity_documents": 1,
+    "registry_path_resolution_checks": 1,
+    "package_root_registry_checks": 1,
+    "builtin_process_catalog_report": 1,
+    "package_process_index": 1,
+    "render_workplace_setup_proposal": 3
+  },
+  "canonical_standalone_imports": {
+    "ensure_trailing_newline": "common.text.ensure_trailing_newline",
+    "check_with_hint": "common.text.check_with_hint",
+    "process_catalog_contexts": "process_catalog.service.process_catalog_contexts",
+    "format_scalar": "common.yaml_dump.format_scalar",
+    "dump_yaml": "common.yaml_dump.dump_yaml"
+  },
+  "composition_formatter_callbacks_migrated": 2,
+  "composition_callback_shape_preserved": true,
+  "serialization_dependency_handoff": ".pf/artifacts/pf121-oop-core-builders-20261018/primary/serialization-dependency-handoff.md",
+  "preflight_all_primary_edits_before_write": true
+}

@@ -1,0 +1,70 @@
+{
+  "baseline_commit": "9f576ce389afb518b7f869e28dc638dcdf1ef596",
+  "source_sha256": "195eefc505712862e6518617721d3c72911edd65dce64b59e5afd837553174f1",
+  "functions": {
+    "format_scalar": {
+      "source": "def format_scalar(value: Any) -> str:\r\n    if value is True:\r\n        return \"true\"\r\n    if value is False:\r\n        return \"false\"\r\n    if value is None:\r\n        return \"null\"\r\n    if isinstance(value, (int, float)):\r\n        return str(value)\r\n    text = str(value)\r\n    if text == \"\":\r\n        return '\"\"'\r\n    yaml_literals = {\"*\", \"null\", \"true\", \"false\", \"yes\", \"no\", \"on\", \"off\", \"~\"}\r\n    special_start = (\"-\", \"?\", \"&\", \"*\", \"!\", \"%\", \"@\", \"`\", \">\", \"|\")\r\n    if (\r\n        text.lower() in yaml_literals\r\n        or text.startswith(special_start)\r\n        or any(char in text for char in [\":\", \"#\", \"{\", \"}\", \"[\", \"]\", \"\\\\\"])\r\n        or text.strip() != text\r\n    ):\r\n        return \"'\" + text.replace(\"'\", \"''\") + \"'\"\r\n    return text\r\n",
+      "ast": "FunctionDef(name='format_scalar', args=arguments(args=[arg(arg='value', annotation=Name(id='Any', ctx=Load()))]), body=[If(test=Compare(left=Name(id='value', ctx=Load()), ops=[Is()], comparators=[Constant(value=True)]), body=[Return(value=Constant(value='true'))]), If(test=Compare(left=Name(id='value', ctx=Load()), ops=[Is()], comparators=[Constant(value=False)]), body=[Return(value=Constant(value='false'))]), If(test=Compare(left=Name(id='value', ctx=Load()), ops=[Is()], comparators=[Constant(value=None)]), body=[Return(value=Constant(value='null'))]), If(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='value', ctx=Load()), Tuple(elts=[Name(id='int', ctx=Load()), Name(id='float', ctx=Load())], ctx=Load())]), body=[Return(value=Call(func=Name(id='str', ctx=Load()), args=[Name(id='value', ctx=Load())]))]), Assign(targets=[Name(id='text', ctx=Store())], value=Call(func=Name(id='str', ctx=Load()), args=[Name(id='value', ctx=Load())])), If(test=Compare(left=Name(id='text', ctx=Load()), ops=[Eq()], comparators=[Constant(value='')]), body=[Return(value=Constant(value='\"\"'))]), Assign(targets=[Name(id='yaml_literals', ctx=Store())], value=Set(elts=[Constant(value='*'), Constant(value='null'), Constant(value='true'), Constant(value='false'), Constant(value='yes'), Constant(value='no'), Constant(value='on'), Constant(value='off'), Constant(value='~')])), Assign(targets=[Name(id='special_start', ctx=Store())], value=Tuple(elts=[Constant(value='-'), Constant(value='?'), Constant(value='&'), Constant(value='*'), Constant(value='!'), Constant(value='%'), Constant(value='@'), Constant(value='`'), Constant(value='>'), Constant(value='|')], ctx=Load())), If(test=BoolOp(op=Or(), values=[Compare(left=Call(func=Attribute(value=Name(id='text', ctx=Load()), attr='lower', ctx=Load())), ops=[In()], comparators=[Name(id='yaml_literals', ctx=Load())]), Call(func=Attribute(value=Name(id='text', ctx=Load()), attr='startswith', ctx=Load()), args=[Name(id='special_start', ctx=Load())]), Call(func=Name(id='any', ctx=Load()), args=[GeneratorExp(elt=Compare(left=Name(id='char', ctx=Load()), ops=[In()], comparators=[Name(id='text', ctx=Load())]), generators=[comprehension(target=Name(id='char', ctx=Store()), iter=List(elts=[Constant(value=':'), Constant(value='#'), Constant(value='{'), Constant(value='}'), Constant(value='['), Constant(value=']'), Constant(value='\\\\')], ctx=Load()), is_async=0)])]), Compare(left=Call(func=Attribute(value=Name(id='text', ctx=Load()), attr='strip', ctx=Load())), ops=[NotEq()], comparators=[Name(id='text', ctx=Load())])]), body=[Return(value=BinOp(left=BinOp(left=Constant(value=\"'\"), op=Add(), right=Call(func=Attribute(value=Name(id='text', ctx=Load()), attr='replace', ctx=Load()), args=[Constant(value=\"'\"), Constant(value=\"''\")])), op=Add(), right=Constant(value=\"'\")))]), Return(value=Name(id='text', ctx=Load()))], returns=Name(id='str', ctx=Load()))"
+    },
+    "dump_yaml": {
+      "source": "def dump_yaml(data: Any, indent: int = 0) -> str:\r\n    lines: list[str] = []\r\n    prefix = \" \" * indent\r\n    if isinstance(data, dict):\r\n        if not data:\r\n            lines.append(f\"{prefix}{{}}\")\r\n        for key, value in data.items():\r\n            if isinstance(value, (dict, list)):\r\n                lines.append(f\"{prefix}{key}:\")\r\n                lines.append(dump_yaml(value, indent + 2))\r\n            else:\r\n                lines.append(f\"{prefix}{key}: {format_scalar(value)}\")\r\n    elif isinstance(data, list):\r\n        if not data:\r\n            lines.append(f\"{prefix}[]\")\r\n        for item in data:\r\n            if isinstance(item, dict):\r\n                lines.append(f\"{prefix}-\")\r\n                lines.append(dump_yaml(item, indent + 2))\r\n            elif isinstance(item, list):\r\n                lines.append(f\"{prefix}-\")\r\n                lines.append(dump_yaml(item, indent + 2))\r\n            else:\r\n                lines.append(f\"{prefix}- {format_scalar(item)}\")\r\n    else:\r\n        lines.append(f\"{prefix}{format_scalar(data)}\")\r\n    return \"\\n\".join(lines)\r\n",
+      "ast": "FunctionDef(name='dump_yaml', args=arguments(args=[arg(arg='data', annotation=Name(id='Any', ctx=Load())), arg(arg='indent', annotation=Name(id='int', ctx=Load()))], defaults=[Constant(value=0)]), body=[AnnAssign(target=Name(id='lines', ctx=Store()), annotation=Subscript(value=Name(id='list', ctx=Load()), slice=Name(id='str', ctx=Load()), ctx=Load()), value=List(ctx=Load()), simple=1), Assign(targets=[Name(id='prefix', ctx=Store())], value=BinOp(left=Constant(value=' '), op=Mult(), right=Name(id='indent', ctx=Load()))), If(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='data', ctx=Load()), Name(id='dict', ctx=Load())]), body=[If(test=UnaryOp(op=Not(), operand=Name(id='data', ctx=Load())), body=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), Constant(value='{}')])]))]), For(target=Tuple(elts=[Name(id='key', ctx=Store()), Name(id='value', ctx=Store())], ctx=Store()), iter=Call(func=Attribute(value=Name(id='data', ctx=Load()), attr='items', ctx=Load())), body=[If(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='value', ctx=Load()), Tuple(elts=[Name(id='dict', ctx=Load()), Name(id='list', ctx=Load())], ctx=Load())]), body=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), FormattedValue(value=Name(id='key', ctx=Load()), conversion=-1), Constant(value=':')])])), Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[Call(func=Name(id='dump_yaml', ctx=Load()), args=[Name(id='value', ctx=Load()), BinOp(left=Name(id='indent', ctx=Load()), op=Add(), right=Constant(value=2))])]))], orelse=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), FormattedValue(value=Name(id='key', ctx=Load()), conversion=-1), Constant(value=': '), FormattedValue(value=Call(func=Name(id='format_scalar', ctx=Load()), args=[Name(id='value', ctx=Load())]), conversion=-1)])]))])])], orelse=[If(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='data', ctx=Load()), Name(id='list', ctx=Load())]), body=[If(test=UnaryOp(op=Not(), operand=Name(id='data', ctx=Load())), body=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), Constant(value='[]')])]))]), For(target=Name(id='item', ctx=Store()), iter=Name(id='data', ctx=Load()), body=[If(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='item', ctx=Load()), Name(id='dict', ctx=Load())]), body=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), Constant(value='-')])])), Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[Call(func=Name(id='dump_yaml', ctx=Load()), args=[Name(id='item', ctx=Load()), BinOp(left=Name(id='indent', ctx=Load()), op=Add(), right=Constant(value=2))])]))], orelse=[If(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='item', ctx=Load()), Name(id='list', ctx=Load())]), body=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), Constant(value='-')])])), Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[Call(func=Name(id='dump_yaml', ctx=Load()), args=[Name(id='item', ctx=Load()), BinOp(left=Name(id='indent', ctx=Load()), op=Add(), right=Constant(value=2))])]))], orelse=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), Constant(value='- '), FormattedValue(value=Call(func=Name(id='format_scalar', ctx=Load()), args=[Name(id='item', ctx=Load())]), conversion=-1)])]))])])])], orelse=[Expr(value=Call(func=Attribute(value=Name(id='lines', ctx=Load()), attr='append', ctx=Load()), args=[JoinedStr(values=[FormattedValue(value=Name(id='prefix', ctx=Load()), conversion=-1), FormattedValue(value=Call(func=Name(id='format_scalar', ctx=Load()), args=[Name(id='data', ctx=Load())]), conversion=-1)])]))])]), Return(value=Call(func=Attribute(value=Constant(value='\\n'), attr='join', ctx=Load()), args=[Name(id='lines', ctx=Load())]))], returns=Name(id='str', ctx=Load()))"
+    }
+  },
+  "actual_legacy_consumers": [
+    {
+      "path": "src/processforge_core/composition.py",
+      "name": "dump_yaml",
+      "receiver": "service.core",
+      "line": 518
+    },
+    {
+      "path": "src/processforge_core/process_execution.py",
+      "name": "dump_yaml",
+      "receiver": "self.core",
+      "line": 1033
+    },
+    {
+      "path": "tools/smoke_core_work_state.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 362
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 1303
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 1354
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 1425
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 1462
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 1522
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "name": "dump_yaml",
+      "receiver": "core",
+      "line": 1087
+    }
+  ]
+}

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from .common.text import ensure_trailing_newline
+from .common.yaml_dump import dump_yaml
+
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -515,8 +518,8 @@ def build_assignment_capsule_publisher(
         snapshot_reader=lambda: service._snapshot_reader(),
         build_context_fields=context_fields,
         now_utc=lambda: service.core.now_utc(),
-        dump_yaml=lambda value: service.core.dump_yaml(value),
-        ensure_trailing_newline=lambda text: service.core.ensure_trailing_newline(text),
+        dump_yaml=lambda value: dump_yaml(value),
+        ensure_trailing_newline=lambda text: ensure_trailing_newline(text),
         relative_path=lambda path, root: service.core.rel(path, root),
         sha256_file=lambda path: service._sha256_file(path),
         stable_ids=stable_ids,

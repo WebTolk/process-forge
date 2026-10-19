@@ -1,0 +1,510 @@
+{
+  "passed": true,
+  "total": 76,
+  "native_exceptions": 4,
+  "groups": {
+    "annotations": 11,
+    "yaml": 27,
+    "text": 3,
+    "platform": 6,
+    "registries": 9,
+    "catalog": 9,
+    "setup": 6,
+    "composition": 2,
+    "imports": 3
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "platform_entity_documents",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "registry_path_resolution_checks",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_root_registry_checks",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "builtin_process_catalog_report",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "package_process_index",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "render_workplace_setup_proposal",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "ensure_trailing_newline",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "check_with_hint",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_catalog_contexts",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "dump_yaml",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "format_scalar",
+      "passed": true
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-0",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "3616bc122a2e8e670c3265c4255ae7ba937759a3846cf8a266cb44682e8ddb7e"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-1",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e0b612ed1072a0ab8de9b360451a268b3f865248f5909a5b2650bdcd68e70a96"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-2",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "9d6a8481e268770fff36f928d0a1b765ff6918017c7dc98d96330329d0ab8bdd"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-3",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "63b7962106cec815740a82823f2b588246310e0ee431d04a4f89e1e4393e75e8"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-4",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "d4b75ae4516c58db7b9c73efb81c1ffeeb59addad70c6a08ca993f51d1529074"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-5",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "d0bfd4ad7f6847c25f5ffeeef1b8fbeaefc1963495e8e4f3e9159d58dbd47d35"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-6",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b9c60b71c247001f36db63efbeee8f48e607ed115449f26e7eedf65bd6194a28"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-7",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "037abd97a334ab9d587368e3a46e955a84dde3a59ffe9c29c016d71211281383"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-8",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "6e9b073b90c3e82c0348d0c9579d12b76ce8c7ac360978f56e258c200f77a587"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-9",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "af0652dc7e1a8ab77d504a6ab492cad39dd2429c1f5fb8056a739813b187b2b3"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-10",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "e827b999c360f31e97ae299c9f47d46c35f9b275634f94fa40c6f4e6367cbacc"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-11",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "8fb908f71430efc18c7693f434b2ca89b76a28babd57e7b1f64dab497bf7cf02"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-12",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "5854ba70de6d3f1e86790406682a5900f0532b15d07f93c0bf6eab140a20e251"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-13",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "42e53bebb55c3e250f5336bbd18ca08845e1911c2819b036cd2f1df744ecb9c0"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-14",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f83a8d3ce133a8de11d30700222513aef5e0c561c260903d2a6b206c72e104b8"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-15",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "7c50d0e1d7cd98099b9b3e5735dda8900412e4ef82e8672f74e3f5a7a081fa25"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-16",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "bd1897ff2d3efb39a3276bac4c1fe895c2cff98774782c320192cab16aa374a1"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-17",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4debaaf2ea1e024eae257150602ff7ccb2a5d4dcf9abcba679406ab692d685c7"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-18",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ab28dffbef0f535e8725268ba4e3cb34df80adf524563d54b062c05bef4e416f"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-19",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b0732710d886b8f536002633c5b819334bfb6b21ce016672c8d4c8a523383a54"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-20",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "2fb931fc845a0d6d7708c8d55e1994c1124ecd3207c934640478d95de5f64c29"
+    },
+    {
+      "group": "yaml",
+      "case": "scalar-21",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "62c699dd733494893db14d5d2bc207535adbff43bf6105afe086df3a64e3c8f7"
+    },
+    {
+      "group": "yaml",
+      "case": "ordered-nested-containers",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "86b51d914b7c4a6688ba2f369adb28a37e99a1e5b74668eb7660b899218ec146"
+    },
+    {
+      "group": "yaml",
+      "case": "explicit-indent",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a6f95862468f330425af39b3748dadc80c3fa38137ec13c7de9bc75ef98bdb57"
+    },
+    {
+      "group": "yaml",
+      "case": "native-indent-failure",
+      "passed": true,
+      "exception": "TypeError",
+      "observation_sha256": "4e54b428c495ed7cddc1a3c0f00e2529fd426350e4959b9be4bc0d021f94a8f9"
+    },
+    {
+      "group": "yaml",
+      "case": "actual-insertion-order",
+      "passed": true
+    },
+    {
+      "group": "yaml",
+      "case": "actual-no-extra-newline",
+      "passed": true
+    },
+    {
+      "group": "text",
+      "case": "trailing-newline",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "4615f1d8362690ccde90731d21db1b03d3ee72806aa6355d62aff2f8bb59338a"
+    },
+    {
+      "group": "text",
+      "case": "empty-newline",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "882fd6c6934a0d6be70ece51932e2233d5bdb0c156fb1c16f73e4e58bdf89f77"
+    },
+    {
+      "group": "text",
+      "case": "multiline-hint",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "dd95cd2cb6e23f0d4bac25998997ff5b58efc6bf51296fe938d2ca08900af017"
+    },
+    {
+      "group": "platform",
+      "case": "all-document-bytes-and-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b8fac67a60798ebd58915bca58bf3cd36a5ee3570f05804026aca3d404800e77"
+    },
+    {
+      "group": "platform",
+      "case": "actual-twelve-documents",
+      "passed": true
+    },
+    {
+      "group": "platform",
+      "case": "actual-no-file-effects",
+      "passed": true
+    },
+    {
+      "group": "platform",
+      "case": "actual-utf8-newline",
+      "passed": true
+    },
+    {
+      "group": "platform",
+      "case": "native-missing-title",
+      "passed": true,
+      "exception": "KeyError",
+      "observation_sha256": "a120ca7072b99fbd8488808569acd9429d3ee85092f1899a405f14e75197a4fa"
+    },
+    {
+      "group": "platform",
+      "case": "native-missing-capabilities",
+      "passed": true,
+      "exception": "KeyError",
+      "observation_sha256": "12188ba9c3b185da5ac820b69da7342ec7e2e2d81991ddd1a4c3a925f4606494"
+    },
+    {
+      "group": "registries",
+      "case": "missing-registry-paths",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "46aafe246efd91c7f66568eeb0438813ff08a37a9f5a3b3cf8e0e4b77cf3a98c"
+    },
+    {
+      "group": "registries",
+      "case": "missing-package-registry",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "28b817317c68fb466eca709c95a0784e5b4989612be4d02385ed9c4a0548d1ee"
+    },
+    {
+      "group": "registries",
+      "case": "empty-registries",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a2298e6877f30cd816adb262b537e344c40b80bb62a6cc3e762691c2f907034a"
+    },
+    {
+      "group": "registries",
+      "case": "empty-package-roots",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f40f4fbb742af5db0901684a0ee2c88b21b014680d4cfcfa60c0942170d76ee8"
+    },
+    {
+      "group": "registries",
+      "case": "duplicate-status-writable-order",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "f8e90028c814493f39c99493f56837c393011781c023aabb12b3870086af0f38"
+    },
+    {
+      "group": "registries",
+      "case": "actual-duplicate-refusal",
+      "passed": true
+    },
+    {
+      "group": "registries",
+      "case": "unknown-command-constant",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "cdb7dc4717066068bcec2ed9291b04ec94a7200fc818fafe483d9aaf05ce1a21"
+    },
+    {
+      "group": "registries",
+      "case": "live-corrected-package-roots",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b8725bb38fcd3d1b5424a8e2e135152c8e2f73826ab780440c0ae0286179ef07"
+    },
+    {
+      "group": "registries",
+      "case": "actual-selectable-root",
+      "passed": true
+    },
+    {
+      "group": "catalog",
+      "case": "flat-index-last-wins",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "70f24d8f83bc0e36b27be214cb47dfb3f30db8a4e0ca302fa0d8a7425f3cccd7"
+    },
+    {
+      "group": "catalog",
+      "case": "actual-last-wins",
+      "passed": true
+    },
+    {
+      "group": "catalog",
+      "case": "context-projection",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "c952920f36ecb8886ac981bebc2be901710294043f519f91bbf5dfecbaf3b736"
+    },
+    {
+      "group": "catalog",
+      "case": "full-report-default-readers",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "03e20ec8991ea139266bf905c67ec0c9b1a01e449b607fb68a43d74058267687"
+    },
+    {
+      "group": "catalog",
+      "case": "public-internal-skip",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "121fa42bf53cf4c5f727ff0f6996ed864008dd5a9d8b1380918a0ec246cd4a0c"
+    },
+    {
+      "group": "catalog",
+      "case": "actual-two-local-definitions",
+      "passed": true
+    },
+    {
+      "group": "catalog",
+      "case": "actual-internal-public-pass",
+      "passed": true
+    },
+    {
+      "group": "catalog",
+      "case": "live-package-check-failure",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "a9e396bdd327a0eb65c6e0d5312eb2634c9bb6ae352d16095139f81e80d31dec"
+    },
+    {
+      "group": "catalog",
+      "case": "actual-package-failure",
+      "passed": true
+    },
+    {
+      "group": "setup",
+      "case": "empty-defaults",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "bc17ff61d4280e898f1688cacfe9327f31b8b5b51b0bdcfdd6dd5ae062529564"
+    },
+    {
+      "group": "setup",
+      "case": "proposal-and-markdown",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "b80bc8fcf531b92744068d3d86a8c19fff1d51ea8d2777bd931cf63be6c8f2ce"
+    },
+    {
+      "group": "setup",
+      "case": "borrowed-model-aliases",
+      "passed": true
+    },
+    {
+      "group": "setup",
+      "case": "actual-bool-truthiness",
+      "passed": true
+    },
+    {
+      "group": "setup",
+      "case": "native-invalid-mode",
+      "passed": true,
+      "exception": "SystemExit",
+      "observation_sha256": "1b17ec1ecb00f9890c3e7258e6ef47247b9af83e4071760fb84117395b72ebf2"
+    },
+    {
+      "group": "setup",
+      "case": "guard-and-list-coercion",
+      "passed": true,
+      "exception": null,
+      "observation_sha256": "ac1ef168ddba2df46db7dd73164ac8910ed506a2852ce1e650a8dfc41f083dca"
+    },
+    {
+      "group": "composition",
+      "case": "canonical-newline-callback",
+      "passed": true
+    },
+    {
+      "group": "composition",
+      "case": "canonical-yaml-callback",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "source-transport-import-only",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "3c388f1570c710c69f633b95b66128ae0f446eaecd37a81054b5eba76b1f7d33",
+    "src/processforge_core/composition.py": "4a4e063a6c5f5516b81a9d96e804f81bb0202050125ff24c1c00699e009d2d93",
+    "docs/concepts/python-core-structure.md": "6828d98c57ffbe864b0c878c7778346f555607ac843bef5d0e5a42128ab062d9",
+    "docs/ru/concepts/python-core-structure.md": "eae81c89c3d6b6aa9d66fe627dab6d5fc6ead85c5b1c9b6316e9e92b4bdca063",
+    "src/processforge_core/project/platform_documents.py": "1f0dd57c6ca9401dddce565cc70529854601b255e732ce89270bf40950018fa3",
+    "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+    "src/processforge_core/process_execution.py": "306ae8189b52848d16a25c7c14ab64aa4d11c86ca0d320bfafa9e26db1776feb",
+    "tools/pf_runtime/host.py": "2eef665adbbcdd4c9a44619f1e2c33e8021b80c31d1beb9b8276da5fcca2b42b",
+    "tools/pf_runtime/service.py": "f14db0028a1d906229ec6dafa6e3afa0df647ff6d13f5052329e7a0b1ce531b5",
+    "tools/smoke_core_work_state.py": "e2f18af9c26e92d5b4258623e7ac812666034725ebc89f52499b8d3b7716a3bf",
+    "src/processforge_core/project/registry_checks.py": "4cd1296407a6f9ddac562e3fa3a7d08c41307dfac92e93ef6c6a13ac327fea82",
+    "src/processforge_core/common/text.py": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+    "src/processforge_core/process_catalog/audit.py": "7173ef568a94dfcb6e98d20eee7b54b6f3dc9dda35087455687e98eef2f7bd23",
+    "src/processforge_core/process_catalog/service.py": "2eb9778ed34e979101e5a4690ba3ae92d8b86eb19968bc65b249100b51fd2d73",
+    "src/processforge_core/project/setup.py": "c8df974090b2d40cd2024cfb0474784ed1f898064a5939aa716fce4285376616"
+  },
+  "scope": "Bounded actual default/copy Core, byte-exact builders/legacy YAML, live registry/catalog checks, aliases and canonical cold formatter callbacks. Short source transport imports only; no Runtime start, archive, install, connected-host or ZIP qualification."
+}

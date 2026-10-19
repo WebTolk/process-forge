@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from . import RUNTIME_PROTOCOL_VERSION
+from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from .provider_adapters import AdapterRegistry, WorkerBinding, worker_input_summary
 from .builtin_provider_adapters import DEFAULT_ADAPTER_REGISTRY
 from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministic_derived_key
@@ -1300,7 +1301,7 @@ def project_for_session(args: argparse.Namespace, workplace_root: Path, core: An
 def command_project_state(args: argparse.Namespace, core: Any) -> int:
     workplace_root = resolve_workplace(args, None, core)
     payload = project_state_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return 0
 
 
@@ -1351,7 +1352,7 @@ def active_execution_records(project_root: Path, core: Any) -> list[dict[str, An
 def command_work_state(args: argparse.Namespace, core: Any) -> int:
     workplace_root = resolve_workplace(args, None, core)
     payload = work_state_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return 0
 
 
@@ -1422,7 +1423,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
 def command_resolve(args: argparse.Namespace, core: Any) -> int:
     workplace_root = resolve_workplace(args, None, core)
     payload = resolve_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return 0
 
 
@@ -1459,7 +1460,7 @@ def command_tick(args: argparse.Namespace, core: Any) -> int:
         raise SystemExit("FAIL: runtime-host tick requires at least one --project-root")
     workplace_root = resolve_workplace(args, project_roots[0], core)
     payload, status = tick_payload(workplace_root, project_roots, core, director=getattr(args, "director", False), inspector=getattr(args, "inspector", False), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None), wait_ttl=getattr(args, "wait_ttl", 3600), lease_ttl=getattr(args, "lease_ttl", 3600))
-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
     return status
 
 
@@ -1519,7 +1520,7 @@ def command_rebuild_projections(args: argparse.Namespace, core: Any) -> int:
         }
         for project_root in project_roots
     ]
-    print(json.dumps({"projections": outputs}, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml({"projections": outputs}))
+    print(json.dumps({"projections": outputs}, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml({"projections": outputs}))
     return 0
 
 

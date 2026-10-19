@@ -1,0 +1,24 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-builders-20261018/review/report.md",
+  "review_sha256": "572a035d62e56bd9cc86a3901e0df7de93bfd4f9eb56cd209e59ad0328335441",
+  "product_sha256": {
+    "tools/processforge.py": "3c388f1570c710c69f633b95b66128ae0f446eaecd37a81054b5eba76b1f7d33",
+    "src/processforge_core/composition.py": "4a4e063a6c5f5516b81a9d96e804f81bb0202050125ff24c1c00699e009d2d93",
+    "docs/concepts/python-core-structure.md": "6828d98c57ffbe864b0c878c7778346f555607ac843bef5d0e5a42128ab062d9",
+    "docs/ru/concepts/python-core-structure.md": "eae81c89c3d6b6aa9d66fe627dab6d5fc6ead85c5b1c9b6316e9e92b4bdca063",
+    "src/processforge_core/project/platform_documents.py": "1f0dd57c6ca9401dddce565cc70529854601b255e732ce89270bf40950018fa3",
+    "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+    "src/processforge_core/process_execution.py": "306ae8189b52848d16a25c7c14ab64aa4d11c86ca0d320bfafa9e26db1776feb",
+    "tools/pf_runtime/host.py": "2eef665adbbcdd4c9a44619f1e2c33e8021b80c31d1beb9b8276da5fcca2b42b",
+    "tools/pf_runtime/service.py": "f14db0028a1d906229ec6dafa6e3afa0df647ff6d13f5052329e7a0b1ce531b5",
+    "tools/smoke_core_work_state.py": "e2f18af9c26e92d5b4258623e7ac812666034725ebc89f52499b8d3b7716a3bf",
+    "src/processforge_core/project/registry_checks.py": "4cd1296407a6f9ddac562e3fa3a7d08c41307dfac92e93ef6c6a13ac327fea82",
+    "src/processforge_core/common/text.py": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+    "src/processforge_core/process_catalog/audit.py": "7173ef568a94dfcb6e98d20eee7b54b6f3dc9dda35087455687e98eef2f7bd23",
+    "src/processforge_core/process_catalog/service.py": "2eb9778ed34e979101e5a4690ba3ae92d8b86eb19968bc65b249100b51fd2d73",
+    "src/processforge_core/project/setup.py": "c8df974090b2d40cd2024cfb0474784ed1f898064a5939aa716fce4285376616",
+    "checksums/processforge.sha256": "53bc2b4b015f40ca90d30266a18b274077655e688e121749d0dc9231a392fbb5"
+  },
+  "scope": "Accepted final source only. No archive/install/Runtime/connected-host/ZIP acceptance; OOP epics remain open."
+}

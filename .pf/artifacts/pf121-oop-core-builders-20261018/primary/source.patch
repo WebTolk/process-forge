@@ -1,0 +1,1691 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index d38557d..b7c4e47 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-b65578acbc5ea55fbd3fff10b87eff301613c1cd40aaa9db5c7164d9b6b947b5  docs/concepts/python-core-structure.md
++6828d98c57ffbe864b0c878c7778346f555607ac843bef5d0e5a42128ab062d9  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-000fde0ca6fe615ac57e82ae3c2eaecc35e1696a0678fa963acde2efc273e2e4  docs/ru/concepts/python-core-structure.md
++eae81c89c3d6b6aa9d66fe627dab6d5fc6ead85c5b1c9b6316e9e92b4bdca063  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -683,7 +683,9 @@ ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processfor
+ d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074  src/processforge_core/common/privacy.py
+ e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2  src/processforge_core/common/record_validation.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
++2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576  src/processforge_core/common/text.py
+ 26c0d3e47ca6b6fcf99d54e3fd6b187799292c34663ac03d392887c657849984  src/processforge_core/common/values.py
++88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752  src/processforge_core/common/yaml_dump.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+ 85105a5f90b9a60f7cf8b9049f17a54f0b5937cb265425924e415fa9fb8cd33a  src/processforge_core/completion/__init__.py
+ 539739a814d91e34a0d7a0c273b89507a3ed8b030973372f482872d926dbcc22  src/processforge_core/completion/documents.py
+@@ -693,7 +695,7 @@ e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2  src/processfor
+ 1ea78d2d918806c057514f408777eea274e527354562f34cc0cf9cc52e2e9013  src/processforge_core/completion/intent_validation.py
+ 1ee8d4f51e4b6d150a44a4063e05862b5d1d6e93d6a157fc2708e909533e2418  src/processforge_core/completion/policy.py
+ 8b8f13f8bf9b7d0971437d478b6266ececf3b0c4b0d3761397dfb01924a18849  src/processforge_core/completion/request.py
+-28ad30ff60291dae3433883149ef9c2427e53c785b5d377fd311c1fe0b5a522f  src/processforge_core/composition.py
++4a4e063a6c5f5516b81a9d96e804f81bb0202050125ff24c1c00699e009d2d93  src/processforge_core/composition.py
+ d9550009cfb927ecbc8fa20ae073e55ad230a732ee64ea7dfff652c8965fe52f  src/processforge_core/configuration/__init__.py
+ 053e94532d7d10a71dde9d3d6b820f804acc1492578b46634f5000799795f78e  src/processforge_core/configuration/errors.py
+ 18611e13c365e5988a486ea0f26595b40c1b84d3ab2e27bcb434e7d7fc33cd11  src/processforge_core/configuration/models.py
+@@ -748,6 +750,7 @@ f9cb908c5a31295837d2782865a9eae6835f873710ab74d0480f9b8b7c06762d  src/processfor
+ 8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1  src/processforge_core/presentation/process_parity.py
+ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processforge_core/process_catalog/__init__.py
+ 3c12bf127fc08105bddc2332cd6c21f8ad2118ef2af479948f211f101f9b7bd3  src/processforge_core/process_catalog/artifacts.py
++7173ef568a94dfcb6e98d20eee7b54b6f3dc9dda35087455687e98eef2f7bd23  src/processforge_core/process_catalog/audit.py
+ 99abdb6ba983f6f77f1b7a22d3ca9b3267c26af1f1620cf8716d9a50af5125a2  src/processforge_core/process_catalog/authoring.py
+ 80dd26391dfd5af0b62a7fd0e2062af32d6245b2b8c4e75ac9e971ae6e8b1cad  src/processforge_core/process_catalog/catalog_read.py
+ 41fc9fa82ad08ad84301be5045d5bcbd8066cfddc7d7f20b37426343246c405a  src/processforge_core/process_catalog/contracts.py
+@@ -762,11 +765,11 @@ d7825e9222392321ad8e4e1991e215c97a632f10d3674f9071000f6109669527  src/processfor
+ 86181af17ac7022f774f68cd69a8184cc8018d80ecf03b78d23c24be3551b3ab  src/processforge_core/process_catalog/routes.py
+ 6252712fe29c7cde1134d48db54ca1c635ba609fddc162c12c6babb8236c2920  src/processforge_core/process_catalog/selection.py
+ c9626a4cee3780476ed24151926ec22521b7f615e8b8e0a97367d84ed75717f2  src/processforge_core/process_catalog/semantics.py
+-06bef2a6f14e9ad5fbf40028b0f69f9c92bae9fcc73a52717c98d2421721aae2  src/processforge_core/process_catalog/service.py
++2eb9778ed34e979101e5a4690ba3ae92d8b86eb19968bc65b249100b51fd2d73  src/processforge_core/process_catalog/service.py
+ 8c0c440625809b5b4211e21de80eaa3ee8221b7053c4df76df2b2f0824ed78e1  src/processforge_core/process_catalog/summary.py
+ 7e4b5fb31934d4bd22c015f563e2e6c29b62b20b5373caace2c23ff767246616  src/processforge_core/process_catalog/validation.py
+ 441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1  src/processforge_core/process_event_journal.py
+-d01a20db07657672540855ce55743651d52691f20a67a7b61307a45685d6da3c  src/processforge_core/process_execution.py
++6793d325564118daad0875c0f0a2e494d2181571535920274be01d99ef017f1a  src/processforge_core/process_execution.py
+ 80890b5341eba46b6730e15c4ed0a31438a8e0b7e31af11ecaf9a695b23d5ecb  src/processforge_core/project/__init__.py
+ c015f45b82159e64d8ac55ef9bcd78684563f7884f7a265e3ef5f680a4cf8806  src/processforge_core/project/capability_registry.py
+ ea4d6ab14135eced28d1b76cf8b37708d25e09d670be39457bfc4a24eca69892  src/processforge_core/project/classification.py
+@@ -783,15 +786,18 @@ ae664b3fac858723a91f41b5795d20447bc965ef24a6dd4ae625520db27d650d  src/processfor
+ ca249dfd6b769f07f02b4f26661e9f822af60d64679b0ba9f1a707687447f121  src/processforge_core/project/knowledge_selection.py
+ dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e  src/processforge_core/project/metadata.py
+ 9f87f464f366b7c8f3f680145e0c8f20b6d7c9af3d4ef1fc7c5319302a604f55  src/processforge_core/project/mode.py
++1f0dd57c6ca9401dddce565cc70529854601b255e732ce89270bf40950018fa3  src/processforge_core/project/platform_documents.py
+ e2beaf9cc56934140ad1b653eedb1e8b0a8dd96447ae7c8db489ceb417fcc29e  src/processforge_core/project/platform_policy.py
+ 5879d79c68a77102033551c6842502721bd05bac556f65c2818b91a2bd78ddda  src/processforge_core/project/platform_resolution.py
+ ace870c7f64d1a77e11e5f1cf8f6d737a93d8bcda8926f49655011f042f99887  src/processforge_core/project/platform_selection.py
+ b28771560b3efdfdf5bfcac5bcb154fea5a5a7f5504d4a32970b028af9ad31c9  src/processforge_core/project/platforms.py
+ 7c55ccadd9156a08b9afd83c525e3b8178cd9a81a0f352b30969e20ef2f2d24d  src/processforge_core/project/readiness.py
+ 8996b55c64966e6bc808d3dac89fa2d3aa58ec0050f50455c2e31a0ca7d4bca2  src/processforge_core/project/reconciliation.py
++4cd1296407a6f9ddac562e3fa3a7d08c41307dfac92e93ef6c6a13ac327fea82  src/processforge_core/project/registry_checks.py
+ f0b95163dad744983bd1a4a3d912a458aea619c358780d2bd1d757d870d9aaf9  src/processforge_core/project/reports.py
+ a525381e85a1b2a51bb48fb73f5438b74965861dee84f3ff2489e724dcf0ecb5  src/processforge_core/project/resolved_comparison.py
+ 1d41cb83175edd5843e7cc276c33d8970a33547e8e6907972274b7973a417292  src/processforge_core/project/resource_snapshot.py
++c8df974090b2d40cd2024cfb0474784ed1f898064a5939aa716fce4285376616  src/processforge_core/project/setup.py
+ de067fb47a624cb21f983fb187f332763a4d74693b0660791481544b0f4f3b61  src/processforge_core/project/snapshot.py
+ 244872ac115cf8bb035e3644544c61956fb93bed9052a7b13fca3e10972ac484  src/processforge_core/project/snapshot_rendering.py
+ 6122d4cf4bc7d5ac53f7c6d5fd7567d406ee8ff351c48931f27ffa5b2b8b0c54  src/processforge_core/project/snapshot_sources.py
+@@ -1020,18 +1026,18 @@ abf554dad66d83c4aa2c8d7077873256b61c90ff76d5ba822fe7c9ea6f26bb01  tools/pf_runti
+ c88b77c7560a938cb4f264ccf098aa796c93485e9bc85a2818125d514edc40ee  tools/pf_runtime/codex_hooks.py
+ 1b1dfafaba990964d71f6741206d1b1b3cec873ad5b7fa372eeb2fdea39ae7b6  tools/pf_runtime/codex_integration.py
+ 9fc01f05c2fd365adfb4bb10479c45704ee570b4ae6e4331f637ded4fb2e564e  tools/pf_runtime/codex_mcp.py
+-190e02f53add51ee622880b4d21514d0dfaf5b5b06d861abdf4c02f17567ca7f  tools/pf_runtime/host.py
++1ade8eaffd029c953ea0bdec8be447ce76b1c4e815951693263e13965b220197  tools/pf_runtime/host.py
+ bad15ce0a1e82773b5de636b1bc49aceeabfb95f3b242113011ff269e771debf  tools/pf_runtime/mcp_server.py
+ 3e8104bc7f7202543db58ca830c0b49507eff5815ff8a57b6c8fbc2713ce1ec6  tools/pf_runtime/monitor.py
+ 6b04880e06be71e362dead8bca901f70b89993140ab7cb1a5021158ee6ad8ac0  tools/pf_runtime/provider_adapters.py
+ 34f81196111750141c654c9a74aaf5a7caadb58117996c19db3fa61e426d9720  tools/pf_runtime/raw_ingress_kernel.py
+-f2e3744417b90e26c98534318e164de6ed1c039f1eebfd3ada818e92e5871daf  tools/pf_runtime/service.py
++f14db0028a1d906229ec6dafa6e3afa0df647ff6d13f5052329e7a0b1ce531b5  tools/pf_runtime/service.py
+ 2748a081777676d81150b3e3fc4ad60afaba5cd481a4950795441418dabc00ea  tools/pf_runtime/session_read.py
+ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runtime/session_replay.py
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-90fe3fe77a2e3fa937ab0f0976a21e8c8c76a47b7992cd7db68334359d96f71c  tools/processforge.py
++cef407df043a48177716779d4e3c9229b1b96b1170a727786f2ba5674ff23b05  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+@@ -1080,7 +1086,7 @@ cd225a1bfe0f33ebf327cdb94de63bc897b7976749d243e037aeaac6f9b08963  tools/smoke_co
+ 50a0a1e93fe3129d80abc7e680a7f5a736d55ec5948d998e8f3a4a5fcdeae1b7  tools/smoke_core_update_manifest.py
+ 2694c57b673e1c9f61ce1b754b4ebe1dccad45615c88d2810e9f2d98a15d5fc2  tools/smoke_core_update_migration_sources.py
+ c0594cf0c9e68646799fbb4595b04f8cdf967ffbeb478b6bbb38e64ee196fa0e  tools/smoke_core_update_missing_owned.py
+-3017914896105f07555488088df39d537b6b5baaf40a695e9da36eed83b3cb07  tools/smoke_core_work_state.py
++b04e33b0607845f3206f94c4c7b4db3685f1dfe275981bbb762f04f3ae24ce32  tools/smoke_core_work_state.py
+ 7b28ec363c587ad222e7d8b2035943dc6ba19eb25658837a15c72f07d04d6ab7  tools/smoke_current_work_ignores_bootstrap_placeholder.py
+ cc2515e364dde4dc5c87b8dc883dd513f66e413bc3193d6fbfc80846d14fc60b  tools/smoke_delivery_profile_not_process.py
+ 18fb000dd539edda1059885a90d86c81443f17fcb6ef8051801d78bbb3f6b746  tools/smoke_derived_report_stale_marking.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index 30ada61..04a77f0 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -98,6 +98,12 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/process_catalog/routes.py` | Current route lookup, validation and required role. |
+ | `src/processforge_core/process_catalog/handoffs.py` | Handoff directory/path and soft document read. |
+ | `src/processforge_core/maintenance/validation.py` | Existing update override and normalized-manifest checks. |
++| `src/processforge_core/project/platform_documents.py` | Existing platform document model/byte construction. |
++| `src/processforge_core/project/registry_checks.py` | Current registry paths and package-root validation. |
++| `src/processforge_core/common/text.py` | Canonical trailing newline and diagnostic hint formatting. |
++| `src/processforge_core/common/yaml_dump.py` | Exact existing YAML scalar and recursive serialization. |
++| `src/processforge_core/process_catalog/audit.py` | Existing ordered builtin process catalog report and flat package index. |
++| `src/processforge_core/project/setup.py` | Existing workplace setup proposal mapping and Markdown. |
+ | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
+ | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
+ | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
+@@ -931,3 +937,40 @@ also owns the distinct installed-version projection; UpdateDocumentReader also
+ owns staged-record location/soft reading. Existing reader constructors and
+ previous methods are unchanged. Discovery, writes, installation, artifact I/O,
+ network and timestamp generation retain their earlier owners.
++
++## Platform document building, registry checks and catalog audit
++
++`project.platform_documents.PlatformDocumentBuilder` owns the existing platform
++document path/byte/note list construction. It preserves every YAML and Markdown
++literal, output order and native lookup failure; it returns data without writing
++files. Full platform authoring preflight/publication and semantic validation
++retain their earlier owners.
++
++`project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
++owns current registry path checks and package-root checks through the existing
++WorkspacePathReferenceReader, ContextContractInputs and ProjectPackageCatalogReader.
++Actual workplace roots are operation-local. Alias/default/status/writable rules,
++duplicates, current filesystem observations and warning/check order are unchanged.
++`common.yaml_dump` owns the exact existing format_scalar and recursive dump_yaml;
++all actual Main/Runtime/process-execution formatter consumers use that owner.
++The zero-argument yaml_formatter provider and one-argument formatting callbacks
++retain their earlier shapes. No serializer replacement or Runtime start is added.
++`common.text` owns the original ensure_trailing_newline and check_with_hint
++functions. Capsule publication composition calls the canonical newline and YAML
++formatters from the same one-argument callbacks; the other legacy dependencies stay with
++their existing owners. No publication or failure timing is changed.
++
++`process_catalog.audit.BuiltinProcessCatalogAuditService(distribution_root)` owns
++the ordered builtin catalog report using a per-operation concrete catalog reader,
++contract/authoring/artifact policies and canonical metadata functions. The flat
++sorted root/packages/*.yaml index remains distinct from the broader project
++package index. Public internal skips, official companion roots, counts, repeated
++observations and warning concatenation retain their earlier semantics.
++The pure process_catalog_contexts projection lives in existing service.py;
++all its prior definitions/data remain unchanged.
++
++`project.setup.WorkplaceSetupProposalBuilder` owns the existing setup proposal
++mapping and Markdown using ProjectCoordinationReader. Defaults, literal path
++placeholders, list coercions, borrowed fields, ordering and invalid-mode refusals
++are preserved. Constructors perform no I/O; actual setup/registry writes,
++transactions, locks, recovery and later delivery layers retain their owners.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index 5ef0d0d..045bf2b 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -103,6 +103,12 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/process_catalog/routes.py` | Текущий поиск маршрута, проверка и требуемая роль. |
+ | `src/processforge_core/process_catalog/handoffs.py` | Каталог, путь и мягкое чтение handoff. |
+ | `src/processforge_core/maintenance/validation.py` | Прежние проверки overrides и нормализованного манифеста обновлений. |
++| `src/processforge_core/project/platform_documents.py` | Прежнее построение модели и байтов документов платформы. |
++| `src/processforge_core/project/registry_checks.py` | Текущая проверка путей реестров и корней пакетов. |
++| `src/processforge_core/common/text.py` | Прежние завершающая строка и оформление подсказок. |
++| `src/processforge_core/common/yaml_dump.py` | Точная прежняя сериализация скаляров и рекурсивного YAML. |
++| `src/processforge_core/process_catalog/audit.py` | Прежний отчёт каталога процессов и плоский индекс пакетов. |
++| `src/processforge_core/project/setup.py` | Прежние модель предложения настройки workplace и Markdown. |
+ | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
+ | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
+ | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
+@@ -945,3 +951,40 @@ UpdateRegistryReader также владеет отдельной проекци
+ UpdateDocumentReader — путём и мягким чтением staged record. Конструкторы
+ и все прежние методы читателей сохранены. Поиск, запись, установка, ввод-вывод
+ артефактов, сеть и получение времени остаются у прежних владельцев.
++
++## Документы платформ, проверки реестров и аудит каталога
++
++`project.platform_documents.PlatformDocumentBuilder` владеет прежним построением
++списка путей, байтов и заметок документов платформы. Литералы YAML и Markdown,
++порядок результатов и исходные ошибки обращений сохранены; метод возвращает
++данные и не записывает файлы. Полный preflight/publication авторинга платформ
++и семантическая проверка сохраняют действующих владельцев.
++
++`project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
++владеет текущими проверками путей реестров и корней пакетов через готовые
++WorkspacePathReferenceReader, ContextContractInputs и ProjectPackageCatalogReader.
++Фактический workplace передаётся на операцию. Правила aliases/default/status/
++writable, дубликаты, наблюдения файлов и порядок предупреждений сохранены.
++`common.yaml_dump` владеет точными прежними format_scalar и рекурсивным dump_yaml;
++все фактические потребители Main/Runtime/process execution используют этого владельца.
++Фабрика yaml_formatter без аргументов и callback форматирования с одним аргументом
++сохраняют прежнюю форму. Сериализатор не подменяется, Runtime не запускается.
++`common.text` владеет прежними ensure_trailing_newline и check_with_hint.
++Сборка публикации капсулы вызывает канонические newline/YAML formatters из тех же
++callback с одним аргументом; остальные legacy-зависимости сохраняют владельцев. Порядок публикации
++и ошибок не меняется.
++
++`process_catalog.audit.BuiltinProcessCatalogAuditService(distribution_root)`
++владеет упорядоченным отчётом builtin catalog через конкретный читатель каталога
++на операцию, contract/authoring/artifact policies и канонические metadata.
++Плоский отсортированный индекс root/packages/*.yaml сохраняет отличие от полного
++индекса пакетов проекта. Пропуск internal в public-режиме, official companion roots,
++счётчики, повторные наблюдения и объединение предупреждений прежние.
++Чистая проекция process_catalog_contexts находится в существующем service.py;
++все его прежние определения и данные сохранены.
++
++`project.setup.WorkplaceSetupProposalBuilder` владеет прежним словарём предложения
++настройки и Markdown через ProjectCoordinationReader. Defaults, path placeholders,
++преобразование списков, ссылки на поля, порядок и отказы неверного режима сохранены.
++Конструкторы не выполняют ввод-вывод. Настройка и запись реестров, транзакции,
++блокировки, recovery и последующие слои приёмки сохраняют действующих владельцев.
+diff --git a/src/processforge_core/common/text.py b/src/processforge_core/common/text.py
+new file mode 100644
+index 0000000..133faf8
+--- /dev/null
++++ b/src/processforge_core/common/text.py
+@@ -0,0 +1,18 @@
++"""Shared text formatting with existing newline and check hint semantics."""
++
++from __future__ import annotations
++
++from .checks import Check, check
++
++
++def ensure_trailing_newline(text: str) -> str:
++    return text if text.endswith("\n") else text + "\n"
++
++
++def check_with_hint(level: str, message: str, why: str, fix: str, alternative: str | None = None) -> Check:
++    details = [message, "", "Why:", f"  {why}", "", "Fix:"]
++    details.extend(f"  {line}" if line else "" for line in fix.splitlines())
++    if alternative:
++        details.extend(["", "Or:"])
++        details.extend(f"  {line}" if line else "" for line in alternative.splitlines())
++    return check(level, "\n".join(details))
+diff --git a/src/processforge_core/common/yaml_dump.py b/src/processforge_core/common/yaml_dump.py
+new file mode 100644
+index 0000000..5cf324e
+--- /dev/null
++++ b/src/processforge_core/common/yaml_dump.py
+@@ -0,0 +1,57 @@
++"""Existing standalone YAML scalar formatting and recursive serialization."""
++
++from __future__ import annotations
++
++from typing import Any
++
++
++def format_scalar(value: Any) -> str:
++    if value is True:
++        return "true"
++    if value is False:
++        return "false"
++    if value is None:
++        return "null"
++    if isinstance(value, (int, float)):
++        return str(value)
++    text = str(value)
++    if text == "":
++        return '""'
++    yaml_literals = {"*", "null", "true", "false", "yes", "no", "on", "off", "~"}
++    special_start = ("-", "?", "&", "*", "!", "%", "@", "`", ">", "|")
++    if (
++        text.lower() in yaml_literals
++        or text.startswith(special_start)
++        or any(char in text for char in [":", "#", "{", "}", "[", "]", "\\"])
++        or text.strip() != text
++    ):
++        return "'" + text.replace("'", "''") + "'"
++    return text
++
++def dump_yaml(data: Any, indent: int = 0) -> str:
++    lines: list[str] = []
++    prefix = " " * indent
++    if isinstance(data, dict):
++        if not data:
++            lines.append(f"{prefix}{{}}")
++        for key, value in data.items():
++            if isinstance(value, (dict, list)):
++                lines.append(f"{prefix}{key}:")
++                lines.append(dump_yaml(value, indent + 2))
++            else:
++                lines.append(f"{prefix}{key}: {format_scalar(value)}")
++    elif isinstance(data, list):
++        if not data:
++            lines.append(f"{prefix}[]")
++        for item in data:
++            if isinstance(item, dict):
++                lines.append(f"{prefix}-")
++                lines.append(dump_yaml(item, indent + 2))
++            elif isinstance(item, list):
++                lines.append(f"{prefix}-")
++                lines.append(dump_yaml(item, indent + 2))
++            else:
++                lines.append(f"{prefix}- {format_scalar(item)}")
++    else:
++        lines.append(f"{prefix}{format_scalar(data)}")
++    return "\n".join(lines)
+diff --git a/src/processforge_core/composition.py b/src/processforge_core/composition.py
+index 3cf9e9e..8dbb785 100644
+--- a/src/processforge_core/composition.py
++++ b/src/processforge_core/composition.py
+@@ -2,6 +2,9 @@
+ 
+ from __future__ import annotations
+ 
++from .common.text import ensure_trailing_newline
++from .common.yaml_dump import dump_yaml
++
+ from dataclasses import dataclass
+ from pathlib import Path
+ import re
+@@ -515,8 +518,8 @@ def build_assignment_capsule_publisher(
+         snapshot_reader=lambda: service._snapshot_reader(),
+         build_context_fields=context_fields,
+         now_utc=lambda: service.core.now_utc(),
+-        dump_yaml=lambda value: service.core.dump_yaml(value),
+-        ensure_trailing_newline=lambda text: service.core.ensure_trailing_newline(text),
++        dump_yaml=lambda value: dump_yaml(value),
++        ensure_trailing_newline=lambda text: ensure_trailing_newline(text),
+         relative_path=lambda path, root: service.core.rel(path, root),
+         sha256_file=lambda path: service._sha256_file(path),
+         stable_ids=stable_ids,
+diff --git a/src/processforge_core/process_catalog/audit.py b/src/processforge_core/process_catalog/audit.py
+new file mode 100644
+index 0000000..3d412b1
+--- /dev/null
++++ b/src/processforge_core/process_catalog/audit.py
+@@ -0,0 +1,127 @@
++"""Audit the built-in process catalog through concrete Core owners."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from processforge_core.common.checks import Check, check
++from processforge_core.common.paths import rel
++from processforge_core.common.values import string_list
++from processforge_core.common.yaml_io import _parse_simple_yaml, yaml_error
++from processforge_core.documents.reader import YamlDocumentReader
++
++from .artifacts import ProcessArtifactDeclarationPolicy
++from .catalog_read import ProcessCatalogReadService
++from .contracts import ProcessContractValidationService
++from .service import process_catalog_contexts, process_catalog_metadata, process_is_public_stable
++from .validation import ProcessAuthoringValidationService
++
++
++class BuiltinProcessCatalogAuditService:
++    """Own the existing ordered catalog report and flat package index."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.distribution_root = distribution_root
++        self.documents = YamlDocumentReader(_parse_simple_yaml)
++        self.contracts = ProcessContractValidationService(distribution_root)
++        self.authoring = ProcessAuthoringValidationService()
++        self.artifacts = ProcessArtifactDeclarationPolicy()
++
++    def report(self, root: Path, *, public: bool = False) -> dict[str, Any]:
++        process_items = ProcessCatalogReadService(root, distribution_root=self.distribution_root).entries(strict=True)
++        process_ids = {entry.process_id for entry in process_items}
++        packages = self.package_index(root)
++        rows: list[dict[str, Any]] = []
++        summary: dict[str, int] = {
++            "processes": 0,
++            "public_stable": 0,
++            "public_experimental": 0,
++            "internal": 0,
++            "fail": 0,
++            "warn": 0,
++            "pass": 0,
++        }
++        checks: list[Check] = []
++        for entry in process_items:
++            process_id = entry.process_id
++            path = entry.path
++            process = entry.process
++            meta = process_catalog_metadata(process)
++            if public and meta["classification"] == "INTERNAL_MAINTENANCE":
++                strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
++            else:
++                strict_checks = self.contracts.validate(
++                    root,
++                    process,
++                    path,
++                    strict=process_is_public_stable(process),
++                    companion_root=entry.root if entry.origin == "official" else root,
++                )
++            failures = [item.message for item in strict_checks if item.level == "FAIL"]
++            warnings = [item.message for item in strict_checks if item.level == "WARN"]
++            checks.extend(strict_checks)
++            if meta["classification"] == "PUBLIC_STABLE":
++                summary["public_stable"] += 1
++            elif meta["classification"] == "PUBLIC_EXPERIMENTAL":
++                summary["public_experimental"] += 1
++            elif meta["classification"] == "INTERNAL_MAINTENANCE":
++                summary["internal"] += 1
++            summary["processes"] += 1
++            summary["fail"] += len(failures)
++            summary["warn"] += len(warnings)
++            if not failures:
++                summary["pass"] += 1
++            process_pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
++            package_id = str(process_pack.get("package") or (string_list(process.get("required_packages"))[0] if string_list(process.get("required_packages")) else ""))
++            companions = self.authoring.paths(entry.root if entry.origin == "official" else root, process_id)
++            rows.append(
++                {
++                    "id": process_id,
++                    "path": rel(path, root),
++                    "origin": entry.origin,
++                    "root": rel(entry.root, root),
++                    "catalog_role": entry.catalog_role,
++                    "status": process.get("status"),
++                    "classification": meta["classification"],
++                    "public_surface": meta["public_surface"],
++                    "package": package_id,
++                    "execution_mode": process.get("execution_mode"),
++                    "coordination_mode": (process.get("coordination_requirements") or {}).get("mode") if isinstance(process.get("coordination_requirements"), dict) else None,
++                    "error_handling": (process.get("error_handling") or {}).get("mode") if isinstance(process.get("error_handling"), dict) else None,
++                    "has_prompt": companions["prompt"].is_file(),
++                    "has_process_doc": companions["doc"].is_file(),
++                    "has_authoring_example": companions["example"].is_file(),
++                    "artifact_definitions_complete": not (self.artifacts.produced_ids(process) - self.artifacts.declared_ids(process)),
++                    "stage_artifacts_declared": not (self.artifacts.produced_ids(process) - self.artifacts.declared_ids(process)),
++                    "gates_valid": not any("gates valid:" in item.message and item.level == "FAIL" for item in strict_checks),
++                    "handoff_semantics": "process_transition" if process.get("process_transitions") else ("run_summary" if process.get("run_completion") else ("stage_note" if process.get("stage_completion") else "none")),
++                    "doctor_contexts": process_catalog_contexts(process),
++                    "result": "fail" if failures else ("warn" if warnings else "pass"),
++                    "failures": failures,
++                    "warnings": warnings + entry.warnings,
++                }
++            )
++
++        for package_id, item in packages.items():
++            package_data = item["data"]
++            for process_id in item["processes"]:
++                checks.append(check("PASS" if process_id in process_ids else "FAIL", f"package {package_id} process id exists: {process_id}"))
++            stable_exposed = set(string_list(package_data.get("stable_processes")))
++            for process_id in stable_exposed:
++                process = next((entry.process for entry in process_items if entry.process_id == process_id), {})
++                checks.append(check("PASS" if process_is_public_stable(process) else "FAIL", f"package {package_id} stable process is public stable: {process_id}"))
++
++        package_failures = [item.message for item in checks if item.level == "FAIL" and item.message.startswith("package ")]
++        summary["fail"] += len(package_failures)
++        return {"schema_version": 1, "summary": summary, "processes": rows, "checks": [{"level": item.level, "message": item.message} for item in checks]}
++
++    def package_index(self, root: Path) -> dict[str, dict[str, Any]]:
++        index: dict[str, dict[str, Any]] = {}
++        for path in sorted((root / "packages").glob("*.yaml")):
++            data = self.documents.load(path)
++            if yaml_error(data) or not isinstance(data, dict):
++                continue
++            package_id = str(data.get("id") or path.stem)
++            index[package_id] = {"path": path, "data": data, "processes": string_list(data.get("processes"))}
++        return index
+diff --git a/src/processforge_core/process_catalog/service.py b/src/processforge_core/process_catalog/service.py
+index a3a564e..ee5f882 100644
+--- a/src/processforge_core/process_catalog/service.py
++++ b/src/processforge_core/process_catalog/service.py
+@@ -338,3 +338,14 @@ def process_definition_exists(context: ProcessCatalogContext, process_id: str) -
+ def process_is_public_stable(process: dict[str, Any]) -> bool:
+     meta = process_catalog_metadata(process)
+     return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
++
++
++def process_catalog_contexts(process: dict[str, Any]) -> dict[str, str]:
++    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
++    mode = str(coordination.get("mode") or "")
++    runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
++    return {
++        "simple": "not_applicable" if mode == "organized_required" else "pass",
++        "organized": "pass",
++        "runtime": "pass" if runtime_requirements.get("supervisor_required") or runtime_requirements.get("runtime_driver_required") else "not_applicable",
++    }
+diff --git a/src/processforge_core/process_execution.py b/src/processforge_core/process_execution.py
+index 316677c..41b67d7 100644
+--- a/src/processforge_core/process_execution.py
++++ b/src/processforge_core/process_execution.py
+@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
+ 
+ from .common.request_scope import safe_load, scoped_request
+ from .common.yaml_io import _parse_simple_yaml
++from .common.yaml_dump import dump_yaml as _canonical_dump_yaml
+ from .documents.reader import YamlDocumentReader
+ from .work.inventory import WorkInventory
+ from .work.state import WorkStatePolicy
+@@ -1030,7 +1031,7 @@ class ProcessExecutionService:
+ 
+         return build_work_document_publisher(
+             text_writer=lambda: self._atomic_text,
+-            yaml_formatter=lambda: self.core.dump_yaml,
++            yaml_formatter=lambda: _canonical_dump_yaml,
+         )
+ 
+     def _atomic_yaml(self, path: Path, value: dict[str, Any]) -> None:
+diff --git a/src/processforge_core/project/platform_documents.py b/src/processforge_core/project/platform_documents.py
+new file mode 100644
+index 0000000..9f07ae5
+--- /dev/null
++++ b/src/processforge_core/project/platform_documents.py
+@@ -0,0 +1,151 @@
++"""Build the existing ordered platform contract document payloads."""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from ..common.text import ensure_trailing_newline
++from ..common.yaml_dump import dump_yaml
++
++
++class PlatformDocumentBuilder:
++    """Construct document values without performing authoring writes."""
++
++    def build(
++        self,
++        target: Path,
++        values: dict[str, Any],
++        contract: dict[str, Any],
++        root_id: str,
++    ) -> list[tuple[Path, bytes, str | None]]:
++        title = values["title"]
++        contract_id = values["contract_id"]
++        documents: list[tuple[Path, bytes, str | None]] = [
++            (
++                target / "platform-contract.yaml",
++                ensure_trailing_newline(dump_yaml(contract)).encode("utf-8"),
++                "platform-contract.schema.json",
++            ),
++            (
++                target / "README.md",
++                ensure_trailing_newline(
++                    f"# {title}\n\nPlatform contract `{contract_id}`."
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "project-types.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "project_type_hints": values["project_types"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "capabilities.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "capabilities": contract["requires"]["capabilities"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "knowledge.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "requires": values["required_packages"],
++                            "recommends": values["recommended_packages"],
++                            "optional": values["optional_packages"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "templates.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "requires": values["required_templates"],
++                            "recommends": values["recommended_templates"],
++                            "optional": values["optional_templates"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "tools.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "requires": values["required_tools"],
++                            "recommends": values["recommended_tools"],
++                            "optional": values["optional_tools"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "mcp.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "requires": values["required_mcp"],
++                            "recommends": values["recommended_mcp"],
++                            "optional": values["optional_mcp"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "processes.yaml",
++                ensure_trailing_newline(
++                    dump_yaml(
++                        {
++                            "schema_version": 1,
++                            "processes": values["processes"],
++                        }
++                    )
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "artifacts" / "platform-contract-authoring-report.md",
++                ensure_trailing_newline(
++                    f"# Platform Contract Authoring Report\n\n- platform: {contract_id}\n- platform_root: {root_id}"
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "reviews" / "platform-contract-authoring-review.md",
++                ensure_trailing_newline(
++                    "# Platform Contract Authoring Review\n\nResult: pass_with_conditions"
++                ).encode("utf-8"),
++                None,
++            ),
++            (
++                target / "handoffs" / "platform-contract-ready-handoff.md",
++                ensure_trailing_newline(
++                    f"# Handoff: platform-create -> project-onboarding\n\nPlatform `{contract_id}` is ready for project type matching."
++                ).encode("utf-8"),
++                None,
++            ),
++        ]
++        return documents
+diff --git a/src/processforge_core/project/registry_checks.py b/src/processforge_core/project/registry_checks.py
+new file mode 100644
+index 0000000..b72428c
+--- /dev/null
++++ b/src/processforge_core/project/registry_checks.py
+@@ -0,0 +1,150 @@
++"""Validate current workplace registry paths through concrete Core readers."""
++
++from __future__ import annotations
++
++from pathlib import Path
++
++from ..common.checks import Check, check
++from ..common.text import check_with_hint
++from ..common.yaml_io import _parse_simple_yaml
++from ..documents.reader import YamlDocumentReader
++from ..resources.project_packages import ProjectPackageCatalogReader
++from ..resources.snapshot import WorkspacePathReferenceReader
++from ..work.context_documents import ContextContractInputs
++
++
++class WorkplaceRegistryValidationService:
++    """Preserve ordered registry diagnostics using current operation roots."""
++
++    def __init__(self, distribution_root: Path) -> None:
++        self.documents = YamlDocumentReader(_parse_simple_yaml)
++        self.inputs = ContextContractInputs(documents=self.documents)
++        self.package_catalog = ProjectPackageCatalogReader(distribution_root)
++
++    def paths(self, workplace_root: Path, workplace_manifest: Path) -> list[Check]:
++        paths = WorkspacePathReferenceReader(
++            workplace_root, workplace_root, workplace_manifest=workplace_manifest,
++            inputs=self.inputs,
++        )
++        checks: list[Check] = []
++        constants = paths.load_workplace_path_constants(workplace_manifest, workplace_root)
++        manifest_data = self.documents.load(workplace_manifest)
++        registries = manifest_data.get("registries", {}) if isinstance(manifest_data.get("registries"), dict) else {}
++        for key, default_name in [
++            ("distributions", "distributions.yaml"),
++            ("platforms", "platforms.yaml"),
++            ("knowledge_roots", "knowledge-roots.yaml"),
++            ("package_roots", "package-roots.yaml"),
++            ("templates", "templates.yaml"),
++            ("tools", "tools.yaml"),
++            ("mcp", "mcp.yaml"),
++            ("process_packs", "process-packs.yaml"),
++        ]:
++            raw_path = str(registries.get(key) or f"registries/{default_name}")
++            resolution = paths.resolve_path_with_constants(raw_path, workplace_root, constants)
++            errors = resolution.get("errors", [])
++            if errors:
++                checks.append(check("FAIL", f"registry {key} path failed: {', '.join(errors)}"))
++            else:
++                path = paths.path_resolution_to_path(resolution)
++                checks.append(check("PASS" if path.is_file() else "FAIL", f"registry {key} resolves to {paths.normalize_path_string(str(path))}"))
++        registry_specs = [
++            ("knowledge-roots.yaml", "knowledge_roots", "path"),
++            ("package-roots.yaml", "package_roots", "path"),
++            ("templates.yaml", "template_roots", "path"),
++            ("tools.yaml", "tools", "command"),
++            ("mcp.yaml", "mcp_servers", "command"),
++        ]
++        for registry_file, collection_key, path_key in registry_specs:
++            registry_path = paths.resolve_registry_path(workplace_manifest, collection_key if collection_key != "mcp_servers" else "mcp", registry_file)
++            if collection_key == "template_roots":
++                registry_path = paths.resolve_registry_path(workplace_manifest, "templates", registry_file)
++            elif collection_key == "tools":
++                registry_path = paths.resolve_registry_path(workplace_manifest, "tools", registry_file)
++            elif collection_key == "knowledge_roots":
++                registry_path = paths.resolve_registry_path(workplace_manifest, "knowledge_roots", registry_file)
++            elif collection_key == "package_roots":
++                registry_path = paths.resolve_registry_path(workplace_manifest, "package_roots", registry_file)
++            if not registry_path.is_file():
++                continue
++            data = self.documents.load(registry_path)
++            entries = data.get(collection_key) if isinstance(data, dict) else None
++            if not isinstance(entries, list):
++                continue
++            for entry in entries:
++                if not isinstance(entry, dict) or not entry.get(path_key):
++                    continue
++                entry_id = str(entry.get("id", "entry"))
++                resolution = paths.resolve_path_with_constants(str(entry[path_key]), workplace_root, constants)
++                errors = resolution.get("errors", [])
++                if errors:
++                    checks.append(check("FAIL", f"{collection_key}.{entry_id}.{path_key} failed: {', '.join(errors)}"))
++                    continue
++                if path_key == "path":
++                    resolved_path = paths.path_resolution_to_path(resolution)
++                    requires_existing = str(entry.get("status", "available")) == "available" or bool(entry.get("must_exist", False))
++                    level = "PASS" if resolved_path.exists() or not requires_existing else "WARN"
++                    checks.append(check(level, f"{collection_key}.{entry_id}.path resolves ({resolution.get('path_status')})"))
++                else:
++                    checks.append(check("PASS", f"{collection_key}.{entry_id}.{path_key} resolves constants"))
++        return checks
++
++    def packages(self, workplace_root: Path) -> list[Check]:
++        checks: list[Check] = []
++        registry_path = workplace_root / "registries" / "package-roots.yaml"
++        if not registry_path.is_file():
++            return [check("WARN", "registries/package-roots.yaml missing; package writes will use fallback <workplace-root>/packages")]
++        entries = self.package_catalog.root_entries(workplace_root)
++        if not entries:
++            return [check("WARN", "package_roots registry is empty; package writes will use fallback <workplace-root>/packages")]
++        ids: dict[str, int] = {}
++        for entry in entries:
++            root_id = str(entry.get("id", ""))
++            ids[root_id] = ids.get(root_id, 0) + 1
++        for root_id, count in sorted(ids.items()):
++            checks.append(check("FAIL" if count > 1 else "PASS", f"package_root id {root_id or '<missing>'} unique"))
++        selectable = False
++        for entry in entries:
++            if not isinstance(entry, dict):
++                continue
++            root = self.package_catalog.root_from_entry(workplace_root, entry)
++            label = f"package_root {root.root_id}"
++            if root.warnings:
++                checks.append(
++                    check_with_hint(
++                        "FAIL",
++                        f"{label} path cannot resolve: {'; '.join(root.warnings)}",
++                        "The package root registry points to a path ProcessForge cannot use.",
++                        "edit registries/package-roots.yaml so this package_root path exists and is relative to the workplace when possible",
++                    )
++                )
++                continue
++            exists = root.resolved_path.is_dir()
++            status = str(entry.get("status", "available"))
++            must_exist = status == "available" or bool(entry.get("must_exist", False))
++            checks.append(
++                check("PASS", f"{label} path exists")
++                if exists or not must_exist
++                else check_with_hint(
++                    "FAIL",
++                    f"{label} path missing",
++                    "This package_root is marked available or must_exist but the directory is absent.",
++                    f"create the package root directory or update registries/package-roots.yaml for {root.root_id}",
++                )
++            )
++            if exists and status == "available":
++                selectable = True
++            if str(entry.get("writable", True)).lower() != "false" and exists:
++                checks.append(check("PASS", f"{label} writable candidate"))
++        checks.append(
++            check("PASS", "default/first available package_root can be selected")
++            if selectable
++            else check_with_hint(
++                "FAIL",
++                "default/first available package_root can be selected",
++                "Authoring commands need at least one available package_root unless every write passes an explicit --package-root.",
++                "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
++                "add an available entry to registries/package-roots.yaml",
++            )
++        )
++        return checks
+diff --git a/src/processforge_core/project/setup.py b/src/processforge_core/project/setup.py
+new file mode 100644
+index 0000000..cf1e6b0
+--- /dev/null
++++ b/src/processforge_core/project/setup.py
+@@ -0,0 +1,107 @@
++"""Build workplace setup proposals with the existing proposal and Markdown contract."""
++
++from __future__ import annotations
++
++from typing import Any
++
++from ..common.ids import safe_id
++from ..common.values import as_list
++from .coordination import ProjectCoordinationReader
++
++
++class WorkplaceSetupProposalBuilder:
++    """Construct the existing review proposal without applying workplace changes."""
++
++    def __init__(self) -> None:
++        self.coordination = ProjectCoordinationReader()
++
++    def build(self, session_id: str, answers: dict[str, Any]) -> tuple[dict[str, Any], str]:
++        machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
++        agents = answers.get("agent_environment") if isinstance(answers.get("agent_environment"), dict) else {}
++        discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
++        resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
++        first_project = answers.get("first_project") if isinstance(answers.get("first_project"), dict) else {}
++        coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
++        proposal = {
++            "schema_version": 1,
++            "session_id": safe_id(session_id, "setup-session"),
++            "status": "ready_for_review",
++            "workplace": {"path_ref": str(machine.get("workplace_path") or "${PF_WORKPLACE}")},
++            "processforge": {"root_ref": str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")},
++            "local_docs": {"path_ref": str(machine.get("local_docs_path") or "${PF_WORKPLACE}/knowledge")},
++            "project_roots": [str(item) for item in as_list(machine.get("project_roots"))],
++            "agent_environments": [str(item) for item in as_list(agents.get("tools") or ["generic"])],
++            "instruction_targets": [str(item) for item in as_list(agents.get("instructions_targets") or ["AGENTS.md"])],
++            "device_discovery": {
++                "enabled": str(discovery.get("enabled") or "ask"),
++                "read_only": bool(discovery.get("read_only", True)),
++                "outputs": [
++                    str(item)
++                    for item in as_list(
++                        discovery.get("outputs")
++                        or ["device-discovery-report.md", "resource-candidates.yaml", "auto-setup-proposal.md"]
++                    )
++                ],
++            },
++            "registries": {
++                "knowledge_roots": resources.get("knowledge_roots", []),
++                "package_roots": resources.get("package_roots", []),
++                "tools": resources.get("tools", []),
++                "mcp_servers": resources.get("mcp_servers", []),
++                "templates": resources.get("templates", []),
++            },
++            "privacy": answers.get("privacy_safety", {}),
++            "platform_policy": answers.get("platform_contracts", {}),
++            "coordination": {
++                "director_capability": bool(coordination.get("director_capability", False)),
++                "default_project_mode": self.coordination.workplace_mode(coordination.get("default_project_mode", "simple")),
++                "initialize_director_office": bool(coordination.get("initialize_director_office", False)),
++            },
++            "first_project": first_project,
++            "apply_steps": [
++                "review optional device-discovery findings and resource candidates",
++                "run workplace-init internals",
++                "write workplace registries",
++                "write agent instruction snippet",
++                "run doctor-workplace",
++                "write project-onboard next steps",
++            ],
++        }
++        md = f"""# Guided Workplace Setup Proposal
++
++## Session
++
++- id: `{safe_id(session_id, "setup-session")}`
++- status: `ready_for_review`
++
++## Layout
++
++- ProcessForge root: `{proposal["processforge"]["root_ref"]}`
++- Workplace: `{proposal["workplace"]["path_ref"]}`
++- Local docs: `{proposal["local_docs"]["path_ref"]}`
++- Project roots: {", ".join(proposal["project_roots"]) if proposal["project_roots"] else "not set"}
++- Director capability: {str(proposal["coordination"]["director_capability"]).lower()}
++- Default project mode: {proposal["coordination"]["default_project_mode"]}
++- Initialize Director Office: {str(proposal["coordination"]["initialize_director_office"]).lower()}
++
++## Agent Environments
++
++- Tools: {", ".join(proposal["agent_environments"])}
++- Instruction targets: {", ".join(proposal["instruction_targets"])}
++
++## Device Discovery
++
++- Enabled: {proposal["device_discovery"]["enabled"]}
++- Read only: {str(proposal["device_discovery"]["read_only"]).lower()}
++- Outputs: {", ".join(proposal["device_discovery"]["outputs"])}
++
++## Apply Plan
++
++1. Review optional device-discovery findings and resource candidates.
++2. Create or update the workplace layer through `workplace-init`.
++3. Preserve private machine paths inside workplace-local files.
++4. Generate a bounded ProcessForge agent instruction snippet.
++5. Run `doctor-workplace`.
++6. Write project onboarding next steps.
++"""
++        return proposal, md
+diff --git a/tools/pf_runtime/host.py b/tools/pf_runtime/host.py
+index 725c4e6..8eeaf00 100644
+--- a/tools/pf_runtime/host.py
++++ b/tools/pf_runtime/host.py
+@@ -19,6 +19,7 @@ from pathlib import Path
+ from typing import Any
+ 
+ from . import RUNTIME_PROTOCOL_VERSION
++from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
+ from .provider_adapters import AdapterRegistry, WorkerBinding, worker_input_summary
+ from .builtin_provider_adapters import DEFAULT_ADAPTER_REGISTRY
+ from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministic_derived_key
+@@ -1300,7 +1301,7 @@ def project_for_session(args: argparse.Namespace, workplace_root: Path, core: An
+ def command_project_state(args: argparse.Namespace, core: Any) -> int:
+     workplace_root = resolve_workplace(args, None, core)
+     payload = project_state_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
+-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
++    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
+     return 0
+ 
+ 
+@@ -1351,7 +1352,7 @@ def active_execution_records(project_root: Path, core: Any) -> list[dict[str, An
+ def command_work_state(args: argparse.Namespace, core: Any) -> int:
+     workplace_root = resolve_workplace(args, None, core)
+     payload = work_state_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
+-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
++    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
+     return 0
+ 
+ 
+@@ -1422,7 +1423,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
+ def command_resolve(args: argparse.Namespace, core: Any) -> int:
+     workplace_root = resolve_workplace(args, None, core)
+     payload = resolve_payload(workplace_root, core, session=getattr(args, "session", None), project_root_ref=getattr(args, "project_root", None))
+-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
++    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
+     return 0
+ 
+ 
+@@ -1459,7 +1460,7 @@ def command_tick(args: argparse.Namespace, core: Any) -> int:
+         raise SystemExit("FAIL: runtime-host tick requires at least one --project-root")
+     workplace_root = resolve_workplace(args, project_roots[0], core)
+     payload, status = tick_payload(workplace_root, project_roots, core, director=getattr(args, "director", False), inspector=getattr(args, "inspector", False), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None), wait_ttl=getattr(args, "wait_ttl", 3600), lease_ttl=getattr(args, "lease_ttl", 3600))
+-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(payload))
++    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(payload))
+     return status
+ 
+ 
+@@ -1519,7 +1520,7 @@ def command_rebuild_projections(args: argparse.Namespace, core: Any) -> int:
+         }
+         for project_root in project_roots
+     ]
+-    print(json.dumps({"projections": outputs}, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml({"projections": outputs}))
++    print(json.dumps({"projections": outputs}, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml({"projections": outputs}))
+     return 0
+ 
+ 
+diff --git a/tools/pf_runtime/service.py b/tools/pf_runtime/service.py
+index d0b714e..5aa6c97 100644
+--- a/tools/pf_runtime/service.py
++++ b/tools/pf_runtime/service.py
+@@ -27,6 +27,7 @@ from pathlib import Path
+ from typing import Any
+ 
+ from . import RUNTIME_PROTOCOL_VERSION
++from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
+ from . import host
+ 
+ 
+@@ -1084,7 +1085,7 @@ def runtime_request(args: argparse.Namespace, core: Any, path: str, payload: dic
+     token = load_token(workplace_root)
+     endpoint = str(state.get("endpoint") or "")
+     code, body = http_json("POST", endpoint.rstrip("/") + path, token=token, payload=payload, timeout=5.0)
+-    print(json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else core.dump_yaml(body))
++    print(json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(body))
+     return 0 if 200 <= code < 300 else 1
+ 
+ 
+diff --git a/tools/processforge.py b/tools/processforge.py
+index 6de2121..78986b3 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -221,6 +221,18 @@ _record_validation_policy = RecordValidationPolicy()
+ _process_route_service = ProcessRouteService(ROOT)
+ _handoff_document_reader = HandoffDocumentReader()
+ _update_document_validation_service = UpdateDocumentValidationService(ROOT)
++from processforge_core.project.platform_documents import PlatformDocumentBuilder
++from processforge_core.project.registry_checks import WorkplaceRegistryValidationService
++from processforge_core.process_catalog.audit import BuiltinProcessCatalogAuditService
++from processforge_core.project.setup import WorkplaceSetupProposalBuilder
++from processforge_core.common.text import ensure_trailing_newline, check_with_hint
++from processforge_core.common.yaml_dump import dump_yaml, format_scalar
++from processforge_core.process_catalog.service import process_catalog_contexts
++
++_platform_document_builder = PlatformDocumentBuilder()
++_workplace_registry_validation_service = WorkplaceRegistryValidationService(ROOT)
++_builtin_process_catalog_audit_service = BuiltinProcessCatalogAuditService(ROOT)
++_workplace_setup_proposal_builder = WorkplaceSetupProposalBuilder()
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -1545,61 +1557,10 @@ def parse_simple_yaml(text: str) -> dict[str, Any]:
+     return root
+ 
+ 
+-def format_scalar(value: Any) -> str:
+-    if value is True:
+-        return "true"
+-    if value is False:
+-        return "false"
+-    if value is None:
+-        return "null"
+-    if isinstance(value, (int, float)):
+-        return str(value)
+-    text = str(value)
+-    if text == "":
+-        return '""'
+-    yaml_literals = {"*", "null", "true", "false", "yes", "no", "on", "off", "~"}
+-    special_start = ("-", "?", "&", "*", "!", "%", "@", "`", ">", "|")
+-    if (
+-        text.lower() in yaml_literals
+-        or text.startswith(special_start)
+-        or any(char in text for char in [":", "#", "{", "}", "[", "]", "\\"])
+-        or text.strip() != text
+-    ):
+-        return "'" + text.replace("'", "''") + "'"
+-    return text
+-
+-
+-def dump_yaml(data: Any, indent: int = 0) -> str:
+-    lines: list[str] = []
+-    prefix = " " * indent
+-    if isinstance(data, dict):
+-        if not data:
+-            lines.append(f"{prefix}{{}}")
+-        for key, value in data.items():
+-            if isinstance(value, (dict, list)):
+-                lines.append(f"{prefix}{key}:")
+-                lines.append(dump_yaml(value, indent + 2))
+-            else:
+-                lines.append(f"{prefix}{key}: {format_scalar(value)}")
+-    elif isinstance(data, list):
+-        if not data:
+-            lines.append(f"{prefix}[]")
+-        for item in data:
+-            if isinstance(item, dict):
+-                lines.append(f"{prefix}-")
+-                lines.append(dump_yaml(item, indent + 2))
+-            elif isinstance(item, list):
+-                lines.append(f"{prefix}-")
+-                lines.append(dump_yaml(item, indent + 2))
+-            else:
+-                lines.append(f"{prefix}- {format_scalar(item)}")
+-    else:
+-        lines.append(f"{prefix}{format_scalar(data)}")
+-    return "\n".join(lines)
+ 
+ 
+-def ensure_trailing_newline(text: str) -> str:
+-    return text if text.endswith("\n") else text + "\n"
++
++
+ 
+ 
+ def write_file(path: Path, content: str, *, force: bool = False) -> WriteResult:
+@@ -2514,96 +2475,6 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
+     }
+ 
+ 
+-def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) -> tuple[dict[str, Any], str]:
+-    machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
+-    agents = answers.get("agent_environment") if isinstance(answers.get("agent_environment"), dict) else {}
+-    discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
+-    resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
+-    first_project = answers.get("first_project") if isinstance(answers.get("first_project"), dict) else {}
+-    coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
+-    proposal = {
+-        "schema_version": 1,
+-        "session_id": safe_id(session_id, "setup-session"),
+-        "status": "ready_for_review",
+-        "workplace": {"path_ref": str(machine.get("workplace_path") or "${PF_WORKPLACE}")},
+-        "processforge": {"root_ref": str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")},
+-        "local_docs": {"path_ref": str(machine.get("local_docs_path") or "${PF_WORKPLACE}/knowledge")},
+-        "project_roots": [str(item) for item in as_list(machine.get("project_roots"))],
+-        "agent_environments": [str(item) for item in as_list(agents.get("tools") or ["generic"])],
+-        "instruction_targets": [str(item) for item in as_list(agents.get("instructions_targets") or ["AGENTS.md"])],
+-        "device_discovery": {
+-            "enabled": str(discovery.get("enabled") or "ask"),
+-            "read_only": bool(discovery.get("read_only", True)),
+-            "outputs": [
+-                str(item)
+-                for item in as_list(
+-                    discovery.get("outputs")
+-                    or ["device-discovery-report.md", "resource-candidates.yaml", "auto-setup-proposal.md"]
+-                )
+-            ],
+-        },
+-        "registries": {
+-            "knowledge_roots": resources.get("knowledge_roots", []),
+-            "package_roots": resources.get("package_roots", []),
+-            "tools": resources.get("tools", []),
+-            "mcp_servers": resources.get("mcp_servers", []),
+-            "templates": resources.get("templates", []),
+-        },
+-        "privacy": answers.get("privacy_safety", {}),
+-        "platform_policy": answers.get("platform_contracts", {}),
+-        "coordination": {
+-            "director_capability": bool(coordination.get("director_capability", False)),
+-            "default_project_mode": _project_coordination_reader.workplace_mode(coordination.get("default_project_mode", "simple")),
+-            "initialize_director_office": bool(coordination.get("initialize_director_office", False)),
+-        },
+-        "first_project": first_project,
+-        "apply_steps": [
+-            "review optional device-discovery findings and resource candidates",
+-            "run workplace-init internals",
+-            "write workplace registries",
+-            "write agent instruction snippet",
+-            "run doctor-workplace",
+-            "write project-onboard next steps",
+-        ],
+-    }
+-    md = f"""# Guided Workplace Setup Proposal
+-
+-## Session
+-
+-- id: `{safe_id(session_id, "setup-session")}`
+-- status: `ready_for_review`
+-
+-## Layout
+-
+-- ProcessForge root: `{proposal["processforge"]["root_ref"]}`
+-- Workplace: `{proposal["workplace"]["path_ref"]}`
+-- Local docs: `{proposal["local_docs"]["path_ref"]}`
+-- Project roots: {", ".join(proposal["project_roots"]) if proposal["project_roots"] else "not set"}
+-- Director capability: {str(proposal["coordination"]["director_capability"]).lower()}
+-- Default project mode: {proposal["coordination"]["default_project_mode"]}
+-- Initialize Director Office: {str(proposal["coordination"]["initialize_director_office"]).lower()}
+-
+-## Agent Environments
+-
+-- Tools: {", ".join(proposal["agent_environments"])}
+-- Instruction targets: {", ".join(proposal["instruction_targets"])}
+-
+-## Device Discovery
+-
+-- Enabled: {proposal["device_discovery"]["enabled"]}
+-- Read only: {str(proposal["device_discovery"]["read_only"]).lower()}
+-- Outputs: {", ".join(proposal["device_discovery"]["outputs"])}
+-
+-## Apply Plan
+-
+-1. Review optional device-discovery findings and resource candidates.
+-2. Create or update the workplace layer through `workplace-init`.
+-3. Preserve private machine paths inside workplace-local files.
+-4. Generate a bounded ProcessForge agent instruction snippet.
+-5. Run `doctor-workplace`.
+-6. Write project onboarding next steps.
+-"""
+-    return proposal, md
+ 
+ 
+ def workplace_setup_agent_snippet(processforge_root: str, workplace_path: str) -> str:
+@@ -2634,7 +2505,7 @@ def command_workplace_setup_start(args: argparse.Namespace) -> int:
+         return 0
+     session_dir.mkdir(parents=True, exist_ok=True)
+     write_yaml_file(session_dir / "answers.yaml", answers)
+-    proposal, proposal_md = render_workplace_setup_proposal(session_id, answers)
++    proposal, proposal_md = _workplace_setup_proposal_builder.build(session_id, answers)
+     write_yaml_file(session_dir / "proposal.yaml", proposal)
+     (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
+     (session_dir / "next-steps.md").write_text(
+@@ -2652,7 +2523,7 @@ def command_workplace_setup_review(args: argparse.Namespace) -> int:
+     session_id = safe_id(args.session_id or "default", "setup-session")
+     session_dir = workplace_setup_session_dir(workplace, session_id)
+     answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+-    proposal, proposal_md = render_workplace_setup_proposal(session_id, answers)
++    proposal, proposal_md = _workplace_setup_proposal_builder.build(session_id, answers)
+     review = f"""# Guided Workplace Setup Review
+ 
+ ## Result
+@@ -2689,7 +2560,7 @@ def command_workplace_setup_apply(args: argparse.Namespace) -> int:
+     session_id = safe_id(args.session_id or "default", "setup-session")
+     session_dir = workplace_setup_session_dir(workplace, session_id)
+     answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+-    proposal, proposal_md = render_workplace_setup_proposal(session_id, answers)
++    proposal, proposal_md = _workplace_setup_proposal_builder.build(session_id, answers)
+     planned = [
+         workplace / "workplace.yaml",
+         workplace / "terms.yaml",
+@@ -2773,13 +2644,6 @@ def print_checks(checks: list[Check]) -> int:
+     return 1 if failed else 0
+ 
+ 
+-def check_with_hint(level: str, message: str, why: str, fix: str, alternative: str | None = None) -> Check:
+-    details = [message, "", "Why:", f"  {why}", "", "Fix:"]
+-    details.extend(f"  {line}" if line else "" for line in fix.splitlines())
+-    if alternative:
+-        details.extend(["", "Or:"])
+-        details.extend(f"  {line}" if line else "" for line in alternative.splitlines())
+-    return check(level, "\n".join(details))
+ 
+ 
+ def run_command_capture(func: Any, args: argparse.Namespace) -> tuple[int, str]:
+@@ -2816,130 +2680,8 @@ def path_constant_checks(workplace_root: Path, workplace_manifest: Path) -> list
+     return checks
+ 
+ 
+-def registry_path_resolution_checks(workplace_root: Path, workplace_manifest: Path) -> list[Check]:
+-    checks: list[Check] = []
+-    constants = load_workplace_path_constants(workplace_manifest, workplace_root)
+-    manifest_data = load_yaml_document(workplace_manifest)
+-    registries = manifest_data.get("registries", {}) if isinstance(manifest_data.get("registries"), dict) else {}
+-    for key, default_name in [
+-        ("distributions", "distributions.yaml"),
+-        ("platforms", "platforms.yaml"),
+-        ("knowledge_roots", "knowledge-roots.yaml"),
+-        ("package_roots", "package-roots.yaml"),
+-        ("templates", "templates.yaml"),
+-        ("tools", "tools.yaml"),
+-        ("mcp", "mcp.yaml"),
+-        ("process_packs", "process-packs.yaml"),
+-    ]:
+-        raw_path = str(registries.get(key) or f"registries/{default_name}")
+-        resolution = resolve_path_with_constants(raw_path, workplace_root, constants)
+-        errors = resolution.get("errors", [])
+-        if errors:
+-            checks.append(check("FAIL", f"registry {key} path failed: {', '.join(errors)}"))
+-        else:
+-            path = path_resolution_to_path(resolution)
+-            checks.append(check("PASS" if path.is_file() else "FAIL", f"registry {key} resolves to {normalize_path_string(str(path))}"))
+-    registry_specs = [
+-        ("knowledge-roots.yaml", "knowledge_roots", "path"),
+-        ("package-roots.yaml", "package_roots", "path"),
+-        ("templates.yaml", "template_roots", "path"),
+-        ("tools.yaml", "tools", "command"),
+-        ("mcp.yaml", "mcp_servers", "command"),
+-    ]
+-    for registry_file, collection_key, path_key in registry_specs:
+-        registry_path = resolve_registry_path(workplace_manifest, collection_key if collection_key != "mcp_servers" else "mcp", registry_file)
+-        if collection_key == "template_roots":
+-            registry_path = resolve_registry_path(workplace_manifest, "templates", registry_file)
+-        elif collection_key == "tools":
+-            registry_path = resolve_registry_path(workplace_manifest, "tools", registry_file)
+-        elif collection_key == "knowledge_roots":
+-            registry_path = resolve_registry_path(workplace_manifest, "knowledge_roots", registry_file)
+-        elif collection_key == "package_roots":
+-            registry_path = resolve_registry_path(workplace_manifest, "package_roots", registry_file)
+-        if not registry_path.is_file():
+-            continue
+-        data = load_yaml_document(registry_path)
+-        entries = data.get(collection_key) if isinstance(data, dict) else None
+-        if not isinstance(entries, list):
+-            continue
+-        for entry in entries:
+-            if not isinstance(entry, dict) or not entry.get(path_key):
+-                continue
+-            entry_id = str(entry.get("id", "entry"))
+-            resolution = resolve_path_with_constants(str(entry[path_key]), workplace_root, constants)
+-            errors = resolution.get("errors", [])
+-            if errors:
+-                checks.append(check("FAIL", f"{collection_key}.{entry_id}.{path_key} failed: {', '.join(errors)}"))
+-                continue
+-            if path_key == "path":
+-                resolved_path = path_resolution_to_path(resolution)
+-                requires_existing = str(entry.get("status", "available")) == "available" or bool(entry.get("must_exist", False))
+-                level = "PASS" if resolved_path.exists() or not requires_existing else "WARN"
+-                checks.append(check(level, f"{collection_key}.{entry_id}.path resolves ({resolution.get('path_status')})"))
+-            else:
+-                checks.append(check("PASS", f"{collection_key}.{entry_id}.{path_key} resolves constants"))
+-    return checks
+ 
+ 
+-def package_root_registry_checks(workplace_root: Path) -> list[Check]:
+-    checks: list[Check] = []
+-    registry_path = workplace_root / "registries" / "package-roots.yaml"
+-    if not registry_path.is_file():
+-        return [check("WARN", "registries/package-roots.yaml missing; package writes will use fallback <workplace-root>/packages")]
+-    entries = _project_package_catalog_reader.root_entries(workplace_root)
+-    if not entries:
+-        return [check("WARN", "package_roots registry is empty; package writes will use fallback <workplace-root>/packages")]
+-    ids: dict[str, int] = {}
+-    for entry in entries:
+-        root_id = str(entry.get("id", ""))
+-        ids[root_id] = ids.get(root_id, 0) + 1
+-    for root_id, count in sorted(ids.items()):
+-        checks.append(check("FAIL" if count > 1 else "PASS", f"package_root id {root_id or '<missing>'} unique"))
+-    selectable = False
+-    for entry in entries:
+-        if not isinstance(entry, dict):
+-            continue
+-        root = _project_package_catalog_reader.root_from_entry(workplace_root, entry)
+-        label = f"package_root {root.root_id}"
+-        if root.warnings:
+-            checks.append(
+-                check_with_hint(
+-                    "FAIL",
+-                    f"{label} path cannot resolve: {'; '.join(root.warnings)}",
+-                    "The package root registry points to a path ProcessForge cannot use.",
+-                    "edit registries/package-roots.yaml so this package_root path exists and is relative to the workplace when possible",
+-                )
+-            )
+-            continue
+-        exists = root.resolved_path.is_dir()
+-        status = str(entry.get("status", "available"))
+-        must_exist = status == "available" or bool(entry.get("must_exist", False))
+-        checks.append(
+-            check("PASS", f"{label} path exists")
+-            if exists or not must_exist
+-            else check_with_hint(
+-                "FAIL",
+-                f"{label} path missing",
+-                "This package_root is marked available or must_exist but the directory is absent.",
+-                f"create the package root directory or update registries/package-roots.yaml for {root.root_id}",
+-            )
+-        )
+-        if exists and status == "available":
+-            selectable = True
+-        if str(entry.get("writable", True)).lower() != "false" and exists:
+-            checks.append(check("PASS", f"{label} writable candidate"))
+-    checks.append(
+-        check("PASS", "default/first available package_root can be selected")
+-        if selectable
+-        else check_with_hint(
+-            "FAIL",
+-            "default/first available package_root can be selected",
+-            "Authoring commands need at least one available package_root unless every write passes an explicit --package-root.",
+-            "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
+-            "add an available entry to registries/package-roots.yaml",
+-        )
+-    )
+-    return checks
+ 
+ 
+ def command_doctor_workplace(args: argparse.Namespace) -> int:
+@@ -2968,8 +2710,8 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
+         if cfg.get("director_office_enabled"):
+             checks.append(check("PASS" if director_office_exists(root, cfg) else "WARN", "Director Office exists"))
+         checks.extend(path_constant_checks(root, manifest))
+-        checks.extend(registry_path_resolution_checks(root, manifest))
+-        checks.extend(package_root_registry_checks(root))
++        checks.extend(_workplace_registry_validation_service.paths(root, manifest))
++        checks.extend(_workplace_registry_validation_service.packages(root))
+     else:
+         checks.append(
+             check_with_hint(
+@@ -11846,122 +11588,17 @@ def process_definition_path(project_root: Path, process_or_path: str) -> Path:
+ 
+ 
+ 
+-def process_catalog_contexts(process: dict[str, Any]) -> dict[str, str]:
+-    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+-    mode = str(coordination.get("mode") or "")
+-    runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
+-    return {
+-        "simple": "not_applicable" if mode == "organized_required" else "pass",
+-        "organized": "pass",
+-        "runtime": "pass" if runtime_requirements.get("supervisor_required") or runtime_requirements.get("runtime_driver_required") else "not_applicable",
+-    }
+ 
+ 
+-def package_process_index(root: Path) -> dict[str, dict[str, Any]]:
+-    index: dict[str, dict[str, Any]] = {}
+-    for path in sorted((root / "packages").glob("*.yaml")):
+-        data = load_yaml_document(path)
+-        if yaml_error(data) or not isinstance(data, dict):
+-            continue
+-        package_id = str(data.get("id") or path.stem)
+-        index[package_id] = {"path": path, "data": data, "processes": string_list(data.get("processes"))}
+-    return index
+ 
+ 
+-def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[str, Any]:
+-    process_items = process_catalog_entries(root, strict=True)
+-    process_ids = {entry.process_id for entry in process_items}
+-    packages = package_process_index(root)
+-    rows: list[dict[str, Any]] = []
+-    summary: dict[str, int] = {
+-        "processes": 0,
+-        "public_stable": 0,
+-        "public_experimental": 0,
+-        "internal": 0,
+-        "fail": 0,
+-        "warn": 0,
+-        "pass": 0,
+-    }
+-    checks: list[Check] = []
+-    for entry in process_items:
+-        process_id = entry.process_id
+-        path = entry.path
+-        process = entry.process
+-        meta = process_catalog_metadata(process)
+-        if public and meta["classification"] == "INTERNAL_MAINTENANCE":
+-            strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
+-        else:
+-            strict_checks = _process_contract_validation_service.validate(
+-                root,
+-                process,
+-                path,
+-                strict=process_is_public_stable(process),
+-                companion_root=entry.root if entry.origin == "official" else root,
+-            )
+-        failures = [item.message for item in strict_checks if item.level == "FAIL"]
+-        warnings = [item.message for item in strict_checks if item.level == "WARN"]
+-        checks.extend(strict_checks)
+-        if meta["classification"] == "PUBLIC_STABLE":
+-            summary["public_stable"] += 1
+-        elif meta["classification"] == "PUBLIC_EXPERIMENTAL":
+-            summary["public_experimental"] += 1
+-        elif meta["classification"] == "INTERNAL_MAINTENANCE":
+-            summary["internal"] += 1
+-        summary["processes"] += 1
+-        summary["fail"] += len(failures)
+-        summary["warn"] += len(warnings)
+-        if not failures:
+-            summary["pass"] += 1
+-        process_pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
+-        package_id = str(process_pack.get("package") or (string_list(process.get("required_packages"))[0] if string_list(process.get("required_packages")) else ""))
+-        companions = _process_authoring_validation_service.paths(entry.root if entry.origin == "official" else root, process_id)
+-        rows.append(
+-            {
+-                "id": process_id,
+-                "path": rel(path, root),
+-                "origin": entry.origin,
+-                "root": rel(entry.root, root),
+-                "catalog_role": entry.catalog_role,
+-                "status": process.get("status"),
+-                "classification": meta["classification"],
+-                "public_surface": meta["public_surface"],
+-                "package": package_id,
+-                "execution_mode": process.get("execution_mode"),
+-                "coordination_mode": (process.get("coordination_requirements") or {}).get("mode") if isinstance(process.get("coordination_requirements"), dict) else None,
+-                "error_handling": (process.get("error_handling") or {}).get("mode") if isinstance(process.get("error_handling"), dict) else None,
+-                "has_prompt": companions["prompt"].is_file(),
+-                "has_process_doc": companions["doc"].is_file(),
+-                "has_authoring_example": companions["example"].is_file(),
+-                "artifact_definitions_complete": not (_process_artifact_declaration_policy.produced_ids(process) - _process_artifact_declaration_policy.declared_ids(process)),
+-                "stage_artifacts_declared": not (_process_artifact_declaration_policy.produced_ids(process) - _process_artifact_declaration_policy.declared_ids(process)),
+-                "gates_valid": not any("gates valid:" in item.message and item.level == "FAIL" for item in strict_checks),
+-                "handoff_semantics": "process_transition" if process.get("process_transitions") else ("run_summary" if process.get("run_completion") else ("stage_note" if process.get("stage_completion") else "none")),
+-                "doctor_contexts": process_catalog_contexts(process),
+-                "result": "fail" if failures else ("warn" if warnings else "pass"),
+-                "failures": failures,
+-                "warnings": warnings + entry.warnings,
+-            }
+-        )
+-
+-    for package_id, item in packages.items():
+-        package_data = item["data"]
+-        for process_id in item["processes"]:
+-            checks.append(check("PASS" if process_id in process_ids else "FAIL", f"package {package_id} process id exists: {process_id}"))
+-        stable_exposed = set(string_list(package_data.get("stable_processes")))
+-        for process_id in stable_exposed:
+-            process = next((entry.process for entry in process_items if entry.process_id == process_id), {})
+-            checks.append(check("PASS" if process_is_public_stable(process) else "FAIL", f"package {package_id} stable process is public stable: {process_id}"))
+-
+-    package_failures = [item.message for item in checks if item.level == "FAIL" and item.message.startswith("package ")]
+-    summary["fail"] += len(package_failures)
+-    return {"schema_version": 1, "summary": summary, "processes": rows, "checks": [{"level": item.level, "message": item.message} for item in checks]}
+ 
+ 
+ def command_builtin_process_catalog_doctor(args: argparse.Namespace) -> int:
+     root_arg = getattr(args, "root", None) or getattr(args, "project_root", None) or "."
+     root = Path(root_arg).expanduser().resolve()
+     require_flow_root(root)
+-    report = builtin_process_catalog_report(root, public=bool(getattr(args, "public", False)))
++    report = _builtin_process_catalog_audit_service.report(root, public=bool(getattr(args, "public", False)))
+     failed = [item for item in report["checks"] if item["level"] == "FAIL"]
+     if getattr(args, "write_report", None):
+         target = Path(args.write_report).expanduser()
+@@ -12254,7 +11891,7 @@ def command_process_layout_migrate(args: argparse.Namespace) -> int:
+     flat_files = sorted([*process_root.glob("*.yaml"), *process_root.glob("*.yml")]) if process_root.is_dir() else []
+     planned: list[tuple[Path, Path]] = []
+     package_ids: set[str] = set()
+-    for package in package_process_index(root).values():
++    for package in _builtin_process_catalog_audit_service.package_index(root).values():
+         package_ids.update(package["processes"])
+     for path in flat_files:
+         data = load_yaml_document(path)
+@@ -19907,142 +19544,6 @@ def platform_contract_from_values(values: dict[str, Any]) -> dict[str, Any]:
+     }
+ 
+ 
+-def platform_entity_documents(
+-    target: Path,
+-    values: dict[str, Any],
+-    contract: dict[str, Any],
+-    root_id: str,
+-) -> list[tuple[Path, bytes, str | None]]:
+-    title = values["title"]
+-    contract_id = values["contract_id"]
+-    documents: list[tuple[Path, bytes, str | None]] = [
+-        (
+-            target / "platform-contract.yaml",
+-            ensure_trailing_newline(dump_yaml(contract)).encode("utf-8"),
+-            "platform-contract.schema.json",
+-        ),
+-        (
+-            target / "README.md",
+-            ensure_trailing_newline(
+-                f"# {title}\n\nPlatform contract `{contract_id}`."
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "project-types.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "project_type_hints": values["project_types"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "capabilities.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "capabilities": contract["requires"]["capabilities"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "knowledge.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "requires": values["required_packages"],
+-                        "recommends": values["recommended_packages"],
+-                        "optional": values["optional_packages"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "templates.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "requires": values["required_templates"],
+-                        "recommends": values["recommended_templates"],
+-                        "optional": values["optional_templates"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "tools.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "requires": values["required_tools"],
+-                        "recommends": values["recommended_tools"],
+-                        "optional": values["optional_tools"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "mcp.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "requires": values["required_mcp"],
+-                        "recommends": values["recommended_mcp"],
+-                        "optional": values["optional_mcp"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "processes.yaml",
+-            ensure_trailing_newline(
+-                dump_yaml(
+-                    {
+-                        "schema_version": 1,
+-                        "processes": values["processes"],
+-                    }
+-                )
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "artifacts" / "platform-contract-authoring-report.md",
+-            ensure_trailing_newline(
+-                f"# Platform Contract Authoring Report\n\n- platform: {contract_id}\n- platform_root: {root_id}"
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "reviews" / "platform-contract-authoring-review.md",
+-            ensure_trailing_newline(
+-                "# Platform Contract Authoring Review\n\nResult: pass_with_conditions"
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-        (
+-            target / "handoffs" / "platform-contract-ready-handoff.md",
+-            ensure_trailing_newline(
+-                f"# Handoff: platform-create -> project-onboarding\n\nPlatform `{contract_id}` is ready for project type matching."
+-            ).encode("utf-8"),
+-            None,
+-        ),
+-    ]
+-    return documents
+ 
+ 
+ def build_platform_authoring_plan(
+@@ -20174,7 +19675,7 @@ def build_platform_authoring_plan(
+             schema_name=schema_name,
+             allow_replace=force,
+         )
+-        for path, content, schema_name in platform_entity_documents(
++        for path, content, schema_name in _platform_document_builder.build(
+             target,
+             values,
+             contract,
+diff --git a/tools/smoke_core_work_state.py b/tools/smoke_core_work_state.py
+index a5c6444..5453679 100644
+--- a/tools/smoke_core_work_state.py
++++ b/tools/smoke_core_work_state.py
+@@ -28,6 +28,7 @@ from processforge_core import diagnostics as d
+ from processforge_core import process_execution as execution
+ from processforge_core.bootstrap import RuntimeBootstrap
+ from processforge_core.composition import build_process_execution_service
++from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
+ from processforge_core.process_execution import ProcessExecutionService
+ from processforge_core.work.state import WorkStatePolicy
+ 
+@@ -359,7 +360,7 @@ class AdapterTests(NormalizedTests):
+             command = WorkStateCommand(
+                 execution_factory=core.process_execution_service,
+                 require_flow_root=core.require_flow_root,
+-                dump_yaml=core.dump_yaml,
++                dump_yaml=_canonical_dump_yaml,
+             )
+             self.assertEqual(command.execute(arguments), 0)
+         self.assertEqual(json.loads(output.getvalue()), service.state())

@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-10-19T00:51:28.284256+00:00",
+  "complete_algorithms": 11,
+  "roles": {
+    "platform": {
+      "complete_algorithms": 3,
+      "artifact_role": "platform-final",
+      "product_sha256": {
+        "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+        "src/processforge_core/project/platform_documents.py": "1f0dd57c6ca9401dddce565cc70529854601b255e732ce89270bf40950018fa3",
+        "src/processforge_core/process_execution.py": "306ae8189b52848d16a25c7c14ab64aa4d11c86ca0d320bfafa9e26db1776feb",
+        "tools/pf_runtime/host.py": "2eef665adbbcdd4c9a44619f1e2c33e8021b80c31d1beb9b8276da5fcca2b42b",
+        "tools/pf_runtime/service.py": "f14db0028a1d906229ec6dafa6e3afa0df647ff6d13f5052329e7a0b1ce531b5",
+        "tools/smoke_core_work_state.py": "e2f18af9c26e92d5b4258623e7ac812666034725ebc89f52499b8d3b7716a3bf"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-builders-20261018/platform-final/activity.md": "e873f9b77241e1580bdbcbf663ad113685b64d6db131fc89cbd5400cd0eb733f",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/platform-final/proof.json": "1fe92408ba77085781f1d2485e33e4d9b996b09c2b2ad7fca9c5566ab98b1e94",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/platform-final/prove.py": "7ea15b8cd788eb8ba6a7106a0f7690422286c1cf7ccf427a52a9a9e644f3f9bb",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/platform-final/report.md": "fc7c400e934c27a951c9f2bf165a1e7af3401383558858a609c2555eb8145f7b",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/platform-final/work-state.json": "1cf504f4c8cd0efe29e53d18af3a61f41d8e5960edcc4319f3b79506c60fdfdb"
+      }
+    },
+    "registries": {
+      "complete_algorithms": 4,
+      "artifact_role": "registries",
+      "product_sha256": {
+        "src/processforge_core/common/text.py": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+        "src/processforge_core/project/registry_checks.py": "4cd1296407a6f9ddac562e3fa3a7d08c41307dfac92e93ef6c6a13ac327fea82"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-builders-20261018/registries/input-manifest.json": "8ea4b02e0b96c538fa1d04d276b0ff62ee9c044d07a9d548dc41fb81afbd2d19",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/registries/log.md": "3c7261ae1ee29a1a2d2526693305734e04d571f66dd2171480916e8f67dcdf72",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/registries/proof.json": "f8e3dd74626af99b08d578269acf6773db9f71ce18dc8a25837bc46344ebe356",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/registries/report.md": "ac3fdb33852a6cb18fe10d55e6300ac6e23f2fde0cc647a3d4b7ee85f7d65200"
+      }
+    },
+    "catalog": {
+      "complete_algorithms": 3,
+      "artifact_role": "catalog",
+      "product_sha256": {
+        "src/processforge_core/process_catalog/audit.py": "7173ef568a94dfcb6e98d20eee7b54b6f3dc9dda35087455687e98eef2f7bd23",
+        "src/processforge_core/process_catalog/service.py": "2eb9778ed34e979101e5a4690ba3ae92d8b86eb19968bc65b249100b51fd2d73"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-builders-20261018/catalog/inputs.json": "d0063f71b7064ef9e06fd7d3e99cacee59647f5971b181299c44539f70c03611",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/catalog/log.md": "d2b02ebbfc755d9e5938e62374bb251367a1269830806708a7a6371373132a59",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/catalog/proof.json": "3b1cf0e642cf6624e6744bdf34f9a35c68d91a11b6a19a171249139b24b573ee",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/catalog/report.md": "43c1cad5989164f1f92435f6c5daa9a532df9c2a46f17c690ae749e830eaeab8"
+      }
+    },
+    "setup": {
+      "complete_algorithms": 1,
+      "artifact_role": "setup",
+      "product_sha256": {
+        "src/processforge_core/project/setup.py": "c8df974090b2d40cd2024cfb0474784ed1f898064a5939aa716fce4285376616"
+      },
+      "evidence_sha256": {
+        ".pf/artifacts/pf121-oop-core-builders-20261018/setup/log.md": "4ad6ffaabf35db6bc11989f3bebce2886b37668c42aed6be3b17bf7eadbab271",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/setup/proof.json": "13490268864018ecebdd6c4ddd200e64dfa31cf29923f0313715b726f38382b1",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/setup/report.md": "0bf1e4f19beaa45119fd7016c50344d83d8216fedc3d796d3f7f5709e26539d4",
+        ".pf/artifacts/pf121-oop-core-builders-20261018/setup/verify.py": "d5be8935537082810e4d964838f195178edda189d480963783316b03e817e641"
+      }
+    }
+  },
+  "scope": "Retained complete algorithm/signature/prior-owner and transport consumer proofs at final raw hashes, without repeating native synthetic scenarios."
+}

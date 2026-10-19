@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 
 from .common.request_scope import safe_load, scoped_request
 from .common.yaml_io import _parse_simple_yaml
+from .common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from .documents.reader import YamlDocumentReader
 from .work.inventory import WorkInventory
 from .work.state import WorkStatePolicy
@@ -1030,7 +1031,7 @@ class ProcessExecutionService:
 
         return build_work_document_publisher(
             text_writer=lambda: self._atomic_text,
-            yaml_formatter=lambda: self.core.dump_yaml,
+            yaml_formatter=lambda: _canonical_dump_yaml,
         )
 
     def _atomic_yaml(self, path: Path, value: dict[str, Any]) -> None:

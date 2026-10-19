@@ -103,6 +103,12 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/process_catalog/routes.py` | Текущий поиск маршрута, проверка и требуемая роль. |
 | `src/processforge_core/process_catalog/handoffs.py` | Каталог, путь и мягкое чтение handoff. |
 | `src/processforge_core/maintenance/validation.py` | Прежние проверки overrides и нормализованного манифеста обновлений. |
+| `src/processforge_core/project/platform_documents.py` | Прежнее построение модели и байтов документов платформы. |
+| `src/processforge_core/project/registry_checks.py` | Текущая проверка путей реестров и корней пакетов. |
+| `src/processforge_core/common/text.py` | Прежние завершающая строка и оформление подсказок. |
+| `src/processforge_core/common/yaml_dump.py` | Точная прежняя сериализация скаляров и рекурсивного YAML. |
+| `src/processforge_core/process_catalog/audit.py` | Прежний отчёт каталога процессов и плоский индекс пакетов. |
+| `src/processforge_core/project/setup.py` | Прежние модель предложения настройки workplace и Markdown. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -945,3 +951,40 @@ UpdateRegistryReader также владеет отдельной проекци
 UpdateDocumentReader — путём и мягким чтением staged record. Конструкторы
 и все прежние методы читателей сохранены. Поиск, запись, установка, ввод-вывод
 артефактов, сеть и получение времени остаются у прежних владельцев.
+
+## Документы платформ, проверки реестров и аудит каталога
+
+`project.platform_documents.PlatformDocumentBuilder` владеет прежним построением
+списка путей, байтов и заметок документов платформы. Литералы YAML и Markdown,
+порядок результатов и исходные ошибки обращений сохранены; метод возвращает
+данные и не записывает файлы. Полный preflight/publication авторинга платформ
+и семантическая проверка сохраняют действующих владельцев.
+
+`project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
+владеет текущими проверками путей реестров и корней пакетов через готовые
+WorkspacePathReferenceReader, ContextContractInputs и ProjectPackageCatalogReader.
+Фактический workplace передаётся на операцию. Правила aliases/default/status/
+writable, дубликаты, наблюдения файлов и порядок предупреждений сохранены.
+`common.yaml_dump` владеет точными прежними format_scalar и рекурсивным dump_yaml;
+все фактические потребители Main/Runtime/process execution используют этого владельца.
+Фабрика yaml_formatter без аргументов и callback форматирования с одним аргументом
+сохраняют прежнюю форму. Сериализатор не подменяется, Runtime не запускается.
+`common.text` владеет прежними ensure_trailing_newline и check_with_hint.
+Сборка публикации капсулы вызывает канонические newline/YAML formatters из тех же
+callback с одним аргументом; остальные legacy-зависимости сохраняют владельцев. Порядок публикации
+и ошибок не меняется.
+
+`process_catalog.audit.BuiltinProcessCatalogAuditService(distribution_root)`
+владеет упорядоченным отчётом builtin catalog через конкретный читатель каталога
+на операцию, contract/authoring/artifact policies и канонические metadata.
+Плоский отсортированный индекс root/packages/*.yaml сохраняет отличие от полного
+индекса пакетов проекта. Пропуск internal в public-режиме, official companion roots,
+счётчики, повторные наблюдения и объединение предупреждений прежние.
+Чистая проекция process_catalog_contexts находится в существующем service.py;
+все его прежние определения и данные сохранены.
+
+`project.setup.WorkplaceSetupProposalBuilder` владеет прежним словарём предложения
+настройки и Markdown через ProjectCoordinationReader. Defaults, path placeholders,
+преобразование списков, ссылки на поля, порядок и отказы неверного режима сохранены.
+Конструкторы не выполняют ввод-вывод. Настройка и запись реестров, транзакции,
+блокировки, recovery и последующие слои приёмки сохраняют действующих владельцев.

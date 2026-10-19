@@ -338,3 +338,14 @@ def process_definition_exists(context: ProcessCatalogContext, process_id: str) -
 def process_is_public_stable(process: dict[str, Any]) -> bool:
     meta = process_catalog_metadata(process)
     return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
+
+
+def process_catalog_contexts(process: dict[str, Any]) -> dict[str, str]:
+    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+    mode = str(coordination.get("mode") or "")
+    runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
+    return {
+        "simple": "not_applicable" if mode == "organized_required" else "pass",
+        "organized": "pass",
+        "runtime": "pass" if runtime_requirements.get("supervisor_required") or runtime_requirements.get("runtime_driver_required") else "not_applicable",
+    }
