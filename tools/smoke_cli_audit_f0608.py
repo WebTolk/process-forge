@@ -216,7 +216,9 @@ def smoke_presence_and_public_mode(root: Path) -> None:
 
 def smoke_plan_default_parity(root: Path) -> None:
     plan = {"run": {"id": "run"}, "workers": [{"id": "worker-a"}]}
-    normalized = pf.normalized_orchestrator_plan(ROOT, plan)
+    from processforge_core.work.orchestration_config import OrchestrationConfigService
+
+    normalized = OrchestrationConfigService().normalized_orchestrator_plan(ROOT, plan)
     from processforge_core.work.outputs import WorkOutputPolicy
     expected = WorkOutputPolicy().expected_report({"id": "worker-a"})
     assert normalized["workers"][0]["expected_report_artifact"] == expected == ".pf/artifacts/worker-a-report.md"

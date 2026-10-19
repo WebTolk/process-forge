@@ -392,6 +392,7 @@ from processforge_subprocess import diagnostic_text, format_command as format_su
 
 from processforge_core.chat.export import ChatExportService
 from processforge_core.agents.hook_policy import HookDispatchPolicy
+from processforge_core.work.orchestration_config import OrchestrationConfigService
 from processforge_core.project.capability_resolution import ProjectCapabilityResolution
 from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
 from processforge_core.project.overrides import ProjectOverrideReader
@@ -11503,8 +11504,6 @@ def command_continuation_doctor(args: argparse.Namespace) -> int:
 
 
 
-def orchestrator_plan_path(project_root: Path, run_id: str) -> Path:
-    return _work_paths.run_root(project_root, run_id) / "orchestrator-plan.yaml"
 
 
 
@@ -12354,7 +12353,7 @@ def load_supervisor_profile(project_root: Path, profile_ref: str | None = None) 
 
 
 def load_run_plan_if_present(project_root: Path, run_id: str) -> dict[str, Any]:
-    path = orchestrator_plan_path(project_root, run_id)
+    path = _orchestration_config_service.orchestrator_plan_path(project_root, run_id)
     return read_yaml_file(path) if path.is_file() else {}
 
 
@@ -12844,21 +12843,6 @@ def command_runtime_host_projection_doctor(args: argparse.Namespace) -> int:
     return runtime_host.command_projection_doctor(args, sys.modules[__name__])
 
 
-def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_arg: str | None = None) -> dict[str, Any]:
-    if plan_arg:
-        path = Path(plan_arg).expanduser()
-        if not path.is_absolute():
-            path = (project_root / path).resolve()
-    elif run_arg:
-        path = orchestrator_plan_path(project_root, run_arg)
-    else:
-        raise SystemExit("FAIL: --plan or --run is required")
-    if not path.is_file():
-        raise SystemExit(f"FAIL: orchestrator plan not found: {path}")
-    data = read_yaml_file(path)
-    if not isinstance(data, dict):
-        raise SystemExit(f"FAIL: orchestrator plan must be a YAML object: {path}")
-    return data
 
 
 
@@ -12875,21 +12859,6 @@ def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_
 
 
 
-def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -> dict[str, Any]:
-    agent_model = _context_contract_inputs.normalize_agent_model(model)
-    if not agent_model:
-        return plan
-    result = copy.deepcopy(plan)
-    runtime = result.get("runtime")
-    if not isinstance(runtime, dict):
-        runtime = {}
-        result["runtime"] = runtime
-    runtime["model"] = agent_model
-    workers = result.get("workers") if isinstance(result.get("workers"), list) else []
-    for worker in workers:
-        if isinstance(worker, dict):
-            worker["model"] = agent_model
-    return result
 
 
 
@@ -12922,7 +12891,7 @@ Current status:
 Initial worker assignments, capsules, and launch prompts were generated.
 
 Input artifacts:
-- {rel(orchestrator_plan_path(project_root, run_id), project_root)}
+- {rel(_orchestration_config_service.orchestrator_plan_path(project_root, run_id), project_root)}
 - {rel(summary, project_root)}
 
 Files changed:
@@ -12949,134 +12918,10 @@ Launch workers with the generated prompts, then integrate their required outputs
     handoff.write_text(handoff_text, encoding="utf-8")
 
 
-def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
-    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
-    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
-    default_driver = str(runtime.get("default_driver") or "manual")
-    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
-    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
-    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
-    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
-    normalized_workers: list[dict[str, Any]] = []
-    for order, worker in enumerate(plan.get("workers", []) if isinstance(plan.get("workers"), list) else [], start=1):
-        if not isinstance(worker, dict):
-            continue
-        worker_id = safe_id(str(worker.get("id") or f"worker-{order}"), "worker")
-        normalized_workers.append(
-            {
-                "id": worker_id,
-                "order": order,
-                "runtime_driver": str(worker.get("runtime_driver") or default_driver),
-                "model": _context_contract_inputs.normalize_agent_model(worker.get("model") or default_model),
-                "reasoning_effort": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
-                "allow_subagents": bool(worker.get("allow_subagents", False)),
-                "subagent_policy": _worker_plan_policy.subagent_policy(worker),
-                "allowed_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_files")),
-                "allowed_read_files": _context_contract_inputs.assignment_scope_items(worker.get("allowed_read_files")),
-                "forbidden_files": _context_contract_inputs.assignment_scope_items(worker.get("forbidden_files")),
-                "required_outputs": _context_contract_inputs.normalize_required_outputs(worker.get("required_outputs")),
-                "workspace_access": _context_contract_inputs.normalize_workspace_access(worker.get("workspace_access")),
-                "expected_report_artifact": str(worker.get("expected_report_artifact") or _work_output_policy.default_report(worker_id)),
-                "depends_on": sorted(_worker_plan_policy.dependency_set(worker)),
-            }
-        )
-    return {
-        "schema_version": 1,
-        "run": {
-            "id": safe_id(str(run.get("id") or "run"), "run"),
-            "title": str(run.get("title") or run.get("id") or "run"),
-            "process": str(run.get("process") or "multi-agent-task-orchestration"),
-        },
-        "runtime": {
-            "default_driver": default_driver,
-            "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
-            "start_policy": str(runtime.get("start_policy") or "manual"),
-            "max_parallel_workers": int(runtime.get("max_parallel_workers") or 1),
-            "model": default_model,
-            "reasoning_effort": default_reasoning_effort,
-        },
-        "allow_write_scope_overlap": _worker_plan_policy.allows_write_scope_overlap(plan),
-        "workers": normalized_workers,
-    }
 
 
-def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
-    normalized = normalized_orchestrator_plan(project_root, plan)
-    run_id = str(normalized["run"]["id"])
-    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
-    default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
-    default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
-    raw_workers: dict[str, dict[str, Any]] = {}
-    for raw_worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
-        if isinstance(raw_worker, dict):
-            raw_workers[safe_id(str(raw_worker.get("id") or "worker"), "worker")] = raw_worker
-    workers: list[dict[str, Any]] = []
-    for worker in normalized["workers"]:
-        policy = worker["subagent_policy"] if isinstance(worker.get("subagent_policy"), dict) else {}
-        raw_worker = raw_workers.get(str(worker["id"]), {})
-        if _context_contract_inputs.normalize_agent_model(raw_worker.get("model") if isinstance(raw_worker, dict) else ""):
-            model_source = f"workers[{worker['id']}].model"
-        elif default_model:
-            model_source = "runtime.model"
-        else:
-            model_source = "default.empty"
-        workers.append(
-            {
-                "id": worker["id"],
-                "runtime_driver": {
-                    "value": worker["runtime_driver"],
-                    "source": f"workers[{worker['id']}].runtime_driver",
-                    "behavior": ["worker-run.runtime_driver"],
-                },
-                "agent_model": {
-                    "value": _context_contract_inputs.normalize_agent_model(worker.get("model")),
-                    "source": model_source,
-                    "behavior": ["assignment.agent_model", "capsule.agent_model", "worker-run.PF_AGENT_MODEL", "runtime-driver.command.model_args"],
-                },
-                "agent_reasoning_effort": {
-                    "value": _context_contract_inputs.normalize_agent_reasoning_effort(worker.get("reasoning_effort") or default_reasoning_effort),
-                    "source": f"workers[{worker['id']}].reasoning_effort" if _context_contract_inputs.normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") if isinstance(raw_worker, dict) else "") else ("runtime.reasoning_effort" if default_reasoning_effort else "default.empty"),
-                    "behavior": ["assignment.agent_reasoning_effort", "capsule.agent_reasoning_effort", "worker-run.PF_AGENT_REASONING_EFFORT", "codex-exec.PF_CODEX_REASONING_EFFORT"],
-                },
-                "subagent_policy": {
-                    "allow": bool(policy.get("allow")),
-                    "max_subagents": int(policy.get("max_subagents") or 0),
-                    "allowed_roles": policy.get("allowed_roles") if isinstance(policy.get("allowed_roles"), list) else [],
-                    "require_reports": bool(policy.get("require_reports")),
-                    "reports_dir": str(policy.get("reports_dir") or ""),
-                    "behavior": ["assignment.subagent_policy", "capsule.subagent_policy", "worker-run.collect.subagent_reports"],
-                },
-                "required_outputs": worker["required_outputs"],
-                "expected_report_artifact": worker["expected_report_artifact"],
-            }
-        )
-    return {
-        "schema_version": 1,
-        "plan": rel(orchestrator_plan_path(project_root, run_id), project_root),
-        "resolved": {
-            "allow_write_scope_overlap": {
-                "value": bool(normalized["allow_write_scope_overlap"]),
-                "source": "plan.allow_write_scope_overlap" if "allow_write_scope_overlap" in plan else "default.deny",
-                "behavior": [
-                    "assignment.overlap_policy=allow" if normalized["allow_write_scope_overlap"] else "assignment.overlap_policy=deny",
-                    "supervisor.write_scope_overlap=allow_for_plan" if normalized["allow_write_scope_overlap"] else "supervisor.write_scope_overlap=block_conflicts",
-                ],
-            },
-            "runtime": normalized["runtime"],
-            "workers": workers,
-        },
-        "warnings": [],
-        "unsupported_fields": [],
-    }
 
 
-def write_orchestrator_config_resolution_artifacts(project_root: Path, plan: dict[str, Any]) -> None:
-    normalized = normalized_orchestrator_plan(project_root, plan)
-    run_id = str(normalized["run"]["id"])
-    root = _work_paths.run_root(project_root, run_id)
-    root.mkdir(parents=True, exist_ok=True)
-    _core_common_yaml_io.write_yaml_file(root / "orchestrator-shell-plan.normalized.yaml", normalized)
-    _core_common_yaml_io.write_yaml_file(root / "config-resolution-report.yaml", build_config_resolution_report(project_root, plan))
 
 
 def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) -> None:
@@ -13110,7 +12955,7 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     run_id = safe_id(args.run, "run")
-    path = orchestrator_plan_path(project_root, run_id)
+    path = _orchestration_config_service.orchestrator_plan_path(project_root, run_id)
     plan = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else _worker_plan_policy.default_task_plan(run_id, args.title)
     if not plan.get("run"):
         plan["run"] = {"id": run_id, "title": args.title, "process": "multi-agent-task-orchestration"}
@@ -13126,14 +12971,14 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
 def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    plan = _orchestration_config_service.load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
     result = print_checks(_worker_plan_validation_service.validate(project_root, plan))
     if getattr(args, "write_normalized", None):
         output = Path(args.write_normalized).expanduser()
         if not output.is_absolute():
             output = (project_root / output).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
-        _core_common_yaml_io.write_yaml_file(output, normalized_orchestrator_plan(project_root, plan))
+        _core_common_yaml_io.write_yaml_file(output, _orchestration_config_service.normalized_orchestrator_plan(project_root, plan))
         print(f"WROTE: {rel(output, project_root)}")
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     emit_process_event(project_root, "orchestrator.plan.reviewed", process_id="multi-agent-task-orchestration", subject=str(run.get("id") or "run"), payload={"result": "fail" if result else "pass"})
@@ -13163,8 +13008,8 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
 def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
-    plan = apply_orchestrator_model_override(plan, getattr(args, "model", None))
+    plan = _orchestration_config_service.load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    plan = _orchestration_config_service.apply_orchestrator_model_override(plan, getattr(args, "model", None))
     checks = _worker_plan_validation_service.validate(project_root, plan)
     if any(item.level == "FAIL" for item in checks):
         print_checks(checks)
@@ -13177,7 +13022,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     default_model = _context_contract_inputs.normalize_agent_model(runtime.get("model") or "")
     default_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
-    planned = [_work_paths.run_document(project_root, run_id), orchestrator_plan_path(project_root, run_id), _work_paths.run_root(project_root, run_id) / "worker-prompts", _work_paths.run_root(project_root, run_id) / "config-resolution-report.yaml"]
+    planned = [_work_paths.run_document(project_root, run_id), _orchestration_config_service.orchestrator_plan_path(project_root, run_id), _work_paths.run_root(project_root, run_id) / "worker-prompts", _work_paths.run_root(project_root, run_id) / "config-resolution-report.yaml"]
     if not args.apply or getattr(args, "dry_run", False):
         print_plan("orchestrator-plan apply dry run", planned, project_root)
         return 0
@@ -13200,7 +13045,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             if "max_parallel_workers" in runtime:
                 run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
             save_run_locked(project_root, run_doc)
-    _core_common_yaml_io.write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
+    _core_common_yaml_io.write_yaml_file(_orchestration_config_service.orchestrator_plan_path(project_root, run_id), plan)
     for order, worker in enumerate(workers, start=1):
         if not isinstance(worker, dict):
             continue
@@ -13261,7 +13106,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             task.setdefault("dependencies", {})["blocked_by"] = blocked_by
         save_task(project_root, task)
     materialize_plan_overlap_policy(project_root, plan)
-    write_orchestrator_config_resolution_artifacts(project_root, plan)
+    _orchestration_config_service.write_orchestrator_config_resolution_artifacts(project_root, plan)
     command_project_context_refresh(argparse.Namespace(project_root=str(project_root)))
     for worker in workers:
         if not isinstance(worker, dict):
@@ -13330,11 +13175,11 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
 def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    plan = _orchestration_config_service.load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     run_id = safe_id(str(run.get("id") or "run"), "run")
     print(f"RUN: {run_id}")
-    print(f"PLAN: {rel(orchestrator_plan_path(project_root, run_id), project_root)}")
+    print(f"PLAN: {rel(_orchestration_config_service.orchestrator_plan_path(project_root, run_id), project_root)}")
     if _work_paths.run_document(project_root, run_id).is_file():
         return command_run_status(argparse.Namespace(project_root=str(project_root), run=run_id))
     print("STATUS: plan-created")
@@ -17845,6 +17690,7 @@ _release_source_policy = ReleaseSourcePolicy()
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
 _chat_export_service = ChatExportService()
 _hook_dispatch_policy = HookDispatchPolicy(hooks=_hook_configuration_reader, documents=_yaml_documents)
+_orchestration_config_service = OrchestrationConfigService()
 _project_capability_resolution = ProjectCapabilityResolution(ROOT)
 _project_classifier_sources = ProjectClassifierSourceReader(ROOT)
 _project_override_reader = ProjectOverrideReader(ROOT)
