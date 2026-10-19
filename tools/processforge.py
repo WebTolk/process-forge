@@ -390,6 +390,7 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
+from processforge_core.agents.hook_policy import HookDispatchPolicy
 from processforge_core.project.capability_resolution import ProjectCapabilityResolution
 from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
 from processforge_core.project.overrides import ProjectOverrideReader
@@ -7197,65 +7198,18 @@ def project_id(project_root: Path) -> str:
 
 
 
-def event_id_value(event: dict[str, Any]) -> str:
-    return str(event.get("event_id") or event.get("id") or f"evt_{uuid.uuid4().hex}")
 
 
-def event_type_name(event: dict[str, Any]) -> str:
-    return str(event.get("event_type") or event.get("type") or "")
 
 
-def event_matches_hook(event: dict[str, Any], hook: dict[str, Any]) -> bool:
-    event_types = hook.get("event_types", ["*"])
-    if not isinstance(event_types, list):
-        return False
-    return "*" in event_types or event_type_name(event) in event_types
 
 
-def hook_targets(project_root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    config = load_yaml_document(_hook_configuration_reader.path(project_root))
-    hooks_config = config.get("hooks") if isinstance(config, dict) else None
-    if isinstance(hooks_config, dict):
-        targets = hooks_config.get("targets", [])
-        return hooks_config, targets if isinstance(targets, list) else []
-    if isinstance(hooks_config, list):
-        return {"mode": config.get("dispatch", {}).get("default_mode", "outbox") if isinstance(config.get("dispatch"), dict) else "outbox"}, hooks_config
-    return {"mode": "outbox"}, []
 
 
-def selected_hooks(project_root: Path, event: dict[str, Any]) -> list[dict[str, Any]]:
-    _hooks_config, hooks = hook_targets(project_root)
-    selected: list[dict[str, Any]] = []
-    for hook in hooks:
-        if not isinstance(hook, dict):
-            continue
-        if not hook.get("enabled", False):
-            continue
-        if event_matches_hook(event, hook):
-            selected.append(hook)
-    return selected
 
 
-def hook_delivery_payload(event: dict[str, Any], target: dict[str, Any], mode: str, delivery_id: str) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "delivery_id": delivery_id,
-        "delivery_time": _core_common_clock.now_utc(),
-        "target_id": str(target.get("id", "hook")),
-        "mode": mode,
-        "event": event,
-    }
 
 
-def wtaicc_outbox_payload(event: dict[str, Any], *, chat: dict[str, Any] | None = None) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "target": "wtaicc",
-        "delivery_mode": "outbox",
-        "created_at": _core_common_clock.now_utc(),
-        "event": event,
-        "chat": chat or {"included": False, "mode": "metadata_only", "messages": []},
-    }
 
 
 def write_hook_result(project_root: Path, result: dict[str, Any]) -> Path:
@@ -7267,13 +7221,13 @@ def write_hook_result(project_root: Path, result: dict[str, Any]) -> Path:
 
 
 def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool = False, outbox: bool = True) -> list[dict[str, Any]]:
-    hooks_config, _all_hooks = hook_targets(project_root)
-    hooks = selected_hooks(project_root, event)
+    hooks_config, _all_hooks = _hook_dispatch_policy.hook_targets(project_root)
+    hooks = _hook_dispatch_policy.selected_hooks(project_root, event)
     actions: list[dict[str, Any]] = []
     for hook in hooks:
         hook_id = safe_id(str(hook.get("id", "hook")), "hook")
         hook_type = str(hook.get("type", "outbox"))
-        delivery_id = "del_" + hashlib.sha256((event_id_value(event) + ":" + hook_id).encode("utf-8")).hexdigest()[:32]
+        delivery_id = "del_" + hashlib.sha256((_hook_dispatch_policy.event_id_value(event) + ":" + hook_id).encode("utf-8")).hexdigest()[:32]
         action: dict[str, Any] = {"hook": hook_id, "target_id": hook_id, "type": hook_type, "delivery_id": delivery_id}
         if dry_run:
             action["status"] = "dry_run"
@@ -7284,9 +7238,9 @@ def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool =
             if hook_id.startswith("wtaicc") and target_root.name != "wtaicc":
                 target_root = target_root / "wtaicc"
             target_root.mkdir(parents=True, exist_ok=True)
-            delivery = hook_delivery_payload(event, hook, "outbox", delivery_id)
-            payload = wtaicc_outbox_payload(event) if hook_id.startswith("wtaicc") else delivery
-            target = target_root / f"{event_id_value(event)}.{hook_id}.json"
+            delivery = _hook_dispatch_policy.hook_delivery_payload(event, hook, "outbox", delivery_id)
+            payload = _hook_dispatch_policy.wtaicc_outbox_payload(event) if hook_id.startswith("wtaicc") else delivery
+            target = target_root / f"{_hook_dispatch_policy.event_id_value(event)}.{hook_id}.json"
             target.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             action["status"] = "outbox_written"
             action["outbox"] = rel(target, project_root)
@@ -7331,14 +7285,14 @@ def admit_process_event(project_root: Path, event: dict[str, Any], *, dispatch: 
     inserted = _process_event_journal.append(
         events_path,
         event,
-        event_id_value=event_id_value,
+        event_id_value=_hook_dispatch_policy.event_id_value,
         record=project_configuration(project_root, workplace_root).config.logging.events,
-        queue_dispatch=dispatch and bool(selected_hooks(project_root, event)),
+        queue_dispatch=dispatch and bool(_hook_dispatch_policy.selected_hooks(project_root, event)),
     )
     if dispatch:
-        for pending in _process_event_journal.pending_dispatch(events_path, event_id=event_id_value(event)):
+        for pending in _process_event_journal.pending_dispatch(events_path, event_id=_hook_dispatch_policy.event_id_value(event)):
             dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
-            _process_event_journal.complete_dispatch(events_path, event_id_value(pending))
+            _process_event_journal.complete_dispatch(events_path, _hook_dispatch_policy.event_id_value(pending))
     return inserted
 
 
@@ -7352,7 +7306,7 @@ def flush_pending_event_dispatches(project_root: Path, *, limit: int = 100) -> N
     path = _run_task_inputs.event_runtime_paths(project_root)[0]
     for pending in _process_event_journal.pending_dispatch(path, limit=limit):
         dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
-        _process_event_journal.complete_dispatch(path, event_id_value(pending))
+        _process_event_journal.complete_dispatch(path, _hook_dispatch_policy.event_id_value(pending))
 
 
 def emit_process_event(project_root: Path, event_type: str, **kwargs: Any) -> dict[str, Any]:
@@ -13959,8 +13913,8 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
     if not args.dry_run:
         append_process_event(project_root, event, dispatch=False)
         if actions:
-            emit_process_event(project_root, "hook.dispatched", payload={"event_id": event_id_value(event), "actions": actions}, privacy="sanitized", correlation_id=str(event.get("correlation_id")))
-        print(f"EVENT: {event_id_value(event)}")
+            emit_process_event(project_root, "hook.dispatched", payload={"event_id": _hook_dispatch_policy.event_id_value(event), "actions": actions}, privacy="sanitized", correlation_id=str(event.get("correlation_id")))
+        print(f"EVENT: {_hook_dispatch_policy.event_id_value(event)}")
     return 0
 
 
@@ -14021,7 +13975,7 @@ def command_chat_record(args: argparse.Namespace) -> int:
     )
     print(f"TRANSCRIPT: {rel(transcript, project_root)}")
     print(f"MESSAGE: {record['message_id']}")
-    print(f"EVENT: {event_id_value(event)}")
+    print(f"EVENT: {_hook_dispatch_policy.event_id_value(event)}")
     return 0
 
 
@@ -14047,7 +14001,7 @@ def command_chat_export(args: argparse.Namespace) -> int:
         "mode": "full" if args.include_content else "metadata_only",
         "messages": chat_export_messages(messages, include_content=args.include_content),
     }
-    payload = wtaicc_outbox_payload(event, chat=chat_payload)
+    payload = _hook_dispatch_policy.wtaicc_outbox_payload(event, chat=chat_payload)
     outbox_root = locate_flow_root(project_root) / "runtime" / "hooks" / "outbox" / "wtaicc"
     outbox_root.mkdir(parents=True, exist_ok=True)
     stamp = _core_common_clock.now_utc().replace(":", "").replace("-", "").replace("Z", "z")
@@ -17978,6 +17932,7 @@ def main(argv: list[str] | None = None) -> int:
 # Concrete owners retain the distribution root and existing request-scoped readers.
 _release_source_policy = ReleaseSourcePolicy()
 _telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
+_hook_dispatch_policy = HookDispatchPolicy(hooks=_hook_configuration_reader, documents=_yaml_documents)
 _project_capability_resolution = ProjectCapabilityResolution(ROOT)
 _project_classifier_sources = ProjectClassifierSourceReader(ROOT)
 _project_override_reader = ProjectOverrideReader(ROOT)

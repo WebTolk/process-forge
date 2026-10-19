@@ -39,6 +39,7 @@ def main():
             process.join(60)
             assert process.exitcode == 0, process.exitcode
         elapsed = time.perf_counter() - started
+        from processforge_core.agents.hook_policy import HookDispatchPolicy
         from processforge_core.work.consistency import RunTaskInputReader
 
         path = RunTaskInputReader().event_runtime_paths(project)[0]
@@ -74,7 +75,7 @@ def main():
             assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         # Commit-before-dispatch remains recoverable with optional history off.
         hooks = [{"id": "test"}]
-        with patch.object(core, "selected_hooks", return_value=hooks), \
+        with patch.object(HookDispatchPolicy, "selected_hooks", return_value=hooks), \
                 patch.object(core, "dispatch_hooks", side_effect=OSError("simulated dispatch failure")):
             try:
                 core.append_process_event(project, {"event_id": "evt_dispatch"})

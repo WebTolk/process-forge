@@ -691,7 +691,10 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
                 raise PermissionError(f"runtime session is not routed: {session_id}")
         remember_project(state, handle)
         event = normalize_event(raw, project_root, core)
-        duplicate = event_exists(project_root, core.event_id_value(event), core)
+        from processforge_core.agents.hook_policy import HookDispatchPolicy
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        duplicate = event_exists(project_root, HookDispatchPolicy().event_id_value(event), core)
         if not duplicate or (not presence and event_type in {"agent.session.started", "agent.session.resumed"}):
             ledger_from_event(raw, project_root, workplace_root, handle, core)
         if session_id and event_type in {"agent.session.started", "agent.session.resumed"}:
@@ -703,9 +706,7 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         save_state(workplace_root, state, core)
         projection = projection_path(project_root, core)
         stage_projection = stage_obligations_path(project_root, core)
-        from processforge_core.work.consistency import RunTaskInputReader
-
-        payload = {"event_id": core.event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
+        payload = {"event_id": HookDispatchPolicy().event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
         return payload
 
 

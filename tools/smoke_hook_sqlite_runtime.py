@@ -23,6 +23,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="pf-sqlite-runtime-") as directory:
         workplace, project = setup_basic_project(Path(directory), "project")
         core.configuration_service(workplace / "configuration.yaml").update({"logging.events": False, "logging.raw_hooks": False})
+        from processforge_core.agents.hook_policy import HookDispatchPolicy
         from processforge_core.work.consistency import RunTaskInputReader
 
         path = RunTaskInputReader().event_runtime_paths(project)[0]
@@ -41,7 +42,7 @@ def main():
         assert journal.count(path) == baseline
         pending = native_envelope({"hook_event_name": "PostToolUse", "cwd": str(project), "session_id": "live",
                                    "tool_name": "Read", "tool_use_id": "pending-dispatch"})
-        with patch.object(core, "selected_hooks", return_value=[{"id": "test"}]), \
+        with patch.object(HookDispatchPolicy, "selected_hooks", return_value=[{"id": "test"}]), \
                 patch.object(core, "dispatch_hooks", side_effect=OSError("after admission, before dispatch")):
             try:
                 host.ingest_event(pending, workplace, core)

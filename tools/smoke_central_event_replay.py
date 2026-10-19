@@ -55,13 +55,14 @@ def existing_runtime_event_id(event_id: str) -> str:
 
 
 def project_event_ids(project: Path, core: object) -> set[str]:
+    from processforge_core.agents.hook_policy import HookDispatchPolicy
     from processforge_core.work.consistency import RunTaskInputReader
 
     events_path, _outbox = RunTaskInputReader().event_runtime_paths(project)
     if not events_path.is_file():
         return set()
     rows = events(project)
-    return {str(core.event_id_value(row)) for row in rows}
+    return {str(HookDispatchPolicy().event_id_value(row)) for row in rows}
 
 
 def remove_project_event(project: Path, core: object, event_id: str) -> None:
