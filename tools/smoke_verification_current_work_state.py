@@ -84,7 +84,9 @@ def main() -> int:
         pf("runtime-host", "projection-doctor", "--project-root", str(root))
 
         result.unlink()
-        failed_event = core.processforge_event(root, "task.doctor.failed", assignment_id_value=task, subject=task, payload={"task_id": task, "result": "fail"})
+        from processforge_core.agents.telemetry import TelemetryEventService
+
+        failed_event = TelemetryEventService().processforge_event(root, "task.doctor.failed", assignment_id_value=task, subject=task, payload={"task_id": task, "result": "fail"})
         core.append_process_event(root, failed_event)
         rebuild(root)
         failed = json.loads((root / ".pf" / "artifacts" / "projections" / "stage-obligations.json").read_text(encoding="utf-8"))

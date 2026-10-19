@@ -108,7 +108,9 @@ def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
 def append_operator_log(workplace_root: Path, core: Any, event: str, **payload: Any) -> None:
     path = operator_log_path(workplace_root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    record = {"time": core.now_utc(), "event": event}
+    import processforge_core.common.clock as _core_common_clock
+
+    record = {"time": _core_common_clock.now_utc(), "event": event}
     record.update(payload)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
@@ -131,6 +133,8 @@ def token_hash(token: str) -> str:
 
 
 def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = "", pid: int | None = None, instance_id: str = "") -> dict[str, Any]:
+    import processforge_core.common.clock as _core_common_clock
+
     return {
         "schema_version": 1,
         "runtime_version": RUNTIME_VERSION,
@@ -138,8 +142,8 @@ def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = 
         "processforge_core_version": getattr(core, "PROCESSFORGE_VERSION", ""),
         "pid": pid if pid is not None else os.getpid(),
         "instance_id": instance_id,
-        "started_at": core.now_utc(),
-        "updated_at": core.now_utc(),
+        "started_at": _core_common_clock.now_utc(),
+        "updated_at": _core_common_clock.now_utc(),
         "endpoint": endpoint,
         "workplace_root": str(workplace_root),
         "workplace_id": workplace_root.name,
@@ -159,7 +163,9 @@ def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = 
 
 
 def save_service_state(workplace_root: Path, core: Any, state: dict[str, Any]) -> None:
-    state["updated_at"] = core.now_utc()
+    import processforge_core.common.clock as _core_common_clock
+
+    state["updated_at"] = _core_common_clock.now_utc()
     write_json_atomic(service_path(workplace_root), state)
 
 
@@ -265,7 +271,9 @@ def cleanup_stale_runtime(workplace_root: Path, core: Any) -> None:
         if state:
             state["status"] = "stale"
             state["health"] = "stale"
-            state["stale_detected_at"] = core.now_utc()
+            import processforge_core.common.clock as _core_common_clock
+
+            state["stale_detected_at"] = _core_common_clock.now_utc()
             write_json_atomic(service_path(workplace_root), state)
 
 
@@ -352,7 +360,9 @@ def acquire_singleton(workplace_root: Path, core: Any, instance_id: str) -> int:
             path.unlink(missing_ok=True)
             fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(json.dumps({"instance_id": instance_id, "pid": os.getpid(), "created_at": core.now_utc()}, sort_keys=True) + "\n")
+            import processforge_core.common.clock as _core_common_clock
+
+            handle.write(json.dumps({"instance_id": instance_id, "pid": os.getpid(), "created_at": _core_common_clock.now_utc()}, sort_keys=True) + "\n")
     return os.getpid()
 
 
@@ -473,8 +483,10 @@ class RuntimeProcess:
             except (Exception, SystemExit):
                 with self.state_lock:
                     self.state.pop("metrics", None)
+                    import processforge_core.common.clock as _core_common_clock
+
                     self.state["scheduler"]["jobs"]["metrics"] = {
-                        "period_seconds": self.metrics_interval, "last_run": self.core.now_utc(), "last_result": "failed"}
+                        "period_seconds": self.metrics_interval, "last_run": _core_common_clock.now_utc(), "last_result": "failed"}
                 try:
                     self.save()
                 except (Exception, SystemExit):
@@ -575,7 +587,9 @@ class RuntimeProcess:
             if previous is not None and now - previous < temporary_files.PERIOD_SECONDS:
                 continue
             self._temporary_files_last_run[project_root] = now
-            result: dict[str, Any] = {"last_run": self.core.now_utc(), "last_result": "failed"}
+            import processforge_core.common.clock as _core_common_clock
+
+            result: dict[str, Any] = {"last_run": _core_common_clock.now_utc(), "last_result": "failed"}
             self._temporary_files_results[project_root] = result
             try:
                 resolved = self.core.project_configuration(project_root, self.workplace_root)
@@ -651,7 +665,9 @@ class RuntimeProcess:
                 with self.state_lock:
                     self._project_errors = project_errors
                     jobs = self.state.setdefault("scheduler", {}).setdefault("jobs", {})
-                    now = self.core.now_utc()
+                    import processforge_core.common.clock as _core_common_clock
+
+                    now = _core_common_clock.now_utc()
                     jobs.setdefault("ledger", {})["last_run"] = now
                     jobs["ledger"]["last_result"] = "ok"
                     jobs.setdefault("director", {})["last_run"] = now

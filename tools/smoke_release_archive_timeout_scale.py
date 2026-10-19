@@ -17,13 +17,15 @@ def run_case(scale: object, expected_arg: str, expected_timeout: int) -> None:
 
     def fake_run(label: str, command: list[str], cwd: Path, timeout: int, **kwargs: object) -> processforge.ReleaseCommandResult:
         calls.append((label, command, timeout))
+        import processforge_core.common.clock as _core_common_clock
+
         return processforge.ReleaseCommandResult(
             label,
             "PASS",
             0,
             "",
-            processforge.now_utc(),
-            processforge.now_utc(),
+            _core_common_clock.now_utc(),
+            _core_common_clock.now_utc(),
             0.0,
             timeout,
             command,

@@ -517,7 +517,7 @@ def build_assignment_capsule_publisher(
         assignment_path=lambda identity: service._assignment_path(identity),
         snapshot_reader=lambda: service._snapshot_reader(),
         build_context_fields=context_fields,
-        now_utc=lambda: service.core.now_utc(),
+        now_utc=lambda: service._clock(),
         dump_yaml=lambda value: dump_yaml(value),
         ensure_trailing_newline=lambda text: ensure_trailing_newline(text),
         relative_path=lambda path, root: service.core.rel(path, root),

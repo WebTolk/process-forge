@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
 
 from .common.request_scope import safe_load, scoped_request
+from .common import clock as _canonical_clock
 from .common.yaml_io import _parse_simple_yaml
 from .common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from .documents.reader import YamlDocumentReader
@@ -190,6 +191,7 @@ class ProcessExecutionService:
     workplace_root: Path | None
     core: Any
     _event_paths: Callable[[Path], tuple[Path, Any]] | None = field(default_factory=lambda: RunTaskInputReader().event_runtime_paths, init=False, repr=False, compare=False)
+    _clock: Callable[[], str] = field(default_factory=lambda: _canonical_clock.now_utc, init=False, repr=False, compare=False)
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
@@ -320,7 +322,7 @@ class ProcessExecutionService:
         except ValueError as exc:
             return self._blocked("invalid_process_definition", message=str(exc), process_id=selected_process)
 
-        now = self.core.now_utc()
+        now = self._clock()
         flow_root = self._flow_root()
         run_id = self._unique_id(flow_root / "runs", "garage-" + self.core.safe_id(objective, "work"))
         assignment_id = self._unique_id(flow_root / "assignments", self.core.safe_id(objective, "task"))
@@ -592,7 +594,7 @@ class ProcessExecutionService:
                     assignment["stage_status"] = "in_progress"
             stage_execution = {**stage_execution, "evidence": self._merge_evidence(stage_execution.get("evidence"), normalized_evidence), "notes": str(notes or stage_execution.get("notes") or "")}
             assignment["stage_execution"] = stage_execution
-            assignment["updated_at"] = self.core.now_utc()
+            assignment["updated_at"] = self._clock()
             self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
             preview = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
             preview_blockers = list(preview.get("blockers") or [])
@@ -642,7 +644,7 @@ class ProcessExecutionService:
         from .composition import build_work_transition_commit_service
 
         return build_work_transition_commit_service(
-            now_utc=lambda: self.core.now_utc(),
+            now_utc=lambda: self._clock(),
             set_run_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status),
             assignment_path=lambda assignment_id: self._assignment_path(assignment_id),
             run_path=lambda run_id: self._run_path(run_id),
@@ -839,7 +841,7 @@ class ProcessExecutionService:
 
         return build_evidence_validation_service(
             lambda: self.project_root,
-            now_utc=lambda: self.core.now_utc(),
+            now_utc=lambda: self._clock(),
             relative_path=lambda path: self.core.rel(path, self.project_root),
             sha256_file=self._sha256_file,
             path_resolver=self._safe_evidence_path,
@@ -984,7 +986,7 @@ class ProcessExecutionService:
 
     def _write_projection(self, state: dict[str, Any]) -> None:
         path = self._flow_root() / "artifacts" / "projections" / "process-execution-state.json"
-        payload = {"schema_version": 1, "kind": "process-execution-state", "generated_at": self.core.now_utc(), "source": {"authority": "run+assignment+pinned-process"}, "state": state}
+        payload = {"schema_version": 1, "kind": "process-execution-state", "generated_at": self._clock(), "source": {"authority": "run+assignment+pinned-process"}, "state": state}
         self._atomic_text(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
     def _write_task_index(self, run: dict[str, Any]) -> None:

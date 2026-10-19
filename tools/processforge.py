@@ -392,6 +392,8 @@ from processforge_subprocess import diagnostic_text, format_command as format_su
 
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
+from processforge_core.agents.telemetry import TelemetryEventService
+import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
 import processforge_core.common.yaml_io as _core_common_yaml_io
 import processforge_core.work.consistency as _core_work_consistency
@@ -762,7 +764,7 @@ def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path
         "transaction_id": plan.transaction_id,
         "command": plan.command,
         "state": "preparing",
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "writes": [],
         "created_directories": [],
         "completed": [],
@@ -969,7 +971,7 @@ def commit_authoring_plan(
             elif _file_digests.sha256_optional_file(write.destination) != _file_digests.sha256_bytes(write.content or b""):
                 raise RuntimeError(f"committed authoring hash mismatch: {write.destination}")
         journal["state"] = "committed"
-        journal["committed_at"] = now_utc()
+        journal["committed_at"] = _core_common_clock.now_utc()
         journal.pop("next_operation", None)
         _authoring_journal_store.write(plan, journal)
     except BaseException:
@@ -1409,8 +1411,6 @@ def flow_layout(project_root: Path) -> str:
     return "pf" if (flow_root / "process-forge.yaml").is_file() else "missing"
 
 
-def flow_label(project_root: Path) -> str:
-    return PROJECT_FLOW_ROOT
 
 
 def flow_path(project_root: Path, *parts: str) -> Path:
@@ -2196,7 +2196,7 @@ def workplace_event(root: Path, event_type: str, *, payload: dict[str, Any] | No
         "event_type": event_type,
         "source": "processforge.cli",
         "subject": workplace_id,
-        "time": now_utc(),
+        "time": _core_common_clock.now_utc(),
         "correlation_id": f"workplace-init-{workplace_id}",
         "project": {"flow_root": "workplace", "project_id": workplace_id},
         "process": {"id": "workplace-initialization", "version": "1.0.0", "stage_id": None, "process_run_id": None},
@@ -2934,7 +2934,7 @@ def director_message_payload(workplace_root: Path, project_root: Path | None, me
     return {
         "schema_version": 1,
         "id": f"msg-{uuid.uuid4().hex[:16]}",
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "message_type": message_type,
         "status": "open",
         "scope": "project" if project_root else "workspace",
@@ -3022,7 +3022,7 @@ def command_director_case_refresh(args: argparse.Namespace) -> int:
                 "project_id": project_id_value,
                 "status": "open",
                 "effective_mode": effective_mode,
-                "refreshed_at": now_utc(),
+                "refreshed_at": _core_common_clock.now_utc(),
                 "source": normalize_path_string(str(snapshot_path)),
                 "reason": "organized" if effective_mode == "organized" else "open_inbox_or_include_simple",
             },
@@ -3050,7 +3050,7 @@ def command_error_route(args: argparse.Namespace) -> int:
     coordination = effective_project_coordination(project_root, getattr(args, "workplace", None))
     result: dict[str, Any] = {
         "schema_version": 1,
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "project_id": project_id(project_root),
         "effective_mode": coordination["effective_mode"],
         "requested_mode": mode,
@@ -5733,7 +5733,7 @@ def format_command(command: list[str]) -> str:
 
 
 def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False, *, layer: str = "public", public_gate: bool = True) -> ReleaseCommandResult:
-    started_at = now_utc()
+    started_at = _core_common_clock.now_utc()
     started = time.perf_counter()
     print(f"RUN {label}:")
     print(f"  {format_command(command)}")
@@ -5741,7 +5741,7 @@ def run_release_command(label: str, command: list[str], cwd: Path, timeout: int,
     sys.stdout.flush()
     result = run_subprocess_command(command, cwd=cwd, timeout=timeout)
     elapsed = time.perf_counter() - started
-    finished_at = now_utc()
+    finished_at = _core_common_clock.now_utc()
     output = "\n".join(part for part in [result.stdout, result.stderr] if part)
     if result.timed_out:
         return ReleaseCommandResult(label, "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}", started_at, finished_at, elapsed, timeout, command, layer, public_gate)
@@ -6177,7 +6177,7 @@ def command_release_test(args: argparse.Namespace) -> int:
         print("FAIL: release-test selection resolved to no runnable checks")
         return 1
     print("ProcessForge release-test")
-    started_at = now_utc()
+    started_at = _core_common_clock.now_utc()
     started = time.perf_counter()
     failed = False
     warned = False
@@ -6209,7 +6209,7 @@ def command_release_test(args: argparse.Namespace) -> int:
         public_checks = public_release_checks(root)
         public_status = print_checks(public_checks)
         failed = failed or public_status != 0
-    finished_at = now_utc()
+    finished_at = _core_common_clock.now_utc()
     elapsed = time.perf_counter() - started
     write_release_test_report(root, results, public_checks, public=public_requested, started_at=started_at, finished_at=finished_at, elapsed_seconds=elapsed, trace_smokes=bool(getattr(args, "trace_smokes", False)))
     print(f"REPORT: {rel(root / '.pf' / 'runtime' / 'release-test' / 'latest-report.json', root)}")
@@ -6874,8 +6874,6 @@ def public_snapshot_path_checks(project_root: Path) -> list[Check]:
     return checks
 
 
-def now_utc() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def sha256_file(path: Path) -> str:
@@ -7298,7 +7296,7 @@ def resource_management_root(workplace_root: Path) -> Path:
 
 
 def resource_management_slug(command: str, object_id: str) -> str:
-    stamp = now_utc().replace(":", "").replace("-", "").replace("Z", "z")
+    stamp = _core_common_clock.now_utc().replace(":", "").replace("-", "").replace("Z", "z")
     return f"{stamp}-{safe_id(command, 'command')}-{safe_id(object_id, 'resource')}"
 
 
@@ -7331,7 +7329,7 @@ def resource_management_event(
         "schema_version": 1,
         "event_id": event_id or f"evt_{uuid.uuid4().hex}",
         "event_type": event_type,
-        "occurred_at": now_utc(),
+        "occurred_at": _core_common_clock.now_utc(),
         "scope": scope,
         "source": {"command": command, "actor_type": "agent"},
         "target": target,
@@ -7353,7 +7351,7 @@ def append_workplace_resource_event(workplace_root: Path, event: dict[str, Any])
                 return target
     target.write_text(
         (target.read_text(encoding="utf-8") if target.is_file() else "")
-        + json.dumps(redact_telemetry_value(event), ensure_ascii=False, sort_keys=True)
+        + json.dumps(_telemetry_event_service.redact_telemetry_value(event), ensure_ascii=False, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -7445,7 +7443,7 @@ def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path 
             "version": str(package_manifest.get("version", "1.0.0")),
             "package_root": package_root_id or str(package_manifest.get("package_root", "")) or None,
         },
-        "generated_at": now_utc(),
+        "generated_at": _core_common_clock.now_utc(),
         "load_policy": {
             "default": "on_demand",
             "heavy_resources": "index_only_until_requested",
@@ -7727,7 +7725,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             if str(item)
         )
     )
-    generated_at = now_utc()
+    generated_at = _core_common_clock.now_utc()
     valid_until = (datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=max_age_days)).isoformat().replace("+00:00", "Z")
     project = manifest_data.get("project", {}) if isinstance(manifest_data.get("project"), dict) else {}
     process_forge_data = manifest_data.get("process_forge", {}) if isinstance(manifest_data.get("process_forge"), dict) else {}
@@ -7952,7 +7950,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         },
         "project_classification": classification,
         "flow": {
-            "root": flow_label(project_root),
+            "root": _telemetry_event_service.flow_label(project_root),
             "layout": flow_layout(project_root),
             "manifest": rel(manifest, project_root),
             "local_config": rel(flow_root / "process-forge.local.yaml", project_root),
@@ -8153,27 +8151,10 @@ def write_project_context_snapshot_outputs(project_root: Path, *, explicit_workp
     return "fresh", {"snapshot_yaml": snapshot_yaml, "snapshot_md": snapshot_md, "snapshot_generation": generation_path, "refresh_report": report, "workplace_snapshot": workplace_snapshot}, snapshot, reasons
 
 
-def telemetry_session_id(prefix: str = "session") -> str:
-    stamp = now_utc().replace("-", "").replace(":", "").replace("Z", "z")
-    return f"{prefix}-{stamp}"
 
 
-def redact_telemetry_value(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {key: redact_telemetry_value(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [redact_telemetry_value(item) for item in value]
-    if isinstance(value, str) and contains_secret_value(value):
-        return "<redacted>"
-    return value
 
 
-def append_telemetry_event(telemetry_path: Path, event: str, **payload: Any) -> None:
-    telemetry_path.parent.mkdir(parents=True, exist_ok=True)
-    item = {"ts": now_utc(), "event": event}
-    item.update(redact_telemetry_value(payload))
-    with telemetry_path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(item, ensure_ascii=False, sort_keys=True) + "\n")
 
 
 
@@ -8217,49 +8198,6 @@ def project_id(project_root: Path) -> str:
     return _context_contract_inputs.project_id(project_root)
 
 
-def processforge_event(
-    project_root: Path,
-    event_type: str,
-    *,
-    severity: str = "info",
-    session_id: str | None = None,
-    assignment_id_value: str | None = None,
-    assignment_path: str | None = None,
-    process_id: str | None = None,
-    process_version: str | None = None,
-    stage: str | None = None,
-    subject: str | None = None,
-    payload: dict[str, Any] | None = None,
-    data: dict[str, Any] | None = None,
-    privacy: str = "private",
-    correlation_id: str | None = None,
-    causation_id: str | None = None,
-    event_id: str | None = None,
-    actor: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    correlation = correlation_id or session_id or f"corr-{uuid.uuid4().hex[:12]}"
-    event_id = event_id or f"evt_{uuid.uuid4().hex}"
-    clean_data = redact_telemetry_value(data if data is not None else (payload or {}))
-    actor_data = actor or {"type": "agent", "id": "processforge-cli", "role": "orchestrator"}
-    event_subject = subject or assignment_path or assignment_id_value or session_id or event_type
-    return {
-        "schema_version": 1,
-        "event_id": event_id,
-        "event_type": event_type,
-        "source": "processforge.cli",
-        "subject": event_subject,
-        "time": now_utc(),
-        "correlation_id": correlation,
-        "causation_id": causation_id,
-        "project": {"flow_root": flow_label(project_root), "project_id": project_id(project_root)},
-        "process": {"id": process_id, "version": process_version, "stage_id": stage, "process_run_id": None},
-        "assignment": {"id": assignment_id_value, "path": assignment_path},
-        "actor": actor_data,
-        "session": {"id": session_id},
-        "data": clean_data,
-        "severity": severity,
-        "privacy": privacy,
-    }
 
 
 def event_id_value(event: dict[str, Any]) -> str:
@@ -8305,7 +8243,7 @@ def hook_delivery_payload(event: dict[str, Any], target: dict[str, Any], mode: s
     return {
         "schema_version": 1,
         "delivery_id": delivery_id,
-        "delivery_time": now_utc(),
+        "delivery_time": _core_common_clock.now_utc(),
         "target_id": str(target.get("id", "hook")),
         "mode": mode,
         "event": event,
@@ -8317,7 +8255,7 @@ def wtaicc_outbox_payload(event: dict[str, Any], *, chat: dict[str, Any] | None 
         "schema_version": 1,
         "target": "wtaicc",
         "delivery_mode": "outbox",
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "event": event,
         "chat": chat or {"included": False, "mode": "metadata_only", "messages": []},
     }
@@ -8421,7 +8359,7 @@ def flush_pending_event_dispatches(project_root: Path, *, limit: int = 100) -> N
 
 
 def emit_process_event(project_root: Path, event_type: str, **kwargs: Any) -> dict[str, Any]:
-    event = processforge_event(project_root, event_type, **kwargs)
+    event = _telemetry_event_service.processforge_event(project_root, event_type, **kwargs)
     append_process_event(project_root, event)
     return event
 
@@ -8533,7 +8471,7 @@ def append_chat_message(
         "session_id": session_id,
         "turn_id": turn_id or f"turn_{len(prior_records) + 1}",
         "parent_message_id": parent_message_id,
-        "timestamp": now_utc(),
+        "timestamp": _core_common_clock.now_utc(),
         "participant": chat_participant(participant_id, participant_role, participant_type),
         "message": {
             "role": message_role,
@@ -8622,12 +8560,12 @@ def write_workplace_context_snapshot(project_root: Path, snapshot: dict[str, Any
         "schema_version": 1,
         "snapshot": {
             "id": "workplace-context",
-            "generated_at": now_utc(),
+            "generated_at": _core_common_clock.now_utc(),
             "privacy": "private",
         },
         "project": {"id": project_id(project_root)},
         "flow": {
-            "root": flow_label(project_root),
+            "root": _telemetry_event_service.flow_label(project_root),
             "manifest": rel(locate_flow_root(project_root) / "process-forge.yaml", project_root),
             "local_config": rel(local_config, project_root),
             "local_config_exists": local_config.is_file(),
@@ -8660,10 +8598,10 @@ def write_session_metadata(project_root: Path, session_id: str, mode: str, snaps
             "mode": mode,
             "actor_type": "human_started_agent",
             "role": "orchestrator",
-            "started_at": now_utc(),
+            "started_at": _core_common_clock.now_utc(),
         },
         "context": {
-            "project_flow_root": flow_label(project_root),
+            "project_flow_root": _telemetry_event_service.flow_label(project_root),
             "snapshot": rel(snapshot_yaml, project_root),
             "snapshot_status": snapshot_status,
         },
@@ -8738,7 +8676,7 @@ def build_context_payload(project_root: Path, assignment: Path | None = None) ->
         "schema_version": 1,
         "context": {
             "id": "context-index",
-            "generated_at": now_utc(),
+            "generated_at": _core_common_clock.now_utc(),
             "mode": "context_resolve",
             "project_flow": manifest_rel,
         },
@@ -8806,7 +8744,7 @@ def write_context_outputs(project_root: Path, assignment: Path | None = None) ->
     paths["conflict_report"].write_text(report, encoding="utf-8")
     cache_payload = {
         "schema_version": 1,
-        "cache": {"id": "context-cache", "generated_at": now_utc(), "status": "fresh" if status != "blocked" else "stale"},
+        "cache": {"id": "context-cache", "generated_at": _core_common_clock.now_utc(), "status": "fresh" if status != "blocked" else "stale"},
         "fingerprints": index["fingerprints"],
         "sources": index["sources"],
         "health": {"conflict_status": status},
@@ -8833,7 +8771,7 @@ def normalized_context_status(status: str) -> str:
 
 
 def unique_context_path(contexts: Path, assn_id: str, suffix: str) -> Path:
-    stamp = now_utc().replace(":", "").replace("-", "").replace("Z", "z")
+    stamp = _core_common_clock.now_utc().replace(":", "").replace("-", "").replace("Z", "z")
     return contexts / f"{assn_id}.{stamp}.{suffix}"
 
 
@@ -8921,11 +8859,11 @@ def compile_execution_context(
         "selected_tools": ["processforge-cli"],
         "selected_mcp": [],
         "selected_templates": resolved["rules"].get("templates", []),
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "checksum": "pending",
         "context": {
             "id": f"{assn_id}-context",
-            "created_at": now_utc(),
+            "created_at": _core_common_clock.now_utc(),
             "immutable": True,
             "context_index": rel(contexts / "context-index.yaml", project_root),
             "conflict_report": rel(assignment_conflict_report, project_root),
@@ -9013,7 +8951,7 @@ def render_session_status(project_root: Path, mode: str) -> str:
             "",
             "## Project Flow Root",
             "",
-            flow_label(project_root),
+            _telemetry_event_service.flow_label(project_root),
             "",
             "## Session Mode",
             "",
@@ -9071,7 +9009,7 @@ def command_session_start(args: argparse.Namespace) -> int:
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
     _run_task_inputs.require_flow_root(project_root)
-    session_id = telemetry_session_id()
+    session_id = _telemetry_event_service.telemetry_session_id()
     session_path, telemetry_path = session_runtime_paths(project_root, session_id)
     freshness, stale_reasons, snapshot = project_context_freshness(project_root)
     if args.rebuild_context_if_stale and freshness in {"missing", "stale"}:
@@ -9094,8 +9032,8 @@ def command_session_start(args: argparse.Namespace) -> int:
         payload={"mode": args.mode, "snapshot_status": freshness},
         correlation_id=session_id,
     )
-    append_telemetry_event(telemetry_path, "session_start", mode=args.mode, actor="agent", session=session_id)
-    append_telemetry_event(
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "session_start", mode=args.mode, actor="agent", session=session_id)
+    _telemetry_event_service.append_telemetry_event(
         telemetry_path,
         "snapshot_check",
         path=rel(project_context_snapshot_paths(project_root)[0], project_root),
@@ -9119,9 +9057,9 @@ def command_session_start(args: argparse.Namespace) -> int:
         flow_root / "contexts" / "project-context.snapshot.md",
     ]
     for source in read_order:
-        append_telemetry_event(telemetry_path, "source_read", path=rel(source, project_root), exists=source.is_file(), reason="session_start")
+        _telemetry_event_service.append_telemetry_event(telemetry_path, "source_read", path=rel(source, project_root), exists=source.is_file(), reason="session_start")
     assignment_path = Path(args.assignment).expanduser().resolve() if args.assignment else None
-    append_telemetry_event(
+    _telemetry_event_service.append_telemetry_event(
         telemetry_path,
         "assignment_loaded",
         path=rel(assignment_path, project_root) if assignment_path else None,
@@ -9139,42 +9077,42 @@ def command_session_start(args: argparse.Namespace) -> int:
     capabilities = snapshot.get("capabilities", {}) if isinstance(snapshot, dict) else {}
     for capability in capabilities.get("required", []) if isinstance(capabilities, dict) else []:
         if isinstance(capability, dict):
-            append_telemetry_event(telemetry_path, "capability_check", required=True, **capability)
+            _telemetry_event_service.append_telemetry_event(telemetry_path, "capability_check", required=True, **capability)
     for capability in capabilities.get("optional", []) if isinstance(capabilities, dict) else []:
         if isinstance(capability, dict):
-            append_telemetry_event(telemetry_path, "capability_check", required=False, **capability)
-    append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="session_start")
+            _telemetry_event_service.append_telemetry_event(telemetry_path, "capability_check", required=False, **capability)
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="session_start")
     selected_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
     if selected_specializations:
-        append_telemetry_event(telemetry_path, "specialization_switch", selected_specializations=selected_specializations, reason="explicit_session_start")
+        _telemetry_event_service.append_telemetry_event(telemetry_path, "specialization_switch", selected_specializations=selected_specializations, reason="explicit_session_start")
         emit_process_event(project_root, "context.snapshot.refreshed", session_id=session_id, payload={"selected_specializations": selected_specializations, "reason": "garage_mode_specialization_switch"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="session-start")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="session-start")
     emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "session-start"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "tool_failed", tool=None, status="skipped")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_failed", tool=None, status="skipped")
     emit_process_event(project_root, "tool.failed", severity="warn", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "mcp_check", status="skipped", reason="no required MCP declared")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "mcp_check", status="skipped", reason="no required MCP declared")
     emit_process_event(project_root, "mcp.invoked", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "fallback_used", status="skipped")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "fallback_used", status="skipped")
     emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"status": "fallback skipped"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "conflict_detected", status="none")
-    append_telemetry_event(telemetry_path, "file_scope_checked", status="ok", flow_root=flow_label(project_root))
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "conflict_detected", status="none")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "file_scope_checked", status="ok", flow_root=_telemetry_event_service.flow_label(project_root))
     report = render_session_status(project_root, args.mode)
     print(report, end="")
     if args.allow_write and not args.report_only:
         target = flow_root / "artifacts" / "session-status-report.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(report, encoding="utf-8")
-        append_telemetry_event(telemetry_path, "artifact_written", path=rel(target, project_root))
+        _telemetry_event_service.append_telemetry_event(telemetry_path, "artifact_written", path=rel(target, project_root))
         emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"path": rel(target, project_root)}, correlation_id=session_id)
         print(f"WROTE: {rel(target, project_root)}")
     else:
-        append_telemetry_event(telemetry_path, "artifact_written", status="skipped", reason="report_only")
-    append_telemetry_event(telemetry_path, "review_requested", status="skipped")
+        _telemetry_event_service.append_telemetry_event(telemetry_path, "artifact_written", status="skipped", reason="report_only")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "review_requested", status="skipped")
     emit_process_event(project_root, "review.requested", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "handoff_created", status="skipped")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "handoff_created", status="skipped")
     emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"status": "handoff skipped"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "doctor_run", status="skipped")
-    append_telemetry_event(telemetry_path, "session_end", status="completed")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "doctor_run", status="skipped")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "session_end", status="completed")
     emit_process_event(project_root, "session.ended", session_id=session_id, payload={"mode": args.mode, "status": "completed"}, correlation_id=session_id)
     print(f"SESSION: {rel(session_path, project_root)}")
     print(f"TELEMETRY: {rel(telemetry_path, project_root)}")
@@ -9191,7 +9129,7 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
         current = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None))
         proposal = {
             "schema_version": 1,
-            "created_at": now_utc(),
+            "created_at": _core_common_clock.now_utc(),
             "reason": getattr(args, "reason", None) or "manual",
             "before": {"snapshot_id": current.get("snapshot_id"), "status": current.get("status")},
             "after": {"snapshot_id": snapshot.get("snapshot", {}).get("id"), "status": "fresh"},
@@ -9211,26 +9149,26 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
         else:
             print(dump_yaml(proposal), end="")
         return 0
-    session_id = telemetry_session_id("project-context-refresh")
+    session_id = _telemetry_event_service.telemetry_session_id("project-context-refresh")
     _session_path, telemetry_path = session_runtime_paths(project_root, session_id)
     emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"command": "project-context-refresh", "reason": getattr(args, "reason", None)}, correlation_id=session_id)
     status, paths, snapshot, old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=getattr(args, "workplace", None))
-    append_telemetry_event(telemetry_path, "session_start", mode="project_context_refresh", actor="agent")
-    append_telemetry_event(telemetry_path, "snapshot_check", status="previous_" + ("stale" if old_reasons else "fresh"), reasons=old_reasons)
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "session_start", mode="project_context_refresh", actor="agent")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "snapshot_check", status="previous_" + ("stale" if old_reasons else "fresh"), reasons=old_reasons)
     for source in snapshot.get("sources", {}).get("fingerprints", []):
         if isinstance(source, dict):
-            append_telemetry_event(telemetry_path, "source_read", path=source.get("path"), source_id=source.get("id"), reason="snapshot_fingerprint")
+            _telemetry_event_service.append_telemetry_event(telemetry_path, "source_read", path=source.get("path"), source_id=source.get("id"), reason="snapshot_fingerprint")
     for group in ("required", "optional"):
         for capability in snapshot.get("capabilities", {}).get(group, []):
             if isinstance(capability, dict):
-                append_telemetry_event(telemetry_path, "capability_check", required=group == "required", **capability)
-    append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="project_context_refresh")
-    append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="project-context-refresh")
+                _telemetry_event_service.append_telemetry_event(telemetry_path, "capability_check", required=group == "required", **capability)
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="project_context_refresh")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="project-context-refresh")
     emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "project-context-refresh"}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "mcp_check", status="skipped", reason="no required MCP declared")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "mcp_check", status="skipped", reason="no required MCP declared")
     emit_process_event(project_root, "mcp.invoked", session_id=session_id, payload={"status": "skipped"}, correlation_id=session_id)
     for path in paths.values():
-        append_telemetry_event(telemetry_path, "artifact_written", path=rel(path, project_root))
+        _telemetry_event_service.append_telemetry_event(telemetry_path, "artifact_written", path=rel(path, project_root))
         emit_process_event(project_root, "artifact.updated", session_id=session_id, payload={"path": rel(path, project_root)}, correlation_id=session_id)
     for group, event_type, severity in [
         ("required", "capability.missing", "error"),
@@ -9239,7 +9177,7 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
         for capability in snapshot.get("capabilities", {}).get(group, []):
             if isinstance(capability, dict) and capability.get("status") == "missing":
                 emit_process_event(project_root, event_type, severity=severity, session_id=session_id, payload={"capability": capability.get("id")}, correlation_id=session_id)
-    append_telemetry_event(telemetry_path, "session_end", status="completed")
+    _telemetry_event_service.append_telemetry_event(telemetry_path, "session_end", status="completed")
     health = snapshot.get("snapshot", {}).get("health", {}).get("status") if isinstance(snapshot.get("snapshot"), dict) else "pass"
     emit_process_event(
         project_root,
@@ -9350,7 +9288,7 @@ def mark_project_context_stale(project_root: Path, *, subject: str, reason: str,
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker = {
         "schema_version": 1,
-        "marked_at": now_utc(),
+        "marked_at": _core_common_clock.now_utc(),
         "subject": subject,
         "reason": reason,
         "source": source,
@@ -9574,7 +9512,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         "schema_version": 1,
         "capsule": {
             "id": f"{assn_id}-capsule",
-            "generated_at": now_utc(),
+            "generated_at": _core_common_clock.now_utc(),
             "assignment_id": assn_id,
             "assignment_path": rel(assignment, project_root),
             "assignment_checksum": sha256_file(assignment),
@@ -9852,7 +9790,7 @@ def registry_file_lock(path: Path, *, timeout_seconds: float = 30.0, stale_after
     guard_fd = os.open(str(guard_path), os.O_CREAT | os.O_RDWR, 0o600)
     deadline = time.monotonic() + timeout_seconds
     owner = {"path": str(path), "pid": os.getpid(), "host": socket.gethostname(),
-             "created_at": now_utc(), "token": uuid.uuid4().hex}
+             "created_at": _core_common_clock.now_utc(), "token": uuid.uuid4().hex}
     acquired = False
 
     def wait_for_owner() -> None:
@@ -10280,14 +10218,14 @@ def save_run(project_root: Path, run: dict[str, Any]) -> None:
 
 
 def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
-    run["updated_at"] = now_utc()
+    run["updated_at"] = _core_common_clock.now_utc()
     write_run_artifact_bundle(project_root, run, include_summary_handoff=include_summary_handoff)
 
 
 
 
 def save_task(project_root: Path, task: dict[str, Any]) -> None:
-    task["updated_at"] = now_utc()
+    task["updated_at"] = _core_common_clock.now_utc()
     _core_common_yaml_io.write_yaml_file(_work_paths.assignment_document(project_root, str(task.get("id", "task"))), task)
 
 
@@ -10367,7 +10305,7 @@ def as_list(value: Any) -> list[Any]:
 
 def append_authoring_log(paths: dict[str, Path], message: str) -> None:
     paths["root"].mkdir(parents=True, exist_ok=True)
-    line = f"- {now_utc()}: {message}\n"
+    line = f"- {_core_common_clock.now_utc()}: {message}\n"
     with paths["log"].open("a", encoding="utf-8") as handle:
         handle.write(line)
 
@@ -10562,7 +10500,7 @@ def build_process_create_plan(
         "",
     ]
     report_lines.extend(f"- `{rel(path, project_root)}`" for path, _content in example_documents)
-    timestamp = now_utc()
+    timestamp = _core_common_clock.now_utc()
     if existing_session and paths["log"].is_file():
         prior_log = paths["log"].read_text(encoding="utf-8")
         log_text = ensure_trailing_newline(prior_log) + f"- {timestamp}: authoring session applied\n"
@@ -11157,7 +11095,7 @@ def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") ->
             "sensitivity": (data.get("privacy") or {}).get("sensitivity", data.get("sensitivity", "internal")) if isinstance(data.get("privacy"), dict) else data.get("sensitivity", "internal"),
             "status": status,
             "path": f"inbox/{candidate_id}.yaml",
-            "queued_at": now_utc(),
+            "queued_at": _core_common_clock.now_utc(),
         }
     )
     index["candidates"] = sorted(candidates, key=lambda item: str(item.get("id")))
@@ -11175,7 +11113,7 @@ def command_evolve_candidate_sanitize(args: argparse.Namespace) -> int:
         sanitized_data = data
     privacy = sanitized_data.get("privacy") if isinstance(sanitized_data.get("privacy"), dict) else {}
     privacy["sanitized"] = True
-    privacy["sanitized_at"] = now_utc()
+    privacy["sanitized_at"] = _core_common_clock.now_utc()
     sanitized_data["privacy"] = privacy
     target = path.with_name(path.stem + ".sanitized" + path.suffix)
     _core_common_yaml_io.write_yaml_file(target, sanitized_data)
@@ -11237,7 +11175,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
         "kind": "processforge.learning_export",
         "bundle_id": bundle_id,
         "target": target_package,
-        "exported_at": now_utc(),
+        "exported_at": _core_common_clock.now_utc(),
         "candidate_count": len(selected),
         "candidates": [_knowledge_candidate_targeting_policy.id_from_data(data, path.stem) for path, data in selected],
     }
@@ -11255,7 +11193,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
     if output.resolve() != bundle_copy.resolve():
         shutil.copyfile(output, bundle_copy)
     with (root / "exports.ndjson").open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps({"bundle": output.name, "target": target_package, "exported_at": now_utc(), "count": len(selected)}, sort_keys=True) + "\n")
+        handle.write(json.dumps({"bundle": output.name, "target": target_package, "exported_at": _core_common_clock.now_utc(), "count": len(selected)}, sort_keys=True) + "\n")
     print(f"EXPORTED: {output}")
     return 0
 
@@ -11280,7 +11218,7 @@ def command_evolve_run(args: argparse.Namespace) -> int:
         "id": safe_id(f"evolution-{getattr(args, 'run', '') or 'run'}", "evolution-report"),
         "process_id": process_id,
         "run_id": str(getattr(args, "run", "") or ""),
-        "generated_at": now_utc(),
+        "generated_at": _core_common_clock.now_utc(),
         "status": "created",
         "evolve": evolve,
         "candidates": [],
@@ -11316,7 +11254,7 @@ def ensure_hub_layout(hub: Path) -> Path:
     for subdir in ["inbox/imports", "candidates", "packages", "updates"]:
         (hub / subdir).mkdir(parents=True, exist_ok=True)
     if not (hub / "hub.yaml").is_file():
-        _core_common_yaml_io.write_yaml_file(hub / "hub.yaml", {"schema_version": 1, "kind": "processforge.knowledge_hub", "created_at": now_utc()})
+        _core_common_yaml_io.write_yaml_file(hub / "hub.yaml", {"schema_version": 1, "kind": "processforge.knowledge_hub", "created_at": _core_common_clock.now_utc()})
     if not (hub / "candidates" / "index.yaml").is_file():
         _core_common_yaml_io.write_yaml_file(hub / "candidates" / "index.yaml", {"schema_version": 1, "kind": "processforge.hub_candidate_index", "candidates": []})
     return hub
@@ -11490,7 +11428,7 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
                 "versions": [
                     {
                         "version": version,
-                        "released_at": now_utc(),
+                        "released_at": _core_common_clock.now_utc(),
                         "download_url": "file:///" + output.as_posix(),
                         "sha256": digest,
                         "changelog_url": "file:///" + (package_root / "changelog.md").as_posix(),
@@ -11910,7 +11848,7 @@ def save_agent_registry(workplace_root: Path, data: dict[str, Any]) -> None:
 def append_agent_ledger_event(workplace_root: Path, payload: dict[str, Any]) -> None:
     ensure_agent_workplace_dirs(workplace_root)
     payload.setdefault("schema_version", 1)
-    payload.setdefault("recorded_at", now_utc())
+    payload.setdefault("recorded_at", _core_common_clock.now_utc())
     path = workplace_agent_ledger_path(workplace_root)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
@@ -11957,7 +11895,7 @@ def write_current_session_refs(workplace_root: Path, project_root: Path | None, 
         "status": presence.get("status"),
         "started_at": presence.get("started_at"),
         "last_seen_at": presence.get("last_seen_at"),
-        "updated_at": now_utc(),
+        "updated_at": _core_common_clock.now_utc(),
     }
     _core_common_json_io.json_write(project_current_session_path(project_root), current)
     project_id = str(presence.get("project_id") or "")
@@ -11998,7 +11936,7 @@ def update_stale_agent_presence(workplace_root: Path) -> None:
             continue
         if str(presence.get("status")) == "online" and ttl_expired(presence):
             presence["status"] = "stale"
-            presence["updated_at"] = now_utc()
+            presence["updated_at"] = _core_common_clock.now_utc()
             write_agent_presence(workplace_root, presence)
             project_ref = str(presence.get("project_root") or "")
             if project_ref:
@@ -12082,7 +12020,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
     profile = next((item for item in registry.get("agents", []) if isinstance(item, dict) and item.get("id") == agent_id), {})
     capabilities = [str(item) for item in (as_list(getattr(args, "capability", [])) or as_list(profile.get("capabilities")))]
     supported_specializations = [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
-    now = now_utc()
+    now = _core_common_clock.now_utc()
     presence = {
         "schema_version": 1,
         "agent_id": agent_id,
@@ -12142,7 +12080,7 @@ def command_agent_heartbeat(args: argparse.Namespace) -> int:
         print(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "online"
-    presence["last_seen_at"] = now_utc()
+    presence["last_seen_at"] = _core_common_clock.now_utc()
     if getattr(args, "task", None):
         presence["task_id"] = args.task
     write_agent_presence(workplace_root, presence)
@@ -12166,12 +12104,12 @@ def command_agent_checkout(args: argparse.Namespace) -> int:
         print(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "checked_out"
-    presence["last_seen_at"] = now_utc()
-    presence["updated_at"] = now_utc()
+    presence["last_seen_at"] = _core_common_clock.now_utc()
+    presence["updated_at"] = _core_common_clock.now_utc()
     presence["finished_at"] = presence["updated_at"]
     write_agent_presence(workplace_root, presence)
     write_current_session_refs(workplace_root, project_root, presence)
-    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": now_utc()})
+    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": _core_common_clock.now_utc()})
     print(f"CHECKED_OUT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
@@ -12290,7 +12228,7 @@ def command_agent_lease_update_status(args: argparse.Namespace, status: str) -> 
         print(f"FAIL: lease not found: {args.lease}")
         return 1
     lease["status"] = status
-    lease["updated_at"] = now_utc()
+    lease["updated_at"] = _core_common_clock.now_utc()
     save_lease(workplace_root, lease)
     print(f"LEASE_{status.upper()}: {lease.get('id')}")
     return 0
@@ -12341,7 +12279,7 @@ def mark_expired_agent_leases(workplace_root: Path) -> int:
         expires = parse_runtime_timestamp(lease.get("expires_at"))
         if expires and expires <= now:
             lease["status"] = "stale"
-            lease["updated_at"] = now_utc()
+            lease["updated_at"] = _core_common_clock.now_utc()
             _core_common_yaml_io.write_yaml_file(path, lease)
             changed += 1
     return changed
@@ -12384,7 +12322,7 @@ def command_process_route_doctor(args: argparse.Namespace) -> int:
 
 
 def save_handoff(project_root: Path, handoff: dict[str, Any]) -> None:
-    handoff["updated_at"] = now_utc()
+    handoff["updated_at"] = _core_common_clock.now_utc()
     _core_common_yaml_io.write_yaml_file(_handoff_document_reader.path(project_root, str(handoff.get("id") or "handoff")), handoff)
 
 
@@ -12413,7 +12351,7 @@ def command_handoff_create(args: argparse.Namespace) -> int:
         "input_artifacts": as_list((route.get("input_contract") if isinstance(route.get("input_contract"), dict) else {}).get("required_artifacts")),
         "expected_results": as_list((route.get("output_contract") if isinstance(route.get("output_contract"), dict) else {}).get("expected_artifacts")),
         "return_to": route.get("return") if isinstance(route.get("return"), dict) else {"process": str(route.get("from_process") or ""), "run_id": args.from_run},
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
     }
     planned = [root / "handoff.yaml", root / "handoff.md", root / "input-manifest.yaml", root / "expected-output.yaml", root / "return-package.yaml"]
     if not getattr(args, "apply", False):
@@ -12477,7 +12415,7 @@ def command_handoff_accept(args: argparse.Namespace) -> int:
     _run_task_inputs.require_flow_root(project_root)
     handoff = _handoff_document_reader.read(project_root, args.handoff)
     handoff["status"] = "accepted"
-    handoff["accepted_by"] = {"agent_id": safe_id(args.agent, "agent"), "session_id": args.session or "", "accepted_at": now_utc()}
+    handoff["accepted_by"] = {"agent_id": safe_id(args.agent, "agent"), "session_id": args.session or "", "accepted_at": _core_common_clock.now_utc()}
     save_handoff(project_root, handoff)
     print(f"ACCEPTED: {handoff.get('id')}")
     return 0
@@ -12510,7 +12448,7 @@ def command_handoff_return(args: argparse.Namespace) -> int:
         print("FAIL: return artifacts missing: " + ", ".join(missing))
         return 1
     handoff["status"] = "returned"
-    handoff["returned_at"] = now_utc()
+    handoff["returned_at"] = _core_common_clock.now_utc()
     handoff["return_artifacts"] = artifacts
     save_handoff(project_root, handoff)
     _core_common_yaml_io.write_yaml_file(_handoff_document_reader.directory(project_root, str(handoff.get("id"))) / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff.get("id"), "status": "returned", "artifacts": artifacts, "returned_at": handoff["returned_at"]})
@@ -12526,7 +12464,7 @@ def command_handoff_finalize(args: argparse.Namespace) -> int:
         print(f"FAIL: handoff is not finalizable: {handoff.get('status')}")
         return 1
     handoff["status"] = "finalized"
-    handoff["finalized_at"] = now_utc()
+    handoff["finalized_at"] = _core_common_clock.now_utc()
     save_handoff(project_root, handoff)
     print(f"FINALIZED: {handoff.get('id')}")
     return 0
@@ -12661,7 +12599,7 @@ def command_continuation_create(args: argparse.Namespace) -> int:
         "waiting_for": {"handoff_id": args.handoff or "", "expected_artifacts": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.expected_artifact)]},
         "resume": {"process": args.process or "", "run_id": args.run or "", "stage": args.stage or "", "instruction": args.instruction or ""},
         "status": "waiting",
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
     }
     path = continuation_path(project_root, continuation_id)
     if path.exists():
@@ -12972,7 +12910,7 @@ def write_agent_run_state(
         "failure_reason": failure_reason,
     }
     if paths["heartbeat"].is_file():
-        state["last_heartbeat_at"] = now_utc()
+        state["last_heartbeat_at"] = _core_common_clock.now_utc()
     reference = (command or {}).get("prepared_input")
     if reference is None and previous_state.get("attempt") == attempt:
         reference = previous_state.get("prepared_input")
@@ -13041,7 +12979,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     if not isinstance(pid, int):
         return write_agent_run_state(project_root, task, driver, "failed", failure_reason="running state missing pid", paths=paths)
     command = json_read(paths["command"])
-    started_at = str(state.get("started_at") or now_utc())
+    started_at = str(state.get("started_at") or _core_common_clock.now_utc())
     exit_marker = json_read(paths["exit"])
     if exit_marker:
         marker_status = str(exit_marker.get("status") or "")
@@ -13049,7 +12987,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         exit_code = marker_exit_code if isinstance(marker_exit_code, int) else None
         if marker_status not in AGENT_RUN_STATUSES or marker_status in {"planned", "ready", "starting", "running", "blocked", "manual_required"}:
             marker_status = "completed" if exit_code == 0 else "failed"
-        finished_at = str(exit_marker.get("finished_at") or now_utc())
+        finished_at = str(exit_marker.get("finished_at") or _core_common_clock.now_utc())
         failure_reason = str(exit_marker.get("failure_reason") or "") or None
         state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
         DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
@@ -13065,7 +13003,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
             proc.kill()
         else:
             terminate_worker_pid(pid)
-        finished_at = now_utc()
+        finished_at = _core_common_clock.now_utc()
         state = write_agent_run_state(project_root, task, driver, "timed_out", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=-1, failure_reason="timeout", command=command, paths=paths)
         _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": -1, "finished_at": finished_at, "status": "timed_out"})
         return state
@@ -13073,14 +13011,14 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         if proc is None and not process_pid_running(pid):
             lost_observed_at = parse_runtime_timestamp(state.get("lost_observed_at"))
             if lost_observed_at is None:
-                observed_at = now_utc()
+                observed_at = _core_common_clock.now_utc()
                 state = write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, failure_reason="pid not alive; waiting for durable exit contract", command=command, paths=paths)
                 state["lost_observed_at"] = observed_at
                 _core_common_json_io.json_write(paths["status"], state)
                 return state
             if datetime.now(timezone.utc) < lost_observed_at + timedelta(seconds=0.25):
                 return state
-            finished_at = now_utc()
+            finished_at = _core_common_clock.now_utc()
             failure_reason = "process exited without durable exit contract"
             state = write_agent_run_state(project_root, task, driver, "unknown_exit", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=failure_reason, command=command, paths=paths)
             _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
@@ -13088,7 +13026,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
             return state
         else:
             return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
-    finished_at = now_utc()
+    finished_at = _core_common_clock.now_utc()
     final_status = "completed" if exit_code == 0 else "failed"
     state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
     _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
@@ -13293,12 +13231,12 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         cwd = command_spec.get("working_directory") or str(project_root)
         paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
         paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
-        started_at = now_utc()
+        started_at = _core_common_clock.now_utc()
         with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
             try:
                 proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
             except OSError as exc:
-                finished_at = now_utc()
+                finished_at = _core_common_clock.now_utc()
                 write_agent_run_state(project_root, task, driver, "failed", started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=str(exc), command=command, paths=paths)
                 print(f"FAIL: start failed for {task_id}: {exc}")
                 return 1
@@ -13312,7 +13250,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     assert proc is not None
     try:
         exit_code = proc.wait(timeout=timeout_seconds)
-        finished_at = now_utc()
+        finished_at = _core_common_clock.now_utc()
         final_status = "completed" if exit_code == 0 else "failed"
         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
         _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
@@ -13320,7 +13258,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         proc.kill()
         exit_code = -1
         final_status = "timed_out"
-        finished_at = now_utc()
+        finished_at = _core_common_clock.now_utc()
         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
         _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
@@ -13367,7 +13305,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
     if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
         return 0
-    write_agent_run_state(project_root, task, driver, "cancelled", pid=pid if isinstance(pid, int) else None, finished_at=now_utc(), failure_reason="stop requested", paths=paths)
+    write_agent_run_state(project_root, task, driver, "cancelled", pid=pid if isinstance(pid, int) else None, finished_at=_core_common_clock.now_utc(), failure_reason="stop requested", paths=paths)
     print(f"STOPPED: {task_id}")
     return 0
 
@@ -13521,7 +13459,7 @@ def emit_worker_completion_event(project_root: Path, event_type: str, receipt_id
     event_id = "evt_" + hashlib.sha256((receipt_id + ":" + event_type).encode("utf-8")).hexdigest()
     path = _run_task_inputs.event_runtime_paths(project_root)[0]
     if _process_event_journal.contains(path, event_id):
-        event = _process_event_journal.get(path, event_id) or processforge_event(project_root, event_type, event_id=event_id, **kwargs)
+        event = _process_event_journal.get(path, event_id) or _telemetry_event_service.processforge_event(project_root, event_type, event_id=event_id, **kwargs)
         admit_process_event(project_root, event)
         return event
     return emit_process_event(project_root, event_type, event_id=event_id, **kwargs)
@@ -13588,7 +13526,7 @@ def supervisor_state_path(project_root: Path) -> Path:
 
 
 def write_supervisor_state(project_root: Path, state: dict[str, Any]) -> None:
-    state["updated_at"] = now_utc()
+    state["updated_at"] = _core_common_clock.now_utc()
     _core_common_json_io.json_write(supervisor_state_path(project_root), state)
 
 
@@ -13830,7 +13768,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
     final_drain_timeout = supervisor_final_drain_timeout(project_root, run_ids, getattr(args, "final_drain_timeout", None))
     drain_interval = min(max(interval if interval > 0 else 0.05, 0.05), 0.25)
     stop_file = project_root / ".pf" / "runtime" / "supervisor" / "stop.request"
-    state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": now_utc(), "updated_at": now_utc(), "stopped_at": None, "tick_count": 0, "drain_tick_count": 0, "final_drain_timeout_seconds": final_drain_timeout, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
+    state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": _core_common_clock.now_utc(), "updated_at": _core_common_clock.now_utc(), "stopped_at": None, "tick_count": 0, "drain_tick_count": 0, "final_drain_timeout_seconds": final_drain_timeout, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
     write_supervisor_state(project_root, state)
     failed = False
     for index in range(max_ticks):
@@ -13865,7 +13803,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
     elif drain_ticks:
         print(f"FINAL-DRAIN: completed ticks={drain_ticks}")
     state["status"] = "stopped"
-    state["stopped_at"] = now_utc()
+    state["stopped_at"] = _core_common_clock.now_utc()
     state["drain_tick_count"] = drain_ticks
     write_supervisor_state(project_root, state)
     print(f"SUPERVISOR: stopped ticks={state['tick_count']} drain_ticks={state['drain_tick_count']}")
@@ -13888,7 +13826,7 @@ def command_supervisor_stop(args: argparse.Namespace) -> int:
     _run_task_inputs.require_flow_root(project_root)
     stop_file = supervisor_root(project_root) / "stop.request"
     stop_file.parent.mkdir(parents=True, exist_ok=True)
-    stop_file.write_text(now_utc() + "\n", encoding="utf-8")
+    stop_file.write_text(_core_common_clock.now_utc() + "\n", encoding="utf-8")
     state = json_read(supervisor_state_path(project_root))
     if state:
         state["status"] = "stopping"
@@ -14596,8 +14534,8 @@ def command_run_create(args: argparse.Namespace) -> int:
         "title": args.title,
         "process": process_id,
         "status": args.status,
-        "created_at": now_utc(),
-        "updated_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
+        "updated_at": _core_common_clock.now_utc(),
         "objective": args.objective or "",
         "platform": getattr(args, "platform", None) or "",
         "selected_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
@@ -14764,8 +14702,8 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
         "run_id": run_id,
         "process": process_id,
         "status": "open",
-        "created_at": now_utc(),
-        "updated_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
+        "updated_at": _core_common_clock.now_utc(),
         "objective": args.objective or "",
         "platform": getattr(args, "platform", None) or "",
         "selected_specializations": [_specialization_catalog_reader.resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
@@ -14970,9 +14908,9 @@ def command_iteration_add(args: argparse.Namespace) -> int:
         raise SystemExit(f"FAIL: duplicate iteration id: {iter_id}")
     artifact_kind = "debug-log.md" if kind == "debug" else "work-log.md"
     artifact = rel(_work_paths.task_artifacts(project_root, str(task.get("run_id", "")), task_id) / artifact_kind, project_root)
-    iteration = {"id": iter_id, "kind": kind, "status": status, "started_at": now_utc(), "summary": args.summary, "artifacts": [artifact]}
+    iteration = {"id": iter_id, "kind": kind, "status": status, "started_at": _core_common_clock.now_utc(), "summary": args.summary, "artifacts": [artifact]}
     if status in {"completed", "passed", "failed", "cancelled"}:
-        iteration["completed_at"] = now_utc()
+        iteration["completed_at"] = _core_common_clock.now_utc()
     if getattr(args, "dry_run", False):
         print(f"DRY-RUN: would add {iter_id} to {task_id}")
         return 0
@@ -14999,7 +14937,7 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
     for item in iterations:
         if isinstance(item, dict) and item.get("id") == args.iteration:
             item["status"] = status
-            item["completed_at"] = now_utc()
+            item["completed_at"] = _core_common_clock.now_utc()
             if args.summary:
                 item["summary"] = args.summary
             found = True
@@ -15027,7 +14965,7 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
         return 1
     if getattr(args, "send", False):
         raise SystemExit("FAIL: --send is reserved for a future network transport and is disabled in the MVP")
-    event = processforge_event(
+    event = _telemetry_event_service.processforge_event(
         project_root,
         args.event_type,
         severity=args.severity,
@@ -15123,7 +15061,7 @@ def command_chat_export(args: argparse.Namespace) -> int:
     if not args.outbox:
         raise SystemExit("FAIL: chat-export is file-first; pass --outbox to write a delivery payload")
     messages = load_chat_messages(project_root, args.session_id)
-    event = processforge_event(
+    event = _telemetry_event_service.processforge_event(
         project_root,
         "session.message.recorded",
         session_id=args.session_id,
@@ -15140,7 +15078,7 @@ def command_chat_export(args: argparse.Namespace) -> int:
     payload = wtaicc_outbox_payload(event, chat=chat_payload)
     outbox_root = locate_flow_root(project_root) / "runtime" / "hooks" / "outbox" / "wtaicc"
     outbox_root.mkdir(parents=True, exist_ok=True)
-    stamp = now_utc().replace(":", "").replace("-", "").replace("Z", "z")
+    stamp = _core_common_clock.now_utc().replace(":", "").replace("-", "").replace("Z", "z")
     target = outbox_root / f"chat-{safe_id(args.session_id, 'session')}-{stamp}.json"
     target.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     append_process_event(project_root, event, dispatch=False)
@@ -15763,7 +15701,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
                         )
 
     sites.sort(key=lambda item: (item["subject"]["type"], item["subject"]["id"], int(item["source"].get("priority", 1000)), item["site_id"]))
-    derived = {"schema_version": 1, "generated_at": now_utc(), "sites": sites}
+    derived = {"schema_version": 1, "generated_at": _core_common_clock.now_utc(), "sites": sites}
     return derived, checks
 
 
@@ -16019,7 +15957,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
             "post_update_doctor": selected.get("post_update_doctor") or source_policy.get("post_update_doctor", []),
         }
         candidates.append(candidate)
-    cache = {"schema_version": 1, "generated_at": now_utc(), "channel": channel, "candidates": candidates, "conflicts": conflicts}
+    cache = {"schema_version": 1, "generated_at": _core_common_clock.now_utc(), "channel": channel, "candidates": candidates, "conflicts": conflicts}
     if args.dry_run:
         print(json.dumps(cache, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -16079,7 +16017,7 @@ def create_update_notifications_from_candidates(workplace_root: Path, candidates
                     existing[str(item["id"])] = item
         except json.JSONDecodeError:
             existing = {}
-    now = now_utc()
+    now = _core_common_clock.now_utc()
     for candidate in candidates:
         if candidate.get("status") != "available":
             continue
@@ -16172,12 +16110,12 @@ def command_update_notifications_acknowledge(args: argparse.Namespace) -> int:
     for item in data.get("notifications", []) if isinstance(data.get("notifications"), list) else []:
         if isinstance(item, dict) and item.get("id") == args.notification:
             item["status"] = "acknowledged"
-            item["acknowledged_at"] = now_utc()
+            item["acknowledged_at"] = _core_common_clock.now_utc()
             changed = True
     if not changed:
         print(f"FAIL: notification not found: {args.notification}")
         return 1
-    data["updated_at"] = now_utc()
+    data["updated_at"] = _core_common_clock.now_utc()
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"ACKNOWLEDGED: {args.notification}")
     return 0
@@ -16256,7 +16194,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
     record = {
         "schema_version": 1,
         "candidate_id": candidate["id"],
-        "staged_at": now_utc(),
+        "staged_at": _core_common_clock.now_utc(),
         "status": "verified" if verified else "failed",
         "workplace": rel(workplace_root, workplace_root.parent),
         "candidate": candidate,
@@ -16299,7 +16237,7 @@ def command_update_verify(args: argparse.Namespace) -> int:
             print("FAIL: artifact version mismatch")
             return 1
     record["status"] = "verified"
-    record["verified_at"] = now_utc()
+    record["verified_at"] = _core_common_clock.now_utc()
     record["verification"] = {"sha256": "pass", "subject_identity": "pass" if manifest else "not_applicable"}
     _update_document_reader.staged_path(workplace_root, args.candidate).write_text(dump_yaml(record), encoding="utf-8")
     print(f"VERIFIED: {args.candidate}")
@@ -16324,13 +16262,13 @@ def update_installed_subject_version(workplace_root: Path, candidate: dict[str, 
             continue
         if subject.get("type") == candidate_subject.get("type") and subject.get("id") == candidate_subject.get("id"):
             subject["version"] = candidate.get("available_version")
-            subject["updated_at"] = now_utc()
+            subject["updated_at"] = _core_common_clock.now_utc()
             if install_path:
                 subject["install_path"] = rel(install_path, workplace_root)
             found = True
     if not found:
-        subjects.append({"type": candidate_subject.get("type"), "id": candidate_subject.get("id"), "scope": candidate_subject.get("scope") or "global", "version": candidate.get("available_version"), "installed_at": now_utc(), "install_path": rel(install_path, workplace_root) if install_path else None})
-    data["updated_at"] = now_utc()
+        subjects.append({"type": candidate_subject.get("type"), "id": candidate_subject.get("id"), "scope": candidate_subject.get("scope") or "global", "version": candidate.get("available_version"), "installed_at": _core_common_clock.now_utc(), "install_path": rel(install_path, workplace_root) if install_path else None})
+    data["updated_at"] = _core_common_clock.now_utc()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(dump_yaml(data), encoding="utf-8")
 
@@ -16440,7 +16378,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
             shutil.copy2(artifact_path, install_path / artifact_path.name)
     update_installed_subject_version(workplace_root, candidate, install_path)
     apply_dir.mkdir(parents=True, exist_ok=True)
-    apply_record = {"schema_version": 1, "candidate_id": args.candidate, "applied_at": now_utc(), "status": "applied", "subject": subject, "installed_version": candidate.get("available_version"), "install_path": rel(install_path, workplace_root), "backup_path": rel(backup_dir, workplace_root), "post_update_doctor": candidate.get("post_update_doctor", [])}
+    apply_record = {"schema_version": 1, "candidate_id": args.candidate, "applied_at": _core_common_clock.now_utc(), "status": "applied", "subject": subject, "installed_version": candidate.get("available_version"), "install_path": rel(install_path, workplace_root), "backup_path": rel(backup_dir, workplace_root), "post_update_doctor": candidate.get("post_update_doctor", [])}
     (apply_dir / "apply-record.yaml").write_text(dump_yaml(apply_record), encoding="utf-8")
     marked = mark_impacted_project_contexts_after_update(workplace_root, candidate, reason="update-applied")
     print(f"APPLIED: {args.candidate}")
@@ -16483,7 +16421,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
             shutil.rmtree(install_path)
         shutil.copytree(backup_tree, install_path)
         restore_path = install_path
-    record = {"schema_version": 1, "candidate_id": args.candidate, "rolled_back_at": now_utc(), "status": "rolled_back", "restore_path": rel(restore_path, workplace_root)}
+    record = {"schema_version": 1, "candidate_id": args.candidate, "rolled_back_at": _core_common_clock.now_utc(), "status": "rolled_back", "restore_path": rel(restore_path, workplace_root)}
     rollback_dir = _update_document_reader.runtime_root(workplace_root) / "rollbacks" / args.candidate
     rollback_dir.mkdir(parents=True, exist_ok=True)
     (rollback_dir / "rollback-record.yaml").write_text(dump_yaml(record), encoding="utf-8")
@@ -16588,7 +16526,7 @@ def search_index_maintenance_for_known_projects(
     payload: dict[str, Any] = {
         "schema_version": 1,
         "kind": "pf.search_index.maintenance",
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "reason": reason,
         "scope": "workplace",
         "project_count": 0,
@@ -16771,7 +16709,7 @@ def write_resource_proposal(workplace_root: Path, command: str, object_id: str, 
         "schema_version": 1,
         "proposal_id": slug,
         "command": command,
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "mode": "proposal_first",
         "payload": payload,
         "privacy": {
@@ -17575,7 +17513,7 @@ def command_docs_import_plan(args: argparse.Namespace) -> int:
         "id": plan_id,
         "source": source,
         "topics": topics,
-        "created_at": now_utc(),
+        "created_at": _core_common_clock.now_utc(),
         "mode": "plan_only",
         "download": {"enabled": False, "reason": "MVP does not crawl or download large documentation sets"},
         "resources": resources,
@@ -19066,6 +19004,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 # Concrete owners retain the distribution root and existing request-scoped readers.
+_telemetry_event_service = TelemetryEventService(context_inputs=_context_contract_inputs)
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
 

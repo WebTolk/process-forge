@@ -34,7 +34,9 @@ def service(service_type,root,counters=None):
     class Counted(service_type):
         def _sha256_file(self,path):counts['hash']+=1;return hashlib.sha256(path.read_bytes()).hexdigest()
         def _safe_evidence_path(self,value):counts['path']+=1;return super()._safe_evidence_path(value)
-    return Counted(root,root/'.pf',SimpleNamespace(now_utc=now,rel=rel)),counts
+    instance=Counted(root,root/'.pf',SimpleNamespace(now_utc=now,rel=rel))
+    object.__setattr__(instance,'_clock',now)
+    return instance,counts
 
 def run_case(service_type,root,method,args):
     instance,counts=service(service_type,root)
@@ -97,6 +99,7 @@ class ValidationTests(unittest.TestCase):
         self.assertIsNone(instance._safe_evidence_path(str(self.root/'valid.txt')))
         self.assertIsNone(instance._safe_evidence_path('../outside.txt'))
         nul=process_execution.ProcessExecutionService(self.root,self.root/'.pf',SimpleNamespace(now_utc=lambda:'fixed'))
+        object.__setattr__(nul, '_clock', nul.core.now_utc)
         self.assertEqual(nul._normalize_evidence({'path':'a\x00b'})[1][0]['code'],'artifact_path_missing')
         for failure in [OSError('io'),RuntimeError('loop'),ValueError('invalid')]:
             with patch.object(Path,'resolve',side_effect=failure):self.assertIsNone(instance._safe_evidence_path('valid.txt'))
@@ -130,6 +133,7 @@ class ValidationTests(unittest.TestCase):
                         if fail=='hash':raise OSError('hash denied')
                         return 'digest'
                 instance=Override(self.root,self.root/'.pf',SimpleNamespace(now_utc=now,rel=rel))
+                object.__setattr__(instance, '_clock', instance.core.now_utc)
                 normalized=instance._normalize_evidence({'path':'file'})
                 diagnostic=instance._evidence_file_diagnostic({'path':'file','sha256':'sha256:digest'})
                 observed.append((normalized,diagnostic,trace))
@@ -151,6 +155,7 @@ class ValidationTests(unittest.TestCase):
                     if source=='hash':raise error
                     return 'digest'
             instance=Override(self.root,self.root/'.pf',SimpleNamespace(now_utc=fail if source=='clock' else lambda:'fixed',rel=fail if source=='rel' else lambda *args:'valid.txt'))
+            object.__setattr__(instance, '_clock', instance.core.now_utc)
             caught=None
             try:instance._normalize_evidence({'path':'valid.txt'})
             except ContextContractError as exc:caught=exc
@@ -171,6 +176,7 @@ class ValidationTests(unittest.TestCase):
                 self.assertTrue(gate['satisfied'])
             calls=[]
             object.__setattr__(instance,'core',SimpleNamespace(now_utc=lambda:calls.append('clock') or 'fixed'))
+            object.__setattr__(instance, '_clock', instance.core.now_utc)
             normalized,blockers=instance._normalize_evidence([{'unknown':{'items':[1]}},'note',{'path':str(self.root/'valid.txt')}])
             self.assertEqual(calls,['clock'])
             self.assertEqual(normalized,[{'unknown':{'items':[1]},'kind':'attestation','status':'ready','recorded_at':'fixed'},

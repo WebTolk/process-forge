@@ -164,6 +164,7 @@ class WorkTransitionCommitTests(unittest.TestCase):
         dependencies = ops.dependencies()
         core = SimpleNamespace(now_utc=dependencies["now_utc"])
         facade = ProcessExecutionService(Path("."), None, core)
+        object.__setattr__(facade, "_clock", dependencies["now_utc"])
         for name, callback in dependencies.items():
             if name != "now_utc":
                 object.__setattr__(facade, name if name == "state" else "_" + name, callback)

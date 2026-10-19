@@ -13,10 +13,11 @@ import os
 import shutil
 import zipfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 from ..common.digests import FileDigestReader
+
+import processforge_core.common.clock as _core_common_clock
 
 
 _file_digests = FileDigestReader()
@@ -31,8 +32,6 @@ class CoreUpdateError(Exception):
     message: str
 
 
-def now_utc() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def sha256_bytes(content: bytes) -> str:
@@ -109,7 +108,7 @@ def make_core_manifest(*, version: str, source: dict[str, Any] | None, files: It
         "schema_version": CORE_MANIFEST_SCHEMA_VERSION,
         "kind": "processforge.core_manifest",
         "version": version,
-        "generated_at": generated_at or now_utc(),
+        "generated_at": generated_at or _core_common_clock.now_utc(),
         "source": source or {},
         "files": normalized_files,
     }
@@ -401,7 +400,7 @@ def apply_workplace_migration(archive_path: Path, workplace_root: Path, migratio
         "schema_version": 1,
         "status": "applied",
         "migration": migration_plan.get("migration"),
-        "applied_at": now_utc(),
+        "applied_at": _core_common_clock.now_utc(),
         "operations": operations,
         "preserved": migration_plan.get("preserved", []),
         "backed_up": backed_up,
@@ -596,7 +595,7 @@ def apply_update(
     blockers = [item for item in plan["blockers"] if item.get("code") != "locally_modified" or not force_local_modifications]
     if blockers:
         raise CoreUpdateError("plan_blocked", "core update plan has blockers")
-    update_id = "core-update-" + now_utc().replace(":", "").replace("-", "")
+    update_id = "core-update-" + _core_common_clock.now_utc().replace(":", "").replace("-", "")
     work_root = runtime_root(core_root)
     backup_dir = work_root / "backups" / update_id
     backup_dir.mkdir(parents=True, exist_ok=True)
@@ -621,7 +620,7 @@ def apply_update(
         "schema_version": 1,
         "update_id": update_id,
         "status": "applying",
-        "started_at": now_utc(),
+        "started_at": _core_common_clock.now_utc(),
         "core_root": str(core_root.resolve()),
         "archive": str(archive_path.resolve()),
         "backup_dir": str(backup_dir),
@@ -638,7 +637,7 @@ def apply_update(
         pending = progress["pending_operations"]
         assert isinstance(completed, list)
         assert isinstance(pending, list)
-        completed.append({"op": op, "path": relative_path, "completed_at": now_utc()})
+        completed.append({"op": op, "path": relative_path, "completed_at": _core_common_clock.now_utc()})
         for index, item in enumerate(list(pending)):
             if isinstance(item, dict) and item.get("op") == op and item.get("path") == relative_path:
                 del pending[index]
@@ -651,7 +650,7 @@ def apply_update(
             "schema_version": 1,
             "update_id": update_id,
             "status": "failed",
-            "failed_at": now_utc(),
+            "failed_at": _core_common_clock.now_utc(),
             "backup_dir": str(backup_dir),
             "error": {"code": code, "message": message},
         }
@@ -689,7 +688,7 @@ def apply_update(
                 raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
             migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
             complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
-        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
+        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": _core_common_clock.now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
         last_apply = work_root / "last-apply.json"
         write_json(last_apply, record)
         in_progress_path.unlink(missing_ok=True)

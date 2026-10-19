@@ -144,11 +144,13 @@ def smoke_exception_and_foreign_release(root: Path) -> None:
     target = root / "foreign.yaml"
     lock = lock_path(target)
     with pf.registry_file_lock(target, timeout_seconds=1, stale_after_seconds=0):
+        import processforge_core.common.clock as _core_common_clock
+
         foreign = {
             "path": str(target),
             "pid": os.getpid(),
             "host": "foreign-owner",
-            "created_at": pf.now_utc(),
+            "created_at": _core_common_clock.now_utc(),
             "token": uuid.uuid4().hex,
         }
         lock.write_text(json.dumps(foreign) + "\n", encoding="utf-8")

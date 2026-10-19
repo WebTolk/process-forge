@@ -81,6 +81,9 @@ class SnapshotTests(unittest.TestCase):
         reader = MemorySnapshots()
         core = SimpleNamespace(locate_flow_root=lambda root: root / '.pf')
         service = ProcessExecutionService(Path('p'), None, core, snapshots=reader)
+        import processforge_core.common.clock as _core_common_clock
+
+        object.__setattr__(service, '_clock', _core_common_clock.now_utc)
         pin = service._process_pin({'id': 'p'}, Path('p/process.yaml'), active_specializations=[], selected_resource_ids=[], allowed_processes=['p'])
         self.assertEqual((pin['snapshot_id'], pin['snapshot_checksum']), ('memory', 'sha256:memory'))
         self.assertEqual(service._selected_resource_ids(), ['a', 'z'])
@@ -113,6 +116,9 @@ class SnapshotTests(unittest.TestCase):
                                resolve_process_definition=lambda *args: SimpleNamespace(process={'id': 'p'}, path=Path('p.yaml')),
                                validate_assignment_scope_overlaps=lambda *args, **kwargs: {'status': 'pass'})
         service = ProcessExecutionService(Path('p'), None, core, snapshots=reader)
+        import processforge_core.common.clock as _core_common_clock
+
+        object.__setattr__(service, '_clock', _core_common_clock.now_utc)
         pin = dict(process_id='p', process_version='1', process_fingerprint='sha256:p', snapshot_id='s', snapshot_checksum='sha256:s')
         with patch.object(ProcessExecutionService, '_context_check', return_value={'status': 'fresh'}), \
              patch.object(ProcessExecutionService, '_find_by_objective', return_value={}), \

@@ -282,11 +282,12 @@ def rebuild_stage_obligations(project_root: Path, core: Any) -> Path:
     STAGE_PROJECTION_CACHE.pop(key, None)
     rows = stage_obligation_rows(project_root, core)
     from processforge_core.work.consistency import RunTaskInputReader
+    import processforge_core.common.clock as _core_common_clock
 
     payload = {
         "schema_version": 1,
         "kind": "stage-obligations",
-        "generated_at": core.now_utc(),
+        "generated_at": _core_common_clock.now_utc(),
         "project_id": core.project_id(project_root),
         "source": {"event_journal": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "authority": "process-definitions+durable-assignments+inspector-state"},
         "obligations": rows,
@@ -330,8 +331,9 @@ def refresh_stage_obligations(project_root: Path, core: Any) -> Path:
     rows = stage_obligation_rows(project_root, core, dependencies=dependencies)
     dependencies.update(value[0] for cache_key, value in PROCESS_DEFINITION_CACHE.items() if cache_key[0] == key)
     from processforge_core.work.consistency import RunTaskInputReader
+    import processforge_core.common.clock as _core_common_clock
 
-    payload = {"schema_version": 1, "kind": "stage-obligations", "generated_at": core.now_utc(),
+    payload = {"schema_version": 1, "kind": "stage-obligations", "generated_at": _core_common_clock.now_utc(),
                "project_id": core.project_id(project_root), "source": {
                    "event_journal": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root),
                    "authority": "process-definitions+durable-assignments+inspector-state"}, "obligations": rows}
@@ -424,7 +426,9 @@ def load_state(workplace_root: Path) -> dict[str, Any]:
 
 
 def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
-    state["updated_at"] = core.now_utc()
+    import processforge_core.common.clock as _core_common_clock
+
+    state["updated_at"] = _core_common_clock.now_utc()
     state["workplace_root"] = str(workplace_root)
     state["processforge_core_version"] = getattr(core, "PROCESSFORGE_VERSION", "")
     write_json(state_path(workplace_root), state)
@@ -464,10 +468,12 @@ def route_project(project_ref: str, workplace_root: Path, core: Any) -> dict[str
         raise SystemExit(f"FAIL: project is not ProcessForge-onboarded: {project_root}")
     coordination = core.effective_project_coordination(project_root, str(workplace_root))
     project_key = core.project_id(project_root)
+    from processforge_core.agents.telemetry import TelemetryEventService
+
     return {
         "project_id": project_key,
         "project_root": str(project_root),
-        "flow_root": core.flow_label(project_root),
+        "flow_root": TelemetryEventService().flow_label(project_root),
         "effective_mode": coordination.get("effective_mode", "simple"),
         "director_enabled": bool(coordination.get("director_available") and coordination.get("effective_mode") == "organized"),
     }
@@ -498,13 +504,15 @@ def remember_session(state: dict[str, Any], session_id: str, handle: dict[str, A
     if not session_id:
         return
     sessions = state.setdefault("sessions", {})
+    import processforge_core.common.clock as _core_common_clock
+
     sessions[session_id] = {
         "cache_only": True,
         "agent_id": agent_id,
         "session_id": session_id,
         "project_id": handle["project_id"],
         "project_root": handle["project_root"],
-        "last_seen_at": core.now_utc(),
+        "last_seen_at": _core_common_clock.now_utc(),
     }
 
 
@@ -548,7 +556,9 @@ def normalize_event(raw: dict[str, Any], project_root: Path, core: Any) -> dict[
         data["run_id"] = run_id
     if task_id and "task_id" not in data:
         data["task_id"] = task_id
-    event = core.processforge_event(
+    from processforge_core.agents.telemetry import TelemetryEventService
+
+    event = TelemetryEventService().processforge_event(
         project_root,
         event_type,
         session_id=session_id or None,
@@ -598,6 +608,7 @@ def ledger_from_event(raw: dict[str, Any], project_root: Path, workplace_root: P
 def rebuild_projection(project_root: Path, core: Any) -> Path:
     with state_lock():
         from processforge_core.work.consistency import RunTaskInputReader
+        import processforge_core.common.clock as _core_common_clock
 
         events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
         rows = [item for _sequence, item, _error in event_journal().records(events_path)
@@ -607,7 +618,7 @@ def rebuild_projection(project_root: Path, core: Any) -> Path:
             "# Runtime Command History",
             "",
             f"- source: `{core.rel(events_path, project_root)}`",
-            f"- generated_at: `{core.now_utc()}`",
+            f"- generated_at: `{_core_common_clock.now_utc()}`",
             "",
             "| time | event | actor | session | subject | status |",
             "| --- | --- | --- | --- | --- | --- |",

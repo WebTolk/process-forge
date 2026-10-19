@@ -209,6 +209,8 @@ def _write_checkpoint(
     counts: Mapping[str, int],
 ) -> None:
     path = contained_path(root, "checkpoints", "session-replay", f"{_safe_session_id(session_id)}.json")
+    import processforge_core.common.clock as _core_common_clock
+
     atomic_write_json(
         path,
         {
@@ -222,7 +224,7 @@ def _write_checkpoint(
             "source_project_ref": project_ref,
             "last_raw_event_id": last_raw_event_id,
             "last_raw_location": last_raw_location,
-            "updated_at": core.now_utc(),
+            "updated_at": _core_common_clock.now_utc(),
             "counts": {key: int(counts.get(key, 0)) for key in COUNT_KEYS},
         },
         root,

@@ -36,7 +36,9 @@ def cli(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
 
 
 def presence_payload(agent_id: str, session_id: str, project: Path) -> dict[str, object]:
-    now = core.now_utc()
+    import processforge_core.common.clock as _core_common_clock
+
+    now = _core_common_clock.now_utc()
     return {
         "schema_version": 1,
         "agent_id": agent_id,

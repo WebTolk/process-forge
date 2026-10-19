@@ -120,13 +120,15 @@ class ContinuationService:
     def _continuation_publisher(self) -> ContinuationPublicationService:
         from ..composition import build_continuation_publication_service
 
+        import processforge_core.common.clock as _core_common_clock
+
         return build_continuation_publication_service(
             record_path=lambda: self._record_path, selection_path=lambda: self._selection_path,
             validate_id=lambda: self._id, record_loader=lambda: self._load,
             binding_reader=lambda: self._work, waiting_reader=lambda: self._waiting,
             status_reader=lambda: self.status, run_lock=lambda: self.work._run_lock,
             record_lock=lambda: self.core.registry_file_lock,
-            publish_document=lambda: self.work._atomic_yaml, clock=lambda: self.core.now_utc,
+            publish_document=lambda: self.work._atomic_yaml, clock=lambda: _core_common_clock.now_utc,
             error=lambda: ContinuationError,
         )
 
@@ -203,8 +205,10 @@ class ContinuationService:
                 if self.work._load_completion_intent(run, assignment) != (None, None):
                     raise ContinuationError("completion_recovery_pending")
                 self._writer_check(binding)
+                import processforge_core.common.clock as _core_common_clock
+
                 intent = {"schema_version": 1, "kind": "pf.work.cancellation", "work": binding,
-                          "reason": reason, "evidence": evidence, "cancelled_at": self.core.now_utc(),
+                          "reason": reason, "evidence": evidence, "cancelled_at": _core_common_clock.now_utc(),
                           "before_run": run, "before_assignment": assignment}
                 intent["checksum"] = canonical_fingerprint(intent)
                 if apply is True:
