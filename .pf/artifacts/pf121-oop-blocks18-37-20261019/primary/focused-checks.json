@@ -1,0 +1,194 @@
+{
+  "automation": {
+    "command": [
+      "tools/smoke_automation_readiness.py",
+      "--scratch-root",
+      ".pf/tmp/pf121-oop-blocks18-37-20261019/primary/checks/automation-fixtures"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.82,
+    "reason": "corrected scratch directory preparation and imports after original Core bootstrap",
+    "layer": "source",
+    "notes": []
+  },
+  "yaml": {
+    "command": [
+      "tools/smoke_yaml_parse_cache.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.13,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "Ran 12 tests in 0.232s",
+      "OK"
+    ]
+  },
+  "transition": {
+    "command": [
+      "tools/smoke_work_transition_commit_service.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.73,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "Ran 7 tests in 0.149s",
+      "OK"
+    ]
+  },
+  "evidence": {
+    "command": [
+      "tools/smoke_evidence_validation_service.py",
+      "--scratch-root",
+      ".pf/tmp/pf121-oop-blocks18-37-20261019/primary/checks/evidence-fixtures"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.49,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "Ran 10 tests in 0.867s",
+      "OK"
+    ]
+  },
+  "classifier-parity": {
+    "command": [
+      "tools/smoke_classifier_distribution_parity.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.32,
+    "reason": "corrected scratch directory preparation and imports after original Core bootstrap",
+    "layer": "source",
+    "notes": [
+      "PASS: smoke_classifier_distribution_parity"
+    ]
+  },
+  "classifier-data": {
+    "command": [
+      "tools/smoke_project_classification_data_driven.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.08,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "PASS: smoke_project_classification_data_driven"
+    ]
+  },
+  "scan-distribution": {
+    "command": [
+      "tools/smoke_project_scan_excludes_distribution_root.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.31,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "PASS: project scan excludes distribution root"
+    ]
+  },
+  "work-state": {
+    "command": [
+      "tools/smoke_core_work_state.py",
+      "--scratch-root",
+      ".pf/tmp/pf121-oop-blocks18-37-20261019/primary/checks/work-state-fixtures"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 5.26,
+    "reason": "supervisor state paths now use their root-independent canonical owner",
+    "layer": "source",
+    "notes": [
+      "Ran 24 tests in 4.282s",
+      "OK (skipped=1)"
+    ]
+  },
+  "scan-workplace": {
+    "command": [
+      "tools/smoke_project_scan_excludes_workplace_root.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.35,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "PASS: project scan excludes workplace root"
+    ]
+  },
+  "scan-knowledge": {
+    "command": [
+      "tools/smoke_project_scan_excludes_knowledge_roots.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.32,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "PASS: project scan excludes knowledge roots"
+    ]
+  },
+  "snapshot": {
+    "command": [
+      "tools/smoke_project_snapshot_read_composition.py",
+      "--scratch-root",
+      ".pf/tmp/pf121-oop-blocks18-37-20261019/primary/checks/snapshot-fixtures"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 4.4,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "Ran 8 tests in 3.777s",
+      "OK (skipped=1)"
+    ]
+  },
+  "hook-journal": {
+    "command": [
+      "tools/smoke_hook_sqlite_runtime.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 17.33,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "PASS: raw/history off, live overrides, conversation delivery, no ingress rebuild/scan, unchanged tick and Work recovery without history"
+    ]
+  },
+  "session-identity": {
+    "command": [
+      "tools/smoke_session_identity_roundtrip.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 22.32,
+    "reason": "initial affected-source verification",
+    "layer": "source",
+    "notes": [
+      "PASS: copied Core presence reader without CLI or Host",
+      "PASS: copied Core chat reader without CLI or Host",
+      "PASS: exact opaque session identity round trip"
+    ]
+  },
+  "classifier-pruning": {
+    "command": [
+      "tools/smoke_classifier_inventory_pruning.py"
+    ],
+    "exit_code": 0,
+    "layer": "source",
+    "reason": "initial affected-source verification, observed directly before the batched runner",
+    "notes": [
+      "PASS: smoke_classifier_inventory_pruning",
+      "SKIP: Windows directory/file symlink creation unavailable"
+    ]
+  },
+  "resource-event-replay": {
+    "command": [
+      "existing smoke_remediation_transactional_authoring.test_post_commit_replay"
+    ],
+    "exit_code": 0,
+    "layer": "source",
+    "reason": "selected existing resource event failure injection after descriptor binding relocation",
+    "notes": [
+      "PASS: existing post-commit resource-event failure and replay scenario"
+    ]
+  }
+}

@@ -1,0 +1,315 @@
+{
+  "schema_version": 1,
+  "baseline": "d0a50a5e51ec09fa97626756faf4a1c05e17afcf",
+  "commits": [
+    {
+      "block": 31,
+      "title": "Run and task consistency",
+      "commit": "a2069664eeed77ec3e0d0a6cef06116cc822cc42",
+      "parent": "d0a50a5e51ec09fa97626756faf4a1c05e17afcf",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/common/json_io.py",
+        "src/processforge_core/common/yaml_io.py",
+        "src/processforge_core/process_execution.py",
+        "src/processforge_core/work/consistency.py",
+        "src/processforge_core/work/continuation.py",
+        "tools/migrate-hook-journals.py",
+        "tools/pf_runtime/codex_hooks.py",
+        "tools/pf_runtime/host.py",
+        "tools/pf_runtime/service.py",
+        "tools/processforge.py",
+        "tools/smoke_agent_start_prompt.py",
+        "tools/smoke_automation_readiness.py",
+        "tools/smoke_central_event_replay.py",
+        "tools/smoke_codex_lifecycle_identity.py",
+        "tools/smoke_codex_worker_governance.py",
+        "tools/smoke_continuation_work.py",
+        "tools/smoke_conversation_completeness.py",
+        "tools/smoke_core_work_state.py",
+        "tools/smoke_diagnostics.py",
+        "tools/smoke_garage_hook_policy.py",
+        "tools/smoke_hook_sqlite_runtime.py",
+        "tools/smoke_prepared_execution_context.py",
+        "tools/smoke_prepared_execution_recovery.py",
+        "tools/smoke_process_event_concurrency.py",
+        "tools/smoke_project_classification_data_driven.py",
+        "tools/smoke_runtime_scheduler_failure_isolation.py",
+        "tools/smoke_work_completion_recovery.py",
+        "tools/smoke_yaml_parse_cache.py"
+      ]
+    },
+    {
+      "block": 30,
+      "title": "Telemetry events",
+      "commit": "d3b8c6c9c879513881fd015c71f3721c3315e06e",
+      "parent": "a2069664eeed77ec3e0d0a6cef06116cc822cc42",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/agents/telemetry.py",
+        "src/processforge_core/common/clock.py",
+        "src/processforge_core/composition.py",
+        "src/processforge_core/maintenance/candidate_read.py",
+        "src/processforge_core/maintenance/update.py",
+        "src/processforge_core/process_execution.py",
+        "src/processforge_core/work/continuation.py",
+        "tools/pf_runtime/host.py",
+        "tools/pf_runtime/service.py",
+        "tools/pf_runtime/session_replay.py",
+        "tools/processforge.py",
+        "tools/smoke_cli_audit_f0608.py",
+        "tools/smoke_evidence_validation_service.py",
+        "tools/smoke_project_snapshot_read_composition.py",
+        "tools/smoke_release_archive_timeout_scale.py",
+        "tools/smoke_session_identity_roundtrip.py",
+        "tools/smoke_stage_readiness_policy.py",
+        "tools/smoke_verification_current_work_state.py",
+        "tools/smoke_work_transition_commit_service.py"
+      ]
+    },
+    {
+      "block": 18,
+      "title": "Workplace setup answers",
+      "commit": "d160f3a92aa014087ba554ee431850115df1ca1f",
+      "parent": "d3b8c6c9c879513881fd015c71f3721c3315e06e",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/setup_answers.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 19,
+      "title": "Project classifier sources",
+      "commit": "e595046b37fc64ca2fd21650a80f4e84ffe26355",
+      "parent": "d160f3a92aa014087ba554ee431850115df1ca1f",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/classifier_sources.py",
+        "src/processforge_core/project/scan_policy.py",
+        "src/processforge_core/resources/registries.py",
+        "src/processforge_core/resources/snapshot.py",
+        "tools/processforge.py",
+        "tools/smoke_classifier_distribution_parity.py",
+        "tools/smoke_classifier_inventory_pruning.py",
+        "tools/smoke_project_classification_data_driven.py"
+      ]
+    },
+    {
+      "block": 20,
+      "title": "Project scan and source inventory policy",
+      "commit": "25a80d053377abd65420e5911b355a0d2837c937",
+      "parent": "e595046b37fc64ca2fd21650a80f4e84ffe26355",
+      "paths": [
+        "checksums/processforge.sha256",
+        "tools/processforge.py",
+        "tools/smoke_project_scan_excludes_distribution_root.py",
+        "tools/smoke_project_scan_excludes_knowledge_roots.py",
+        "tools/smoke_project_scan_excludes_workplace_root.py"
+      ]
+    },
+    {
+      "block": 21,
+      "title": "Release source filtering policy",
+      "commit": "b6c1d31b34eda6154fe1b0e52cc78003cabc02e9",
+      "parent": "25a80d053377abd65420e5911b355a0d2837c937",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/maintenance/release_sources.py",
+        "tools/processforge.py",
+        "tools/smoke_agent_entry_release.py",
+        "tools/smoke_release_pack_excludes_user_processes.py",
+        "tools/smoke_release_public_dist_gate.py",
+        "tools/smoke_remediation_checksum_surface.py"
+      ]
+    },
+    {
+      "block": 22,
+      "title": "Project overrides",
+      "commit": "6390d56be92d9a0440676cd0a4fe9b439c4e4842",
+      "parent": "b6c1d31b34eda6154fe1b0e52cc78003cabc02e9",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/overrides.py",
+        "src/processforge_core/resources/buckets.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 23,
+      "title": "Capability provider and route resolution",
+      "commit": "fa9650a248ea0f71034ee5bb9c0ad0a52fd78b25",
+      "parent": "6390d56be92d9a0440676cd0a4fe9b439c4e4842",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/project/capability_resolution.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 24,
+      "title": "Workplace resource event journals",
+      "commit": "e1c027b85cfb9fa7450c94262d86ac32926afac6",
+      "parent": "fa9650a248ea0f71034ee5bb9c0ad0a52fd78b25",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/resources/workplace_events.py",
+        "tools/processforge.py",
+        "tools/smoke_remediation_transactional_authoring.py",
+        "tools/smoke_search_update_operational_hardening.py"
+      ]
+    },
+    {
+      "block": 25,
+      "title": "Release Git provenance",
+      "commit": "27f1342de07481e1396ba8e729ba6bc39a3b9aec",
+      "parent": "e1c027b85cfb9fa7450c94262d86ac32926afac6",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/maintenance/release_provenance.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 26,
+      "title": "Workspace resource matching policy",
+      "commit": "65537d2584c0764aee189b99e68fcb35a6052bc1",
+      "parent": "27f1342de07481e1396ba8e729ba6bc39a3b9aec",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/prepared/resources.py",
+        "src/processforge_core/work/workspace_refs.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 27,
+      "title": "Event hook selection and payloads",
+      "commit": "35b90d63da3a02299c590b6d004c1ec9a8d66c99",
+      "parent": "65537d2584c0764aee189b99e68fcb35a6052bc1",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/agents/hook_policy.py",
+        "tools/pf_runtime/host.py",
+        "tools/processforge.py",
+        "tools/smoke_central_event_replay.py",
+        "tools/smoke_hook_sqlite_runtime.py",
+        "tools/smoke_process_event_concurrency.py"
+      ]
+    },
+    {
+      "block": 28,
+      "title": "Chat export projection",
+      "commit": "d7eebfd92e58e227a58bcf7e0e0a206960f4413d",
+      "parent": "35b90d63da3a02299c590b6d004c1ec9a8d66c99",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/chat/export.py",
+        "tools/pf_runtime/session_read.py",
+        "tools/processforge.py",
+        "tools/smoke_session_identity_roundtrip.py"
+      ]
+    },
+    {
+      "block": 29,
+      "title": "Session metadata outputs",
+      "commit": "3b51290906c5e433f4c7a2e6b2cf802e92dc41b6",
+      "parent": "d7eebfd92e58e227a58bcf7e0e0a206960f4413d",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/agents/session_metadata.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 32,
+      "title": "Orchestration configuration",
+      "commit": "6dbec52e04b63b619e255ec7523f5089df38de9d",
+      "parent": "3b51290906c5e433f4c7a2e6b2cf802e92dc41b6",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/work/orchestration_config.py",
+        "tools/processforge.py",
+        "tools/smoke_cli_audit_f0608.py"
+      ]
+    },
+    {
+      "block": 33,
+      "title": "Supervisor profile and state",
+      "commit": "af9ba5809e2eef1618f6e2c2180f10f1e54cbb38",
+      "parent": "6dbec52e04b63b619e255ec7523f5089df38de9d",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/runtime/supervisor_inputs.py",
+        "tools/pf_runtime/host.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 34,
+      "title": "Worker observation inputs",
+      "commit": "604b62aa30e65844b38ffecdc9c69e4f469489cf",
+      "parent": "af9ba5809e2eef1618f6e2c2180f10f1e54cbb38",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/runtime/observation_inputs.py",
+        "tools/pf_runtime/service.py",
+        "tools/processforge.py",
+        "tools/smoke_long_lived_runtime.py",
+        "tools/smoke_server_operator.py"
+      ]
+    },
+    {
+      "block": 35,
+      "title": "Agent workplace registry",
+      "commit": "730a5e65c21e5e846a82d7aca3c31ce079b6a93f",
+      "parent": "604b62aa30e65844b38ffecdc9c69e4f469489cf",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/agents/registry.py",
+        "src/processforge_core/runtime/metrics.py",
+        "src/processforge_core/work/continuation.py",
+        "tools/pf_runtime/service.py",
+        "tools/processforge.py",
+        "tools/smoke_session_identity_roundtrip.py"
+      ]
+    },
+    {
+      "block": 36,
+      "title": "Project coordination state",
+      "commit": "c6c16eb7aa4db238d1a850369c964ebe924e038e",
+      "parent": "730a5e65c21e5e846a82d7aca3c31ce079b6a93f",
+      "paths": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/prepared/resources.py",
+        "src/processforge_core/project/coordination_state.py",
+        "src/processforge_core/project/initialization.py",
+        "src/processforge_core/work/context.py",
+        "tools/pf_runtime/host.py",
+        "tools/processforge.py",
+        "tools/smoke_cli_audit_f0608.py",
+        "tools/smoke_core_work_state.py",
+        "tools/smoke_project_context_capability_records_real_core.py"
+      ]
+    },
+    {
+      "block": 37,
+      "title": "Public support and encoding policies",
+      "commit": "ae111ca51f00676ea41d043285ef3cd9b19c0992",
+      "parent": "c6c16eb7aa4db238d1a850369c964ebe924e038e",
+      "paths": [
+        "checksums/processforge.sha256",
+        "docs/concepts/python-core-structure.md",
+        "docs/ru/concepts/python-core-structure.md",
+        "src/processforge_core/maintenance/public_source_checks.py",
+        "tools/processforge.py",
+        "tools/smoke_runtime_no_domain_file_patterns.py"
+      ]
+    }
+  ],
+  "reviewed_source_head": "ae111ca51f00676ea41d043285ef3cd9b19c0992",
+  "correction_commit": "26e423cea7b3457f175dc1cf483958a0d52c04a8",
+  "accepted_source_status": "pass",
+  "open_source_findings": 0
+}

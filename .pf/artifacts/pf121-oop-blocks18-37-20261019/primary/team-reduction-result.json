@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-19T18:38:48.607193+00:00",
+  "team": "1-1-4",
+  "retained_code_roles": [
+    "a",
+    "b",
+    "c",
+    "d2"
+  ],
+  "ended": {
+    "e2-long": {
+      "status": "completed",
+      "attempt": 1,
+      "finished_at": "2026-10-19T18:35:01Z",
+      "exit_code": 0,
+      "report_present": true,
+      "exports_present": true,
+      "proof_present": true
+    },
+    "f-long": {
+      "status": "completed",
+      "attempt": 1,
+      "finished_at": "2026-10-19T18:35:53Z",
+      "exit_code": 0,
+      "report_present": true,
+      "exports_present": true,
+      "proof_present": true
+    }
+  },
+  "native_checkout": "Both exact agent/session checkout calls succeeded",
+  "acceptance": "Independent review and Work closure remain pending; coding sessions ended after source/reports/Python/architecture readiness."
+}

@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-19T18:45:03.192564+00:00",
+  "source_commit": "26e423cea7b3457f175dc1cf483958a0d52c04a8",
+  "branch": "dev",
+  "origin": {
+    "push": "succeeded",
+    "readback": "26e423cea7b3457f175dc1cf483958a0d52c04a8"
+  },
+  "gitverse": {
+    "push": "succeeded_via_existing_token_helper",
+    "readback": "26e423cea7b3457f175dc1cf483958a0d52c04a8"
+  },
+  "same_full_sha": true,
+  "published_layers": [
+    "source"
+  ],
+  "not_qualified": [
+    "archive",
+    "installed",
+    "live_Runtime",
+    "connected_MCP"
+  ]
+}

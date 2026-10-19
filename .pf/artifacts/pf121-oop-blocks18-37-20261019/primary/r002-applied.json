@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-19T18:40:11.017127+00:00",
+  "finding": "R002",
+  "status": "applied_pending_independent_resolution",
+  "reviewed_source_head": "ae111ca51f00676ea41d043285ef3cd9b19c0992",
+  "correction_commit": "26e423cea7b3457f175dc1cf483958a0d52c04a8",
+  "source_path": "tools/smoke_project_snapshot_read_composition.py",
+  "changed_paths": [
+    "checksums/processforge.sha256",
+    "tools/smoke_project_snapshot_read_composition.py"
+  ],
+  "raw_sha256": "08f4271b8ebb213b2b0b3b3b76afe14bda9027a2da3e8ee4dfbfb471d8485649",
+  "git_lf_sha256": "8af8e8f0c145c6f042f8578497e10cd6831e78a6465b454700f6652314e0c9c8",
+  "existing_targeted_test": {
+    "name": "SnapshotTests.test_start_preflight_uses_injection_before_capsule",
+    "tests_run": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "layer": "candidate source compiled under original module __file__"
+  },
+  "original_pinned_proofs_preserved": true,
+  "other_source_changes": false
+}

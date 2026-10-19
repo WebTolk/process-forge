@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-19T18:38:28.668521+00:00",
+  "finding": "R002",
+  "status": "candidate_ready",
+  "path": "tools/smoke_project_snapshot_read_composition.py",
+  "before_raw_sha256": "68e023aa107448cbbc09c85affd51e5e2281c697b5e111a28b37f6db086a204d",
+  "candidate_raw_sha256": "08f4271b8ebb213b2b0b3b3b76afe14bda9027a2da3e8ee4dfbfb471d8485649",
+  "candidate_git_lf_sha256": "8af8e8f0c145c6f042f8578497e10cd6831e78a6465b454700f6652314e0c9c8",
+  "candidate": ".pf/tmp/pf121-oop-blocks18-37-20261019/fixtures/r002/smoke_project_snapshot_read_composition.py",
+  "method": "test_start_preflight_uses_injection_before_capsule",
+  "change": "Keep the local SimpleNamespace clock callback using vars(core)['now_utc']; remove the now-unused local canonical-clock import only from that method.",
+  "existing_test": {
+    "name": "SnapshotTests.test_start_preflight_uses_injection_before_capsule",
+    "tests_run": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "layer": "candidate source compiled under original module __file__"
+  },
+  "live_product_unchanged": true,
+  "limits": "Original immutable review baseline and pinned proofs unchanged; candidate not applied or committed yet."
+}

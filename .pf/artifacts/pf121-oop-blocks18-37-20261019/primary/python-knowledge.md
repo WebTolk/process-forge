@@ -1,0 +1,21 @@
+# PF-selected Python knowledge for the current refactor
+
+This is a project-scoped digest of local Python material actually resolved and read by primary through PF. It is provided as a required inline source to native workers, so its use does not rely on an empty prepared external-resource grant. Do not claim to have read entire external manuals from this digest. Record the concrete guidance applied and use the pinned original architectural documents for project decisions.
+
+Resource: docs.python-practices:root. Verified material fingerprint: sha256:a79ec68220e1b953af3364cd20d4d80a5fb31de2b3226f04e046592283ec22fe. Exact Work resource resolution also returned ready/available for each a/b/c/d2/e2/f contribution; portable resolution evidence is in primary/python-access-<role>.json. External resource bodies still require the prepared contract's explicit material grants. This digest is authorized project material.
+
+Sources actually read: pep20.md (sha256:9ee7c54f484c758a2e59d242d66326ec7f198de5eadbdf017eaefcf090718d5a), pep8.md (sha256:9c1f6c135bc0a3db8cc1f22a7753a5d970d4cfe8a93da90ddaaf39240689bdb0), descriptor.md (sha256:6f6df4e96e2eaa9def26712c0800a50ece0b9de3ccbbf7fee2d2bda1fea2df89), plus the local practices README/index. For pep8, primary read Imports (lines 328-405), class/function/argument naming and public/internal interfaces (lines 802-909). For descriptor, primary read functions/methods and binding mechanics (approximately lines 695-805). The local mirror identifies the official Python documentation/PEPs as its source.
+
+## Concrete application
+
+Use explicit owning-module imports. Keep standard-library, third-party and project imports grouped. Avoid wildcard imports and eager package re-exports. The existing tool bootstrap must run before any Core import that depends on its source path. Imports of a name by Main do not make that name an intended public API; actual consumers must import the canonical owner directly.
+
+Use ordinary modules and CapWords classes for real responsibilities; methods and values use snake_case. Keep constructors cold. Store explicit immutable context/root inputs or concrete Core dependencies only. A rootless registry read operation should not invent a current project or use a dummy root merely to fit a different owner's constructor. Factor the real shared responsibility when required, preserving all existing method algorithms and constructor behavior.
+
+An instance attribute lookup of a function binds the instance as the first argument. This is why a moved method needs self, and why a fixture that replaces a class method must accept that inserted self. Class access returns the underlying function; static methods retain the original call shape. Preserve all old operation parameters/defaults/annotations after removing only the inserted receiver for parity comparison. Do not globally replace a local Python variable just because it has the same spelling as a moved global helper.
+
+Use canonical concrete readers and path/value policies rather than duplicating them. Reader construction itself must not perform IO or cache application-lifetime YAML. Request-scoped parsing remains the existing mechanism: moving to another instance does not authorize persistent parsed state, extra reads, skipped live checks or metadata-only freshness. Preserve mutable object identity for shared constants/registries and shallow-copy behavior.
+
+Preserve the existing algorithms, guard/read/write/error order, aliases, payload formats and native exceptions. Python style guidance does not authorize changing those contracts. Keep named architecture decisions separate from implementation acceptance. Imported concrete services must not call back into Main through callbacks, providers, host facades or deferred imports.
+
+After the assigned code is ready, reread the original migration contract, ADR/domain/direction, progressive decision, clarification and relevant OOP specs. Compare actual source with D01-D11/R01-R12 and report any deviation. When source bytes are unchanged, retain already computed parity/compile evidence and record their hashes instead of repeating successful checks. New code changes require only the affected evidence to be recomputed.

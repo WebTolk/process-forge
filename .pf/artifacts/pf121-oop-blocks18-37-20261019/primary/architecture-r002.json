@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-19T18:45:03.194870+00:00",
+  "after_correction": "26e423cea7b3457f175dc1cf483958a0d52c04a8",
+  "sources_reread": {
+    ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md": "016a7485060bc39cdd448ccb38087954550f89f2b84e52959bdc52de6a9f15a4",
+    ".pf/artifacts/progressive-oop-boundary-20261010/decision.md": "63c68bd61176d5cd3ab1e27791d3cc43657f2d750dac162b15e4da55e43e616b",
+    ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md": "728b1fa837377cf8be32b549af8fd1d005ff9332f76409da45510d46f31ee01d",
+    ".pf/artifacts/pf-framework-architecture-20261005/adr.md": "076acfe9c8df09f9408556d144840e60ac4a594b064bfe9ada3981e7e39cb550",
+    ".pf/artifacts/pf-framework-architecture-20261005/domain.md": "c90fe925601522e0f45fb13c282547d7f17e87d958d6c718d7345599557ab649",
+    ".pf/artifacts/pf-framework-architecture-20261005/direction.md": "23d68db7ffe463d1e63ea96acaff6104256c8e658d9baee9e4cfc9fa3445ba14",
+    ".pf/artifacts/python-framework-20261005/oop-02.md": "c6462768f3aac61ca77c9268e7b32be00193719e5a9dda3896c99c231336d647",
+    ".pf/artifacts/python-framework-20261005/oop-03.md": "38d1fd36d54a9c4cf5de0c9fef212dafca034c98b27622ddd64e5c8fbc1f0522",
+    ".pf/artifacts/python-framework-20261005/oop-05.md": "26ceb97ab62124026378cb40815fc966cd883a20a6c7635a8595ad33e047f274"
+  },
+  "comparison": "The bounded correction restores the identical local clock callback. D05/D07/D09 and R06/R07 preserve operation-local state, fixture semantics and Python binding. Owning modules, public interfaces, guards, journals, live reads, locks, lifecycle and immutable historical pins are unchanged. No new architecture or feature. All nine original sources were reread after applying this correction."
+}
