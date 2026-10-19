@@ -1405,11 +1405,12 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
+    from processforge_core.runtime.supervisor_inputs import SupervisorStateInputs
     from processforge_core.work.consistency import RunTaskInputReader
 
     events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
     from processforge_core.common.json_io import json_read
-    supervisor = json_read(core.supervisor_state_path(project_root))
+    supervisor = json_read(SupervisorStateInputs().supervisor_state_path(project_root))
     projection = stage_obligations_payload(project_root, core)
     obligations = projection.get("obligations") if isinstance(projection.get("obligations"), list) else []
     execution = active_execution_records(project_root, core)

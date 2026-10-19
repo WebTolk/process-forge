@@ -402,6 +402,8 @@ from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
 from processforge_core.work.consistency import RunTaskConsistencyService
 from processforge_core.work.consistency import RunTaskInputReader
 from processforge_core.agents.session_metadata import SessionMetadataWriter
+from processforge_core.runtime.supervisor_inputs import SupervisorInputService
+from processforge_core.runtime.supervisor_inputs import SupervisorStateInputs
 from processforge_core.agents.telemetry import TelemetryEventService
 from processforge_core.resources.registries import WorkplaceRegistryReader
 from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
@@ -12324,26 +12326,6 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     emit_process_event(project_root, "task.failed", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
 
 
-def default_supervisor_profile() -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "id": "default",
-        "title": "Default Process Supervisor",
-        "loop": {"interval_seconds": 1, "max_ticks": 1},
-        "scheduling": {"max_parallel_workers": 1, "start_policy": "manual", "default_driver": "manual"},
-        "collection": {"auto_collect_completed": True},
-        "stop": {"file": ".pf/runtime/supervisor/stop.request"},
-    }
-
-
-def load_supervisor_profile(project_root: Path, profile_ref: str | None = None) -> dict[str, Any]:
-    if not profile_ref or profile_ref == "default":
-        template = ROOT / "templates" / "supervisor-profile.yaml"
-        return read_yaml_file(template) if template.is_file() else default_supervisor_profile()
-    path = Path(profile_ref).expanduser()
-    if not path.is_absolute():
-        path = (project_root / path).resolve()
-    return read_yaml_file(path)
 
 
 
@@ -12352,18 +12334,12 @@ def load_supervisor_profile(project_root: Path, profile_ref: str | None = None) 
 
 
 
-def load_run_plan_if_present(project_root: Path, run_id: str) -> dict[str, Any]:
-    path = _orchestration_config_service.orchestrator_plan_path(project_root, run_id)
-    return read_yaml_file(path) if path.is_file() else {}
 
 
-def supervisor_state_path(project_root: Path) -> Path:
-    return supervisor_root(project_root) / "state.json"
 
 
-def write_supervisor_state(project_root: Path, state: dict[str, Any]) -> None:
-    state["updated_at"] = _core_common_clock.now_utc()
-    _core_common_json_io.json_write(supervisor_state_path(project_root), state)
+
+
 
 
 def historical_worker_capture(project_root: Path, run_id: str, task_id: str) -> bool:
@@ -12439,7 +12415,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
     """Observe one pass, retaining task outcomes separately from execution errors."""
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
+    profile = _supervisor_input_service.load_supervisor_profile(project_root, getattr(args, "profile", None))
     run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else _run_task_inputs.active_run_ids(project_root)
     started: list[str] = []
     collected: list[str] = []
@@ -12458,7 +12434,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
     running_scopes: dict[str, list[str]] = {}
     for run_id in run_ids:
         run = load_run(project_root, run_id)
-        plan = load_run_plan_if_present(project_root, run_id)
+        plan = _supervisor_state_inputs.load_run_plan_if_present(project_root, run_id)
         runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
         workers = _worker_plan_policy.worker_map(plan)
         run_max_parallel = int(runtime.get("max_parallel_workers") or max_parallel)
@@ -12594,7 +12570,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
 def command_supervisor_run(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
+    profile = _supervisor_input_service.load_supervisor_profile(project_root, getattr(args, "profile", None))
     loop = profile.get("loop") if isinstance(profile.get("loop"), dict) else {}
     interval_arg = getattr(args, "interval", None)
     max_ticks_arg = getattr(args, "max_ticks", None)
@@ -12605,7 +12581,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
     drain_interval = min(max(interval if interval > 0 else 0.05, 0.05), 0.25)
     stop_file = project_root / ".pf" / "runtime" / "supervisor" / "stop.request"
     state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": _core_common_clock.now_utc(), "updated_at": _core_common_clock.now_utc(), "stopped_at": None, "tick_count": 0, "drain_tick_count": 0, "final_drain_timeout_seconds": final_drain_timeout, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
-    write_supervisor_state(project_root, state)
+    _supervisor_state_inputs.write_supervisor_state(project_root, state)
     failed = False
     for index in range(max_ticks):
         if stop_file.is_file():
@@ -12614,7 +12590,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
         tick_status = command_supervisor_tick(argparse.Namespace(project_root=str(project_root), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None)))
         failed = failed or tick_status != 0
         state["tick_count"] = index + 1
-        write_supervisor_state(project_root, state)
+        _supervisor_state_inputs.write_supervisor_state(project_root, state)
         if failed:
             break
         if index + 1 < max_ticks:
@@ -12627,7 +12603,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
         failed = failed or tick_status != 0
         drain_ticks += 1
         state["drain_tick_count"] = drain_ticks
-        write_supervisor_state(project_root, state)
+        _supervisor_state_inputs.write_supervisor_state(project_root, state)
         if failed:
             break
         pending = supervisor_pending_drain_task_ids(project_root, run_ids)
@@ -12641,7 +12617,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
     state["status"] = "stopped"
     state["stopped_at"] = _core_common_clock.now_utc()
     state["drain_tick_count"] = drain_ticks
-    write_supervisor_state(project_root, state)
+    _supervisor_state_inputs.write_supervisor_state(project_root, state)
     print(f"SUPERVISOR: stopped ticks={state['tick_count']} drain_ticks={state['drain_tick_count']}")
     return 1 if failed else 0
 
@@ -12649,7 +12625,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
 def command_supervisor_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    state = json_read(supervisor_state_path(project_root))
+    state = json_read(_supervisor_state_inputs.supervisor_state_path(project_root))
     if not state:
         print("STATUS: not-started")
         return 1
@@ -12663,11 +12639,11 @@ def command_supervisor_stop(args: argparse.Namespace) -> int:
     stop_file = supervisor_root(project_root) / "stop.request"
     stop_file.parent.mkdir(parents=True, exist_ok=True)
     stop_file.write_text(_core_common_clock.now_utc() + "\n", encoding="utf-8")
-    state = json_read(supervisor_state_path(project_root))
+    state = json_read(_supervisor_state_inputs.supervisor_state_path(project_root))
     if state:
         state["status"] = "stopping"
         state["stop_requested"] = True
-        write_supervisor_state(project_root, state)
+        _supervisor_state_inputs.write_supervisor_state(project_root, state)
     print(f"STOP REQUESTED: {rel(stop_file, project_root)}")
     return 0
 
@@ -17699,6 +17675,8 @@ _release_git_provenance = ReleaseGitProvenance(source_policy=_release_source_pol
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()
 _session_metadata_writer = SessionMetadataWriter(inputs=_context_contract_inputs)
+_supervisor_input_service = SupervisorInputService(ROOT, documents=_yaml_documents, inputs=_context_contract_inputs, work_paths=_work_paths)
+_supervisor_state_inputs = SupervisorStateInputs(documents=_yaml_documents, inputs=_context_contract_inputs, work_paths=_work_paths)
 _workplace_registry_reader = WorkplaceRegistryReader(inputs=_context_contract_inputs)
 _workplace_resource_events = WorkplaceResourceEventJournal(documents=_yaml_documents, telemetry=_telemetry_event_service)
 _workplace_setup_answers = WorkplaceSetupAnswers()
