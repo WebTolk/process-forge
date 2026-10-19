@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from contextlib import redirect_stdout
 from http.server import ThreadingHTTPServer
+from http.client import HTTPException
 import io
 import json
 from pathlib import Path
@@ -36,6 +37,68 @@ def wait_until(predicate, timeout=3):
     return False
 
 
+def check_disconnected_responses(workplace):
+    """A lost response must not retry an accepted event or prevent shutdown."""
+    cases = [(error, write, "/event")
+             for error in (BrokenPipeError, ConnectionAbortedError, ConnectionResetError)
+             for write in (1, 2)]
+    cases += [(ConnectionAbortedError, write, "/shutdown") for write in (1, 2)]
+    for error, failed_write, path in cases:
+        runtime = service.RuntimeProcess(workplace, core, interval=2)
+        runtime.state.update(status="ready", health="ready")
+        done, failures, statuses = threading.Event(), [], []
+        base = runtime.make_handler()
+
+        class DisconnectedHandler(base):
+            def setup(self):
+                super().setup()
+                original_write = self.wfile.write
+                writes = 0
+
+                def write(data):
+                    nonlocal writes
+                    writes += 1
+                    if self.path == path and writes >= failed_write:
+                        raise error("client disconnected")
+                    return original_write(data)
+
+                self.wfile.write = write
+
+            def send_response(self, status, message=None):
+                statuses.append(status)
+                super().send_response(status, message)
+
+            def finish(self):
+                try:
+                    super().finish()
+                finally:
+                    done.set()
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), DisconnectedHandler)
+        server.handle_error = lambda *args: failures.append(sys.exception())
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=0.01), daemon=True)
+        thread.start()
+        endpoint = f"http://127.0.0.1:{server.server_port}"
+        try:
+            with patch.object(service.host, "ingest_event", return_value={"accepted": True}) as ingest, patch.object(service, "append_operator_log") as log:
+                try:
+                    service.http_json("POST", endpoint + path, runtime.token, {})
+                except (OSError, HTTPException):
+                    pass  # The client cannot receive a response on its lost connection.
+                assert done.wait(3), (error, failed_write, path)
+                assert failures == [], failures
+                assert statuses == [200], statuses
+                assert not any(call.args[2] == "request.error" for call in log.call_args_list)
+                assert runtime.active_requests == 0
+                assert ingest.call_count == (1 if path == "/event" else 0)
+                assert runtime.stop_event.is_set() == (path == "/shutdown")
+                assert service.http_json("GET", endpoint + "/readyz", runtime.token)[0] == 200
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(3)
+
+
 def main():
     with tempfile.TemporaryDirectory(prefix="pf-server spaces-") as temp:
         root = Path(temp)
@@ -46,6 +109,7 @@ def main():
         worker = project / ".pf/runtime/agent-runs/task/attempt/status.json"
         runtime = service.RuntimeProcess(wp, core, interval=2)
         runtime.state.update(status="ready", health="ready")
+        check_disconnected_responses(wp / "disconnected-responses")
         handler_finished = threading.Event()
         base_handler = runtime.make_handler()
         class ObservedHandler(base_handler):
@@ -88,6 +152,10 @@ def main():
             # Receiving the response is earlier than the server's finally block.
             assert handler_finished.wait(3)
             assert responses[0][0] == 200 and runtime.active_requests == 0
+            with patch.object(service.host, "ingest_event", side_effect=ValueError("application failure")):
+                code, body = post("/event", {})
+                assert code == 400 and body == {"error": "application failure"}
+                assert wait_until(lambda: runtime.active_requests == 0)
             runtime.scheduler_active = True
             assert post("/shutdown", guarded)[0] == 409
             runtime.scheduler_active = False

@@ -699,8 +699,13 @@ class RuntimeProcess:
                 self.send_response(status)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                try:
+                    self.end_headers()
+                    self.wfile.write(body)
+                except ConnectionError:
+                    # The request may already be committed. A lost response is
+                    # transport cleanup, not a reason to retry an error reply.
+                    self.close_connection = True
 
             def authorize(self) -> bool:
                 header = self.headers.get("Authorization", "")
