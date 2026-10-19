@@ -1120,7 +1120,8 @@ def _conversation_messages(
         )
         message_id = "msg_" + key[:32]
         event_id = "evt_" + hashlib.sha256(("chat.message.recorded:" + message_id).encode("utf-8")).hexdigest()[:32]
-        _path, record, _event = core.append_chat_message(
+        from processforge_core.chat.writer import ChatTranscriptWriter
+        _path, record, _event = ChatTranscriptWriter().append_chat_message(
             project_root,
             session_id=session_id,
             participant_id=str(participant.get("id") or envelope.get("adapter") or "agent"),
