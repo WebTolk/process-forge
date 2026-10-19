@@ -116,9 +116,7 @@ class SnapshotTests(unittest.TestCase):
                                resolve_process_definition=lambda *args: SimpleNamespace(process={'id': 'p'}, path=Path('p.yaml')),
                                validate_assignment_scope_overlaps=lambda *args, **kwargs: {'status': 'pass'})
         service = ProcessExecutionService(Path('p'), None, core, snapshots=reader)
-        import processforge_core.common.clock as _core_common_clock
-
-        object.__setattr__(service, '_clock', _core_common_clock.now_utc)
+        object.__setattr__(service, '_clock', vars(core)['now_utc'])
         pin = dict(process_id='p', process_version='1', process_fingerprint='sha256:p', snapshot_id='s', snapshot_checksum='sha256:s')
         with patch.object(ProcessExecutionService, '_context_check', return_value={'status': 'fresh'}), \
              patch.object(ProcessExecutionService, '_find_by_objective', return_value={}), \
