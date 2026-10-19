@@ -399,6 +399,7 @@ from processforge_core.project.classifier_sources import ProjectClassifierSource
 from processforge_core.project.coordination_state import ProjectCoordinationStateService
 from processforge_core.project.overrides import ProjectOverrideReader
 from processforge_core.project.scan_policy import ProjectScanPolicy
+from processforge_core.maintenance.public_source_checks import PublicSourcePolicy
 from processforge_core.maintenance.release_provenance import ReleaseGitProvenance
 from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
 from processforge_core.work.consistency import RunTaskConsistencyService
@@ -415,6 +416,7 @@ from processforge_core.work.workspace_refs import WorkspaceAccessReferenceServic
 import processforge_core.common.clock as _core_common_clock
 import processforge_core.common.json_io as _core_common_json_io
 import processforge_core.common.yaml_io as _core_common_yaml_io
+import processforge_core.maintenance.public_source_checks as _core_maintenance_public_source_checks
 import processforge_core.maintenance.release_provenance as _core_maintenance_release_provenance
 import processforge_core.maintenance.release_sources as _core_maintenance_release_sources
 import processforge_core.project.overrides as _core_project_overrides
@@ -4510,65 +4512,8 @@ RELEASE_GENERATED_SUFFIXES = {".pyc", ".pyo"}
 
 
 
-def core_hardcode_violations(root: Path) -> list[str]:
-    policy = _context_contract_inputs.documents.policy("core-hardcode-policy.yaml", root, distribution_root=ROOT)
-    patterns = policy_entries(policy, "forbidden_core_patterns")
-    if not patterns:
-        return []
-    targets = policy.get("targets")
-    target_patterns = [str(item) for item in targets] if isinstance(targets, list) else ["tools/processforge.py"]
-    allowed_patterns = [str(item) for item in policy.get("allowed_paths", [])] if isinstance(policy.get("allowed_paths"), list) else []
-    target_paths: list[Path] = []
-    for target in target_patterns:
-        matches = [path for path in root.glob(target) if path.is_file()] if any(char in target for char in "*?[]") else [root / target]
-        target_paths.extend(path for path in matches if path.is_file())
-    violations: list[str] = []
-    for path in sorted(set(target_paths), key=lambda item: item.as_posix()):
-        target = rel(path, root)
-        if any(fnmatch.fnmatch(target, pattern) for pattern in allowed_patterns):
-            continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        for entry in patterns:
-            entry_targets = [str(item) for item in entry.get("targets", [])] if isinstance(entry.get("targets"), list) else []
-            if entry_targets and not any(fnmatch.fnmatch(target, pattern) for pattern in entry_targets):
-                continue
-            entry_allowed = [str(item) for item in entry.get("allowed_paths", [])] if isinstance(entry.get("allowed_paths"), list) else []
-            if any(fnmatch.fnmatch(target, pattern) for pattern in entry_allowed):
-                continue
-            raw_pattern = entry.get("pattern") or entry.get("id")
-            if not raw_pattern:
-                continue
-            flags = re.IGNORECASE if bool(entry.get("case_insensitive", False)) else 0
-            try:
-                matched = re.search(str(raw_pattern), text, flags)
-            except re.error:
-                matched = str(raw_pattern) in text
-            if matched:
-                violations.append(f"{target}: {entry.get('id', raw_pattern)}")
-    return violations
 
 
-def public_support_policy_violations(archive_path: str, text: str, policy: dict[str, Any]) -> list[str]:
-    violations: list[str] = []
-    group = archive_path.split("/", 1)[0]
-    for entry in policy_entries(policy, "blocked_public_surface_patterns"):
-        groups = [str(item) for item in as_list(entry.get("groups")) if item]
-        if groups and group not in groups:
-            continue
-        allowed_paths = [str(item) for item in as_list(entry.get("allowed_paths")) if item]
-        if any(fnmatch.fnmatch(archive_path, pattern) for pattern in allowed_paths):
-            continue
-        raw_pattern = entry.get("pattern") or entry.get("id")
-        if not raw_pattern:
-            continue
-        flags = re.IGNORECASE if entry.get("case_insensitive", True) else 0
-        try:
-            matched = re.search(str(raw_pattern), text, flags)
-        except re.error:
-            matched = str(raw_pattern).lower() in text.lower() if flags else str(raw_pattern) in text
-        if matched:
-            violations.append(str(entry.get("message", entry.get("id", raw_pattern))))
-    return violations
 
 
 def release_required_path_exists(root: Path, archive_path: str) -> bool:
@@ -4640,7 +4585,7 @@ def release_checks(root: Path) -> list[Check]:
 
     checks.extend(release_agent_entry_checks(root))
 
-    core_violations = core_hardcode_violations(root)
+    core_violations = _public_source_policy.core_hardcode_violations(root)
     if core_violations:
         for violation in core_violations:
             checks.append(
@@ -4693,7 +4638,7 @@ def release_checks(root: Path) -> list[Check]:
                         "replace base-technology platform examples with docs.* knowledge package examples",
                     )
                 )
-            for violation in public_support_policy_violations(archive_path, text, public_support_policy):
+            for violation in _public_source_policy.public_support_policy_violations(archive_path, text, public_support_policy):
                 public_support_policy_failed = True
                 checks.append(
                     check_with_hint(
@@ -4728,30 +4673,10 @@ def release_checks(root: Path) -> list[Check]:
     return checks
 
 
-RUSSIAN_MOJIBAKE_MARKERS = ("Рџ", "РЎ", "РЋ", "Р€", "вЂ", "Гђ", "Г‘")
 
 
-def russian_documentation_files(root: Path) -> list[Path]:
-    files = [root / "README.ru.md", root / "QUICKSTART.ru.md"]
-    ru_root = root / "docs" / "ru"
-    if ru_root.is_dir():
-        files.extend(path for path in ru_root.rglob("*.md") if path.is_file())
-    return sorted({path for path in files if path.is_file()}, key=lambda path: rel(path, root))
 
 
-def russian_mojibake_checks(root: Path) -> list[Check]:
-    checks: list[Check] = []
-    failures: list[str] = []
-    for path in russian_documentation_files(root):
-        text = path.read_text(encoding="utf-8", errors="replace")
-        markers = [marker for marker in RUSSIAN_MOJIBAKE_MARKERS if marker in text]
-        if markers:
-            failures.append(f"{rel(path, root)} markers={','.join(markers)}")
-    if failures:
-        checks.extend(check("FAIL", f"Russian documentation mojibake: {item}") for item in failures)
-    else:
-        checks.append(check("PASS", "Russian documentation has no known mojibake markers"))
-    return checks
 
 
 def public_release_checks(root: Path) -> list[Check]:
@@ -4788,7 +4713,7 @@ def public_release_checks(root: Path) -> list[Check]:
     else:
         checks.append(check("PASS", "no parity WARN remains tagged before public release"))
 
-    checks.extend(russian_mojibake_checks(root))
+    checks.extend(_public_source_policy.russian_mojibake_checks(root))
     return checks
 
 
@@ -17440,6 +17365,7 @@ _project_classifier_sources = ProjectClassifierSourceReader(ROOT)
 _project_coordination_state = ProjectCoordinationStateService(documents=_yaml_documents, inputs=_context_contract_inputs)
 _project_override_reader = ProjectOverrideReader(ROOT)
 _project_scan_policy = ProjectScanPolicy()
+_public_source_policy = PublicSourcePolicy(distribution_root=ROOT, inputs=_context_contract_inputs)
 _release_git_provenance = ReleaseGitProvenance(source_policy=_release_source_policy)
 _run_task_consistency_service = RunTaskConsistencyService(ROOT)
 _run_task_inputs = RunTaskInputReader()

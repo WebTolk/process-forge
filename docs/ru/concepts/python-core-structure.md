@@ -1085,7 +1085,7 @@ ProcessParityRenderer получил прежний индекс parity, общ�
 
 `maintenance.candidate_read.UpdateCandidateReader(distribution_root)` владеет
 прежним свежим JSON read/find через готовые пути UpdateDocumentReader и точные
-существующие часы maintenance.update.now_utc. Конструктор не читает файлы/время.
+существующие часы common.clock.now_utc. Конструктор не читает файлы/время.
 Fallback missing/JSONDecodeError/non-dict, остальные ошибки, raw ID/first match
 и unknown fields сохранены. Два authoring smoke используют канонические модели
 и inputs после прежнего локального bootstrap; assertions, fixtures и матрицы
@@ -1133,3 +1133,56 @@ ProjectInitializationInputs владеет manifest project types, набора�
 вызывает её напрямую. Coordination modes/defaults имеют отдельный контракт.
 Конструкторы холодные, корни явные. Source-only перенос сохраняет 1.2.0;
 OOP-эпики и поздняя квалификация остаются открытыми.
+
+## Настройка, правила, события и данные выполнения
+
+Следующие двадцать ограниченных групп переданы конкретным владельцам Core.
+Выбранные реализации и прежние алиасы вспомогательных функций удалены из Main;
+потребители в CLI, Runtime, Core и проверках обращаются к модулям владельцев.
+
+| Ответственность | Модуль и владелец |
+| --- | --- |
+| Ответы настройки рабочего места | `project.setup_answers.WorkplaceSetupAnswers` |
+| Источники классификаторов и перечни файлов | `project.classifier_sources.ProjectClassifierSourceReader` |
+| Роли путей и исключения сканирования | `project.scan_policy.ProjectScanPolicy` |
+| Отбор исходников выпуска | `maintenance.release_sources.ReleaseSourcePolicy` |
+| Переопределения проекта | `project.overrides.ProjectOverrideReader` |
+| Поставщики возможностей и маршруты | `project.capability_resolution.ProjectCapabilityResolution` |
+| Журналы событий ресурсов рабочего места | `resources.workplace_events.WorkplaceResourceEventJournal` |
+| Происхождение выпуска в Git | `maintenance.release_provenance.ReleaseGitProvenance` |
+| Сопоставление ресурсов рабочего пространства | `work.workspace_refs.WorkspaceAccessReferenceService` |
+| Выбор хуков и подготовка их данных | `agents.hook_policy.HookDispatchPolicy` |
+| Представление экспорта чата | `chat.export.ChatExportService` |
+| Запись метаданных сессии | `agents.session_metadata.SessionMetadataWriter` |
+| Построение и запись событий телеметрии | `agents.telemetry.TelemetryEventService` |
+| Чтение и согласованность Run/task | `work.consistency.RunTaskInputReader`, `RunTaskConsistencyService` |
+| Настройки оркестрации | `work.orchestration_config.OrchestrationConfigService` |
+| Профили, планы и состояние supervisor | `runtime.supervisor_inputs.SupervisorInputService`, `SupervisorStateInputs` |
+| Данные наблюдения за воркерами | `runtime.observation_inputs.WorkerObservationInputService` |
+| Реестр агентов рабочего места | `agents.registry.AgentWorkplaceRegistry` |
+| Состояние координации проекта | `project.coordination_state.ProjectCoordinationStateService` |
+| Правила публичных исходников и кодировки | `maintenance.public_source_checks.PublicSourcePolicy` |
+
+`resources.registries.WorkplaceRegistryReader` владеет прежним чтением реестров
+и связанными правилами путей, которым не нужен корень проекта или дистрибутива.
+Замороженный `WorkspacePathReferenceReader` наследует эти алгоритмы, сохраняя
+поля и конструктор. Данные Run/task и supervisor также отделены от операций,
+которым требуется явно заданный корень дистрибутива. Подстановка корня проекта
+или текущего каталога вместо него не используется.
+
+Общие простые функции находятся в `common.clock`, `common.json_io`,
+`common.yaml_io` и `resources.buckets`. Точные константы правил расположены
+рядом с владельцами. Изменяемый реестр отсоединённых процессов остаётся единым
+объектом в `runtime.observation_inputs` для перенесённых и оставшихся операций.
+Конструктор и match arguments ProcessExecutionService сохранены; закрытые поля
+часов и путей событий получают конкретные операции Core без обращений к Main.
+Управляемые тестовые зависимости перенесены с сохранением assertions и порядка
+ошибок. Импорты Runtime следуют прежним проверкам и загрузке Core.
+
+Алгоритмы, сигнатуры, данные ответов, ошибки, форматы документов, неизвестные
+поля, порядок чтения/записи и свежие чтения YAML сохранены. Пометка индекса после
+события ресурса действует по прежним правилам. Операционное наблюдение за
+воркерами, материализация пересечений, оставшийся сценарий доступа к рабочему
+пространству и lifecycle/recovery сохраняют прежних владельцев. Новых функций
+продукта нет; OOP-эпики и приёмка архива, установки, Runtime и подключённого хоста
+этими группами не завершаются.

@@ -1073,7 +1073,7 @@ ordering, annotation and native error remain unchanged.
 
 `maintenance.candidate_read.UpdateCandidateReader(distribution_root)` owns the
 existing fresh JSON candidate read/find. It reuses UpdateDocumentReader paths
-and the identical existing maintenance.update.now_utc; constructor performs no
+and the identical common.clock.now_utc; constructor performs no
 I/O or clock read. Missing/JSONDecodeError/non-dict fallbacks, other failures,
 raw ID/first match and unknown fields remain unchanged. Two authoring smoke
 consumers use canonical models/input owners after their existing local bootstrap;
@@ -1122,3 +1122,55 @@ sets, greenfield/brownfield mode and initial defaults. The initialization consum
 calls it directly. Coordination project modes/defaults are separate contracts.
 All constructors are cold and roots explicit. This source-only move preserves
 1.2.0 contracts and leaves OOP epics/later qualification open.
+
+## Setup, policies, events and execution inputs
+
+The next twenty bounded groups use the following concrete owners. Selected
+implementations and old helper aliases are removed from Main; actual CLI,
+Runtime, Core and smoke callers import the owning modules directly.
+
+| Responsibility | Module and owner |
+| --- | --- |
+| Workplace setup answers | `project.setup_answers.WorkplaceSetupAnswers` |
+| Classifier sources and inventories | `project.classifier_sources.ProjectClassifierSourceReader` |
+| Project scan roles and exclusions | `project.scan_policy.ProjectScanPolicy` |
+| Release source filtering | `maintenance.release_sources.ReleaseSourcePolicy` |
+| Project overrides | `project.overrides.ProjectOverrideReader` |
+| Capability providers and routes | `project.capability_resolution.ProjectCapabilityResolution` |
+| Workplace resource event journals | `resources.workplace_events.WorkplaceResourceEventJournal` |
+| Release Git provenance | `maintenance.release_provenance.ReleaseGitProvenance` |
+| Workspace resource matching | `work.workspace_refs.WorkspaceAccessReferenceService` |
+| Event hook selection and payloads | `agents.hook_policy.HookDispatchPolicy` |
+| Chat export projection | `chat.export.ChatExportService` |
+| Session metadata writes | `agents.session_metadata.SessionMetadataWriter` |
+| Telemetry event construction and recording | `agents.telemetry.TelemetryEventService` |
+| Run/task inputs and consistency | `work.consistency.RunTaskInputReader`, `RunTaskConsistencyService` |
+| Orchestration configuration | `work.orchestration_config.OrchestrationConfigService` |
+| Supervisor profiles, plans and state | `runtime.supervisor_inputs.SupervisorInputService`, `SupervisorStateInputs` |
+| Worker observation inputs | `runtime.observation_inputs.WorkerObservationInputService` |
+| Agent workplace registry | `agents.registry.AgentWorkplaceRegistry` |
+| Project coordination state | `project.coordination_state.ProjectCoordinationStateService` |
+| Public source and encoding policies | `maintenance.public_source_checks.PublicSourcePolicy` |
+
+`resources.registries.WorkplaceRegistryReader` owns the existing live registry
+reads and their root-independent path dependency graph. The frozen
+`WorkspacePathReferenceReader` inherits these algorithms with its existing
+fields and constructor. Run/task and supervisor inputs likewise separate
+root-independent reads from operations requiring an explicit distribution root.
+No reader substitutes a project or current directory for that root.
+
+Shared primitives remain plain functions in `common.clock`, `common.json_io`,
+`common.yaml_io` and `resources.buckets`. Exact policy constants live beside
+their owners. The mutable detached-process registry is one object in
+`runtime.observation_inputs`, used by both extraction and remaining operations.
+ProcessExecutionService keeps its constructor and match arguments; private
+clock/event-path fields compose concrete Core operations without Main callbacks.
+Controlled fixtures bind these dependencies while preserving assertions and
+failure order. Runtime imports retain the existing guards and Core bootstrap.
+
+Algorithms, signatures, payloads, errors, document formats, unknown fields,
+read/write ordering and live YAML reads are retained. The resource event dirty
+mark still has its original behavior. Operational worker observation, overlap
+materialization, the remaining workspace-access workflow and lifecycle/recovery
+retain their earlier owners. These groups add no product feature and do not
+complete OOP epics or archive/install/Runtime/connected-host qualification.

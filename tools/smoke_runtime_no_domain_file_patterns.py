@@ -6,7 +6,10 @@ from smoke_domain_neutral_core_helpers import ROOT, load_processforge
 
 def main() -> None:
     pf = load_processforge()
-    violations = pf.core_hardcode_violations(ROOT)
+    from processforge_core.maintenance.public_source_checks import PublicSourcePolicy
+    from processforge_core.work.context_documents import ContextContractInputs
+
+    violations = PublicSourcePolicy(Path(__file__).resolve().parents[1], inputs=ContextContractInputs()).core_hardcode_violations(ROOT)
     if violations:
         raise AssertionError(violations)
     print("PASS: smoke_runtime_no_domain_file_patterns")
