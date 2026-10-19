@@ -1,0 +1,40 @@
+{
+  "status": "integrated",
+  "removed_definitions": [
+    "AuthoringEffect",
+    "AuthoringPlan",
+    "AuthoringWrite",
+    "aggregate_status",
+    "authoring_file_hash",
+    "authoring_hash_bytes",
+    "authoring_journal_path",
+    "authoring_mode",
+    "authoring_parent_chain",
+    "authoring_transaction_root",
+    "build_process_authoring_example_documents",
+    "find_update_candidate",
+    "incomplete_authoring_journals",
+    "process_yaml_content",
+    "read_update_candidates",
+    "render_authoring_plan",
+    "render_parity_index",
+    "validate_authoring_parent_types"
+  ],
+  "migrated_name_consumers": {
+    "render_authoring_plan": 1,
+    "authoring_mode": 7,
+    "authoring_transaction_root": 1,
+    "authoring_journal_path": 3,
+    "incomplete_authoring_journals": 1,
+    "validate_authoring_parent_types": 1,
+    "authoring_parent_chain": 1,
+    "build_process_authoring_example_documents": 1,
+    "read_update_candidates": 3,
+    "find_update_candidate": 6,
+    "authoring_hash_bytes": 3,
+    "authoring_file_hash": 5,
+    "render_parity_index": 1
+  },
+  "prior_digest_and_parity_instances_reused": true,
+  "preflight_all_primary_edits_before_write": true
+}

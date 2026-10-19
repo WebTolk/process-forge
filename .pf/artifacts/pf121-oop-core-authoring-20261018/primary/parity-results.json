@@ -1,0 +1,572 @@
+{
+  "passed": true,
+  "total": 85,
+  "native_exceptions": 7,
+  "groups": {
+    "annotations": 18,
+    "models": 7,
+    "stdout": 2,
+    "inputs": 4,
+    "paths": 2,
+    "digests": 9,
+    "parents": 6,
+    "journals": 4,
+    "status": 8,
+    "bytes": 3,
+    "examples": 6,
+    "parity-markdown": 3,
+    "candidates": 11,
+    "imports": 2
+  },
+  "cases": [
+    {
+      "group": "annotations",
+      "case": "AuthoringWrite",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "AuthoringEffect",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "AuthoringPlan",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "authoring_mode",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "authoring_transaction_root",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "authoring_journal_path",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "authoring_hash_bytes",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "authoring_file_hash",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "incomplete_authoring_journals",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "validate_authoring_parent_types",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "render_authoring_plan",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "authoring_parent_chain",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "process_yaml_content",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "build_process_authoring_example_documents",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "render_parity_index",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "aggregate_status",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "read_update_candidates",
+      "passed": true
+    },
+    {
+      "group": "annotations",
+      "case": "find_update_candidate",
+      "passed": true
+    },
+    {
+      "group": "models",
+      "case": "fields AuthoringWrite",
+      "passed": true
+    },
+    {
+      "group": "models",
+      "case": "fields AuthoringEffect",
+      "passed": true
+    },
+    {
+      "group": "models",
+      "case": "fields AuthoringPlan",
+      "passed": true
+    },
+    {
+      "group": "models",
+      "case": "write-defaults",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "546c8e7c8e9de22545a1659316bfd6360681c647c9353d85bafb24ecbfb22315"
+    },
+    {
+      "group": "models",
+      "case": "effect-defaults",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "78ff27618576ba05826867d7c9f7684d058a5450bb6d870cb73465b9b259a596"
+    },
+    {
+      "group": "models",
+      "case": "fresh mutable payload _old_authoring",
+      "passed": true
+    },
+    {
+      "group": "models",
+      "case": "fresh mutable payload processforge_core.authoring.plans",
+      "passed": true
+    },
+    {
+      "group": "stdout",
+      "case": "sorted-plan-callbacks-inert",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "ddef0fddbfbeea2440dc24e22eaf96f100aae16ea154cf5a39314f8022e92e96"
+    },
+    {
+      "group": "stdout",
+      "case": "empty-plan",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "30d7017265290c186ade15b50ef89d7a7a3bc7bb5b0a0bb7d6abfc8f3f6378de"
+    },
+    {
+      "group": "inputs",
+      "case": "mode 27",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "39cedcf0685e7617c84d320f419c7aadc40e0e889c82f4dee8ef6b35e389491d"
+    },
+    {
+      "group": "inputs",
+      "case": "mode 28",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "b468f2dfef0c86ea4636f3044d2d27f8c44aae99209b23496e7068165775bc6f"
+    },
+    {
+      "group": "inputs",
+      "case": "mode 29",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a3b684bd25ff102b8be61a9b17937a9274d5e6040d378f5ffc1576aa4927cbac"
+    },
+    {
+      "group": "inputs",
+      "case": "mode 30",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "3d23733fabf54fc0622f611bbfdf302e8a95710f413aacebe55bdecd8c056793"
+    },
+    {
+      "group": "paths",
+      "case": "transaction-root",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4a495388ad6cd8af44a691a46279017e269c499824d958d588656aefac8263af"
+    },
+    {
+      "group": "paths",
+      "case": "journal-path",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1755265d15ceacaa46f3ae021d9924ffdeb84a7c25dd75caa2e63f40fddc7cfe"
+    },
+    {
+      "group": "digests",
+      "case": "bytes 33",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5649eb56c86217b90200a6bc21d26fb2d152f85def205f027ae95e1e337a4ba2"
+    },
+    {
+      "group": "digests",
+      "case": "bytes 34",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c1ad41ccad1eff7c459ce4426d76dc50feedc75ad16d1103643f9c7c097fb676"
+    },
+    {
+      "group": "digests",
+      "case": "bytes 35",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d62df349ed9de34d57b46f6eac900c3c81ccf55b2d27ac146b49c91025c58f1d"
+    },
+    {
+      "group": "digests",
+      "case": "buffer protocol",
+      "passed": true
+    },
+    {
+      "group": "digests",
+      "case": "invalid not bytes",
+      "passed": true,
+      "native_exception": "TypeError",
+      "observation_sha256": "208d9f0aeacbc80b83aafc6001a548f7f324893f7076fbb6477d866adbb4737e"
+    },
+    {
+      "group": "digests",
+      "case": "invalid None",
+      "passed": true,
+      "native_exception": "TypeError",
+      "observation_sha256": "323e9c3853849530612d8236292f8d5886f51b9e96ae48933e91440d4fe0036f"
+    },
+    {
+      "group": "digests",
+      "case": "raw-file",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "acabb2a9fc299ce55b336303c98b8509cca9b26c52a6b6aef3156a73ac36fcf2"
+    },
+    {
+      "group": "digests",
+      "case": "missing",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e1314bee62ebd984dc31a2ca40573e581610d5a8a2c68216275c1b19be63de5b"
+    },
+    {
+      "group": "digests",
+      "case": "directory",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5737edc2e1376ead98d336ef23106ac0ef3e09bd7ff8d8c971e99353fbc0be80"
+    },
+    {
+      "group": "parents",
+      "case": "parent-types 42",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "234d3b05ccb39ba05e7ac59292f98dc711b49f79995ee35e4f7c86fbd42c7a0f"
+    },
+    {
+      "group": "parents",
+      "case": "parent-types 43",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "effdf64093bd7310932c0fd595594c432cda20c0d41afbaed83af0e30a3e91e2"
+    },
+    {
+      "group": "parents",
+      "case": "parent-types 44",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "b5503749f8577ad3574546ef7f4d225eddf4b0ad5c4a61730e58fee394cbe989"
+    },
+    {
+      "group": "parents",
+      "case": "parent-types 45",
+      "passed": true,
+      "native_exception": "SystemExit",
+      "observation_sha256": "c6d3df6a54f1b4ce261369e037840f0a14027450073c5a2daf584fab33f5cf9a"
+    },
+    {
+      "group": "parents",
+      "case": "missing-chain",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d63cdd02428dd5b261ea048d7e0481206211d53fc58e4cbd9c8d9f29b0ec083d"
+    },
+    {
+      "group": "parents",
+      "case": "existing-chain",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8d0a6dd4dd1c063723f7e42cdf87d2791ab3458cbc9b2b60ed734305f6a5b120"
+    },
+    {
+      "group": "journals",
+      "case": "missing-root",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b47eea68d023e6469083870a2cc967fee67b27a6c613b76379708630033e9cc8"
+    },
+    {
+      "group": "journals",
+      "case": "sorted-and-terminal-filter",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "9522b5ced724b31fb221ebec8253a24b61817e4a4b8cf0a176c396406fda4685"
+    },
+    {
+      "group": "journals",
+      "case": "two incomplete",
+      "passed": true
+    },
+    {
+      "group": "journals",
+      "case": "fresh-after-state-change",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "1da04b1cd04e9641b90cdb6ba28279301f16273fe722074967e9d1e9a068cc3a"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 52",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "5184b208b86cb8ae37d45cec9ec09673eb0f6a8d6cd10ed561e4c5e1d4eafdf9"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 53",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "3d756a266c71e278ae1f8693afeb9fac0fef23e21ca75445877eeb3ca9b4c48d"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 54",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "20403b664fb992d7bb25412f3a0f0b2f09be002f258979ca8386a5615a2cb5e6"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 55",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "aa0510f0bef887da8694cd2bf238725d7773091a2526aadaba0f462766ee5ff3"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 56",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a5eaedf1a37f38994184ddf23564fa8448cca54d855bb19067a77961b220e4b3"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 57",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "750bdd2aef7c53221151df1eb28025729f5ba1e25451fbecbe3d1fce398d2bf5"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 58",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c048ebd1630e9be4f118397f0a4631ca447be7048d59fbeba69496e037cfd415"
+    },
+    {
+      "group": "status",
+      "case": "aggregate 59",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "aad2768cb3cbd3afef6b50e8838b537d06bcdc005322b36614839df2ea1f8163"
+    },
+    {
+      "group": "bytes",
+      "case": "yaml 60",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "d91ca563efdce554f3d8aa6ce711e897e9e2777c2e75f758cb875846ae548cf1"
+    },
+    {
+      "group": "bytes",
+      "case": "yaml 61",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "36cf8f9e6caa53d5887cd56038c22ebe9201d17bad9fab0c252eb63d93e5ba08"
+    },
+    {
+      "group": "bytes",
+      "case": "yaml 62",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "b49ee00c072776450b09bd956b7f4705df3fb133f025d7c608d126ef94ed41d0"
+    },
+    {
+      "group": "examples",
+      "case": "documents 63",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c06dfdde1191ee63a38cb2f1f384ff14c4a61f8ccf55082d8e0ca72e1406cdcd"
+    },
+    {
+      "group": "examples",
+      "case": "seven outputs 64",
+      "passed": true
+    },
+    {
+      "group": "examples",
+      "case": "documents 65",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4083de3772e78659a8b5aed69366e2023d703a63b909eef7df003eea6678c1f5"
+    },
+    {
+      "group": "examples",
+      "case": "seven outputs 66",
+      "passed": true
+    },
+    {
+      "group": "examples",
+      "case": "documents 67",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "8dcd8d311f0dd18412185c2defbb4823c230f3d59dc28aff3773a40613b1abf6"
+    },
+    {
+      "group": "examples",
+      "case": "seven outputs 68",
+      "passed": true
+    },
+    {
+      "group": "parity-markdown",
+      "case": "index 69",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "ae2262e766a4b2067088d8b3cf6d3fe2076e991ace63a9e0d5d9ba22cc238b4d"
+    },
+    {
+      "group": "parity-markdown",
+      "case": "index 70",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "c0053ce5b44f35c0ac32d133ec7a12b64da26ac63beb3e521a933cab79c7767b"
+    },
+    {
+      "group": "parity-markdown",
+      "case": "index 71",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "39c9a85ea8a601b584b79be390773c8224d7a9fe7c205b25a1756e3c303c3f56"
+    },
+    {
+      "group": "candidates",
+      "case": "missing",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6267d3ad133959ee9651eb91510252d937c742095cd4ac38ec26ee31a8792648"
+    },
+    {
+      "group": "candidates",
+      "case": "invalid",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6267d3ad133959ee9651eb91510252d937c742095cd4ac38ec26ee31a8792648"
+    },
+    {
+      "group": "candidates",
+      "case": "list",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "6267d3ad133959ee9651eb91510252d937c742095cd4ac38ec26ee31a8792648"
+    },
+    {
+      "group": "candidates",
+      "case": "valid",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "e3cf7f16bfbbd6abbacd45eb4601d54f4b048548b6d806c5461bfd1b4db4c0a3"
+    },
+    {
+      "group": "candidates",
+      "case": "find x",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "10da379f2426f58db0e89803bb186650c54d86b8412b58cb02f0521f1f449e2d"
+    },
+    {
+      "group": "candidates",
+      "case": "find absent",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "a6a6f34ae11beb995cbb6b6a4791bb31ccb752c132ec61e84f8151d2ebbe2b17"
+    },
+    {
+      "group": "candidates",
+      "case": "find 7",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "cf7748e6558854489d27b853972d661eeda23fff2f34e79bb0a713fbe21acf63"
+    },
+    {
+      "group": "candidates",
+      "case": "unicode-propagates",
+      "passed": true,
+      "native_exception": "UnicodeDecodeError",
+      "observation_sha256": "d4420ade365f4a2dfbb82d71c6544fb8888043b5a4ddae318f6e51f6567fcaf9"
+    },
+    {
+      "group": "candidates",
+      "case": "initial-live",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "4cc034dbf796c8947a1477697509fade9269743a6b1347ec566336b55a26d22f"
+    },
+    {
+      "group": "candidates",
+      "case": "same-size-same-mtime",
+      "passed": true,
+      "native_exception": null,
+      "observation_sha256": "09166f2389405abe7e0e6e5341c099ac7ea59a3f84116786705f08fb267d386e"
+    },
+    {
+      "group": "candidates",
+      "case": "fresh v2",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "direct",
+      "passed": true
+    },
+    {
+      "group": "imports",
+      "case": "copied",
+      "passed": true
+    }
+  ],
+  "source_hashes": {
+    "tools/processforge.py": "465049c58d61bd634122c228ced8861a66ee4531b3698454a867e1deabf0174f",
+    "docs/concepts/python-core-structure.md": "7e11235b2c086508d1cdc533f81c1d833f493356696bdc22d556c36339f3f153",
+    "docs/ru/concepts/python-core-structure.md": "9397b8f9c8103d48b6c8c40762a1c3c4cf8b467924ba8d9423d47061c9f05d3a",
+    "src/processforge_core/authoring/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "src/processforge_core/authoring/plans.py": "04b0b27a1998cfe7ebfa9703524838237f3c796ce4c7e916d767145b35272208",
+    "tools/smoke_authoring_crash_recovery.py": "a4436d206c054b97e6de087b33202c246ed4809c150cee19b5df70437accb1c8",
+    "tools/smoke_remediation_transactional_authoring.py": "dcc050a4c931fef416d7362cfcebd36bec1e3b324dc77c55760ecae68b6dfa95",
+    "src/processforge_core/authoring/inputs.py": "a586e9ac589f7c8d1fd9871b71af1b6e33c31d47efba76c56a49ae72dc79df9c",
+    "src/processforge_core/common/digests.py": "66bf62dc67bdaac2b95c651c20fa45bb3b0156161ae834db316dd5ac8343583d",
+    "src/processforge_core/process_catalog/examples.py": "f5ddbbdd59b6b6acb7446689fb4787f5dc3af0d899e3f3701f8cb79f38dcf569",
+    "src/processforge_core/presentation/process_parity.py": "1c4e8fa1658c4721e660a69f6828df668b9c5599cfb931f13cf46f792b3e4e21",
+    "src/processforge_core/common/status.py": "6dba027ab1ddd3fbe64d014ca198ac8ff485784c0eee2c676d096d5a1e737160",
+    "src/processforge_core/maintenance/candidate_read.py": "22e7789dc700242a1540b7791a726400517212d7e35976fe23d67057f7ba027d"
+  },
+  "scope": "Bounded real scratch/default models/paths/journals/digests/stdout/bytes/candidates, test-only frozen identical canonical clock, direct/copied Core without Main/transport; no transaction mutation/Runtime/ZIP qualification."
+}

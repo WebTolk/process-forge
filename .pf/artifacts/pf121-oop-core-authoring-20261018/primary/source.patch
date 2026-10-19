@@ -1,0 +1,1185 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index c861daf..0ab98fa 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -121,7 +121,7 @@ ed067f95a4d711a26378dbd6fa35a569744a0e8b432f2dc502f09d0c2a7af91e  docs/concepts/
+ c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40  docs/concepts/project-snapshot.md
+ b88bcf538de1ecf3ab9ec7cb84fe4fadc4a7ba676d88a5144340a76d8c1b4f3b  docs/concepts/provider-adapters.md
+ f5294f07972f681c295e28c7cf688838b6a13e03485666a6c0771a11906fe6a7  docs/concepts/public-private-config.md
+-959c777a3797d559a726b64b1006574afa70ef67d60c7753763a95a2a613217d  docs/concepts/python-core-structure.md
++7e11235b2c086508d1cdc533f81c1d833f493356696bdc22d556c36339f3f153  docs/concepts/python-core-structure.md
+ 085a32eece055f0ed5d0c9b9327530d3b366d294a407491a3e1026b23b378cec  docs/concepts/resource-events.md
+ d09d0ca06e45c0fc097ff88c308293e17e9b4e673c70b62f5362d378bd5e0d4c  docs/concepts/resource-management.md
+ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/resource-privacy.md
+@@ -287,7 +287,7 @@ d66096dca8418af23a46446a2b022d9c6126d0e873d13ee7d52fb6155078162b  docs/ru/concep
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+ a44f63f904a5e3733722c0290893c705b28cc931083ab3d1a23aba4bfa2c9b7b  docs/ru/concepts/provider-adapters.md
+-30f619565d1fff8dff2f4dd30dce266e4fbf01941f7a996f7950d0ab933520f5  docs/ru/concepts/python-core-structure.md
++9397b8f9c8103d48b6c8c40762a1c3c4cf8b467924ba8d9423d47061c9f05d3a  docs/ru/concepts/python-core-structure.md
+ 177aed3fd05d7ca306aef0baf5a6cf577fea902cb9738b18af148dcd4469e01a  docs/ru/concepts/resource-search-index.md
+ f9ce17d09ad1a3d6f012aa6b5626ef0b3bc668aac69760ea8d42818178a28c25  docs/ru/concepts/runs-tasks-iterations.md
+ 4849d2e22b0d34af832b7920d4a18af5106be4aaf530c3f9bbba6ddb6025dd49  docs/ru/concepts/runtime-configuration.md
+@@ -670,12 +670,15 @@ c217e4e80fddf208a3a7a1f64a6f91148b5a7ec374505f55577c242b5c78f22e  src/processfor
+ a9d9fa23729414ded4cf212a311bd58568243f36dead3490e5d7440d4b101c69  src/processforge_core/agents/__init__.py
+ 1785e25d42e3685330fa6d7700cf575b73fa7c2d0625ec3f338a56d8791e5fdc  src/processforge_core/agents/hook_admission.py
+ c91c1fd8c8dffaef89739e51bb7bbcbe11b7919ca049a28cbdf7e2d6f2c6a219  src/processforge_core/agents/presence.py
++01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b  src/processforge_core/authoring/__init__.py
++a586e9ac589f7c8d1fd9871b71af1b6e33c31d47efba76c56a49ae72dc79df9c  src/processforge_core/authoring/inputs.py
++04b0b27a1998cfe7ebfa9703524838237f3c796ce4c7e916d767145b35272208  src/processforge_core/authoring/plans.py
+ 856f324669a53c71a07ca37035292c84b991e9812f5ba8e0345b51d7c6c1c94f  src/processforge_core/bootstrap.py
+ bf1510c900cfdf5c92dbc41000034cb17c244525729fbbd7406a64c763507e19  src/processforge_core/chat/__init__.py
+ 42dda46bb946bc5e91de924ea20d9064eb34d29ddfb29dfcf3920d4768477aa0  src/processforge_core/chat/transcripts.py
+ d553b81a7da4b3f02101e0beefa9dfa787767ff774c0c86513d5d1ca28286909  src/processforge_core/common/__init__.py
+ 19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432  src/processforge_core/common/checks.py
+-ab7b6b4e9970e4e5bf3c22352354052fb5f45b33432d6b96f41a211b1619535e  src/processforge_core/common/digests.py
++66bf62dc67bdaac2b95c651c20fa45bb3b0156161ae834db316dd5ac8343583d  src/processforge_core/common/digests.py
+ ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processforge_core/common/ids.py
+ 8f91f58a6152a713b621d3d5e03218bce8bb66e597c7c37eb63405a7e7aba013  src/processforge_core/common/json_io.py
+ 929ab865d31a4b72f5ae8728f513d8514add9cf4ab98c4f7c0269c0178ecabdf  src/processforge_core/common/ndjson.py
+@@ -684,6 +687,7 @@ ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8  src/processfor
+ d701063a9e64f5d03a9eeecc6e1cf31684b80d13ecc03f49db43eaa427cf6074  src/processforge_core/common/privacy.py
+ e73d7c787f15cfb31036bbb8d9be8d353e7556693dcf49c610cf62ec957c8fc2  src/processforge_core/common/record_validation.py
+ 9938bbc6bdad6fed32610e54651d0cd9b9fbfa389815ff0a66184d0867914ae6  src/processforge_core/common/request_scope.py
++6dba027ab1ddd3fbe64d014ca198ac8ff485784c0eee2c676d096d5a1e737160  src/processforge_core/common/status.py
+ 2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576  src/processforge_core/common/text.py
+ 670ffc254d5063641bc00f2c55b23f5886acd9ec89076a34ee87d08b5e825f5f  src/processforge_core/common/values.py
+ 88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752  src/processforge_core/common/yaml_dump.py
+@@ -727,6 +731,7 @@ d291d2e8bc4aeb99fb2b4f18112982755c1941b0a51de5691b581129dae355ef  src/processfor
+ f01ced3cbd104f0381d86d4c29d01a9ea2070047e28222a47a31b198188582de  src/processforge_core/evolution/privacy.py
+ 778ec4c7270ef06c426e7b788f02702907a24be9b753ef84877ddeeb33686b19  src/processforge_core/garage.py
+ 00eb2ff04becf5ea3af5fe1499a3f47a61eba937d584b91b61f1c082407df61e  src/processforge_core/maintenance/__init__.py
++22e7789dc700242a1540b7791a726400517212d7e35976fe23d67057f7ba027d  src/processforge_core/maintenance/candidate_read.py
+ 3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552  src/processforge_core/maintenance/documents.py
+ f678df2822444cea88d16a0b74f2786f8bbd5f390abfd7985ce47e8ce2c896e1  src/processforge_core/maintenance/presentation.py
+ c573cab64fad82959e1c97342db9db771aef120335f5784c487d5d5f8d4af75a  src/processforge_core/maintenance/registries.py
+@@ -748,7 +753,7 @@ fd3fcc46416441538d477d5deb17f1d2b10cb17c5c66ea5fb5757f54b52c909d  src/processfor
+ d050e9412b2d190474c36f4a527628a3c55e8cfbb812a78c02ec6ca33a970532  src/processforge_core/prepared/resource_selection.py
+ 99dce10f8793d1af6f42ed92fa7159b36ab5310c4a180dc78bb67bfec9bfa5f7  src/processforge_core/prepared/resources.py
+ f9cb908c5a31295837d2782865a9eae6835f873710ab74d0480f9b8b7c06762d  src/processforge_core/prepared/snapshot_read.py
+-8c92492f9627e66747f2830a2d18171f087b6e24ded4a13a90262a6f109a85c1  src/processforge_core/presentation/process_parity.py
++1c4e8fa1658c4721e660a69f6828df668b9c5599cfb931f13cf46f792b3e4e21  src/processforge_core/presentation/process_parity.py
+ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processforge_core/process_catalog/__init__.py
+ 3c12bf127fc08105bddc2332cd6c21f8ad2118ef2af479948f211f101f9b7bd3  src/processforge_core/process_catalog/artifacts.py
+ 7173ef568a94dfcb6e98d20eee7b54b6f3dc9dda35087455687e98eef2f7bd23  src/processforge_core/process_catalog/audit.py
+@@ -758,6 +763,7 @@ b66c3af0dd5cebad3204268137cc29737eb1583775666ea277c6ffc5a80aeed8  src/processfor
+ 98e4edee5f6f161b50698735e30945af4ead15832992c57fec340484812b0676  src/processforge_core/process_catalog/coordination.py
+ e5936d407aa0793795c8aa1b774acd3f76dc58205e15c0b1b1d18b8b336416ac  src/processforge_core/process_catalog/definition_read.py
+ 84fbfa98942a73a392c03ca8ceb3da39461e2b0e75dc7963a9d33bb45169a50f  src/processforge_core/process_catalog/evolution.py
++f5ddbbdd59b6b6acb7446689fb4787f5dc3af0d899e3f3701f8cb79f38dcf569  src/processforge_core/process_catalog/examples.py
+ 7ec36f6d54287fa4ea414a18fc6a5f8358198382d377da498f3aea5437aa16d2  src/processforge_core/process_catalog/handoffs.py
+ 6a402ffb55914f53690be41619c9cf1bb312b4bf95b02526920cf8e39182b3a7  src/processforge_core/process_catalog/models.py
+ dd11b217014f4896c9101be12396bdf8452c6601230398c36a8218ddb20a7049  src/processforge_core/process_catalog/official_read.py
+@@ -1046,7 +1052,7 @@ ae203f81e7387eb3dc249ee5da692f32479df5908d2445d78e4422adae250e54  tools/pf_runti
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ 41f9970777460544c903497ffcba1e953a3a71aced81e050d2bcdb2418754907  tools/prepared_executor.py
+ 6e482be79cea97479584e6286a07c5c7db47d79ca9f9bef8c66aa017d6c4f107  tools/process_execution_smoke_support.py
+-571f80ada0031e2e1296dc27c8387f75be431b15ed5f1cb89d775d5bdb7ef370  tools/processforge.py
++f2223d1e986e282f1061a26b172c492eb56dc2e14ab3f069b1f6a9b1176fd0c7  tools/processforge.py
+ 85e692d46ddcb8753e19a53fcd88c2fe1873a7ad959eba46a45ccb2edb233cc1  tools/processforge_subprocess.py
+ 4236a7ed9531d53490bcf6f9d6c015e5ed8c0db50c2d3abaefeae1263656feed  tools/release_metadata_contract.py
+ cdfd19c8a0bbec97f10ada337c131b28fa1d8c2b1f4bb198974ec6be82282fda  tools/smoke_action_discovery.py
+@@ -1059,7 +1065,7 @@ c6906397a9bcb932112165d1b1996d2ad8486447fa2e9f9bbf623fc4e6e68208  tools/smoke_ag
+ 83c758cf778a52af275ce7ce64b3d0c673ad67f8dad93e5859b245c57e02ceed  tools/smoke_agent_start_prompt.py
+ bf0ba8f7a2f69d6a911917078fab950daa79aa22c7d5fee1394fd6367747723a  tools/smoke_agent_workspace_platform_availability_snapshot.py
+ 418dec1ef34be4df52154f9033c4b722b85d5aa9d2b03eea6d3d822cf163fcec  tools/smoke_authenticated_report_content.py
+-b4583db80c8a022e26c9654aa04990cff68594a6e0733d9800326a8c1ef98713  tools/smoke_authoring_crash_recovery.py
++a4436d206c054b97e6de087b33202c246ed4809c150cee19b5df70437accb1c8  tools/smoke_authoring_crash_recovery.py
+ e681795ae3230563228ec6cbfc5f2cdc2c63649290642b67e6e81c4569203c99  tools/smoke_automation_readiness.py
+ d6b6c103b98678b427d29d52f63c334bfea0ebb9f41f1195d5c2121853183506  tools/smoke_builtin_process_catalog.py
+ a953a8b292174bee1b02acbc44b7992646618656efb2f9d6bff55fb64a222e4b  tools/smoke_builtin_process_pack_completeness.py
+@@ -1261,7 +1267,7 @@ c2f668f3b851b244a64cafcdbdfc0f037c62f68043c030819f57a492a4b2dca2  tools/smoke_re
+ 5099999d4069c09b9de32e7958977721604c0c0ceb129605defa00d61eb9f285  tools/smoke_remediation_registry_safety.py
+ d5aec09d69e1c7230387a8be132df240ef8054ec9e66bdc7199780540e1403d8  tools/smoke_remediation_schema_inventory.py
+ 8965bf714d4daa76398f8f217295c75bd0c513cc5ca818e61be1ae9703a8238e  tools/smoke_remediation_security_boundaries.py
+-c6245594c839b7101b64e7f11570446244ecf9863495660c8c5abe347ea90063  tools/smoke_remediation_transactional_authoring.py
++dcc050a4c931fef416d7362cfcebd36bec1e3b324dc77c55760ecae68b6dfa95  tools/smoke_remediation_transactional_authoring.py
+ b5a6bccdc7cd693d5a1660ce880ba4d63985b8a6df395b8c801de6499166036b  tools/smoke_request_scope.py
+ 15bbb5c1cc707343c7b95edc99bb34aecd62c9475ea1a125a1e9c8e97ca94f6e  tools/smoke_resource_indexing_policy_acceptance.py
+ b6b29f9f59ee799b18390451fb514a995f30c5c21e073343a5c263f1d23e46e0  tools/smoke_resource_resolve_real_core.py
+diff --git a/docs/concepts/python-core-structure.md b/docs/concepts/python-core-structure.md
+index ab62332..dea3cdf 100644
+--- a/docs/concepts/python-core-structure.md
++++ b/docs/concepts/python-core-structure.md
+@@ -113,6 +113,11 @@ See [supported actions](action-discovery.md).
+ | `src/processforge_core/resources/package_checks.py` | Existing ordered knowledge package doctor. |
+ | `src/processforge_core/resources/index_checks.py` | Existing resource index/path_ref/project checks. |
+ | `src/processforge_core/work/worker_assignment.py` | Strict assignment reads and exact worker launch prompt rendering. |
++| `src/processforge_core/authoring/plans.py` | Existing authoring dataclasses and plan stdout. |
++| `src/processforge_core/authoring/inputs.py` | Existing authoring modes, paths, journals and parent guards. |
++| `src/processforge_core/process_catalog/examples.py` | Existing process authoring example document bytes. |
++| `src/processforge_core/common/status.py` | Shared existing aggregate status projection. |
++| `src/processforge_core/maintenance/candidate_read.py` | Existing fresh candidate JSON read/find. |
+ | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
+ | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
+ | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
+@@ -1040,3 +1045,29 @@ their other logic and assertions are preserved. Constructors perform no I/O or
+ retain project documents. Preparation/launch policy, index writes/timestamps,
+ unselected authoring and lifecycle/recovery stay with their existing owners.
+ This source slice does not complete OOP epics or later delivery qualifications.
++
++## Authoring data/read inputs, process output and candidate reading
++
++`authoring.plans` owns the existing mutable AuthoringWrite/AuthoringEffect/
++AuthoringPlan dataclasses and AuthoringPlanRenderer. Fields, defaults, borrowed
++callback data and sorted stdout are unchanged. `authoring.inputs.AuthoringInputService`
++owns mode selection, transaction/journal paths, incomplete journals and parent
++guards/chains. Callbacks remain inert in this moved scope. Authoring preflight,
++failure injection, staging, publication, commit and rollback retain their owners.
++Existing FileDigestReader gained the two original raw-byte/guarded-file helpers;
++its prior streaming method and dataclass contract are unchanged.
++
++`process_catalog.examples` owns exact process_yaml_content and the seven original
++process authoring example documents through ProcessAuthoringExampleBuilder.
++Existing ProcessParityRenderer gained the original parity index; common.status
++owns shared aggregate_status. Prior renderer methods and every output literal,
++ordering, annotation and native error remain unchanged.
++
++`maintenance.candidate_read.UpdateCandidateReader(distribution_root)` owns the
++existing fresh JSON candidate read/find. It reuses UpdateDocumentReader paths
++and the identical existing maintenance.update.now_utc; constructor performs no
++I/O or clock read. Missing/JSONDecodeError/non-dict fallbacks, other failures,
++raw ID/first match and unknown fields remain unchanged. Two authoring smoke
++consumers use canonical models/input owners after their existing local bootstrap;
++assertions, fixtures and failure-injection matrices are preserved. This source
++slice adds no feature and leaves OOP epics and later delivery layers open.
+diff --git a/docs/ru/concepts/python-core-structure.md b/docs/ru/concepts/python-core-structure.md
+index ff565eb..84aed1b 100644
+--- a/docs/ru/concepts/python-core-structure.md
++++ b/docs/ru/concepts/python-core-structure.md
+@@ -118,6 +118,11 @@ Work-импорты на текущем dev-этапе не сохраняютс
+ | `src/processforge_core/resources/package_checks.py` | Прежняя упорядоченная диагностика пакетов знаний. |
+ | `src/processforge_core/resources/index_checks.py` | Прежние проверки индексов, path_ref и ресурсов проекта. |
+ | `src/processforge_core/work/worker_assignment.py` | Строгое чтение Assignment и прежний текст worker launch prompt. |
++| `src/processforge_core/authoring/plans.py` | Прежние модели авторинга и stdout плана. |
++| `src/processforge_core/authoring/inputs.py` | Прежние режимы, пути, журналы и guards авторинга. |
++| `src/processforge_core/process_catalog/examples.py` | Прежние байты документов примера авторинга процессов. |
++| `src/processforge_core/common/status.py` | Общая прежняя проекция итогового статуса. |
++| `src/processforge_core/maintenance/candidate_read.py` | Прежнее свежее чтение и поиск JSON кандидатов. |
+ | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
+ | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
+ | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
+@@ -1052,3 +1057,28 @@ safe ID/путей, ветви prepared input, счётчики, разделы
+ логика и assertions не меняются. Конструкторы не читают и не удерживают документы.
+ Preparation/launch policy, запись индекса/timestamps, невыбранный authoring и
+ lifecycle/recovery сохраняют владельцев. OOP-эпики и последующая приёмка открыты.
++
++## Данные и чтение авторинга, представление процессов и кандидаты
++
++`authoring.plans` владеет прежними изменяемыми dataclass AuthoringWrite,
++AuthoringEffect, AuthoringPlan и AuthoringPlanRenderer. Поля, defaults, ссылки
++на callback-данные и отсортированный stdout сохранены. AuthoringInputService
++в `authoring.inputs` владеет режимом, путями transaction/journal, незавершёнными
++журналами и проверками/цепочками родителей. Перенесённый scope не исполняет
++callbacks. Preflight, failure injection, staging/publication/commit/rollback
++сохраняют владельцев. FileDigestReader получил два прежних raw-byte/guarded-file
++метода; его streaming-метод и dataclass-контракт не изменились.
++
++`process_catalog.examples` владеет точной process_yaml_content и построением
++семи прежних документов примера через ProcessAuthoringExampleBuilder. Готовый
++ProcessParityRenderer получил прежний индекс parity, общая aggregate_status
++находится в common.status. Существовавшие методы, литералы, порядок, аннотации
++и исходные ошибки сохранены.
++
++`maintenance.candidate_read.UpdateCandidateReader(distribution_root)` владеет
++прежним свежим JSON read/find через готовые пути UpdateDocumentReader и точные
++существующие часы maintenance.update.now_utc. Конструктор не читает файлы/время.
++Fallback missing/JSONDecodeError/non-dict, остальные ошибки, raw ID/first match
++и unknown fields сохранены. Два authoring smoke используют канонические модели
++и inputs после прежнего локального bootstrap; assertions, fixtures и матрицы
++failure injection точны. Новых функций нет; OOP-эпики и поздняя приёмка открыты.
+diff --git a/src/processforge_core/authoring/__init__.py b/src/processforge_core/authoring/__init__.py
+new file mode 100644
+index 0000000..8b13789
+--- /dev/null
++++ b/src/processforge_core/authoring/__init__.py
+@@ -0,0 +1 @@
++
+diff --git a/src/processforge_core/authoring/inputs.py b/src/processforge_core/authoring/inputs.py
+new file mode 100644
+index 0000000..e7bdfcd
+--- /dev/null
++++ b/src/processforge_core/authoring/inputs.py
+@@ -0,0 +1,64 @@
++"""Existing authoring mode, transaction paths and read-only input checks."""
++
++from __future__ import annotations
++
++import argparse
++from pathlib import Path
++
++from ..work.context_documents import ContextContractInputs
++from .plans import AuthoringPlan
++
++
++class AuthoringInputService:
++    def __init__(self) -> None:
++        self.inputs = ContextContractInputs()
++
++    def mode(self, args: argparse.Namespace) -> str:
++        apply = bool(getattr(args, "apply", False))
++        dry_run = bool(getattr(args, "dry_run", False))
++        if apply == dry_run:
++            raise SystemExit("FAIL: choose exactly one of --dry-run or --apply")
++        if apply:
++            return "apply"
++        return "dry_run"
++
++    def transaction_root(self, plan: AuthoringPlan) -> Path:
++        return plan.runtime_root / "authoring-transactions" / plan.transaction_id
++
++    def journal_path(self, plan: AuthoringPlan) -> Path:
++        return self.transaction_root(plan) / "journal.yaml"
++
++    def incomplete_journals(self, runtime_root: Path) -> list[Path]:
++        root = runtime_root / "authoring-transactions"
++        if not root.is_dir():
++            return []
++        incomplete: list[Path] = []
++        terminal = {"rolled_back", "committed_audit_complete"}
++        for path in sorted(root.glob("*/journal.yaml")):
++            data = self.inputs.load_yaml_document(path)
++            if str(data.get("state") or "") not in terminal:
++                incomplete.append(path)
++        return incomplete
++
++    def parent_types(self, destination: Path) -> None:
++        if destination.exists() and destination.is_dir():
++            raise SystemExit(f"FAIL: authoring destination is a directory: {destination}")
++        parent = destination.parent
++        missing: list[Path] = []
++        while not parent.exists():
++            missing.append(parent)
++            if parent == parent.parent:
++                break
++            parent = parent.parent
++        if parent.exists() and not parent.is_dir():
++            raise SystemExit(f"FAIL: authoring destination parent is not a directory: {parent}")
++
++    def parent_chain(self, path: Path) -> list[Path]:
++        chain: list[Path] = []
++        parent = path.parent
++        while not parent.exists():
++            chain.append(parent)
++            if parent == parent.parent:
++                break
++            parent = parent.parent
++        return list(reversed(chain))
+diff --git a/src/processforge_core/authoring/plans.py b/src/processforge_core/authoring/plans.py
+new file mode 100644
+index 0000000..cc31e26
+--- /dev/null
++++ b/src/processforge_core/authoring/plans.py
+@@ -0,0 +1,60 @@
++from __future__ import annotations
++
++from dataclasses import dataclass, field
++from pathlib import Path
++from typing import Any
++
++from ..common.paths import rel
++
++
++@dataclass
++class AuthoringWrite:
++    destination: Path
++    content: bytes | None
++    role: str = "entity"
++    operation: str = "create"
++    schema_name: str | None = None
++    allow_replace: bool = False
++
++@dataclass
++class AuthoringEffect:
++    label: str
++    destination: str
++    role: str = "audit"
++    operation: str = "append"
++    condition: str = "after_commit"
++    kind: str = "callback"
++    payload: dict[str, Any] = field(default_factory=dict)
++    executable: bool = True
++    callback: Any = None
++
++@dataclass
++class AuthoringPlan:
++    transaction_id: str
++    command: str
++    runtime_root: Path
++    authoritative_writes: list[AuthoringWrite]
++    registry_writes: list[AuthoringWrite]
++    post_commit_effects: list[AuthoringEffect]
++    validation_callbacks: list[Any]
++
++
++class AuthoringPlanRenderer:
++    def render(self, plan: AuthoringPlan, root: Path) -> None:
++        print(f"PLAN: {plan.command}")
++        print("TRANSACTION: <generated-on-apply>")
++        rows: list[tuple[str, str, str, str]] = []
++        for write in [*plan.authoritative_writes, *plan.registry_writes]:
++            rows.append(
++                (
++                    rel(write.destination, root),
++                    write.role,
++                    write.operation,
++                    f"schema={write.schema_name}" if write.schema_name else "",
++                )
++            )
++        for effect in plan.post_commit_effects:
++            rows.append((effect.destination, effect.role, effect.operation, effect.condition))
++        for destination, role, operation, condition in sorted(rows):
++            suffix = f" [{condition}]" if condition else ""
++            print(f"- {role}:{operation}: {destination}{suffix}")
+diff --git a/src/processforge_core/common/digests.py b/src/processforge_core/common/digests.py
+index 6c98b7e..cda498a 100644
+--- a/src/processforge_core/common/digests.py
++++ b/src/processforge_core/common/digests.py
+@@ -14,3 +14,9 @@ class FileDigestReader:
+             for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                 digest.update(chunk)
+         return digest.hexdigest()
++
++    def sha256_bytes(self, content: bytes) -> str:
++        return hashlib.sha256(content).hexdigest()
++
++    def sha256_optional_file(self, path: Path) -> str | None:
++        return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+diff --git a/src/processforge_core/common/status.py b/src/processforge_core/common/status.py
+new file mode 100644
+index 0000000..7d1b4bf
+--- /dev/null
++++ b/src/processforge_core/common/status.py
+@@ -0,0 +1,14 @@
++from __future__ import annotations
++
++
++def aggregate_status(statuses: list[str]) -> str:
++    normalized = [status for status in statuses if status]
++    if not normalized:
++        return "SKIP"
++    if "FAIL" in normalized:
++        return "FAIL"
++    if "WARN" in normalized:
++        return "WARN"
++    if all(status == "SKIP" for status in normalized):
++        return "SKIP"
++    return "PASS"
+diff --git a/src/processforge_core/maintenance/candidate_read.py b/src/processforge_core/maintenance/candidate_read.py
+new file mode 100644
+index 0000000..4240c83
+--- /dev/null
++++ b/src/processforge_core/maintenance/candidate_read.py
+@@ -0,0 +1,32 @@
++"""Live reads of existing update candidate documents."""
++
++from __future__ import annotations
++
++import json
++from pathlib import Path
++from typing import Any
++
++from .documents import UpdateDocumentReader
++from .update import now_utc
++
++
++class UpdateCandidateReader:
++    def __init__(self, distribution_root: Path) -> None:
++        self.documents = UpdateDocumentReader(distribution_root)
++
++    def read(self, workplace_root: Path) -> dict[str, Any]:
++        path = self.documents.candidates_path(workplace_root)
++        if not path.is_file():
++            return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
++        try:
++            data = json.loads(path.read_text(encoding="utf-8"))
++        except json.JSONDecodeError:
++            return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
++        return data if isinstance(data, dict) else {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
++
++    def find(self, workplace_root: Path, candidate_id: str) -> dict[str, Any] | None:
++        data = self.read(workplace_root)
++        for item in data.get("candidates", []) if isinstance(data.get("candidates"), list) else []:
++            if isinstance(item, dict) and item.get("id") == candidate_id:
++                return item
++        return None
+diff --git a/src/processforge_core/presentation/process_parity.py b/src/processforge_core/presentation/process_parity.py
+index cc1ba23..7103bf9 100644
+--- a/src/processforge_core/presentation/process_parity.py
++++ b/src/processforge_core/presentation/process_parity.py
+@@ -7,6 +7,7 @@ from typing import Any
+ 
+ from processforge_core.common.checks import Check
+ from processforge_core.common.paths import rel
++from processforge_core.common.status import aggregate_status
+ 
+ 
+ class ProcessParityRenderer:
+@@ -100,3 +101,37 @@ class ProcessParityRenderer:
+         else:
+             lines.append("Process is not reproducible enough for release parity; fix FAIL items before public release.")
+         return "\n".join(lines) + "\n"
++
++    def index(self, rows: list[dict[str, Any]], title: str) -> str:
++        result = aggregate_status([str(item.get("result", "")) for item in rows])
++        counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
++        lines = [
++            f"# {title}",
++            "",
++            f"Result: `{result}`",
++            "",
++            "## Summary",
++            "",
++            f"- PASS: {counts['PASS']}",
++            f"- WARN: {counts['WARN']}",
++            f"- SKIP: {counts['SKIP']}",
++            f"- FAIL: {counts['FAIL']}",
++            "",
++            "## Checked",
++            "",
++            "- Semantic parity for process definitions discovered by ProcessForge.",
++            "- Generated authoring backfill candidates and semantic diff artifacts.",
++            "",
++            "## Skipped",
++            "",
++            "- Byte-for-byte YAML formatting and key order are intentionally not compared.",
++            "",
++            "## Items",
++            "",
++            "| Item | Result | Source | Review |",
++            "|---|---|---|---|",
++        ]
++        for item in rows:
++            name = str(item.get("process_id") or item.get("id") or "item")
++            lines.append(f"| `{name}` | {item.get('result', '')} | `{item.get('source', '')}` | `{item.get('review', '')}` |")
++        return "\n".join(lines) + "\n"
+diff --git a/src/processforge_core/process_catalog/examples.py b/src/processforge_core/process_catalog/examples.py
+new file mode 100644
+index 0000000..ec6fb29
+--- /dev/null
++++ b/src/processforge_core/process_catalog/examples.py
+@@ -0,0 +1,56 @@
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Any
++
++from processforge_core.common.ids import title_from_id
++from processforge_core.common.text import ensure_trailing_newline
++from processforge_core.common.yaml_dump import dump_yaml
++
++
++def process_yaml_content(value: dict[str, Any]) -> bytes:
++    return ensure_trailing_newline(dump_yaml(value)).encode("utf-8")
++
++
++class ProcessAuthoringExampleBuilder:
++    def build(
++        self,
++        project_root: Path,
++        process: dict[str, Any],
++        answers: dict[str, Any],
++        review_text: str,
++    ) -> list[tuple[Path, bytes]]:
++        process_id = str(process.get("id") or "process")
++        example_root = project_root / "examples" / "process-authoring" / process_id
++        title = str(process.get("name") or title_from_id(process_id))
++        readme = "\n".join(
++            [
++                f"# Process Authoring Example: {title}",
++                "",
++                "This example shows the authoring inputs, generated process draft, and logic review produced before apply.",
++                "",
++                "```bash",
++                f"python bin/pf.py process-create --project-root <project-root> --answers examples/process-authoring/{process_id}/answers.yaml --apply",
++                f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
++                "```",
++                "",
++            ]
++        )
++        return [
++            (example_root / "README.md", readme.encode("utf-8")),
++            (example_root / "answers.yaml", process_yaml_content(answers)),
++            (example_root / "draft.process.yaml", process_yaml_content(process)),
++            (example_root / "logic-review.md", review_text.encode("utf-8")),
++            (
++                example_root / f"process-authoring-{process_id}-report.md",
++                f"# {title} Process Authoring Report\n\nStatus: authored and applied through ProcessForge process authoring.\n".encode("utf-8"),
++            ),
++            (
++                example_root / f"process-authoring-{process_id}-review.md",
++                f"# {title} Process Authoring Review\n\nResult: pass.\n".encode("utf-8"),
++            ),
++            (
++                example_root / f"process-authoring-{process_id}-handoff.md",
++                f"# {title} Process Authoring Handoff\n\nThe example process is ready for `process-doctor` and task-batch use.\n".encode("utf-8"),
++            ),
++        ]
+diff --git a/tools/processforge.py b/tools/processforge.py
+index 59d3532..e5049d2 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -255,6 +255,18 @@ _resource_record_service = ResourceRecordService()
+ _knowledge_package_validation_service = KnowledgePackageValidationService(ROOT)
+ _knowledge_resource_index_service = KnowledgeResourceIndexService(ROOT)
+ _worker_assignment_service = WorkerAssignmentService()
++from processforge_core.authoring.plans import AuthoringPlanRenderer
++from processforge_core.authoring.inputs import AuthoringInputService
++from processforge_core.process_catalog.examples import ProcessAuthoringExampleBuilder
++from processforge_core.maintenance.candidate_read import UpdateCandidateReader
++from processforge_core.authoring.plans import AuthoringWrite, AuthoringEffect, AuthoringPlan
++from processforge_core.process_catalog.examples import process_yaml_content
++from processforge_core.common.status import aggregate_status
++
++_authoring_plan_renderer = AuthoringPlanRenderer()
++_authoring_input_service = AuthoringInputService()
++_process_authoring_example_builder = ProcessAuthoringExampleBuilder()
++_update_candidate_reader = UpdateCandidateReader(ROOT)
+ _file_digests = FileDigestReader()
+ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
+ _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
+@@ -661,38 +673,10 @@ class WriteResult:
+     target: Path
+ 
+ 
+-@dataclass
+-class AuthoringWrite:
+-    destination: Path
+-    content: bytes | None
+-    role: str = "entity"
+-    operation: str = "create"
+-    schema_name: str | None = None
+-    allow_replace: bool = False
+ 
+ 
+-@dataclass
+-class AuthoringEffect:
+-    label: str
+-    destination: str
+-    role: str = "audit"
+-    operation: str = "append"
+-    condition: str = "after_commit"
+-    kind: str = "callback"
+-    payload: dict[str, Any] = field(default_factory=dict)
+-    executable: bool = True
+-    callback: Any = None
+ 
+ 
+-@dataclass
+-class AuthoringPlan:
+-    transaction_id: str
+-    command: str
+-    runtime_root: Path
+-    authoritative_writes: list[AuthoringWrite]
+-    registry_writes: list[AuthoringWrite]
+-    post_commit_effects: list[AuthoringEffect]
+-    validation_callbacks: list[Any]
+ 
+ 
+ AUTHORING_FAILURE_INJECTOR: Any = None
+@@ -704,30 +688,14 @@ def authoring_failure_point(phase: str, plan: AuthoringPlan, write: AuthoringWri
+         callback(phase, plan, write)
+ 
+ 
+-def authoring_mode(args: argparse.Namespace) -> str:
+-    apply = bool(getattr(args, "apply", False))
+-    dry_run = bool(getattr(args, "dry_run", False))
+-    if apply == dry_run:
+-        raise SystemExit("FAIL: choose exactly one of --dry-run or --apply")
+-    if apply:
+-        return "apply"
+-    return "dry_run"
+ 
+ 
+-def authoring_transaction_root(plan: AuthoringPlan) -> Path:
+-    return plan.runtime_root / "authoring-transactions" / plan.transaction_id
+ 
+ 
+-def authoring_journal_path(plan: AuthoringPlan) -> Path:
+-    return authoring_transaction_root(plan) / "journal.yaml"
+ 
+ 
+-def authoring_hash_bytes(content: bytes) -> str:
+-    return hashlib.sha256(content).hexdigest()
+ 
+ 
+-def authoring_file_hash(path: Path) -> str | None:
+-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+ 
+ 
+ def write_authoring_journal_data(path: Path, journal: dict[str, Any]) -> None:
+@@ -742,38 +710,15 @@ def write_authoring_journal_data(path: Path, journal: dict[str, Any]) -> None:
+ 
+ 
+ def write_authoring_journal(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
+-    write_authoring_journal_data(authoring_journal_path(plan), journal)
++    write_authoring_journal_data(_authoring_input_service.journal_path(plan), journal)
++
++
+ 
+ 
+-def incomplete_authoring_journals(runtime_root: Path) -> list[Path]:
+-    root = runtime_root / "authoring-transactions"
+-    if not root.is_dir():
+-        return []
+-    incomplete: list[Path] = []
+-    terminal = {"rolled_back", "committed_audit_complete"}
+-    for path in sorted(root.glob("*/journal.yaml")):
+-        data = load_yaml_document(path)
+-        if str(data.get("state") or "") not in terminal:
+-            incomplete.append(path)
+-    return incomplete
+-
+-
+-def validate_authoring_parent_types(destination: Path) -> None:
+-    if destination.exists() and destination.is_dir():
+-        raise SystemExit(f"FAIL: authoring destination is a directory: {destination}")
+-    parent = destination.parent
+-    missing: list[Path] = []
+-    while not parent.exists():
+-        missing.append(parent)
+-        if parent == parent.parent:
+-            break
+-        parent = parent.parent
+-    if parent.exists() and not parent.is_dir():
+-        raise SystemExit(f"FAIL: authoring destination parent is not a directory: {parent}")
+ 
+ 
+ def preflight_authoring_plan(plan: AuthoringPlan) -> None:
+-    incomplete = incomplete_authoring_journals(plan.runtime_root)
++    incomplete = _authoring_input_service.incomplete_journals(plan.runtime_root)
+     if incomplete:
+         raise SystemExit(
+             "FAIL: incomplete authoring transaction blocks mutation: "
+@@ -784,7 +729,7 @@ def preflight_authoring_plan(plan: AuthoringPlan) -> None:
+     if len(destinations) != len(set(destinations)):
+         raise SystemExit("FAIL: authoring plan contains duplicate destinations")
+     for write in writes:
+-        validate_authoring_parent_types(write.destination)
++        _authoring_input_service.parent_types(write.destination)
+         if write.operation == "delete":
+             if not write.destination.is_file():
+                 raise SystemExit(f"FAIL: authoring delete source missing: {write.destination}")
+@@ -797,33 +742,15 @@ def preflight_authoring_plan(plan: AuthoringPlan) -> None:
+         callback(plan, None)
+ 
+ 
+-def render_authoring_plan(plan: AuthoringPlan, root: Path) -> None:
+-    print(f"PLAN: {plan.command}")
+-    print("TRANSACTION: <generated-on-apply>")
+-    rows: list[tuple[str, str, str, str]] = []
+-    for write in [*plan.authoritative_writes, *plan.registry_writes]:
+-        rows.append(
+-            (
+-                rel(write.destination, root),
+-                write.role,
+-                write.operation,
+-                f"schema={write.schema_name}" if write.schema_name else "",
+-            )
+-        )
+-    for effect in plan.post_commit_effects:
+-        rows.append((effect.destination, effect.role, effect.operation, effect.condition))
+-    for destination, role, operation, condition in sorted(rows):
+-        suffix = f" [{condition}]" if condition else ""
+-        print(f"- {role}:{operation}: {destination}{suffix}")
+ 
+ 
+ def render_authoring_dry_run(plan: AuthoringPlan, root: Path) -> None:
+     preflight_authoring_plan(plan)
+-    render_authoring_plan(plan, root)
++    _authoring_plan_renderer.render(plan, root)
+ 
+ 
+ def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path, Path]]:
+-    transaction_root = authoring_transaction_root(plan)
++    transaction_root = _authoring_input_service.transaction_root(plan)
+     staged_root = transaction_root / "staged"
+     backup_root = transaction_root / "backups"
+     journal: dict[str, Any] = {
+@@ -872,8 +799,8 @@ def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path
+                 "role": write.role,
+                 "operation": write.operation,
+                 "pre_exists": write.destination.is_file(),
+-                "pre_sha256": authoring_file_hash(write.destination),
+-                "staged_sha256": authoring_hash_bytes(write.content) if write.content is not None else None,
++                "pre_sha256": _file_digests.sha256_optional_file(write.destination),
++                "staged_sha256": _file_digests.sha256_bytes(write.content) if write.content is not None else None,
+                 "staged_path": str(staged_path) if write.operation != "delete" else None,
+                 "backup_path": str(backup_path),
+                 "published": False,
+@@ -893,7 +820,7 @@ def validate_staged_authoring_plan(
+         if write.operation == "delete":
+             continue
+         staged_path = staged[write.destination]
+-        if authoring_file_hash(staged_path) != authoring_hash_bytes(write.content or b""):
++        if _file_digests.sha256_optional_file(staged_path) != _file_digests.sha256_bytes(write.content or b""):
+             raise RuntimeError(f"staged authoring hash mismatch: {write.destination}")
+     for callback in plan.validation_callbacks:
+         callback(plan, staged)
+@@ -901,15 +828,6 @@ def validate_staged_authoring_plan(
+     write_authoring_journal(plan, journal)
+ 
+ 
+-def authoring_parent_chain(path: Path) -> list[Path]:
+-    chain: list[Path] = []
+-    parent = path.parent
+-    while not parent.exists():
+-        chain.append(parent)
+-        if parent == parent.parent:
+-            break
+-        parent = parent.parent
+-    return list(reversed(chain))
+ 
+ 
+ def publish_authoring_write(
+@@ -923,7 +841,7 @@ def publish_authoring_write(
+     if write.destination.is_file():
+         backup.parent.mkdir(parents=True, exist_ok=True)
+         shutil.copy2(write.destination, backup)
+-    for directory in authoring_parent_chain(write.destination):
++    for directory in _authoring_input_service.parent_chain(write.destination):
+         directory.mkdir()
+         journal["created_directories"].append(str(directory))
+     if write.operation == "delete":
+@@ -947,7 +865,7 @@ def authoring_restore_record(record: dict[str, Any], transaction_id: str) -> lis
+             expected = record.get("pre_sha256")
+             if not backup.is_file():
+                 return [f"missing backup for {destination}"]
+-            if expected and authoring_file_hash(backup) != expected:
++            if expected and _file_digests.sha256_optional_file(backup) != expected:
+                 return [f"backup hash mismatch for {destination}"]
+             destination.parent.mkdir(parents=True, exist_ok=True)
+             temporary = destination.with_name(f".{destination.name}.{transaction_id}.restore")
+@@ -973,7 +891,7 @@ def verify_authoring_rollback(journal: dict[str, Any]) -> list[str]:
+             expected = record.get("pre_sha256")
+             if not destination.is_file():
+                 errors.append(f"pre-existing destination missing after rollback: {destination}")
+-            elif expected and authoring_file_hash(destination) != expected:
++            elif expected and _file_digests.sha256_optional_file(destination) != expected:
+                 errors.append(f"pre-existing destination hash mismatch after rollback: {destination}")
+         elif destination.exists():
+             errors.append(f"pre-missing destination still exists after rollback: {destination}")
+@@ -1013,7 +931,7 @@ def rollback_authoring_plan(plan: AuthoringPlan, journal: dict[str, Any]) -> Non
+     write_authoring_journal(plan, journal)
+     if not ok:
+         raise RuntimeError(
+-            f"authoring rollback could not be verified; recovery required: {authoring_journal_path(plan)}"
++            f"authoring rollback could not be verified; recovery required: {_authoring_input_service.journal_path(plan)}"
+         )
+ 
+ 
+@@ -1044,7 +962,7 @@ def commit_authoring_plan(
+             if write.operation == "delete":
+                 if write.destination.exists():
+                     raise RuntimeError(f"deleted authoring path still exists: {write.destination}")
+-            elif authoring_file_hash(write.destination) != authoring_hash_bytes(write.content or b""):
++            elif _file_digests.sha256_optional_file(write.destination) != _file_digests.sha256_bytes(write.content or b""):
+                 raise RuntimeError(f"committed authoring hash mismatch: {write.destination}")
+         journal["state"] = "committed"
+         journal["committed_at"] = now_utc()
+@@ -1177,7 +1095,7 @@ def run_post_commit_effect_records(
+ 
+ def run_post_commit_effects(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
+     authoring_failure_point("after_commit_before_audit", plan)
+-    run_post_commit_effect_records(journal, authoring_journal_path(plan), plan)
++    run_post_commit_effect_records(journal, _authoring_input_service.journal_path(plan), plan)
+ 
+ 
+ def execute_authoring_plan(plan: AuthoringPlan) -> dict[str, Any]:
+@@ -1258,7 +1176,7 @@ def command_authoring_transaction_recover(args: argparse.Namespace) -> int:
+     journal_path = runtime_root / "authoring-transactions" / transaction_id / "journal.yaml"
+     if not journal_path.is_file():
+         raise SystemExit(f"FAIL: authoring transaction journal not found: {journal_path}")
+-    mode = authoring_mode(args)
++    mode = _authoring_input_service.mode(args)
+     state = recover_authoring_transaction(journal_path, apply=mode == "apply")
+     print(f"TRANSACTION: {transaction_id}")
+     print(f"STATE: {state}")
+@@ -10970,50 +10888,8 @@ def write_process_authoring_example(project_root: Path, process: dict[str, Any],
+     return files
+ 
+ 
+-def process_yaml_content(value: dict[str, Any]) -> bytes:
+-    return ensure_trailing_newline(dump_yaml(value)).encode("utf-8")
+ 
+ 
+-def build_process_authoring_example_documents(
+-    project_root: Path,
+-    process: dict[str, Any],
+-    answers: dict[str, Any],
+-    review_text: str,
+-) -> list[tuple[Path, bytes]]:
+-    process_id = str(process.get("id") or "process")
+-    example_root = project_root / "examples" / "process-authoring" / process_id
+-    title = str(process.get("name") or title_from_id(process_id))
+-    readme = "\n".join(
+-        [
+-            f"# Process Authoring Example: {title}",
+-            "",
+-            "This example shows the authoring inputs, generated process draft, and logic review produced before apply.",
+-            "",
+-            "```bash",
+-            f"python bin/pf.py process-create --project-root <project-root> --answers examples/process-authoring/{process_id}/answers.yaml --apply",
+-            f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
+-            "```",
+-            "",
+-        ]
+-    )
+-    return [
+-        (example_root / "README.md", readme.encode("utf-8")),
+-        (example_root / "answers.yaml", process_yaml_content(answers)),
+-        (example_root / "draft.process.yaml", process_yaml_content(process)),
+-        (example_root / "logic-review.md", review_text.encode("utf-8")),
+-        (
+-            example_root / f"process-authoring-{process_id}-report.md",
+-            f"# {title} Process Authoring Report\n\nStatus: authored and applied through ProcessForge process authoring.\n".encode("utf-8"),
+-        ),
+-        (
+-            example_root / f"process-authoring-{process_id}-review.md",
+-            f"# {title} Process Authoring Review\n\nResult: pass.\n".encode("utf-8"),
+-        ),
+-        (
+-            example_root / f"process-authoring-{process_id}-handoff.md",
+-            f"# {title} Process Authoring Handoff\n\nThe example process is ready for `process-doctor` and task-batch use.\n".encode("utf-8"),
+-        ),
+-    ]
+ 
+ 
+ def process_authoring_event_effect(
+@@ -11091,7 +10967,7 @@ def build_process_create_plan(
+         answers["output"]["process_root"] = output_root
+         answers["output"]["path"] = rel(target_process, project_root)
+ 
+-    example_documents = build_process_authoring_example_documents(project_root, draft, answers, review_text)
++    example_documents = _process_authoring_example_builder.build(project_root, draft, answers, review_text)
+     report_lines = [
+         f"# Process Authoring Apply Report: {process_id}",
+         "",
+@@ -11218,7 +11094,7 @@ def build_process_create_plan(
+ def command_process_authoring_apply(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    mode = authoring_mode(args)
++    mode = _authoring_input_service.mode(args)
+     process_id = safe_id(args.process or getattr(args, "id", ""), "process")
+     paths = process_authoring_paths(project_root, process_id)
+     if not paths["draft"].is_file():
+@@ -11247,7 +11123,7 @@ def command_process_authoring_apply(args: argparse.Namespace) -> int:
+ def command_process_create(args: argparse.Namespace) -> int:
+     project_root = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project_root)
+-    mode = authoring_mode(args)
++    mode = _authoring_input_service.mode(args)
+     raw_answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve()) if args.answers else {}
+     if args.answers and "evolve" not in raw_answers:
+         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
+@@ -12258,46 +12134,13 @@ def command_process_parity_check_all(args: argparse.Namespace) -> int:
+         },
+     )
+     index.parent.mkdir(parents=True, exist_ok=True)
+-    index.write_text(render_parity_index(rows, "Process Authoring Parity"), encoding="utf-8")
++    index.write_text(_process_parity_renderer.index(rows, "Process Authoring Parity"), encoding="utf-8")
+     emit_process_event(project_root, "authoring_parity.completed" if not failed else "authoring_parity.failed", severity="error" if failed else ("warn" if warned else "info"), subject="process-parity-check-all", payload={"summary": rel(summary, project_root), "index": rel(index, project_root), "result": "FAIL" if failed else ("WARN" if warned else "PASS")}, correlation_id="authoring-parity-all")
+     print(f"SUMMARY: {rel(summary, project_root)}")
+     print(f"INDEX: {rel(index, project_root)}")
+     return 1 if failed else 0
+ 
+ 
+-def render_parity_index(rows: list[dict[str, Any]], title: str) -> str:
+-    result = aggregate_status([str(item.get("result", "")) for item in rows])
+-    counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
+-    lines = [
+-        f"# {title}",
+-        "",
+-        f"Result: `{result}`",
+-        "",
+-        "## Summary",
+-        "",
+-        f"- PASS: {counts['PASS']}",
+-        f"- WARN: {counts['WARN']}",
+-        f"- SKIP: {counts['SKIP']}",
+-        f"- FAIL: {counts['FAIL']}",
+-        "",
+-        "## Checked",
+-        "",
+-        "- Semantic parity for process definitions discovered by ProcessForge.",
+-        "- Generated authoring backfill candidates and semantic diff artifacts.",
+-        "",
+-        "## Skipped",
+-        "",
+-        "- Byte-for-byte YAML formatting and key order are intentionally not compared.",
+-        "",
+-        "## Items",
+-        "",
+-        "| Item | Result | Source | Review |",
+-        "|---|---|---|---|",
+-    ]
+-    for item in rows:
+-        name = str(item.get("process_id") or item.get("id") or "item")
+-        lines.append(f"| `{name}` | {item.get('result', '')} | `{item.get('source', '')}` | `{item.get('review', '')}` |")
+-    return "\n".join(lines) + "\n"
+ 
+ 
+ def resource_parity_report(project_root: Path, kind: str, resource_id: str, status: str, notes: list[str], source: str = "") -> Path:
+@@ -12393,17 +12236,6 @@ def command_platform_parity_check(args: argparse.Namespace) -> int:
+     return 1 if status == "FAIL" else 0
+ 
+ 
+-def aggregate_status(statuses: list[str]) -> str:
+-    normalized = [status for status in statuses if status]
+-    if not normalized:
+-        return "SKIP"
+-    if "FAIL" in normalized:
+-        return "FAIL"
+-    if "WARN" in normalized:
+-        return "WARN"
+-    if all(status == "SKIP" for status in normalized):
+-        return "SKIP"
+-    return "PASS"
+ 
+ 
+ def resource_report_status(project_root: Path, kind: str, resource_id: str) -> tuple[str, str]:
+@@ -16573,23 +16405,8 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
+ 
+ 
+ 
+-def read_update_candidates(workplace_root: Path) -> dict[str, Any]:
+-    path = _update_document_reader.candidates_path(workplace_root)
+-    if not path.is_file():
+-        return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+-    try:
+-        data = json.loads(path.read_text(encoding="utf-8"))
+-    except json.JSONDecodeError:
+-        return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+-    return data if isinstance(data, dict) else {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+ 
+ 
+-def find_update_candidate(workplace_root: Path, candidate_id: str) -> dict[str, Any] | None:
+-    data = read_update_candidates(workplace_root)
+-    for item in data.get("candidates", []) if isinstance(data.get("candidates"), list) else []:
+-        if isinstance(item, dict) and item.get("id") == candidate_id:
+-            return item
+-    return None
+ 
+ 
+ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+@@ -16682,7 +16499,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+ 
+ def command_update_candidates_list(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    data = read_update_candidates(workplace_root)
++    data = _update_candidate_reader.read(workplace_root)
+     candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
+     if args.json:
+         print(json.dumps({"schema_version": 1, "candidates": candidates}, ensure_ascii=False, indent=2, sort_keys=True))
+@@ -16698,7 +16515,7 @@ def command_update_candidates_list(args: argparse.Namespace) -> int:
+ 
+ def command_update_candidates_show(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    candidate = find_update_candidate(workplace_root, args.candidate)
++    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
+     if not candidate:
+         print(f"FAIL: candidate not found: {args.candidate}")
+         return 1
+@@ -16775,7 +16592,7 @@ def mirror_update_notifications_to_director(workplace_root: Path, notifications:
+ 
+ def command_update_notifications_create(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    data = read_update_candidates(workplace_root)
++    data = _update_candidate_reader.read(workplace_root)
+     candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
+     notifications = create_update_notifications_from_candidates(workplace_root, [item for item in candidates if isinstance(item, dict)])
+     print(f"NOTIFICATIONS: {len(notifications.get('notifications', []))}")
+@@ -16832,7 +16649,7 @@ def command_update_notifications_acknowledge(args: argparse.Namespace) -> int:
+ 
+ def command_update_changelog_show(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    candidate = find_update_candidate(workplace_root, args.candidate)
++    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
+     if not candidate:
+         print(f"FAIL: candidate not found: {args.candidate}")
+         return 1
+@@ -16901,7 +16718,7 @@ def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
+ 
+ def command_update_stage(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    candidate = find_update_candidate(workplace_root, args.candidate)
++    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
+     if not candidate:
+         print(f"FAIL: candidate not found: {args.candidate}")
+         return 1
+@@ -16937,7 +16754,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
+ 
+ def command_update_verify(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    candidate = find_update_candidate(workplace_root, args.candidate)
++    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
+     record = _update_document_reader.staged_record(workplace_root, args.candidate)
+     if not candidate or not record:
+         print(f"FAIL: staged candidate not found: {args.candidate}")
+@@ -17055,7 +16872,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
+         print("FAIL: update apply requires --confirm")
+         return 1
+     workplace_root = update_workplace_root(args.workplace)
+-    candidate = find_update_candidate(workplace_root, args.candidate)
++    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
+     record = _update_document_reader.staged_record(workplace_root, args.candidate)
+     if not candidate or not record:
+         print(f"FAIL: staged candidate not found: {args.candidate}")
+@@ -17120,7 +16937,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
+ 
+ def command_update_rollback(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+-    candidate = find_update_candidate(workplace_root, args.candidate)
++    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
+     if not candidate:
+         print(f"FAIL: candidate not found: {args.candidate}")
+         return 1
+@@ -17165,7 +16982,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
+ def command_update_doctor(args: argparse.Namespace) -> int:
+     workplace_root = update_workplace_root(args.workplace)
+     checks: list[Check] = []
+-    candidates = read_update_candidates(workplace_root)
++    candidates = _update_candidate_reader.read(workplace_root)
+     _update_schema_checks.append(checks, candidates, "update-candidates.schema.json", str(_update_document_reader.candidates_path(workplace_root)))
+     notifications = {}
+     if _update_document_reader.notifications_path(workplace_root).is_file():
+@@ -17861,7 +17678,7 @@ def build_knowledge_resource_add_plan(
+ 
+ 
+ def command_knowledge_add_url(args: argparse.Namespace) -> int:
+-    mode = authoring_mode(args)
++    mode = _authoring_input_service.mode(args)
+     resource_id = safe_id(
+         args.id or resource_id_from_url(args.url, "article"),
+         "resource",
+@@ -17897,7 +17714,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
+ 
+ 
+ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
+-    mode = authoring_mode(args)
++    mode = _authoring_input_service.mode(args)
+     resource_file = Path(args.resource_file).expanduser().resolve()
+     data = load_yaml_document(resource_file)
+     if not data or yaml_error(data):
+@@ -19125,7 +18942,7 @@ def build_platform_authoring_plan(
+ 
+ 
+ def command_platform_create(args: argparse.Namespace) -> int:
+-    mode = authoring_mode(args)
++    mode = _authoring_input_service.mode(args)
+     plan, _values, contract_path = build_platform_authoring_plan(args, "platform-create")
+     workplace_root = Path(args.workplace).expanduser().resolve()
+     if mode == "dry_run":
+@@ -19178,7 +18995,7 @@ def install_platform_args(args: argparse.Namespace) -> argparse.Namespace:
+ 
+ def command_platform_contract_install(args: argparse.Namespace) -> int:
+     normalized = install_platform_args(args)
+-    mode = authoring_mode(normalized)
++    mode = _authoring_input_service.mode(normalized)
+     plan, _values, contract_path = build_platform_authoring_plan(
+         normalized,
+         "platform-contract-install",
+diff --git a/tools/smoke_authoring_crash_recovery.py b/tools/smoke_authoring_crash_recovery.py
+index 3b7ebdf..9b85312 100644
+--- a/tools/smoke_authoring_crash_recovery.py
++++ b/tools/smoke_authoring_crash_recovery.py
+@@ -20,18 +20,23 @@ def load_journal(path: Path) -> dict:
+ 
+ 
+ def crash_after_publish_rolls_back(processforge: object, root: Path) -> None:
++    from processforge_core.authoring.inputs import AuthoringInputService
++    from processforge_core.authoring.plans import AuthoringPlan, AuthoringWrite
++
++    _authoring_input_service = AuthoringInputService()
++
+     runtime = root / "runtime"
+     existing = root / "authoritative" / "existing.txt"
+     created = root / "authoritative" / "nested" / "created.txt"
+     existing.parent.mkdir(parents=True)
+     existing.write_text("before\n", encoding="utf-8")
+-    plan = processforge.AuthoringPlan(
++    plan = AuthoringPlan(
+         transaction_id="crash-after-publish",
+         command="smoke-crash-recovery",
+         runtime_root=runtime,
+         authoritative_writes=[
+-            processforge.AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
+-            processforge.AuthoringWrite(created, b"created\n", role="entity"),
++            AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
++            AuthoringWrite(created, b"created\n", role="entity"),
+         ],
+         registry_writes=[],
+         post_commit_effects=[],
+@@ -42,7 +47,7 @@ def crash_after_publish_rolls_back(processforge: object, root: Path) -> None:
+     records = journal["writes"]
+     processforge.publish_authoring_write(plan, plan.authoritative_writes[0], records[0], staged, journal)
+     processforge.publish_authoring_write(plan, plan.authoritative_writes[1], records[1], staged, journal)
+-    journal_path = processforge.authoring_journal_path(plan)
++    journal_path = _authoring_input_service.journal_path(plan)
+     assert load_journal(journal_path)["state"] == "prepared"
+     assert processforge.recover_authoring_transaction(journal_path, apply=False) == "prepared"
+     assert processforge.recover_authoring_transaction(journal_path, apply=True) == "rolled_back"
+@@ -55,16 +60,21 @@ def crash_after_publish_rolls_back(processforge: object, root: Path) -> None:
+ 
+ 
+ def corrupted_backup_requires_manual_recovery(processforge: object, root: Path) -> None:
++    from processforge_core.authoring.inputs import AuthoringInputService
++    from processforge_core.authoring.plans import AuthoringPlan, AuthoringWrite
++
++    _authoring_input_service = AuthoringInputService()
++
+     runtime = root / "runtime"
+     existing = root / "authoritative" / "corrupted.txt"
+     existing.parent.mkdir(parents=True)
+     existing.write_text("before\n", encoding="utf-8")
+-    plan = processforge.AuthoringPlan(
++    plan = AuthoringPlan(
+         transaction_id="corrupted-backup",
+         command="smoke-crash-recovery",
+         runtime_root=runtime,
+         authoritative_writes=[
+-            processforge.AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
++            AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
+         ],
+         registry_writes=[],
+         post_commit_effects=[],
+@@ -75,7 +85,7 @@ def corrupted_backup_requires_manual_recovery(processforge: object, root: Path)
+     record = journal["writes"][0]
+     processforge.publish_authoring_write(plan, plan.authoritative_writes[0], record, staged, journal)
+     Path(record["backup_path"]).write_text("corrupt\n", encoding="utf-8")
+-    journal_path = processforge.authoring_journal_path(plan)
++    journal_path = _authoring_input_service.journal_path(plan)
+     assert processforge.recover_authoring_transaction(journal_path, apply=True) == "recovery_required"
+     recovered = load_journal(journal_path)
+     assert recovered["rollback_verified"] is False
+diff --git a/tools/smoke_remediation_transactional_authoring.py b/tools/smoke_remediation_transactional_authoring.py
+index 4e66e95..2a5db4c 100644
+--- a/tools/smoke_remediation_transactional_authoring.py
++++ b/tools/smoke_remediation_transactional_authoring.py
+@@ -236,6 +236,8 @@ def test_platform_staged_semantics(root: Path) -> None:
+ 
+ def test_post_commit_replay(root: Path) -> None:
+     processforge = importlib.import_module("processforge")
++    from processforge_core.authoring.plans import AuthoringEffect, AuthoringPlan
++
+     workplace = root / "post-commit-workplace"
+     init_workplace(workplace)
+     original_append = processforge.append_workplace_resource_event
+@@ -268,14 +270,14 @@ def test_post_commit_replay(root: Path) -> None:
+             },
+         ],
+     }
+-    plan = processforge.AuthoringPlan(
++    plan = AuthoringPlan(
+         transaction_id=transaction_id,
+         command="platform-create",
+         runtime_root=workplace / "runtime",
+         authoritative_writes=[],
+         registry_writes=[],
+         post_commit_effects=[
+-            processforge.AuthoringEffect(
++            AuthoringEffect(
+                 "platform-audit-events",
+                 "runtime/resource-management/proposals/<transaction>.yaml and runtime/events/events.ndjson",
+                 kind="platform_audit",

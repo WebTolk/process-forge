@@ -1,0 +1,22 @@
+{
+  "status": "accepted_source_only",
+  "review": ".pf/artifacts/pf121-oop-core-authoring-20261018/review/report.md",
+  "review_sha256": "528ab055324c73ca2a3b7dfa7ade47a55bb3a1aa097a204cbce374e18e9f1c5b",
+  "product_sha256": {
+    "tools/processforge.py": "465049c58d61bd634122c228ced8861a66ee4531b3698454a867e1deabf0174f",
+    "docs/concepts/python-core-structure.md": "7e11235b2c086508d1cdc533f81c1d833f493356696bdc22d556c36339f3f153",
+    "docs/ru/concepts/python-core-structure.md": "9397b8f9c8103d48b6c8c40762a1c3c4cf8b467924ba8d9423d47061c9f05d3a",
+    "src/processforge_core/authoring/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "src/processforge_core/authoring/plans.py": "04b0b27a1998cfe7ebfa9703524838237f3c796ce4c7e916d767145b35272208",
+    "tools/smoke_authoring_crash_recovery.py": "a4436d206c054b97e6de087b33202c246ed4809c150cee19b5df70437accb1c8",
+    "tools/smoke_remediation_transactional_authoring.py": "dcc050a4c931fef416d7362cfcebd36bec1e3b324dc77c55760ecae68b6dfa95",
+    "src/processforge_core/authoring/inputs.py": "a586e9ac589f7c8d1fd9871b71af1b6e33c31d47efba76c56a49ae72dc79df9c",
+    "src/processforge_core/common/digests.py": "66bf62dc67bdaac2b95c651c20fa45bb3b0156161ae834db316dd5ac8343583d",
+    "src/processforge_core/process_catalog/examples.py": "f5ddbbdd59b6b6acb7446689fb4787f5dc3af0d899e3f3701f8cb79f38dcf569",
+    "src/processforge_core/presentation/process_parity.py": "1c4e8fa1658c4721e660a69f6828df668b9c5599cfb931f13cf46f792b3e4e21",
+    "src/processforge_core/common/status.py": "6dba027ab1ddd3fbe64d014ca198ac8ff485784c0eee2c676d096d5a1e737160",
+    "src/processforge_core/maintenance/candidate_read.py": "22e7789dc700242a1540b7791a726400517212d7e35976fe23d67057f7ba027d",
+    "checksums/processforge.sha256": "1f88c7a9763b2570062168506523a7a17c37d30d91ce06b86a2733ca3bc96d01"
+  },
+  "scope": "Accepted final source only. No archive/install/Runtime/connected-host/ZIP acceptance; OOP epics remain open."
+}

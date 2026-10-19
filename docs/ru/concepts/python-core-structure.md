@@ -118,6 +118,11 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/resources/package_checks.py` | Прежняя упорядоченная диагностика пакетов знаний. |
 | `src/processforge_core/resources/index_checks.py` | Прежние проверки индексов, path_ref и ресурсов проекта. |
 | `src/processforge_core/work/worker_assignment.py` | Строгое чтение Assignment и прежний текст worker launch prompt. |
+| `src/processforge_core/authoring/plans.py` | Прежние модели авторинга и stdout плана. |
+| `src/processforge_core/authoring/inputs.py` | Прежние режимы, пути, журналы и guards авторинга. |
+| `src/processforge_core/process_catalog/examples.py` | Прежние байты документов примера авторинга процессов. |
+| `src/processforge_core/common/status.py` | Общая прежняя проекция итогового статуса. |
+| `src/processforge_core/maintenance/candidate_read.py` | Прежнее свежее чтение и поиск JSON кандидатов. |
 | `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
@@ -1052,3 +1057,28 @@ safe ID/путей, ветви prepared input, счётчики, разделы 
 логика и assertions не меняются. Конструкторы не читают и не удерживают документы.
 Preparation/launch policy, запись индекса/timestamps, невыбранный authoring и
 lifecycle/recovery сохраняют владельцев. OOP-эпики и последующая приёмка открыты.
+
+## Данные и чтение авторинга, представление процессов и кандидаты
+
+`authoring.plans` владеет прежними изменяемыми dataclass AuthoringWrite,
+AuthoringEffect, AuthoringPlan и AuthoringPlanRenderer. Поля, defaults, ссылки
+на callback-данные и отсортированный stdout сохранены. AuthoringInputService
+в `authoring.inputs` владеет режимом, путями transaction/journal, незавершёнными
+журналами и проверками/цепочками родителей. Перенесённый scope не исполняет
+callbacks. Preflight, failure injection, staging/publication/commit/rollback
+сохраняют владельцев. FileDigestReader получил два прежних raw-byte/guarded-file
+метода; его streaming-метод и dataclass-контракт не изменились.
+
+`process_catalog.examples` владеет точной process_yaml_content и построением
+семи прежних документов примера через ProcessAuthoringExampleBuilder. Готовый
+ProcessParityRenderer получил прежний индекс parity, общая aggregate_status
+находится в common.status. Существовавшие методы, литералы, порядок, аннотации
+и исходные ошибки сохранены.
+
+`maintenance.candidate_read.UpdateCandidateReader(distribution_root)` владеет
+прежним свежим JSON read/find через готовые пути UpdateDocumentReader и точные
+существующие часы maintenance.update.now_utc. Конструктор не читает файлы/время.
+Fallback missing/JSONDecodeError/non-dict, остальные ошибки, raw ID/first match
+и unknown fields сохранены. Два authoring smoke используют канонические модели
+и inputs после прежнего локального bootstrap; assertions, fixtures и матрицы
+failure injection точны. Новых функций нет; OOP-эпики и поздняя приёмка открыты.

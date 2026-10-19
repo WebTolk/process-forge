@@ -1,0 +1,76 @@
+{
+  "status": "passed",
+  "complete_algorithms": 18,
+  "synthetic_cases": 18,
+  "roles": {
+    "models": {
+      "algorithms": [
+        "AuthoringWrite",
+        "AuthoringEffect",
+        "AuthoringPlan",
+        "render_authoring_plan"
+      ],
+      "products": {
+        "src/processforge_core/authoring/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "src/processforge_core/authoring/plans.py": "04b0b27a1998cfe7ebfa9703524838237f3c796ce4c7e916d767145b35272208",
+        "tools/smoke_authoring_crash_recovery.py": "a4436d206c054b97e6de087b33202c246ed4809c150cee19b5df70437accb1c8",
+        "tools/smoke_remediation_transactional_authoring.py": "dcc050a4c931fef416d7362cfcebd36bec1e3b324dc77c55760ecae68b6dfa95"
+      },
+      "native_synthetic_cases": 3,
+      "proof_sha256": "578001a0126ad0b4eb01bf9dd64d3287e5c6e6815f4c70443b6fb7e5c327f63c",
+      "report_sha256": "7d59f5ea4d2fa7f6fe1bb2bf99e3dfb19ea29df0b91d88ab831844304c371771",
+      "prior_owner_count": 1
+    },
+    "inputs": {
+      "algorithms": [
+        "authoring_mode",
+        "authoring_transaction_root",
+        "authoring_journal_path",
+        "incomplete_authoring_journals",
+        "validate_authoring_parent_types",
+        "authoring_parent_chain",
+        "authoring_hash_bytes",
+        "authoring_file_hash"
+      ],
+      "products": {
+        "src/processforge_core/authoring/inputs.py": "a586e9ac589f7c8d1fd9871b71af1b6e33c31d47efba76c56a49ae72dc79df9c",
+        "src/processforge_core/common/digests.py": "66bf62dc67bdaac2b95c651c20fa45bb3b0156161ae834db316dd5ac8343583d"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "02f5f79f663a8201b12bd5f0a9394cdb61cca09912d0eefefad2c35f5936d962",
+      "report_sha256": "d9048d737e2ce41c11747251fc180409acd7d93389a106d588bbb22a6d2570b1",
+      "prior_owner_count": 8
+    },
+    "process": {
+      "algorithms": [
+        "process_yaml_content",
+        "build_process_authoring_example_documents",
+        "render_parity_index",
+        "aggregate_status"
+      ],
+      "products": {
+        "src/processforge_core/process_catalog/examples.py": "f5ddbbdd59b6b6acb7446689fb4787f5dc3af0d899e3f3701f8cb79f38dcf569",
+        "src/processforge_core/common/status.py": "6dba027ab1ddd3fbe64d014ca198ac8ff485784c0eee2c676d096d5a1e737160",
+        "src/processforge_core/presentation/process_parity.py": "1c4e8fa1658c4721e660a69f6828df668b9c5599cfb931f13cf46f792b3e4e21"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "bddb47ae45df6497ea91723e0842191df314a904c15d5d19a9bafcdca43d2aad",
+      "report_sha256": "2e5f5694dbedf752eb1e92a8943a10942e6d91de7f407199c64c0c2338a3be7e",
+      "prior_owner_count": 5
+    },
+    "updates": {
+      "algorithms": [
+        "read_update_candidates",
+        "find_update_candidate"
+      ],
+      "products": {
+        "src/processforge_core/maintenance/candidate_read.py": "22e7789dc700242a1540b7791a726400517212d7e35976fe23d67057f7ba027d"
+      },
+      "native_synthetic_cases": 5,
+      "proof_sha256": "9ccb0e96eb7c4ce928b31315223a67d947fb15b7f1b283ad5826195164a540ce",
+      "report_sha256": "f708ba404eaea9cd32315d05ab4e3f2569a2c1bce893f6178a2af2490d4247e5",
+      "prior_owner_count": 2
+    }
+  },
+  "scope": "Complete retained algorithm, signature, annotation, prior-owner and bounded stub trace proofs inspected at final raw hashes; no synthetic scenarios repeated."
+}

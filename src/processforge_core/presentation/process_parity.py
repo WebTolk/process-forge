@@ -7,6 +7,7 @@ from typing import Any
 
 from processforge_core.common.checks import Check
 from processforge_core.common.paths import rel
+from processforge_core.common.status import aggregate_status
 
 
 class ProcessParityRenderer:
@@ -99,4 +100,38 @@ class ProcessParityRenderer:
             lines.append("Process is reproducible with documented warnings; public-release action items are listed explicitly when present.")
         else:
             lines.append("Process is not reproducible enough for release parity; fix FAIL items before public release.")
+        return "\n".join(lines) + "\n"
+
+    def index(self, rows: list[dict[str, Any]], title: str) -> str:
+        result = aggregate_status([str(item.get("result", "")) for item in rows])
+        counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
+        lines = [
+            f"# {title}",
+            "",
+            f"Result: `{result}`",
+            "",
+            "## Summary",
+            "",
+            f"- PASS: {counts['PASS']}",
+            f"- WARN: {counts['WARN']}",
+            f"- SKIP: {counts['SKIP']}",
+            f"- FAIL: {counts['FAIL']}",
+            "",
+            "## Checked",
+            "",
+            "- Semantic parity for process definitions discovered by ProcessForge.",
+            "- Generated authoring backfill candidates and semantic diff artifacts.",
+            "",
+            "## Skipped",
+            "",
+            "- Byte-for-byte YAML formatting and key order are intentionally not compared.",
+            "",
+            "## Items",
+            "",
+            "| Item | Result | Source | Review |",
+            "|---|---|---|---|",
+        ]
+        for item in rows:
+            name = str(item.get("process_id") or item.get("id") or "item")
+            lines.append(f"| `{name}` | {item.get('result', '')} | `{item.get('source', '')}` | `{item.get('review', '')}` |")
         return "\n".join(lines) + "\n"

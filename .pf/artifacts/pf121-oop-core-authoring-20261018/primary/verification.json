@@ -1,0 +1,76 @@
+{
+  "status": "passed",
+  "removed_definitions": 18,
+  "removed_functions": 15,
+  "moved_dataclasses": 3,
+  "retained_main_definitions": 700,
+  "entire_main_ast_only_expected_delta": true,
+  "three_class_asts_exact": true,
+  "two_standalone_function_asts_exact": true,
+  "prior_digest_raw_prefix_and_entire_ast_preserved": true,
+  "prior_parity_renderer_ast_preserved_except_declared_import_and_new_method": true,
+  "consumer_full_ast_boundaries": {
+    "tools/smoke_authoring_crash_recovery.py": {
+      "full_ast_only_declared_imports_instances_targets": true
+    },
+    "tools/smoke_remediation_transactional_authoring.py": {
+      "full_ast_only_declared_imports_instances_targets": true
+    }
+  },
+  "readonly_prior_owner_sha256": {
+    "src/processforge_core/common/checks.py": "19c5bdd64249ed40ffb96452d6a5b04ddc3b187eba60cbe135dbbf9150365432",
+    "src/processforge_core/common/ids.py": "ad4c6d38a0ba4a2da2cae741a02da7a2cd6229f65386bd7b29c1d864c1e356b8",
+    "src/processforge_core/common/paths.py": "9f26e32ffca53adb3ef45f55771cdb3e12d6099bfdeecbf241a49717f8fe9aff",
+    "src/processforge_core/common/text.py": "2509672ad89d55af864144a4b26cac73b389d21edf7fa7562c4e66682bf39576",
+    "src/processforge_core/common/yaml_dump.py": "88ef91f4be27620f65e82d537c54b7b668b121a8ce603f624662b3044ae62752",
+    "src/processforge_core/common/yaml_io.py": "543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27",
+    "src/processforge_core/documents/reader.py": "ccc98655202bc9b01c2ae9aae57e8eefb3b87f226bff611e0a0cb4df7bd547bf",
+    "src/processforge_core/maintenance/documents.py": "3a8e4f207f40a534860259323bb876f439c9e48fdaf6f327b5dcb1cf958eb552",
+    "src/processforge_core/maintenance/update.py": "0cc56b68d51b910fcf1ef05ce9852c8a7de679ba3000dca8e51e14cc5089b5cc",
+    "src/processforge_core/work/context_documents.py": "67cbdf5876e3e451d3a8db2ebac7548e04c8f91ddb45f009674488a1347c33e5"
+  },
+  "native_acceptance_sha256": "007ddef99a4adf1e9932995444ed2572d89e440b033d7e4dbc2305f05ef9becd",
+  "parity": {
+    "total": 85,
+    "native_exceptions": 7,
+    "sha256": "8b97765893e2acf2826ef3488c816ae4188c792602e5054c7a4853e9d6af95d0"
+  },
+  "smokes": {
+    "count": 5,
+    "passed": true,
+    "sha256": "f85d0041a4e176a9df093d6c39b89116aa7a838f0bb519b24ca0d5d29288fb6a"
+  },
+  "product_sha256": {
+    "tools/processforge.py": "465049c58d61bd634122c228ced8861a66ee4531b3698454a867e1deabf0174f",
+    "docs/concepts/python-core-structure.md": "7e11235b2c086508d1cdc533f81c1d833f493356696bdc22d556c36339f3f153",
+    "docs/ru/concepts/python-core-structure.md": "9397b8f9c8103d48b6c8c40762a1c3c4cf8b467924ba8d9423d47061c9f05d3a",
+    "src/processforge_core/authoring/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "src/processforge_core/authoring/plans.py": "04b0b27a1998cfe7ebfa9703524838237f3c796ce4c7e916d767145b35272208",
+    "tools/smoke_authoring_crash_recovery.py": "a4436d206c054b97e6de087b33202c246ed4809c150cee19b5df70437accb1c8",
+    "tools/smoke_remediation_transactional_authoring.py": "dcc050a4c931fef416d7362cfcebd36bec1e3b324dc77c55760ecae68b6dfa95",
+    "src/processforge_core/authoring/inputs.py": "a586e9ac589f7c8d1fd9871b71af1b6e33c31d47efba76c56a49ae72dc79df9c",
+    "src/processforge_core/common/digests.py": "66bf62dc67bdaac2b95c651c20fa45bb3b0156161ae834db316dd5ac8343583d",
+    "src/processforge_core/process_catalog/examples.py": "f5ddbbdd59b6b6acb7446689fb4787f5dc3af0d899e3f3701f8cb79f38dcf569",
+    "src/processforge_core/presentation/process_parity.py": "1c4e8fa1658c4721e660a69f6828df668b9c5599cfb931f13cf46f792b3e4e21",
+    "src/processforge_core/common/status.py": "6dba027ab1ddd3fbe64d014ca198ac8ff485784c0eee2c676d096d5a1e737160",
+    "src/processforge_core/maintenance/candidate_read.py": "22e7789dc700242a1540b7791a726400517212d7e35976fe23d67057f7ba027d",
+    "checksums/processforge.sha256": "1f88c7a9763b2570062168506523a7a17c37d30d91ce06b86a2733ca3bc96d01"
+  },
+  "inventory": {
+    "rows_before": 1377,
+    "rows_after": 1383,
+    "changed_rows": 7,
+    "new_rows": 6,
+    "untouched_rows": 1370,
+    "preserved_known_drift": [
+      ".pf/process-forge.yaml",
+      "tools/release_metadata_contract.py",
+      "tools/smoke_stable_update_manifest_points_to_release.py"
+    ]
+  },
+  "scope": "Exact inert models/read inputs/stdout/bytes/candidate reading; existing digest/parity instances and identical Core clock reused. Callback execution, transactions/staging/commit/rollback/failure injector remain explicitly unselected.",
+  "limits": [
+    "Source-only; OOP epics and archive/install/Runtime/connected-host qualification remain open.",
+    "Five affected existing scripts; no new test suite, service start or ZIP check."
+  ]
+}

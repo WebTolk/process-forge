@@ -255,6 +255,18 @@ _resource_record_service = ResourceRecordService()
 _knowledge_package_validation_service = KnowledgePackageValidationService(ROOT)
 _knowledge_resource_index_service = KnowledgeResourceIndexService(ROOT)
 _worker_assignment_service = WorkerAssignmentService()
+from processforge_core.authoring.plans import AuthoringPlanRenderer
+from processforge_core.authoring.inputs import AuthoringInputService
+from processforge_core.process_catalog.examples import ProcessAuthoringExampleBuilder
+from processforge_core.maintenance.candidate_read import UpdateCandidateReader
+from processforge_core.authoring.plans import AuthoringWrite, AuthoringEffect, AuthoringPlan
+from processforge_core.process_catalog.examples import process_yaml_content
+from processforge_core.common.status import aggregate_status
+
+_authoring_plan_renderer = AuthoringPlanRenderer()
+_authoring_input_service = AuthoringInputService()
+_process_authoring_example_builder = ProcessAuthoringExampleBuilder()
+_update_candidate_reader = UpdateCandidateReader(ROOT)
 _file_digests = FileDigestReader()
 _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
@@ -661,38 +673,10 @@ class WriteResult:
     target: Path
 
 
-@dataclass
-class AuthoringWrite:
-    destination: Path
-    content: bytes | None
-    role: str = "entity"
-    operation: str = "create"
-    schema_name: str | None = None
-    allow_replace: bool = False
 
 
-@dataclass
-class AuthoringEffect:
-    label: str
-    destination: str
-    role: str = "audit"
-    operation: str = "append"
-    condition: str = "after_commit"
-    kind: str = "callback"
-    payload: dict[str, Any] = field(default_factory=dict)
-    executable: bool = True
-    callback: Any = None
 
 
-@dataclass
-class AuthoringPlan:
-    transaction_id: str
-    command: str
-    runtime_root: Path
-    authoritative_writes: list[AuthoringWrite]
-    registry_writes: list[AuthoringWrite]
-    post_commit_effects: list[AuthoringEffect]
-    validation_callbacks: list[Any]
 
 
 AUTHORING_FAILURE_INJECTOR: Any = None
@@ -704,30 +688,14 @@ def authoring_failure_point(phase: str, plan: AuthoringPlan, write: AuthoringWri
         callback(phase, plan, write)
 
 
-def authoring_mode(args: argparse.Namespace) -> str:
-    apply = bool(getattr(args, "apply", False))
-    dry_run = bool(getattr(args, "dry_run", False))
-    if apply == dry_run:
-        raise SystemExit("FAIL: choose exactly one of --dry-run or --apply")
-    if apply:
-        return "apply"
-    return "dry_run"
 
 
-def authoring_transaction_root(plan: AuthoringPlan) -> Path:
-    return plan.runtime_root / "authoring-transactions" / plan.transaction_id
 
 
-def authoring_journal_path(plan: AuthoringPlan) -> Path:
-    return authoring_transaction_root(plan) / "journal.yaml"
 
 
-def authoring_hash_bytes(content: bytes) -> str:
-    return hashlib.sha256(content).hexdigest()
 
 
-def authoring_file_hash(path: Path) -> str | None:
-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
 
 def write_authoring_journal_data(path: Path, journal: dict[str, Any]) -> None:
@@ -742,38 +710,15 @@ def write_authoring_journal_data(path: Path, journal: dict[str, Any]) -> None:
 
 
 def write_authoring_journal(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
-    write_authoring_journal_data(authoring_journal_path(plan), journal)
+    write_authoring_journal_data(_authoring_input_service.journal_path(plan), journal)
 
 
-def incomplete_authoring_journals(runtime_root: Path) -> list[Path]:
-    root = runtime_root / "authoring-transactions"
-    if not root.is_dir():
-        return []
-    incomplete: list[Path] = []
-    terminal = {"rolled_back", "committed_audit_complete"}
-    for path in sorted(root.glob("*/journal.yaml")):
-        data = load_yaml_document(path)
-        if str(data.get("state") or "") not in terminal:
-            incomplete.append(path)
-    return incomplete
 
 
-def validate_authoring_parent_types(destination: Path) -> None:
-    if destination.exists() and destination.is_dir():
-        raise SystemExit(f"FAIL: authoring destination is a directory: {destination}")
-    parent = destination.parent
-    missing: list[Path] = []
-    while not parent.exists():
-        missing.append(parent)
-        if parent == parent.parent:
-            break
-        parent = parent.parent
-    if parent.exists() and not parent.is_dir():
-        raise SystemExit(f"FAIL: authoring destination parent is not a directory: {parent}")
 
 
 def preflight_authoring_plan(plan: AuthoringPlan) -> None:
-    incomplete = incomplete_authoring_journals(plan.runtime_root)
+    incomplete = _authoring_input_service.incomplete_journals(plan.runtime_root)
     if incomplete:
         raise SystemExit(
             "FAIL: incomplete authoring transaction blocks mutation: "
@@ -784,7 +729,7 @@ def preflight_authoring_plan(plan: AuthoringPlan) -> None:
     if len(destinations) != len(set(destinations)):
         raise SystemExit("FAIL: authoring plan contains duplicate destinations")
     for write in writes:
-        validate_authoring_parent_types(write.destination)
+        _authoring_input_service.parent_types(write.destination)
         if write.operation == "delete":
             if not write.destination.is_file():
                 raise SystemExit(f"FAIL: authoring delete source missing: {write.destination}")
@@ -797,33 +742,15 @@ def preflight_authoring_plan(plan: AuthoringPlan) -> None:
         callback(plan, None)
 
 
-def render_authoring_plan(plan: AuthoringPlan, root: Path) -> None:
-    print(f"PLAN: {plan.command}")
-    print("TRANSACTION: <generated-on-apply>")
-    rows: list[tuple[str, str, str, str]] = []
-    for write in [*plan.authoritative_writes, *plan.registry_writes]:
-        rows.append(
-            (
-                rel(write.destination, root),
-                write.role,
-                write.operation,
-                f"schema={write.schema_name}" if write.schema_name else "",
-            )
-        )
-    for effect in plan.post_commit_effects:
-        rows.append((effect.destination, effect.role, effect.operation, effect.condition))
-    for destination, role, operation, condition in sorted(rows):
-        suffix = f" [{condition}]" if condition else ""
-        print(f"- {role}:{operation}: {destination}{suffix}")
 
 
 def render_authoring_dry_run(plan: AuthoringPlan, root: Path) -> None:
     preflight_authoring_plan(plan)
-    render_authoring_plan(plan, root)
+    _authoring_plan_renderer.render(plan, root)
 
 
 def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path, Path]]:
-    transaction_root = authoring_transaction_root(plan)
+    transaction_root = _authoring_input_service.transaction_root(plan)
     staged_root = transaction_root / "staged"
     backup_root = transaction_root / "backups"
     journal: dict[str, Any] = {
@@ -872,8 +799,8 @@ def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path
                 "role": write.role,
                 "operation": write.operation,
                 "pre_exists": write.destination.is_file(),
-                "pre_sha256": authoring_file_hash(write.destination),
-                "staged_sha256": authoring_hash_bytes(write.content) if write.content is not None else None,
+                "pre_sha256": _file_digests.sha256_optional_file(write.destination),
+                "staged_sha256": _file_digests.sha256_bytes(write.content) if write.content is not None else None,
                 "staged_path": str(staged_path) if write.operation != "delete" else None,
                 "backup_path": str(backup_path),
                 "published": False,
@@ -893,7 +820,7 @@ def validate_staged_authoring_plan(
         if write.operation == "delete":
             continue
         staged_path = staged[write.destination]
-        if authoring_file_hash(staged_path) != authoring_hash_bytes(write.content or b""):
+        if _file_digests.sha256_optional_file(staged_path) != _file_digests.sha256_bytes(write.content or b""):
             raise RuntimeError(f"staged authoring hash mismatch: {write.destination}")
     for callback in plan.validation_callbacks:
         callback(plan, staged)
@@ -901,15 +828,6 @@ def validate_staged_authoring_plan(
     write_authoring_journal(plan, journal)
 
 
-def authoring_parent_chain(path: Path) -> list[Path]:
-    chain: list[Path] = []
-    parent = path.parent
-    while not parent.exists():
-        chain.append(parent)
-        if parent == parent.parent:
-            break
-        parent = parent.parent
-    return list(reversed(chain))
 
 
 def publish_authoring_write(
@@ -923,7 +841,7 @@ def publish_authoring_write(
     if write.destination.is_file():
         backup.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(write.destination, backup)
-    for directory in authoring_parent_chain(write.destination):
+    for directory in _authoring_input_service.parent_chain(write.destination):
         directory.mkdir()
         journal["created_directories"].append(str(directory))
     if write.operation == "delete":
@@ -947,7 +865,7 @@ def authoring_restore_record(record: dict[str, Any], transaction_id: str) -> lis
             expected = record.get("pre_sha256")
             if not backup.is_file():
                 return [f"missing backup for {destination}"]
-            if expected and authoring_file_hash(backup) != expected:
+            if expected and _file_digests.sha256_optional_file(backup) != expected:
                 return [f"backup hash mismatch for {destination}"]
             destination.parent.mkdir(parents=True, exist_ok=True)
             temporary = destination.with_name(f".{destination.name}.{transaction_id}.restore")
@@ -973,7 +891,7 @@ def verify_authoring_rollback(journal: dict[str, Any]) -> list[str]:
             expected = record.get("pre_sha256")
             if not destination.is_file():
                 errors.append(f"pre-existing destination missing after rollback: {destination}")
-            elif expected and authoring_file_hash(destination) != expected:
+            elif expected and _file_digests.sha256_optional_file(destination) != expected:
                 errors.append(f"pre-existing destination hash mismatch after rollback: {destination}")
         elif destination.exists():
             errors.append(f"pre-missing destination still exists after rollback: {destination}")
@@ -1013,7 +931,7 @@ def rollback_authoring_plan(plan: AuthoringPlan, journal: dict[str, Any]) -> Non
     write_authoring_journal(plan, journal)
     if not ok:
         raise RuntimeError(
-            f"authoring rollback could not be verified; recovery required: {authoring_journal_path(plan)}"
+            f"authoring rollback could not be verified; recovery required: {_authoring_input_service.journal_path(plan)}"
         )
 
 
@@ -1044,7 +962,7 @@ def commit_authoring_plan(
             if write.operation == "delete":
                 if write.destination.exists():
                     raise RuntimeError(f"deleted authoring path still exists: {write.destination}")
-            elif authoring_file_hash(write.destination) != authoring_hash_bytes(write.content or b""):
+            elif _file_digests.sha256_optional_file(write.destination) != _file_digests.sha256_bytes(write.content or b""):
                 raise RuntimeError(f"committed authoring hash mismatch: {write.destination}")
         journal["state"] = "committed"
         journal["committed_at"] = now_utc()
@@ -1177,7 +1095,7 @@ def run_post_commit_effect_records(
 
 def run_post_commit_effects(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
     authoring_failure_point("after_commit_before_audit", plan)
-    run_post_commit_effect_records(journal, authoring_journal_path(plan), plan)
+    run_post_commit_effect_records(journal, _authoring_input_service.journal_path(plan), plan)
 
 
 def execute_authoring_plan(plan: AuthoringPlan) -> dict[str, Any]:
@@ -1258,7 +1176,7 @@ def command_authoring_transaction_recover(args: argparse.Namespace) -> int:
     journal_path = runtime_root / "authoring-transactions" / transaction_id / "journal.yaml"
     if not journal_path.is_file():
         raise SystemExit(f"FAIL: authoring transaction journal not found: {journal_path}")
-    mode = authoring_mode(args)
+    mode = _authoring_input_service.mode(args)
     state = recover_authoring_transaction(journal_path, apply=mode == "apply")
     print(f"TRANSACTION: {transaction_id}")
     print(f"STATE: {state}")
@@ -10970,50 +10888,8 @@ def write_process_authoring_example(project_root: Path, process: dict[str, Any],
     return files
 
 
-def process_yaml_content(value: dict[str, Any]) -> bytes:
-    return ensure_trailing_newline(dump_yaml(value)).encode("utf-8")
 
 
-def build_process_authoring_example_documents(
-    project_root: Path,
-    process: dict[str, Any],
-    answers: dict[str, Any],
-    review_text: str,
-) -> list[tuple[Path, bytes]]:
-    process_id = str(process.get("id") or "process")
-    example_root = project_root / "examples" / "process-authoring" / process_id
-    title = str(process.get("name") or title_from_id(process_id))
-    readme = "\n".join(
-        [
-            f"# Process Authoring Example: {title}",
-            "",
-            "This example shows the authoring inputs, generated process draft, and logic review produced before apply.",
-            "",
-            "```bash",
-            f"python bin/pf.py process-create --project-root <project-root> --answers examples/process-authoring/{process_id}/answers.yaml --apply",
-            f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
-            "```",
-            "",
-        ]
-    )
-    return [
-        (example_root / "README.md", readme.encode("utf-8")),
-        (example_root / "answers.yaml", process_yaml_content(answers)),
-        (example_root / "draft.process.yaml", process_yaml_content(process)),
-        (example_root / "logic-review.md", review_text.encode("utf-8")),
-        (
-            example_root / f"process-authoring-{process_id}-report.md",
-            f"# {title} Process Authoring Report\n\nStatus: authored and applied through ProcessForge process authoring.\n".encode("utf-8"),
-        ),
-        (
-            example_root / f"process-authoring-{process_id}-review.md",
-            f"# {title} Process Authoring Review\n\nResult: pass.\n".encode("utf-8"),
-        ),
-        (
-            example_root / f"process-authoring-{process_id}-handoff.md",
-            f"# {title} Process Authoring Handoff\n\nThe example process is ready for `process-doctor` and task-batch use.\n".encode("utf-8"),
-        ),
-    ]
 
 
 def process_authoring_event_effect(
@@ -11091,7 +10967,7 @@ def build_process_create_plan(
         answers["output"]["process_root"] = output_root
         answers["output"]["path"] = rel(target_process, project_root)
 
-    example_documents = build_process_authoring_example_documents(project_root, draft, answers, review_text)
+    example_documents = _process_authoring_example_builder.build(project_root, draft, answers, review_text)
     report_lines = [
         f"# Process Authoring Apply Report: {process_id}",
         "",
@@ -11218,7 +11094,7 @@ def build_process_create_plan(
 def command_process_authoring_apply(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    mode = authoring_mode(args)
+    mode = _authoring_input_service.mode(args)
     process_id = safe_id(args.process or getattr(args, "id", ""), "process")
     paths = process_authoring_paths(project_root, process_id)
     if not paths["draft"].is_file():
@@ -11247,7 +11123,7 @@ def command_process_authoring_apply(args: argparse.Namespace) -> int:
 def command_process_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    mode = authoring_mode(args)
+    mode = _authoring_input_service.mode(args)
     raw_answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve()) if args.answers else {}
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
@@ -12258,46 +12134,13 @@ def command_process_parity_check_all(args: argparse.Namespace) -> int:
         },
     )
     index.parent.mkdir(parents=True, exist_ok=True)
-    index.write_text(render_parity_index(rows, "Process Authoring Parity"), encoding="utf-8")
+    index.write_text(_process_parity_renderer.index(rows, "Process Authoring Parity"), encoding="utf-8")
     emit_process_event(project_root, "authoring_parity.completed" if not failed else "authoring_parity.failed", severity="error" if failed else ("warn" if warned else "info"), subject="process-parity-check-all", payload={"summary": rel(summary, project_root), "index": rel(index, project_root), "result": "FAIL" if failed else ("WARN" if warned else "PASS")}, correlation_id="authoring-parity-all")
     print(f"SUMMARY: {rel(summary, project_root)}")
     print(f"INDEX: {rel(index, project_root)}")
     return 1 if failed else 0
 
 
-def render_parity_index(rows: list[dict[str, Any]], title: str) -> str:
-    result = aggregate_status([str(item.get("result", "")) for item in rows])
-    counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
-    lines = [
-        f"# {title}",
-        "",
-        f"Result: `{result}`",
-        "",
-        "## Summary",
-        "",
-        f"- PASS: {counts['PASS']}",
-        f"- WARN: {counts['WARN']}",
-        f"- SKIP: {counts['SKIP']}",
-        f"- FAIL: {counts['FAIL']}",
-        "",
-        "## Checked",
-        "",
-        "- Semantic parity for process definitions discovered by ProcessForge.",
-        "- Generated authoring backfill candidates and semantic diff artifacts.",
-        "",
-        "## Skipped",
-        "",
-        "- Byte-for-byte YAML formatting and key order are intentionally not compared.",
-        "",
-        "## Items",
-        "",
-        "| Item | Result | Source | Review |",
-        "|---|---|---|---|",
-    ]
-    for item in rows:
-        name = str(item.get("process_id") or item.get("id") or "item")
-        lines.append(f"| `{name}` | {item.get('result', '')} | `{item.get('source', '')}` | `{item.get('review', '')}` |")
-    return "\n".join(lines) + "\n"
 
 
 def resource_parity_report(project_root: Path, kind: str, resource_id: str, status: str, notes: list[str], source: str = "") -> Path:
@@ -12393,17 +12236,6 @@ def command_platform_parity_check(args: argparse.Namespace) -> int:
     return 1 if status == "FAIL" else 0
 
 
-def aggregate_status(statuses: list[str]) -> str:
-    normalized = [status for status in statuses if status]
-    if not normalized:
-        return "SKIP"
-    if "FAIL" in normalized:
-        return "FAIL"
-    if "WARN" in normalized:
-        return "WARN"
-    if all(status == "SKIP" for status in normalized):
-        return "SKIP"
-    return "PASS"
 
 
 def resource_report_status(project_root: Path, kind: str, resource_id: str) -> tuple[str, str]:
@@ -16573,23 +16405,8 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
 
 
 
-def read_update_candidates(workplace_root: Path) -> dict[str, Any]:
-    path = _update_document_reader.candidates_path(workplace_root)
-    if not path.is_file():
-        return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
-    return data if isinstance(data, dict) else {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
 
 
-def find_update_candidate(workplace_root: Path, candidate_id: str) -> dict[str, Any] | None:
-    data = read_update_candidates(workplace_root)
-    for item in data.get("candidates", []) if isinstance(data.get("candidates"), list) else []:
-        if isinstance(item, dict) and item.get("id") == candidate_id:
-            return item
-    return None
 
 
 def command_update_candidates_refresh(args: argparse.Namespace) -> int:
@@ -16682,7 +16499,7 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
 
 def command_update_candidates_list(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    data = read_update_candidates(workplace_root)
+    data = _update_candidate_reader.read(workplace_root)
     candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
     if args.json:
         print(json.dumps({"schema_version": 1, "candidates": candidates}, ensure_ascii=False, indent=2, sort_keys=True))
@@ -16698,7 +16515,7 @@ def command_update_candidates_list(args: argparse.Namespace) -> int:
 
 def command_update_candidates_show(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    candidate = find_update_candidate(workplace_root, args.candidate)
+    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     if not candidate:
         print(f"FAIL: candidate not found: {args.candidate}")
         return 1
@@ -16775,7 +16592,7 @@ def mirror_update_notifications_to_director(workplace_root: Path, notifications:
 
 def command_update_notifications_create(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    data = read_update_candidates(workplace_root)
+    data = _update_candidate_reader.read(workplace_root)
     candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
     notifications = create_update_notifications_from_candidates(workplace_root, [item for item in candidates if isinstance(item, dict)])
     print(f"NOTIFICATIONS: {len(notifications.get('notifications', []))}")
@@ -16832,7 +16649,7 @@ def command_update_notifications_acknowledge(args: argparse.Namespace) -> int:
 
 def command_update_changelog_show(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    candidate = find_update_candidate(workplace_root, args.candidate)
+    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     if not candidate:
         print(f"FAIL: candidate not found: {args.candidate}")
         return 1
@@ -16901,7 +16718,7 @@ def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
 
 def command_update_stage(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    candidate = find_update_candidate(workplace_root, args.candidate)
+    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     if not candidate:
         print(f"FAIL: candidate not found: {args.candidate}")
         return 1
@@ -16937,7 +16754,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
 
 def command_update_verify(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    candidate = find_update_candidate(workplace_root, args.candidate)
+    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     record = _update_document_reader.staged_record(workplace_root, args.candidate)
     if not candidate or not record:
         print(f"FAIL: staged candidate not found: {args.candidate}")
@@ -17055,7 +16872,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
         print("FAIL: update apply requires --confirm")
         return 1
     workplace_root = update_workplace_root(args.workplace)
-    candidate = find_update_candidate(workplace_root, args.candidate)
+    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     record = _update_document_reader.staged_record(workplace_root, args.candidate)
     if not candidate or not record:
         print(f"FAIL: staged candidate not found: {args.candidate}")
@@ -17120,7 +16937,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
 
 def command_update_rollback(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
-    candidate = find_update_candidate(workplace_root, args.candidate)
+    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     if not candidate:
         print(f"FAIL: candidate not found: {args.candidate}")
         return 1
@@ -17165,7 +16982,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
 def command_update_doctor(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
     checks: list[Check] = []
-    candidates = read_update_candidates(workplace_root)
+    candidates = _update_candidate_reader.read(workplace_root)
     _update_schema_checks.append(checks, candidates, "update-candidates.schema.json", str(_update_document_reader.candidates_path(workplace_root)))
     notifications = {}
     if _update_document_reader.notifications_path(workplace_root).is_file():
@@ -17861,7 +17678,7 @@ def build_knowledge_resource_add_plan(
 
 
 def command_knowledge_add_url(args: argparse.Namespace) -> int:
-    mode = authoring_mode(args)
+    mode = _authoring_input_service.mode(args)
     resource_id = safe_id(
         args.id or resource_id_from_url(args.url, "article"),
         "resource",
@@ -17897,7 +17714,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
 
 
 def command_knowledge_add_resource(args: argparse.Namespace) -> int:
-    mode = authoring_mode(args)
+    mode = _authoring_input_service.mode(args)
     resource_file = Path(args.resource_file).expanduser().resolve()
     data = load_yaml_document(resource_file)
     if not data or yaml_error(data):
@@ -19125,7 +18942,7 @@ def build_platform_authoring_plan(
 
 
 def command_platform_create(args: argparse.Namespace) -> int:
-    mode = authoring_mode(args)
+    mode = _authoring_input_service.mode(args)
     plan, _values, contract_path = build_platform_authoring_plan(args, "platform-create")
     workplace_root = Path(args.workplace).expanduser().resolve()
     if mode == "dry_run":
@@ -19178,7 +18995,7 @@ def install_platform_args(args: argparse.Namespace) -> argparse.Namespace:
 
 def command_platform_contract_install(args: argparse.Namespace) -> int:
     normalized = install_platform_args(args)
-    mode = authoring_mode(normalized)
+    mode = _authoring_input_service.mode(normalized)
     plan, _values, contract_path = build_platform_authoring_plan(
         normalized,
         "platform-contract-install",

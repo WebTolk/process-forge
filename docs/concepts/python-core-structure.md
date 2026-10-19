@@ -113,6 +113,11 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/resources/package_checks.py` | Existing ordered knowledge package doctor. |
 | `src/processforge_core/resources/index_checks.py` | Existing resource index/path_ref/project checks. |
 | `src/processforge_core/work/worker_assignment.py` | Strict assignment reads and exact worker launch prompt rendering. |
+| `src/processforge_core/authoring/plans.py` | Existing authoring dataclasses and plan stdout. |
+| `src/processforge_core/authoring/inputs.py` | Existing authoring modes, paths, journals and parent guards. |
+| `src/processforge_core/process_catalog/examples.py` | Existing process authoring example document bytes. |
+| `src/processforge_core/common/status.py` | Shared existing aggregate status projection. |
+| `src/processforge_core/maintenance/candidate_read.py` | Existing fresh candidate JSON read/find. |
 | `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
@@ -1040,3 +1045,29 @@ their other logic and assertions are preserved. Constructors perform no I/O or
 retain project documents. Preparation/launch policy, index writes/timestamps,
 unselected authoring and lifecycle/recovery stay with their existing owners.
 This source slice does not complete OOP epics or later delivery qualifications.
+
+## Authoring data/read inputs, process output and candidate reading
+
+`authoring.plans` owns the existing mutable AuthoringWrite/AuthoringEffect/
+AuthoringPlan dataclasses and AuthoringPlanRenderer. Fields, defaults, borrowed
+callback data and sorted stdout are unchanged. `authoring.inputs.AuthoringInputService`
+owns mode selection, transaction/journal paths, incomplete journals and parent
+guards/chains. Callbacks remain inert in this moved scope. Authoring preflight,
+failure injection, staging, publication, commit and rollback retain their owners.
+Existing FileDigestReader gained the two original raw-byte/guarded-file helpers;
+its prior streaming method and dataclass contract are unchanged.
+
+`process_catalog.examples` owns exact process_yaml_content and the seven original
+process authoring example documents through ProcessAuthoringExampleBuilder.
+Existing ProcessParityRenderer gained the original parity index; common.status
+owns shared aggregate_status. Prior renderer methods and every output literal,
+ordering, annotation and native error remain unchanged.
+
+`maintenance.candidate_read.UpdateCandidateReader(distribution_root)` owns the
+existing fresh JSON candidate read/find. It reuses UpdateDocumentReader paths
+and the identical existing maintenance.update.now_utc; constructor performs no
+I/O or clock read. Missing/JSONDecodeError/non-dict fallbacks, other failures,
+raw ID/first match and unknown fields remain unchanged. Two authoring smoke
+consumers use canonical models/input owners after their existing local bootstrap;
+assertions, fixtures and failure-injection matrices are preserved. This source
+slice adds no feature and leaves OOP epics and later delivery layers open.

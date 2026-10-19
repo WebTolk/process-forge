@@ -236,6 +236,8 @@ def test_platform_staged_semantics(root: Path) -> None:
 
 def test_post_commit_replay(root: Path) -> None:
     processforge = importlib.import_module("processforge")
+    from processforge_core.authoring.plans import AuthoringEffect, AuthoringPlan
+
     workplace = root / "post-commit-workplace"
     init_workplace(workplace)
     original_append = processforge.append_workplace_resource_event
@@ -268,14 +270,14 @@ def test_post_commit_replay(root: Path) -> None:
             },
         ],
     }
-    plan = processforge.AuthoringPlan(
+    plan = AuthoringPlan(
         transaction_id=transaction_id,
         command="platform-create",
         runtime_root=workplace / "runtime",
         authoritative_writes=[],
         registry_writes=[],
         post_commit_effects=[
-            processforge.AuthoringEffect(
+            AuthoringEffect(
                 "platform-audit-events",
                 "runtime/resource-management/proposals/<transaction>.yaml and runtime/events/events.ndjson",
                 kind="platform_audit",
