@@ -1,0 +1,56 @@
+schema_version: 1
+id: pf-cli-mcp-context-consistency-20261019
+title: 'Будущая задача: согласовать проверку контекста CLI и MCP и установить причину расхождения'
+run_id: pf-upgrade-maintenance-backlog-20261019
+process: software-feature-development
+status: open
+created_at: '2026-10-19T13:58:03Z'
+updated_at: '2026-10-19T13:58:03Z'
+objective: 'Будущая задача. Сейчас только регистрация; исследование и исправление не входят в текущие 20 блоков рефакторинга.
+
+Поручение пользователя: выяснить и устранить конфликт CLI и MCP, которые должны использовать общее ядро PF, но по одному проектному снимку дают разные результаты готовности контекста.
+
+Наблюдения 2026-10-19: для ctx-20261019-051448-f6dad2 исходный CLI project-context-check возвращал stale/ask_operator и единственную причину source changed: official-pack-processforge-official-software-development-package; подключённый pf.context возвращал fresh/continue. После однократного разрешённого пользователем project-context-refresh исходный CLI для ctx-20261019-135618-1115fe возвращает fresh/continue без stale_resources, а подключённый pf.context возвращает stale/ask_operator. Поэтому простой повтор refresh не устраняет расхождение. При refresh SEARCH_INDEX action=none, status=fresh; перестроение индекса не выполнялось. Проверка exact существующей Work остаётся valid/ready. Это наблюдения, а не уже установленная причина и не доказательство тождественности фактически загруженных сборок.
+
+Критерии будущего результата:
+1. Воспроизвести пару CLI/MCP на одном проекте, одном поколении снимка и согласованных параметрах; сохранить структурированные ответы, идентичность снимка, исходные fingerprints и время наблюдения. Разделить факты snapshot freshness, resource readiness, execution readiness и policy_action.
+2. Проверить фактически загруженные module roots, version/build/source fingerprints, distribution root и выбранный официальный пакет, PID/start time MCP, способы разрешения путей и источников, возможные кэши/TTL/request scope и окружение. Заявление об общем ядре проверить по коду и фактической загрузке; не считать одинаковую строку версии доказательством идентичных модулей или данных.
+3. Найти конкретную цепочку, на которой расходятся результат или provenance: исходное/установленное ядро, живой MCP-хост, данные пакетов, отображение/канонизация путей, инвалидирование кэша либо отдельная логика адаптеров. Не назначать причину заранее и не маскировать дефект повторным refresh/restart/force или игнорированием stale.
+4. Для одинаковых фактических входов CLI и MCP вызывают каноническую политику ядра и возвращают согласованные freshness/readiness/policy/reasons. Для действительно разных входов диагностика показывает конкретное различие загруженного ядра, distribution root или источника и понятное действие оператора. Штатная Work не получает расширенных прав и не запускает инфраструктуру автоматически.
+5. Проверить свежий и устаревший снимок, обновление исходного пакета и снимка, живой MCP с прежним процессом/кэшем и новый подключённый хост. Независимый stdio-процесс не считать доказательством принятия уже подключённым MCP. Не требовать полного рабочего индекса для проверки freshness и не совмещать это с будущей задачей индексации устройства.
+6. Дать необходимые существующие регрессионные проверки общих политик и адаптеров, обновить диагностику/руководство. Сохранить опубликованные CLI/MCP payloads/ошибки и file-only режим, либо предварительно спроектировать необходимое изменение публичного контракта.
+
+Связи: pf-context-refresh-indexing-separation-20261019, pf-health-readiness-statistics-20261019, pf-upgrade-integrated-verification-20261019. Общее основание и исходные наблюдения: .pf/artifacts/pf121-oop-blocks18-37-20261019/primary/context-conflict-observation.json.
+
+Границы регистрации: карточка open/planning_only, writer=false, без product scope и без капсулы выполнения. Сейчас не менять freshness-политику, кэши, индексацию или адаптеры, не обновлять PF и не запускать/не перезапускать Runtime/MCP/хост. Перед будущим исследованием оформить свежую явно ограниченную Work. Текущий разрешённый исходный файловый рефакторинг продолжить через свежий source CLI; несогласованность подключённого MCP сохраняется отдельным открытым вопросом.'
+platform: ""
+selected_specializations:
+  []
+order: 9
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: intake-scope
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+ownership:
+  owner_id: pf-cli-mcp-context-consistency-20261019
+  owner_label: worker-pf-cli-mcp-context-consistency-20261019
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []

@@ -1,0 +1,54 @@
+{
+  "observed_date": "2026-10-19",
+  "operator_instruction": "Refresh once, register future CLI/MCP conflict task, then start six native workers and refactor.",
+  "before": {
+    "snapshot": "ctx-20261019-051448-f6dad2",
+    "source_cli": {
+      "status": "stale",
+      "policy_action": "ask_operator",
+      "reason": "source changed: official-pack-processforge-official-software-development-package"
+    },
+    "connected_mcp": {
+      "policy_action": "continue",
+      "recommended_action": "continue",
+      "snapshot_id": "ctx-20261019-051448-f6dad2",
+      "status": "fresh"
+    }
+  },
+  "refresh": {
+    "status": "fresh",
+    "snapshot": "ctx-20261019-135618-1115fe",
+    "search_index": {
+      "scope": "workplace",
+      "action": "none",
+      "status": "fresh",
+      "documents": 163,
+      "generation": "be547d79202961f2"
+    }
+  },
+  "after": {
+    "source_cli": {
+      "status": "fresh",
+      "policy_action": "continue",
+      "stale_resources": []
+    },
+    "connected_mcp": {
+      "policy_action": "ask_operator",
+      "recommended_action": "project-context-refresh",
+      "snapshot_id": "ctx-20261019-135618-1115fe",
+      "status": "stale"
+    }
+  },
+  "existing_root_work": {
+    "run_id": "garage-p121-oop20-20261019-execute-twenty-planned-behavior-preserving-re",
+    "assignment_id": "p121-oop20-20261019-execute-twenty-planned-behavior-preserving-refactor",
+    "context_id": "p121-oop20-20261019-execute-twenty-planned-behavior-preserving-refactor-capsule",
+    "validation": "valid",
+    "execution_readiness": "ready",
+    "stage": "implementation"
+  },
+  "cause_status": "not_yet_determined",
+  "same_loaded_core": "unverified; future task must establish actual loaded modules and inputs",
+  "continuation": "User expressly directs source file-only refactor after refresh. Use fresh source CLI and pinned exact Work; retain connected MCP mismatch as unqualified separate layer.",
+  "evidence_projection": "Portable projection; machine-local root reference omitted. Original local observation retained separately."
+}

@@ -107,3 +107,15 @@ Decisions: PASS. Run draft содержит восемь open-карточек; 
 Risks: Поддерживаемые агенты и механизмы настройки предстоит определить при будущем проектировании; регистрация не включает установку хуков или подтверждение работоспособности интеграций.
 Next steps: Отдельный коммит документов восьмой карточки, параллельная отправка в origin/dev и gitverse/dev с существующим token helper для GitVerse, чтение обеих удалённых веток. Реализацию не начинать.
 Handoff: .pf/handoffs/pf-upgrade-maintenance-backlog-20261019.md.
+# Дополнение 2026-10-19: CLI/MCP context consistency
+
+Task: По прямому поручению пользователя зарегистрировать будущую задачу о расхождении результатов CLI и MCP после ещё одного обновления контекста.
+Files changed: Штатно создана .pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml; обновлена общая очередь backlog.md. Прежние восемь карточек не менялись.
+Artifacts changed: Наблюдения сохранены в цикле pf121-oop-blocks18-37-20261019; документирование выполняется в отдельной Work p121-cli-mcp-registration-20261019-document-the-exact-newly-registered-f.
+Templates used: Существующий формат будущей очереди и planning_only карточек.
+Tools used: source project-context-refresh/check, connected pf.context, native task-create/task-doctor, exact work-start/state/transitions.
+Decisions: Девятая карточка open/planning_only/writer=false, Run остаётся draft. В критериях разделены наблюдаемое расхождение и пока не доказанная идентичность реально загруженного ядра. Требуется проверить входы, module/distribution roots, build/source fingerprints, официальный пакет, PID/start time MCP, разрешение путей и кэши; не маскировать конфликт refresh/restart/force. Исправление не включается в текущие 20 блоков.
+Risks: После source refresh ctx-20261019-135618-1115fe CLI fresh/continue, MCP stale/ask_operator; до refresh результаты были обратными. Это факты текущего устройства, не установленная причина. SEARCH_INDEX action=none, перестроение не выполнялось.
+Next steps: Отдельный коммит регистрации и одинаковые полные SHA dev на обоих remote; реализация только в будущей явно ограниченной Work.
+Handoff: Реализация, срок и релиз задачи не назначены. Пользователь отдельно поручил продолжать исходный файловый рефакторинг после refresh.
+
