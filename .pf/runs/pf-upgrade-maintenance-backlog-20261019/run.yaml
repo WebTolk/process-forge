@@ -1,0 +1,52 @@
+schema_version: 1
+id: pf-upgrade-maintenance-backlog-20261019
+title: 'Будущие задачи: надёжность обновлений, обслуживание и диагностика PF'
+process: software-feature-development
+status: draft
+created_at: '2026-10-19T12:44:58Z'
+updated_at: '2026-10-19T12:47:35Z'
+objective: Будущая очередь по отчёту обновления 1.1.0 → 1.2.0 на соседнем устройстве. Сейчас только регистрация пяти задач; выполнение и привязка к релизу не согласованы. Продуктовый код и инфраструктуру не менять. Существующую задачу окна PF App Server не дублировать.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-upgrade-compatibility-matrix-20261019
+    assignment: .pf/assignments/pf-upgrade-compatibility-matrix-20261019.yaml
+    status: open
+    order: 1
+    blocking: true
+  -
+    id: pf-upgrade-integrated-verification-20261019
+    assignment: .pf/assignments/pf-upgrade-integrated-verification-20261019.yaml
+    status: open
+    order: 2
+    blocking: true
+  -
+    id: pf-maintenance-sqlite-journals-20261019
+    assignment: .pf/assignments/pf-maintenance-sqlite-journals-20261019.yaml
+    status: open
+    order: 3
+    blocking: true
+  -
+    id: pf-windows-monitor-launch-20261019
+    assignment: .pf/assignments/pf-windows-monitor-launch-20261019.yaml
+    status: open
+    order: 4
+    blocking: true
+  -
+    id: pf-health-readiness-statistics-20261019
+    assignment: .pf/assignments/pf-health-readiness-statistics-20261019.yaml
+    status: open
+    order: 5
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true
