@@ -90,6 +90,14 @@ Work-импорты на текущем dev-этапе не сохраняютс
 
 | Модуль | Обязанность |
 | --- | --- |
+| `src/processforge_core/project/file_templates.py`, `project/runtime_launchers.py` | Прежние файлы проекта и байты шаблонов запуска с явным корнем дистрибутива и конкретными входными службами инициализации и обнаружения. |
+| `src/processforge_core/project/workplace_templates.py`, `project/workplace_terms.py`, `process_catalog/profile_packs.py` | Прежние файлы рабочего места, термины и выбор официальных пакетов по профилю. |
+| `src/processforge_core/project/initialization_discovery.py` | Прежняя сборка классификации и обнаружения, подбор общих ресурсов и чтение текста реестров; инициализация получает явную операцию генерации файлов. |
+| `src/processforge_core/project/configuration_inputs.py` | Прежнее разрешение конфигурации проекта и устройства с тем же общим resolver и сохранением последней корректной конфигурации. |
+| `src/processforge_core/agents/process_events.py`, `agents/hook_dispatch.py` | Прежние допуск событий, запись журнала, диагностика и выполнение hooks через конкретные зависимости Core; сборка Work явно передаёт необязательный recorder. |
+| `src/processforge_core/chat/writer.py` | Прежние добавление сообщений, блокировки, обработка повторов, запись событий и синхронизация экспорта. |
+| `src/processforge_core/maintenance/release_manifest.py`, `maintenance/release_plan.py`, `maintenance/release_commands.py` | Прежние правила манифеста выпуска, упорядоченные планы команд и их записи; выполнение остаётся у текущего адаптера. |
+| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Общие прежние форматирование Markdown-списков и имя, версия и шаблон хеша выпуска. |
 | `src/processforge_core/resources/project_packages.py` | Манифесты пакетов проекта, записи корней, актуальные candidates/index, дубликаты и зависимости через конкретные пути и документы Core. |
 | `src/processforge_core/project/platform_resolution.py` | Прежнее рекурсивное разрешение иерархии платформ и сбор ресурсов/зависимостей через конкретные каталоги и правила Core. |
 | `src/processforge_core/process_catalog/semantics.py` | Прежняя полнота авторинга, проекции семантики и упорядоченное сравнение совместимости. |

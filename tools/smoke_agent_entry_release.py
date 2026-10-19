@@ -100,7 +100,8 @@ def main() -> int:
         inventory.parent.mkdir()
         inventory.write_text(validator.build_inventory(source), encoding="utf-8")
         files = ReleaseSourcePolicy().release_source_files(source)
-        owned = release.release_core_manifest(files, version=release.RELEASE_ARCHIVE_VERSION, source=None, generated_at="2026-01-01T00:00:00Z")
+        from processforge_core.common.release_identity import RELEASE_ARCHIVE_VERSION
+        owned = release.release_core_manifest(files, version=RELEASE_ARCHIVE_VERSION, source=None, generated_at="2026-01-01T00:00:00Z")
         archive_path = base / "candidate.zip"
         entries = release.write_release_zip(archive_path, files, 1767225600,
                     extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(owned))])

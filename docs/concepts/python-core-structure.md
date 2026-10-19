@@ -85,6 +85,14 @@ See [supported actions](action-discovery.md).
 
 | Module | Responsibility |
 | --- | --- |
+| `src/processforge_core/project/file_templates.py`, `project/runtime_launchers.py` | Existing project files and launcher template bytes through explicit distribution and concrete initialization/discovery inputs. |
+| `src/processforge_core/project/workplace_templates.py`, `project/workplace_terms.py`, `process_catalog/profile_packs.py` | Existing workplace files, terms and official profile pack selection. |
+| `src/processforge_core/project/initialization_discovery.py` | Existing classifier/detection composition, global resource matching and registry text reads; initialization receives an explicit file-generation operation. |
+| `src/processforge_core/project/configuration_inputs.py` | Existing project/device configuration resolution with the same shared resolver and last-valid configuration behavior. |
+| `src/processforge_core/agents/process_events.py`, `agents/hook_dispatch.py` | Existing event admission, journal append, diagnostics and hook dispatch with concrete Core dependencies; Work composition supplies an optional recorder explicitly. |
+| `src/processforge_core/chat/writer.py` | Existing chat append, locking, duplicate handling, event recording and export synchronization. |
+| `src/processforge_core/maintenance/release_manifest.py`, `maintenance/release_plan.py`, `maintenance/release_commands.py` | Existing release-manifest rules, ordered command plans and command records; execution remains with its current adapter. |
+| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Shared existing Markdown list formatting and canonical release name/version/hash pattern. |
 | `src/processforge_core/resources/project_packages.py` | Project package manifests, root records, current candidate/index reads, duplicate tracking and dependency IDs through concrete Core paths/documents. |
 | `src/processforge_core/project/platform_resolution.py` | Existing recursive platform hierarchy and resource/dependency aggregation with concrete catalog, projection and package owners. |
 | `src/processforge_core/process_catalog/semantics.py` | Existing authoring coverage, semantic projections and ordered compatibility comparison. |

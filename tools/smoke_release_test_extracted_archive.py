@@ -4,11 +4,15 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from processforge import release_test_commands
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from processforge_core.maintenance.release_plan import ReleaseCommandPlanBuilder
 
 
 def labels(root: Path) -> set[str]:
-    return {command.label for command in release_test_commands(root, clean_first=True, public=True)}
+    return {command.label for command in ReleaseCommandPlanBuilder().release_test_commands(root, clean_first=True, public=True)}
 
 
 def main() -> int:
