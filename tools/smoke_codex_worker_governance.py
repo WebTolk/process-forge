@@ -48,7 +48,9 @@ def main() -> int:
         (project / ".pf" / "assignments").mkdir(parents=True)
         (project / ".pf" / "runs" / "governed-run" / "worker-prompts").mkdir(parents=True)
         writable = task(writer=True, code=True, artifacts=True)
-        pf.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
 
         driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
         from processforge_core.runtime.command import WorkerCommandBuilder

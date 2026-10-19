@@ -55,7 +55,9 @@ def existing_runtime_event_id(event_id: str) -> str:
 
 
 def project_event_ids(project: Path, core: object) -> set[str]:
-    events_path, _outbox = core.event_runtime_paths(project)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    events_path, _outbox = RunTaskInputReader().event_runtime_paths(project)
     if not events_path.is_file():
         return set()
     rows = events(project)

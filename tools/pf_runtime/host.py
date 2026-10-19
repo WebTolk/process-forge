@@ -81,7 +81,9 @@ def output_fact(project_root: Path, output: dict[str, Any], core: Any) -> dict[s
 
 
 def journal_events(project_root: Path, core: Any) -> list[dict[str, Any]]:
-    path, _outbox = core.event_runtime_paths(project_root)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
     return [event for _sequence, event, _error in event_journal().records(path)]
 
 
@@ -155,7 +157,9 @@ def declared_stage_obligations(project_root: Path, core: Any, *, dependencies: s
             continue
         if str(task.get("status") or "") in {"done", "completed", "cancelled", "failed"}:
             continue
-        process_id = core.task_process_id(task)
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        process_id = RunTaskInputReader().task_process_id(task)
         if not process_id:
             continue
         if process_id not in process_cache:
@@ -233,7 +237,9 @@ def build_required_output_readiness(item: dict[str, Any], project_root: Path, co
 def declared_verification_event(project_root: Path, task_id: str, verification: dict[str, Any], core: Any) -> dict[str, Any] | None:
     passed_event = str(verification.get("passed_event") or "")
     failed_event = str(verification.get("failed_event") or "")
-    return event_journal().latest_assignment_event(core.event_runtime_paths(project_root)[0],
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    return event_journal().latest_assignment_event(RunTaskInputReader().event_runtime_paths(project_root)[0],
                                                          task_id, {passed_event, failed_event})
 
 
@@ -275,12 +281,14 @@ def rebuild_stage_obligations(project_root: Path, core: Any) -> Path:
     key = str(project_root.resolve())
     STAGE_PROJECTION_CACHE.pop(key, None)
     rows = stage_obligation_rows(project_root, core)
+    from processforge_core.work.consistency import RunTaskInputReader
+
     payload = {
         "schema_version": 1,
         "kind": "stage-obligations",
         "generated_at": core.now_utc(),
         "project_id": core.project_id(project_root),
-        "source": {"event_journal": core.rel(core.event_runtime_paths(project_root)[0], project_root), "authority": "process-definitions+durable-assignments+inspector-state"},
+        "source": {"event_journal": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "authority": "process-definitions+durable-assignments+inspector-state"},
         "obligations": rows,
     }
     out = stage_obligations_path(project_root, core)
@@ -298,7 +306,9 @@ def _stage_input_signature(project_root: Path, core: Any, dependencies: set[Path
             facts.append((str(path), stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns))
         except FileNotFoundError:
             facts.append((str(path), None))
-    return (tuple(facts), event_journal().verification_revision(core.event_runtime_paths(project_root)[0]))
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    return (tuple(facts), event_journal().verification_revision(RunTaskInputReader().event_runtime_paths(project_root)[0]))
 
 
 def refresh_stage_obligations(project_root: Path, core: Any) -> Path:
@@ -319,9 +329,11 @@ def refresh_stage_obligations(project_root: Path, core: Any) -> Path:
     before = _stage_input_signature(project_root, core, dependencies)
     rows = stage_obligation_rows(project_root, core, dependencies=dependencies)
     dependencies.update(value[0] for cache_key, value in PROCESS_DEFINITION_CACHE.items() if cache_key[0] == key)
+    from processforge_core.work.consistency import RunTaskInputReader
+
     payload = {"schema_version": 1, "kind": "stage-obligations", "generated_at": core.now_utc(),
                "project_id": core.project_id(project_root), "source": {
-                   "event_journal": core.rel(core.event_runtime_paths(project_root)[0], project_root),
+                   "event_journal": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root),
                    "authority": "process-definitions+durable-assignments+inspector-state"}, "obligations": rows}
     write_json(out, payload)
     after = _stage_input_signature(project_root, core, dependencies)
@@ -419,7 +431,9 @@ def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
 
 
 def event_exists(project_root: Path, event_id: str, core: Any) -> bool:
-    return event_journal().contains(core.event_runtime_paths(project_root)[0], event_id)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    return event_journal().contains(RunTaskInputReader().event_runtime_paths(project_root)[0], event_id)
 
 
 def stable_event_id(payload: dict[str, Any]) -> str:
@@ -437,7 +451,9 @@ def resolve_workplace(args: argparse.Namespace, project_root: Path | None, core:
 
 def resolve_project(project_ref: str, core: Any) -> Path:
     project_root = Path(project_ref).expanduser().resolve()
-    core.require_flow_root(project_root)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    RunTaskInputReader().require_flow_root(project_root)
     return project_root
 
 
@@ -581,7 +597,9 @@ def ledger_from_event(raw: dict[str, Any], project_root: Path, workplace_root: P
 
 def rebuild_projection(project_root: Path, core: Any) -> Path:
     with state_lock():
-        events_path, _outbox = core.event_runtime_paths(project_root)
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
         rows = [item for _sequence, item, _error in event_journal().records(events_path)
                 if str(item.get("event_type") or "").startswith("agent.")]
         out = projection_path(project_root, core)
@@ -674,7 +692,9 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         save_state(workplace_root, state, core)
         projection = projection_path(project_root, core)
         stage_projection = stage_obligations_path(project_root, core)
-        payload = {"event_id": core.event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(core.event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        payload = {"event_id": core.event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
         return payload
 
 
@@ -1158,7 +1178,9 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
     )
     settings = configuration.config.logging
     # Refuse a half-migrated project before admitting new raw work.
-    event_journal().count(core.event_runtime_paths(project_root)[0])
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    event_journal().count(RunTaskInputReader().event_runtime_paths(project_root)[0])
     kernel = RawIngressKernel(workplace_root, flow_root=core.locate_flow_root(project_root), record_raw=settings.raw_hooks)
     receipt = kernel.ingest(native)
     response = _raw_receipt_payload(receipt)
@@ -1330,7 +1352,9 @@ def active_execution_records(project_root: Path, core: Any) -> list[dict[str, An
         task_status = str(task.get("status") or "")
         if task_status in {"done", "completed", "cancelled", "failed"}:
             continue
-        process_id = core.task_process_id(task)
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        process_id = RunTaskInputReader().task_process_id(task)
         if process_id not in process_cache:
             process_cache[process_id] = resolved_process(project_root, process_id, core) if process_id else None
         process = process_cache[process_id]
@@ -1369,7 +1393,9 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
-    events_path, _outbox = core.event_runtime_paths(project_root)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
     from processforge_core.common.json_io import json_read
     supervisor = json_read(core.supervisor_state_path(project_root))
     projection = stage_obligations_payload(project_root, core)

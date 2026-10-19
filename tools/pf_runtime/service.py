@@ -540,7 +540,9 @@ class RuntimeProcess:
         latest: dict[str, Any] | None = None
         for project_root in roots:
             try:
-                events_path, _outbox = self.core.event_runtime_paths(project_root)
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
                 if not events_path.is_file():
                     continue
                 item = host.event_journal().latest(events_path)

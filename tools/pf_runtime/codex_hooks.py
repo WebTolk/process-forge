@@ -155,7 +155,9 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
     service = runtime.service
     project_root = Path(project_ref).expanduser()
     try:
-        core.require_flow_root(project_root)
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        RunTaskInputReader().require_flow_root(project_root)
     except SystemExit:
         return {"status": "ignored", "reason": "not_processforge_project"}
 

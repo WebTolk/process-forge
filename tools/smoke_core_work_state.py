@@ -356,10 +356,14 @@ class AdapterTests(NormalizedTests):
         output = io.StringIO()
         records = []
         arguments = SimpleNamespace(project_root='fixture', json=True)
-        with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(core, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(RunTaskInputReader, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
+            from processforge_core.work.consistency import RunTaskInputReader
+
             command = WorkStateCommand(
                 execution_factory=core.process_execution_service,
-                require_flow_root=core.require_flow_root,
+                require_flow_root=RunTaskInputReader().require_flow_root,
                 dump_yaml=_canonical_dump_yaml,
             )
             self.assertEqual(command.execute(arguments), 0)

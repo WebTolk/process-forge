@@ -216,11 +216,13 @@ class ContinuationService:
     def _cancellation_replayer(self) -> CancellationReplayService:
         from ..composition import build_cancellation_replay_service
 
+        from processforge_core.work.consistency import RunTaskInputReader
+
         return build_cancellation_replay_service(
             fingerprint=lambda: canonical_fingerprint, error=lambda: ContinuationError,
             writer_check=lambda: self._writer_check, binding_reader=lambda: self._work,
             work=lambda: self.work, record_loader=lambda: self._load,
-            project_root=lambda: self.project, event_paths=lambda: self.core.event_runtime_paths,
+            project_root=lambda: self.project, event_paths=lambda: RunTaskInputReader().event_runtime_paths,
             event_reader=lambda: self.core.process_event_exists,
         )
 

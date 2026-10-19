@@ -84,7 +84,9 @@ def main() -> int:
         assert not results[1]["deduplicated"]
         assert results[2]["deduplicated"]
 
-        events_path, _ = runtime.core.event_runtime_paths(project)
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        events_path, _ = RunTaskInputReader().event_runtime_paths(project)
         events = [event for _sequence, event, _error in runtime.core.iter_process_events(events_path)]
         lifecycle = [
             event

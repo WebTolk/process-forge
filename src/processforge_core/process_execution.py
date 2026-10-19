@@ -14,6 +14,7 @@ from .common.yaml_io import _parse_simple_yaml
 from .common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from .documents.reader import YamlDocumentReader
 from .work.inventory import WorkInventory
+from .work.consistency import RunTaskInputReader
 from .work.state import WorkStatePolicy
 from .work.outputs import WorkOutputPolicy
 from .common.checks import Check
@@ -188,6 +189,7 @@ class ProcessExecutionService:
     project_root: Path
     workplace_root: Path | None
     core: Any
+    _event_paths: Callable[[Path], tuple[Path, Any]] | None = field(default_factory=lambda: RunTaskInputReader().event_runtime_paths, init=False, repr=False, compare=False)
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
@@ -820,7 +822,7 @@ class ProcessExecutionService:
         from .composition import build_automation_readiness_service
 
         return build_automation_readiness_service(
-            project_root=self.project_root, has_output_checks=lambda: self.output_checks is not None, output_checks=lambda root, assignment: self.output_checks(root, assignment), has_fingerprint=lambda: self.verification_fingerprint is not None, fingerprint=lambda root, assignment: self.verification_fingerprint(root, assignment), has_event_paths=lambda: hasattr(self.core, 'event_runtime_paths'), event_paths=lambda root: self.core.event_runtime_paths(root), latest_event=self._latest_assignment_event
+            project_root=self.project_root, has_output_checks=lambda: self.output_checks is not None, output_checks=lambda root, assignment: self.output_checks(root, assignment), has_fingerprint=lambda: self.verification_fingerprint is not None, fingerprint=lambda root, assignment: self.verification_fingerprint(root, assignment), has_event_paths=lambda: self._event_paths is not None, event_paths=lambda root: self._event_paths(root), latest_event=self._latest_assignment_event
         )
 
     def _automation_states(self, process: dict[str, Any], stage: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:

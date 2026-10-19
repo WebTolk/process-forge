@@ -174,9 +174,11 @@ def main():
         assert service.transition(run_id=selectors['run_id'],assignment_id=selectors['assignment_id'],outcome='completed')['reason'] == 'cancellation_recovery_pending'
         result = continuation.request('cancel_work', **cancel, apply=True)
         assert result['status'] == 'cancelled', result
-        events = core.event_runtime_paths(project)[0].read_bytes()
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        events = RunTaskInputReader().event_runtime_paths(project)[0].read_bytes()
         assert continuation.request('cancel_work', **cancel, apply=True)['already_applied']
-        assert core.event_runtime_paths(project)[0].read_bytes() == events
+        assert RunTaskInputReader().event_runtime_paths(project)[0].read_bytes() == events
         assert capsule.read_bytes() == capsule_bytes
         task = _worker_assignment_service.load(project,selectors['assignment_id'])
         assert task['stage'] == 'build' and task['stage_status'] != 'completed'

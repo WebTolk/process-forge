@@ -80,7 +80,9 @@ def terminal_worker_admission() -> None:
             launch = Mock(side_effect=AssertionError('unexpected process launch'))
             stdout = io.StringIO()
             with ExitStack() as stack:
-                stack.enter_context(patch.object(core, 'require_flow_root'))
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                stack.enter_context(patch.object(RunTaskInputReader, 'require_flow_root'))
                 stack.enter_context(patch.object(WorkerAssignmentService, 'load', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
                 stack.enter_context(patch.multiple(core, **{name: spy for name, spy in spies.items() if name not in {"build_worker_process_command", "runtime_driver_for_task"}}))
@@ -119,7 +121,9 @@ def terminal_worker_admission() -> None:
             launch = Mock(side_effect=AssertionError('manual fixture launched process'))
             before = files()
             with ExitStack() as stack:
-                stack.enter_context(patch.object(core, 'require_flow_root'))
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                stack.enter_context(patch.object(RunTaskInputReader, 'require_flow_root'))
                 stack.enter_context(patch.object(WorkerAssignmentService, 'load', return_value=task))
                 stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
                 stack.enter_context(patch.object(core, 'existing_running_worker_run', return_value=None))
@@ -144,7 +148,9 @@ def terminal_worker_admission() -> None:
             intent.write_text('pending\n', encoding='utf-8')
             try:
                 stdout = io.StringIO()
-                with patch.object(core, 'require_flow_root'), patch.object(WorkerAssignmentService, 'load', return_value=task), \
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                with patch.object(RunTaskInputReader, 'require_flow_root'), patch.object(WorkerAssignmentService, 'load', return_value=task), \
                      patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()), \
                      patch.object(core, 'prepare_worker_run', side_effect=AssertionError('unexpected prepare')), redirect_stdout(stdout):
                     code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))

@@ -75,7 +75,9 @@ def previews(base):
             before=tree(root)
             assert cli(root) == generated
             assert tree(root)==before, 'preview wrote files'
-    with patch.object(core,'active_run_ids',side_effect=AssertionError('must not enumerate Runs')):
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    with patch.object(RunTaskInputReader,'active_run_ids',side_effect=AssertionError('must not enumerate Runs')):
         assert core.default_start_agent_here(root)==generated
         assert core.start_agent_run_block(root)==startup.WORK_GUIDANCE
         assert core.refresh_start_agent_run_block(root,old)==generated

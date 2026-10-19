@@ -390,6 +390,13 @@ from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
+from processforge_core.work.consistency import RunTaskConsistencyService
+from processforge_core.work.consistency import RunTaskInputReader
+import processforge_core.common.json_io as _core_common_json_io
+import processforge_core.common.yaml_io as _core_common_yaml_io
+import processforge_core.work.consistency as _core_work_consistency
+
+
 PROJECT_FLOW_ROOT = ".pf"
 PROCESSFORGE_VERSION = "1.2.0"
 PROCESSFORGE_SPEC_VERSION = "1.0"
@@ -1395,15 +1402,6 @@ def locate_flow_root(project_root: Path, *, prefer_pf: bool = True) -> Path:
     return _context_contract_inputs.locate_flow_root(project_root, prefer_pf=prefer_pf)
 
 
-def require_flow_root(project_root: Path) -> Path:
-    flow_root = locate_flow_root(project_root)
-    manifest = flow_root / "process-forge.yaml"
-    if not manifest.is_file():
-        raise SystemExit(
-            f"FAIL: .pf/process-forge.yaml not found under {project_root}. "
-            "Run `python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply` first."
-        )
-    return flow_root
 
 
 def flow_layout(project_root: Path) -> str:
@@ -2423,9 +2421,9 @@ def command_workplace_setup_start(args: argparse.Namespace) -> int:
         print_plan("workplace-setup start dry run", planned, workplace)
         return 0
     session_dir.mkdir(parents=True, exist_ok=True)
-    write_yaml_file(session_dir / "answers.yaml", answers)
+    _core_common_yaml_io.write_yaml_file(session_dir / "answers.yaml", answers)
     proposal, proposal_md = _workplace_setup_proposal_builder.build(session_id, answers)
-    write_yaml_file(session_dir / "proposal.yaml", proposal)
+    _core_common_yaml_io.write_yaml_file(session_dir / "proposal.yaml", proposal)
     (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
     (session_dir / "next-steps.md").write_text(
         "# Next Steps\n\nReview `proposal.md`, adjust `answers.yaml`, then run `workplace-setup apply` with `--apply`.\n",
@@ -2465,8 +2463,8 @@ pass_with_conditions
         print_plan("workplace-setup review dry run", planned, workplace)
         return 0
     session_dir.mkdir(parents=True, exist_ok=True)
-    write_yaml_file(session_dir / "answers.yaml", answers)
-    write_yaml_file(session_dir / "proposal.yaml", proposal)
+    _core_common_yaml_io.write_yaml_file(session_dir / "answers.yaml", answers)
+    _core_common_yaml_io.write_yaml_file(session_dir / "proposal.yaml", proposal)
     (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
     (session_dir / "review.md").write_text(ensure_trailing_newline(review), encoding="utf-8")
     append_workplace_event(workplace, "workplace.setup.reviewed", payload={"session_id": session_id})
@@ -2492,12 +2490,12 @@ def command_workplace_setup_apply(args: argparse.Namespace) -> int:
         print_plan("workplace-setup apply dry run", planned, workplace)
         return 0
     session_dir.mkdir(parents=True, exist_ok=True)
-    write_yaml_file(session_dir / "answers.yaml", answers)
-    write_yaml_file(session_dir / "proposal.yaml", proposal)
+    _core_common_yaml_io.write_yaml_file(session_dir / "answers.yaml", answers)
+    _core_common_yaml_io.write_yaml_file(session_dir / "proposal.yaml", proposal)
     (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
     init_answers = guided_answers_to_workplace_init_answers(workplace, answers)
     init_answers_path = session_dir / "workplace-init.answers.yaml"
-    write_yaml_file(init_answers_path, init_answers)
+    _core_common_yaml_io.write_yaml_file(init_answers_path, init_answers)
     status, output = run_command_capture(
         command_init_workplace,
         argparse.Namespace(root=str(workplace), answers=str(init_answers_path), apply=True, dry_run=False, force=True, command="workplace-setup apply"),
@@ -2822,7 +2820,7 @@ def update_workplace_coordination(workplace_root: Path, updater: Any) -> dict[st
     cfg = _project_coordination_reader.workplace(manifest)
     updater(cfg)
     data["coordination"] = cfg
-    write_yaml_file(manifest, data)
+    _core_common_yaml_io.write_yaml_file(manifest, data)
     return cfg
 
 
@@ -2876,7 +2874,7 @@ def command_workplace_mode_doctor(args: argparse.Namespace) -> int:
 
 def command_project_mode_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     payload = effective_project_coordination(project_root, getattr(args, "workplace", None))
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))
@@ -2892,7 +2890,7 @@ def command_project_mode_status(args: argparse.Namespace) -> int:
 
 def command_project_mode_set(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    flow_root = require_flow_root(project_root)
+    flow_root = _run_task_inputs.require_flow_root(project_root)
     mode = _project_coordination_reader.project_mode(args.mode)
     if mode == "organized":
         status = effective_project_coordination(project_root, getattr(args, "workplace", None))
@@ -2912,7 +2910,7 @@ def command_project_mode_set(args: argparse.Namespace) -> int:
     director.setdefault("inbox_submit_required", False)
     coordination["director"] = director
     data["coordination"] = coordination
-    write_yaml_file(manifest, data)
+    _core_common_yaml_io.write_yaml_file(manifest, data)
     write_project_context_snapshot_outputs(project_root)
     print(f"UPDATED: {rel(manifest, project_root)}")
     return command_project_mode_status(argparse.Namespace(project_root=str(project_root), workplace=getattr(args, "workplace", None), json=args.json))
@@ -2920,7 +2918,7 @@ def command_project_mode_set(args: argparse.Namespace) -> int:
 
 def command_project_mode_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     checks = coordination_doctor_checks(project_root, getattr(args, "workplace", None))
     return print_checks(checks)
 
@@ -2949,7 +2947,7 @@ def command_director_inbox_submit(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if args.project_root else None
     workplace_root = normalize_workplace_path(Path(args.workplace)) if args.workplace else None
     if project_root:
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
         status = effective_project_coordination(project_root, str(workplace_root) if workplace_root else None)
         workplace_root = Path(str(status["workplace_root"])) if status.get("workplace_root") else workplace_root
         if status["effective_mode"] == "simple" and not args.allow_simple_submit and args.message_type != "operator_note":
@@ -2981,7 +2979,7 @@ def command_director_inbox_submit(args: argparse.Namespace) -> int:
     paths = initialize_director_office(workplace_root)
     payload = director_message_payload(workplace_root, project_root, args.message_type, args.content or "", coordination)
     message_path = paths["inbox_path"] / f"{payload['id']}.yaml"
-    write_yaml_file(message_path, payload)
+    _core_common_yaml_io.write_yaml_file(message_path, payload)
     if args.json:
         print(json.dumps({"status": "pass", "message": rel(message_path, workplace_root), "payload": payload}, indent=2, sort_keys=True))
     else:
@@ -3017,7 +3015,7 @@ def command_director_case_refresh(args: argparse.Namespace) -> int:
         if effective_mode != "organized" and project_id_value not in inbox_project_ids and not include_simple:
             continue
         case_path = paths["cases_path"] / f"{safe_id(project_id_value, 'project')}.yaml"
-        write_yaml_file(
+        _core_common_yaml_io.write_yaml_file(
             case_path,
             {
                 "schema_version": 1,
@@ -3042,7 +3040,7 @@ def command_director_case_refresh(args: argparse.Namespace) -> int:
 
 def command_error_route(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     mode = str(args.mode or "none")
     if mode not in ERROR_WORKFLOW_MODES:
         raise SystemExit("FAIL: error workflow mode must be none, director_inbox, route_to_process, or needs_operator")
@@ -3087,7 +3085,7 @@ def command_error_route(args: argparse.Namespace) -> int:
     elif mode == "needs_operator":
         result["status"] = "needs_operator"
     output = locate_flow_root(project_root) / "artifacts" / "error-workflow" / f"error-{uuid.uuid4().hex[:12]}.yaml"
-    write_yaml_file(output, result)
+    _core_common_yaml_io.write_yaml_file(output, result)
     if args.json:
         print(json.dumps({"status": "pass", "path": rel(output, project_root), "result": result}, indent=2, sort_keys=True))
     else:
@@ -6919,7 +6917,7 @@ def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str,
     }
 
 
-_yaml_documents = YamlDocumentReader(fallback=parse_simple_yaml)
+_yaml_documents = YamlDocumentReader(fallback=_core_common_yaml_io._parse_simple_yaml)
 
 
 def load_yaml_document(path: Path) -> dict[str, Any]:
@@ -7563,7 +7561,7 @@ def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]
     paths = _work_paths.worker_run(project_root, run_id, task_id)
     private_file(project_root, rel(paths["workspace_access"], project_root))
     document = workspace_access_runtime_document(project_root, task)
-    json_write(paths["workspace_access"], document)
+    _core_common_json_io.json_write(paths["workspace_access"], document)
     return paths["workspace_access"]
 
 
@@ -8178,9 +8176,6 @@ def append_telemetry_event(telemetry_path: Path, event: str, **payload: Any) -> 
         handle.write(json.dumps(item, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def event_runtime_paths(project_root: Path) -> tuple[Path, Path]:
-    runtime = locate_flow_root(project_root) / "runtime" / "events"
-    return runtime / "events.sqlite3", locate_flow_root(project_root) / "runtime" / "hooks" / "outbox"
 
 
 def project_configuration(project_root: Path, workplace_root: Path | None = None):
@@ -8397,7 +8392,7 @@ def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool =
 def admit_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True, workplace_root: Path | None = None) -> bool:
     if not (event.get("event_id") or event.get("id")):
         raise JournalError("journal_event_id_required")
-    events_path, _outbox = event_runtime_paths(project_root)
+    events_path, _outbox = _run_task_inputs.event_runtime_paths(project_root)
     inserted = _process_event_journal.append(
         events_path,
         event,
@@ -8413,13 +8408,13 @@ def admit_process_event(project_root: Path, event: dict[str, Any], *, dispatch: 
 
 
 def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True, workplace_root: Path | None = None) -> Path:
-    events_path, _outbox = event_runtime_paths(project_root)
+    events_path, _outbox = _run_task_inputs.event_runtime_paths(project_root)
     admit_process_event(project_root, event, dispatch=dispatch, workplace_root=workplace_root)
     return events_path
 
 
 def flush_pending_event_dispatches(project_root: Path, *, limit: int = 100) -> None:
-    path = event_runtime_paths(project_root)[0]
+    path = _run_task_inputs.event_runtime_paths(project_root)[0]
     for pending in _process_event_journal.pending_dispatch(path, limit=limit):
         dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
         _process_event_journal.complete_dispatch(path, event_id_value(pending))
@@ -9075,7 +9070,7 @@ def command_session_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     session_id = telemetry_session_id()
     session_path, telemetry_path = session_runtime_paths(project_root, session_id)
     freshness, stale_reasons, snapshot = project_context_freshness(project_root)
@@ -9190,7 +9185,7 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     if getattr(args, "dry_run", False):
         snapshot = build_project_context_snapshot(project_root, explicit_workplace=getattr(args, "workplace", None))
         current = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None))
@@ -9276,7 +9271,7 @@ def command_project_context_check(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     result = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None))
     result["session_start"] = bool(getattr(args, "session_start", False))
     result["check_update_candidates"] = getattr(args, "check_update_candidates", "if_due")
@@ -9377,7 +9372,7 @@ def command_project_context_mark_stale(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     marker = mark_project_context_stale(project_root, subject=args.subject, reason=args.reason, source="project-context-mark-stale")
     print(f"MARKED_STALE: {rel(marker, project_root)}")
     return 0
@@ -9526,7 +9521,7 @@ def workspace_access_public_path_issues(access: dict[str, list[Any]]) -> list[st
 
 def command_assignment_capsule(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     assignment = Path(args.assignment).expanduser().resolve()
     metadata = extract_assignment_front_matter(assignment)
     if not metadata:
@@ -9664,7 +9659,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
 
 def command_capsule_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     capsule_path = Path(args.capsule).expanduser()
     if not capsule_path.is_absolute():
         capsule_path = project_root / capsule_path
@@ -9706,9 +9701,6 @@ def command_capsule_doctor(args: argparse.Namespace) -> int:
     return print_checks(checks)
 
 
-RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}
-TASK_STATUSES = {"open", "in_progress", "blocked", "debugging", "review", "done", "cancelled", "failed"}
-ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed", "cancelled"}
 
 
 
@@ -9727,9 +9719,6 @@ def read_yaml_file(path: Path) -> dict[str, Any]:
     return data
 
 
-def write_yaml_file(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
 
 
 def write_yaml_file_atomic(path: Path, data: dict[str, Any]) -> None:
@@ -10000,7 +9989,7 @@ def initialize_director_office(workplace_root: Path, coordination: dict[str, Any
         )
     manifest = paths["office_path"] / "process-forge.yaml"
     if not manifest.exists():
-        write_yaml_file(
+        _core_common_yaml_io.write_yaml_file(
             manifest,
             {
                 "schema_version": 1,
@@ -10091,16 +10080,6 @@ def validate_process_against_project_mode(process_data: dict[str, Any], project_
     return [check("PASS", f"process coordination requirements match effective {effective_mode} mode")]
 
 
-def _process_catalog_context(
-    project_root: Path,
-    *,
-    workplace_manifest: Path | None = None,
-) -> ProcessCatalogContext:
-    from processforge_core.process_catalog.catalog_read import ProcessCatalogReadService
-
-    return ProcessCatalogReadService(
-        project_root, distribution_root=ROOT, workplace_manifest=workplace_manifest,
-    ).context()
 
 
 def process_catalog_role(process: dict[str, Any]) -> str:
@@ -10174,7 +10153,7 @@ def official_process_definition_refs(
     include_available: bool = False,
     workplace_manifest: Path | None = None,
 ) -> list[ProcessDefinitionRef]:
-    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    context = _run_task_consistency_service._process_catalog_context(project_root, workplace_manifest=workplace_manifest)
     return catalog_official_process_definition_refs(
         context,
         include_available=include_available,
@@ -10182,7 +10161,7 @@ def official_process_definition_refs(
 
 
 def process_root_candidates(project_root: Path) -> list[tuple[Path, str, bool]]:
-    return catalog_process_root_candidates(_process_catalog_context(project_root))
+    return catalog_process_root_candidates(_run_task_consistency_service._process_catalog_context(project_root))
 
 
 def process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
@@ -10196,7 +10175,7 @@ def process_catalog_entries(
     include_available_official: bool = False,
     workplace_manifest: Path | None = None,
 ) -> list[ProcessDefinitionRef]:
-    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    context = _run_task_consistency_service._process_catalog_context(project_root, workplace_manifest=workplace_manifest)
     return catalog_process_catalog_entries(
         context,
         strict=strict,
@@ -10211,7 +10190,7 @@ def resolve_process_definition(
     include_available_official: bool = False,
     workplace_manifest: Path | None = None,
 ) -> ProcessDefinitionRef:
-    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    context = _run_task_consistency_service._process_catalog_context(project_root, workplace_manifest=workplace_manifest)
     return catalog_resolve_process_definition(
         context,
         process_or_path,
@@ -10220,44 +10199,15 @@ def resolve_process_definition(
 
 
 def require_official_process_active(project_root: Path, process_id: str) -> None:
-    catalog_require_official_process_active(_process_catalog_context(project_root), process_id)
+    catalog_require_official_process_active(_run_task_consistency_service._process_catalog_context(project_root), process_id)
 
 
-def process_definition_exists(project_root: Path, process_id: str) -> bool:
-    return catalog_process_definition_exists(_process_catalog_context(project_root), process_id)
 
 
-def active_run_ids(project_root: Path) -> list[str]:
-    root = locate_flow_root(project_root) / "runs"
-    ids: list[str] = []
-    if not root.is_dir():
-        return ids
-    for path in sorted(root.glob("*/run.yaml")):
-        data = _yaml_documents.load_fields(path, ("id", "status", "__yaml_error__"))
-        if yaml_error(data):
-            continue
-        status = str(data.get("status", ""))
-        if status in {"draft", "open", "in_progress", "blocked", "review"}:
-            ids.append(str(data.get("id") or path.parent.name))
-    return ids
 
 
-def task_process_id(task: dict[str, Any]) -> str:
-    value = task.get("process")
-    if isinstance(value, dict):
-        return str(value.get("id", ""))
-    return str(value or "")
 
 
-def next_iteration_id(task: dict[str, Any]) -> str:
-    iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
-    used = {str(item.get("id")) for item in iterations if isinstance(item, dict)}
-    index = 1
-    while True:
-        candidate = f"iter-{index:03d}"
-        if candidate not in used:
-            return candidate
-        index += 1
 
 
 def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
@@ -10338,7 +10288,7 @@ def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_
 
 def save_task(project_root: Path, task: dict[str, Any]) -> None:
     task["updated_at"] = now_utc()
-    write_yaml_file(_work_paths.assignment_document(project_root, str(task.get("id", "task"))), task)
+    _core_common_yaml_io.write_yaml_file(_work_paths.assignment_document(project_root, str(task.get("id", "task"))), task)
 
 
 def update_run_task_status(project_root: Path, run_id: str, task_id: str, status: str) -> None:
@@ -10360,116 +10310,8 @@ def update_run_task_status_locked(project_root: Path, run_id: str, task_id: str,
 
 
 
-def validate_run_consistency(project_root: Path, run_id: str, include_runtime_events: bool = False) -> list[Check]:
-    flow_root = require_flow_root(project_root)
-    checks: list[Check] = []
-    path = _work_paths.run_document(project_root, run_id)
-    if not path.is_file():
-        return [check("FAIL", f"{rel(path, project_root)} missing")]
-    run = read_yaml_file(path)
-    error = yaml_error(run)
-    if error:
-        return [check("FAIL", f"{rel(path, project_root)} invalid YAML: {error}")]
-    for key in ["schema_version", "id", "title", "process", "status", "created_at", "updated_at", "tasks"]:
-        checks.append(check("PASS" if key in run else "FAIL", f"run.{key} present"))
-    status = str(run.get("status", ""))
-    checks.append(check("PASS" if status in RUN_STATUSES else "FAIL", f"run status valid: {status or 'missing'}"))
-    artifact_paths = {
-        "summary": _work_paths.summary(project_root, str(run.get("id", run_id))),
-        "task index": _work_paths.run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
-        "handoff": _work_paths.handoff(project_root, str(run.get("id", run_id))),
-    }
-    status_patterns = {
-        "summary": r"^- status: `([^`]+)`$",
-        "task index": r"^Run status: `([^`]+)`$",
-        "handoff": r"^Status: `([^`]+)`$",
-    }
-    for label, artifact_path in artifact_paths.items():
-        required = label == "task index" or status == "completed"
-        if not artifact_path.is_file():
-            checks.append(check("FAIL" if required else "PASS", f"{label} artifact {'exists' if required else 'not yet required'}: {rel(artifact_path, project_root)}"))
-            continue
-        text = artifact_path.read_text(encoding="utf-8", errors="replace")
-        match = re.search(status_patterns[label], text, flags=re.MULTILINE)
-        artifact_status = match.group(1) if match else ""
-        checks.append(check("PASS" if artifact_status == status else "FAIL", f"{label} status matches run: {artifact_status or 'missing'}"))
-    process_id = str(run.get("process", ""))
-    checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
-    checks.append(check("PASS" if not public_yaml_has_private_path(run) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
-    tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
-    seen: set[str] = set()
-    if not isinstance(tasks, list):
-        checks.append(check("FAIL", "run.tasks must be a list"))
-        tasks = []
-    for item in tasks:
-        if not isinstance(item, dict):
-            checks.append(check("FAIL", "run.tasks item must be an object"))
-            continue
-        task_id = str(item.get("id", ""))
-        assignment_rel = str(item.get("assignment", ""))
-        task_status = str(item.get("status", ""))
-        checks.append(check("PASS" if task_id and task_id not in seen else "FAIL", f"task id unique: {task_id or 'missing'}"))
-        seen.add(task_id)
-        checks.append(check("PASS" if task_status in TASK_STATUSES else "FAIL", f"task status valid for {task_id}: {task_status or 'missing'}"))
-        assignment_path = project_root / assignment_rel if assignment_rel.startswith(PROJECT_FLOW_ROOT + "/") else flow_root / "assignments" / f"{safe_id(task_id, 'task')}.yaml"
-        checks.append(check("PASS" if assignment_path.is_file() else "FAIL", f"assignment exists for {task_id}: {assignment_rel or rel(assignment_path, project_root)}"))
-        if assignment_path.is_file():
-            task = read_yaml_file(assignment_path)
-            checks.append(check("PASS" if str(task.get("run_id", "")) == str(run.get("id", "")) else "FAIL", f"{task_id} run_id matches run"))
-    if status == "completed":
-        incomplete = [str(item.get("id")) for item in tasks if isinstance(item, dict) and item.get("blocking", True) is not False and str(item.get("status")) != "done"]
-        checks.append(check("PASS" if not incomplete else "FAIL", "completed run has all blocking tasks done" + (f": {', '.join(incomplete)}" if incomplete else "")))
-        summary = artifact_paths["summary"]
-        handoff = artifact_paths["handoff"]
-        checks.append(check("PASS" if summary.is_file() else "FAIL", f"{rel(summary, project_root)} exists"))
-        checks.append(check("PASS" if handoff.is_file() else "FAIL", f"{rel(handoff, project_root)} exists"))
-    if include_runtime_events:
-        events_path, _outbox = event_runtime_paths(project_root)
-        events = _process_event_journal.page(events_path, run_id=str(run.get("id", run_id)), limit=1)
-        checks.append(check("PASS" if events else "WARN", "runtime run events exist"))
-    return checks
 
 
-def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
-    require_flow_root(project_root)
-    checks: list[Check] = []
-    path = _work_paths.assignment_document(project_root, task_id)
-    if not path.is_file():
-        return [check("FAIL", f"{rel(path, project_root)} missing")]
-    task = read_yaml_file(path)
-    for key in ["schema_version", "id", "title", "run_id", "process", "status", "iterations", "result"]:
-        checks.append(check("PASS" if key in task else "FAIL", f"task.{key} present"))
-    status = str(task.get("status", ""))
-    checks.append(check("PASS" if status in TASK_STATUSES else "FAIL", f"task status valid: {status or 'missing'}"))
-    run_id = str(task.get("run_id", ""))
-    checks.append(check("PASS" if run_id and _work_paths.run_document(project_root, run_id).is_file() else "FAIL", f"referenced run exists: {run_id or 'missing'}"))
-    process_id = task_process_id(task)
-    checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
-    checks.append(check("PASS" if not public_yaml_has_private_path(task) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
-    iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
-    seen: set[str] = set()
-    if not isinstance(iterations, list):
-        checks.append(check("FAIL", "task.iterations must be a list"))
-        iterations = []
-    for item in iterations:
-        if not isinstance(item, dict):
-            checks.append(check("FAIL", "iteration item must be an object"))
-            continue
-        iter_id = str(item.get("id", ""))
-        kind = str(item.get("kind", ""))
-        iter_status = str(item.get("status", ""))
-        checks.append(check("PASS" if iter_id and iter_id not in seen else "FAIL", f"iteration id unique: {iter_id or 'missing'}"))
-        seen.add(iter_id)
-        checks.append(check("PASS" if kind in ITERATION_KINDS else "FAIL", f"iteration kind valid for {iter_id}: {kind or 'missing'}"))
-        checks.append(check("PASS" if iter_status in ITERATION_STATUSES else "FAIL", f"iteration status valid for {iter_id}: {iter_status or 'missing'}"))
-    result = task.get("result") if isinstance(task.get("result"), dict) else {}
-    if status == "done":
-        result_summary = str(result.get("summary", "")).strip()
-        result_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), list) else []
-        checks.append(check("PASS" if result_summary or result_artifacts else "FAIL", "completed task has result summary or artifact"))
-    result_waivers = result.get("waivers") if isinstance(result.get("waivers"), dict) else {}
-    checks.extend(_work_output_policy.checks(project_root, task, {str(key): str(value) for key, value in result_waivers.items()}, enforce_missing=status == "done"))
-    return checks
 
 
 def process_authoring_root(project_root: Path, process_id: str) -> Path:
@@ -10536,7 +10378,7 @@ def append_authoring_log(paths: dict[str, Path], message: str) -> None:
 
 def command_process_authoring_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     raw_answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve()) if args.answers else {}
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
@@ -10555,8 +10397,8 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
     if getattr(args, "dry_run", False):
         print_plan("process-authoring-start dry run", planned, project_root)
         return 0
-    write_yaml_file(paths["answers"], answers)
-    write_yaml_file(paths["draft"], draft)
+    _core_common_yaml_io.write_yaml_file(paths["answers"], answers)
+    _core_common_yaml_io.write_yaml_file(paths["draft"], draft)
     paths["questions"].write_text(_process_authoring_renderer.questions(answers), encoding="utf-8")
     append_authoring_log(paths, "authoring session started")
     emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
@@ -10569,7 +10411,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
 
 def command_process_authoring_review(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     process_id = safe_id(args.process or "", "process")
     paths = process_authoring_paths(project_root, process_id)
     if not paths["draft"].is_file():
@@ -10613,8 +10455,8 @@ def write_process_authoring_example(project_root: Path, process: dict[str, Any],
     )
     files[0].parent.mkdir(parents=True, exist_ok=True)
     files[0].write_text(readme, encoding="utf-8")
-    write_yaml_file(files[1], answers)
-    write_yaml_file(files[2], process)
+    _core_common_yaml_io.write_yaml_file(files[1], answers)
+    _core_common_yaml_io.write_yaml_file(files[2], process)
     files[3].write_text(review_text, encoding="utf-8")
     dogfood_title = str(process.get("name") or title_from_id(process_id))
     dogfood = {
@@ -10640,7 +10482,7 @@ def process_authoring_event_effect(
 ) -> AuthoringEffect:
     return AuthoringEffect(
         label=f"event:{event_type}",
-        destination=rel(event_runtime_paths(project_root)[0], project_root),
+        destination=rel(_run_task_inputs.event_runtime_paths(project_root)[0], project_root),
         role="audit",
         operation="append",
         condition="after_commit",
@@ -10663,7 +10505,7 @@ def build_process_create_plan(
     allow_core: bool,
     existing_session: bool,
 ) -> tuple[AuthoringPlan, dict[str, Path]]:
-    flow_root = require_flow_root(project_root)
+    flow_root = _run_task_inputs.require_flow_root(project_root)
     _update_schema_checks.require(
         answers,
         "process-authoring-answers.schema.json",
@@ -10833,7 +10675,7 @@ def build_process_create_plan(
 
 def command_process_authoring_apply(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     mode = _authoring_input_service.mode(args)
     process_id = safe_id(args.process or getattr(args, "id", ""), "process")
     paths = process_authoring_paths(project_root, process_id)
@@ -10862,7 +10704,7 @@ def command_process_authoring_apply(args: argparse.Namespace) -> int:
 
 def command_process_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     mode = _authoring_input_service.mode(args)
     raw_answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve()) if args.answers else {}
     if args.answers and "evolve" not in raw_answers:
@@ -10918,7 +10760,7 @@ def process_definition_path(project_root: Path, process_or_path: str) -> Path:
 def command_builtin_process_catalog_doctor(args: argparse.Namespace) -> int:
     root_arg = getattr(args, "root", None) or getattr(args, "project_root", None) or "."
     root = Path(root_arg).expanduser().resolve()
-    require_flow_root(root)
+    _run_task_inputs.require_flow_root(root)
     report = _builtin_process_catalog_audit_service.report(root, public=bool(getattr(args, "public", False)))
     failed = [item for item in report["checks"] if item["level"] == "FAIL"]
     if getattr(args, "write_report", None):
@@ -10944,7 +10786,7 @@ def command_builtin_process_catalog_doctor(args: argparse.Namespace) -> int:
 
 def command_process_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     resolved = resolve_process_definition(project_root, args.process)
     path = resolved.path
     process = resolved.process
@@ -10987,7 +10829,7 @@ def public_process_origin(origin: str) -> str:
 
 def command_process_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     workplace_manifest = None
     if getattr(args, "workplace", None):
         workplace_manifest = workplace_manifest_path_from_root(
@@ -11045,7 +10887,7 @@ def command_process_list(args: argparse.Namespace) -> int:
 
 def command_process_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     workplace_manifest = None
     if getattr(args, "workplace", None):
         workplace_manifest = workplace_manifest_path_from_root(
@@ -11198,14 +11040,14 @@ def process_layout_checks(root: Path) -> list[Check]:
 
 def command_process_layout_doctor(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
-    require_flow_root(root)
+    _run_task_inputs.require_flow_root(root)
     result = print_checks(process_layout_checks(root))
     return result
 
 
 def command_process_layout_migrate(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
-    require_flow_root(root)
+    _run_task_inputs.require_flow_root(root)
     process_root = root / "processes"
     target_root = process_root / ("custom" if getattr(args, "custom", False) else "user")
     built_in_target = process_root / "core"
@@ -11251,7 +11093,7 @@ def ensure_learning_layout(workplace: Path) -> Path:
         (root / subdir).mkdir(parents=True, exist_ok=True)
     index = root / "index.yaml"
     if not index.is_file():
-        write_yaml_file(index, {"schema_version": 1, "kind": "processforge.learning_queue", "candidates": []})
+        _core_common_yaml_io.write_yaml_file(index, {"schema_version": 1, "kind": "processforge.learning_queue", "candidates": []})
     exports = root / "exports.ndjson"
     exports.parent.mkdir(parents=True, exist_ok=True)
     if not exports.is_file():
@@ -11299,7 +11141,7 @@ def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") ->
     state["local"] = status
     data["status"] = state
     target = root / "inbox" / f"{candidate_id}.yaml"
-    write_yaml_file(target, data)
+    _core_common_yaml_io.write_yaml_file(target, data)
     index_path = root / "index.yaml"
     index = read_yaml_file(index_path) if index_path.is_file() else {"schema_version": 1, "kind": "processforge.learning_queue", "candidates": []}
     candidates = [item for item in as_list(index.get("candidates")) if isinstance(item, dict) and item.get("id") != candidate_id]
@@ -11319,7 +11161,7 @@ def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") ->
         }
     )
     index["candidates"] = sorted(candidates, key=lambda item: str(item.get("id")))
-    write_yaml_file(index_path, index)
+    _core_common_yaml_io.write_yaml_file(index_path, index)
     return target
 
 
@@ -11336,7 +11178,7 @@ def command_evolve_candidate_sanitize(args: argparse.Namespace) -> int:
     privacy["sanitized_at"] = now_utc()
     sanitized_data["privacy"] = privacy
     target = path.with_name(path.stem + ".sanitized" + path.suffix)
-    write_yaml_file(target, sanitized_data)
+    _core_common_yaml_io.write_yaml_file(target, sanitized_data)
     print(f"WROTE: {target}")
     return 0
 
@@ -11420,7 +11262,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
 
 def command_evolve_run(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     process_id = str(getattr(args, "process", None) or "task-batch-execution")
     process = read_yaml_file(process_definition_path(project_root, process_id))
     evolve = process.get("evolve") if isinstance(process.get("evolve"), dict) else {}
@@ -11450,7 +11292,7 @@ def command_evolve_run(args: argparse.Namespace) -> int:
         report["candidates"].append(_knowledge_candidate_targeting_policy.id_from_data(read_yaml_file(source), source.stem))
         if getattr(args, "workplace", None):
             queue_candidate(Path(args.workplace).expanduser().resolve(), source)
-    write_yaml_file(root / "evolution-report.yaml", report)
+    _core_common_yaml_io.write_yaml_file(root / "evolution-report.yaml", report)
     (root / "evolution-report.md").write_text(
         "\n".join(
             [
@@ -11474,9 +11316,9 @@ def ensure_hub_layout(hub: Path) -> Path:
     for subdir in ["inbox/imports", "candidates", "packages", "updates"]:
         (hub / subdir).mkdir(parents=True, exist_ok=True)
     if not (hub / "hub.yaml").is_file():
-        write_yaml_file(hub / "hub.yaml", {"schema_version": 1, "kind": "processforge.knowledge_hub", "created_at": now_utc()})
+        _core_common_yaml_io.write_yaml_file(hub / "hub.yaml", {"schema_version": 1, "kind": "processforge.knowledge_hub", "created_at": now_utc()})
     if not (hub / "candidates" / "index.yaml").is_file():
-        write_yaml_file(hub / "candidates" / "index.yaml", {"schema_version": 1, "kind": "processforge.hub_candidate_index", "candidates": []})
+        _core_common_yaml_io.write_yaml_file(hub / "candidates" / "index.yaml", {"schema_version": 1, "kind": "processforge.hub_candidate_index", "candidates": []})
     return hub
 
 
@@ -11531,7 +11373,7 @@ def command_knowledge_hub_import(args: argparse.Namespace) -> int:
             }
         )
     index["candidates"] = sorted(rows, key=lambda item: str(item.get("id")))
-    write_yaml_file(index_path, index)
+    _core_common_yaml_io.write_yaml_file(index_path, index)
     print(f"IMPORTED: {bundle_id}")
     return 0
 
@@ -11594,8 +11436,8 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         (package_root / "resources" / "incoming-learnings.md").write_text("\n".join(incoming), encoding="utf-8")
         resources.append({"id": "incoming-learnings", "path": "resources/incoming-learnings.md", "type": "markdown"})
     (package_root / "resources" / "candidate-notes.md").write_text("\n".join(notes), encoding="utf-8")
-    write_yaml_file(package_root / "resources" / "index.yaml", {"schema_version": 1, "resources": resources})
-    write_yaml_file(package_root / "package.yaml", package_manifest)
+    _core_common_yaml_io.write_yaml_file(package_root / "resources" / "index.yaml", {"schema_version": 1, "resources": resources})
+    _core_common_yaml_io.write_yaml_file(package_root / "package.yaml", package_manifest)
     changelog_items = ["- Added reviewed learning candidates to `resources/candidate-notes.md`."]
     if incoming_candidates:
         changelog_items.append("- Staged unreviewed parent-platform candidates in `resources/incoming-learnings.md`.")
@@ -11662,7 +11504,7 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
     }
     update_manifest = hub / "updates" / f"{package_id}.update.json"
     update_manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    write_yaml_file(
+    _core_common_yaml_io.write_yaml_file(
         hub / "updates" / "processforge-update-index.yaml",
         {"schema_version": 1, "updates": [{"id": package_id, "manifest": rel(update_manifest, hub), "version": version, "artifact": rel(output, hub)}]},
     )
@@ -11684,7 +11526,7 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
         "package-manifest.schema.json",
         f"released knowledge package {package_id}",
     )
-    write_yaml_file(package_manifest_path, package)
+    _core_common_yaml_io.write_yaml_file(package_manifest_path, package)
     print(f"RELEASED: {output}")
     print(f"MANIFEST: {update_manifest}")
     return 0
@@ -11719,7 +11561,7 @@ def process_backfill_paths(project_root: Path, process_id: str) -> dict[str, Pat
 
 def command_process_authoring_import(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     if args.process_file:
         process_path = Path(args.process_file).expanduser()
         process_path = process_path if process_path.is_absolute() else project_root / process_path
@@ -11739,11 +11581,11 @@ def command_process_authoring_import(args: argparse.Namespace) -> int:
     if getattr(args, "dry_run", False):
         print_plan("process-authoring-import dry run", planned, project_root)
         return 0
-    write_yaml_file(paths["answers"], answers)
-    write_yaml_file(paths["draft"], draft)
-    write_yaml_file(paths["source"], process)
-    write_yaml_file(paths["semantic_map"], _process_semantic_policy.map(process, process_path, project_root, unsupported))
-    write_yaml_file(paths["unsupported"], {"schema_version": 1, "unsupported": unsupported})
+    _core_common_yaml_io.write_yaml_file(paths["answers"], answers)
+    _core_common_yaml_io.write_yaml_file(paths["draft"], draft)
+    _core_common_yaml_io.write_yaml_file(paths["source"], process)
+    _core_common_yaml_io.write_yaml_file(paths["semantic_map"], _process_semantic_policy.map(process, process_path, project_root, unsupported))
+    _core_common_yaml_io.write_yaml_file(paths["unsupported"], {"schema_version": 1, "unsupported": unsupported})
     paths["import_report"].write_text(_process_parity_renderer.import_report(process, process_path, paths, project_root, unsupported), encoding="utf-8")
     emit_process_event(project_root, "authoring_parity.started", process_id=process_id, subject=process_id, payload={"command": "process-authoring-import", "source": rel(process_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
     if unsupported:
@@ -11801,7 +11643,7 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
     review.parent.mkdir(parents=True, exist_ok=True)
     diff_path.parent.mkdir(parents=True, exist_ok=True)
     review.write_text(_process_parity_renderer.parity_report(process_id, process_path, project_root, status, diffs, unsupported, logic_checks), encoding="utf-8")
-    write_yaml_file(diff_path, {"schema_version": 1, "process_id": process_id, "result": status, "diffs": diffs, "unsupported": unsupported})
+    _core_common_yaml_io.write_yaml_file(diff_path, {"schema_version": 1, "process_id": process_id, "result": status, "diffs": diffs, "unsupported": unsupported})
     emit_process_event(project_root, "authoring_parity.process.checked", process_id=process_id, subject=process_id, severity="error" if status == "FAIL" else ("warn" if status == "WARN" else "info"), payload={"result": status, "review": rel(review, project_root), "semantic_diff": rel(diff_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
     if status == "FAIL":
         emit_process_event(project_root, "authoring_parity.failed", process_id=process_id, subject=process_id, severity="error", payload={"diffs": diffs}, correlation_id=f"authoring-parity-{process_id}")
@@ -11810,7 +11652,7 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
 
 def command_process_parity_check(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     process_path = Path(args.process_file).expanduser() if getattr(args, "process_file", None) else process_definition_path(project_root, args.process)
     if not process_path.is_absolute():
         process_path = project_root / process_path
@@ -11836,7 +11678,7 @@ CRITICAL_PARITY_PROCESSES = {
 
 def command_process_parity_check_all(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     rows: list[dict[str, Any]] = []
     failed = False
     warned = False
@@ -11850,7 +11692,7 @@ def command_process_parity_check_all(args: argparse.Namespace) -> int:
     index = locate_flow_root(project_root) / "reviews" / "parity" / "processes" / "index.md"
     result = "FAIL" if failed else ("WARN" if warned else "PASS")
     counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
-    write_yaml_file(
+    _core_common_yaml_io.write_yaml_file(
         summary,
         {
             "schema_version": 1,
@@ -11905,7 +11747,7 @@ def resource_parity_report(project_root: Path, kind: str, resource_id: str, stat
 def command_template_parity_check(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else ROOT
     if getattr(args, "project_root", None):
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
     template_id = safe_id(args.template, "template")
     candidates = [project_root / "templates" / f"{template_id}.yaml", project_root / "templates" / f"{template_id}.md", project_root / "templates" / args.template]
     found = next((path for path in candidates if path.is_file()), None)
@@ -11926,7 +11768,7 @@ def command_template_parity_check(args: argparse.Namespace) -> int:
 def command_knowledge_package_parity_check(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else ROOT
     if getattr(args, "project_root", None):
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
     package_id = safe_id(args.package, "package")
     path = project_root / "packages" / f"{package_id}.yaml"
     if not path.is_file():
@@ -11946,7 +11788,7 @@ def command_knowledge_package_parity_check(args: argparse.Namespace) -> int:
 def command_platform_parity_check(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else ROOT
     if getattr(args, "project_root", None):
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
     platform_id = safe_id(args.platform, "platform")
     candidates = [project_root / "templates" / f"{platform_id}.yaml", project_root / "templates" / f"{platform_id.replace('platform-', 'platform-contract-')}.yaml"]
     path = next((item for item in candidates if item.is_file()), None)
@@ -11970,7 +11812,7 @@ def command_platform_parity_check(args: argparse.Namespace) -> int:
 
 def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     process_result = command_process_parity_check_all(argparse.Namespace(project_root=str(project_root)))
     process_summary = locate_flow_root(project_root) / "artifacts" / "parity" / "processes" / "summary.yaml"
     process_status = "FAIL" if process_result else "PASS"
@@ -11990,7 +11832,7 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
     summary = locate_flow_root(project_root) / "artifacts" / "parity" / "summary.yaml"
     result = aggregate_status([process_status, *[str(item.get("result", "")) for item in resource_rows]])
     resource_counts = {status: sum(1 for item in resource_rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
-    write_yaml_file(
+    _core_common_yaml_io.write_yaml_file(
         summary,
         {
             "schema_version": 1,
@@ -12062,7 +11904,7 @@ def load_agent_registry(workplace_root: Path) -> dict[str, Any]:
 
 def save_agent_registry(workplace_root: Path, data: dict[str, Any]) -> None:
     ensure_agent_workplace_dirs(workplace_root)
-    write_yaml_file(workplace_agent_registry_path(workplace_root), data)
+    _core_common_yaml_io.write_yaml_file(workplace_agent_registry_path(workplace_root), data)
 
 
 def append_agent_ledger_event(workplace_root: Path, payload: dict[str, Any]) -> None:
@@ -12117,10 +11959,10 @@ def write_current_session_refs(workplace_root: Path, project_root: Path | None, 
         "last_seen_at": presence.get("last_seen_at"),
         "updated_at": now_utc(),
     }
-    json_write(project_current_session_path(project_root), current)
+    _core_common_json_io.json_write(project_current_session_path(project_root), current)
     project_id = str(presence.get("project_id") or "")
     if project_id:
-        json_write(workplace_current_session_path(workplace_root, project_id), current)
+        _core_common_json_io.json_write(workplace_current_session_path(workplace_root, project_id), current)
 
 
 def find_agent_presence(workplace_root: Path, *, agent_id: str | None = None, session_id: str | None = None, project_id: str | None = None) -> dict[str, Any]:
@@ -12135,7 +11977,7 @@ def write_agent_presence(workplace_root: Path, payload: dict[str, Any]) -> None:
     ensure_agent_workplace_dirs(workplace_root)
     agent_id = str(payload.get("agent_id") or "agent")
     session_id = str(payload.get("session_id") or agent_session_id(agent_id))
-    json_write(agent_presence_path(workplace_root, agent_id, session_id), payload)
+    _core_common_json_io.json_write(agent_presence_path(workplace_root, agent_id, session_id), payload)
 
 
 def agent_session_id(agent_id: str) -> str:
@@ -12407,7 +12249,7 @@ def load_lease(workplace_root: Path, lease_id: str) -> dict[str, Any]:
 def save_lease(workplace_root: Path, lease: dict[str, Any]) -> None:
     ensure_agent_workplace_dirs(workplace_root)
     with registry_file_lock(workplace_agent_leases_dir(workplace_root) / "registry"):
-        write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
+        _core_common_yaml_io.write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
 
 
 def command_agent_lease_grant(args: argparse.Namespace) -> int:
@@ -12500,7 +12342,7 @@ def mark_expired_agent_leases(workplace_root: Path) -> int:
         if expires and expires <= now:
             lease["status"] = "stale"
             lease["updated_at"] = now_utc()
-            write_yaml_file(path, lease)
+            _core_common_yaml_io.write_yaml_file(path, lease)
             changed += 1
     return changed
 
@@ -12513,7 +12355,7 @@ def mark_expired_agent_leases(workplace_root: Path) -> int:
 
 def command_process_route_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     routes = [item for item in _process_route_document_reader.read(project_root).get("routes", []) if isinstance(item, dict)]
     if getattr(args, "json", False):
         print(json.dumps({"routes": routes}, ensure_ascii=False, indent=2))
@@ -12527,7 +12369,7 @@ def command_process_route_list(args: argparse.Namespace) -> int:
 
 def command_process_route_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     return print_checks(_process_route_service.validate(project_root))
 
 
@@ -12543,14 +12385,14 @@ def command_process_route_doctor(args: argparse.Namespace) -> int:
 
 def save_handoff(project_root: Path, handoff: dict[str, Any]) -> None:
     handoff["updated_at"] = now_utc()
-    write_yaml_file(_handoff_document_reader.path(project_root, str(handoff.get("id") or "handoff")), handoff)
+    _core_common_yaml_io.write_yaml_file(_handoff_document_reader.path(project_root, str(handoff.get("id") or "handoff")), handoff)
 
 
 
 
 def command_handoff_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     route = _process_route_service.by_id(project_root, args.route)
     handoff_id = safe_id(args.id or f"handoff-{route.get('id')}", "handoff")
     root = _handoff_document_reader.directory(project_root, handoff_id)
@@ -12579,9 +12421,9 @@ def command_handoff_create(args: argparse.Namespace) -> int:
         return 0
     root.mkdir(parents=True, exist_ok=True)
     save_handoff(project_root, handoff)
-    write_yaml_file(root / "input-manifest.yaml", {"schema_version": 1, "handoff_id": handoff_id, "artifacts": handoff["input_artifacts"]})
-    write_yaml_file(root / "expected-output.yaml", {"schema_version": 1, "handoff_id": handoff_id, "expected_results": handoff["expected_results"]})
-    write_yaml_file(root / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff_id, "status": "pending", "artifacts": []})
+    _core_common_yaml_io.write_yaml_file(root / "input-manifest.yaml", {"schema_version": 1, "handoff_id": handoff_id, "artifacts": handoff["input_artifacts"]})
+    _core_common_yaml_io.write_yaml_file(root / "expected-output.yaml", {"schema_version": 1, "handoff_id": handoff_id, "expected_results": handoff["expected_results"]})
+    _core_common_yaml_io.write_yaml_file(root / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff_id, "status": "pending", "artifacts": []})
     (root / "handoff.md").write_text(f"# Handoff: {handoff_id}\n\nStatus: waiting_for_agent\n\nRoute: `{route.get('id')}`\n", encoding="utf-8")
     print(f"WROTE: {rel(root / 'handoff.yaml', project_root)}")
     return 0
@@ -12611,7 +12453,7 @@ def handoff_available_agents(args: argparse.Namespace, handoff: dict[str, Any], 
 
 def command_handoff_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     handoff = _handoff_document_reader.read(project_root, args.handoff)
     agents = handoff_available_agents(args, handoff, project_root)
     payload = {
@@ -12632,7 +12474,7 @@ def command_handoff_status(args: argparse.Namespace) -> int:
 
 def command_handoff_accept(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     handoff = _handoff_document_reader.read(project_root, args.handoff)
     handoff["status"] = "accepted"
     handoff["accepted_by"] = {"agent_id": safe_id(args.agent, "agent"), "session_id": args.session or "", "accepted_at": now_utc()}
@@ -12643,7 +12485,7 @@ def command_handoff_accept(args: argparse.Namespace) -> int:
 
 def command_handoff_start_target_run(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     handoff = _handoff_document_reader.read(project_root, args.handoff)
     run_id = safe_id(args.run or f"{handoff.get('id')}-target", "run")
     process_id = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or "task-batch-execution")
@@ -12660,7 +12502,7 @@ def command_handoff_start_target_run(args: argparse.Namespace) -> int:
 
 def command_handoff_return(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     handoff = _handoff_document_reader.read(project_root, args.handoff)
     artifacts = [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.artifact)]
     missing = [item for item in artifacts if not (project_root / item).is_file()]
@@ -12671,14 +12513,14 @@ def command_handoff_return(args: argparse.Namespace) -> int:
     handoff["returned_at"] = now_utc()
     handoff["return_artifacts"] = artifacts
     save_handoff(project_root, handoff)
-    write_yaml_file(_handoff_document_reader.directory(project_root, str(handoff.get("id"))) / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff.get("id"), "status": "returned", "artifacts": artifacts, "returned_at": handoff["returned_at"]})
+    _core_common_yaml_io.write_yaml_file(_handoff_document_reader.directory(project_root, str(handoff.get("id"))) / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff.get("id"), "status": "returned", "artifacts": artifacts, "returned_at": handoff["returned_at"]})
     print(f"RETURNED: {handoff.get('id')}")
     return 0
 
 
 def command_handoff_finalize(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     handoff = _handoff_document_reader.read(project_root, args.handoff)
     if str(handoff.get("status")) not in {"returned", "accepted", "in_progress"}:
         print(f"FAIL: handoff is not finalizable: {handoff.get('status')}")
@@ -12692,7 +12534,7 @@ def command_handoff_finalize(args: argparse.Namespace) -> int:
 
 def command_handoff_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     checks: list[Check] = []
     for root in sorted((locate_flow_root(project_root) / "handoffs").glob("*")):
         if not root.is_dir() or root.name == "runs":
@@ -12713,7 +12555,7 @@ def command_handoff_offer(args: argparse.Namespace) -> int:
 
 def command_agent_director_tick(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
     changed = mark_expired_agent_leases(workplace_root)
     for root in sorted((locate_flow_root(project_root) / "handoffs").glob("*")):
@@ -12786,7 +12628,7 @@ def command_agent_director_run(args: argparse.Namespace) -> int:
 
 def command_agent_director_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     rows: list[dict[str, Any]] = []
     for path in sorted((locate_flow_root(project_root) / "handoffs").glob("*/handoff.yaml")):
         handoff = load_yaml_document(path)
@@ -12804,7 +12646,7 @@ def continuation_path(project_root: Path, continuation_id: str) -> Path:
 
 def command_continuation_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     if getattr(args, "assignment", None) or getattr(args, "context_id", None):
         return continuation_command(args, "create", continuation_id=args.id, run_id=args.run,
                                     assignment_id=args.assignment, context_id=args.context_id,
@@ -12828,7 +12670,7 @@ def command_continuation_create(args: argparse.Namespace) -> int:
     if not getattr(args, "apply", False):
         print_plan("continuation-create dry run", [path], project_root)
         return 0
-    write_yaml_file(path, payload)
+    _core_common_yaml_io.write_yaml_file(path, payload)
     print(f"WROTE: {rel(path, project_root)}")
     return 0
 
@@ -12844,7 +12686,7 @@ def command_continuation_resume(args: argparse.Namespace) -> int:
 def continuation_command(args: argparse.Namespace, operation: str, **request: Any) -> int:
     from processforge_core.work.continuation import ContinuationService
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
     result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__]).request(operation, **request)
     print(json.dumps(result, ensure_ascii=False, indent=2) if getattr(args, "json", False) else dump_yaml(result))
@@ -12859,7 +12701,7 @@ def command_work_cancel(args: argparse.Namespace) -> int:
 
 def command_continuation_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     checks: list[Check] = []
     for path in sorted((locate_flow_root(project_root) / "continuations").glob("*.yaml")):
         payload = load_yaml_document(path)
@@ -12951,7 +12793,7 @@ def normalize_workplace_manifest(path: Path | None) -> Path | None:
 def command_runtime_driver_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     for driver_id, status, source in _runtime_driver_catalog_reader.ids(workplace_manifest=workplace_manifest, project_root=project_root):
         print(f"{driver_id}\t{status}\t{source}")
@@ -12961,7 +12803,7 @@ def command_runtime_driver_list(args: argparse.Namespace) -> int:
 def command_runtime_driver_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
@@ -12970,7 +12812,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
 def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
-        require_flow_root(project_root)
+        _run_task_inputs.require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     driver.pop("_source_path", None)
@@ -12984,9 +12826,6 @@ def supervisor_root(project_root: Path) -> Path:
     return locate_flow_root(project_root) / "runtime" / "supervisor"
 
 
-def json_write(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 
@@ -13065,7 +12904,7 @@ def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[
     emit_process_event(
         project_root,
         event_type,
-        process_id=task_process_id(task),
+        process_id=_run_task_inputs.task_process_id(task),
         subject=task_id,
         assignment_id_value=task_id,
         assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root),
@@ -13139,9 +12978,9 @@ def write_agent_run_state(
         reference = previous_state.get("prepared_input")
     if reference:
         state["prepared_input"] = reference
-    json_write(paths["status"], state)
+    _core_common_json_io.json_write(paths["status"], state)
     if command:
-        json_write(paths["command"], command)
+        _core_common_json_io.json_write(paths["command"], command)
     return state
 
 
@@ -13214,7 +13053,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         failure_reason = str(exit_marker.get("failure_reason") or "") or None
         state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
         DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
-        emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+        emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
         return state
     started_dt = parse_runtime_timestamp(started_at)
     timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
@@ -13228,7 +13067,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
             terminate_worker_pid(pid)
         finished_at = now_utc()
         state = write_agent_run_state(project_root, task, driver, "timed_out", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=-1, failure_reason="timeout", command=command, paths=paths)
-        json_write(paths["exit"], {"schema_version": 1, "exit_code": -1, "finished_at": finished_at, "status": "timed_out"})
+        _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": -1, "finished_at": finished_at, "status": "timed_out"})
         return state
     if exit_code is None:
         if proc is None and not process_pid_running(pid):
@@ -13237,24 +13076,24 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
                 observed_at = now_utc()
                 state = write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, failure_reason="pid not alive; waiting for durable exit contract", command=command, paths=paths)
                 state["lost_observed_at"] = observed_at
-                json_write(paths["status"], state)
+                _core_common_json_io.json_write(paths["status"], state)
                 return state
             if datetime.now(timezone.utc) < lost_observed_at + timedelta(seconds=0.25):
                 return state
             finished_at = now_utc()
             failure_reason = "process exited without durable exit contract"
             state = write_agent_run_state(project_root, task, driver, "unknown_exit", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=failure_reason, command=command, paths=paths)
-            json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
-            emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+            _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
+            emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
             return state
         else:
             return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
     finished_at = now_utc()
     final_status = "completed" if exit_code == 0 else "failed"
     state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
-    json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+    _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
-    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     return state
 
 
@@ -13339,7 +13178,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         prepared_input.write_once(prepared_path, document)
     except (OSError, ValueError, RuntimeError) as exc:
         raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
-    json_write(paths["workspace_access"], document["input"]["resources"])
+    _core_common_json_io.json_write(paths["workspace_access"], document["input"]["resources"])
     prompt_path = _work_paths.worker_prompt(project_root, run_id, task_id)
     prepared_input.local_file(project_root, rel(prompt_path, project_root))
     prompt_path.parent.mkdir(parents=True, exist_ok=True)
@@ -13351,7 +13190,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     # of a newly launched process.
     paths["exit"].unlink(missing_ok=True)
     write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
-    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.run.prepared", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
     diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
     diagnostics.emit("info", "worker.prepared", {"driver_id": driver.get("id"), "status": state_status}, component="worker")
     return task, driver, paths
@@ -13359,7 +13198,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
 
 def command_worker_run_prepare(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -13385,7 +13224,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
 
 def command_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -13464,10 +13303,10 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
                 print(f"FAIL: start failed for {task_id}: {exc}")
                 return 1
         write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
-        json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
+        _core_common_json_io.json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
         if detach:
             DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
-            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+            emit_process_event(project_root, "worker.run.started", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
             print(f"RUNNING: {task_id} pid={proc.pid}")
             return 0
     assert proc is not None
@@ -13476,22 +13315,22 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         finished_at = now_utc()
         final_status = "completed" if exit_code == 0 else "failed"
         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
-        json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+        _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     except subprocess.TimeoutExpired:
         proc.kill()
         exit_code = -1
         final_status = "timed_out"
         finished_at = now_utc()
         write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
-        json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+        _core_common_json_io.json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+    emit_process_event(project_root, "worker.run.finished", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
     return 0 if final_status == "completed" else 1
 
 
 def command_worker_run_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -13509,7 +13348,7 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
 
 def command_worker_run_stop(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -13535,7 +13374,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
 
 def command_worker_run_collect(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -13671,7 +13510,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         print(output, end="")
         if status:
             return status
-    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
+    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "report": _work_output_policy.expected_report(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
     prepared_input.write_once(completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]})
     if governed:
         print(f"COLLECTED: {task_id}; governed stage transition remains required")
@@ -13680,7 +13519,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
 
 def emit_worker_completion_event(project_root: Path, event_type: str, receipt_id: str, **kwargs: Any) -> dict[str, Any]:
     event_id = "evt_" + hashlib.sha256((receipt_id + ":" + event_type).encode("utf-8")).hexdigest()
-    path = event_runtime_paths(project_root)[0]
+    path = _run_task_inputs.event_runtime_paths(project_root)[0]
     if _process_event_journal.contains(path, event_id):
         event = _process_event_journal.get(path, event_id) or processforge_event(project_root, event_type, event_id=event_id, **kwargs)
         admit_process_event(project_root, event)
@@ -13708,7 +13547,7 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     }
     save_task(project_root, task)
     update_run_task_status(project_root, run_id, task_id, "failed")
-    emit_process_event(project_root, "task.failed", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "task.failed", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
 
 
 def default_supervisor_profile() -> dict[str, Any]:
@@ -13750,7 +13589,7 @@ def supervisor_state_path(project_root: Path) -> Path:
 
 def write_supervisor_state(project_root: Path, state: dict[str, Any]) -> None:
     state["updated_at"] = now_utc()
-    json_write(supervisor_state_path(project_root), state)
+    _core_common_json_io.json_write(supervisor_state_path(project_root), state)
 
 
 def historical_worker_capture(project_root: Path, run_id: str, task_id: str) -> bool:
@@ -13825,9 +13664,9 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
 def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
     """Observe one pass, retaining task outcomes separately from execution errors."""
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
-    run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else active_run_ids(project_root)
+    run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else _run_task_inputs.active_run_ids(project_root)
     started: list[str] = []
     collected: list[str] = []
     skipped: list[str] = []
@@ -13980,14 +13819,14 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_supervisor_run(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
     loop = profile.get("loop") if isinstance(profile.get("loop"), dict) else {}
     interval_arg = getattr(args, "interval", None)
     max_ticks_arg = getattr(args, "max_ticks", None)
     interval = float(interval_arg if interval_arg is not None else (loop.get("interval_seconds") or 1))
     max_ticks = int(max_ticks_arg if max_ticks_arg is not None else (loop.get("max_ticks") or 1))
-    run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else active_run_ids(project_root)
+    run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else _run_task_inputs.active_run_ids(project_root)
     final_drain_timeout = supervisor_final_drain_timeout(project_root, run_ids, getattr(args, "final_drain_timeout", None))
     drain_interval = min(max(interval if interval > 0 else 0.05, 0.05), 0.25)
     stop_file = project_root / ".pf" / "runtime" / "supervisor" / "stop.request"
@@ -14035,7 +13874,7 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
 
 def command_supervisor_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     state = json_read(supervisor_state_path(project_root))
     if not state:
         print("STATUS: not-started")
@@ -14046,7 +13885,7 @@ def command_supervisor_status(args: argparse.Namespace) -> int:
 
 def command_supervisor_stop(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     stop_file = supervisor_root(project_root) / "stop.request"
     stop_file.parent.mkdir(parents=True, exist_ok=True)
     stop_file.write_text(now_utc() + "\n", encoding="utf-8")
@@ -14461,8 +14300,8 @@ def write_orchestrator_config_resolution_artifacts(project_root: Path, plan: dic
     run_id = str(normalized["run"]["id"])
     root = _work_paths.run_root(project_root, run_id)
     root.mkdir(parents=True, exist_ok=True)
-    write_yaml_file(root / "orchestrator-shell-plan.normalized.yaml", normalized)
-    write_yaml_file(root / "config-resolution-report.yaml", build_config_resolution_report(project_root, plan))
+    _core_common_yaml_io.write_yaml_file(root / "orchestrator-shell-plan.normalized.yaml", normalized)
+    _core_common_yaml_io.write_yaml_file(root / "config-resolution-report.yaml", build_config_resolution_report(project_root, plan))
 
 
 def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) -> None:
@@ -14494,7 +14333,7 @@ def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) ->
 
 def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     run_id = safe_id(args.run, "run")
     path = orchestrator_plan_path(project_root, run_id)
     plan = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else _worker_plan_policy.default_task_plan(run_id, args.title)
@@ -14503,7 +14342,7 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
     if not args.apply or getattr(args, "dry_run", False):
         print_plan("orchestrator-plan create dry run", [path], project_root)
         return 0
-    write_yaml_file(path, plan)
+    _core_common_yaml_io.write_yaml_file(path, plan)
     emit_process_event(project_root, "orchestrator.plan.created", process_id="multi-agent-task-orchestration", subject=run_id, payload={"plan": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
     return 0
@@ -14511,7 +14350,7 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
 
 def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
     result = print_checks(_worker_plan_validation_service.validate(project_root, plan))
     if getattr(args, "write_normalized", None):
@@ -14519,7 +14358,7 @@ def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
         if not output.is_absolute():
             output = (project_root / output).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
-        write_yaml_file(output, normalized_orchestrator_plan(project_root, plan))
+        _core_common_yaml_io.write_yaml_file(output, normalized_orchestrator_plan(project_root, plan))
         print(f"WROTE: {rel(output, project_root)}")
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     emit_process_event(project_root, "orchestrator.plan.reviewed", process_id="multi-agent-task-orchestration", subject=str(run.get("id") or "run"), payload={"result": "fail" if result else "pass"})
@@ -14528,7 +14367,7 @@ def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
 
 def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = str(task.get("run_id") or "")
@@ -14541,14 +14380,14 @@ def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
         return 0
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(prompt, encoding="utf-8")
-    emit_process_event(project_root, "worker.launch_prompt.created", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
+    emit_process_event(project_root, "worker.launch_prompt.created", process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(output, project_root)}")
     return 0
 
 
 def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
     plan = apply_orchestrator_model_override(plan, getattr(args, "model", None))
     checks = _worker_plan_validation_service.validate(project_root, plan)
@@ -14586,7 +14425,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             if "max_parallel_workers" in runtime:
                 run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
             save_run_locked(project_root, run_doc)
-    write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
+    _core_common_yaml_io.write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
     for order, worker in enumerate(workers, start=1):
         if not isinstance(worker, dict):
             continue
@@ -14715,7 +14554,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
 
 def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     run_id = safe_id(str(run.get("id") or "run"), "run")
@@ -14744,7 +14583,7 @@ def work_resource_service(project_root: Path, explicit_workplace: str | None = N
 
 def command_run_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     run_id = safe_id(args.id, "run")
     process_id = safe_id(args.process, "task-batch-execution")
     require_official_process_active(project_root, process_id)
@@ -14783,7 +14622,7 @@ def command_run_create(args: argparse.Namespace) -> int:
 
 def command_run_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     root = locate_flow_root(project_root) / "runs"
     runs = sorted(root.glob("*/run.yaml")) if root.is_dir() else []
     if not runs:
@@ -14822,7 +14661,7 @@ def command_run_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run_id = str(args.run or "").strip()
     with registry_file_lock(_work_paths.run_document(project_root, run_id)):
-        checks = validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
+        checks = _run_task_consistency_service.validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
     result = print_checks(checks)
     emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
     return result
@@ -15025,7 +14864,7 @@ def _command_task_create_locked(args: argparse.Namespace) -> int:
             print("OVERLAP_CHECK: " + overlap_check["status"])
         return 0
     _work_paths.task_artifacts(project_root, run_id, task_id).mkdir(parents=True, exist_ok=True)
-    write_yaml_file(path, task)
+    _core_common_yaml_io.write_yaml_file(path, task)
     tasks.append({"id": task_id, "assignment": rel(path, project_root), "status": "open", "order": order, "blocking": True})
     run["tasks"] = tasks
     save_run_locked(project_root, run)
@@ -15056,12 +14895,12 @@ def _command_task_start_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
-    require_official_process_active(project_root, task_process_id(task))
+    require_official_process_active(project_root, _run_task_inputs.task_process_id(task))
     task["status"] = "in_progress"
     save_task(project_root, task)
     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "in_progress")
     for event_type in ["task.started", "assignment.started"]:
-        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
+        emit_process_event(project_root, event_type, process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
     print(f"STARTED: {task_id}")
     return 0
 
@@ -15094,7 +14933,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
     save_task(project_root, task)
     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "done")
     for event_type in ["task.completed", "assignment.completed"]:
-        event_kwargs = dict(process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
+        event_kwargs = dict(process_id=_run_task_inputs.task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
         if getattr(args, "completion_id", None):
             emit_worker_completion_event(project_root, event_type, args.completion_id, **event_kwargs)
         else:
@@ -15108,7 +14947,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
 def command_task_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
-    checks = validate_task_consistency(project_root, task_id)
+    checks = _run_task_consistency_service.validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
     task = _worker_assignment_service.load(project_root, task_id)
     emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": _work_output_policy.fingerprint(project_root, task)})
@@ -15123,9 +14962,9 @@ def command_iteration_add(args: argparse.Namespace) -> int:
     if kind not in ITERATION_KINDS:
         raise SystemExit(f"FAIL: invalid iteration kind: {kind}")
     status = args.status
-    if status not in ITERATION_STATUSES:
+    if status not in _core_work_consistency.ITERATION_STATUSES:
         raise SystemExit(f"FAIL: invalid iteration status: {status}")
-    iter_id = safe_id(args.id, "iter") if args.id else next_iteration_id(task)
+    iter_id = safe_id(args.id, "iter") if args.id else _run_task_inputs.next_iteration_id(task)
     iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
     if any(isinstance(item, dict) and item.get("id") == iter_id for item in iterations):
         raise SystemExit(f"FAIL: duplicate iteration id: {iter_id}")
@@ -15143,7 +14982,7 @@ def command_iteration_add(args: argparse.Namespace) -> int:
     if status == "in_progress":
         task["status"] = "debugging" if kind == "debug" else "in_progress"
     save_task(project_root, task)
-    emit_process_event(project_root, "iteration.added", process_id=task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    emit_process_event(project_root, "iteration.added", process_id=_run_task_inputs.task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
     print(f"ADDED: {iter_id}")
     return 0
 
@@ -15153,7 +14992,7 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     status = args.status
-    if status not in ITERATION_STATUSES:
+    if status not in _core_work_consistency.ITERATION_STATUSES:
         raise SystemExit(f"FAIL: invalid iteration status: {status}")
     iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
     found = False
@@ -15172,14 +15011,14 @@ def command_iteration_complete(args: argparse.Namespace) -> int:
         return 0
     task["iterations"] = iterations
     save_task(project_root, task)
-    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=_run_task_inputs.task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(_work_paths.assignment_document(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
     print(f"UPDATED: {args.iteration}")
     return 0
 
 
 def command_hooks_dispatch(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     hook_checks = _hook_configuration_reader.validate(project_root)
     hook_failures = [item for item in hook_checks if item.level == "FAIL"]
     if hook_failures:
@@ -15217,10 +15056,10 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
 
 def command_events_validate(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     flow_root = locate_flow_root(project_root)
     failures: list[str] = []
-    events_path = event_runtime_paths(project_root)[0]
+    events_path = _run_task_inputs.event_runtime_paths(project_root)[0]
     for line_number, data, error in iter_process_events(events_path):
         label = f"{rel(events_path, project_root)}:{line_number}"
         if error:
@@ -15248,7 +15087,7 @@ def command_events_validate(args: argparse.Namespace) -> int:
 
 def command_chat_record(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     if args.content_file:
         content = Path(args.content_file).expanduser().read_text(encoding="utf-8", errors="replace")
     elif args.content is not None:
@@ -15278,7 +15117,7 @@ def command_chat_record(args: argparse.Namespace) -> int:
 
 def command_chat_export(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     if args.target != "wtaicc":
         raise SystemExit("FAIL: only --target wtaicc is supported by the MVP")
     if not args.outbox:
@@ -15322,7 +15161,7 @@ def command_context_resolve(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     if getattr(args, "platform", None) or getattr(args, "process", None) or getattr(args, "specialization", None):
         flow_root = locate_flow_root(project_root)
         workplace_manifest = resolve_workplace_manifest(flow_root / "process-forge.local.yaml") if (flow_root / "process-forge.local.yaml").is_file() else None
@@ -15351,7 +15190,7 @@ def command_context_resolve(args: argparse.Namespace) -> int:
 
 def command_context_compile(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
+    _run_task_inputs.require_flow_root(project_root)
     assignment = Path(args.assignment).expanduser().resolve()
     print("DEPRECATED: context-compile is a compatibility command. Use assignment-capsule with YAML front matter for .pf projects.")
     ecp_path, capsule_path, conflict_report = compile_execution_context(
@@ -15396,7 +15235,7 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
 
 def command_doctor_context(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    flow_root = require_flow_root(project_root)
+    flow_root = _run_task_inputs.require_flow_root(project_root)
     checks: list[Check] = []
     manifest = flow_root / "process-forge.yaml"
     checks.append(check("PASS" if manifest.is_file() else "FAIL", f"{rel(manifest, project_root)} found"))
@@ -15486,7 +15325,7 @@ def command_doctor_context(args: argparse.Namespace) -> int:
 
 def command_doctor_project(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    flow_root = require_flow_root(project_root)
+    flow_root = _run_task_inputs.require_flow_root(project_root)
     checks: list[Check] = []
     manifest = flow_root / "process-forge.yaml"
     local_manifest = flow_root / "process-forge.local.yaml"
@@ -16049,7 +15888,7 @@ def command_self_update_check(args: argparse.Namespace) -> int:
 
 def command_project_upgrade_check(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    flow_root = require_flow_root(project_root)
+    flow_root = _run_task_inputs.require_flow_root(project_root)
     manifest = load_yaml_document(flow_root / "process-forge.yaml")
     process_forge_data = manifest.get("process_forge", {}) if isinstance(manifest.get("process_forge"), dict) else {}
     current = str(args.current_version or process_forge_data.get("version") or "1.0.0")
@@ -18684,7 +18523,7 @@ def command_platform_contract_install(args: argparse.Namespace) -> int:
 
 def command_diagnostics_configure(args: argparse.Namespace) -> int:
     project = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project)
+    _run_task_inputs.require_flow_root(project)
     path = project / ".pf" / "diagnostics.json"
     options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
     def proposal():
@@ -18715,7 +18554,7 @@ def command_diagnostics_configure(args: argparse.Namespace) -> int:
 
 def command_diagnostics_status(args: argparse.Namespace) -> int:
     project = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project)
+    _run_task_inputs.require_flow_root(project)
     options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
     logger = diagnostics.for_project(project, run_id=args.run_id, session_id=args.session_id, invocation=options)
     root = project / ".pf" / "runtime" / "diagnostics"
@@ -18727,7 +18566,7 @@ def command_diagnostics_status(args: argparse.Namespace) -> int:
 
 def command_diagnostics_export(args: argparse.Namespace) -> int:
     project = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project)
+    _run_task_inputs.require_flow_root(project)
     check = project_context_check_result(project)
     metadata = {"context_check": {k: check.get(k) for k in ("snapshot_id", "status", "reasons", "broken_refs", "stale_resources", "policy_action")},
                 "entry_build": diagnostics.build_identity(__file__)}
@@ -18751,7 +18590,7 @@ def build_parser() -> argparse.ArgumentParser:
     ActionsCommandParser(execute=ActionsCommand(
         parser_factory=build_parser,
         execution_factory=process_execution_service,
-        require_flow_root=require_flow_root,
+        require_flow_root=_run_task_inputs.require_flow_root,
         dump_yaml=dump_yaml,
         version=PROCESSFORGE_VERSION,
     ).execute).register(sub.add_parser)
@@ -18780,7 +18619,7 @@ def build_parser() -> argparse.ArgumentParser:
     agent_entry_commands = AgentEntryCommandParser(
         agent_entry=AgentEntryCommand().execute,
         agent_start_prompt=AgentStartPromptCommand(
-            require_flow_root=require_flow_root,
+            require_flow_root=_run_task_inputs.require_flow_root,
             start_prompt_renderer=default_start_agent_here,
         ).execute,
         global_agents_section=command_global_agents_section,
@@ -19136,22 +18975,22 @@ def build_parser() -> argparse.ArgumentParser:
         work_cancel=command_work_cancel,
         work_resource_read=WorkResourceReadCommand(
             resource_factory=work_resource_service,
-            require_flow_root=require_flow_root,
+            require_flow_root=_run_task_inputs.require_flow_root,
             dump_yaml=dump_yaml,
         ).execute,
         work_start=WorkStartCommand(
             execution_factory=process_execution_service,
-            require_flow_root=require_flow_root,
+            require_flow_root=_run_task_inputs.require_flow_root,
             dump_yaml=dump_yaml,
         ).execute,
         work_state=WorkStateCommand(
             execution_factory=process_execution_service,
-            require_flow_root=require_flow_root,
+            require_flow_root=_run_task_inputs.require_flow_root,
             dump_yaml=dump_yaml,
         ).execute,
         work_transition=WorkTransitionCommand(
             execution_factory=process_execution_service,
-            require_flow_root=require_flow_root,
+            require_flow_root=_run_task_inputs.require_flow_root,
             dump_yaml=dump_yaml,
         ).execute,
     )
@@ -19178,7 +19017,7 @@ def build_parser() -> argparse.ArgumentParser:
         run_list=command_run_list,
         run_status=command_run_status,
         run_summary=command_run_summary,
-        run_statuses=RUN_STATUSES,
+        run_statuses=_core_work_consistency.RUN_STATUSES,
     )
     runs_commands.register(sub.add_parser)
 
@@ -19195,7 +19034,7 @@ def build_parser() -> argparse.ArgumentParser:
         iteration_add=command_iteration_add,
         iteration_complete=command_iteration_complete,
         iteration_kinds=ITERATION_KINDS,
-        iteration_statuses=ITERATION_STATUSES,
+        iteration_statuses=_core_work_consistency.ITERATION_STATUSES,
     )
     iterations_commands.register(sub.add_parser)
 
@@ -19223,6 +19062,12 @@ def main(argv: list[str] | None = None) -> int:
         project_id_resolver=project_id,
         entry_file=__file__,
     ).run(argv)
+
+
+
+# Concrete owners retain the distribution root and existing request-scoped readers.
+_run_task_consistency_service = RunTaskConsistencyService(ROOT)
+_run_task_inputs = RunTaskInputReader()
 
 
 if __name__ == "__main__":

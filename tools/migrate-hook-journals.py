@@ -31,7 +31,9 @@ def _signature(path: Path):
 
 
 def _sources(project: Path, workplace: Path):
-    flow = core.require_flow_root(project)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    flow = RunTaskInputReader().require_flow_root(project)
     events = flow / "runtime/events/events.ndjson"
     raw_root = workplace / "runtime/agent-events"
     sources = [("events", events)] if events.is_file() else []

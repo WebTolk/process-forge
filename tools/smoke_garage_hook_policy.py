@@ -52,7 +52,9 @@ class PolicyTests(unittest.TestCase):
         path = self.core.locate_flow_root(self.project) / "process-forge.yaml"
         document = self.core.read_yaml_file(path)
         document.setdefault("coordination", {})["mode"] = value
-        self.core.write_yaml_file(path, document)
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(path, document)
 
     def envelope(self, event="UserPromptSubmit", **values):
         return codex_hooks.native_envelope({"hook_event_name": event, "cwd": str(self.project),
@@ -145,14 +147,18 @@ class PolicyTests(unittest.TestCase):
         original = self.core.read_yaml_file(path)
         changed = dict(original)
         changed["coordination"] = {**original.get("coordination", {}), "default_project_mode": "organized"}
-        self.core.write_yaml_file(path, changed)
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(path, changed)
         try:
             _config, enabled = self.host.hook_configuration(self.project, self.workplace, self.core)
             self.assertTrue(enabled)
             self.mode("simple")
             self.assertFalse(self.host.hook_configuration(self.project, self.workplace, self.core)[1])
         finally:
-            self.core.write_yaml_file(path, original)
+            import processforge_core.common.yaml_io as _core_common_yaml_io
+
+            _core_common_yaml_io.write_yaml_file(path, original)
 
     def test_forge_admits_even_with_false_overrides(self):
         self.mode("organized")

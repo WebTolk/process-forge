@@ -23,7 +23,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix="pf-sqlite-runtime-") as directory:
         workplace, project = setup_basic_project(Path(directory), "project")
         core.configuration_service(workplace / "configuration.yaml").update({"logging.events": False, "logging.raw_hooks": False})
-        path = core.event_runtime_paths(project)[0]
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        path = RunTaskInputReader().event_runtime_paths(project)[0]
         journal = ProcessEventJournal()
         baseline = journal.count(path)
         start = native_envelope({"hook_event_name": "SessionStart", "source": "startup", "cwd": str(project), "session_id": "live"})
@@ -84,16 +86,19 @@ def main():
             assert build.call_count == 1
     with fixture() as (workplace, project, started):
         config = project / ".pf/configuration.yaml"
-        core.write_yaml_file(config, ProjectPFConfig().with_changes({"logging.events": False}).to_dict())
-        before = ProcessEventJournal().count(core.event_runtime_paths(project)[0])
+        from processforge_core.work.consistency import RunTaskInputReader
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(config, ProjectPFConfig().with_changes({"logging.events": False}).to_dict())
+        before = ProcessEventJournal().count(RunTaskInputReader().event_runtime_paths(project)[0])
         service = ProcessExecutionService(project, workplace, core)
         _proof, evidence = prepare(service, started, project)
         intent = interrupt(service, started, project, evidence, "event", "after")
         result = ProcessExecutionService(project, workplace, core).transition(run_id=started["run_id"], outcome="completed")
         assert result["action"] == "run_completed", result
         assert not paths(project, started)["intent"].exists()
-        assert ProcessEventJournal().count(core.event_runtime_paths(project)[0]) == before
-        assert all(core.process_event_exists(core.event_runtime_paths(project)[0], event["event_id"]) for event in intent["final"]["events"])
+        assert ProcessEventJournal().count(RunTaskInputReader().event_runtime_paths(project)[0]) == before
+        assert all(core.process_event_exists(RunTaskInputReader().event_runtime_paths(project)[0], event["event_id"]) for event in intent["final"]["events"])
     print("PASS: raw/history off, live overrides, conversation delivery, no ingress rebuild/scan, unchanged tick and Work recovery without history")
 
 

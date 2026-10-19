@@ -104,12 +104,16 @@ def make_shell_driver(project: Path) -> Path:
         "model_args": [],
     }
     path = project / ".pf" / "runtime" / "prepared-offline-driver.yaml"
-    core.write_yaml_file(path, driver)
+    import processforge_core.common.yaml_io as _core_common_yaml_io
+
+    _core_common_yaml_io.write_yaml_file(path, driver)
     return path
 
 
 def event_rows(project: Path) -> list[dict[str, Any]]:
-    path = core.event_runtime_paths(project)[0]
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    path = RunTaskInputReader().event_runtime_paths(project)[0]
     if not path.is_file():
         return []
     return [row for _sequence, row, _error in core.iter_process_events(path)]
@@ -453,7 +457,9 @@ def main() -> int:
         empty_process["initial_stage"] = initial["id"]
         initial["resource_subset"] = []
         empty_process_path = project / "processes" / "custom" / "prepared-empty-subset.yaml"
-        core.write_yaml_file(empty_process_path, empty_process)
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(empty_process_path, empty_process)
         pf("run-create", "--project-root", str(project), "--id", "prepared-subset-run", "--title", "Stage subset regression", "--process", "prepared-empty-subset", "--apply")
         subset_args = ["task-create", "--project-root", str(project), "--run", "prepared-subset-run", "--id", "empty-subset-task",
                        "--title", "empty-subset-task", "--process", "prepared-empty-subset", "--stage", initial["id"], "--execution-mode", "docs_only",

@@ -39,7 +39,9 @@ def main():
             process.join(60)
             assert process.exitcode == 0, process.exitcode
         elapsed = time.perf_counter() - started
-        path = core.event_runtime_paths(project)[0]
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        path = RunTaskInputReader().event_runtime_paths(project)[0]
         journal = ProcessEventJournal()
         assert journal.count(path) == 301
         assert len(journal.page(path, session_id="session-3")) == 50

@@ -146,7 +146,9 @@ def failure_correlation_journal(root):
             with d.span("evidence-check"):
                 pass
         detail_counts.append(len(records))
-    path, _ = core.event_runtime_paths(root)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    path, _ = RunTaskInputReader().event_runtime_paths(root)
     rows = [row for _sequence, row, _error in core.iter_process_events(path)]
     for row in rows:
         events.append({key: row[key] for key in ("event_type", "data", "process", "assignment")})

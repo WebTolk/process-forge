@@ -4,6 +4,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .text import ensure_trailing_newline
+from .yaml_dump import dump_yaml
+
 
 def _parse_scalar(value: str) -> Any:
     value = value.strip()
@@ -79,3 +82,8 @@ def read_yaml_file(path: Path) -> dict[str, Any]:
     if error:
         raise SystemExit(f"FAIL: {path} is invalid YAML: {error}")
     return data
+
+
+def write_yaml_file(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")

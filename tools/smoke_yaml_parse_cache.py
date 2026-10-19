@@ -204,14 +204,16 @@ class YamlCacheTests(unittest.TestCase):
                         result.append(str(value.get("id") or path.parent.name))
                 return result
 
-            self.assertEqual(core.active_run_ids(project), legacy())
-            self.assertEqual(core.active_run_ids(project), ["first", "c-missing-id", "123", "first", "last"])
+            from processforge_core.work.consistency import RunTaskInputReader
+
+            self.assertEqual(RunTaskInputReader().active_run_ids(project), legacy())
+            self.assertEqual(RunTaskInputReader().active_run_ids(project), ["first", "c-missing-id", "123", "first", "last"])
             added = project / ".pf/runs/new"
             added.mkdir()
             (added / "run.yaml").write_text("id: new\nstatus: open\n", encoding="utf-8")
-            self.assertEqual(core.active_run_ids(project), legacy())
+            self.assertEqual(RunTaskInputReader().active_run_ids(project), legacy())
             (project / ".pf/runs/a-first/run.yaml").unlink()
-            self.assertEqual(core.active_run_ids(project), legacy())
+            self.assertEqual(RunTaskInputReader().active_run_ids(project), legacy())
 
 
 if __name__ == "__main__":

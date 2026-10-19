@@ -21,7 +21,9 @@ def suite(cls,root):
         if "output_checks" in cls.__dataclass_fields__:
             kwargs={"output_checks":vars(core).get("required_output_checks"),
                     "verification_fingerprint":vars(core).get("task_verification_fingerprint")}
-        return cls(root,None,core,**kwargs)
+        instance=cls(root,None,core,**kwargs)
+        object.__setattr__(instance,'_event_paths',vars(core).get('event_runtime_paths'))
+        return instance
     (root/'events.sqlite3').unlink(missing_ok=True)
     assignment={'id':'task'}
     rows=[]

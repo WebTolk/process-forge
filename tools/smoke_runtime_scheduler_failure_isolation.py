@@ -29,14 +29,18 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-runtime-isolation-") as raw:
         root = Path(raw)
         workplace = root / "workplace"
-        core.write_yaml_file(workplace / "workplace.yaml", {
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(workplace / "workplace.yaml", {
             "schema_version": 1, "id": "fixture-workplace",
             "coordination": {"default_project_mode": "simple", "director_enabled": False},
         })
         projects = [root / "bad-project", root / "good-project"]
         state = host.load_state(workplace)
         for project in projects:
-            core.write_yaml_file(project / ".pf/process-forge.yaml", {
+            import processforge_core.common.yaml_io as _core_common_yaml_io
+
+            _core_common_yaml_io.write_yaml_file(project / ".pf/process-forge.yaml", {
                 "schema_version": 1, "project": {"id": project.name},
                 "coordination": {"mode": "simple"},
                 "paths": {"runtime": "runtime", "assignments": "assignments"},
@@ -45,7 +49,7 @@ def main() -> int:
         host.save_state(workplace, state, core)
         valid_cache = host.state_path(workplace).read_bytes()
         bad_run = projects[0] / ".pf/runs/broken/run.yaml"
-        core.write_yaml_file(bad_run, {
+        _core_common_yaml_io.write_yaml_file(bad_run, {
             "id": "broken", "status": "in_progress", "tasks": [{"id": "missing"}],
         })
         runtime = service.RuntimeProcess(workplace, core, interval=0.25)
@@ -73,7 +77,9 @@ def main() -> int:
             assert any(item.get("project_id") == "good-project" for item in payload["projects"]), payload
             assert thread.is_alive() and not escaped, escaped
             assert runtime.status_payload()["health"] == "degraded"
-            core.write_yaml_file(bad_run, {"id": "broken", "status": "in_progress", "tasks": []})
+            import processforge_core.common.yaml_io as _core_common_yaml_io
+
+            _core_common_yaml_io.write_yaml_file(bad_run, {"id": "broken", "status": "in_progress", "tasks": []})
             wait_for(lambda: runtime.status_payload()["health"] == "ready")
             payload = runtime.state["last_scheduler_result"]
             assert {item["project_id"] for item in payload["projects"]} == {p.name for p in projects}, payload
@@ -82,12 +88,12 @@ def main() -> int:
             # a successful observation leaves the scheduler operational.
             task_id = "old-failed-worker"
             assignment = projects[0] / f".pf/assignments/{task_id}.yaml"
-            core.write_yaml_file(assignment, {"id": task_id, "run_id": "broken", "status": "failed"})
+            _core_common_yaml_io.write_yaml_file(assignment, {"id": task_id, "run_id": "broken", "status": "failed"})
             from processforge_core.work.paths import WorkPaths
             worker_status = WorkPaths().worker_run(projects[0], "broken", task_id)["status"]
             worker_status.parent.mkdir(parents=True, exist_ok=True)
             worker_status.write_text(json.dumps({"status": "failed", "driver_id": "manual", "failure_reason": "fixture failure"}), encoding="utf-8")
-            core.write_yaml_file(bad_run, {"id": "broken", "status": "in_progress", "tasks": [{"id": task_id}]})
+            _core_common_yaml_io.write_yaml_file(bad_run, {"id": "broken", "status": "in_progress", "tasks": [{"id": task_id}]})
             before = (assignment.read_bytes(), worker_status.read_bytes())
             wait_for(lambda: any(task_id in row.get("inspector_result", {}).get("failed", []) for row in runtime.state["last_scheduler_result"]["projects"]))
             assert runtime.status_payload()["health"] == "ready", runtime.state
@@ -100,14 +106,14 @@ def main() -> int:
             assert before == (assignment.read_bytes(), worker_status.read_bytes())
             # A genuine Director failure must still degrade even with valid
             # structured Inspector metadata; restoration must recover health.
-            core.write_yaml_file(workplace / "workplace.yaml", {
+            _core_common_yaml_io.write_yaml_file(workplace / "workplace.yaml", {
                 "schema_version": 1, "id": "fixture-workplace",
                 "coordination": {"default_project_mode": "simple", "director_enabled": True},
             })
             manifest = projects[0] / ".pf/process-forge.yaml"
             configuration = core.read_yaml_file(manifest)
             configuration["coordination"]["mode"] = "organized"
-            core.write_yaml_file(manifest, configuration)
+            _core_common_yaml_io.write_yaml_file(manifest, configuration)
             with patch.object(core, "command_agent_director_tick", return_value=1):
                 wait_for(lambda: runtime.status_payload()["health"] == "degraded")
             wait_for(lambda: runtime.status_payload()["health"] == "ready")

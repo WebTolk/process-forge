@@ -127,7 +127,9 @@ def setup_worker_project(root: Path) -> tuple[Path, Path, Path, str, str, str, s
     definition.update(id="prompt-only", name="Prompt-only fixture")
     process_path = project / "processes/custom/prompt-only.yaml"
     process_path.parent.mkdir(parents=True, exist_ok=True)
-    core.write_yaml_file(process_path, definition)
+    import processforge_core.common.yaml_io as _core_common_yaml_io
+
+    _core_common_yaml_io.write_yaml_file(process_path, definition)
     pf("project-context-refresh", "--project-root", str(project))
     second = root / "foreign-project"
     second.mkdir()

@@ -44,14 +44,16 @@ def check_marker_parity(pf, root: Path) -> None:
         marker.parent.mkdir(parents=True)
         marker.write_text("fixture\n", encoding="utf-8")
         flow = project / ".pf"
-        pf.write_yaml_file(flow / "project-classifiers" / "fixture.yaml", {
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(flow / "project-classifiers" / "fixture.yaml", {
             "schema_version": 1, "kind": "processforge.project_classifier",
             "id": "fixture.parity", "status": "active",
             "rules": [{"id": name, "when": {"all": [{"exists": path}]},
                        "classify_as": {"project_types": [f"fixture.{name}"]}}
                       for name, path in rules],
         })
-        pf.write_yaml_file(flow / "registries" / "project-classifiers.yaml", {
+        _core_common_yaml_io.write_yaml_file(flow / "registries" / "project-classifiers.yaml", {
             "schema_version": 1, "project_classifiers": [
                 {"id": "fixture.parity", "path": "project-classifiers/fixture.yaml", "status": "active"}],
         })

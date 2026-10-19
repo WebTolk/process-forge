@@ -90,7 +90,9 @@ def verify_final(project, started, intent):
         require(task == intent["final"]["assignment"] and run == intent["final"]["run"], "terminal payload changed on retry")
         for key, journal_key in [("summary", "summary"), ("handoff", "handoff"), ("index", "task_index")]:
             require(owned[key].read_text(encoding="utf-8") == intent["final"][journal_key]["content"], f"{key} content changed on retry")
-        events = [row for _sequence, row, _error in core.iter_process_events(core.event_runtime_paths(project)[0])]
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        events = [row for _sequence, row, _error in core.iter_process_events(RunTaskInputReader().event_runtime_paths(project)[0])]
         for spec in intent["final"]["events"]:
             require(sum(item.get("event_id") == spec["event_id"] for item in events) == 1, spec)
     summary = owned["summary"].read_text(encoding="utf-8")
