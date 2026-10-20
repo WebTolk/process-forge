@@ -53,6 +53,7 @@ def _bootstrap_repo_src() -> Path:
 
 ROOT = _bootstrap_repo_src()
 
+from processforge_core.resources.identity import ResourceIdentityPolicy, RESOURCE_ID_PATTERN as _resource_id_pattern, WINDOWS_RESERVED_DEVICE_BASENAMES as _windows_reserved_device_basenames
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -1193,7 +1194,7 @@ def recover_authoring_transaction(journal_path: Path, *, apply: bool = True) -> 
 
 def command_authoring_transaction_recover(args: argparse.Namespace) -> int:
     runtime_root = Path(args.runtime_root).expanduser().resolve()
-    transaction_id = validate_resource_id(str(args.transaction), "authoring transaction")
+    transaction_id = _resource_identity_policy.validate_resource_id(str(args.transaction), "authoring transaction")
     journal_path = runtime_root / "authoring-transactions" / transaction_id / "journal.yaml"
     if not journal_path.is_file():
         raise SystemExit(f"FAIL: authoring transaction journal not found: {journal_path}")
@@ -1248,53 +1249,10 @@ def rel(path: Path, root: Path) -> str:
 
 
 
-RESOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
-WINDOWS_RESERVED_DEVICE_BASENAMES = {
-    "con",
-    "prn",
-    "aux",
-    "nul",
-    *{f"com{index}" for index in range(1, 10)},
-    *{f"lpt{index}" for index in range(1, 10)},
-}
 
 
-def validate_resource_id(raw: str, resource_kind: str = "resource") -> str:
-    value = str(raw)
-    invalid_reason = ""
-    if not value:
-        invalid_reason = "must not be empty"
-    elif value != value.strip() or any(ord(char) < 32 or ord(char) == 127 for char in value):
-        invalid_reason = "must not contain whitespace or control characters"
-    elif "%" in value:
-        invalid_reason = "must not contain percent-encoded path characters"
-    elif "/" in value or "\\" in value:
-        invalid_reason = "must not contain path separators"
-    elif ":" in value or re.match(r"^[a-zA-Z]:", value):
-        invalid_reason = "must not contain drive, URI, or alternate-stream syntax"
-    elif value.endswith((".", " ")):
-        invalid_reason = "must not end with a Windows-trimmed dot or space"
-    elif any(segment in {"", ".", ".."} for segment in value.split(".")):
-        invalid_reason = "must not contain empty or relative dot segments"
-    elif value.split(".", 1)[0] in WINDOWS_RESERVED_DEVICE_BASENAMES:
-        invalid_reason = "must not use a Windows reserved device basename"
-    elif not RESOURCE_ID_PATTERN.fullmatch(value):
-        invalid_reason = "must match ^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
-    if invalid_reason:
-        raise SystemExit(f"FAIL: invalid {resource_kind} id {value!r}: {invalid_reason}")
-    return value
 
 
-def contained_resource_path(root: Path, target: Path, resource_kind: str = "resource") -> Path:
-    try:
-        resolved_root = root.expanduser().resolve()
-        resolved_target = target.expanduser().resolve()
-        resolved_target.relative_to(resolved_root)
-    except (OSError, RuntimeError, ValueError) as exc:
-        raise SystemExit(
-            f"FAIL: invalid {resource_kind} target cannot be contained under declared root: {target.as_posix()}"
-        ) from exc
-    return resolved_target
 
 
 
@@ -7047,17 +7005,17 @@ def build_process_create_plan(
     review_text = _process_authoring_renderer.logic_review(draft, checks)
 
     paths = process_authoring_paths(project_root, process_id)
-    target_process = contained_resource_path(
+    target_process = _resource_identity_policy.contained_resource_path(
         project_root / "processes" / output_root,
         project_root / "processes" / output_root / f"{process_id}.yaml",
         "process",
     )
-    target_prompt = contained_resource_path(
+    target_prompt = _resource_identity_policy.contained_resource_path(
         project_root / "prompts",
         project_root / "prompts" / f"{process_id}-agent.md",
         "process prompt",
     )
-    target_doc = contained_resource_path(
+    target_doc = _resource_identity_policy.contained_resource_path(
         project_root / "docs" / "processes",
         project_root / "docs" / "processes" / f"{process_id}.md",
         "process documentation",
@@ -7897,10 +7855,10 @@ def command_knowledge_hub_import(args: argparse.Namespace) -> int:
 
 
 def command_knowledge_package_build_from_candidates(args: argparse.Namespace) -> int:
-    package_id = validate_resource_id(str(args.package), "knowledge package")
+    package_id = _resource_identity_policy.validate_resource_id(str(args.package), "knowledge package")
     hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
     version = str(args.version)
-    package_root = contained_resource_path(
+    package_root = _resource_identity_policy.contained_resource_path(
         hub / "packages",
         hub / "packages" / package_id,
         "knowledge package",
@@ -7966,10 +7924,10 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
 
 
 def command_knowledge_package_release(args: argparse.Namespace) -> int:
-    package_id = validate_resource_id(str(args.package), "knowledge package")
+    package_id = _resource_identity_policy.validate_resource_id(str(args.package), "knowledge package")
     hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
     version = str(args.version)
-    package_root = contained_resource_path(
+    package_root = _resource_identity_policy.contained_resource_path(
         hub / "packages",
         hub / "packages" / package_id,
         "knowledge package",
@@ -13261,7 +13219,7 @@ def build_knowledge_resource_add_plan(
     workplace_root = Path(args.workplace).expanduser().resolve()
     if not (workplace_root / "workplace.yaml").is_file():
         raise SystemExit(f"FAIL: workplace is not initialized: {workplace_root}")
-    package_id = validate_resource_id(str(args.package), "knowledge package")
+    package_id = _resource_identity_policy.validate_resource_id(str(args.package), "knowledge package")
     package_root_id = getattr(args, "package_root", None)
     manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(
         workplace_root,
@@ -13551,14 +13509,14 @@ def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
 
 def command_knowledge_package_create(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
-    package_id = validate_resource_id(str(args.id), "knowledge package")
+    package_id = _resource_identity_policy.validate_resource_id(str(args.id), "knowledge package")
     package_root = _project_package_catalog_reader.resolve_root(workplace_root, args.package_root, mode="write" if args.apply else "read")
-    package_dir = contained_resource_path(
+    package_dir = _resource_identity_policy.contained_resource_path(
         package_root.resolved_path,
         package_root.resolved_path / package_id,
         "knowledge package",
     )
-    manifest_path = contained_resource_path(
+    manifest_path = _resource_identity_policy.contained_resource_path(
         package_root.resolved_path,
         package_dir / "package.yaml",
         "knowledge package",
@@ -14207,13 +14165,13 @@ def command_specialization_doctor(args: argparse.Namespace) -> int:
 
 def command_specialization_create(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
-    requested_id = validate_resource_id(str(args.id), "specialization")
-    specialization_id = validate_resource_id(
+    requested_id = _resource_identity_policy.validate_resource_id(str(args.id), "specialization")
+    specialization_id = _resource_identity_policy.validate_resource_id(
         _specialization_catalog_reader.resource_id(requested_id),
         "specialization",
     )
     specialization_root = workplace_root / "specializations"
-    target = contained_resource_path(
+    target = _resource_identity_policy.contained_resource_path(
         specialization_root,
         specialization_root / f"{specialization_id}.yaml",
         "specialization",
@@ -14363,7 +14321,7 @@ def command_project_override_doctor(args: argparse.Namespace) -> int:
 
 
 def platform_authoring_values(args: argparse.Namespace) -> dict[str, Any]:
-    platform_id = validate_resource_id(
+    platform_id = _resource_identity_policy.validate_resource_id(
         str(args.id).removeprefix("platform."),
         "platform",
     )
@@ -14489,7 +14447,7 @@ def build_platform_authoring_plan(
         getattr(args, "platform_root", None),
         mode="read",
     )
-    target = contained_resource_path(
+    target = _resource_identity_policy.contained_resource_path(
         platform_root,
         platform_root / values["contract_id"],
         "platform",
@@ -14705,7 +14663,7 @@ def command_platform_create(args: argparse.Namespace) -> int:
 
 
 def install_platform_args(args: argparse.Namespace) -> argparse.Namespace:
-    platform_id = validate_resource_id(
+    platform_id = _resource_identity_policy.validate_resource_id(
         str(args.id).removeprefix("platform."),
         "platform",
     )
@@ -15344,6 +15302,8 @@ _process_event_recorder = ProcessEventRecorder(journal=_process_event_journal, i
 _chat_transcript_writer = ChatTranscriptWriter(events=_process_event_recorder, exports=_chat_export_service)
 _release_manifest_policy = ReleaseManifestPolicy(file_digests=FileDigestReader())
 _release_command_plan = ReleaseCommandPlanBuilder()
+
+_resource_identity_policy = ResourceIdentityPolicy()
 
 if __name__ == "__main__":
     sys.exit(main())

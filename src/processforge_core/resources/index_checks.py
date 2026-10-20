@@ -13,7 +13,7 @@ from ..project.requirements import PlatformDependencyPreflightService
 from ..work.context_documents import ContextContractInputs
 from .project_packages import ProjectPackageCatalogReader
 from .records import HEAVY_RESOURCE_KINDS, ResourceRecordService
-from .snapshot import WorkspacePathReferenceReader
+from .identity import ResourceIdentityPolicy
 
 
 class KnowledgeResourceIndexService:
@@ -29,7 +29,7 @@ class KnowledgeResourceIndexService:
     def index_path(self, manifest_path: Path, workplace_root: Path, package_id: str) -> Path:
         if manifest_path.name == "package.yaml":
             return manifest_path.parent / "indexes" / "resource-index.yaml"
-        paths = WorkspacePathReferenceReader(workplace_root, workplace_root, inputs=self.inputs)
+        paths = ResourceIdentityPolicy()
         validated_id = paths.validate_resource_id(package_id, "knowledge package")
         package_root = workplace_root / "packages"
         return paths.contained_resource_path(
