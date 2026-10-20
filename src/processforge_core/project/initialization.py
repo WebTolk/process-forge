@@ -14,6 +14,8 @@ from typing import Any, Callable
 from ..agent_entry.contract import EntryError
 from ..agent_entry import migration as entry_migration
 from ..documents.answers import AnswersDocumentReader
+from .agent_hooks import AgentHookSetupError, ProjectAgentHookConfigurator
+from .coordination_state import ProjectCoordinationStateService
 from .host_integration import optional_host_integration_status
 from .initialization_inputs import ProjectInitializationInputs
 
@@ -88,6 +90,14 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
     resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
     missing_artifacts = [item for item in _DETERMINISTIC_ARTIFACTS if not (flow / item).is_file()] if flow.is_dir() else list(_DETERMINISTIC_ARTIFACTS)
     codex = optional_host_integration_status(project_root, core)
+    hook_plan = None
+    try:
+        workplace_manifest = ProjectCoordinationStateService().resolve_project_workplace_manifest(project_root, workplace)
+        hook_plan = ProjectAgentHookConfigurator().plan(project_root, workplace_manifest)
+        if hook_plan is not None:
+            codex = hook_plan.report
+    except AgentHookSetupError as exc:
+        codex = ProjectAgentHookConfigurator.failure(exc.code)
     if not flow.is_dir() or not snapshot_path.is_file():
         state = "incomplete"
     elif str(health.get("status") or "") == "blocked":
@@ -96,6 +106,10 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
         state = "repairable"
     else:
         state = "complete"
+    base_state = state
+    required_hooks_missing = codex.get("required") is True and codex.get("status") != "installed"
+    if required_hooks_missing and state != "incomplete":
+        state = "blocked" if state == "blocked" or codex.get("status") in {"invalid", "unavailable"} else "repairable"
     workplace_path = Path(workplace).expanduser() if workplace else None
     if workplace_path is None:
         workplace_state = "auto"
@@ -110,7 +124,9 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
     repair_plan = []
     if state == "incomplete":
         repair_plan.append("initialize")
-    if state == "repairable":
+    if required_hooks_missing and "initialize" not in repair_plan:
+        repair_plan.append("initialize")
+    if base_state == "repairable":
         repair_plan.append("refresh_context")
         if missing_artifacts:
             repair_plan.append("restore_deterministic_artifacts")
@@ -164,7 +180,8 @@ def _initialization_request(request: dict[str, Any], core: Any) -> dict[str, Any
     return {"project_root": project_root, "workplace": workplace, "answers": answers, "project_type": str(project_type) if project_type else None, "coordination_mode": str(coordination_mode) if coordination_mode else None, "force": bool(request.get("force", False)), "allow_missing_workplace": bool(request.get("allow_missing_workplace", False)), "command": str(request.get("command") or "project-onboard")}
 
 
-def initialize_project(request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration) -> dict[str, Any]:
+def initialize_project(request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration,
+                       agent_hooks: ProjectAgentHookConfigurator | None = None) -> dict[str, Any]:
     """Plan or perform one deterministic initialization workflow for CLI and MCP."""
     normalized = _initialization_request(request, core)
     project_root, workplace = normalized["project_root"], normalized["workplace"]
@@ -179,14 +196,35 @@ def initialize_project(request: dict[str, Any], core: Any, *, build_project_file
     normalized["agent_entry_plan"] = entry_plan
     if apply_requested is True and entry_plan["blockers"]:
         raise ProjectInitializationError(entry_plan["blockers"][0])
+    hooks = agent_hooks if agent_hooks is not None else ProjectAgentHookConfigurator()
+    try:
+        hook_plan = hooks.plan(project_root, workplace)
+    except AgentHookSetupError as exc:
+        raise ProjectInitializationError(exc.code) from exc
+    hook_error = hook_plan.report.get("error") if hook_plan is not None else None
+    if apply_requested is True and hook_error:
+        raise ProjectInitializationError(hook_error)
     files = build_project_files(project_root, workplace, normalized["answers"])
     if apply_requested is True:
-        return apply("initialize", apply_requested=True, execute=lambda: core.execute_project_initialization(normalized, files))
+        def execute() -> dict[str, Any]:
+            result = core.execute_project_initialization(normalized, files)
+            if hook_plan is not None and result.get("status") == "complete":
+                try:
+                    result["codex_integration"] = hooks.apply(hook_plan)
+                except AgentHookSetupError as exc:
+                    raise ProjectInitializationError(exc.code) from exc
+            return result
+        return apply("initialize", apply_requested=True, execute=execute)
     planned = [core.rel(path, project_root) for path in files]
     planned.extend(f"{core.PROJECT_FLOW_ROOT}/{item}" for item in core.PROJECT_FLOW_DIRS)
     planned.append(".gitignore")
+    if hook_plan is not None:
+        planned.append(hook_plan.report["target"])
     if apply_requested is not True:
-        return {"action": "initialize", "applied": False, "status": "blocked" if entry_plan["blockers"] else "planned", "mode": ProjectInitializationInputs().mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if entry_plan["blockers"] else "rerun with apply: true"}
+        result = {"action": "initialize", "applied": False, "status": "blocked" if entry_plan["blockers"] or hook_error else "planned", "mode": ProjectInitializationInputs().mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if entry_plan["blockers"] else "resolve_codex_hooks_blockers" if hook_error else "rerun with apply: true"}
+        if hook_plan is not None:
+            result["codex_integration"] = hook_plan.report
+        return result
     raise ProjectInitializationError("apply_required")
 
 
