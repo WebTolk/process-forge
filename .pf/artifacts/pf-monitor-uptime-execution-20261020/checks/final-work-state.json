@@ -1,0 +1,252 @@
+{
+  "action": "run_completed",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {
+        "artifact_id": "evolution-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/evolution-report.md",
+        "recorded_at": "2026-10-20T19:36:17Z",
+        "sha256": "sha256:0959e4b2ebc37d2744b0fb79c360aba80d3faf469e7e73e1e7eb876feb1419a0",
+        "status": "ready",
+        "summary": "Captured the clean Git qualification prerequisite, checksum diagnostic semantics, retained failed evidence and final complete source PASS. One-task stop boundary preserved; only native doctors and authorized Git transport remain."
+      },
+      "id": "evolution-report",
+      "kind": "artifact",
+      "satisfied": true
+    }
+  ],
+  "assignment": {
+    "id": "pf-monitor-uptime-execution-20261020-implement-the-explicitly-authorized",
+    "status": "done"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [],
+    "status": "complete"
+  },
+  "context": {
+    "checksum": "sha256:dc344ae099daec47ace47b050fbaa3b281081293346d6e704e97405ea83a03e9",
+    "id": "pf-monitor-uptime-execution-20261020-implement-the-explicitly-authorized-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:c6b5bc0b3fe77c32bdfdd80d202ba81f847a1298d55163420ae55e548d32be4a",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "evolve",
+        "parameters": {},
+        "produced_artifacts": [
+          "evolution-report",
+          "updated-rules-or-extensions",
+          "instruction-update-proposal",
+          "knowledge-update-proposal"
+        ],
+        "required_capabilities": [
+          "review"
+        ],
+        "required_inputs": [
+          "delivery-report"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [
+    {
+      "input_id": "delivery-report",
+      "kind": "input",
+      "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/delivery-report.md",
+      "recorded_at": "2026-10-20T19:36:17Z",
+      "sha256": "sha256:9cf9ae6af72192068b02aaba5bd172364a344acc06b208e7148a404bb885ea5b",
+      "status": "ready",
+      "summary": "Source readiness and explicit profile decision retained."
+    },
+    {
+      "artifact_id": "evolution-report",
+      "kind": "artifact",
+      "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/evolution-report.md",
+      "recorded_at": "2026-10-20T19:36:17Z",
+      "sha256": "sha256:0959e4b2ebc37d2744b0fb79c360aba80d3faf469e7e73e1e7eb876feb1419a0",
+      "status": "ready",
+      "summary": "Captured the clean Git qualification prerequisite, checksum diagnostic semantics, retained failed evidence and final complete source PASS. One-task stop boundary preserved; only native doctors and authorized Git transport remain."
+    },
+    {
+      "gate_id": "evolution-captured",
+      "kind": "gate",
+      "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/evolution-report.md",
+      "recorded_at": "2026-10-20T19:36:17Z",
+      "sha256": "sha256:0959e4b2ebc37d2744b0fb79c360aba80d3faf469e7e73e1e7eb876feb1419a0",
+      "status": "passed",
+      "summary": "Captured the clean Git qualification prerequisite, checksum diagnostic semantics, retained failed evidence and final complete source PASS. One-task stop boundary preserved; only native doctors and authorized Git transport remain."
+    }
+  ],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact",
+      "write_product"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-monitor-uptime-execution-20261020/**",
+      ".pf/artifacts/pf-night-execution-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/assignments/pf-monitor-uptime-format-20261019.yaml",
+      ".pf/handoffs/pf-monitor-uptime-execution-20261020.md",
+      ".pf/handoffs/pf-night-execution-20261020.md",
+      ".pf/logs/pf-monitor-uptime-execution-20261020.md",
+      ".pf/logs/pf-night-execution-20261020.md",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-monitor-uptime-execution-20261020/**",
+      "checksums/processforge.sha256",
+      "docs/concepts/runtime-monitor.md",
+      "docs/ru/concepts/runtime-monitor.md",
+      "tests/runtime_monitor/test_uptime.py",
+      "tools/pf_runtime/monitor.py",
+      "tools/smoke_runtime_monitor.py"
+    ],
+    "allowed_read_files": [
+      ".gitattributes",
+      ".mypy.ini",
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-monitor-uptime-execution-20261020/**",
+      ".pf/artifacts/pf-night-execution-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/artifacts/python-quality-context.md",
+      ".pf/assignments/pf-monitor-uptime-format-20261019.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-monitor-uptime-execution-20261020.md",
+      ".pf/handoffs/pf-night-execution-20261020.md",
+      ".pf/logs/pf-monitor-uptime-execution-20261020.md",
+      ".pf/logs/pf-night-execution-20261020.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-monitor-uptime-execution-20261020/**",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/deliver.py",
+      ".ruff.toml",
+      "AGENTS.md",
+      "bin/pf.py",
+      "checksums/processforge.sha256",
+      "docs/concepts/runtime-monitor.md",
+      "docs/ru/concepts/runtime-monitor.md",
+      "docs/ru/guides/python-quality.md",
+      "mypy.ini",
+      "pyproject.toml",
+      "pytest.ini",
+      "ruff.toml",
+      "setup.cfg",
+      "tests/**",
+      "tools/pf_runtime/__init__.py",
+      "tools/pf_runtime/monitor.py",
+      "tools/processforge.py",
+      "tools/python-qa/**",
+      "tools/smoke_runtime_monitor.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "release-readiness-decided",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/delivery-report.md",
+          "recorded_at": "2026-10-20T19:35:34Z",
+          "sha256": "sha256:9cf9ae6af72192068b02aaba5bd172364a344acc06b208e7148a404bb885ea5b",
+          "status": "passed",
+          "summary": "Ready for scoped dev source delivery after all source gates; original card natively done. Installed/public delivery profile explicitly skipped: user requested one source task, commit/push and stop; no publication/install/final ZIP acceptance authorized."
+        },
+        "id": "release-readiness-decided",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "evolution-captured",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/evolution-report.md",
+          "recorded_at": "2026-10-20T19:36:17Z",
+          "sha256": "sha256:0959e4b2ebc37d2744b0fb79c360aba80d3faf469e7e73e1e7eb876feb1419a0",
+          "status": "passed",
+          "summary": "Captured the clean Git qualification prerequisite, checksum diagnostic semantics, retained failed evidence and final complete source PASS. One-task stop boundary preserved; only native doctors and authorized Git transport remain."
+        },
+        "id": "evolution-captured",
+        "phase": "exit",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [],
+  "kind": "pf.work.state",
+  "obligations": [],
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "input_id": "delivery-report",
+        "kind": "input",
+        "path": ".pf/artifacts/pf-monitor-uptime-execution-20261020/delivery-report.md",
+        "recorded_at": "2026-10-20T19:36:17Z",
+        "sha256": "sha256:9cf9ae6af72192068b02aaba5bd172364a344acc06b208e7148a404bb885ea5b",
+        "status": "ready",
+        "summary": "Source readiness and explicit profile decision retained."
+      },
+      "id": "delivery-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-monitor-uptime-execution-20261020-implement-the-explicitly-aut",
+    "status": "completed"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "evolve",
+    "status": "completed",
+    "title": "Evolve"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

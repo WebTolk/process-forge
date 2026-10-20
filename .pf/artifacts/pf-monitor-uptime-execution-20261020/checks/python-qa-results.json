@@ -1,0 +1,148 @@
+{
+  "tool-versions": {
+    "command": [
+      "python",
+      "<shared-python-qa>/qa.py",
+      "--project-root",
+      ".",
+      "versions"
+    ],
+    "exit_code": 0,
+    "stdout": "{\r\n  \"python\": \"3.14.3\",\r\n  \"tools\": {\r\n    \"ruff\": \"0.17.1\",\r\n    \"pytest\": \"9.1.1\",\r\n    \"pytest-cov\": \"7.1.0\",\r\n    \"coverage\": \"7.16.2\",\r\n    \"mypy\": \"2.4.0\",\r\n    \"bandit\": \"1.9.4\",\r\n    \"pip-audit\": \"2.10.1\"\r\n  }\r\n}\r\n",
+    "stderr": ""
+  },
+  "lint": {
+    "command": [
+      "python",
+      "<shared-python-qa>/qa.py",
+      "--project-root",
+      "<candidate>",
+      "lint",
+      "--",
+      "tools/pf_runtime/monitor.py",
+      "tests/runtime_monitor/test_uptime.py"
+    ],
+    "exit_code": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  "format": {
+    "command": [
+      "python",
+      "<shared-python-qa>/qa.py",
+      "--project-root",
+      "<candidate>",
+      "format",
+      "--",
+      "tools/pf_runtime/monitor.py",
+      "tests/runtime_monitor/test_uptime.py"
+    ],
+    "exit_code": 0,
+    "stdout": "2 files already formatted\n",
+    "stderr": ""
+  },
+  "mypy-changed": {
+    "command": [
+      "python",
+      "<shared-python-qa>/qa.py",
+      "--project-root",
+      "<candidate>",
+      "typecheck",
+      "--",
+      "--follow-imports=silent",
+      "<task-private>\\typed_area.py"
+    ],
+    "exit_code": 0,
+    "stdout": "Success: no issues found in 1 source file\r\n",
+    "stderr": ""
+  },
+  "mypy-owner-legacy": {
+    "command": [
+      "python",
+      "<shared-python-qa>/qa.py",
+      "--project-root",
+      "<candidate>",
+      "typecheck",
+      "--",
+      "--follow-imports=silent",
+      "tools/pf_runtime/monitor.py"
+    ],
+    "exit_code": 1,
+    "stdout": "tools\\pf_runtime\\monitor.py:165: error: Unsupported operand types for + (\"int\" and \"None\")  [operator]\r\ntools\\pf_runtime\\monitor.py:165: note: Right operand is of type \"int | None\"\r\ntools\\pf_runtime\\monitor.py:167: error: Unsupported operand types for + (\"int\" and \"None\")  [operator]\r\ntools\\pf_runtime\\monitor.py:167: note: Right operand is of type \"int | None\"\r\ntools\\pf_runtime\\monitor.py:676: error: Incompatible types in assignment (expression has type \"tuple[int, int]\", variable has type \"None\")  [assignment]\r\ntools\\pf_runtime\\monitor.py:705: error: Module has no attribute \"tcgetattr\"  [attr-defined]\r\ntools\\pf_runtime\\monitor.py:706: error: Module has no attribute \"tcsetattr\"  [attr-defined]\r\ntools\\pf_runtime\\monitor.py:706: error: Module has no attribute \"TCSADRAIN\"  [attr-defined]\r\ntools\\pf_runtime\\monitor.py:707: error: Module has no attribute \"setcbreak\"  [attr-defined]\r\ntools\\pf_runtime\\monitor.py:741: error: Incompatible types in assignment (expression has type \"bytes\", variable has type \"str\")  [assignment]\r\ntools\\pf_runtime\\monitor.py:847: error: Item \"RuntimeOverrides\" of \"RuntimeConfig | RuntimeOverrides\" has no attribute \"metrics\"  [union-attr]\r\nFound 9 errors in 1 file (checked 1 source file)\r\n",
+    "stderr": ""
+  },
+  "baseline-mypy-matching-environment": {
+    "exit_code": 1,
+    "stdout": "<task-private>\\baseline_owner.py:132: error: Unsupported operand types for + (\"int\" and \"None\")  [operator]\r\n<task-private>\\baseline_owner.py:132: note: Right operand is of type \"int | None\"\r\n<task-private>\\baseline_owner.py:133: error: Unsupported operand types for + (\"int\" and \"None\")  [operator]\r\n<task-private>\\baseline_owner.py:133: note: Right operand is of type \"int | None\"\r\n<task-private>\\baseline_owner.py:374: error: Incompatible types in assignment (expression has type \"tuple[int, int]\", variable has type \"None\")  [assignment]\r\n<task-private>\\baseline_owner.py:397: error: Module has no attribute \"tcgetattr\"  [attr-defined]\r\n<task-private>\\baseline_owner.py:398: error: Module has no attribute \"tcsetattr\"  [attr-defined]\r\n<task-private>\\baseline_owner.py:398: error: Module has no attribute \"TCSADRAIN\"  [attr-defined]\r\n<task-private>\\baseline_owner.py:399: error: Module has no attribute \"setcbreak\"  [attr-defined]\r\n<task-private>\\baseline_owner.py:430: error: Incompatible types in assignment (expression has type \"bytes\", variable has type \"str\")  [assignment]\r\n<task-private>\\baseline_owner.py:484: error: Item \"RuntimeOverrides\" of \"RuntimeConfig | RuntimeOverrides\" has no attribute \"metrics\"  [union-attr]\r\nFound 9 errors in 1 file (checked 1 source file)\r\n",
+    "stderr": ""
+  },
+  "docstrings-new-corrected": {
+    "exit_code": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  "qa-reconciliation": {
+    "matching_environment_baseline_errors": 9,
+    "whole_owner_errors": 9,
+    "new_owner_errors": {},
+    "changed_function_mypy_exit": 0,
+    "docstrings_new_exit": 0,
+    "baseline_context_adjustment": "Only relative service import qualified to check unchanged baseline in a standalone diagnostic file; production source is untouched."
+  },
+  "focused-tests": {
+    "exit_code": 0,
+    "stdout": "....................................                                     [100%]\r\n36 passed in 0.16s\r\n",
+    "stderr": ""
+  },
+  "checksum-repair": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "tools/validate-process-forge-checksums.py",
+      "--root",
+      "<candidate>",
+      "--check"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: checksum inventory matches.\r\n",
+    "stderr": "",
+    "removed_rows": {
+      "release/updates/processforge-alpha.json": "2cd4e3377902caf470c560d7adf06fd5a54bcebf68a4a1edddd89995656a1843",
+      "release/1.3.0-alpha1/processforge-1.3.0-alpha1.manifest.json": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f"
+    },
+    "other_product_source_hashes_unchanged": true
+  },
+  "import-parity": {
+    "unchanged_imports_preserved": true,
+    "removed": [],
+    "added": [
+      [
+        "from",
+        "calendar",
+        "monthrange",
+        null
+      ],
+      [
+        "from",
+        "datetime",
+        "timedelta",
+        null
+      ]
+    ]
+  },
+  "provenance-clean-qualification": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "tools/smoke_release_manifest_provenance_contract.py"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: release manifest v1 provenance contract smoke completed.\r\n",
+    "stderr": "",
+    "qualification_commit": "99f19b0c32776cd2452f5698b5748751c6587dba"
+  }
+}

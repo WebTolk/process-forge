@@ -33,6 +33,13 @@ without interval metadata keeps the old two-second viewer default. Without a
 running Runtime the viewer uses the selected workplace configuration/default.
 The compact view includes a small static PF splash, uptime, sample age and
 activity counts; `--details` selects scheduler and observation diagnostics.
+Uptime uses `yy/mo/dd/hh/mm` (years/months/days/hours/minutes), for example
+`00/00/02/03/15`. The `y/mo/d/h/min` legend distinguishes months from minutes.
+Calendar months and years are calculated in UTC from the existing observation
+timestamp and elapsed seconds. Each whole month retains the starting day/time,
+clamping the day to the target month's last day; twelve months form a year.
+The remainder is elapsed days, hours and complete minutes. Unavailable or invalid
+uptime remains `unknown`; JSON `uptime_seconds` retains its numeric format.
 There is no splash delay. See [workplace configuration](../authoring/workplace-configuration.md)
 for YAML, the independent Core CRUD API and CLI commands.
 There are no overlapping probes or catch-up bursts. Resizing the terminal

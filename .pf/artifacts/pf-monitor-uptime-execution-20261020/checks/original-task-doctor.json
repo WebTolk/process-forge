@@ -1,0 +1,19 @@
+{
+  "command": [
+    "python",
+    "-B",
+    "-X",
+    "utf8",
+    "bin/pf.py",
+    "task-doctor",
+    "--project-root",
+    "<project>",
+    "--task",
+    "pf-monitor-uptime-format-20261019"
+  ],
+  "exit_code": 0,
+  "native": {
+    "raw_stdout": "PASS: task.schema_version present\r\nPASS: task.id present\r\nPASS: task.title present\r\nPASS: task.run_id present\r\nPASS: task.process present\r\nPASS: task.status present\r\nPASS: task.iterations present\r\nPASS: task.result present\r\nPASS: task status valid: done\r\nPASS: referenced run exists: pf-upgrade-maintenance-backlog-20261019\r\nPASS: process exists: software-feature-development\r\nPASS: .pf/assignments/pf-monitor-uptime-format-20261019.yaml has no private absolute paths\r\nPASS: completed task has result summary or artifact\r\n"
+  },
+  "stderr": ""
+}

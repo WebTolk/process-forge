@@ -1,0 +1,70 @@
+{
+  "created_at": "2026-10-20T18:18:49.381804+00:00",
+  "base_commit": "7a4021788643e5df325f5ac1e1df1ab70ed02ac6",
+  "semantic_change": "New format_uptime and its compact render line only; three local lambda-to-def style changes normalized for AST parity",
+  "unchanged_logic_ast_parity": true,
+  "source_files": [
+    {
+      "path": "tools/pf_runtime/monitor.py",
+      "sha256": "691a8778716f840f54016a51e9a1e4169f0ff552a67753624c6765a4d1279c00"
+    },
+    {
+      "path": "tests/runtime_monitor/test_uptime.py",
+      "sha256": "25b7ce20c3e2b3256e07a4f51bc88bf443a2e76d9d984abea429e9206666477d"
+    },
+    {
+      "path": "docs/concepts/runtime-monitor.md",
+      "sha256": "7182aa207768fcd3f726d62715604219c8fbfc1439ce4eaf169a97403e217a2f"
+    },
+    {
+      "path": "docs/ru/concepts/runtime-monitor.md",
+      "sha256": "7110fd5e43c0e140666f10c04a056d0f79bfd9224e5034ceed050ec69c11cdbc"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "sha256": "6914aa666bf27ff8fdc5b34113426e3c364cb623ff9362cd14a7c4c3ff6b1ccf"
+    }
+  ],
+  "typed_functions": [
+    {
+      "name": "collect_snapshot",
+      "first_line": 231,
+      "last_line": 437,
+      "source_sha256": "1efac3f139550579eaabf9a814851b57a795494831bb3eaec27565ec24afaf07"
+    },
+    {
+      "name": "render_details",
+      "first_line": 466,
+      "last_line": 529,
+      "source_sha256": "8b9029df54c5e835de8dcc191ad0c1647f0376230b72faad9efab0f8c1510207"
+    },
+    {
+      "name": "format_uptime",
+      "first_line": 540,
+      "last_line": 589,
+      "source_sha256": "eb558f1f10202d674cb4c28f49fb15bede48b5b95cb87f6d268d495ce794db69"
+    },
+    {
+      "name": "render",
+      "first_line": 592,
+      "last_line": 654,
+      "source_sha256": "131a62735934a6a4fd86fdeb981c9f1a1ab9e0a2ec1a534ef7c304fd37b47c5b"
+    }
+  ],
+  "assurance_inventory_repair": {
+    "at": "2026-10-20T18:35:39.700558+00:00",
+    "removed_rows": {
+      "release/updates/processforge-alpha.json": "2cd4e3377902caf470c560d7adf06fd5a54bcebf68a4a1edddd89995656a1843",
+      "release/1.3.0-alpha1/processforge-1.3.0-alpha1.manifest.json": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f"
+    },
+    "reason": "Native validator's expected-only entries are inventory entries outside its actual public file set. The release directory is not in PUBLIC_DIRS. Removed exactly those two inventory rows; product/release source bytes unchanged."
+  },
+  "qualification_commit": {
+    "sha": "99f19b0c32776cd2452f5698b5748751c6587dba",
+    "parent": "7a4021788643e5df325f5ac1e1df1ab70ed02ac6",
+    "at": "2026-10-20T19:02:48.522211+00:00",
+    "detached_worktree_only": true,
+    "git_clean": true,
+    "dev_unchanged": true
+  }
+}

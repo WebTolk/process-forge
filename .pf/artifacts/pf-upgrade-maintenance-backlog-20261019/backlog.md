@@ -26,7 +26,7 @@
 | 4 | [Монитор в Windows](../../assignments/pf-windows-monitor-launch-20261019.yaml) | `pf-windows-monitor-launch-20261019` | `open` |
 | 5 | [Понятная диагностика](../../assignments/pf-health-readiness-statistics-20261019.yaml) | `pf-health-readiness-statistics-20261019` | `open` |
 | 6 | [Контекст и индексация устройства](../../assignments/pf-context-refresh-indexing-separation-20261019.yaml) | `pf-context-refresh-indexing-separation-20261019` | `open` |
-| 7 | [Формат uptime](../../assignments/pf-monitor-uptime-format-20261019.yaml) | `pf-monitor-uptime-format-20261019` | `open` |
+| 7 | [Формат uptime](../../assignments/pf-monitor-uptime-format-20261019.yaml) | `pf-monitor-uptime-format-20261019` | `done` |
 | 8 | [Автонастройка хуков в Forge](../../assignments/pf-forge-project-init-agent-hooks-20261019.yaml) | `pf-forge-project-init-agent-hooks-20261019` | `done` |
 | 9 | [Согласованность контекста CLI и MCP](../../assignments/pf-cli-mcp-context-consistency-20261019.yaml) | `pf-cli-mcp-context-consistency-20261019` | `open` |
 | 10 | [Расход токенов и логи задачи](../../assignments/pf-task-token-usage-logs-20261020.yaml) | `pf-task-token-usage-logs-20261020` | `open` |
@@ -114,6 +114,9 @@
 Отображать существующий uptime в формате `гг/мм/дд/чч/мм`: годы/месяцы/дни/часы/минуты. Пример: `00/00/02/03/15` для двух дней, трёх часов и пятнадцати минут. Источник и смысл метрики сохраняются; изменение ограничено представлением в мониторе.
 
 Правило расчёта месяцев и лет следует явно определить до реализации. Подпись должна отличать месяцы от минут; неизвестные данные не подменяются нулевым uptime. Полные критерии находятся в [карточке задачи](../../assignments/pf-monitor-uptime-format-20261019.yaml). Связанные карточки запуска монитора и диагностики сохраняют собственные границы.
+
+
+Результат 2026-10-20: карточка 7 выполнена отдельной ограниченной Work; формат `00/00/02/03/15`, календарные месяцы/годы в UTC, числовые метрики сохранены. [Отчёт и проверки](../pf-monitor-uptime-execution-20261020/report.md). Реализация других открытых карточек не начиналась.
 
 ## 8. Хуки популярных агентов при инициализации в Forge
 

@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-20T19:34:50.712475+00:00",
+  "command": [
+    "python",
+    "-B",
+    "-X",
+    "utf8",
+    "bin/pf.py",
+    "task-complete",
+    "--project-root",
+    "<project>",
+    "--task",
+    "pf-monitor-uptime-format-20261019",
+    "--summary",
+    "Выполнено отдельной разрешённой Work garage-pf-monitor-uptime-execution-20261020-implement-the-explicitly-aut. Uptime отображается как годы/месяцы/дни/часы/минуты с календарными месяцами в UTC; числовые метрики сохранены. Все pytest, полный public PF release-test, supervisor-stress и проверки изменённого Python-кода завершены; см. отчёт.",
+    "--artifact",
+    ".pf/artifacts/pf-monitor-uptime-execution-20261020/report.md",
+    "--artifact",
+    ".pf/artifacts/pf-monitor-uptime-execution-20261020/test-report.md",
+    "--artifact",
+    ".pf/artifacts/pf-monitor-uptime-execution-20261020/code-quality-report.md",
+    "--apply"
+  ],
+  "exit_code": 0,
+  "task": "pf-monitor-uptime-format-20261019",
+  "task_status": "done",
+  "result": {
+    "status": "done",
+    "summary": "Выполнено отдельной разрешённой Work garage-pf-monitor-uptime-execution-20261020-implement-the-explicitly-aut. Uptime отображается как годы/месяцы/дни/часы/минуты с календарными месяцами в UTC; числовые метрики сохранены. Все pytest, полный public PF release-test, supervisor-stress и проверки изменённого Python-кода завершены; см. отчёт.",
+    "artifacts": [
+      ".pf/artifacts/pf-monitor-uptime-execution-20261020/report.md",
+      ".pf/artifacts/pf-monitor-uptime-execution-20261020/test-report.md",
+      ".pf/artifacts/pf-monitor-uptime-execution-20261020/code-quality-report.md"
+    ]
+  },
+  "planning_scope_preserved": true,
+  "backlog_run_status": "draft",
+  "other_task_records_unchanged": true
+}
