@@ -1,0 +1,3 @@
+# Run Plan: pf-update-prerelease-order-20261020: Fix only prerelease ordering for existing u
+
+Objective: pf-update-prerelease-order-20261020: Fix only prerelease ordering for existing update discovery/selection so 1.3.0-alpha1 -> alpha2 -> final works and SemVer build metadata does not create an update. Preserve shared ResourceVersionPolicy and resource constraints, existing numeric/v-prefixed shorthand and lexical-warning behavior, payloads/channels/file-only operation. Add focused meaningful tests and registered pytest/Ruff/mypy checks, review final change and deliver one separate commit to both dev remotes. User paused OOP; no alpha version bump, packaging, ZIP audit, installation or publication.

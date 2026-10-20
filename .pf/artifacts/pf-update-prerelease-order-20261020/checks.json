@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-20T13:30:18.587921+00:00",
+  "checks": [
+    {
+      "name": "pytest",
+      "exit_code": 0,
+      "stdout": ".................                                                        [100%]\n17 passed in 0.08s\n",
+      "stderr": ""
+    },
+    {
+      "name": "ruff",
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "name": "ruff-format",
+      "exit_code": 0,
+      "stdout": "2 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "name": "mypy-changed-methods",
+      "exit_code": 0,
+      "stdout": "Success: no issues found in 1 source file\n",
+      "stderr": ""
+    },
+    {
+      "name": "update-discovery",
+      "exit_code": 0,
+      "stdout": "PASS: update candidate discovery smoke\n",
+      "stderr": ""
+    }
+  ],
+  "guards_preserved": true,
+  "unchanged_method_ast_equal": true,
+  "source_sha256": "9b3dfa81a297603622c28c1846442b3d33190bc78a60d7e1edec3c7c2f9eebcd",
+  "typed_slice_sha256": "6d10a0f07b3afa166a60f793b1f37e84ba2570a1129b6e56318609eeb8bd16bd",
+  "typed_scope": [
+    "__init__",
+    "_version_key",
+    "select"
+  ],
+  "limits": "Initial full mypy run exposed 264 transitive errors; narrowed whole-module run exposed 12 pre-existing normalize/latest errors and pytest dependency resolution. Those failures are retained separately. Required changed typed methods are checked from exact AST source spans with silent imports; no error codes are disabled."
+}

@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-20T13:31:25.845401+00:00",
+  "files": [
+    {
+      "path": "src/processforge_core/maintenance/versions.py",
+      "sha256": "9b3dfa81a297603622c28c1846442b3d33190bc78a60d7e1edec3c7c2f9eebcd"
+    },
+    {
+      "path": "tests/update_versions/test_selection.py",
+      "sha256": "6f3dcaabed40cd1ab9d3699f883a0eae870ac6b38efc1afe67b0657f019bb9a0"
+    }
+  ],
+  "inventory_rows_changed": [
+    "src/processforge_core/maintenance/versions.py"
+  ],
+  "resource_policy_unchanged": true,
+  "unrelated_oop_guards_preserved": true
+}

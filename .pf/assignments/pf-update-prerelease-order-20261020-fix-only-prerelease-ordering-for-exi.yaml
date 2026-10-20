@@ -1,0 +1,495 @@
+schema_version: 1
+id: pf-update-prerelease-order-20261020-fix-only-prerelease-ordering-for-exi
+title: 'pf-update-prerelease-order-20261020: Fix only prerelease ordering for existing u'
+run_id: garage-pf-update-prerelease-order-20261020-fix-only-prerelease-ordering
+process: software-feature-development
+status: done
+created_at: '2026-10-20T13:22:17Z'
+updated_at: '2026-10-20T13:32:05Z'
+objective: 'pf-update-prerelease-order-20261020: Fix only prerelease ordering for existing update discovery/selection so 1.3.0-alpha1 -> alpha2 -> final works and SemVer build metadata does not create an update. Preserve shared ResourceVersionPolicy and resource constraints, existing numeric/v-prefixed shorthand and lexical-warning behavior, payloads/channels/file-only operation. Add focused meaningful tests and registered pytest/Ruff/mypy checks, review final change and deliver one separate commit to both dev remotes. User paused OOP; no alpha version bump, packaging, ZIP audit, installation or publication.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: evolve accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+  artifacts:
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/architecture-plan.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/domain-modeling.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/implementation.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/intake-scope.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/investigation.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/orchestration.md
+    - .pf/artifacts/pf-update-prerelease-order-20261020/stages/release-delivery.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-20T13:31:34Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      status: ready
+      path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+      sha256: 'sha256:382a82c58f9ea144dab99c1e6bfe45cb0f5bb1622bc40f757c5eb4da2a1e5346'
+      summary: 'evolve: explicit acceptance and limitations in the stage report'
+      recorded_at: '2026-10-20T13:32:05Z'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      status: passed
+      path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+      sha256: 'sha256:382a82c58f9ea144dab99c1e6bfe45cb0f5bb1622bc40f757c5eb4da2a1e5346'
+      summary: 'evolve: explicit acceptance and limitations in the stage report'
+      recorded_at: '2026-10-20T13:32:05Z'
+  notes: evolve accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-20T13:22:17Z'
+    completed_at: '2026-10-20T13:24:34Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/orchestration.md
+        sha256: 'sha256:68a3e3199c56714ab181cff09b650b884f5619e7ea3783f3640754237b5279f9'
+        summary: 'orchestration: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:34Z'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/orchestration.md
+        sha256: 'sha256:68a3e3199c56714ab181cff09b650b884f5619e7ea3783f3640754237b5279f9'
+        summary: 'orchestration: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:34Z'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/orchestration.md
+        sha256: 'sha256:68a3e3199c56714ab181cff09b650b884f5619e7ea3783f3640754237b5279f9'
+        summary: 'orchestration: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:34Z'
+      -
+        kind: gate
+        gate_id: context-ready
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/orchestration.md
+        sha256: 'sha256:68a3e3199c56714ab181cff09b650b884f5619e7ea3783f3640754237b5279f9'
+        summary: 'orchestration: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:34Z'
+    notes: orchestration accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/orchestration.md
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-20T13:24:34Z'
+    completed_at: '2026-10-20T13:24:38Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/intake-scope.md
+        sha256: 'sha256:7e9f62ba4ef4a770fb641c1867588f012e9268be19d4a0462a3bfebde4e9416c'
+        summary: 'intake-scope: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:38Z'
+      -
+        kind: artifact
+        artifact_id: scope
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/intake-scope.md
+        sha256: 'sha256:7e9f62ba4ef4a770fb641c1867588f012e9268be19d4a0462a3bfebde4e9416c'
+        summary: 'intake-scope: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:38Z'
+      -
+        kind: artifact
+        artifact_id: task-record
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/intake-scope.md
+        sha256: 'sha256:7e9f62ba4ef4a770fb641c1867588f012e9268be19d4a0462a3bfebde4e9416c'
+        summary: 'intake-scope: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:38Z'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/intake-scope.md
+        sha256: 'sha256:7e9f62ba4ef4a770fb641c1867588f012e9268be19d4a0462a3bfebde4e9416c'
+        summary: 'intake-scope: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:24:38Z'
+    notes: intake-scope accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/intake-scope.md
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-20T13:24:38Z'
+    completed_at: '2026-10-20T13:25:58Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/investigation.md
+        sha256: 'sha256:ea412d76a5883a270524dfdb35f6aed4ce09a99ce352cfb89e0d1df39c996ba2'
+        summary: 'investigation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:25:58Z'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/investigation.md
+        sha256: 'sha256:ea412d76a5883a270524dfdb35f6aed4ce09a99ce352cfb89e0d1df39c996ba2'
+        summary: 'investigation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:25:58Z'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/investigation.md
+        sha256: 'sha256:ea412d76a5883a270524dfdb35f6aed4ce09a99ce352cfb89e0d1df39c996ba2'
+        summary: 'investigation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:25:58Z'
+      -
+        kind: gate
+        gate_id: impact-understood
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/investigation.md
+        sha256: 'sha256:ea412d76a5883a270524dfdb35f6aed4ce09a99ce352cfb89e0d1df39c996ba2'
+        summary: 'investigation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:25:58Z'
+    notes: investigation accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/investigation.md
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-20T13:25:58Z'
+    completed_at: '2026-10-20T13:26:02Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/domain-modeling.md
+        sha256: 'sha256:d39e66bfd1017c321ff3d87696c5509dca11d7ac51883af15fae7ac3bb91fae7'
+        summary: 'domain-modeling: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:02Z'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/domain-modeling.md
+        sha256: 'sha256:d39e66bfd1017c321ff3d87696c5509dca11d7ac51883af15fae7ac3bb91fae7'
+        summary: 'domain-modeling: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:02Z'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/domain-modeling.md
+        sha256: 'sha256:d39e66bfd1017c321ff3d87696c5509dca11d7ac51883af15fae7ac3bb91fae7'
+        summary: 'domain-modeling: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:02Z'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/domain-modeling.md
+        sha256: 'sha256:d39e66bfd1017c321ff3d87696c5509dca11d7ac51883af15fae7ac3bb91fae7'
+        summary: 'domain-modeling: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:02Z'
+    notes: domain-modeling accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/domain-modeling.md
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-20T13:26:02Z'
+    completed_at: '2026-10-20T13:26:06Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/architecture-plan.md
+        sha256: 'sha256:6a47d8b3bd5f41e71e7041e3a75bcc79a5236ed608ee9819974d142e297f76bd'
+        summary: 'architecture-plan: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:06Z'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/architecture-plan.md
+        sha256: 'sha256:6a47d8b3bd5f41e71e7041e3a75bcc79a5236ed608ee9819974d142e297f76bd'
+        summary: 'architecture-plan: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:06Z'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/architecture-plan.md
+        sha256: 'sha256:6a47d8b3bd5f41e71e7041e3a75bcc79a5236ed608ee9819974d142e297f76bd'
+        summary: 'architecture-plan: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:06Z'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/architecture-plan.md
+        sha256: 'sha256:6a47d8b3bd5f41e71e7041e3a75bcc79a5236ed608ee9819974d142e297f76bd'
+        summary: 'architecture-plan: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:26:06Z'
+    notes: architecture-plan accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/architecture-plan.md
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-20T13:26:06Z'
+    completed_at: '2026-10-20T13:31:27Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/implementation.md
+        sha256: 'sha256:7b898e6b14c4e77a2f425153605724ce1d98575dfbbdc71025fc3770d1b8c32e'
+        summary: 'implementation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:27Z'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/implementation.md
+        sha256: 'sha256:7b898e6b14c4e77a2f425153605724ce1d98575dfbbdc71025fc3770d1b8c32e'
+        summary: 'implementation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:27Z'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/implementation.md
+        sha256: 'sha256:7b898e6b14c4e77a2f425153605724ce1d98575dfbbdc71025fc3770d1b8c32e'
+        summary: 'implementation: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:27Z'
+    notes: implementation accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/implementation.md
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-20T13:31:27Z'
+    completed_at: '2026-10-20T13:31:31Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+        sha256: 'sha256:e43ea5db9dcc0aa941dc92854eb1ed61149a97c32c5665c4902b5e9098b56ca6'
+        summary: 'code-assurance: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:31Z'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+        sha256: 'sha256:e43ea5db9dcc0aa941dc92854eb1ed61149a97c32c5665c4902b5e9098b56ca6'
+        summary: 'code-assurance: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:31Z'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+        sha256: 'sha256:e43ea5db9dcc0aa941dc92854eb1ed61149a97c32c5665c4902b5e9098b56ca6'
+        summary: 'code-assurance: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:31Z'
+      -
+        kind: artifact
+        artifact_id: test-report
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+        sha256: 'sha256:e43ea5db9dcc0aa941dc92854eb1ed61149a97c32c5665c4902b5e9098b56ca6'
+        summary: 'code-assurance: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:31Z'
+      -
+        kind: artifact
+        artifact_id: code-quality-report
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+        sha256: 'sha256:e43ea5db9dcc0aa941dc92854eb1ed61149a97c32c5665c4902b5e9098b56ca6'
+        summary: 'code-assurance: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:31Z'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+        sha256: 'sha256:e43ea5db9dcc0aa941dc92854eb1ed61149a97c32c5665c4902b5e9098b56ca6'
+        summary: 'code-assurance: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:31Z'
+    notes: code-assurance accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/code-assurance.md
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-20T13:31:31Z'
+    completed_at: '2026-10-20T13:31:34Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/release-delivery.md
+        sha256: 'sha256:c03d014817513826838c980ffeceae0d32409fab2e72d5d2b1eab2dcf6601301'
+        summary: 'release-delivery: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:34Z'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/release-delivery.md
+        sha256: 'sha256:c03d014817513826838c980ffeceae0d32409fab2e72d5d2b1eab2dcf6601301'
+        summary: 'release-delivery: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:34Z'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/release-delivery.md
+        sha256: 'sha256:c03d014817513826838c980ffeceae0d32409fab2e72d5d2b1eab2dcf6601301'
+        summary: 'release-delivery: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:31:34Z'
+    notes: release-delivery accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/release-delivery.md
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-20T13:31:34Z'
+    completed_at: '2026-10-20T13:32:05Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        status: ready
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+        sha256: 'sha256:382a82c58f9ea144dab99c1e6bfe45cb0f5bb1622bc40f757c5eb4da2a1e5346'
+        summary: 'evolve: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:32:05Z'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        status: passed
+        path: .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+        sha256: 'sha256:382a82c58f9ea144dab99c1e6bfe45cb0f5bb1622bc40f757c5eb4da2a1e5346'
+        summary: 'evolve: explicit acceptance and limitations in the stage report'
+        recorded_at: '2026-10-20T13:32:05Z'
+    notes: evolve accepted with exact scope and recorded limitations; see .pf/artifacts/pf-update-prerelease-order-20261020/stages/evolve.md
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261020-072238-da5df2
+  snapshot_checksum: 'sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a'
+  assignment_capsule: .pf/contexts/assignment-capsules/pf-update-prerelease-order-20261020-fix-only-prerelease-ordering-for-exi.capsule.yaml
+  assignment_capsule_checksum: 'sha256:472a7878342e8bab81b66610a2ddbab75a8477cf0d04c0bb2df0abb1f60a6a86'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/contexts/assignment-capsules/**
+  - .pf/artifacts/python-framework-20261005/**
+  - .pf/artifacts/python-core-structure/**
+  - .pf/artifacts/python-quality-context.md
+  - .pf/artifacts/pf-python-quality-20261020/**
+  - .pf/artifacts/pf-context-parity-20261020/**
+  - .pf/artifacts/pf-context-connected-verify-20261020/**
+  - .pf/handoffs/pf-context-connected-verify-20261020.md
+  - .pf/handoffs/pf-python-quality-20261020.md
+  - .pf/artifacts/pf-update-prerelease-order-20261020/**
+  - .pf/tmp/pf-update-prerelease-order-20261020/**
+  - .pf/tmp/pf-context-connected-verify-20261020/driver.py
+  - .pf/tmp/pf-context-connected-verify-20261020/deliver.py
+  - src/**
+  - tools/**
+  - tests/**
+  - docs/**
+  - checksums/**
+  - schemas/**
+  - processes/**
+  - packs/**
+  - pyproject.toml
+  - pytest.ini
+  - mypy.ini
+  - ruff.toml
+  - .ruff.toml
+  - VERSION
+  - CHANGELOG.md
+  - .gitattributes
+allowed_files:
+  - src/processforge_core/maintenance/versions.py
+  - tests/update_versions/**
+  - checksums/processforge.sha256
+  - .pf/artifacts/pf-update-prerelease-order-20261020/**
+  - .pf/tmp/pf-update-prerelease-order-20261020/**
+  - .pf/logs/pf-update-prerelease-order-20261020.md
+  - .pf/handoffs/pf-update-prerelease-order-20261020.md
+forbidden_files:
+  - src/processforge_core/resources/versioning.py
+  - tools/processforge.py
+  - src/processforge_core/project/platform_roots.py
+  - .pf/artifacts/pf121-oop-blocks54-55-20261020/**
+  - VERSION
+  - CHANGELOG.md
+ownership:
+  owner_id: pf-update-prerelease-order-20261020
+  role: primary
+  writer: true
+expected_report:
+  artifact: .pf/artifacts/pf-update-prerelease-order-20261020/report.md
+  format: markdown
+  language: ru
+required_sources:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-quality-context.md
+  - .pf/artifacts/python-framework-20261005/oop-05.md
+  - .pf/artifacts/pf-context-parity-20261020/primary/alpha-preparation-handoff.md
+required_outputs:
+  -
+    id: prerelease-fix-report
+    path: .pf/artifacts/pf-update-prerelease-order-20261020/report.md
+    type: report
+    required: true
