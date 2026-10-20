@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-20T14:21:48.753780+00:00",
+  "tag": "v1.3.0-alpha1",
+  "version": "1.3.0-alpha1",
+  "source_commit": "d32200700c48bdbf796728f01209798d40a986c6",
+  "source_tree": "ac54f1b3b5281eee2bfd805abcbe4ac473383ba7",
+  "archive": {
+    "path": ".pf/artifacts/pf-alpha1-freeze-release-20261020/release/processforge-1.3.0-alpha1.zip",
+    "name": "processforge-1.3.0-alpha1.zip",
+    "sha256": "71f8a16f95e1ce63cde3e7f9e3344b67734c14f85f631e8e392d93e46dbde7ea",
+    "bytes": 2794326,
+    "entry_count_declared_by_pack": 1461
+  },
+  "sidecar": {
+    "path": ".pf/artifacts/pf-alpha1-freeze-release-20261020/release/processforge-1.3.0-alpha1.manifest.json",
+    "name": "processforge-1.3.0-alpha1.manifest.json",
+    "sha256": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f",
+    "bytes": 265811
+  },
+  "archive_content_inspection": false,
+  "archive_test": "not_run_per_operator_instruction"
+}

@@ -1,0 +1,44 @@
+{
+  "source_commit": "d32200700c48bdbf796728f01209798d40a986c6",
+  "archive_sha256": "71f8a16f95e1ce63cde3e7f9e3344b67734c14f85f631e8e392d93e46dbde7ea",
+  "sidecar_sha256": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f",
+  "draft": false,
+  "prerelease": true,
+  "release_ids": {
+    "github": 418489329,
+    "gitverse": 548932813
+  },
+  "assets": [
+    {
+      "provider": "github",
+      "name": "processforge-1.3.0-alpha1.manifest.json",
+      "bytes": 265811,
+      "sha256": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f"
+    },
+    {
+      "provider": "github",
+      "name": "processforge-1.3.0-alpha1.zip",
+      "bytes": 2794326,
+      "sha256": "71f8a16f95e1ce63cde3e7f9e3344b67734c14f85f631e8e392d93e46dbde7ea"
+    },
+    {
+      "provider": "gitverse",
+      "name": "processforge-1.3.0-alpha1.manifest.json.txt",
+      "bytes": 265811,
+      "sha256": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f"
+    },
+    {
+      "provider": "gitverse",
+      "name": "processforge-1.3.0-alpha1.zip",
+      "bytes": 2794326,
+      "sha256": "71f8a16f95e1ce63cde3e7f9e3344b67734c14f85f631e8e392d93e46dbde7ea"
+    }
+  ],
+  "published_at": "2026-10-20T14:25:13.509074+00:00",
+  "both_published": true,
+  "github_latest_stable": "v1.2.0",
+  "github_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha1",
+  "gitverse_url": "https://gitverse.ru/webtolk/process-forge/releases/tag/v1.3.0-alpha1",
+  "archive_content_inspected": false,
+  "gitverse_sidecar_alias": ".manifest.json.txt; identical bytes, remove .txt after download"
+}

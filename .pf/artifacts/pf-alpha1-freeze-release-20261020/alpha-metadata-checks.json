@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "source_commit": "d32200700c48bdbf796728f01209798d40a986c6",
+  "archive_sha256": "71f8a16f95e1ce63cde3e7f9e3344b67734c14f85f631e8e392d93e46dbde7ea",
+  "historical_sidecar_sha256": "f6bf94bec5fe6ba6bd52979162901fae3bc6457a0a974673e3d07acdf4fe0f7f",
+  "schema_validation_exit_code": 0,
+  "alpha_discovery_from_1_2_0": true,
+  "stable_channel_excludes_alpha": true,
+  "stable_manifest_unchanged": true,
+  "feed_is_explicit_alpha_opt_in": true,
+  "inventory_rows_changed": [
+    "release/updates/processforge-alpha.json",
+    "release/1.3.0-alpha1/processforge-1.3.0-alpha1.manifest.json"
+  ]
+}

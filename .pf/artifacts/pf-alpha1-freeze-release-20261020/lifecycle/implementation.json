@@ -1,0 +1,294 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "release-delivery",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "review-findings",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "test-plan",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "test-cases",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "test-report",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "code-quality-report",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-alpha1-freeze-release-20261020-user-explicitly-requests-freeze-and-pu",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "review-findings",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "test-plan",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "test-cases",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "test-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "code-quality-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "assurance-complete"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "code-assurance"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:a4f9ef91fec55348ab375c41b9a927f4f7b58e5a311f9a6e646e024d65c1f85f",
+    "id": "pf-alpha1-freeze-release-20261020-user-explicitly-requests-freeze-and-pu-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:ef3f75c12cc8f19922b9ccefdb6de6e2e43f21da7968f47421f09a94ba4fa136",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "code-assurance",
+        "parameters": {},
+        "produced_artifacts": [
+          "review-findings",
+          "test-plan",
+          "test-cases",
+          "test-report",
+          "code-quality-report",
+          "browser-verification-report"
+        ],
+        "required_capabilities": [
+          "review",
+          "test_running"
+        ],
+        "required_inputs": [
+          "change-summary"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact",
+      "write_product"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-alpha1-freeze-release-20261020/**",
+      ".pf/handoffs/pf-alpha1-freeze-release-20261020.md",
+      ".pf/logs/pf-alpha1-freeze-release-20261020.md",
+      ".pf/tmp/pf-alpha1-freeze-release-20261020/**",
+      "CHANGELOG.md",
+      "VERSION",
+      "checksums/processforge.sha256",
+      "docs/releases/1.3.0-alpha1.md",
+      "docs/ru/releases/1.3.0-alpha1.md",
+      "release/1.3.0-alpha1/**",
+      "release/updates/processforge-alpha.json",
+      "src/processforge_core/common/release_identity.py",
+      "tools/smoke_runtime_no_domain_file_patterns.py"
+    ],
+    "allowed_read_files": [
+      ".gitattributes",
+      ".gitignore",
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-alpha1-freeze-release-20261020/**",
+      ".pf/artifacts/pf-context-connected-verify-20261020/**",
+      ".pf/artifacts/pf-context-parity-20261020/**",
+      ".pf/artifacts/pf-python-quality-20261020/**",
+      ".pf/artifacts/pf-update-prerelease-order-20261020/**",
+      ".pf/artifacts/pf120-docs-release-20261018/**",
+      ".pf/artifacts/pf121-oop-blocks54-55-20261020/primary/deadline-checkpoint.json",
+      ".pf/artifacts/python-framework-20261005/**",
+      ".pf/artifacts/python-quality-context.md",
+      ".pf/contexts/assignment-capsules/**",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-update-prerelease-order-20261020.md",
+      ".pf/handoffs/pf121-oop-blocks54-55-20261020.md",
+      ".pf/process-forge.local.yaml",
+      ".pf/process-forge.yaml",
+      ".pf/tmp/pf-alpha1-freeze-release-20261020/**",
+      ".pf/tmp/pf-update-prerelease-order-20261020/deliver.py",
+      ".pf/tmp/pf-update-prerelease-order-20261020/driver.py",
+      ".pf/tmp/pf-update-prerelease-order-20261020/git-delivery.json",
+      ".pf/tmp/pf120-docs-release-20261018/**",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "README.md",
+      "README.ru.md",
+      "VERSION",
+      "bin/**",
+      "checksums/**",
+      "docs/**",
+      "packs/**",
+      "processes/**",
+      "release/**",
+      "schemas/**",
+      "src/**",
+      "templates/**",
+      "tests/**",
+      "tools/**"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "implementation-scope-respected",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-alpha1-freeze-release-20261020/stages/implementation.md",
+          "recorded_at": "2026-10-20T13:38:37Z",
+          "sha256": "sha256:1d07a19fd6a6e4d8dba97931fe670a08b13b0bab0611b8a3be0c1cbad0e7d41e",
+          "status": "passed",
+          "summary": "implementation: explicit acceptance and limitations in the stage report"
+        },
+        "id": "implementation-scope-respected",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "assurance-complete",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "review-findings",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "test-plan",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "test-cases",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "test-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "code-quality-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "assurance-complete"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "code-assurance"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "code-assurance",
+  "obligations": [],
+  "previous_stage_id": "implementation",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "change-summary",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-alpha1-freeze-release-20261020/stages/implementation.md",
+        "recorded_at": "2026-10-20T13:38:37Z",
+        "sha256": "sha256:1d07a19fd6a6e4d8dba97931fe670a08b13b0bab0611b8a3be0c1cbad0e7d41e",
+        "status": "ready",
+        "summary": "implementation: explicit acceptance and limitations in the stage report"
+      },
+      "id": "change-summary",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-alpha1-freeze-release-20261020-user-explicitly-requests-freeze",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "code-assurance",
+    "status": "in_progress",
+    "title": "Code Assurance"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

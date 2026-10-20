@@ -1,0 +1,8 @@
+{
+  "purpose": "Reproducible source freeze, qualification and mirrored prerelease publication evidence",
+  "source_commit": "d32200700c48bdbf796728f01209798d40a986c6",
+  "retained_roots": [".pf/tmp/pf-alpha1-freeze-release-20261020", ".pf/artifacts/pf-alpha1-freeze-release-20261020/release"],
+  "contents": ["clean source worktree", "raw private commands and traces", "candidate baselines and guarded preimages", "native lifecycle receipts", "token-free publication helpers", "canonical archive and sidecar"],
+  "age_authorizes_deletion": false,
+  "archive_contents_inspected": false
+}
