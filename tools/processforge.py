@@ -60,6 +60,7 @@ from processforge_core.configuration.project_parameters import ProjectParameterR
 from processforge_core.project.overrides import PROJECT_OVERRIDE_MODES as _project_override_modes
 from processforge_core.configuration.assignment_parameters import AssignmentParameterResolver
 from processforge_core.resources.package_write import PackageManifestWriter
+from processforge_core.resources.private_paths import PrivateResourcePathWriter
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -4247,17 +4248,6 @@ def write_resource_management_report(workplace_root: Path, slug: str, title: str
 
 
 
-def ensure_private_resource_path(workplace_root: Path, resource_id: str, raw_path: str) -> Path:
-    target = workplace_root / "registries" / "private-resource-paths.yaml"
-    entry = {
-        "id": resource_id,
-        "label": resource_id.replace("-", " ").title(),
-        "path": raw_path,
-        "visibility": "private",
-        "status": "available",
-    }
-    _workplace_registry_writer.upsert(target, "private_resource_paths", entry)
-    return target
 
 
 
@@ -15080,6 +15070,8 @@ _package_manifest_writer = PackageManifestWriter(ROOT)
 _package_manifest_writer.packages = _project_package_catalog_reader
 _package_manifest_writer.indexes = _knowledge_resource_index_service
 _package_manifest_writer.records = _resource_record_service
+_private_resource_path_writer = PrivateResourcePathWriter(ROOT)
+_private_resource_path_writer.registry = _workplace_registry_writer
 
 if __name__ == "__main__":
     sys.exit(main())
