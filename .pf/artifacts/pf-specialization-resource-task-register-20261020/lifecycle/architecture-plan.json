@@ -1,0 +1,222 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "code-assurance",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "changed-files",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "change-summary",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-specialization-resource-register-20261020-register-only-one-deferred",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "changed-files",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "change-summary",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "implementation-scope-respected"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "implementation"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:c21396ca127851b43f8e6d5c8368b4fc17907776c9368c6bc0e6fb33a2718b92",
+    "id": "pf-specialization-resource-register-20261020-register-only-one-deferred-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:b92915afa79bc51ee9da16e977644fd52c3536796b15f877ddb96601fb0db488",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "implementation",
+        "parameters": {},
+        "produced_artifacts": [
+          "changed-files",
+          "change-summary"
+        ],
+        "required_capabilities": [
+          "repository_write"
+        ],
+        "required_inputs": [
+          "implementation-plan"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-specialization-resource-task-register-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/artifacts/runs/pf-upgrade-maintenance-backlog-20261019/pf-specialization-required-resource-selection-20261020/**",
+      ".pf/assignments/pf-specialization-required-resource-selection-20261020.yaml",
+      ".pf/handoffs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-specialization-resource-task-register-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/assignments/pf-specialization-required-resource-selection-20261020.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-forge-agent-hooks-followup-20261020/deliver.py",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/**",
+      "AGENTS.md",
+      "bin/pf.py",
+      "schemas/assignment.schema.json",
+      "schemas/run.schema.json",
+      "tools/processforge.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "architecture-plan-ready",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/architecture-plan.md",
+          "recorded_at": "2026-10-20T17:41:18Z",
+          "sha256": "sha256:c66cd04709f86c2a5fd4e56c65957567056dc68883b4d2fdeb9d33a17cbd3c53",
+          "status": "passed",
+          "summary": "Для регистрации выбрана отдельная карточка pf-specialization-required-resource-selection-20261020, порядок 14, дальний горизонт, open/planning_only/writer=false, без продуктовой записи и execution capsule. Способ будущего изменения выбора ресурсов определяется после исследования; автоматическое расширение доступа ко всему пакету не предписывается. Исходная очередь, завершённые Work и замороженная alpha1 сохраняются."
+        },
+        "id": "architecture-plan-ready",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "implementation-scope-respected",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "changed-files",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "change-summary",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "implementation-scope-respected"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "implementation"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "implementation",
+  "obligations": [],
+  "previous_stage_id": "architecture-plan",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "implementation-plan",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/architecture-plan.md",
+        "recorded_at": "2026-10-20T17:41:18Z",
+        "sha256": "sha256:c66cd04709f86c2a5fd4e56c65957567056dc68883b4d2fdeb9d33a17cbd3c53",
+        "status": "ready",
+        "summary": "Для регистрации выбрана отдельная карточка pf-specialization-required-resource-selection-20261020, порядок 14, дальний горизонт, open/planning_only/writer=false, без продуктовой записи и execution capsule. Способ будущего изменения выбора ресурсов определяется после исследования; автоматическое расширение доступа ко всему пакету не предписывается. Исходная очередь, завершённые Work и замороженная alpha1 сохраняются."
+      },
+      "id": "implementation-plan",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-specialization-resource-register-20261020-register-only-one-de",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "implementation",
+    "status": "in_progress",
+    "title": "Implementation"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

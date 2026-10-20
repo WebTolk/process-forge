@@ -1,0 +1,269 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "architecture-plan",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "domain-notes",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "domain-model",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "domain-rules",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-specialization-resource-register-20261020-register-only-one-deferred",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "domain-notes",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "domain-model",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "domain-rules",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "domain-rules-captured"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "domain-modeling"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:c21396ca127851b43f8e6d5c8368b4fc17907776c9368c6bc0e6fb33a2718b92",
+    "id": "pf-specialization-resource-register-20261020-register-only-one-deferred-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:b92915afa79bc51ee9da16e977644fd52c3536796b15f877ddb96601fb0db488",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "domain-modeling",
+        "parameters": {},
+        "produced_artifacts": [
+          "domain-notes",
+          "domain-model",
+          "domain-rules"
+        ],
+        "required_capabilities": [
+          "repository_read"
+        ],
+        "required_inputs": [
+          "investigation-report",
+          "impact-analysis"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-specialization-resource-task-register-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/artifacts/runs/pf-upgrade-maintenance-backlog-20261019/pf-specialization-required-resource-selection-20261020/**",
+      ".pf/assignments/pf-specialization-required-resource-selection-20261020.yaml",
+      ".pf/handoffs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-specialization-resource-task-register-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/assignments/pf-specialization-required-resource-selection-20261020.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-forge-agent-hooks-followup-20261020/deliver.py",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/**",
+      "AGENTS.md",
+      "bin/pf.py",
+      "schemas/assignment.schema.json",
+      "schemas/run.schema.json",
+      "tools/processforge.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "investigation-complete",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/investigation.md",
+          "recorded_at": "2026-10-20T17:41:17Z",
+          "sha256": "sha256:d80dc3123145e42ddd7b2d168c935f885928e4cc796515c756be49038fdeec50",
+          "status": "passed",
+          "summary": "Просмотрена существующая очередь из 13 карточек и выполнен поиск дубликата по точному resource_id и формулировке обязательного ресурса специализации; дубликат не найден. Сохранены preimage четырёх общих файлов и все 13 записей Run. Сообщение пользователя фиксируется как наблюдение для будущего воспроизведения; код разрешения ресурсов не исследовался, доступ к Joomla документации не запрашивался и причина текущего поведения не объявляется доказанной."
+        },
+        "id": "investigation-complete",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      },
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "impact-understood",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/investigation.md",
+          "recorded_at": "2026-10-20T17:41:17Z",
+          "sha256": "sha256:d80dc3123145e42ddd7b2d168c935f885928e4cc796515c756be49038fdeec50",
+          "status": "passed",
+          "summary": "Просмотрена существующая очередь из 13 карточек и выполнен поиск дубликата по точному resource_id и формулировке обязательного ресурса специализации; дубликат не найден. Сохранены preimage четырёх общих файлов и все 13 записей Run. Сообщение пользователя фиксируется как наблюдение для будущего воспроизведения; код разрешения ресурсов не исследовался, доступ к Joomla документации не запрашивался и причина текущего поведения не объявляется доказанной."
+        },
+        "id": "impact-understood",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "domain-rules-captured",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "domain-notes",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "domain-model",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "domain-rules",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "domain-rules-captured"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "domain-modeling"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "domain-modeling",
+  "obligations": [],
+  "previous_stage_id": "investigation",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "investigation-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/investigation.md",
+        "recorded_at": "2026-10-20T17:41:17Z",
+        "sha256": "sha256:d80dc3123145e42ddd7b2d168c935f885928e4cc796515c756be49038fdeec50",
+        "status": "ready",
+        "summary": "Просмотрена существующая очередь из 13 карточек и выполнен поиск дубликата по точному resource_id и формулировке обязательного ресурса специализации; дубликат не найден. Сохранены preimage четырёх общих файлов и все 13 записей Run. Сообщение пользователя фиксируется как наблюдение для будущего воспроизведения; код разрешения ресурсов не исследовался, доступ к Joomla документации не запрашивался и причина текущего поведения не объявляется доказанной."
+      },
+      "id": "investigation-report",
+      "kind": "input",
+      "satisfied": true
+    },
+    {
+      "evidence": {
+        "artifact_id": "impact-analysis",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/investigation.md",
+        "recorded_at": "2026-10-20T17:41:17Z",
+        "sha256": "sha256:d80dc3123145e42ddd7b2d168c935f885928e4cc796515c756be49038fdeec50",
+        "status": "ready",
+        "summary": "Просмотрена существующая очередь из 13 карточек и выполнен поиск дубликата по точному resource_id и формулировке обязательного ресурса специализации; дубликат не найден. Сохранены preimage четырёх общих файлов и все 13 записей Run. Сообщение пользователя фиксируется как наблюдение для будущего воспроизведения; код разрешения ресурсов не исследовался, доступ к Joomla документации не запрашивался и причина текущего поведения не объявляется доказанной."
+      },
+      "id": "impact-analysis",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-specialization-resource-register-20261020-register-only-one-de",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "domain-modeling",
+    "status": "in_progress",
+    "title": "Domain Modeling"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "new_task": "pf-specialization-required-resource-selection-20261020",
+  "order": 14,
+  "priority": "deferred_future",
+  "status": "open",
+  "execution_mode": "planning_only",
+  "writer": false,
+  "execution_capsule": null,
+  "backlog_status": "draft",
+  "backlog_task_count": 14,
+  "previous_13_run_task_records_unchanged": true,
+  "reported_case": "joomla.rest-api.documentation:rest-api-docs",
+  "observed_cause": "not_reproduced_in_registration",
+  "implementation": "not_started"
+}

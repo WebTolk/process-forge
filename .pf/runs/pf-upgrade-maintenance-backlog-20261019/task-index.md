@@ -15,3 +15,4 @@ Run status: `draft`
 | 9 | `pf-cli-mcp-context-consistency-20261019` | `done` | `.pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml` |
 | 10 | `pf-task-token-usage-logs-20261020` | `open` | `.pf/assignments/pf-task-token-usage-logs-20261020.yaml` |
 | 13 | `pf-forge-agent-hooks-adapters-20261020` | `open` | `.pf/assignments/pf-forge-agent-hooks-adapters-20261020.yaml` |
+| 14 | `pf-specialization-required-resource-selection-20261020` | `open` | `.pf/assignments/pf-specialization-required-resource-selection-20261020.yaml` |

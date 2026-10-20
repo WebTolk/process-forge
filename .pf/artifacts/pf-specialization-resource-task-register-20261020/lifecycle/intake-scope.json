@@ -1,0 +1,239 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "domain-modeling",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "investigation-report",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "impact-analysis",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-specialization-resource-register-20261020-register-only-one-deferred",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "investigation-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "impact-analysis",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "investigation-complete"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "impact-understood"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "investigation"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:c21396ca127851b43f8e6d5c8368b4fc17907776c9368c6bc0e6fb33a2718b92",
+    "id": "pf-specialization-resource-register-20261020-register-only-one-deferred-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:b92915afa79bc51ee9da16e977644fd52c3536796b15f877ddb96601fb0db488",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "investigation",
+        "parameters": {},
+        "produced_artifacts": [
+          "investigation-report",
+          "impact-analysis"
+        ],
+        "required_capabilities": [
+          "repository_read"
+        ],
+        "required_inputs": [
+          "scope"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-specialization-resource-task-register-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/artifacts/runs/pf-upgrade-maintenance-backlog-20261019/pf-specialization-required-resource-selection-20261020/**",
+      ".pf/assignments/pf-specialization-required-resource-selection-20261020.yaml",
+      ".pf/handoffs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-specialization-resource-task-register-20261020/**",
+      ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      ".pf/assignments/pf-specialization-required-resource-selection-20261020.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-specialization-resource-task-register-20261020.md",
+      ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+      ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+      ".pf/tmp/pf-forge-agent-hooks-followup-20261020/deliver.py",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/**",
+      "AGENTS.md",
+      "bin/pf.py",
+      "schemas/assignment.schema.json",
+      "schemas/run.schema.json",
+      "tools/processforge.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "scope-accepted",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/intake-scope.md",
+          "recorded_at": "2026-10-20T17:41:17Z",
+          "sha256": "sha256:62d2b21cd6e8f69147445898890f81e99e15b5dbc32983877bd20ecae72a5a1f",
+          "status": "passed",
+          "summary": "Главное требование: исследовать случай, когда одного наличия пакета в специализации недостаточно для доступа к содержимому и нужен явный выбор конкретного ресурса в проектном контексте. Точный ресурс joomla.rest-api.documentation:rest-api-docs. Задача дальнего горизонта, без срока/релиза. Прикладные REST-поля и подтверждение публикации сохраняются как контекст примера; разработки REST сейчас нет."
+        },
+        "id": "scope-accepted",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "investigation-complete",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      },
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "impact-understood",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "investigation-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "impact-analysis",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "investigation-complete"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "impact-understood"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "investigation"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "investigation",
+  "obligations": [],
+  "previous_stage_id": "intake-scope",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "scope",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-specialization-resource-task-register-20261020/stages/intake-scope.md",
+        "recorded_at": "2026-10-20T17:41:17Z",
+        "sha256": "sha256:62d2b21cd6e8f69147445898890f81e99e15b5dbc32983877bd20ecae72a5a1f",
+        "status": "ready",
+        "summary": "Главное требование: исследовать случай, когда одного наличия пакета в специализации недостаточно для доступа к содержимому и нужен явный выбор конкретного ресурса в проектном контексте. Точный ресурс joomla.rest-api.documentation:rest-api-docs. Задача дальнего горизонта, без срока/релиза. Прикладные REST-поля и подтверждение публикации сохраняются как контекст примера; разработки REST сейчас нет."
+      },
+      "id": "scope",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-specialization-resource-register-20261020-register-only-one-de",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "investigation",
+    "status": "in_progress",
+    "title": "Investigation"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}
