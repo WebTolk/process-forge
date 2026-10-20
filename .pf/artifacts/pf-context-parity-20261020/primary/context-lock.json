@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T11:43:38.842875+00:00",
+  "group": "context-lock",
+  "command": [
+    "python",
+    "-X",
+    "utf8",
+    "tools/smoke_project_context_snapshot_lock_model.py"
+  ],
+  "exit_code": 0,
+  "source_layer": "working-source",
+  "log": ".pf/tmp/pf-context-parity-20261020/context-lock.log",
+  "stdout": "PASS: project context snapshot lock model smoke\r\n",
+  "stderr": ""
+}

@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-10-20T12:08:15.232Z",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "snapshot_id": "ctx-20261020-072238-da5df2",
+  "source": {
+    "status": "fresh",
+    "execution_readiness": "ready",
+    "policy_action": "continue",
+    "snapshot_unchanged": true
+  },
+  "actual_connected_mcp": {
+    "policy_action": "ask_operator",
+    "recommended_action": "project-context-refresh",
+    "snapshot_id": "ctx-20261020-072238-da5df2",
+    "status": "stale"
+  },
+  "installed_or_host_updated": false,
+  "acceptance": "pending; source repair and adapters are qualified, actual connected host still loads pre-fix installed implementation",
+  "required_action": "separate authorized native Core delivery followed by real host reconnect and pf.context; do not refresh this unchanged snapshot"
+}

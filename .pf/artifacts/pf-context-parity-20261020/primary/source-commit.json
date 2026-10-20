@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-20T12:00:56.761105+00:00",
+  "base": "e708864483f9e0de8f42970770b1c807dd611623",
+  "commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "paths": [
+    "src/processforge_core/project/source_check.py",
+    "src/processforge_core/project/snapshot_sources.py",
+    "docs/concepts/context-resolution.md",
+    "docs/ru/concepts/context-resolution.md",
+    "tests/context_parity/conftest.py",
+    "tests/context_parity/test_official_pack_freshness.py",
+    "checksums/processforge.sha256"
+  ],
+  "clean_inventory_sha256": "70611175d7dfdbef01af4ca5e1ed17ec94d3f81258388b11ade97051278b4d47",
+  "worktree_inventory_sha256": "251695b41a4cecd2875b3c6ac1b8875819ba4824fd0f8d62007463905be9272a",
+  "unrelated_worktree_changes_preserved": true,
+  "real_index_empty_before_and_after": true,
+  "review_status": "pass",
+  "diff_stat": " checksums/processforge.sha256                      |   8 +-\n docs/concepts/context-resolution.md                |  19 ++\n docs/ru/concepts/context-resolution.md             |  20 ++\n src/processforge_core/project/snapshot_sources.py  | 213 +++++++++++----\n src/processforge_core/project/source_check.py      |  59 ++++-\n tests/context_parity/conftest.py                   |   7 +\n .../context_parity/test_official_pack_freshness.py | 290 +++++++++++++++++++++\n 7 files changed, 558 insertions(+), 58 deletions(-)\n"
+}

@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-20T11:39:51.506522+00:00",
+  "baseline_head": "e708864483f9e0de8f42970770b1c807dd611623",
+  "source_only": true,
+  "files": [
+    {
+      "path": "src/processforge_core/project/source_check.py",
+      "raw_sha256": "af8314e3b85d33e79f6fb438c5b195f5362cfdc3f3fc8b7c74bec14e17a09930",
+      "released_sha256": "af8314e3b85d33e79f6fb438c5b195f5362cfdc3f3fc8b7c74bec14e17a09930"
+    },
+    {
+      "path": "src/processforge_core/project/snapshot_sources.py",
+      "raw_sha256": "457af97c65af39d6921eea296495e0d316dda32a282dbcd3abde7dc90ddba169",
+      "released_sha256": "457af97c65af39d6921eea296495e0d316dda32a282dbcd3abde7dc90ddba169"
+    },
+    {
+      "path": "docs/concepts/context-resolution.md",
+      "raw_sha256": "48536a34b36daf767e2209251006ce36e2729ffcb9d56b67b585d78c95cec9e9",
+      "released_sha256": "48536a34b36daf767e2209251006ce36e2729ffcb9d56b67b585d78c95cec9e9"
+    },
+    {
+      "path": "docs/ru/concepts/context-resolution.md",
+      "raw_sha256": "68822bee34a7b12c12b0fa4d1d623e2f910fb3e230883fc01eb747879ffd630d",
+      "released_sha256": "68822bee34a7b12c12b0fa4d1d623e2f910fb3e230883fc01eb747879ffd630d"
+    },
+    {
+      "path": "tests/context_parity/conftest.py",
+      "raw_sha256": "01fd822873f0278c61f3e5c71b460ecacf87cd6ce20619494c0cb5dd10c3129e",
+      "released_sha256": "01fd822873f0278c61f3e5c71b460ecacf87cd6ce20619494c0cb5dd10c3129e"
+    },
+    {
+      "path": "tests/context_parity/test_official_pack_freshness.py",
+      "raw_sha256": "d58c3ea100060150e780b673c4ac06c5166e879731b751d36e66236ea806e36b",
+      "released_sha256": "d58c3ea100060150e780b673c4ac06c5166e879731b751d36e66236ea806e36b"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "raw_sha256": "251695b41a4cecd2875b3c6ac1b8875819ba4824fd0f8d62007463905be9272a",
+      "released_sha256": "251695b41a4cecd2875b3c6ac1b8875819ba4824fd0f8d62007463905be9272a"
+    }
+  ],
+  "inventory_changed_rows": [
+    "src/processforge_core/project/source_check.py",
+    "src/processforge_core/project/snapshot_sources.py",
+    "docs/concepts/context-resolution.md",
+    "docs/ru/concepts/context-resolution.md"
+  ],
+  "inherited_oop_changes_excluded": true,
+  "runtime_installed_connected_acceptance": "separate outstanding delivery boundary"
+}

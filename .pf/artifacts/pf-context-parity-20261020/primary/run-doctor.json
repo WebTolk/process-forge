@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-20T12:22:51.262Z",
+  "command": "python -B -X utf8 tools/processforge.py run-doctor --project-root . --run garage-pf-context-parity-20261020-diagnose-and-fix-pf-cli-mcp-context-co",
+  "exit_code": 0,
+  "result": "PASS",
+  "run_id": "garage-pf-context-parity-20261020-diagnose-and-fix-pf-cli-mcp-context-co",
+  "action": "run_completed",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "incomplete": [],
+  "all_native_doctor_checks_passed": true,
+  "qualification": "bounded source implementation complete; release and actual connected-host acceptance remain as documented"
+}

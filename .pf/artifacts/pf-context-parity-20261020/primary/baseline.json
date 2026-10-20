@@ -1,0 +1,104 @@
+{
+  "at": "2026-10-20T11:28:37.461462+00:00",
+  "snapshot_identical": true,
+  "source": {
+    "snapshot_id": "ctx-20261020-072238-da5df2",
+    "snapshot_sha256": "sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+    "status": "fresh",
+    "fresh": true,
+    "stale": false,
+    "broken": false,
+    "policy_action": "continue",
+    "recommended_action": "continue",
+    "readiness": {
+      "context": {
+        "status": "fresh"
+      },
+      "resources": {
+        "status": "fresh",
+        "blockers": []
+      },
+      "execution": {
+        "status": "ready",
+        "missing_capabilities": [],
+        "blockers": []
+      }
+    },
+    "resource_readiness": {
+      "status": "fresh",
+      "blockers": []
+    },
+    "execution_readiness": {
+      "status": "ready",
+      "missing_capabilities": [],
+      "blockers": []
+    },
+    "stale_resources": []
+  },
+  "installed": {
+    "snapshot_id": "ctx-20261020-072238-da5df2",
+    "snapshot_sha256": "sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+    "status": "stale",
+    "fresh": false,
+    "stale": true,
+    "broken": false,
+    "policy_action": "ask_operator",
+    "recommended_action": "project-context-refresh",
+    "readiness": {
+      "context": {
+        "status": "fresh"
+      },
+      "resources": {
+        "status": "fresh",
+        "blockers": []
+      },
+      "execution": {
+        "status": "ready",
+        "missing_capabilities": [],
+        "blockers": []
+      }
+    },
+    "resource_readiness": {
+      "status": "fresh",
+      "blockers": []
+    },
+    "execution_readiness": {
+      "status": "ready",
+      "missing_capabilities": [],
+      "blockers": []
+    },
+    "stale_resources": [
+      {
+        "reason": "source changed: official-pack-processforge-official-software-development-package"
+      }
+    ]
+  },
+  "pack_source": {
+    "recorded_checksum": "9cfcce38538d006fd446d12d0eaa1cd5a29496004e4298034f1596858055c080",
+    "raw_sha256": "9cfcce38538d006fd446d12d0eaa1cd5a29496004e4298034f1596858055c080",
+    "lf_sha256": "a9dd4ec5c0fa3f8aacc912d6b18877f0e7d67cbc4bc441cbdfd9cb149357d2de",
+    "crlf_sha256": "9cfcce38538d006fd446d12d0eaa1cd5a29496004e4298034f1596858055c080",
+    "crlf_count": 62,
+    "size": 1517
+  },
+  "pack_installed": {
+    "recorded_checksum": "9cfcce38538d006fd446d12d0eaa1cd5a29496004e4298034f1596858055c080",
+    "raw_sha256": "a9dd4ec5c0fa3f8aacc912d6b18877f0e7d67cbc4bc441cbdfd9cb149357d2de",
+    "lf_sha256": "a9dd4ec5c0fa3f8aacc912d6b18877f0e7d67cbc4bc441cbdfd9cb149357d2de",
+    "crlf_sha256": "9cfcce38538d006fd446d12d0eaa1cd5a29496004e4298034f1596858055c080",
+    "crlf_count": 0,
+    "size": 1455
+  },
+  "same_lf_content": true,
+  "same_core_algorithms": {
+    "legacy_check": true,
+    "source_check": true,
+    "sources_reader": true
+  },
+  "root_aliases": [
+    "<source-distribution>",
+    "<installed-distribution>"
+  ],
+  "context_refreshed": false,
+  "services_restarted": false
+}

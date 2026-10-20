@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-10-20T12:04:09.197611+00:00",
+  "finished_at": "2026-10-20T12:13:59.932649+00:00",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "native_command": [
+    "release-test",
+    "--public",
+    "--fail-fast",
+    "--trace-smokes"
+  ],
+  "exit_code": 1,
+  "skipped": [
+    "smoke_release_pack_excludes_user_processes",
+    "smoke_release_test_extracted_archive",
+    "smoke_agent_entry_release",
+    "smoke_release_manifest_provenance_contract",
+    "release package"
+  ],
+  "skip_reason": "User explicitly excluded archive-content checks; native release-pack already succeeded.",
+  "archive_contents_inspected": false,
+  "qualification": "cumulative source only; no deployment or actual connected-host acceptance"
+}

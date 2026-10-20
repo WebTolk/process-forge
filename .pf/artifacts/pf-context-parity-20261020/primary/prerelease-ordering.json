@@ -1,0 +1,58 @@
+{
+  "observed_at": "2026-10-20T12:12:36.109953+00:00",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "policy": "src/processforge_core/resources/versioning.py:ResourceVersionPolicy",
+  "policy_sha256": "bff728e23d056f8b20e789cafc04cd40b8e76c883e8cc400299efa822c247a51",
+  "keys": {
+    "1.2.0": [
+      0,
+      [
+        1,
+        2,
+        0
+      ]
+    ],
+    "1.3.0-alpha1": [
+      0,
+      [
+        1,
+        3,
+        0
+      ]
+    ],
+    "1.3.0-alpha2": [
+      0,
+      [
+        1,
+        3,
+        0
+      ]
+    ],
+    "1.3.0": [
+      0,
+      [
+        1,
+        3,
+        0
+      ]
+    ]
+  },
+  "alpha1_after_stable120": [
+    true,
+    null
+  ],
+  "alpha2_after_alpha1": [
+    false,
+    null
+  ],
+  "final_after_alpha1": [
+    false,
+    null
+  ],
+  "expected_semver": {
+    "alpha2_after_alpha1": true,
+    "final_after_alpha1": true
+  },
+  "assessment": "existing prerelease ordering defect; fix or explicit manual-only release limitation is needed before alpha publication",
+  "product_files_changed": false
+}

@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-20T11:55:32.022619+00:00",
+  "changed_fields": [
+    "project_classification.matched_rules[0].source",
+    "project_classification.matched_rules[1].source"
+  ],
+  "nested_test_distribution": true,
+  "cli_mcp_equal": true,
+  "original_snapshot_mutated": false,
+  "classification_policy_unchanged": true,
+  "interpretation": "Test distribution paths are different classification provenance; both adapters correctly report the same stale result for these different inputs. This is not the source/installed LF-CRLF defect."
+}

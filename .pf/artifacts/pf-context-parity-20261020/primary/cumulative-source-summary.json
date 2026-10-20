@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-20T12:17:46.344565+00:00",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "result": "FAIL",
+  "counts": {
+    "PASS": 70,
+    "FAIL": 1
+  },
+  "checks_started": 71,
+  "elapsed_seconds": 589.185,
+  "failed": [
+    {
+      "label": "smoke_runtime_no_domain_file_patterns",
+      "status": "FAIL",
+      "code": null
+    }
+  ],
+  "failure": {
+    "check": "smoke_runtime_no_domain_file_patterns",
+    "error": "NameError: name 'Path' is not defined",
+    "cause": "missing pathlib.Path import in the unchanged smoke script",
+    "last_change_commit": "ae111ca51f00676ea41d043285ef3cd9b19c0992",
+    "changed_by_context_fix": false
+  },
+  "remaining_checks": "not run due to native fail-fast; no full-suite pass claimed",
+  "archive_checks": "excluded by explicit user instruction",
+  "raw_evidence": [
+    {
+      "path": ".pf/tmp/pf-context-parity-20261020/release-test-evidence/latest-report.json",
+      "sha256": "3712f5381c348cbeada027c9b4cfde7707fbcfab22a94ac4c483d306ad42cd09"
+    },
+    {
+      "path": ".pf/tmp/pf-context-parity-20261020/release-test-evidence/latest-report.md",
+      "sha256": "c66a315e83cd7ca296e5e4c6c79c7ea89745ec67ef45009951d1d0493c135fe6"
+    },
+    {
+      "path": ".pf/tmp/pf-context-parity-20261020/release-test-evidence/latest-trace.ndjson",
+      "sha256": "f731417395d4faf7175efd8f1e5677b911f03a90d15007ced5a511d488a7ed3f"
+    }
+  ],
+  "product_files_changed": false,
+  "supervisor_stress": {
+    "status": "not_run",
+    "reason": "The public source projection does not include .pf/dogfooding/run_dogfooding_tests.py; no stress qualification claimed."
+  }
+}

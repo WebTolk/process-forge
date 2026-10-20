@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T11:43:36.033016+00:00",
+  "group": "context-core",
+  "command": [
+    "python",
+    "-X",
+    "utf8",
+    "tools/smoke_project_context_capability_records_real_core.py"
+  ],
+  "exit_code": 0,
+  "source_layer": "working-source",
+  "log": ".pf/tmp/pf-context-parity-20261020/context-core.log",
+  "stdout": "PASS: order_duplicates_key_order_falsey_and_provider_identity\r\nPASS: unconditional_custom_dict_get_and_required_before_optional\r\nPASS: membership_before_get_and_capability_identity\r\nPASS: availability_snapshot_survives_provider_mutation\r\nPASS: provider_iteration_even_empty_and_error_precedence\r\nPASS: missing_get_errors_and_unhashable_membership_before_get\r\nPASS: required_failure_suppresses_optional_and_optional_failure_follows_required\r\nPASS: empty_result\r\nPASS: copied_src_isolated_python_default_owner_without_monolith_or_transport\r\nPASS: build_project_context_snapshot_real_failure_path\r\nPASS: command_assignment_capsule_real_failure_path\r\nPASS: build_context_fields_real_failure_path_without_reverse_helper\r\nPASS: project context capability records real Core smoke\r\n",
+  "stderr": ""
+}

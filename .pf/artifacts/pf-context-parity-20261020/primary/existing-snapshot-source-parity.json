@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-20T11:53:47.516843+00:00",
+  "status": "pass",
+  "layer": "repaired Core library with actual source and installed pack data; no deployment",
+  "snapshot_id": "ctx-20261020-072238-da5df2",
+  "snapshot_sha256": "bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+  "source_comparison_reasons": {
+    "source_distribution": [],
+    "installed_distribution_data": []
+  },
+  "snapshot_unchanged": true,
+  "installed_files_changed": false,
+  "actual_connected_host_accepted": false
+}

@@ -1,0 +1,593 @@
+schema_version: 1
+id: pf-context-parity-20261020-diagnose-and-fix-pf-cli-mcp-context-consisten
+title: 'pf-context-parity-20261020: Diagnose and fix pf-cli-mcp-context-consistency-2026'
+run_id: garage-pf-context-parity-20261020-diagnose-and-fix-pf-cli-mcp-context-co
+process: software-feature-development
+status: done
+created_at: '2026-10-20T11:20:56Z'
+updated_at: '2026-10-20T12:19:50Z'
+objective: 'pf-context-parity-20261020: Diagnose and fix pf-cli-mcp-context-consistency-20261019 through shared Python Core; preserve public contracts and pending OOP54-55, independently assure and deliver the bounded fix, then assess current alpha release readiness without publication.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: evolve completed; exact scope and evidence retained.
+  artifacts:
+    - .pf/artifacts/pf-context-parity-20261020/primary/architecture.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/delivery.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/implementation.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/intake.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/investigation.md
+    - .pf/artifacts/pf-context-parity-20261020/primary/orchestration.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-20T12:19:10Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      status: ready
+      path: .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+      sha256: 'sha256:e9fb10e6cbf36728a17b8962fe70412645545a93ca9357f4a0147abe66b9ef99'
+      summary: 'evolve: see the sealed stage report'
+      recorded_at: '2026-10-20T12:19:49Z'
+    -
+      kind: gate
+      gate_id: release-readiness-decided
+      status: passed
+      path: .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+      sha256: 'sha256:e9fb10e6cbf36728a17b8962fe70412645545a93ca9357f4a0147abe66b9ef99'
+      summary: 'evolve: see the sealed stage report'
+      recorded_at: '2026-10-20T12:19:49Z'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      status: passed
+      path: .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+      sha256: 'sha256:e9fb10e6cbf36728a17b8962fe70412645545a93ca9357f4a0147abe66b9ef99'
+      summary: 'evolve: see the sealed stage report'
+      recorded_at: '2026-10-20T12:19:49Z'
+  notes: evolve completed; exact scope and evidence retained.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-20T11:20:56Z'
+    completed_at: '2026-10-20T11:25:41Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/orchestration.md
+        sha256: 'sha256:0ddca7d0946d3b25acf43624fc03a17084cd4b65c2c7fd0617f40117f1364702'
+        summary: 'orchestration: see the sealed stage report'
+        recorded_at: '2026-10-20T11:25:41Z'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/orchestration.md
+        sha256: 'sha256:0ddca7d0946d3b25acf43624fc03a17084cd4b65c2c7fd0617f40117f1364702'
+        summary: 'orchestration: see the sealed stage report'
+        recorded_at: '2026-10-20T11:25:41Z'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/orchestration.md
+        sha256: 'sha256:0ddca7d0946d3b25acf43624fc03a17084cd4b65c2c7fd0617f40117f1364702'
+        summary: 'orchestration: see the sealed stage report'
+        recorded_at: '2026-10-20T11:25:41Z'
+      -
+        kind: gate
+        gate_id: context-ready
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/orchestration.md
+        sha256: 'sha256:0ddca7d0946d3b25acf43624fc03a17084cd4b65c2c7fd0617f40117f1364702'
+        summary: 'orchestration: see the sealed stage report'
+        recorded_at: '2026-10-20T11:25:41Z'
+    notes: orchestration completed; exact scope and evidence retained.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-20T11:25:41Z'
+    completed_at: '2026-10-20T11:28:09Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/intake.md
+        sha256: 'sha256:02781fe95ec1cecd96d611589613b03f470faa47651d433d528e7ff7310e059c'
+        summary: 'intake-scope: see the sealed stage report'
+        recorded_at: '2026-10-20T11:28:09Z'
+      -
+        kind: artifact
+        artifact_id: scope
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/intake.md
+        sha256: 'sha256:02781fe95ec1cecd96d611589613b03f470faa47651d433d528e7ff7310e059c'
+        summary: 'intake-scope: see the sealed stage report'
+        recorded_at: '2026-10-20T11:28:09Z'
+      -
+        kind: artifact
+        artifact_id: task-record
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/intake.md
+        sha256: 'sha256:02781fe95ec1cecd96d611589613b03f470faa47651d433d528e7ff7310e059c'
+        summary: 'intake-scope: see the sealed stage report'
+        recorded_at: '2026-10-20T11:28:09Z'
+      -
+        kind: gate
+        gate_id: context-ready
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/intake.md
+        sha256: 'sha256:02781fe95ec1cecd96d611589613b03f470faa47651d433d528e7ff7310e059c'
+        summary: 'intake-scope: see the sealed stage report'
+        recorded_at: '2026-10-20T11:28:09Z'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/intake.md
+        sha256: 'sha256:02781fe95ec1cecd96d611589613b03f470faa47651d433d528e7ff7310e059c'
+        summary: 'intake-scope: see the sealed stage report'
+        recorded_at: '2026-10-20T11:28:09Z'
+    notes: intake-scope completed; exact scope and evidence retained.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-20T11:28:09Z'
+    completed_at: '2026-10-20T11:31:07Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/investigation.md
+        sha256: 'sha256:9542c4cd7b6198c91c767dcc31a0cb1642cf5eb739324958158b9fe6853d19bb'
+        summary: 'investigation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:07Z'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/investigation.md
+        sha256: 'sha256:9542c4cd7b6198c91c767dcc31a0cb1642cf5eb739324958158b9fe6853d19bb'
+        summary: 'investigation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:07Z'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/investigation.md
+        sha256: 'sha256:9542c4cd7b6198c91c767dcc31a0cb1642cf5eb739324958158b9fe6853d19bb'
+        summary: 'investigation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:07Z'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/investigation.md
+        sha256: 'sha256:9542c4cd7b6198c91c767dcc31a0cb1642cf5eb739324958158b9fe6853d19bb'
+        summary: 'investigation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:07Z'
+      -
+        kind: gate
+        gate_id: impact-understood
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/investigation.md
+        sha256: 'sha256:9542c4cd7b6198c91c767dcc31a0cb1642cf5eb739324958158b9fe6853d19bb'
+        summary: 'investigation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:07Z'
+    notes: investigation completed; exact scope and evidence retained.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-20T11:31:07Z'
+    completed_at: '2026-10-20T11:31:10Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+        sha256: 'sha256:ec90314b2cffa3cd199cf66697552ebc1623aaef67431285fd10e3ff4323f934'
+        summary: 'domain-modeling: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:10Z'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+        sha256: 'sha256:ec90314b2cffa3cd199cf66697552ebc1623aaef67431285fd10e3ff4323f934'
+        summary: 'domain-modeling: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:10Z'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+        sha256: 'sha256:ec90314b2cffa3cd199cf66697552ebc1623aaef67431285fd10e3ff4323f934'
+        summary: 'domain-modeling: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:10Z'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+        sha256: 'sha256:ec90314b2cffa3cd199cf66697552ebc1623aaef67431285fd10e3ff4323f934'
+        summary: 'domain-modeling: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:10Z'
+      -
+        kind: gate
+        gate_id: impact-understood
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+        sha256: 'sha256:ec90314b2cffa3cd199cf66697552ebc1623aaef67431285fd10e3ff4323f934'
+        summary: 'domain-modeling: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:10Z'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/domain.md
+        sha256: 'sha256:ec90314b2cffa3cd199cf66697552ebc1623aaef67431285fd10e3ff4323f934'
+        summary: 'domain-modeling: see the sealed stage report'
+        recorded_at: '2026-10-20T11:31:10Z'
+    notes: domain-modeling completed; exact scope and evidence retained.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-20T11:31:10Z'
+    completed_at: '2026-10-20T11:32:09Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/architecture.md
+        sha256: 'sha256:3929f1e94edddc3482cdfbe5e7a9aa4ee1cf008bf576692e57adaaab5d27e337'
+        summary: 'architecture-plan: see the sealed stage report'
+        recorded_at: '2026-10-20T11:32:09Z'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/architecture.md
+        sha256: 'sha256:3929f1e94edddc3482cdfbe5e7a9aa4ee1cf008bf576692e57adaaab5d27e337'
+        summary: 'architecture-plan: see the sealed stage report'
+        recorded_at: '2026-10-20T11:32:09Z'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/architecture.md
+        sha256: 'sha256:3929f1e94edddc3482cdfbe5e7a9aa4ee1cf008bf576692e57adaaab5d27e337'
+        summary: 'architecture-plan: see the sealed stage report'
+        recorded_at: '2026-10-20T11:32:09Z'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/architecture.md
+        sha256: 'sha256:3929f1e94edddc3482cdfbe5e7a9aa4ee1cf008bf576692e57adaaab5d27e337'
+        summary: 'architecture-plan: see the sealed stage report'
+        recorded_at: '2026-10-20T11:32:09Z'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/architecture.md
+        sha256: 'sha256:3929f1e94edddc3482cdfbe5e7a9aa4ee1cf008bf576692e57adaaab5d27e337'
+        summary: 'architecture-plan: see the sealed stage report'
+        recorded_at: '2026-10-20T11:32:09Z'
+    notes: architecture-plan completed; exact scope and evidence retained.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-20T11:32:09Z'
+    completed_at: '2026-10-20T11:41:20Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/implementation.md
+        sha256: 'sha256:cbdca02a5b725a04fa14f99c9cf0c8106b27e33a6edd21a62cc76eb6bbc8d238'
+        summary: 'implementation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:41:20Z'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/implementation.md
+        sha256: 'sha256:cbdca02a5b725a04fa14f99c9cf0c8106b27e33a6edd21a62cc76eb6bbc8d238'
+        summary: 'implementation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:41:20Z'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/implementation.md
+        sha256: 'sha256:cbdca02a5b725a04fa14f99c9cf0c8106b27e33a6edd21a62cc76eb6bbc8d238'
+        summary: 'implementation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:41:20Z'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/implementation.md
+        sha256: 'sha256:cbdca02a5b725a04fa14f99c9cf0c8106b27e33a6edd21a62cc76eb6bbc8d238'
+        summary: 'implementation: see the sealed stage report'
+        recorded_at: '2026-10-20T11:41:20Z'
+    notes: implementation completed; exact scope and evidence retained.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-20T11:41:20Z'
+    completed_at: '2026-10-20T11:57:17Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+      -
+        kind: artifact
+        artifact_id: test-report
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+      -
+        kind: artifact
+        artifact_id: code-quality-report
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/assurance.md
+        sha256: 'sha256:3dbfb11565ff4bf3071db534adc18597ef913a905e6aead694323792bb22eaab'
+        summary: 'code-assurance: see the sealed stage report'
+        recorded_at: '2026-10-20T11:57:16Z'
+    notes: code-assurance completed; exact scope and evidence retained.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-20T11:57:17Z'
+    completed_at: '2026-10-20T12:19:10Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/delivery.md
+        sha256: 'sha256:2db7a107878dceb4276378ec91d2c45f87a7a2523189e979d5ef09bbeac012c7'
+        summary: 'release-delivery: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:10Z'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/delivery.md
+        sha256: 'sha256:2db7a107878dceb4276378ec91d2c45f87a7a2523189e979d5ef09bbeac012c7'
+        summary: 'release-delivery: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:10Z'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/delivery.md
+        sha256: 'sha256:2db7a107878dceb4276378ec91d2c45f87a7a2523189e979d5ef09bbeac012c7'
+        summary: 'release-delivery: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:10Z'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/delivery.md
+        sha256: 'sha256:2db7a107878dceb4276378ec91d2c45f87a7a2523189e979d5ef09bbeac012c7'
+        summary: 'release-delivery: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:10Z'
+    notes: release-delivery completed; exact scope and evidence retained.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-20T12:19:10Z'
+    completed_at: '2026-10-20T12:19:50Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        status: ready
+        path: .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+        sha256: 'sha256:e9fb10e6cbf36728a17b8962fe70412645545a93ca9357f4a0147abe66b9ef99'
+        summary: 'evolve: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:49Z'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+        sha256: 'sha256:e9fb10e6cbf36728a17b8962fe70412645545a93ca9357f4a0147abe66b9ef99'
+        summary: 'evolve: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:49Z'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        status: passed
+        path: .pf/artifacts/pf-context-parity-20261020/primary/evolve.md
+        sha256: 'sha256:e9fb10e6cbf36728a17b8962fe70412645545a93ca9357f4a0147abe66b9ef99'
+        summary: 'evolve: see the sealed stage report'
+        recorded_at: '2026-10-20T12:19:49Z'
+    notes: evolve completed; exact scope and evidence retained.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261020-072238-da5df2
+  snapshot_checksum: 'sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a'
+  assignment_capsule: .pf/contexts/assignment-capsules/pf-context-parity-20261020-diagnose-and-fix-pf-cli-mcp-context-consisten.capsule.yaml
+  assignment_capsule_checksum: 'sha256:00344bd0fed9d8e68f3cc4049a4e0125d5411dc21fe92684f9c4c2910755ee1e'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_files:
+  - .pf/artifacts/pf-context-parity-20261020/**
+  - .pf/tmp/pf-context-parity-20261020/**
+  - .pf/handoffs/pf-context-parity-20261020.md
+  - .pf/logs/pf-context-parity-20261020.md
+  - src/processforge_core/project/source_check.py
+  - src/processforge_core/project/snapshot_sources.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/pf_runtime/host.py
+  - tests/context_parity/**
+  - checksums/processforge.sha256
+  - docs/concepts/context-resolution.md
+  - docs/ru/concepts/context-resolution.md
+  - docs/guides/project-context.md
+  - docs/ru/guides/project-context.md
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/contexts/assignment-capsules/**
+  - .pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml
+  - .pf/assignments/pf-core-documentation-20261020.yaml
+  - .pf/assignments/pf-core-unit-coverage-20261020.yaml
+  - .pf/artifacts/python-quality-context.md
+  - .pf/artifacts/pf-python-quality-20261020/**
+  - .pf/artifacts/pf121-oop-blocks54-55-20261020/**
+  - .pf/artifacts/pf-framework-architecture-20261005/**
+  - .pf/artifacts/python-framework-20261005/**
+  - .pf/artifacts/original-architecture-alignment-20261010/**
+  - .pf/artifacts/oop-refactor-clarification-20261005/**
+  - .pf/artifacts/progressive-oop-boundary-20261010/**
+  - .pf/artifacts/pf-upgrade-maintenance-backlog-20261019/**
+  - .pf/handoffs/pf-app-server-restart-20261020.md
+  - .pf/handoffs/pf-python-quality-20261020.md
+  - .pf/handoffs/pf-upgrade-maintenance-backlog-20261019.md
+  - .pf/handoffs/pf121-oop-blocks54-55-20261020.md
+  - .pf/runs/pf-upgrade-maintenance-backlog-20261019/**
+  - src/**
+  - tools/**
+  - tests/**
+  - docs/**
+  - packs/**
+  - schemas/**
+  - processes/**
+  - checksums/**
+  - templates/**
+  - README.md
+  - README.ru.md
+  - VERSION
+  - CHANGELOG.md
+  - .gitattributes
+  - pyproject.toml
+  - pytest.ini
+  - .pf/artifacts/pf-context-parity-20261020/**
+  - .pf/tmp/pf-context-parity-20261020/**
+forbidden_files:
+  - src/processforge_core/resources/**
+  - src/processforge_core/project/platform_roots.py
+ownership:
+  owner_id: pf-context-parity-20261020
+  role: primary
+  writer: true
+required_sources:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-quality-context.md
+  - .pf/artifacts/oop-refactor-clarification-20261005/clarification.md
+  - .pf/artifacts/original-architecture-alignment-20261010/migration-contract.md
+  - .pf/artifacts/pf-framework-architecture-20261005/adr.md
+  - .pf/artifacts/pf-framework-architecture-20261005/direction.md
+  - .pf/artifacts/pf-framework-architecture-20261005/domain.md
+  - .pf/artifacts/progressive-oop-boundary-20261010/decision.md
+  - .pf/artifacts/python-framework-20261005/oop-02.md
+  - .pf/artifacts/python-framework-20261005/oop-03.md
+  - .pf/artifacts/python-framework-20261005/oop-05.md
+expected_report:
+  artifact: .pf/artifacts/pf-context-parity-20261020/primary/report.md
+  format: markdown
+  language: ru
+required_outputs:
+  -
+    id: context-parity-report
+    path: .pf/artifacts/pf-context-parity-20261020/primary/report.md
+    type: report
+    required: true

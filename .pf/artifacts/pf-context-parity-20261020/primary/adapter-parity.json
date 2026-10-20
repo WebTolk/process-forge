@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-20T11:47:02.760207+00:00",
+  "layer": "clean-package-shaped CLI and MCP adapter; not actual connected host",
+  "cli_exit": 0,
+  "cli": {
+    "snapshot_id": "ctx-20261020-072238-da5df2",
+    "status": "stale",
+    "policy_action": "ask_operator",
+    "recommended_action": "project-context-refresh"
+  },
+  "mcp": {
+    "snapshot_id": "ctx-20261020-072238-da5df2",
+    "status": "stale",
+    "policy_action": "ask_operator",
+    "recommended_action": "project-context-refresh"
+  },
+  "equal": true,
+  "snapshot_sha256": "sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+  "stale_resources": [
+    {
+      "reason": "project classification changed"
+    }
+  ],
+  "source_distribution": "<clean-candidate>",
+  "runtime_or_mcp_service_started": false,
+  "existing_connected_host_accepted": false
+}

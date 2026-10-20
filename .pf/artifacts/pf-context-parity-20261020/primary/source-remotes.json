@@ -1,0 +1,10 @@
+{
+  "observed_at": "2026-10-20T12:08:15.232Z",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "origin_dev": "526c5d13e42e96693802760cce35fe896e208708",
+  "gitverse_dev": "526c5d13e42e96693802760cce35fe896e208708",
+  "initial_pushes_parallel": true,
+  "gitverse_missing_push_retried_without_new_commit": true,
+  "gitverse_auth": "existing GITVERSE_TOKEN; no token in URLs, arguments or artifacts",
+  "readback": "git ls-remote, full SHA verified"
+}

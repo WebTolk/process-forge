@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-20T11:38:16.329Z",
+  "kind": "focused-iteration-checks",
+  "checks": [
+    {
+      "name": "pytest",
+      "command": "python <shared-python-qa>/qa.py --project-root . test -- -q -p no:cacheprovider tests/context_parity",
+      "exit_code": 0,
+      "log": ".pf/tmp/pf-context-parity-20261020/pytest.log",
+      "output": "................                                                     [100%]\r\n16 passed, 4 subtests passed in 1.51s\r\n"
+    },
+    {
+      "name": "lint",
+      "command": "python <shared-python-qa>/qa.py --project-root . lint -- src/processforge_core/project/source_check.py src/processforge_core/project/snapshot_sources.py tests/context_parity",
+      "exit_code": 0,
+      "log": ".pf/tmp/pf-context-parity-20261020/lint.log",
+      "output": "All checks passed!\r\n"
+    },
+    {
+      "name": "format",
+      "command": "python <shared-python-qa>/qa.py --project-root . format -- src/processforge_core/project/source_check.py src/processforge_core/project/snapshot_sources.py tests/context_parity",
+      "exit_code": 0,
+      "log": ".pf/tmp/pf-context-parity-20261020/format.log",
+      "output": "4 files already formatted\r\n"
+    },
+    {
+      "name": "mypy",
+      "command": "python <shared-python-qa>/qa.py --project-root . typecheck -- --follow-imports=silent --ignore-missing-imports --cache-dir .pf/tmp/pf-context-parity-20261020/mypy-cache src/processforge_core/project/source_check.py src/processforge_core/project/snapshot_sources.py tests/context_parity",
+      "exit_code": 0,
+      "log": ".pf/tmp/pf-context-parity-20261020/mypy.log",
+      "output": "Success: no issues found in 4 source files\r\n"
+    },
+    {
+      "name": "versions",
+      "command": "python <shared-python-qa>/qa.py --project-root . versions",
+      "exit_code": 0,
+      "log": ".pf/tmp/pf-context-parity-20261020/versions.log",
+      "output": "{\r\n  \"python\": \"3.14.3\",\r\n  \"tools\": {\r\n    \"ruff\": \"0.17.1\",\r\n    \"pytest\": \"9.1.1\",\r\n    \"pytest-cov\": \"7.1.0\",\r\n    \"coverage\": \"7.16.2\",\r\n    \"mypy\": \"2.4.0\",\r\n    \"bandit\": \"1.9.4\",\r\n    \"pip-audit\": \"2.10.1\"\r\n  }\r\n}\r\n"
+    }
+  ]
+}

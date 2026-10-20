@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T11:43:42.436280+00:00",
+  "group": "context-policy",
+  "command": [
+    "python",
+    "-X",
+    "utf8",
+    "tools/smoke_project_context_freshness_policies.py"
+  ],
+  "exit_code": 0,
+  "source_layer": "working-source",
+  "log": ".pf/tmp/pf-context-parity-20261020/context-policy.log",
+  "stdout": "PASS: project context freshness policies smoke\r\n",
+  "stderr": ""
+}

@@ -1,0 +1,87 @@
+{
+  "at": "2026-10-20T11:50:26.490427+00:00",
+  "status": "pass",
+  "layer": "normal clean distribution; native private project; long-lived in-process MCP adapter",
+  "observations": [
+    {
+      "phase": "original LF",
+      "cli": {
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "mcp": {
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "equal": true,
+      "expected": "fresh",
+      "reasons": []
+    },
+    {
+      "phase": "CRLF same text without refresh",
+      "cli": {
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "mcp": {
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "equal": true,
+      "expected": "fresh",
+      "reasons": []
+    },
+    {
+      "phase": "real package change in same loaded MCP adapter",
+      "cli": {
+        "status": "stale",
+        "policy_action": "ask_operator",
+        "recommended_action": "project-context-refresh",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "mcp": {
+        "status": "stale",
+        "policy_action": "ask_operator",
+        "recommended_action": "project-context-refresh",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "equal": true,
+      "expected": "stale",
+      "reasons": [
+        {
+          "reason": "source changed: official-pack-processforge-official-software-development-package"
+        }
+      ]
+    },
+    {
+      "phase": "restored LF in same loaded MCP adapter",
+      "cli": {
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "mcp": {
+        "status": "fresh",
+        "policy_action": "continue",
+        "recommended_action": "continue",
+        "snapshot_id": "ctx-20261020-115020-8e8f36"
+      },
+      "equal": true,
+      "expected": "fresh",
+      "reasons": []
+    }
+  ],
+  "snapshot_unchanged": true,
+  "snapshot_sha256": "f704f96b086a35a58b6f870a0d7ce4e10676c1f4ff42df4ce739167a4c0a8b30",
+  "actual_installed_core_or_connected_host_changed": false,
+  "services_started_or_restarted": false
+}

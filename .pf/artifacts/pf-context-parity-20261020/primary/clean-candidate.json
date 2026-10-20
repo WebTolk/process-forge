@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-20T11:45:20.682709+00:00",
+  "baseline_head": "e708864483f9e0de8f42970770b1c807dd611623",
+  "root": ".pf/tmp/pf-context-parity-20261020/candidate",
+  "own_files": [
+    "src/processforge_core/project/source_check.py",
+    "src/processforge_core/project/snapshot_sources.py",
+    "docs/concepts/context-resolution.md",
+    "docs/ru/concepts/context-resolution.md",
+    "tests/context_parity/conftest.py",
+    "tests/context_parity/test_official_pack_freshness.py"
+  ],
+  "inventory_changed_rows": [
+    "src/processforge_core/project/source_check.py",
+    "src/processforge_core/project/snapshot_sources.py",
+    "docs/concepts/context-resolution.md",
+    "docs/ru/concepts/context-resolution.md"
+  ],
+  "clean_inventory_sha256": "70611175d7dfdbef01af4ca5e1ed17ec94d3f81258388b11ade97051278b4d47",
+  "excluded_pending_oop": [
+    "src/processforge_core/project/platform_roots.py",
+    "src/processforge_core/resources/records.py",
+    "src/processforge_core/resources/registries.py",
+    "src/processforge_core/resources/snapshot.py",
+    "tools/processforge.py",
+    "docs/concepts/python-core-structure.md",
+    "docs/ru/concepts/python-core-structure.md"
+  ],
+  "source_export_sha256": "1d6be8369cb1a7f1c3fa0cb667bbd32cd75401ac09f56b8afd69c822bf007bc3",
+  "tracked_public_paths_count": 32,
+  "installed_or_host_changed": false
+}

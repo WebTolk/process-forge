@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-20T12:17:46.345255+00:00",
+  "root": ".pf/tmp/pf-context-parity-20261020",
+  "reason": "Retained task evidence: native QA logs, before/after fingerprints, same-snapshot and adapter fixtures, source commit index, clean-checkout reproduction of release-test failure, and secret-free transport scripts.",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "contains_credential_values": false,
+  "disposal": "Only after evidence handoff or a separately scoped cleanup; never by age alone."
+}

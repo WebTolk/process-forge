@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-20T11:57:14.265Z",
+  "status": "pass",
+  "qualification": "source-only independent review",
+  "reviewer": "/root/context_parity_review",
+  "run_id": "garage-pf-context-parity-review-20261020-independent-source-only-review",
+  "assignment_id": "pf-context-parity-review-20261020-independent-source-only-review-of-comp",
+  "context_id": "pf-context-parity-review-20261020-independent-source-only-review-of-comp-capsule",
+  "capsule_sha256": "c0622dfb0eb78ad2c3156bfa39e0bdb1c05f36e04a9c3f2378dd988c89864cc8",
+  "action": "run_completed",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "report": ".pf/artifacts/pf-context-parity-review-20261020/report.md",
+  "reported_report_sha256": "107f8aedcd25b0b9c98bc7f5ce004bfb5f1bee878c02966a24153f55f47b507f",
+  "report_size_bytes": 6844,
+  "final_native_receipt": ".pf/artifacts/pf-context-parity-review-20261020/lifecycle/evolve.json",
+  "reported_receipt_sha256": "91f601f5b3f8a6ff8a59215b8b1e7b64e166aaa9ae446c7afb493b5f0974e559",
+  "received_via": "independent reviewer final message, including complete sealed report",
+  "material_findings": [],
+  "candidate_files_verified": 7,
+  "independent_checks": [
+    "All 7 candidate raw hashes match, before and after review",
+    "Frozen dataclass fields/order/defaults/decorators preserved; constructors cold",
+    "fingerprint() AST unchanged; FileDigestReader unchanged",
+    "Only 4 own inventory rows changed, all 7 inherited rows retained",
+    "Shared policy, active-source selection, real drift/races/add/remove and raw public shape preserved",
+    "Read actual diff, selected Python knowledge, all required architecture sources and existing receipts"
+  ],
+  "reviewer_commands": [
+    {
+      "command": "python -B -X utf8 .pf/tmp/pf-context-parity-review-20261020/inspect_candidate.py",
+      "exit_code": 0
+    },
+    {
+      "command": "python -B -X utf8 .pf/tmp/pf-context-parity-review-20261020/seal_review.py",
+      "exit_code": 0
+    }
+  ],
+  "reused_verification": {
+    "pytest": "16 passed, 4 subtests",
+    "ruff_lint": "pass",
+    "ruff_format": "4 files formatted",
+    "mypy": "4 files, no issues",
+    "context_policy": "pass",
+    "context_lock": "pass",
+    "context_core": "pass",
+    "adapter_fixture": "4 phases equal; snapshot unchanged"
+  },
+  "installed_or_connected_acceptance": false,
+  "zip_contents_audit": false
+}
