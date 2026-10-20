@@ -99,9 +99,15 @@ project snapshot.
 python bin/pf.py context-resolve --project-root <path>
 ```
 
-Команда записывает context index, resolved rules, conflict report и приватный
-cache record. Она работает консервативно: отсутствие обязательных источников
-или blocking conflicts не дают получить чистый context status.
+Команда читает существующий snapshot проектного контекста и проверяет его
+текущую актуальность и готовность. Она не пересоздаёт старые файлы контекста,
+не обновляет snapshot и не обслуживает поисковый индекс. С `--json` возвращается
+один JSON-объект с полями `snapshot` и `check`; отсутствующий, повреждённый или
+блокирующий контекст остаётся ошибкой.
+
+Для явного пересоздания snapshot служит `project-context-refresh`. Поведение
+селекторов и переход со старой неявной записи описаны в
+[руководстве команды](../guides/context-resolve.md).
 
 См. также [каскадное объединение](cascade-merge.md),
 [snapshot проектного контекста](project-context-snapshot.md) и

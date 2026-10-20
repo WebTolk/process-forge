@@ -86,7 +86,12 @@ list item by id.
 
 ## Minimal Tool Behavior
 
-`python bin/pf.py context-resolve --project-root <path>` writes the
-context index, resolved rules, conflict report, and a private cache record. The
-command is conservative: missing required sources or blocked conflicts prevent a
-clean context status.
+`python bin/pf.py context-resolve --project-root <path>` reads the existing
+canonical project snapshot and checks its current freshness and readiness. It
+does not regenerate legacy context files, refresh the snapshot, or maintain the
+search index. `--json` returns one JSON object with `snapshot` and `check` fields;
+missing, broken, or blocked context remains a failure.
+
+Use `project-context-refresh` explicitly when the project snapshot needs to be
+regenerated. See the [context command guide](../guides/context-resolve.md) for
+selector behavior and migration from the older implicit writer.

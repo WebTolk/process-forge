@@ -11105,12 +11105,18 @@ def command_context_resolve(args: argparse.Namespace) -> int:
         else:
             print(dump_yaml({"resolved_context": resolved}), end="")
         return 1 if resolved.get("conflicts") else 0
-    print("DEPRECATED: context-resolve is a compatibility command. Use project-context-refresh and project-context-check for .pf projects.")
-    status, paths = write_context_outputs(project_root)
-    print(f"STATUS: {status}")
-    for path in paths.values():
-        print(f"WROTE: {rel(path, project_root)}")
-    return 1 if status == "blocked" else 0
+    from processforge_core.project.snapshot import load_snapshot
+
+    check_result = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None))
+    payload = {
+        "snapshot": load_snapshot(project_root) if not check_result.get("broken") else {},
+        "check": check_result,
+    }
+    if getattr(args, "json", False):
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(dump_yaml(payload), end="")
+    return 1 if check_result.get("broken") or check_result.get("policy_action") == "block" else 0
 
 
 def command_context_compile(args: argparse.Namespace) -> int:
