@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-20T08:35:42.942648+00:00",
+  "status": "pass",
+  "authorization": "Explicit operator request to restart App Server before manually reconnecting the session",
+  "command_template": "python <installed-core>/tools/processforge.py server restart --workplace <workplace> --interval 10 --timeout 20 --force --json",
+  "normal_attempt": {
+    "exit_code": 1,
+    "http_status": 409,
+    "reason": "runtime_busy_or_activity_unknown",
+    "restart_performed": false
+  },
+  "force_attempt": {
+    "exit_code": 0,
+    "result": "started",
+    "reason": "Global activity metrics partial; held leases=0 with complete lease coverage, own cycle workers already terminal/checked_out. Explicit requested operator restart, native force option only. Unobserved activity was not treated as zero."
+  },
+  "new_process_identity_verified": true,
+  "old_process_no_longer_alive": true,
+  "entrypoint_is_installed_core": true,
+  "installed_source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "readiness": "ready",
+  "health": "ready",
+  "interval_seconds": 10.0,
+  "configuration_status": "valid",
+  "server_issue_count": 0,
+  "core_update_repeated": false,
+  "project_context_refreshed": false,
+  "connected_mcp_after_reconnect_accepted": false,
+  "next_action": "User restarts the session; next session checks actual connected pf.context and loaded provenance before further work. No next refactor started.",
+  "private_proof_location": ".pf/tmp/pf-app-server-restart-20261020/"
+}
