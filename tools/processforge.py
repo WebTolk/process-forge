@@ -58,6 +58,7 @@ from processforge_core.resources.workplace_catalog import WorkplaceCatalogReader
 from processforge_core.work.context_documents import PATH_CONSTANT_PATTERN as _path_constant_pattern
 from processforge_core.configuration.project_parameters import ProjectParameterResolver
 from processforge_core.project.overrides import PROJECT_OVERRIDE_MODES as _project_override_modes
+from processforge_core.configuration.assignment_parameters import AssignmentParameterResolver
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -4173,32 +4174,6 @@ SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
 
 
 
-def resolve_assignment_parameters(project_root: Path, snapshot: dict[str, Any], assignment_metadata: dict[str, Any]) -> dict[str, Any]:
-    base = snapshot.get("resolved_parameters") if isinstance(snapshot.get("resolved_parameters"), dict) else {}
-    snapshot_resolution = snapshot.get("parameter_resolution") if isinstance(snapshot.get("parameter_resolution"), dict) else {}
-    result: dict[str, Any] = {
-        "status": "resolved",
-        "resolved_parameters": copy.deepcopy(base),
-        "sources": copy.deepcopy(snapshot_resolution.get("sources", [])) if isinstance(snapshot_resolution.get("sources"), list) else [],
-        "provenance": copy.deepcopy(snapshot_resolution.get("provenance", {})) if isinstance(snapshot_resolution.get("provenance"), dict) else {},
-        "conflicts": copy.deepcopy(snapshot_resolution.get("conflicts", [])) if isinstance(snapshot_resolution.get("conflicts"), list) else [],
-    }
-    process_ref = assignment_metadata.get("process")
-    process_id = str(process_ref.get("id") if isinstance(process_ref, dict) else process_ref or "")
-    stage_id = str(assignment_metadata.get("stage") or "")
-    if process_id:
-        try:
-            process_path = resolve_process_definition(project_root, process_id).path
-            process_parameters, stage_parameters = _parameter_source_service.process_parameters(process_path)
-            _parameter_source_service.add(result, source_id=f"assignment-process:{process_id}", layer="process", parameters=process_parameters, path=process_path, project_root=project_root)
-            if stage_id and stage_id in stage_parameters:
-                _parameter_source_service.add(result, source_id=f"assignment-stage:{process_id}:{stage_id}", layer="stage", parameters=stage_parameters[stage_id], path=process_path, project_root=project_root)
-        except SystemExit:
-            result["conflicts"].append({"id": process_id, "kind": "process", "reason": "assignment process parameters could not be loaded"})
-    _parameter_source_service.add(result, source_id="assignment", layer="task", parameters=parameter_payload(assignment_metadata))
-    if result["conflicts"]:
-        result["status"] = "conflict"
-    return result
 
 
 
@@ -15149,6 +15124,8 @@ _project_parameter_resolver._parameter_source_service = _parameter_source_servic
 _project_parameter_resolver._specialization_catalog_reader = _specialization_catalog_reader
 _project_parameter_resolver._project_override_reader = _project_override_reader
 _project_parameter_resolver._project_platform_selection_service = _project_platform_selection_service
+_assignment_parameter_resolver = AssignmentParameterResolver(ROOT)
+_assignment_parameter_resolver._parameter_source_service = _parameter_source_service
 
 if __name__ == "__main__":
     sys.exit(main())
