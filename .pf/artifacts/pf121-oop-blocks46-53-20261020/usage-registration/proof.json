@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-20T04:29:41.221818+00:00",
+  "task_id": "pf-task-token-usage-logs-20261020",
+  "task_order": 10,
+  "status": "open",
+  "run_status": "draft",
+  "execution_mode": "planning_only",
+  "writer": false,
+  "capsule_created": false,
+  "task_doctor": "PASS: task.schema_version present\nPASS: task.id present\nPASS: task.title present\nPASS: task.run_id present\nPASS: task.process present\nPASS: task.status present\nPASS: task.iterations present\nPASS: task.result present\nPASS: task status valid: open\nPASS: referenced run exists: pf-upgrade-maintenance-backlog-20261019\nPASS: process exists: software-feature-development\nPASS: .pf/assignments/pf-task-token-usage-logs-20261020.yaml has no private absolute paths\n",
+  "native_run_readback": "RUN: pf-upgrade-maintenance-backlog-20261019\nTITLE: Будущие задачи: надёжность обновлений, обслуживание и диагностика PF\nSTATUS: draft\nTASKS: open=10\n- 1: pf-upgrade-compatibility-matrix-20261019 [open]\n- 2: pf-upgrade-integrated-verification-20261019 [open]\n- 3: pf-maintenance-sqlite-journals-20261019 [open]\n- 4: pf-windows-monitor-launch-20261019 [open]\n- 5: pf-health-readiness-statistics-20261019 [open]\n- 6: pf-context-refresh-indexing-separation-20261019 [open]\n- 7: pf-monitor-uptime-format-20261019 [open]\n- 8: pf-forge-project-init-agent-hooks-20261019 [open]\n- 9: pf-cli-mcp-context-consistency-20261019 [open]\n- 10: pf-task-token-usage-logs-20261020 [open]\n",
+  "scope": "future registration only; no feature implementation or product source changes",
+  "files": [
+    ".pf/assignments/pf-task-token-usage-logs-20261020.yaml",
+    ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml",
+    ".pf/runs/pf-upgrade-maintenance-backlog-20261019/task-index.md",
+    ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+    ".pf/handoffs/pf-upgrade-maintenance-backlog-20261019.md",
+    ".pf/logs/pf-upgrade-maintenance-backlog-20261019.md"
+  ]
+}

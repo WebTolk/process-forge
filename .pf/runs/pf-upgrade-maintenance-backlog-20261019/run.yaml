@@ -4,7 +4,7 @@ title: 'Будущие задачи: надёжность обновлений, 
 process: software-feature-development
 status: draft
 created_at: '2026-10-19T12:44:58Z'
-updated_at: '2026-10-19T13:58:09Z'
+updated_at: '2026-10-20T04:22:43Z'
 objective: Будущая очередь по отчёту обновления 1.1.0 → 1.2.0, сообщениям агентов об эксплуатации PF и требованиям пользователя к обслуживанию, диагностике и инициализации. Сейчас только регистрация задач; выполнение и привязка к релизу не согласованы. Продуктовый код и инфраструктуру не менять. Индексация документации относится к работе и планировщику уровня устройства, а не к обновлению проектного контекста. Автонастройка хуков при инициализации в Forge является будущей задачей. Существующую задачу окна PF App Server не дублировать.
 platform: ""
 selected_specializations:
@@ -66,6 +66,12 @@ tasks:
     assignment: .pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml
     status: open
     order: 9
+    blocking: true
+  -
+    id: pf-task-token-usage-logs-20261020
+    assignment: .pf/assignments/pf-task-token-usage-logs-20261020.yaml
+    status: open
+    order: 10
     blocking: true
 final_artifacts:
   []
