@@ -41,6 +41,8 @@ Within that unit, repeat investigation, domain/architecture reasoning, approved 
 
 Separate local verification from final assurance in the plan. Run the focused checks affected by each iteration. At code-assurance, assess the accumulated candidate with the agreed risk-based check set, including integration/regression checks where relevant. Reuse earlier evidence only with its provenance and continued applicability to that candidate; later edits require rerunning the checks they invalidate. Do not rerun an unrelated full suite, package, installation or publication after every small edit merely because an iteration ended.
 
+At `code-assurance`, tests and code quality are required through the existing `assurance-complete` gate. Write the required `test-report` and `code-quality-report` with actual commands, tool versions, checked candidate identity, scope, exit codes, results and limitations. Run the configured test runner, lint, format check and applicable static analysis from the project/toolchain context. A required failure or unavailable check blocks completion. Only checks with no applicable executable code may be recorded as `not_applicable`, with a concrete reason and evidence. Do not substitute a prose assertion for execution or automatically fix code during a read-only quality check.
+
 Apply the project's explicit commit, publication, release and installation policies at the agreed delivery boundary. Do not silently waive a requested delivery. Record conditional operations as not_applicable with reason and evidence when they are not required.
 
 ## Nested Assignments

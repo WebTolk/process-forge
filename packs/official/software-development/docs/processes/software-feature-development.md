@@ -134,6 +134,18 @@ publication.
 
 ## Checks And Evidence
 
+At `code-assurance`, relevant tests and project/toolchain code-quality checks
+are required. The existing `assurance-complete` gate requires both `test-report`
+and `code-quality-report` to record the actual commands, tool versions, checked
+candidate, scope, exit codes, results and limitations. Failed or unavailable
+required checks block completion. A change without applicable executable code
+needs an explicit `not_applicable` reason and supporting evidence; an empty report
+does not establish success. Use the project's configured test runner, lint,
+format check and applicable static analysis. Additional documentation, coverage
+and security checks follow the affected scope and toolchain policy. Automatic
+fixes require a separate explicit operation. Tool bindings belong to the project
+and toolchain, so this process remains language independent.
+
 Plan focused checks for each affected area and risk-based final assurance for
 the integrated result. Run checks relevant to an iteration, then assess the
 accumulated candidate at `code-assurance`. Include integration and regression

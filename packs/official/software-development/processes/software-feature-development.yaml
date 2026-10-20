@@ -1,7 +1,7 @@
 schema_version: 1
 id: software-feature-development
 name: Software Feature Development
-version: 1.2.0
+version: 1.2.1
 status: active
 description: Guides one cohesive software result through orchestration, intake, investigation, domain understanding, architecture, iterative implementation, integrated assurance, release delivery and evolution capture. Internal iterations and nested worker contributions stay inside the parent result boundary. Release and evolution stages may be completed as not_applicable with evidence when delivery is not required.
 required_capabilities:
@@ -280,7 +280,7 @@ stages:
   - implementation-scope-respected
 - id: code-assurance
   title: Code Assurance
-  description: Review the accumulated candidate against acceptance criteria and the risk-based verification plan, including applicable integration, regression and browser/UI checks; reuse valid evidence and rerun checks affected by later edits.
+  description: Review the accumulated candidate against acceptance criteria; run the relevant tests and project/toolchain code-quality checks and record successful results in the required test-report and code-quality-report. Include applicable integration, regression and browser/UI checks; reuse valid evidence and rerun checks affected by later edits.
   required_inputs:
   - change-summary
   produced_artifacts:
@@ -288,6 +288,7 @@ stages:
   - test-plan
   - test-cases
   - test-report
+  - code-quality-report
   - browser-verification-report
   required_role: reviewer
   required_capabilities:
@@ -300,7 +301,7 @@ stages:
   - implementation-scope-respected
   exit_gates:
   - assurance-complete
-  goal: Verify the change and explicitly record browser/UI verification as applicable or not_applicable.
+  goal: Require successful relevant tests and code-quality checks; record exact evidence and justified applicability decisions, including browser/UI verification.
   actor: primary_agent
   gates:
   - assurance-complete
@@ -309,6 +310,7 @@ stages:
   description: Apply the agreed result-level delivery requirement and explicit project/operator policies, run the configured profile when required, and record package/publication evidence or a justified not_applicable decision.
   required_inputs:
   - test-report
+  - code-quality-report
   produced_artifacts:
   - release-notes
   - migration-notes
@@ -520,12 +522,25 @@ artifact_definitions:
   path_hint: .pf/artifacts/test-cases.md
 - id: test-report
   title: Test Report
+  description: Actual relevant unit, integration and regression commands, tool versions, checked candidate identity, exit codes and results. Failed or unavailable required tests do not pass assurance. For a change without executable behavior, record a justified not_applicable decision with reason and evidence.
   owner_role: reviewer
   template: validation-report-template
   lifecycle: *artifact_lifecycle
   type: markdown
   required: true
   path_hint: .pf/artifacts/test-report.md
+- id: code-quality-report
+  title: Code Quality Report
+  description: Actual project/toolchain lint, formatting and applicable static-analysis commands, versions, checked candidate identity, scope, exit codes, findings and limitations. Failed or unavailable required checks do not pass assurance. For a change without applicable code, record a justified not_applicable decision with reason and evidence.
+  owner_role: reviewer
+  template: validation-report-template
+  lifecycle: *artifact_lifecycle
+  type: markdown
+  required: true
+  not_applicable_requires:
+  - reason
+  - evidence
+  path_hint: .pf/artifacts/code-quality-report.md
 - id: browser-verification-report
   title: Browser Verification Report
   owner_role: reviewer
@@ -682,7 +697,7 @@ gates:
   type: checklist
   required: true
 - id: assurance-complete
-  description: Review, tests, test report, and conditional browser/UI verification evidence are complete.
+  description: Review is complete and required test-report and code-quality-report show successful relevant tests and project/toolchain quality checks for the current candidate, with actual commands, versions and exit codes. Required failures or unavailable checks block completion. Any inapplicable check, including conditional browser/UI verification, requires an explicit reason and supporting evidence; missing evidence is not success.
   blocking: true
   type: checklist
   required: true
