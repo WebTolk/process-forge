@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-20T12:53:01.710Z",
+  "run_id": "garage-pf-context-device-install-20261020-operator-explicitly-requested",
+  "action": "run_completed",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "incomplete": [],
+  "run_doctor_exit_code": 0,
+  "output": "PASS: run.schema_version present\r\nPASS: run.id present\r\nPASS: run.title present\r\nPASS: run.process present\r\nPASS: run.status present\r\nPASS: run.created_at present\r\nPASS: run.updated_at present\r\nPASS: run.tasks present\r\nPASS: run status valid: completed\r\nPASS: summary status matches run: completed\r\nPASS: task index status matches run: completed\r\nPASS: handoff status matches run: completed\r\nPASS: process exists: software-feature-development\r\nPASS: .pf/runs/garage-pf-context-device-install-20261020-operator-explicitly-requested/run.yaml has no private absolute paths\r\nPASS: task id unique: pf-context-device-install-20261020-operator-explicitly-requested-install\r\nPASS: task status valid for pf-context-device-install-20261020-operator-explicitly-requested-install: done\r\nPASS: assignment exists for pf-context-device-install-20261020-operator-explicitly-requested-install: .pf/assignments/pf-context-device-install-20261020-operator-explicitly-requested-install.yaml\r\nPASS: pf-context-device-install-20261020-operator-explicitly-requested-install run_id matches run\r\nPASS: completed run has all blocking tasks done\r\nPASS: .pf/runs/garage-pf-context-device-install-20261020-operator-explicitly-requested/summary.md exists\r\nPASS: .pf/handoffs/runs/garage-pf-context-device-install-20261020-operator-explicitly-requested-handoff.md exists\r\n"
+}

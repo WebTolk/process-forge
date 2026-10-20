@@ -75,3 +75,15 @@ Next recommended action: начать с живых .pf/AGENTS.md, pf.context/so
 подготовку альфы. Полный OOP epic и Core unit coverage остаются отдельными задачами.
 Собственные raw evidence и воспроизведение сохранены под .pf/tmp/pf-context-parity-20261020
 по retention.json; удаление по возрасту не разрешено.
+
+## Дополнение после прямого поручения установить, 2026-10-20 16:54 +04:00
+
+Исправление УСТАНОВЛЕНО на текущее устройство отдельной разрешённой Work.
+Один native apply core-update-20261020T124659Z, source 526c5d13, 5 changed,
+1458 managed verified, incomplete_update=false, repair nothing_to_repair,
+doctor-workplace PASS197. Installed и source CLI оба fresh/ready/continue на
+прежнем snapshot без refresh. Ранее записанное «Core не обновлялся» описывает
+состояние до этого дополнения. Актуальная передача:
+.pf/handoffs/pf-context-device-install-20261020.md.
+Осталось пользовательское переподключение/новая сессия и actual connected MCP
+сравнение. НЕ применять этот пакет повторно и не повторять старый update.

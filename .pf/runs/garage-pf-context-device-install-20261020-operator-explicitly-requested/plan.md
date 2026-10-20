@@ -1,0 +1,3 @@
+# Run Plan: pf-context-device-install-20261020: operator explicitly requested installation o
+
+Objective: pf-context-device-install-20261020: operator explicitly requested installation on the current device before they restart this session. Apply exactly the reviewed source 526c5d13e42e96693802760cce35fe896e208708 dev archive with SHA256 acaa0ff8b3b8a368520a7a115e3db14efe45c74555425f74ea116d9dd9b36457 using native Core update once, preserve installed local/unowned and Workplace/project state, verify installed CLI freshness on the unchanged snapshot, and hand off actual connected MCP acceptance to the user's restarted session. No source changes, alpha publication, archive content audit or service restart.

@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-20T12:47:00.399160+00:00",
+  "native_exit_code": 0,
+  "status": "applied",
+  "update_id": "core-update-20261020T124659Z",
+  "counts": {
+    "added": 0,
+    "changed": 5,
+    "locally_modified": 0,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1453
+  },
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "archive_sha256": "acaa0ff8b3b8a368520a7a115e3db14efe45c74555425f74ea116d9dd9b36457",
+  "attempts": 1,
+  "force_local_modifications": false,
+  "service_restarts": false,
+  "operator_authorization": "Установи и я перезапущу сессию",
+  "backup_namespace": "core-update-20261020T124659Z"
+}

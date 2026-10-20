@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-20T12:49:28.709102+00:00",
+  "result": "pass",
+  "update_id": "core-update-20261020T124659Z",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "version": "1.2.0",
+  "installed_owned_verified": 1458,
+  "backup_preimages_verified": 5,
+  "previous_manifest_backup_verified": true,
+  "protected_files_preserved": 7,
+  "previous_manifest_backup_raw_sha_matches": false,
+  "workplace_yaml_preserved": 243,
+  "unowned_static_preserved": 69,
+  "unrelated_source_preserved": 8,
+  "incomplete_update": false,
+  "repair": "nothing_to_repair",
+  "doctor_workplace": "pass",
+  "doctor_pass_lines": 197,
+  "installed_module_roots_verified": true,
+  "installed_context": {
+    "snapshot_id": "ctx-20261020-072238-da5df2",
+    "snapshot_sha256": "sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+    "status": "fresh",
+    "resource_readiness": {
+      "blockers": [],
+      "status": "fresh"
+    },
+    "execution_readiness": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "policy_action": "continue",
+    "stale_resources": []
+  },
+  "snapshot_refreshed": false,
+  "services_restarted": false,
+  "actual_connected_host_acceptance": "pending user session restart",
+  "archive_content_audit": false
+}

@@ -1,0 +1,14 @@
+{
+  "run_id": "garage-pf-context-device-install-20261020-operator-explicitly-requested",
+  "assignment_id": "pf-context-device-install-20261020-operator-explicitly-requested-install",
+  "context_id": "pf-context-device-install-20261020-operator-explicitly-requested-install-capsule",
+  "capsule_checksum": "sha256:a2a82c892841bbee205732535c27fa262859017882453228f385686343a3f7cb",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "operator_authorization": "Установи и я перезапущу сессию",
+  "source_only_predecessor_terminal": true
+}

@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-20T12:43:11.425432+00:00",
+  "source_commit": "526c5d13e42e96693802760cce35fe896e208708",
+  "archive_sha256": "acaa0ff8b3b8a368520a7a115e3db14efe45c74555425f74ea116d9dd9b36457",
+  "protected_files": 7,
+  "workplace_yaml_files": 243,
+  "unowned_static_files": 69,
+  "unrelated_source_files": 8,
+  "status_before": "installed",
+  "installed_owned_before": 1458,
+  "incomplete_update_before": false,
+  "native_plan_exit_code": 0,
+  "archive_content_audit": false,
+  "native_installer_validation": true,
+  "unreviewed_source_driver_used": false
+}

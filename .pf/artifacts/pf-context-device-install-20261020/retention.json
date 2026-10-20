@@ -1,0 +1,7 @@
+{
+  "scope": ".pf/tmp/pf-context-device-install-20261020",
+  "purpose": "Retained installation evidence: native before/after results, guards, updater attempt/result, manifests and installed module provenance.",
+  "update_id": "core-update-20261020T124659Z",
+  "contains_credential_values": false,
+  "disposal": "Only after an evidence handoff or explicitly scoped cleanup; never by age alone."
+}
