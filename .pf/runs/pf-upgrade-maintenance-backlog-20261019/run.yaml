@@ -4,91 +4,82 @@ title: 'Будущие задачи: надёжность обновлений, 
 process: software-feature-development
 status: draft
 created_at: '2026-10-19T12:44:58Z'
-updated_at: '2026-10-20T13:14:23Z'
+updated_at: '2026-10-20T17:34:04Z'
 objective: Будущая очередь по отчёту обновления 1.1.0 → 1.2.0, сообщениям агентов об эксплуатации PF и требованиям пользователя к обслуживанию, диагностике и инициализации. Сейчас только регистрация задач; выполнение и привязка к релизу не согласованы. Продуктовый код и инфраструктуру не менять. Индексация документации относится к работе и планировщику уровня устройства, а не к обновлению проектного контекста. Автонастройка хуков при инициализации в Forge является будущей задачей. Существующую задачу окна PF App Server не дублировать.
-platform: ""
-selected_specializations:
-  []
+platform: ''
+selected_specializations: []
 scope:
   type: project
   project_root: .
 tasks:
-  -
-    id: pf-upgrade-compatibility-matrix-20261019
-    assignment: .pf/assignments/pf-upgrade-compatibility-matrix-20261019.yaml
-    status: open
-    order: 1
-    blocking: true
-  -
-    id: pf-upgrade-integrated-verification-20261019
-    assignment: .pf/assignments/pf-upgrade-integrated-verification-20261019.yaml
-    status: open
-    order: 2
-    blocking: true
-  -
-    id: pf-maintenance-sqlite-journals-20261019
-    assignment: .pf/assignments/pf-maintenance-sqlite-journals-20261019.yaml
-    status: open
-    order: 3
-    blocking: true
-  -
-    id: pf-windows-monitor-launch-20261019
-    assignment: .pf/assignments/pf-windows-monitor-launch-20261019.yaml
-    status: open
-    order: 4
-    blocking: true
-  -
-    id: pf-health-readiness-statistics-20261019
-    assignment: .pf/assignments/pf-health-readiness-statistics-20261019.yaml
-    status: open
-    order: 5
-    blocking: true
-  -
-    id: pf-context-refresh-indexing-separation-20261019
-    assignment: .pf/assignments/pf-context-refresh-indexing-separation-20261019.yaml
-    status: open
-    order: 6
-    blocking: true
-  -
-    id: pf-monitor-uptime-format-20261019
-    assignment: .pf/assignments/pf-monitor-uptime-format-20261019.yaml
-    status: open
-    order: 7
-    blocking: true
-  -
-    id: pf-forge-project-init-agent-hooks-20261019
-    assignment: .pf/assignments/pf-forge-project-init-agent-hooks-20261019.yaml
-    status: done
-    order: 8
-    blocking: true
-  -
-    id: pf-cli-mcp-context-consistency-20261019
-    assignment: .pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml
-    status: done
-    order: 9
-    blocking: true
-  -
-    id: pf-task-token-usage-logs-20261020
-    assignment: .pf/assignments/pf-task-token-usage-logs-20261020.yaml
-    status: open
-    order: 10
-    blocking: true
-  -
-    id: pf-core-documentation-20261020
-    assignment: .pf/assignments/pf-core-documentation-20261020.yaml
-    status: open
-    order: 11
-    blocking: true
-  -
-    id: pf-core-unit-coverage-20261020
-    assignment: .pf/assignments/pf-core-unit-coverage-20261020.yaml
-    status: open
-    order: 12
-    blocking: true
-final_artifacts:
-  []
+- id: pf-upgrade-compatibility-matrix-20261019
+  assignment: .pf/assignments/pf-upgrade-compatibility-matrix-20261019.yaml
+  status: open
+  order: 1
+  blocking: true
+- id: pf-upgrade-integrated-verification-20261019
+  assignment: .pf/assignments/pf-upgrade-integrated-verification-20261019.yaml
+  status: open
+  order: 2
+  blocking: true
+- id: pf-maintenance-sqlite-journals-20261019
+  assignment: .pf/assignments/pf-maintenance-sqlite-journals-20261019.yaml
+  status: open
+  order: 3
+  blocking: true
+- id: pf-windows-monitor-launch-20261019
+  assignment: .pf/assignments/pf-windows-monitor-launch-20261019.yaml
+  status: open
+  order: 4
+  blocking: true
+- id: pf-health-readiness-statistics-20261019
+  assignment: .pf/assignments/pf-health-readiness-statistics-20261019.yaml
+  status: open
+  order: 5
+  blocking: true
+- id: pf-context-refresh-indexing-separation-20261019
+  assignment: .pf/assignments/pf-context-refresh-indexing-separation-20261019.yaml
+  status: open
+  order: 6
+  blocking: true
+- id: pf-monitor-uptime-format-20261019
+  assignment: .pf/assignments/pf-monitor-uptime-format-20261019.yaml
+  status: open
+  order: 7
+  blocking: true
+- id: pf-forge-project-init-agent-hooks-20261019
+  assignment: .pf/assignments/pf-forge-project-init-agent-hooks-20261019.yaml
+  status: done
+  order: 8
+  blocking: true
+- id: pf-cli-mcp-context-consistency-20261019
+  assignment: .pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml
+  status: done
+  order: 9
+  blocking: true
+- id: pf-task-token-usage-logs-20261020
+  assignment: .pf/assignments/pf-task-token-usage-logs-20261020.yaml
+  status: open
+  order: 10
+  blocking: true
+- id: pf-core-documentation-20261020
+  assignment: .pf/assignments/pf-core-documentation-20261020.yaml
+  status: open
+  order: 11
+  blocking: true
+- id: pf-core-unit-coverage-20261020
+  assignment: .pf/assignments/pf-core-unit-coverage-20261020.yaml
+  status: open
+  order: 12
+  blocking: true
+- id: pf-forge-agent-hooks-adapters-20261020
+  assignment: .pf/assignments/pf-forge-agent-hooks-adapters-20261020.yaml
+  status: open
+  order: 13
+  blocking: true
+final_artifacts: []
 events:
   emitted:
-    - run.created
+  - run.created
 privacy:
   public_safe: true

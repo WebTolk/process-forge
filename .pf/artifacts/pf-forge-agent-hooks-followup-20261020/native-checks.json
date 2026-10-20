@@ -1,0 +1,53 @@
+{
+  "task-doctor": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "bin/pf.py",
+      "task-doctor",
+      "--project-root",
+      ".",
+      "--task",
+      "pf-forge-agent-hooks-adapters-20261020"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: task.schema_version present\r\nPASS: task.id present\r\nPASS: task.title present\r\nPASS: task.run_id present\r\nPASS: task.process present\r\nPASS: task.status present\r\nPASS: task.iterations present\r\nPASS: task.result present\r\nPASS: task status valid: open\r\nPASS: referenced run exists: pf-upgrade-maintenance-backlog-20261019\r\nPASS: process exists: software-feature-development\r\nPASS: .pf/assignments/pf-forge-agent-hooks-adapters-20261020.yaml has no private absolute paths\r\n",
+    "stderr": ""
+  },
+  "backlog-run-doctor": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "bin/pf.py",
+      "run-doctor",
+      "--project-root",
+      ".",
+      "--run",
+      "pf-upgrade-maintenance-backlog-20261019"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: run.schema_version present\r\nPASS: run.id present\r\nPASS: run.title present\r\nPASS: run.process present\r\nPASS: run.status present\r\nPASS: run.created_at present\r\nPASS: run.updated_at present\r\nPASS: run.tasks present\r\nPASS: run status valid: draft\r\nPASS: summary artifact not yet required: .pf/runs/pf-upgrade-maintenance-backlog-20261019/summary.md\r\nPASS: task index status matches run: draft\r\nPASS: handoff artifact not yet required: .pf/handoffs/runs/pf-upgrade-maintenance-backlog-20261019-handoff.md\r\nPASS: process exists: software-feature-development\r\nPASS: .pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml has no private absolute paths\r\nPASS: task id unique: pf-upgrade-compatibility-matrix-20261019\r\nPASS: task status valid for pf-upgrade-compatibility-matrix-20261019: open\r\nPASS: assignment exists for pf-upgrade-compatibility-matrix-20261019: .pf/assignments/pf-upgrade-compatibility-matrix-20261019.yaml\r\nPASS: pf-upgrade-compatibility-matrix-20261019 run_id matches run\r\nPASS: task id unique: pf-upgrade-integrated-verification-20261019\r\nPASS: task status valid for pf-upgrade-integrated-verification-20261019: open\r\nPASS: assignment exists for pf-upgrade-integrated-verification-20261019: .pf/assignments/pf-upgrade-integrated-verification-20261019.yaml\r\nPASS: pf-upgrade-integrated-verification-20261019 run_id matches run\r\nPASS: task id unique: pf-maintenance-sqlite-journals-20261019\r\nPASS: task status valid for pf-maintenance-sqlite-journals-20261019: open\r\nPASS: assignment exists for pf-maintenance-sqlite-journals-20261019: .pf/assignments/pf-maintenance-sqlite-journals-20261019.yaml\r\nPASS: pf-maintenance-sqlite-journals-20261019 run_id matches run\r\nPASS: task id unique: pf-windows-monitor-launch-20261019\r\nPASS: task status valid for pf-windows-monitor-launch-20261019: open\r\nPASS: assignment exists for pf-windows-monitor-launch-20261019: .pf/assignments/pf-windows-monitor-launch-20261019.yaml\r\nPASS: pf-windows-monitor-launch-20261019 run_id matches run\r\nPASS: task id unique: pf-health-readiness-statistics-20261019\r\nPASS: task status valid for pf-health-readiness-statistics-20261019: open\r\nPASS: assignment exists for pf-health-readiness-statistics-20261019: .pf/assignments/pf-health-readiness-statistics-20261019.yaml\r\nPASS: pf-health-readiness-statistics-20261019 run_id matches run\r\nPASS: task id unique: pf-context-refresh-indexing-separation-20261019\r\nPASS: task status valid for pf-context-refresh-indexing-separation-20261019: open\r\nPASS: assignment exists for pf-context-refresh-indexing-separation-20261019: .pf/assignments/pf-context-refresh-indexing-separation-20261019.yaml\r\nPASS: pf-context-refresh-indexing-separation-20261019 run_id matches run\r\nPASS: task id unique: pf-monitor-uptime-format-20261019\r\nPASS: task status valid for pf-monitor-uptime-format-20261019: open\r\nPASS: assignment exists for pf-monitor-uptime-format-20261019: .pf/assignments/pf-monitor-uptime-format-20261019.yaml\r\nPASS: pf-monitor-uptime-format-20261019 run_id matches run\r\nPASS: task id unique: pf-forge-project-init-agent-hooks-20261019\r\nPASS: task status valid for pf-forge-project-init-agent-hooks-20261019: done\r\nPASS: assignment exists for pf-forge-project-init-agent-hooks-20261019: .pf/assignments/pf-forge-project-init-agent-hooks-20261019.yaml\r\nPASS: pf-forge-project-init-agent-hooks-20261019 run_id matches run\r\nPASS: task id unique: pf-cli-mcp-context-consistency-20261019\r\nPASS: task status valid for pf-cli-mcp-context-consistency-20261019: done\r\nPASS: assignment exists for pf-cli-mcp-context-consistency-20261019: .pf/assignments/pf-cli-mcp-context-consistency-20261019.yaml\r\nPASS: pf-cli-mcp-context-consistency-20261019 run_id matches run\r\nPASS: task id unique: pf-task-token-usage-logs-20261020\r\nPASS: task status valid for pf-task-token-usage-logs-20261020: open\r\nPASS: assignment exists for pf-task-token-usage-logs-20261020: .pf/assignments/pf-task-token-usage-logs-20261020.yaml\r\nPASS: pf-task-token-usage-logs-20261020 run_id matches run\r\nPASS: task id unique: pf-core-documentation-20261020\r\nPASS: task status valid for pf-core-documentation-20261020: open\r\nPASS: assignment exists for pf-core-documentation-20261020: .pf/assignments/pf-core-documentation-20261020.yaml\r\nPASS: pf-core-documentation-20261020 run_id matches run\r\nPASS: task id unique: pf-core-unit-coverage-20261020\r\nPASS: task status valid for pf-core-unit-coverage-20261020: open\r\nPASS: assignment exists for pf-core-unit-coverage-20261020: .pf/assignments/pf-core-unit-coverage-20261020.yaml\r\nPASS: pf-core-unit-coverage-20261020 run_id matches run\r\nPASS: task id unique: pf-forge-agent-hooks-adapters-20261020\r\nPASS: task status valid for pf-forge-agent-hooks-adapters-20261020: open\r\nPASS: assignment exists for pf-forge-agent-hooks-adapters-20261020: .pf/assignments/pf-forge-agent-hooks-adapters-20261020.yaml\r\nPASS: pf-forge-agent-hooks-adapters-20261020 run_id matches run\r\n",
+    "stderr": ""
+  },
+  "backlog-run-status": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "bin/pf.py",
+      "run-status",
+      "--project-root",
+      ".",
+      "--run",
+      "pf-upgrade-maintenance-backlog-20261019"
+    ],
+    "exit_code": 0,
+    "stdout": "RUN: pf-upgrade-maintenance-backlog-20261019\r\nTITLE: ������� ������: ��������� ����������, ������������ � ����������� PF\r\nSTATUS: draft\r\nTASKS: done=2, open=11\r\n- 1: pf-upgrade-compatibility-matrix-20261019 [open]\r\n- 2: pf-upgrade-integrated-verification-20261019 [open]\r\n- 3: pf-maintenance-sqlite-journals-20261019 [open]\r\n- 4: pf-windows-monitor-launch-20261019 [open]\r\n- 5: pf-health-readiness-statistics-20261019 [open]\r\n- 6: pf-context-refresh-indexing-separation-20261019 [open]\r\n- 7: pf-monitor-uptime-format-20261019 [open]\r\n- 8: pf-forge-project-init-agent-hooks-20261019 [done]\r\n- 9: pf-cli-mcp-context-consistency-20261019 [done]\r\n- 10: pf-task-token-usage-logs-20261020 [open]\r\n- 11: pf-core-documentation-20261020 [open]\r\n- 12: pf-core-unit-coverage-20261020 [open]\r\n- 13: pf-forge-agent-hooks-adapters-20261020 [open]\r\n",
+    "stderr": ""
+  }
+}

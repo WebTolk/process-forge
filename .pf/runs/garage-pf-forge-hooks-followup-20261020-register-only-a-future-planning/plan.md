@@ -1,0 +1,3 @@
+# Run Plan: pf-forge-hooks-followup-20261020: Register only a future planning task for Forge
+
+Objective: pf-forge-hooks-followup-20261020: Register only a future planning task for Forge project initialization hook adapters for popular agents beyond the already accepted Codex adapter. Reuse the existing maintenance backlog, keep the completed Codex task immutable, record scope and acceptance criteria, verify registration, commit and deliver only owned artifacts to both dev remotes, then stop. Do not implement hooks, change product code, initialize projects, install or restart infrastructure, or continue OOP refactoring.
