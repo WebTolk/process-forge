@@ -49,7 +49,6 @@ def install(
     files = [
         "qa.py",
         "install.py",
-        "python-qa.ps1",
         "requirements.txt",
         "README.md",
         "toolchain.json",

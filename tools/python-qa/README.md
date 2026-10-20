@@ -30,7 +30,6 @@ python <shared-tools>/python-qa/qa.py --project-root <project> audit
 python <shared-tools>/python-qa/qa.py --project-root <project> versions
 ```
 
-On Windows, python-qa.ps1 forwards the same arguments without shell interpolation.
 `format` checks formatting. `format-fix` rewrites formatting; `fix` applies Ruff's
 supported safe lint fixes. Unsafe fixes require an explicit forwarded option.
 `lint` and `docstrings` explicitly disable fixes, including project `fix` and
