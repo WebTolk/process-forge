@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-20T08:25:19.339646+00:00",
+  "status": "pass",
+  "update_id": "core-update-20261020T081547Z",
+  "native_status": "applied",
+  "apply_attempts": 1,
+  "post_update_doctor": "pass",
+  "native_backup_exact_local_manifest_match": true,
+  "local_manifest_backup_sha256": "0c37a442f1824b7dbe94e807067467ab06fb40e127e3381b9df64d6a04f7c3dc",
+  "counts": {
+    "added": 62,
+    "changed": 95,
+    "locally_modified": 1,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1301
+  },
+  "scope": "Installed file update and short installed CLI checks. Runtime/connected MCP were not reloaded or accepted.",
+  "proofs": [
+    "device-core-install.json",
+    "device-core-plan-acceptance.json",
+    "checks-installed.json"
+  ]
+}

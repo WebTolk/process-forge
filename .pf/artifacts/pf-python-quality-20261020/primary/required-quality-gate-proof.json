@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-20T07:47:12.005542+00:00",
+  "status": "pass",
+  "process_version": "1.2.1",
+  "omitted_artifact": "code-quality-report",
+  "native_transition_exit_code": 1,
+  "stage_remained": "code-assurance",
+  "proof": "Native lifecycle rejects completion without the new required quality report; no new validation engine or manual state edit."
+}

@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-20T08:15:50.389605+00:00",
+  "status": "pass",
+  "native_apply_status": "applied",
+  "native_apply_keys": [
+    "applied_at",
+    "available_version",
+    "backed_up",
+    "backup_dir",
+    "counts",
+    "post_update_doctor",
+    "schema_version",
+    "status",
+    "update_id",
+    "workplace_migration"
+  ],
+  "source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "source_provenance_matches": true,
+  "installed_version": "1.2.0",
+  "installed_manifest_sha256": "ab3d6d9cdbf44396f6d68ded81331edfae6b86517f9c4af0b1331d1d69297451",
+  "archive": ".pf/artifacts/pf-python-quality-20261020/primary/release/processforge-1.2.0-dev-20261020-python-quality.zip",
+  "archive_sha256": "6bbca7781d43fba641dad23c92ac2310ce66f4abfb98cf8cbd0d63bad362d333",
+  "apply_attempts": 1,
+  "force_local_modifications": true,
+  "reviewed_owned_file_backup": "device-core-plan-acceptance.json",
+  "limits": "Installed files/provenance only. Actual loaded Runtime/MCP and host reload are separate evidence."
+}

@@ -1,0 +1,91 @@
+{
+  "at": "2026-10-20T08:21:51.709562+00:00",
+  "status": "pass",
+  "completed": [
+    {
+      "role": "documentation",
+      "run_id": "garage-p121-quality-context-docs-20261020-correct-only-the-two-current-e",
+      "assignment_id": "p121-quality-context-docs-20261020-correct-only-the-two-current-en-ru-co",
+      "context_id": "p121-quality-context-docs-20261020-correct-only-the-two-current-en-ru-co-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    },
+    {
+      "role": "assurance",
+      "run_id": "garage-p121-quality-assurance-20261020-enable-the-existing-native-softwa",
+      "assignment_id": "p121-quality-assurance-20261020-enable-the-existing-native-software-deve",
+      "context_id": "p121-quality-assurance-20261020-enable-the-existing-native-software-deve-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    },
+    {
+      "role": "findings",
+      "run_id": "garage-p121-quality-findings-20261020-fix-independent-review-f3-f4-in-th",
+      "assignment_id": "p121-quality-findings-20261020-fix-independent-review-f3-f4-in-the-exist",
+      "context_id": "p121-quality-findings-20261020-fix-independent-review-f3-f4-in-the-exist-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    },
+    {
+      "role": "activation",
+      "run_id": "garage-p121-quality-activation-20261020-complete-the-operator-requested",
+      "assignment_id": "p121-quality-activation-20261020-complete-the-operator-requested-permane",
+      "context_id": "p121-quality-activation-20261020-complete-the-operator-requested-permane-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    },
+    {
+      "role": "review_final",
+      "run_id": "garage-p121-quality-review-final-20261020-independent-read-only-delta-re",
+      "assignment_id": "p121-quality-review-final-20261020-independent-read-only-delta-review-of",
+      "context_id": "p121-quality-review-final-20261020-independent-read-only-delta-review-of-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    },
+    {
+      "role": "deliveryfix",
+      "run_id": "garage-p121-quality-deliveryfix-20261020-repair-the-native-development-p",
+      "assignment_id": "p121-quality-deliveryfix-20261020-repair-the-native-development-packagin",
+      "context_id": "p121-quality-deliveryfix-20261020-repair-the-native-development-packagin-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    },
+    {
+      "role": "deliveryfix_review",
+      "run_id": "garage-p121-quality-deliveryfix-review-20261020-independent-read-only-de",
+      "assignment_id": "p121-quality-deliveryfix-review-20261020-independent-read-only-delta-rev",
+      "context_id": "p121-quality-deliveryfix-review-20261020-independent-read-only-delta-rev-capsule",
+      "action": "run_completed",
+      "run_status": "completed"
+    }
+  ],
+  "source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "forge_hook_future_card_status": "done",
+  "future_cards": {
+    "pf-core-documentation-20261020": {
+      "status": "open",
+      "mode": "planning_only",
+      "writer": false
+    },
+    "pf-core-unit-coverage-20261020": {
+      "status": "open",
+      "mode": "planning_only",
+      "writer": false
+    }
+  },
+  "historical_cancellations": [
+    "repair",
+    "hooks",
+    "finish",
+    "review",
+    "primary"
+  ],
+  "handoffs": [
+    "quality-successor-handoffs.json",
+    "findings-handoff.json",
+    "historical-review-handoff.json",
+    "deliveryfix-handoff.json"
+  ],
+  "stop_after_this_delivery": true,
+  "limits": "Completed successor Works are not represented as completion of their cancelled predecessors. No next OOP block or pending 54-55 delivery."
+}

@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-20T07:50:36.484215+00:00",
+  "status": "pass",
+  "from_tree": "40282e709d3e04ef95238fe41b9b23aed543b281",
+  "to_tree": "80d0c2027f7a00461df18166cb64c792d9054e07",
+  "identical_reviewed_source_files": 38,
+  "changed_paths": [
+    "checksums/processforge.sha256"
+  ],
+  "semantic_checksum_rows_identical": true,
+  "git_diff_ignore_space_at_eol_empty": true,
+  "reason": "The canonical writer used platform CRLF on Windows. Git delivery follows repository LF. Normalize only the manifest blob; no source/test changes or repeated tests/review are needed."
+}

@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-20T08:11:44.132610+00:00",
+  "status": "pass",
+  "source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "tree": "1cbef1d1e24cfc020e40c6658acfd4c488c7e336",
+  "commits": [
+    {
+      "group": "quality",
+      "commit": "c75c0f54c2c56145114a80712e72fb2a81130e71"
+    },
+    {
+      "group": "context",
+      "commit": "f3896f888040a903ec91beaaffecb2197b98b087"
+    },
+    {
+      "group": "hooks",
+      "commit": "1a9f894ec66a5172ec00fb026af192a092b45448"
+    },
+    {
+      "group": "assurance",
+      "commit": "fff4c8d183f5e5527c8964f67ec7568a0cc27671"
+    },
+    {
+      "group": "context-policy",
+      "commit": "f892ed4d47d4b18bed00ca59c3b9196233e98645"
+    },
+    {
+      "group": "release-notes",
+      "commit": "eb0951a2acece2b716ee960959fcc38ccce6fb49"
+    },
+    {
+      "group": "deliveryfix",
+      "commit": "cfb1816fe7e768c698cc2b814a99d18636db52d7"
+    },
+    {
+      "group": "release-link",
+      "commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e"
+    }
+  ],
+  "pending_source_excluded": [
+    "docs/concepts/python-core-structure.md",
+    "docs/ru/concepts/python-core-structure.md",
+    "src/processforge_core/project/platform_roots.py",
+    "src/processforge_core/resources/records.py",
+    "src/processforge_core/resources/registries.py",
+    "src/processforge_core/resources/snapshot.py",
+    "tools/processforge.py"
+  ],
+  "working_pending_inventory_preserved": true,
+  "prior_source_delivery": "source-delivery.json",
+  "packaging_review": "deliveryfix-review-acceptance.json",
+  "documentation_only_acceptance": "release-link-acceptance.json"
+}

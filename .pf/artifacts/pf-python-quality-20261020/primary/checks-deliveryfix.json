@@ -1,0 +1,136 @@
+{
+  "at": "2026-10-20T08:02:00.294123+00:00",
+  "status": "pass",
+  "checks": [
+    {
+      "check": "installer-tests",
+      "command_template": [
+        "<shared-python-qa>/python",
+        "<shared-python-qa>/qa.py",
+        "--project-root",
+        ".",
+        "test",
+        "--",
+        "-q",
+        "tests/python_qa/test_installer.py"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "ebd938888ffaa2af3581cec946b9b58fbc84d3d34af429b416dd4a0ad79f1a12",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tail": [
+        "....                                                                     [100%]",
+        "4 passed in 0.10s"
+      ]
+    },
+    {
+      "check": "installer-lint",
+      "command_template": [
+        "<shared-python-qa>/python",
+        "<shared-python-qa>/qa.py",
+        "--project-root",
+        ".",
+        "lint",
+        "--",
+        "tools/python-qa/install.py"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tail": [
+        "All checks passed!"
+      ]
+    },
+    {
+      "check": "installer-format",
+      "command_template": [
+        "<shared-python-qa>/python",
+        "<shared-python-qa>/qa.py",
+        "--project-root",
+        ".",
+        "format",
+        "--",
+        "tools/python-qa/install.py"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "fd2299c9f1c6dc869070883e281051bfe93aacf66c1a3b0069f45b4aa410ca50",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tail": [
+        "1 file already formatted"
+      ]
+    },
+    {
+      "check": "installer-types",
+      "command_template": [
+        "<shared-python-qa>/python",
+        "<shared-python-qa>/qa.py",
+        "--project-root",
+        ".",
+        "typecheck",
+        "--",
+        "tools/python-qa/install.py"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tail": [
+        "Success: no issues found in 1 source file"
+      ]
+    }
+  ],
+  "source_pins": {
+    "tools/python-qa/install.py": "0849192f90d6d1738c6e171f0aeb8ecf09522d285e23d1f7675a8123d22118f6",
+    "tools/python-qa/README.md": "75688443e1b53ca9a0fdab1e6586b9ca51ccead682864e79a75cf7f36e1fd675"
+  },
+  "removed": "tools/python-qa/python-qa.ps1",
+  "post_implementation_sources_read": [
+    {
+      "path": ".pf/AGENTS.md",
+      "sha256": "b0b68e7fbc05fb17e68f768c8a0c77b3c55396bb8e80303b0aa0fd3b9a0ea6f5"
+    },
+    {
+      "path": "src/processforge_core/AGENTS.md",
+      "sha256": "65abf9c838b8b6c53e9008f8426e9b0b9f3a2c25523281463827ec966f54a988"
+    },
+    {
+      "path": ".pf/artifacts/pf121-oop-blocks18-37-20261019/primary/python-knowledge.md",
+      "sha256": "f01e8c9fad4d1a3419cb32531819030bb8331bae63519a02b2a88355261e9f1a"
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/direction.md",
+      "sha256": "23d68db7ffe463d1e63ea96acaff6104256c8e658d9baee9e4cfc9fa3445ba14"
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/domain.md",
+      "sha256": "c90fe925601522e0f45fb13c282547d7f17e87d958d6c718d7345599557ab649"
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/adr.md",
+      "sha256": "076acfe9c8df09f9408556d144840e60ac4a594b064bfe9ada3981e7e39cb550"
+    },
+    {
+      "path": ".pf/artifacts/progressive-oop-boundary-20261010/decision.md",
+      "sha256": "63c68bd61176d5cd3ab1e27791d3cc43657f2d750dac162b15e4da55e43e616b"
+    },
+    {
+      "path": ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md",
+      "sha256": "016a7485060bc39cdd448ccb38087954550f89f2b84e52959bdc52de6a9f15a4"
+    },
+    {
+      "path": ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md",
+      "sha256": "728b1fa837377cf8be32b549af8fd1d005ff9332f76409da45510d46f31ee01d"
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-02.md",
+      "sha256": "c6462768f3aac61ca77c9268e7b32be00193719e5a9dda3896c99c231336d647"
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-03.md",
+      "sha256": "38d1fd36d54a9c4cf5de0c9fef212dafca034c98b27622ddd64e5c8fbc1f0522"
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-05.md",
+      "sha256": "26ceb97ab62124026378cb40815fc966cd883a20a6c7635a8595ad33e047f274"
+    }
+  ],
+  "limits": "Four existing installer tests and quality for the changed installer only. Earlier launcher/Core tests retained for unchanged source. Dependency installation mocked by installer unit tests; no redundant network install or ZIP audit."
+}

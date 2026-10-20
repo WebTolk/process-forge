@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-20T08:15:34.929893+00:00",
+  "status": "pass",
+  "native_plan_status": "blocked",
+  "archive_sha256": "6bbca7781d43fba641dad23c92ac2310ce66f4abfb98cf8cbd0d63bad362d333",
+  "expected_source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "counts": {
+    "added": 62,
+    "changed": 95,
+    "locally_modified": 1,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1301
+  },
+  "native_blockers": [
+    {
+      "code": "locally_modified",
+      "path": ".pf/process-forge.yaml"
+    }
+  ],
+  "reviewed_local_modifications": [
+    {
+      "path": ".pf/process-forge.yaml",
+      "current_sha256": "0c37a442f1824b7dbe94e807067467ab06fb40e127e3381b9df64d6a04f7c3dc",
+      "recorded_sha256": "57b456d34fa1e08c2e6142a4aa9870f01f8896e893e62891e2b9680472664b86",
+      "changed_yaml_keys": [
+        "process",
+        "processes",
+        "specializations"
+      ],
+      "exact_private_backup": ".pf/tmp/pf-python-quality-20261020/primary/before-device-core-local-process-forge-private.yaml"
+    }
+  ],
+  "force_local_modifications": true,
+  "decision": "Operator explicitly requested installation of the dev Core on this device. Replace this single reviewed Core-owned distribution manifest with its release template, preserving the exact local version before apply and in native updater backups. No project repository or Workplace user configuration is replaced.",
+  "workplace_migration": {
+    "status": "not_applicable",
+    "blockers": []
+  },
+  "limits": "Native plan remains blocked until its documented force-local-modifications apply option is used for this reviewed owned file. This is not an unqualified clean plan or a blanket force override."
+}

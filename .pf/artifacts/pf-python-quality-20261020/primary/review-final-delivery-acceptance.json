@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-20T07:50:36.484965+00:00",
+  "status": "pass",
+  "report": ".pf/artifacts/pf-python-quality-20261020/review-final/report.md",
+  "report_sha256": "7a23c7f74b4fb492eb9277fa6e3f60c14ad1e4e84f58e8c42f1e17de3ecf18d7",
+  "candidate_tree": "80d0c2027f7a00461df18166cb64c792d9054e07",
+  "base": "84d0f2c681dbcf861128d5098c8db2c938c3e918",
+  "reviewer_findings": [],
+  "closed": [
+    "F1",
+    "F2 source",
+    "F3",
+    "F4"
+  ],
+  "git_tree_verified_by_primary": "40282e709d3e04ef95238fe41b9b23aed543b281",
+  "native_worker_result_collected": true,
+  "limits": [
+    "Source review only",
+    "POSIX venv execution unverified; Windows symlink creation skipped",
+    "Whole-Core lint/type/coverage and actually connected host not accepted by this review"
+  ],
+  "reviewed_source_tree": "40282e709d3e04ef95238fe41b9b23aed543b281",
+  "checksum_only_equivalence": "candidate-v4-equivalence.json",
+  "primary_accepted_checksum_lf_normalization": true
+}

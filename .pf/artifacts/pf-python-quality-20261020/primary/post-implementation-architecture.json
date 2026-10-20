@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-20T07:27:13.872478+00:00",
+  "roles": [
+    "primary QA fixes",
+    "documentation integration",
+    "style successor",
+    "native assurance activation",
+    "hook review findings",
+    "permanent context resource activation"
+  ],
+  "sources": [
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/direction.md",
+      "sha256": "23d68db7ffe463d1e63ea96acaff6104256c8e658d9baee9e4cfc9fa3445ba14",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/domain.md",
+      "sha256": "c90fe925601522e0f45fb13c282547d7f17e87d958d6c718d7345599557ab649",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/pf-framework-architecture-20261005/adr.md",
+      "sha256": "076acfe9c8df09f9408556d144840e60ac4a594b064bfe9ada3981e7e39cb550",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/progressive-oop-boundary-20261010/decision.md",
+      "sha256": "63c68bd61176d5cd3ab1e27791d3cc43657f2d750dac162b15e4da55e43e616b",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md",
+      "sha256": "016a7485060bc39cdd448ccb38087954550f89f2b84e52959bdc52de6a9f15a4",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md",
+      "sha256": "728b1fa837377cf8be32b549af8fd1d005ff9332f76409da45510d46f31ee01d",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-02.md",
+      "sha256": "c6462768f3aac61ca77c9268e7b32be00193719e5a9dda3896c99c231336d647",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-03.md",
+      "sha256": "38d1fd36d54a9c4cf5de0c9fef212dafca034c98b27622ddd64e5c8fbc1f0522",
+      "reread_after_final_implementation": true
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/oop-05.md",
+      "sha256": "26ceb97ab62124026378cb40815fc966cd883a20a6c7635a8595ad33e047f274",
+      "reread_after_final_implementation": true
+    }
+  ],
+  "comparison": {
+    "D01_D02_D09": "Canonical cold owners reused, no reverse Main/Host import or duplicate hook algorithm. Native Python modules; real test interpreter retained.",
+    "D03_D05_D08": "Explicit user-requested initialization/deployment only; no import/start/Kernel/DI/plugin/grant mechanisms.",
+    "D06_D07_R06_R07_R08": "Required checks record actual exits/bytes. Read-only Ruff is forced, hook conflicts precede writes, current revision and ingress provenance/dedup remain tested.",
+    "D11_R03_R10_R11": "Existing stage graph and gate IDs, next catalog version with historical pins unchanged; native handoffs preserve immutable capsules. Pending source remains excluded.",
+    "R12": "Portable project IDs/config; private deployed paths only in private workplace registry. Source/archive/installed/connected boundaries explicit."
+  }
+}

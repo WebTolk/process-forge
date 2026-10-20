@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-20T08:12:39.961059+00:00",
+  "status": "pass",
+  "source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "native_installer_exit_code": 0,
+  "managed_files": {
+    "qa.py": "7cd794faca9febf366bed5253a941b66fc4735b96766cfc93b25ae7854ab62c3",
+    "install.py": "0849192f90d6d1738c6e171f0aeb8ecf09522d285e23d1f7675a8123d22118f6",
+    "requirements.txt": "f6c7cd73af4e0fbabcfa0415da1531576c23bcae17b65eb25ecd721089dcd889",
+    "README.md": "d2d3dd871d646bd1d448f5d8920469063eadbc42ff2720745024871ed3d9f685",
+    "toolchain.json": "d2dc5c34f4bd789daf3214b1a28bd01204bbf25a48b30c081f8c402a507d505d",
+    "config/ruff.toml": "68e9014383d5af387e86aeff4ab7b5aae140b3a3d4540d306a34859f0f9ff60e",
+    "config/mypy.ini": "cb27ff0ad1b136cb5c3c3b10b19965e7c018f7e056ddbd372c230696a554fce4",
+    "config/bandit.yaml": "28c822de6ce83ac4cd9fc90abe13f67bdcb8ef6c1a8be77d8c38bf1137c623ab",
+    "requirements.lock.txt": "d5695970769324883aedb332571bd5c6855f2bad098895eea978db6e6a0dc894"
+  },
+  "python_version": [
+    3,
+    14
+  ],
+  "legacy_local_wrapper_preserved": true,
+  "registry_commands_unchanged": "Already use canonical Python qa.py",
+  "location": "Shared station tool layer outside Core and project repositories",
+  "limits": "Native pinned install and dependency check only; no broad dependency security audit or project dependency changes."
+}

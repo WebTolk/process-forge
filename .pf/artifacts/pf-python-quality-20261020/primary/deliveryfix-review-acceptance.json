@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-20T08:09:34.837593+00:00",
+  "status": "pass",
+  "report": ".pf/artifacts/pf-python-quality-20261020/deliveryfix-review/report.md",
+  "report_sha256": "a8a904a9fe5884e58c5461f9ac27e6907e6261ef618519ad9626f25fa3a28602",
+  "candidate_tree": "8c259b6fcbed037aa12e12f5fe45777ffcfe9939",
+  "native_worker_result_collected": true,
+  "findings": []
+}

@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-20T08:23:30.254471+00:00",
+  "status": "pass",
+  "agents": [
+    {
+      "agent_id": "p121-quality-deliveryfix-review-20261020",
+      "session_id": "p121-quality-deliveryfix-review-20261020-session",
+      "worker_status": "completed",
+      "native_checkout_exit_code": 0,
+      "native_status": "checked_out"
+    },
+    {
+      "agent_id": "p121-quality-hooks-20261020",
+      "session_id": "p121-quality-hooks-20261020-session",
+      "worker_status": "timed_out",
+      "native_checkout_exit_code": 0,
+      "native_status": "checked_out"
+    },
+    {
+      "agent_id": "p121-quality-repair-20261020",
+      "session_id": "p121-quality-repair-20261020-session",
+      "worker_status": "timed_out",
+      "native_checkout_exit_code": 0,
+      "native_status": "checked_out"
+    },
+    {
+      "agent_id": "p121-quality-review-20261020",
+      "session_id": "p121-quality-review-20261020-session",
+      "worker_status": "completed",
+      "native_checkout_exit_code": 0,
+      "native_status": "checked_out"
+    },
+    {
+      "agent_id": "p121-quality-review-final-20261020",
+      "session_id": "p121-quality-review-final-20261020-session",
+      "worker_status": "completed",
+      "native_checkout_exit_code": 0,
+      "native_status": "checked_out"
+    },
+    {
+      "agent_id": "p121-quality-primary-20261020",
+      "session_id": "p121-quality-primary-session-20261020",
+      "worker_status": "primary orchestration complete",
+      "native_checkout_exit_code": 0,
+      "native_status": "checked_out"
+    }
+  ],
+  "limits": "Only agents created for this quality cycle; no unrelated actors or PF services stopped."
+}

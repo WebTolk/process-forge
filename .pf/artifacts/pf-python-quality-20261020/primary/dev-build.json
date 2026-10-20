@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T08:12:08.859606+00:00",
+  "status": "pass",
+  "source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "source_tree": "1cbef1d1e24cfc020e40c6658acfd4c488c7e336",
+  "archive": ".pf/artifacts/pf-python-quality-20261020/primary/release/processforge-1.2.0-dev-20261020-python-quality.zip",
+  "archive_sha256": "6bbca7781d43fba641dad23c92ac2310ce66f4abfb98cf8cbd0d63bad362d333",
+  "archive_bytes": 2789133,
+  "worktree": ".pf/tmp/pf-python-quality-20261020/primary/dev-release-source-v3",
+  "worktree_head": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "clean_source_before_pack": true,
+  "pack_exit_code": 0,
+  "validation": "Native release-pack preflight/consumer checks only; no separate ZIP content audit or unrelated full suite.",
+  "publication": "Local development artifact; base version1.2.0, no stable tag/assets/channel publication."
+}

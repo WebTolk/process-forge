@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-20T06:53:55.131095+00:00",
+  "tools": [
+    {
+      "id": "python-ruff",
+      "capability": "python_linting",
+      "operation": "lint",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . lint"
+    },
+    {
+      "id": "python-formatter",
+      "capability": "python_formatting",
+      "operation": "format",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . format"
+    },
+    {
+      "id": "python-docstrings",
+      "capability": "python_documentation_linting",
+      "operation": "docstrings",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . docstrings"
+    },
+    {
+      "id": "python-pytest",
+      "capability": "python_unit_testing",
+      "operation": "test",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . test"
+    },
+    {
+      "id": "python-coverage",
+      "capability": "python_test_coverage",
+      "operation": "coverage",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . coverage"
+    },
+    {
+      "id": "python-mypy",
+      "capability": "python_static_analysis",
+      "operation": "typecheck",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . typecheck"
+    },
+    {
+      "id": "python-bandit",
+      "capability": "python_security_analysis",
+      "operation": "security",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . security"
+    },
+    {
+      "id": "python-pip-audit",
+      "capability": "python_dependency_audit",
+      "operation": "audit",
+      "status": "configured",
+      "command_template": "\"<shared-python-qa>/.venv/Scripts/python.exe\" \"<shared-python-qa>/qa.py\" --project-root . audit"
+    }
+  ],
+  "scope": "workplace; exact private deployed paths, neutral public templates; existing entries and path constants preserved by native upsert",
+  "path_constant_note": "Native path-resolve confirmed PF_TOOLS is workplace-local; use the operator-selected shared station tool directory without changing this existing constant.",
+  "healthcheck": "shared launcher versions; actual tools/interpreter already exercised in two independent fixture projects",
+  "toolchain": "python/toolchain.json deployed in the shared toolchains layer"
+}

@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-20T08:11:38.774533+00:00",
+  "status": "pass",
+  "reason": "Native release-pack public-neutrality scan misclassified the existing pytest documentation hostname as a package id. Use its verified official shorter entry URL, which redirects to the same documentation.",
+  "source_url": "https://pytest.org/",
+  "redirects_to": "https://docs.pytest.org/en/stable/",
+  "browser_verification": "Official website opened successfully in the current turn.",
+  "changed": [
+    "tools/python-qa/README.md",
+    "checksums/processforge.sha256"
+  ],
+  "executable_source_unchanged": true,
+  "prior_code_review_and_tests_retained": true,
+  "additional_tests_or_review": "Not repeated: one documentation URL and its checksum only; unchanged code evidence remains applicable.",
+  "release_policy_unchanged": true,
+  "before_sha256": "75688443e1b53ca9a0fdab1e6586b9ca51ccead682864e79a75cf7f36e1fd675",
+  "after_sha256": "d2d3dd871d646bd1d448f5d8920469063eadbc42ff2720745024871ed3d9f685"
+}

@@ -1,0 +1,89 @@
+{
+  "at": "2026-10-20T08:17:15.000594+00:00",
+  "status": "pass",
+  "source_commit": "d6eb1412fb47ad21df50e4c446d0cc813589034e",
+  "installed_critical_files": [
+    {
+      "path": "tools/processforge.py",
+      "sha256": "0900f3a4afd65cec43fa9e40d8b3c08ce9bc93efa5354a25ed0e76407c12a1c0",
+      "accepted_source_matches": true
+    },
+    {
+      "path": "src/processforge_core/project/agent_hooks.py",
+      "sha256": "a5b13840dfbb24ab7cc9634863be05cbc44ea759aae77c3a85b30e626a2548b8",
+      "accepted_source_matches": true
+    },
+    {
+      "path": "src/processforge_core/project/initialization.py",
+      "sha256": "343f36d7b70f2d9a4777f47c4916c61dd38777fed416420b21c19fdbf24168d8",
+      "accepted_source_matches": true
+    },
+    {
+      "path": "tools/pf_runtime/codex_integration.py",
+      "sha256": "947fce98422d10559a63a55fae0aa7298eb1be8051b8b862037f416f89dad3dd",
+      "accepted_source_matches": true
+    },
+    {
+      "path": "tools/python-qa/qa.py",
+      "sha256": "7cd794faca9febf366bed5253a941b66fc4735b96766cfc93b25ae7854ab62c3",
+      "accepted_source_matches": true
+    },
+    {
+      "path": "tools/python-qa/install.py",
+      "sha256": "0849192f90d6d1738c6e171f0aeb8ecf09522d285e23d1f7675a8123d22118f6",
+      "accepted_source_matches": true
+    },
+    {
+      "path": "packs/official/software-development/processes/software-feature-development.yaml",
+      "sha256": "2de502691d92de7e305d272a4a97acc975233563cb8cf6e7631397062c979a4e",
+      "accepted_source_matches": true
+    }
+  ],
+  "checks": [
+    {
+      "check": "context-read-existing",
+      "actual_exit": 0,
+      "expected_exit": 0,
+      "pass": true,
+      "stdout_sha256": "724043a57d8d4888c21206b58ae20a769a7cd44050c36f7d8bb11634d3051c69",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "context-read-missing",
+      "actual_exit": 1,
+      "expected_exit": 1,
+      "pass": true,
+      "stdout_sha256": "6bc9d5b58e8976303698a1d7158bcc9dd9b352518dce473ee575138261b37f10",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "fixture-workplace",
+      "actual_exit": 0,
+      "expected_exit": 0,
+      "pass": true,
+      "stdout_sha256": "6a1d319aa38bf378876ac5bc3f2c5f3a5cc49c1418564fc6746e2a6d00209350",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "forge-project-init",
+      "actual_exit": 0,
+      "expected_exit": 0,
+      "pass": true,
+      "stdout_sha256": "beedc5d381f10b87fb5bf82f638bd466e67bbabe97beb047eed10b8edfc02e89",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "existing_context_unchanged": true,
+  "missing_context_snapshot_not_created": true,
+  "missing_context_manifest_unchanged": true,
+  "missing_context_diagnostic_files": [
+    ".pf/runtime/diagnostics/.diagnostics.lock",
+    ".pf/runtime/diagnostics/diagnostics.jsonl"
+  ],
+  "forge_initialization": "complete",
+  "native_adapter": "Codex",
+  "generated_commands_target_installed_core": true,
+  "shared_qa_exit_code": 0,
+  "shared_qa_launcher_sha256": "7cd794faca9febf366bed5253a941b66fc4735b96766cfc93b25ae7854ab62c3",
+  "limits": "Short installed CLI/initialization/tool checks only. Missing context emits the standard diagnostic journal/lock, not a context snapshot. Fixture workplace and project are isolated; no service starts or live host configuration. Actual loaded Runtime and connected MCP acceptance remain separate."
+}
