@@ -1,0 +1,40 @@
+schema_version: 1
+id: pf-core-documentation-20261020
+title: 'Документирование ООП-ядра PF: модули, классы и публичные методы'
+run_id: pf-upgrade-maintenance-backlog-20261019
+process: software-feature-development
+status: open
+created_at: '2026-10-20T06:00:54Z'
+updated_at: '2026-10-20T06:00:54Z'
+objective: 'Будущая задача документирования processforge_core. Сейчас зарегистрировать план, без массовой правки Core. В будущей scoped Work составить карту публичных модулей/классов/методов по фактическим владельцам. Принять PEP 8 и PEP 257, единый Google docstring style: описание ответственности модуля и границ класса; у публичных методов назначение, Args/Returns/Raises, ограничения, побочные эффекты, порядок чтения/записи, актуальность данных и ownership там, где это существенно. Типы указывать в настоящих аннотациях, не дублировать бессодержательные сигнатуры в тексте. Для простых внутренних помощников достаточно короткого осмысленного описания. Документы должны объяснять реальные контракты и зависимости, без обещания уже завершённой OOP-миграции. Обновлять ownership/API-карту и примеры библиотечного использования без Main/CLI/Runtime. Включать правила D (pydocstyle/Google) через общую Python QA toolchain поэтапно по документируемым областям; не вводить внезапный обязательный аудит всего монолита. Генерацию справки через Sphinx autodoc либо другой выбранный инструмент проектировать отдельно с учётом нежелательных import-time эффектов. Приёмка: проверенные module/class/public method docstrings, соответствие описаний действительным параметрам/ошибкам/эффектам, локальная сборка справки при выбранном генераторе, отсутствие изменений поведения и независимое ревью. Использовать выбранные PF локальные знания Python и перечитать исходные архитектурные документы после каждого ограниченного этапа. Критерий результата — полезная проверенная документация, а не механическое число строк. До исполнения — новая валидная Work и отдельные явные области записи.'
+platform: ""
+selected_specializations:
+  []
+order: 11
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: intake-scope
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+ownership:
+  owner_id: pf-core-documentation-20261020
+  owner_label: worker-pf-core-documentation-20261020
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
