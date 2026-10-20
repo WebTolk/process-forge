@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-20T04:35:29.669057+00:00",
+  "children": [
+    {
+      "role": "a",
+      "run_id": "garage-p121-oop8-a-20261020-implement-coherent-existing-blocks-46-47-uni",
+      "assignment_id": "p121-oop8-a-20261020-implement-coherent-existing-blocks-46-47-unify-actu",
+      "context_id": "p121-oop8-a-20261020-implement-coherent-existing-blocks-46-47-unify-actu-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    },
+    {
+      "role": "b",
+      "run_id": "garage-p121-oop8-b-20261020-implement-coherent-existing-blocks-48-49-mov",
+      "assignment_id": "p121-oop8-b-20261020-implement-coherent-existing-blocks-48-49-move-exist",
+      "context_id": "p121-oop8-b-20261020-implement-coherent-existing-blocks-48-49-move-exist-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    },
+    {
+      "role": "c",
+      "run_id": "garage-p121-oop8-c-20261020-implement-coherent-existing-blocks-50-51-mov",
+      "assignment_id": "p121-oop8-c-20261020-implement-coherent-existing-blocks-50-51-move-exist",
+      "context_id": "p121-oop8-c-20261020-implement-coherent-existing-blocks-50-51-move-exist-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    },
+    {
+      "role": "d2",
+      "run_id": "garage-p121-oop8-d2-20261020-implement-coherent-existing-blocks-52-53-mo",
+      "assignment_id": "p121-oop8-d2-20261020-implement-coherent-existing-blocks-52-53-move-the",
+      "context_id": "p121-oop8-d2-20261020-implement-coherent-existing-blocks-52-53-move-the-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    },
+    {
+      "role": "consumers",
+      "run_id": "garage-p121-oop8-consumers-20261020-integrate-exact-listed-existing-cano",
+      "assignment_id": "p121-oop8-consumers-20261020-integrate-exact-listed-existing-canonical-c",
+      "context_id": "p121-oop8-consumers-20261020-integrate-exact-listed-existing-canonical-c-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    },
+    {
+      "role": "review",
+      "run_id": "garage-p121-oop8-review-20261020-independent-clean-context-review-of-fin",
+      "assignment_id": "p121-oop8-review-20261020-independent-clean-context-review-of-finished-s",
+      "context_id": "p121-oop8-review-20261020-independent-clean-context-review-of-finished-s-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    },
+    {
+      "role": "usage",
+      "run_id": "garage-p121-oop8-usage-20261020-register-explicitly-requested-future-tok",
+      "assignment_id": "p121-oop8-usage-20261020-register-explicitly-requested-future-token-usag",
+      "context_id": "p121-oop8-usage-20261020-register-explicitly-requested-future-token-usag-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done"
+    }
+  ],
+  "all_terminal": true
+}

@@ -1,0 +1,238 @@
+{
+  "status": "prepared_only_not_admitted",
+  "source_candidate": "b770c056b7c68cb8ef2b93b5bd453728a221ac0d00d730ef7386df272c87eb5b",
+  "future_blocks": {
+    "54": {
+      "responsibility": "Unify rootless path resolution through the existing WorkplaceRegistryReader. Reuse its existing resolve_path_with_constants method; move identical workplace_path_resolution from Main and Snapshot to that rootless owner, preserve both duplicated originals, existing dataclass fields and current lookups. No dummy project root.",
+      "functions": [
+        "resolve_path_with_constants",
+        "workplace_path_resolution"
+      ],
+      "worker_paths": [
+        "src/processforge_core/resources/registries.py",
+        "src/processforge_core/resources/snapshot.py"
+      ]
+    },
+    "55": {
+      "responsibility": "Own existing platform root selection and platform contract path discovery in project/platform_roots.py with concrete PlatformContractReader, WorkplaceRegistryWriter and the ready rootless registry path method. Preserve write-only registry fallback/mkdir, error strings, live selection, first-file order and return identity. No Main callback.",
+      "functions": [
+        "resolve_platform_root",
+        "platform_contract_path"
+      ],
+      "worker_paths": [
+        "src/processforge_core/project/platform_roots.py"
+      ],
+      "depends_on": 54
+    }
+  },
+  "functions": {
+    "resolve_path_with_constants": {
+      "source": "def resolve_path_with_constants(raw_path: str | None, base_dir: Path, constants: dict[str, str] | None = None) -> dict[str, Any]:\n    original = \"\" if raw_path is None else str(raw_path)\n    constants = constants or _workplace_registry_reader.load_workplace_path_constants(None, base_dir)\n    expanded, used_constants, errors = _workplace_registry_reader.expand_path_constants(original, constants)\n    expanded = normalize_path_string(expanded)\n    status = \"resolved\"\n    if errors:\n        status = \"error\"\n    elif used_constants:\n        status = \"resolved_from_constant\"\n    elif path_string_is_absolute(expanded):\n        status = \"absolute\"\n    else:\n        status = \"resolved_relative\"\n    if path_string_is_absolute(expanded):\n        resolved = expanded\n        is_absolute = True\n    else:\n        resolved = normalize_path_string((base_dir / expanded).resolve().as_posix())\n        is_absolute = True\n    return {\n        \"original\": original,\n        \"expanded\": expanded,\n        \"resolved\": resolved,\n        \"is_absolute\": is_absolute,\n        \"is_private\": is_absolute,\n        \"path_status\": status,\n        \"constants\": used_constants,\n        \"errors\": errors,\n    }",
+      "ast": "FunctionDef(name='resolve_path_with_constants', args=arguments(args=[arg(arg='raw_path', annotation=BinOp(left=Name(id='str', ctx=Load()), op=BitOr(), right=Constant(value=None))), arg(arg='base_dir', annotation=Name(id='Path', ctx=Load())), arg(arg='constants', annotation=BinOp(left=Subscript(value=Name(id='dict', ctx=Load()), slice=Tuple(elts=[Name(id='str', ctx=Load()), Name(id='str', ctx=Load())], ctx=Load()), ctx=Load()), op=BitOr(), right=Constant(value=None)))], defaults=[Constant(value=None)]), body=[Assign(targets=[Name(id='original', ctx=Store())], value=IfExp(test=Compare(left=Name(id='raw_path', ctx=Load()), ops=[Is()], comparators=[Constant(value=None)]), body=Constant(value=''), orelse=Call(func=Name(id='str', ctx=Load()), args=[Name(id='raw_path', ctx=Load())]))), Assign(targets=[Name(id='constants', ctx=Store())], value=BoolOp(op=Or(), values=[Name(id='constants', ctx=Load()), Call(func=Attribute(value=Name(id='_workplace_registry_reader', ctx=Load()), attr='load_workplace_path_constants', ctx=Load()), args=[Constant(value=None), Name(id='base_dir', ctx=Load())])])), Assign(targets=[Tuple(elts=[Name(id='expanded', ctx=Store()), Name(id='used_constants', ctx=Store()), Name(id='errors', ctx=Store())], ctx=Store())], value=Call(func=Attribute(value=Name(id='_workplace_registry_reader', ctx=Load()), attr='expand_path_constants', ctx=Load()), args=[Name(id='original', ctx=Load()), Name(id='constants', ctx=Load())])), Assign(targets=[Name(id='expanded', ctx=Store())], value=Call(func=Name(id='normalize_path_string', ctx=Load()), args=[Name(id='expanded', ctx=Load())])), Assign(targets=[Name(id='status', ctx=Store())], value=Constant(value='resolved')), If(test=Name(id='errors', ctx=Load()), body=[Assign(targets=[Name(id='status', ctx=Store())], value=Constant(value='error'))], orelse=[If(test=Name(id='used_constants', ctx=Load()), body=[Assign(targets=[Name(id='status', ctx=Store())], value=Constant(value='resolved_from_constant'))], orelse=[If(test=Call(func=Name(id='path_string_is_absolute', ctx=Load()), args=[Name(id='expanded', ctx=Load())]), body=[Assign(targets=[Name(id='status', ctx=Store())], value=Constant(value='absolute'))], orelse=[Assign(targets=[Name(id='status', ctx=Store())], value=Constant(value='resolved_relative'))])])]), If(test=Call(func=Name(id='path_string_is_absolute', ctx=Load()), args=[Name(id='expanded', ctx=Load())]), body=[Assign(targets=[Name(id='resolved', ctx=Store())], value=Name(id='expanded', ctx=Load())), Assign(targets=[Name(id='is_absolute', ctx=Store())], value=Constant(value=True))], orelse=[Assign(targets=[Name(id='resolved', ctx=Store())], value=Call(func=Name(id='normalize_path_string', ctx=Load()), args=[Call(func=Attribute(value=Call(func=Attribute(value=BinOp(left=Name(id='base_dir', ctx=Load()), op=Div(), right=Name(id='expanded', ctx=Load())), attr='resolve', ctx=Load())), attr='as_posix', ctx=Load()))])), Assign(targets=[Name(id='is_absolute', ctx=Store())], value=Constant(value=True))]), Return(value=Dict(keys=[Constant(value='original'), Constant(value='expanded'), Constant(value='resolved'), Constant(value='is_absolute'), Constant(value='is_private'), Constant(value='path_status'), Constant(value='constants'), Constant(value='errors')], values=[Name(id='original', ctx=Load()), Name(id='expanded', ctx=Load()), Name(id='resolved', ctx=Load()), Name(id='is_absolute', ctx=Load()), Name(id='is_absolute', ctx=Load()), Name(id='status', ctx=Load()), Name(id='used_constants', ctx=Load()), Name(id='errors', ctx=Load())]))], returns=Subscript(value=Name(id='dict', ctx=Load()), slice=Tuple(elts=[Name(id='str', ctx=Load()), Name(id='Any', ctx=Load())], ctx=Load()), ctx=Load()))",
+      "line": 1285,
+      "source_sha256": "411c7e8439367bcb8136251cb0a8f0df555c64004fbc96ac824a6a1a44c2ddbe"
+    },
+    "workplace_path_resolution": {
+      "source": "def workplace_path_resolution(workplace_root: Path, raw_path: str | None) -> dict[str, Any]:\n    manifest = workplace_root / \"workplace.yaml\"\n    return resolve_path_with_constants(raw_path, workplace_root, _workplace_registry_reader.load_workplace_path_constants(manifest, workplace_root))",
+      "ast": "FunctionDef(name='workplace_path_resolution', args=arguments(args=[arg(arg='workplace_root', annotation=Name(id='Path', ctx=Load())), arg(arg='raw_path', annotation=BinOp(left=Name(id='str', ctx=Load()), op=BitOr(), right=Constant(value=None)))]), body=[Assign(targets=[Name(id='manifest', ctx=Store())], value=BinOp(left=Name(id='workplace_root', ctx=Load()), op=Div(), right=Constant(value='workplace.yaml'))), Return(value=Call(func=Name(id='resolve_path_with_constants', ctx=Load()), args=[Name(id='raw_path', ctx=Load()), Name(id='workplace_root', ctx=Load()), Call(func=Attribute(value=Name(id='_workplace_registry_reader', ctx=Load()), attr='load_workplace_path_constants', ctx=Load()), args=[Name(id='manifest', ctx=Load()), Name(id='workplace_root', ctx=Load())])]))], returns=Subscript(value=Name(id='dict', ctx=Load()), slice=Tuple(elts=[Name(id='str', ctx=Load()), Name(id='Any', ctx=Load())], ctx=Load()), ctx=Load()))",
+      "line": 1317,
+      "source_sha256": "a6d114c09d7221b9ba7be80adfedf25a85fb93698dc036fdb13770a5cb28ad80"
+    },
+    "platform_contract_path": {
+      "source": "def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:\n    platform_id, contract_id = _platform_contract_reader.normalize_id_pair(platform)\n    for candidate_id in [contract_id, platform_id]:\n        entry = _platform_contract_reader.registry_entry(workplace_root / \"workplace.yaml\", candidate_id)\n        if entry and entry.get(\"path\"):\n            path = workplace_root / str(entry[\"path\"])\n            if path.is_file():\n                return path\n    _root_id, root_path = resolve_platform_root(workplace_root, None, mode=\"read\")\n    for candidate in [root_path / contract_id / \"platform-contract.yaml\", root_path / platform_id / \"platform-contract.yaml\", workplace_root / \"platforms\" / platform_id / \"platform.yaml\"]:\n        if candidate.is_file():\n            return candidate\n    return None",
+      "ast": "FunctionDef(name='platform_contract_path', args=arguments(args=[arg(arg='workplace_root', annotation=Name(id='Path', ctx=Load())), arg(arg='platform', annotation=Name(id='str', ctx=Load()))]), body=[Assign(targets=[Tuple(elts=[Name(id='platform_id', ctx=Store()), Name(id='contract_id', ctx=Store())], ctx=Store())], value=Call(func=Attribute(value=Name(id='_platform_contract_reader', ctx=Load()), attr='normalize_id_pair', ctx=Load()), args=[Name(id='platform', ctx=Load())])), For(target=Name(id='candidate_id', ctx=Store()), iter=List(elts=[Name(id='contract_id', ctx=Load()), Name(id='platform_id', ctx=Load())], ctx=Load()), body=[Assign(targets=[Name(id='entry', ctx=Store())], value=Call(func=Attribute(value=Name(id='_platform_contract_reader', ctx=Load()), attr='registry_entry', ctx=Load()), args=[BinOp(left=Name(id='workplace_root', ctx=Load()), op=Div(), right=Constant(value='workplace.yaml')), Name(id='candidate_id', ctx=Load())])), If(test=BoolOp(op=And(), values=[Name(id='entry', ctx=Load()), Call(func=Attribute(value=Name(id='entry', ctx=Load()), attr='get', ctx=Load()), args=[Constant(value='path')])]), body=[Assign(targets=[Name(id='path', ctx=Store())], value=BinOp(left=Name(id='workplace_root', ctx=Load()), op=Div(), right=Call(func=Name(id='str', ctx=Load()), args=[Subscript(value=Name(id='entry', ctx=Load()), slice=Constant(value='path'), ctx=Load())]))), If(test=Call(func=Attribute(value=Name(id='path', ctx=Load()), attr='is_file', ctx=Load())), body=[Return(value=Name(id='path', ctx=Load()))])])]), Assign(targets=[Tuple(elts=[Name(id='_root_id', ctx=Store()), Name(id='root_path', ctx=Store())], ctx=Store())], value=Call(func=Name(id='resolve_platform_root', ctx=Load()), args=[Name(id='workplace_root', ctx=Load()), Constant(value=None)], keywords=[keyword(arg='mode', value=Constant(value='read'))])), For(target=Name(id='candidate', ctx=Store()), iter=List(elts=[BinOp(left=BinOp(left=Name(id='root_path', ctx=Load()), op=Div(), right=Name(id='contract_id', ctx=Load())), op=Div(), right=Constant(value='platform-contract.yaml')), BinOp(left=BinOp(left=Name(id='root_path', ctx=Load()), op=Div(), right=Name(id='platform_id', ctx=Load())), op=Div(), right=Constant(value='platform-contract.yaml')), BinOp(left=BinOp(left=BinOp(left=Name(id='workplace_root', ctx=Load()), op=Div(), right=Constant(value='platforms')), op=Div(), right=Name(id='platform_id', ctx=Load())), op=Div(), right=Constant(value='platform.yaml'))], ctx=Load()), body=[If(test=Call(func=Attribute(value=Name(id='candidate', ctx=Load()), attr='is_file', ctx=Load())), body=[Return(value=Name(id='candidate', ctx=Load()))])]), Return(value=Constant(value=None))], returns=BinOp(left=Name(id='Path', ctx=Load()), op=BitOr(), right=Constant(value=None)))",
+      "line": 13298,
+      "source_sha256": "9280e6637517e4a56115c6cdf2b13b8dfdf49000e07f6ce40b39d6c0649521f0"
+    },
+    "resolve_platform_root": {
+      "source": "def resolve_platform_root(workplace_root: Path, platform_root_id: str | None = None, *, mode: str = \"read\") -> tuple[str, Path]:\n    registry_path = workplace_root / \"registries\" / \"platform-contract-roots.yaml\"\n    data = load_yaml_document(registry_path)\n    roots = data.get(\"platform_contract_roots\") if isinstance(data, dict) else None\n    entries = [entry for entry in roots if isinstance(entry, dict)] if isinstance(roots, list) else []\n    if not entries:\n        entries = [{\"id\": \"global\", \"label\": \"Global platform contracts\", \"path\": \"${PF_PLATFORM_CONTRACTS}\", \"scope\": \"workplace\", \"status\": \"available\"}]\n        if mode == \"write\":\n            _workplace_registry_writer.upsert(registry_path, \"platform_contract_roots\", entries[0])\n    selected = None\n    if platform_root_id:\n        for entry in entries:\n            if str(entry.get(\"id\")) == platform_root_id:\n                selected = entry\n                break\n        if selected is None:\n            raise SystemExit(f\"FAIL: platform root '{platform_root_id}' not found in registries/platform-contract-roots.yaml\")\n    else:\n        available = [entry for entry in entries if str(entry.get(\"status\", \"available\")) == \"available\"]\n        selected = available[0] if available else entries[0]\n    root_id = str(selected.get(\"id\", \"global\"))\n    root_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(selected.get(\"path\") or \"${PF_PLATFORM_CONTRACTS}\")))\n    if mode == \"write\":\n        root_path.mkdir(parents=True, exist_ok=True)\n    return root_id, root_path",
+      "ast": "FunctionDef(name='resolve_platform_root', args=arguments(args=[arg(arg='workplace_root', annotation=Name(id='Path', ctx=Load())), arg(arg='platform_root_id', annotation=BinOp(left=Name(id='str', ctx=Load()), op=BitOr(), right=Constant(value=None)))], kwonlyargs=[arg(arg='mode', annotation=Name(id='str', ctx=Load()))], kw_defaults=[Constant(value='read')], defaults=[Constant(value=None)]), body=[Assign(targets=[Name(id='registry_path', ctx=Store())], value=BinOp(left=BinOp(left=Name(id='workplace_root', ctx=Load()), op=Div(), right=Constant(value='registries')), op=Div(), right=Constant(value='platform-contract-roots.yaml'))), Assign(targets=[Name(id='data', ctx=Store())], value=Call(func=Name(id='load_yaml_document', ctx=Load()), args=[Name(id='registry_path', ctx=Load())])), Assign(targets=[Name(id='roots', ctx=Store())], value=IfExp(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='data', ctx=Load()), Name(id='dict', ctx=Load())]), body=Call(func=Attribute(value=Name(id='data', ctx=Load()), attr='get', ctx=Load()), args=[Constant(value='platform_contract_roots')]), orelse=Constant(value=None))), Assign(targets=[Name(id='entries', ctx=Store())], value=IfExp(test=Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='roots', ctx=Load()), Name(id='list', ctx=Load())]), body=ListComp(elt=Name(id='entry', ctx=Load()), generators=[comprehension(target=Name(id='entry', ctx=Store()), iter=Name(id='roots', ctx=Load()), ifs=[Call(func=Name(id='isinstance', ctx=Load()), args=[Name(id='entry', ctx=Load()), Name(id='dict', ctx=Load())])], is_async=0)]), orelse=List(ctx=Load()))), If(test=UnaryOp(op=Not(), operand=Name(id='entries', ctx=Load())), body=[Assign(targets=[Name(id='entries', ctx=Store())], value=List(elts=[Dict(keys=[Constant(value='id'), Constant(value='label'), Constant(value='path'), Constant(value='scope'), Constant(value='status')], values=[Constant(value='global'), Constant(value='Global platform contracts'), Constant(value='${PF_PLATFORM_CONTRACTS}'), Constant(value='workplace'), Constant(value='available')])], ctx=Load())), If(test=Compare(left=Name(id='mode', ctx=Load()), ops=[Eq()], comparators=[Constant(value='write')]), body=[Expr(value=Call(func=Attribute(value=Name(id='_workplace_registry_writer', ctx=Load()), attr='upsert', ctx=Load()), args=[Name(id='registry_path', ctx=Load()), Constant(value='platform_contract_roots'), Subscript(value=Name(id='entries', ctx=Load()), slice=Constant(value=0), ctx=Load())]))])]), Assign(targets=[Name(id='selected', ctx=Store())], value=Constant(value=None)), If(test=Name(id='platform_root_id', ctx=Load()), body=[For(target=Name(id='entry', ctx=Store()), iter=Name(id='entries', ctx=Load()), body=[If(test=Compare(left=Call(func=Name(id='str', ctx=Load()), args=[Call(func=Attribute(value=Name(id='entry', ctx=Load()), attr='get', ctx=Load()), args=[Constant(value='id')])]), ops=[Eq()], comparators=[Name(id='platform_root_id', ctx=Load())]), body=[Assign(targets=[Name(id='selected', ctx=Store())], value=Name(id='entry', ctx=Load())), Break()])]), If(test=Compare(left=Name(id='selected', ctx=Load()), ops=[Is()], comparators=[Constant(value=None)]), body=[Raise(exc=Call(func=Name(id='SystemExit', ctx=Load()), args=[JoinedStr(values=[Constant(value=\"FAIL: platform root '\"), FormattedValue(value=Name(id='platform_root_id', ctx=Load()), conversion=-1), Constant(value=\"' not found in registries/platform-contract-roots.yaml\")])]))])], orelse=[Assign(targets=[Name(id='available', ctx=Store())], value=ListComp(elt=Name(id='entry', ctx=Load()), generators=[comprehension(target=Name(id='entry', ctx=Store()), iter=Name(id='entries', ctx=Load()), ifs=[Compare(left=Call(func=Name(id='str', ctx=Load()), args=[Call(func=Attribute(value=Name(id='entry', ctx=Load()), attr='get', ctx=Load()), args=[Constant(value='status'), Constant(value='available')])]), ops=[Eq()], comparators=[Constant(value='available')])], is_async=0)])), Assign(targets=[Name(id='selected', ctx=Store())], value=IfExp(test=Name(id='available', ctx=Load()), body=Subscript(value=Name(id='available', ctx=Load()), slice=Constant(value=0), ctx=Load()), orelse=Subscript(value=Name(id='entries', ctx=Load()), slice=Constant(value=0), ctx=Load())))]), Assign(targets=[Name(id='root_id', ctx=Store())], value=Call(func=Name(id='str', ctx=Load()), args=[Call(func=Attribute(value=Name(id='selected', ctx=Load()), attr='get', ctx=Load()), args=[Constant(value='id'), Constant(value='global')])])), Assign(targets=[Name(id='root_path', ctx=Store())], value=Call(func=Name(id='path_resolution_to_path', ctx=Load()), args=[Call(func=Name(id='workplace_path_resolution', ctx=Load()), args=[Name(id='workplace_root', ctx=Load()), Call(func=Name(id='str', ctx=Load()), args=[BoolOp(op=Or(), values=[Call(func=Attribute(value=Name(id='selected', ctx=Load()), attr='get', ctx=Load()), args=[Constant(value='path')]), Constant(value='${PF_PLATFORM_CONTRACTS}')])])])])), If(test=Compare(left=Name(id='mode', ctx=Load()), ops=[Eq()], comparators=[Constant(value='write')]), body=[Expr(value=Call(func=Attribute(value=Name(id='root_path', ctx=Load()), attr='mkdir', ctx=Load()), keywords=[keyword(arg='parents', value=Constant(value=True)), keyword(arg='exist_ok', value=Constant(value=True))]))]), Return(value=Tuple(elts=[Name(id='root_id', ctx=Load()), Name(id='root_path', ctx=Load())], ctx=Load()))], returns=Subscript(value=Name(id='tuple', ctx=Load()), slice=Tuple(elts=[Name(id='str', ctx=Load()), Name(id='Path', ctx=Load())], ctx=Load()), ctx=Load()))",
+      "line": 13586,
+      "source_sha256": "d43fe6951d364e29ed59272f6c5acc8a19646738016df0b36059b31a0f6ece18"
+    }
+  },
+  "cross_file_census": [
+    {
+      "path": "src/processforge_core/maintenance/documents.py",
+      "line": 34,
+      "name": "workplace_path_resolution",
+      "source": "references.workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/documents.py",
+      "line": 90,
+      "name": "workplace_path_resolution",
+      "source": "references.workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 58,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 185,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 190,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 35,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 78,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 100,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/maintenance/registries.py",
+      "line": 101,
+      "name": "workplace_path_resolution",
+      "source": "self._references(workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/project/registry_checks.py",
+      "line": 44,
+      "name": "resolve_path_with_constants",
+      "source": "paths.resolve_path_with_constants"
+    },
+    {
+      "path": "src/processforge_core/project/registry_checks.py",
+      "line": 78,
+      "name": "resolve_path_with_constants",
+      "source": "paths.resolve_path_with_constants"
+    },
+    {
+      "path": "src/processforge_core/project/templates.py",
+      "line": 46,
+      "name": "workplace_path_resolution",
+      "source": "references.workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/resources/records.py",
+      "line": 44,
+      "name": "workplace_path_resolution",
+      "source": "paths.workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/resources/records.py",
+      "line": 61,
+      "name": "workplace_path_resolution",
+      "source": "paths.workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/resources/records.py",
+      "line": 101,
+      "name": "workplace_path_resolution",
+      "source": "WorkspacePathReferenceReader(workplace_root, workplace_root).workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/resources/registries.py",
+      "line": 117,
+      "name": "resolve_path_with_constants",
+      "source": "self.resolve_path_with_constants"
+    },
+    {
+      "path": "src/processforge_core/resources/snapshot.py",
+      "line": 37,
+      "name": "resolve_path_with_constants",
+      "source": "self.resolve_path_with_constants"
+    },
+    {
+      "path": "src/processforge_core/resources/snapshot.py",
+      "line": 56,
+      "name": "workplace_path_resolution",
+      "source": "self.workplace_path_resolution"
+    },
+    {
+      "path": "src/processforge_core/resources/snapshot.py",
+      "line": 189,
+      "name": "workplace_path_resolution",
+      "source": "self.workplace_path_resolution"
+    },
+    {
+      "path": "tools/smoke_process_catalog_real_core.py",
+      "line": 249,
+      "name": "resolve_path_with_constants",
+      "kind": "literal",
+      "historical_or_fixture_review_required": true
+    },
+    {
+      "path": "tools/smoke_resource_resolve_real_core.py",
+      "line": 40,
+      "name": "workplace_path_resolution",
+      "kind": "literal",
+      "historical_or_fixture_review_required": true
+    },
+    {
+      "path": "tools/smoke_resource_resolve_real_core.py",
+      "line": 41,
+      "name": "resolve_path_with_constants",
+      "kind": "literal",
+      "historical_or_fixture_review_required": true
+    }
+  ],
+  "required_architecture_sources": [
+    ".pf/artifacts/oop-refactor-clarification-20261005/clarification.md",
+    ".pf/artifacts/original-architecture-alignment-20261010/migration-contract.md",
+    ".pf/artifacts/pf-framework-architecture-20261005/adr.md",
+    ".pf/artifacts/pf-framework-architecture-20261005/direction.md",
+    ".pf/artifacts/pf-framework-architecture-20261005/domain.md",
+    ".pf/artifacts/progressive-oop-boundary-20261010/decision.md",
+    ".pf/artifacts/python-framework-20261005/oop-02.md",
+    ".pf/artifacts/python-framework-20261005/oop-03.md",
+    ".pf/artifacts/python-framework-20261005/oop-05.md"
+  ],
+  "python_digest": ".pf/artifacts/pf121-oop-blocks18-37-20261019/primary/python-knowledge.md",
+  "admission": "Only after current source has independent acceptance, both-dev readback and terminal child/root lifecycle. Separate exact scopes and fresh valid capsules; retain native1-1-4 roles without inventing mandatory concurrency. Do not start implementation when time is insufficient for honest review/delivery before05:00Z. This is preparation, not permission or source acceptance.",
+  "roles": {
+    "a": {
+      "blocks": [
+        54
+      ],
+      "functions": [
+        "resolve_path_with_constants",
+        "workplace_path_resolution"
+      ],
+      "support": [],
+      "paths": [
+        "src/processforge_core/resources/registries.py",
+        "src/processforge_core/resources/snapshot.py",
+        "src/processforge_core/resources/records.py"
+      ],
+      "responsibility": "Unify actual duplicated rootless path resolution. Reuse the existing exact WorkplaceRegistryReader.resolve_path_with_constants; add its cohesive workplace_path_resolution method by moving identical Main and Snapshot definitions, then remove obsolete Snapshot override. Snapshot retains original dataclass fields/constructor and inherits the real canonical method. Migrate ResourceRecordService direct WorkspacePathReferenceReader(workplace_root,workplace_root).workplace_path_resolution call to the rootless reader; no fake project root, callback, alias wrapper or duplicate algorithm. Preserve all unselected methods and shared inputs. Primary handles Main/caller globals/docs/checksums/Git."
+    },
+    "c": {
+      "blocks": [
+        55
+      ],
+      "functions": [
+        "resolve_platform_root",
+        "platform_contract_path"
+      ],
+      "support": [],
+      "paths": [
+        "src/processforge_core/project/platform_roots.py"
+      ],
+      "responsibility": "Own the existing platform root selection and platform contract path discovery in one cohesive PlatformRootResolver with explicit actual distribution root, concrete PlatformContractReader, WorkplaceRegistryWriter and WorkplaceRegistryReader. Reuse ready rootless workplace_path_resolution from block54; report missing readiness rather than inventing dummy roots or copy. Preserve exactly the write-only fallback registry upsert/mkdir, load/selection order, first-file lookup order, errors/return identities. Cold constructor, full algorithm/default/signature/literal parity; no Main callback or new product feature. Primary handles Main/caller globals/docs/checksums/Git."
+    }
+  },
+  "retained_topology": "primary orchestrates/codes; one independent reviewer after implementation; four retained logical executor roles. Only a/c have independent code responsibility in this final pair, no mandatory simultaneous concurrency.",
+  "deadline_utc": "2026-10-20T05:00:00Z"
+}

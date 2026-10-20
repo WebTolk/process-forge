@@ -1,0 +1,133 @@
+{
+  "at": "2026-10-20T04:28:46.197137+00:00",
+  "baseline": "3ef5c9b19ef4484a0b71d1c29706c4ab3d72b2eb",
+  "head": "165ed08bc7341248533741fc037b7bf202fb672c",
+  "commits": [
+    {
+      "block": 46,
+      "commit": "679483026f3c878db033eb24ea1ac5b354e6aa0b",
+      "parent": "3ef5c9b19ef4484a0b71d1c29706c4ab3d72b2eb",
+      "tree": "a767cb4231b5e7f272b38065e93b1c079b9bd69d",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/resources/identity.py",
+        "src/processforge_core/resources/index_checks.py",
+        "src/processforge_core/resources/snapshot.py",
+        "tools/processforge.py",
+        "tools/smoke_remediation_security_boundaries.py"
+      ]
+    },
+    {
+      "block": 47,
+      "commit": "e1de9b66d647685a1e1f3910c01a82f96864abc1",
+      "parent": "679483026f3c878db033eb24ea1ac5b354e6aa0b",
+      "tree": "216565aeb6576f870c2c3fb105256fd5b483103e",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/configuration/specializations.py",
+        "src/processforge_core/resources/snapshot.py",
+        "src/processforge_core/resources/workplace_catalog.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 48,
+      "commit": "9311b0760d101c1fcf57bb740c1855a57394bf42",
+      "parent": "e1de9b66d647685a1e1f3910c01a82f96864abc1",
+      "tree": "80b8dddc14965a33144fd72d772fdd50675fec2c",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/configuration/project_parameters.py",
+        "src/processforge_core/project/overrides.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 49,
+      "commit": "7e8bb32990efd8b81a4caec861020022581a88ef",
+      "parent": "9311b0760d101c1fcf57bb740c1855a57394bf42",
+      "tree": "f37b4bb960b42ab772ea8d868b49aaf77a6edc62",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/configuration/assignment_parameters.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 50,
+      "commit": "0086ac4fc9b2f415a8fdfde2d43753e53514b4dc",
+      "parent": "7e8bb32990efd8b81a4caec861020022581a88ef",
+      "tree": "d231be92cb1c047febbd990ddeb8107069a5a5f5",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/resources/package_write.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 51,
+      "commit": "100f6ead1d62354ff50e7f4f77bd788dfed5693a",
+      "parent": "0086ac4fc9b2f415a8fdfde2d43753e53514b4dc",
+      "tree": "966581787befb8eba43f8a0610d0b26c73ec5f7c",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/resources/private_paths.py",
+        "tools/processforge.py"
+      ]
+    },
+    {
+      "block": 52,
+      "commit": "1cebd81f0813c3f3cb4cbfe9866532d29f05c819",
+      "parent": "100f6ead1d62354ff50e7f4f77bd788dfed5693a",
+      "tree": "928ddea5e91b3f90e9f6026d90e389437fd7087e",
+      "files": [
+        "checksums/processforge.sha256",
+        "src/processforge_core/bootstrap.py",
+        "src/processforge_core/composition.py",
+        "src/processforge_core/presentation/work_summaries.py",
+        "src/processforge_core/process_execution.py",
+        "src/processforge_core/work/continuation.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/processforge.py",
+        "tools/smoke_completion_document_service.py",
+        "tools/smoke_completion_intent_builder.py",
+        "tools/smoke_continuation_work.py",
+        "tools/smoke_core_work_state.py",
+        "tools/smoke_diagnostics.py",
+        "tools/smoke_egress_work.py",
+        "tools/smoke_hook_sqlite_runtime.py",
+        "tools/smoke_work_capsule_contract_parity.py",
+        "tools/smoke_work_completion_recovery.py",
+        "tools/smoke_work_evidence_freshness.py",
+        "tools/smoke_work_resource_binding.py",
+        "tools/smoke_work_start_scope.py"
+      ]
+    },
+    {
+      "block": 53,
+      "commit": "165ed08bc7341248533741fc037b7bf202fb672c",
+      "parent": "1cebd81f0813c3f3cb4cbfe9866532d29f05c819",
+      "tree": "05b78f6dfa797bf9074405f8cb849cb8cd07ef27",
+      "files": [
+        "checksums/processforge.sha256",
+        "docs/concepts/python-core-structure.md",
+        "docs/ru/concepts/python-core-structure.md",
+        "src/processforge_core/project/platform_documents.py",
+        "tools/processforge.py",
+        "tools/smoke_remediation_transactional_authoring.py"
+      ]
+    }
+  ],
+  "foreign_index_entries_preserved": 8568,
+  "working_source_equals_final_prefix": true,
+  "review_acceptance": {
+    "at": "2026-10-20T04:28:32.978208+00:00",
+    "pass": true,
+    "open_source_findings": 0,
+    "review_message": "msg_c75620ce55a04f71b0efa6a0c9c1d41e",
+    "candidate_manifest_sha256": "64fbff0c9aad0fefdda7aef445f64f99f0a256df913ba2403309e982f93cfa1f",
+    "review_result_sha256": "dbaef1e31bdff6f176ca4f3dc6583e2459b6173631f05d883f09382749d4d8d2",
+    "evidence_note": "E001 records LF-normalized test output digests versus CRLF stored bytes. Independent exact raw/LF supplement is retained; all original logs and successful checks preserved, no reruns or source correction needed.",
+    "scope": "all four workers and primary; 35 candidate files, 8 coherent prefixes, 11 existing passing check groups; source only"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-20T04:29:55.697486+00:00",
+  "commit": "165ed08bc7341248533741fc037b7bf202fb672c",
+  "parallel_push": [
+    {
+      "provider": "origin",
+      "push_exit": 0
+    },
+    {
+      "provider": "gitverse",
+      "push_exit": 0
+    }
+  ],
+  "parallel_readback": [
+    {
+      "provider": "origin",
+      "readback_exit": 0,
+      "readback_sha": "165ed08bc7341248533741fc037b7bf202fb672c"
+    },
+    {
+      "provider": "gitverse",
+      "readback_exit": 0,
+      "readback_sha": "165ed08bc7341248533741fc037b7bf202fb672c"
+    }
+  ],
+  "pass": true,
+  "scope": "dev branches only; no tag, stable assets or PR lifecycle claim"
+}

@@ -1,0 +1,337 @@
+{
+  "baseline": "3ef5c9b19ef4484a0b71d1c29706c4ab3d72b2eb",
+  "source_commit": "165ed08bc7341248533741fc037b7bf202fb672c",
+  "source_files": [
+    {
+      "path": "docs/concepts/python-core-structure.md",
+      "git_sha256": "cdc9546528662806b9ff09f0d4c36b4dd0c271d0a9a0e5baf50939e32cc7fc60",
+      "raw_sha256": "cdc9546528662806b9ff09f0d4c36b4dd0c271d0a9a0e5baf50939e32cc7fc60"
+    },
+    {
+      "path": "docs/ru/concepts/python-core-structure.md",
+      "git_sha256": "e121ab37d6ea987ab592e98c80559fa39795e908f46a037c26684f4663179469",
+      "raw_sha256": "e121ab37d6ea987ab592e98c80559fa39795e908f46a037c26684f4663179469"
+    },
+    {
+      "path": "src/processforge_core/bootstrap.py",
+      "git_sha256": "67365a7278e3648d08c9b2d73b66142c60ecca408fe78ec6faa2b5cb301f2903",
+      "raw_sha256": "67365a7278e3648d08c9b2d73b66142c60ecca408fe78ec6faa2b5cb301f2903"
+    },
+    {
+      "path": "src/processforge_core/composition.py",
+      "git_sha256": "53d0dcd14c6fd4bab43d722af3f4f24f8ea91dbcc5d3c894286fec8b93c8d981",
+      "raw_sha256": "53d0dcd14c6fd4bab43d722af3f4f24f8ea91dbcc5d3c894286fec8b93c8d981"
+    },
+    {
+      "path": "src/processforge_core/configuration/assignment_parameters.py",
+      "git_sha256": "5557f05f71b2940ab599e6be0066d28b252086959336d1d5fc3e5e08d719ec3b",
+      "raw_sha256": "5557f05f71b2940ab599e6be0066d28b252086959336d1d5fc3e5e08d719ec3b"
+    },
+    {
+      "path": "src/processforge_core/configuration/project_parameters.py",
+      "git_sha256": "823640a6742a96346c1c66090ee27f9008aaa5774e093b438dc1f11e1fe36820",
+      "raw_sha256": "823640a6742a96346c1c66090ee27f9008aaa5774e093b438dc1f11e1fe36820"
+    },
+    {
+      "path": "src/processforge_core/configuration/specializations.py",
+      "git_sha256": "3fcfaa43d8e1d74b76d1d6c50aa6e28d1d1f4840234225a5ac0349aad0e97b07",
+      "raw_sha256": "3fcfaa43d8e1d74b76d1d6c50aa6e28d1d1f4840234225a5ac0349aad0e97b07"
+    },
+    {
+      "path": "src/processforge_core/presentation/work_summaries.py",
+      "git_sha256": "35e9896cae3ca3bafd9284f7dfdaa7d487cbd5704ce5da75493bf087bb485444",
+      "raw_sha256": "35e9896cae3ca3bafd9284f7dfdaa7d487cbd5704ce5da75493bf087bb485444"
+    },
+    {
+      "path": "src/processforge_core/process_execution.py",
+      "git_sha256": "1b7189e1857ff7fff0ddbb27f8a10edc407e75c29305969e9b26257a80575d9e",
+      "raw_sha256": "1b7189e1857ff7fff0ddbb27f8a10edc407e75c29305969e9b26257a80575d9e"
+    },
+    {
+      "path": "src/processforge_core/project/overrides.py",
+      "git_sha256": "a8e084375bfe34f3ba6ed4626c7dab580b595b9f62523905a50a3677a48e82d5",
+      "raw_sha256": "a8e084375bfe34f3ba6ed4626c7dab580b595b9f62523905a50a3677a48e82d5"
+    },
+    {
+      "path": "src/processforge_core/project/platform_documents.py",
+      "git_sha256": "963179a3613e39742ec74b3cb6021ec2f00e969cbd35fe3d91b0b07a46fd9682",
+      "raw_sha256": "963179a3613e39742ec74b3cb6021ec2f00e969cbd35fe3d91b0b07a46fd9682"
+    },
+    {
+      "path": "src/processforge_core/resources/identity.py",
+      "git_sha256": "5ceabc38e7f30fc58e0fd1956df1fa4ff92f9da683e30c3e84715f28e5f1974b",
+      "raw_sha256": "5ceabc38e7f30fc58e0fd1956df1fa4ff92f9da683e30c3e84715f28e5f1974b"
+    },
+    {
+      "path": "src/processforge_core/resources/index_checks.py",
+      "git_sha256": "f58cb0fb8141b2f3bb2b96fc033d88abeaefe62105fbb80c3dde9e8915ce4961",
+      "raw_sha256": "f58cb0fb8141b2f3bb2b96fc033d88abeaefe62105fbb80c3dde9e8915ce4961"
+    },
+    {
+      "path": "src/processforge_core/resources/package_write.py",
+      "git_sha256": "2194a40f55970ad786d84e0c0b9f4a4e1d2b95fcf394264e8e998d708cb2ad53",
+      "raw_sha256": "2194a40f55970ad786d84e0c0b9f4a4e1d2b95fcf394264e8e998d708cb2ad53"
+    },
+    {
+      "path": "src/processforge_core/resources/private_paths.py",
+      "git_sha256": "19e19de76438ab22820216e9d955f7cd3fe9f76ec5133cb33a5b670be04cb188",
+      "raw_sha256": "19e19de76438ab22820216e9d955f7cd3fe9f76ec5133cb33a5b670be04cb188"
+    },
+    {
+      "path": "src/processforge_core/resources/snapshot.py",
+      "git_sha256": "6ec569c6b1461ecb4e5493d3d26955d0b5db27d4d43ce2b78ac660dfbdf6561e",
+      "raw_sha256": "6ec569c6b1461ecb4e5493d3d26955d0b5db27d4d43ce2b78ac660dfbdf6561e"
+    },
+    {
+      "path": "src/processforge_core/resources/workplace_catalog.py",
+      "git_sha256": "b03866318cf241a21a61b426601f3f13ea940fdaf251dd8c8102798e30228763",
+      "raw_sha256": "b03866318cf241a21a61b426601f3f13ea940fdaf251dd8c8102798e30228763"
+    },
+    {
+      "path": "src/processforge_core/work/continuation.py",
+      "git_sha256": "a7a4a17e173ba33fd787c5d10fe075d9896510114d7847224fc9ccde69e271fd",
+      "raw_sha256": "a7a4a17e173ba33fd787c5d10fe075d9896510114d7847224fc9ccde69e271fd"
+    },
+    {
+      "path": "tools/pf_runtime/mcp_server.py",
+      "git_sha256": "1a523f767a75a13f14b2c7072ed73928d7634886d2aabb2ca5824b05c084e757",
+      "raw_sha256": "1a523f767a75a13f14b2c7072ed73928d7634886d2aabb2ca5824b05c084e757"
+    },
+    {
+      "path": "tools/processforge.py",
+      "git_sha256": "9f48a0e1f08aa3594d1e572d2e1adbc5c2111cd667494594bb6536d15733aab3",
+      "raw_sha256": "b770c056b7c68cb8ef2b93b5bd453728a221ac0d00d730ef7386df272c87eb5b"
+    },
+    {
+      "path": "tools/smoke_completion_document_service.py",
+      "git_sha256": "19542cde1aafc355d01dadcf4032cda139e72e81a44d8c43c54ae322bf6bb249",
+      "raw_sha256": "19542cde1aafc355d01dadcf4032cda139e72e81a44d8c43c54ae322bf6bb249"
+    },
+    {
+      "path": "tools/smoke_completion_intent_builder.py",
+      "git_sha256": "1862899c246ea565ebd080c11570e90c7bdfaf578e09b4556071cb30b33e79f6",
+      "raw_sha256": "1862899c246ea565ebd080c11570e90c7bdfaf578e09b4556071cb30b33e79f6"
+    },
+    {
+      "path": "tools/smoke_continuation_work.py",
+      "git_sha256": "ccfb60ae2be2a3b8509d91366be9d82d545a6f2bb36149b32daba04c3d912937",
+      "raw_sha256": "ccfb60ae2be2a3b8509d91366be9d82d545a6f2bb36149b32daba04c3d912937"
+    },
+    {
+      "path": "tools/smoke_core_work_state.py",
+      "git_sha256": "676fff9fa94dcdc26273f4a20650d697e721b24a4e9ce02641fb4c6959c60ed9",
+      "raw_sha256": "676fff9fa94dcdc26273f4a20650d697e721b24a4e9ce02641fb4c6959c60ed9"
+    },
+    {
+      "path": "tools/smoke_diagnostics.py",
+      "git_sha256": "5ec98b30f75590c953b6fcc9313b80ff45318768da4fd7c5977ff495efead01c",
+      "raw_sha256": "5ec98b30f75590c953b6fcc9313b80ff45318768da4fd7c5977ff495efead01c"
+    },
+    {
+      "path": "tools/smoke_egress_work.py",
+      "git_sha256": "3d1fffd25128db75b852db559939230c5ca60cba21e8008a0fd0d5c89b1a0b23",
+      "raw_sha256": "3d1fffd25128db75b852db559939230c5ca60cba21e8008a0fd0d5c89b1a0b23"
+    },
+    {
+      "path": "tools/smoke_hook_sqlite_runtime.py",
+      "git_sha256": "15de9493043bf92a517770167c34e0e43dcaf4d13549d5d360de52a934161212",
+      "raw_sha256": "15de9493043bf92a517770167c34e0e43dcaf4d13549d5d360de52a934161212"
+    },
+    {
+      "path": "tools/smoke_remediation_security_boundaries.py",
+      "git_sha256": "69640d04d98c4d94c7743d44e3b5cfe75b485361029bf55e3e1eb19f079fb0ee",
+      "raw_sha256": "69640d04d98c4d94c7743d44e3b5cfe75b485361029bf55e3e1eb19f079fb0ee"
+    },
+    {
+      "path": "tools/smoke_remediation_transactional_authoring.py",
+      "git_sha256": "c60e3bf0139f4d5b7f56a3719a6b29f2e0b8a636ad3f1b2b6f18e9dd7161cd5e",
+      "raw_sha256": "c60e3bf0139f4d5b7f56a3719a6b29f2e0b8a636ad3f1b2b6f18e9dd7161cd5e"
+    },
+    {
+      "path": "tools/smoke_work_capsule_contract_parity.py",
+      "git_sha256": "61c766681819b8e9b8aa47f0e56afeeee3823835d85344019c403dc34b05ff92",
+      "raw_sha256": "61c766681819b8e9b8aa47f0e56afeeee3823835d85344019c403dc34b05ff92"
+    },
+    {
+      "path": "tools/smoke_work_completion_recovery.py",
+      "git_sha256": "3063b085781b26920c9033ff34266dfc96332aec4162ed15c6bfd9b12251d6b0",
+      "raw_sha256": "3063b085781b26920c9033ff34266dfc96332aec4162ed15c6bfd9b12251d6b0"
+    },
+    {
+      "path": "tools/smoke_work_evidence_freshness.py",
+      "git_sha256": "edf4ceeaedc2e0aaddbb620f31f387098aabc94e5dae6a7df1a8319d4ef5fcba",
+      "raw_sha256": "edf4ceeaedc2e0aaddbb620f31f387098aabc94e5dae6a7df1a8319d4ef5fcba"
+    },
+    {
+      "path": "tools/smoke_work_resource_binding.py",
+      "git_sha256": "ab359b5e1e0644181b1db865ec9ce1d80d0d7f4a36fecba6eb07ceb8f1dba3c8",
+      "raw_sha256": "ab359b5e1e0644181b1db865ec9ce1d80d0d7f4a36fecba6eb07ceb8f1dba3c8"
+    },
+    {
+      "path": "tools/smoke_work_start_scope.py",
+      "git_sha256": "76674d76cf48cc53c9e6b337c8b8eae0c8c5cc5e6d5fdf1953e9be6217910d82",
+      "raw_sha256": "76674d76cf48cc53c9e6b337c8b8eae0c8c5cc5e6d5fdf1953e9be6217910d82"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "git_sha256": "4371fcc0bd4f59a4756b605d537ca36397d1876e67558a0618490b55f514e3aa",
+      "raw_sha256": "4371fcc0bd4f59a4756b605d537ca36397d1876e67558a0618490b55f514e3aa"
+    }
+  ],
+  "selected_main_bindings_absent": [
+    "PATH_CONSTANT_PATTERN",
+    "PROJECT_OVERRIDE_MODES",
+    "RESOURCE_ID_PATTERN",
+    "WINDOWS_RESERVED_DEVICE_BASENAMES",
+    "build_resource_index",
+    "contained_resource_path",
+    "ensure_private_resource_path",
+    "expand_path_constants",
+    "load_workplace_path_constants",
+    "package_manifest_path_for_write",
+    "platform_contract_from_values",
+    "render_run_summary",
+    "render_task_index",
+    "resolve_assignment_parameters",
+    "resolve_project_parameters",
+    "validate_resource_id",
+    "workplace_registry_entry",
+    "workspace_registry_specs",
+    "write_package_manifest_and_index"
+  ],
+  "checks": [
+    {
+      "name": "smoke_parameter_cascade_resolution.py",
+      "at": "2026-10-20T04:07:46.670549+00:00",
+      "exit_code": 0,
+      "seconds": 4.078,
+      "log_sha256": "b1e5730fdd45cb6f2c14590872a0fcb6dcef4c9862cbb20bc4ffb925fa63e4f0"
+    },
+    {
+      "name": "smoke_parameter_assignment_capsule.py",
+      "at": "2026-10-20T04:07:46.856615+00:00",
+      "exit_code": 0,
+      "seconds": 4.264,
+      "log_sha256": "0629d401431fa88b97f8a0660ba3a49c6b2992b33eeb703af1fc343f10c006f9"
+    },
+    {
+      "name": "smoke_parameter_freshness.py",
+      "at": "2026-10-20T04:07:47.357355+00:00",
+      "exit_code": 0,
+      "seconds": 4.765,
+      "log_sha256": "2a4f09c6845cf985cddc47a185b18c97425d883576ef7ce70489fc1e452d10f7"
+    },
+    {
+      "name": "smoke_remediation_transactional_authoring.py",
+      "at": "2026-10-20T04:08:11.525604+00:00",
+      "exit_code": 0,
+      "seconds": 24.854,
+      "log_sha256": "7823230959b685801b0441cb9c81108c96f2a4da12c59118e69962318b466ffe"
+    },
+    {
+      "name": "smoke_work_completion_recovery.py",
+      "at": "2026-10-20T04:08:29.204151+00:00",
+      "exit_code": 0,
+      "seconds": 42.346,
+      "log_sha256": "11939024a8f7e1b1e9d67d7d4c8cc7e1ec4198f71fc9193b2b9784e6b6cf95fb"
+    },
+    {
+      "name": "composition-adapters",
+      "at": "2026-10-20T04:08:30.093903+00:00",
+      "exit_code": 0,
+      "seconds": 0.889,
+      "log_sha256": "e5f9bcb8147f029ee471cdafbbe5b1f1515bbd4a5a021cef0062c7ec45163c5e"
+    },
+    {
+      "name": "real-resource-reads",
+      "at": "2026-10-20T04:08:35.619391+00:00",
+      "exit_code": 0,
+      "seconds": 5.524,
+      "log_sha256": "76fedb4b9f8e38df7c0a4d38a46b035ba0a3c670b907c74854bc8e396f82d9bf"
+    },
+    {
+      "name": "smoke_continuation_work.py",
+      "at": "2026-10-20T04:08:38.003922+00:00",
+      "exit_code": 0,
+      "seconds": 50.645,
+      "log_sha256": "91124a3f4abc38947c08101112989716f9559d0c22c2a50a23fbdcbd974bd15d"
+    },
+    {
+      "name": "smoke_remediation_security_boundaries.py",
+      "at": "2026-10-20T04:09:55.060560+00:00",
+      "exit_code": 0,
+      "seconds": 103.534,
+      "log_sha256": "85c47fb53cb75d1db0a8eddd5c0c26aada6aabcaf2c4ccfbffe418cf05562f7d"
+    },
+    {
+      "name": "smoke_completion_document_service.py --baseline consumer-baseline",
+      "exit_code": 0,
+      "cases": 20,
+      "evidence": "exec 5e5b74; exact current port bytes, no later port changes"
+    },
+    {
+      "name": "smoke_completion_intent_builder.py --baseline consumer-baseline",
+      "exit_code": 0,
+      "cases": 22,
+      "evidence": "exec 984738; exact current port bytes, no later port changes"
+    }
+  ],
+  "independent_review": {
+    "at": "2026-10-20T04:28:32.978208+00:00",
+    "pass": true,
+    "open_source_findings": 0,
+    "review_message": "msg_c75620ce55a04f71b0efa6a0c9c1d41e",
+    "candidate_manifest_sha256": "64fbff0c9aad0fefdda7aef445f64f99f0a256df913ba2403309e982f93cfa1f",
+    "review_result_sha256": "dbaef1e31bdff6f176ca4f3dc6583e2459b6173631f05d883f09382749d4d8d2",
+    "evidence_note": "E001 records LF-normalized test output digests versus CRLF stored bytes. Independent exact raw/LF supplement is retained; all original logs and successful checks preserved, no reruns or source correction needed.",
+    "scope": "all four workers and primary; 35 candidate files, 8 coherent prefixes, 11 existing passing check groups; source only"
+  },
+  "log_digest_supplement": [
+    {
+      "name": "smoke_parameter_cascade_resolution.py",
+      "raw_sha256": "c0d57ea901f00443b785ebad004cb6fe95397f94bf31df6ba05d4ed5608ee666",
+      "lf_sha256": "b1e5730fdd45cb6f2c14590872a0fcb6dcef4c9862cbb20bc4ffb925fa63e4f0"
+    },
+    {
+      "name": "smoke_parameter_assignment_capsule.py",
+      "raw_sha256": "be3652f6b13b419eee12fb2cef62ab655b458272e7d7dffef6aebd13fb16f60e",
+      "lf_sha256": "0629d401431fa88b97f8a0660ba3a49c6b2992b33eeb703af1fc343f10c006f9"
+    },
+    {
+      "name": "smoke_parameter_freshness.py",
+      "raw_sha256": "df51c5e6add853139f0712489a0872eba40bb9b914ffc8a8c4a1359d5d299d23",
+      "lf_sha256": "2a4f09c6845cf985cddc47a185b18c97425d883576ef7ce70489fc1e452d10f7"
+    },
+    {
+      "name": "smoke_remediation_transactional_authoring.py",
+      "raw_sha256": "06bcef35f56831b76f8926b448bd568a44f286c133eb0e99f82868fd50e50868",
+      "lf_sha256": "7823230959b685801b0441cb9c81108c96f2a4da12c59118e69962318b466ffe"
+    },
+    {
+      "name": "smoke_work_completion_recovery.py",
+      "raw_sha256": "3461d43d9365792fb24db18a3589f1156bf6b8215c554a39bca9f0f5d72fce59",
+      "lf_sha256": "11939024a8f7e1b1e9d67d7d4c8cc7e1ec4198f71fc9193b2b9784e6b6cf95fb"
+    },
+    {
+      "name": "composition-adapters",
+      "raw_sha256": "b04eed444ca7ebc5b52175894ac8eb2a95d5f9f0c4e8f216c8c973fd92727734",
+      "lf_sha256": "e5f9bcb8147f029ee471cdafbbe5b1f1515bbd4a5a021cef0062c7ec45163c5e"
+    },
+    {
+      "name": "real-resource-reads",
+      "raw_sha256": "b419e0398f28bf98ddb2356413638e6117c0db39edec8384d8ec70d4c39f9fe5",
+      "lf_sha256": "76fedb4b9f8e38df7c0a4d38a46b035ba0a3c670b907c74854bc8e396f82d9bf"
+    },
+    {
+      "name": "smoke_continuation_work.py",
+      "raw_sha256": "09806725ef1f409bc316a57bab748d13644d6db03a3389603c44c96da275c3f5",
+      "lf_sha256": "91124a3f4abc38947c08101112989716f9559d0c22c2a50a23fbdcbd974bd15d"
+    },
+    {
+      "name": "smoke_remediation_security_boundaries.py",
+      "raw_sha256": "39ca860104f81883a3bfba892e94a82f154f44ff5a49bd8dd50a5a4ebf56519e",
+      "lf_sha256": "85c47fb53cb75d1db0a8eddd5c0c26aada6aabcaf2c4ccfbffe418cf05562f7d"
+    }
+  ],
+  "qualification": "source_only"
+}

@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-20T04:28:32.978208+00:00",
+  "pass": true,
+  "open_source_findings": 0,
+  "review_message": "msg_c75620ce55a04f71b0efa6a0c9c1d41e",
+  "candidate_manifest_sha256": "64fbff0c9aad0fefdda7aef445f64f99f0a256df913ba2403309e982f93cfa1f",
+  "review_result_sha256": "dbaef1e31bdff6f176ca4f3dc6583e2459b6173631f05d883f09382749d4d8d2",
+  "evidence_note": "E001 records LF-normalized test output digests versus CRLF stored bytes. Independent exact raw/LF supplement is retained; all original logs and successful checks preserved, no reruns or source correction needed.",
+  "scope": "all four workers and primary; 35 candidate files, 8 coherent prefixes, 11 existing passing check groups; source only"
+}
