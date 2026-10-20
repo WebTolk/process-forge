@@ -64,7 +64,7 @@ explicit `docstrings` operation, not a new mandatory whole-project gate.
 Official sources:
 
 - https://docs.astral.sh/ruff/
-- https://docs.pytest.org/en/stable/
+- https://pytest.org/
 - https://pytest-cov.readthedocs.io/en/latest/
 - https://coverage.readthedocs.io/
 - https://mypy.readthedocs.io/
