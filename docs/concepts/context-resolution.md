@@ -95,3 +95,22 @@ missing, broken, or blocked context remains a failure.
 Use `project-context-refresh` explicitly when the project snapshot needs to be
 regenerated. See the [context command guide](../guides/context-resolve.md) for
 selector behavior and migration from the older implicit writer.
+
+## Source fingerprints across CLI and MCP
+
+CLI and MCP use the same Core source-check policy. Active official process-pack
+manifests and project classifiers can have CRLF line endings in a working copy
+and LF endings in an installed archive. The checker accepts these two uniform
+representations of the same content. It verifies the live raw checksum again
+before accepting an equivalent representation; a write between observations is
+not accepted as proof of freshness.
+
+Recorded fingerprints remain raw byte hashes. Artifact, capsule, archive and
+public checksum verification remain byte-exact. Project and workplace sources
+retain their existing strict comparison. Changes to content, comments, spaces,
+source membership or a lone carriage return still invalidate the snapshot.
+
+When CLI and MCP disagree, compare the snapshot identity, effective workplace,
+loaded Core and distribution roots, and actual source bytes. Different package
+content or builds require an explicit alignment of those inputs. Repeating a
+snapshot refresh or restarting services does not repair a comparison defect.
