@@ -59,6 +59,7 @@ from processforge_core.work.context_documents import PATH_CONSTANT_PATTERN as _p
 from processforge_core.configuration.project_parameters import ProjectParameterResolver
 from processforge_core.project.overrides import PROJECT_OVERRIDE_MODES as _project_override_modes
 from processforge_core.configuration.assignment_parameters import AssignmentParameterResolver
+from processforge_core.resources.package_write import PackageManifestWriter
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -4271,67 +4272,16 @@ def resource_id_from_url(url: str, fallback: str = "resource") -> str:
 
 
 
-def package_manifest_path_for_write(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> tuple[PackageRootResolution, Path]:
-    existing = _project_package_catalog_reader.find_manifests(workplace_root, package_id)
-    if package_root_id:
-        root, default_path = _project_package_catalog_reader.resolve_path(workplace_root, package_id, package_root_id, mode="write")
-        for existing_root, existing_path in existing:
-            if existing_root.root_id == root.root_id:
-                return existing_root, existing_path
-        return root, default_path
-    if len(existing) > 1:
-        roots = ", ".join(f"{root.root_id}:{path.as_posix()}" for root, path in existing)
-        raise SystemExit(f"FAIL: duplicate package id '{package_id}' found across package roots: {roots}; pass --package-root")
-    if len(existing) == 1:
-        root, path = existing[0]
-        if not root.resolved_path.is_dir() and not root.fallback:
-            raise SystemExit(f"FAIL: package root '{root.root_id}' path does not exist: {root.resolved_path.as_posix()}")
-        return root, path
-    root, default_path = _project_package_catalog_reader.resolve_path(workplace_root, package_id, None, mode="write")
-    if root.fallback:
-        root.resolved_path.mkdir(parents=True, exist_ok=True)
-    return root, default_path
 
 
 
 
 
 
-def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path | None = None, package_root_id: str | None = None) -> dict[str, Any]:
-    package_id = str(package_manifest.get("id", "package"))
-    resources = [
-        _resource_record_service.normalize(resource, package_id, workplace_root)
-        for resource in package_manifest.get("resources", [])
-        if isinstance(resource, dict)
-    ]
-    return {
-        "schema_version": 1,
-        "package": {
-            "id": package_id,
-            "version": str(package_manifest.get("version", "1.0.0")),
-            "package_root": package_root_id or str(package_manifest.get("package_root", "")) or None,
-        },
-        "generated_at": _core_common_clock.now_utc(),
-        "load_policy": {
-            "default": "on_demand",
-            "heavy_resources": "index_only_until_requested",
-            "do_not_load_full_content": True,
-        },
-        "resources": resources,
-    }
 
 
 
 
-def write_package_manifest_and_index(workplace_root: Path, package_id: str, package_manifest: dict[str, Any], package_root_id: str | None = None) -> tuple[Path, Path, PackageRootResolution]:
-    package_root, manifest_path = package_manifest_path_for_write(workplace_root, package_id, package_root_id)
-    package_manifest["package_root"] = package_root.root_id
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(ensure_trailing_newline(dump_yaml(package_manifest)), encoding="utf-8")
-    index_path = _knowledge_resource_index_service.index_path(manifest_path, workplace_root, package_id)
-    index_path.parent.mkdir(parents=True, exist_ok=True)
-    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(package_manifest, workplace_root, package_root.root_id))), encoding="utf-8")
-    return manifest_path, index_path, package_root
 
 
 
@@ -12860,7 +12810,7 @@ def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
     _manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="write")
     package_existed = _manifest_path.is_file()
     result = upsert_resource(manifest["resources"], resource)
-    manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
+    manifest_path, index_path, package_root = _package_manifest_writer.write(workplace_root, package_id, manifest, package_root_id)
     _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
         _workplace_resource_events.resource_management_event(
@@ -12972,7 +12922,7 @@ def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
     _manifest_path, manifest, package_root = _project_package_catalog_reader.load_manifest(workplace_root, package_id, package_root_id, mode="write")
     package_existed = _manifest_path.is_file()
     result = upsert_resource(manifest["resources"], resource)
-    manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
+    manifest_path, index_path, package_root = _package_manifest_writer.write(workplace_root, package_id, manifest, package_root_id)
     _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
         _workplace_resource_events.resource_management_event(
@@ -13064,7 +13014,7 @@ def build_knowledge_resource_add_plan(
         "package-manifest.schema.json",
         f"knowledge package {package_id}",
     )
-    index = build_resource_index(
+    index = _package_manifest_writer.build_index(
         manifest,
         workplace_root,
         package_root.root_id,
@@ -13288,7 +13238,7 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
     index_path.parent.mkdir(parents=True, exist_ok=True)
-    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(manifest, workplace_root, package_root.root_id))), encoding="utf-8")
+    index_path.write_text(ensure_trailing_newline(dump_yaml(_package_manifest_writer.build_index(manifest, workplace_root, package_root.root_id))), encoding="utf-8")
     _workplace_resource_events.append_workplace_resource_event(
         workplace_root,
         _workplace_resource_events.resource_management_event(
@@ -15126,6 +15076,10 @@ _project_parameter_resolver._project_override_reader = _project_override_reader
 _project_parameter_resolver._project_platform_selection_service = _project_platform_selection_service
 _assignment_parameter_resolver = AssignmentParameterResolver(ROOT)
 _assignment_parameter_resolver._parameter_source_service = _parameter_source_service
+_package_manifest_writer = PackageManifestWriter(ROOT)
+_package_manifest_writer.packages = _project_package_catalog_reader
+_package_manifest_writer.indexes = _knowledge_resource_index_service
+_package_manifest_writer.records = _resource_record_service
 
 if __name__ == "__main__":
     sys.exit(main())
