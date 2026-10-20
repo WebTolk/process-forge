@@ -56,6 +56,8 @@ ROOT = _bootstrap_repo_src()
 from processforge_core.resources.identity import ResourceIdentityPolicy, RESOURCE_ID_PATTERN as _resource_id_pattern, WINDOWS_RESERVED_DEVICE_BASENAMES as _windows_reserved_device_basenames
 from processforge_core.resources.workplace_catalog import WorkplaceCatalogReader
 from processforge_core.work.context_documents import PATH_CONSTANT_PATTERN as _path_constant_pattern
+from processforge_core.configuration.project_parameters import ProjectParameterResolver
+from processforge_core.project.overrides import PROJECT_OVERRIDE_MODES as _project_override_modes
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -2469,7 +2471,6 @@ def command_error_route(args: argparse.Namespace) -> int:
 
 
 
-PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
 
 
 
@@ -2581,7 +2582,7 @@ def resolve_specialization_context(
         specialization_overrides = _project_override_reader.project_specialization_override_entries(project_root, specialization_id)
         for override_entry in specialization_overrides:
             mode = str(override_entry.get("mode") or "extension")
-            if mode not in PROJECT_OVERRIDE_MODES:
+            if mode not in _project_override_modes:
                 conflicts.append({"id": specialization_id, "kind": "specialization", "reason": f"unsupported project override mode: {mode}"})
                 continue
             overlay = _project_override_reader.load_project_override_document(project_root, override_entry)
@@ -2635,7 +2636,7 @@ def resolve_specialization_context(
         kind = str(entry.get("kind") or "")
         target = str(entry.get("target") or "")
         mode = str(entry.get("mode") or "extension")
-        if mode not in PROJECT_OVERRIDE_MODES:
+        if mode not in _project_override_modes:
             conflicts.append({"id": target, "kind": kind, "reason": f"unsupported project override mode: {mode}"})
             continue
         base_path = None
@@ -4170,101 +4171,6 @@ SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
 
 
 
-def resolve_project_parameters(
-    project_root: Path,
-    workplace_manifest: Path | None,
-    manifest_data: dict[str, Any],
-    platform_resolution: dict[str, Any],
-    specialization_ids: list[str],
-    platform_ids: list[str],
-    process_id: str | None,
-    process_paths: list[Path],
-) -> dict[str, Any]:
-    flow_root = locate_flow_root(project_root)
-    result: dict[str, Any] = {
-        "status": "resolved",
-        "resolved_parameters": {},
-        "sources": [],
-        "provenance": {},
-        "conflicts": [],
-    }
-    if workplace_manifest and workplace_manifest.is_file():
-        workplace_data = load_yaml_document(workplace_manifest)
-        _parameter_source_service.add(
-            result,
-            source_id="workplace-manifest",
-            layer="workplace",
-            parameters=parameter_payload(workplace_data),
-            path=workplace_manifest,
-            project_root=project_root,
-            private=True,
-            display_path="<private-workplace-manifest-ref>",
-        )
-        for index, path in enumerate(_parameter_source_service.workplace_paths(workplace_manifest)):
-            data = load_yaml_document(path)
-            _parameter_source_service.add(
-                result,
-                source_id=f"workplace-parameters-{index + 1}",
-                layer="workplace",
-                parameters=parameter_payload(data),
-                path=path,
-                project_root=project_root,
-                private=True,
-                display_path=f"<private-workplace-ref>/{path.relative_to(workplace_manifest.parent).as_posix()}" if path_is_relative_to(path, workplace_manifest.parent) else "<private-workplace-parameters-ref>",
-            )
-    for contract in platform_resolution.get("contracts", []) if isinstance(platform_resolution.get("contracts"), list) else []:
-        if isinstance(contract, dict):
-            _parameter_source_service.add(
-                result,
-                source_id=f"platform:{contract.get('id', 'unknown')}",
-                layer="platform",
-                parameters=parameter_payload(contract),
-            )
-    index = _specialization_catalog_reader.manifest_index(workplace_manifest, project_root)
-    for specialization_id in [_specialization_catalog_reader.resource_id(item) for item in specialization_ids if str(item)]:
-        spec = index.get(specialization_id)
-        if not isinstance(spec, dict):
-            continue
-        for override_entry in _project_override_reader.project_specialization_override_entries(project_root, specialization_id):
-            mode = str(override_entry.get("mode") or "extension")
-            if mode not in PROJECT_OVERRIDE_MODES:
-                result["conflicts"].append({"id": specialization_id, "kind": "specialization", "reason": f"unsupported project override mode: {mode}"})
-                continue
-            overlay = _project_override_reader.load_project_override_document(project_root, override_entry)
-            if overlay:
-                spec, _overlay_notes = _project_override_reader.apply_specialization_overlay(spec, overlay, mode)
-        _parameter_source_service.add(
-            result,
-            source_id=f"specialization:{specialization_id}",
-            layer="specialization",
-            parameters=parameter_payload(spec),
-            path=spec.get("__manifest_path") if isinstance(spec.get("__manifest_path"), Path) else None,
-            project_root=project_root,
-            private=str(spec.get("__source") or "") == "workplace",
-        )
-        for binding_index, binding in enumerate(spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []):
-            if isinstance(binding, dict) and _project_platform_selection_service.binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
-                _parameter_source_service.add(
-                    result,
-                    source_id=f"specialization:{specialization_id}:binding:{binding_index + 1}",
-                    layer="specialization",
-                    parameters=parameter_payload(binding),
-                )
-    _parameter_source_service.add(result, source_id="project-manifest", layer="project", parameters=parameter_payload(manifest_data), path=flow_root / "process-forge.yaml", project_root=project_root)
-    project_parameters = flow_root / "parameters.yaml"
-    _parameter_source_service.add(result, source_id="project-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_parameters)), path=project_parameters, project_root=project_root)
-    local_config = flow_root / "process-forge.local.yaml"
-    local_data = load_yaml_document(local_config)
-    local_overrides = local_data.get("overrides") if isinstance(local_data.get("overrides"), dict) else {}
-    _parameter_source_service.add(result, source_id="project-local-overrides", layer="project", parameters=parameter_payload(local_overrides), path=local_config, project_root=project_root, private=True)
-    project_local_parameters = flow_root / "parameters.local.yaml"
-    _parameter_source_service.add(result, source_id="project-local-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_local_parameters)), path=project_local_parameters, project_root=project_root, private=True)
-    for index, path in enumerate(process_paths):
-        parameters, _stage_parameters = _parameter_source_service.process_parameters(path)
-        _parameter_source_service.add(result, source_id=f"process:{path.stem}:{index + 1}", layer="process", parameters=parameters, path=path, project_root=project_root)
-    if result["conflicts"]:
-        result["status"] = "conflict"
-    return result
 
 
 def resolve_assignment_parameters(project_root: Path, snapshot: dict[str, Any], assignment_metadata: dict[str, Any]) -> dict[str, Any]:
@@ -4819,7 +4725,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
                 }
             )
     reproducibility = _ResourceSnapshotRules().reproducibility(resolved_knowledge_resources)
-    parameter_resolution = resolve_project_parameters(
+    parameter_resolution = _project_parameter_resolver.resolve(
         project_root,
         workplace_manifest_path,
         manifest_data,
@@ -14197,7 +14103,7 @@ def command_project_override_add(args: argparse.Namespace) -> int:
     mode = str(args.mode)
     if kind not in {"templates", "knowledge_packages", "tools", "mcp", "specializations"}:
         raise SystemExit(f"FAIL: unsupported project override kind: {args.kind}")
-    if mode not in PROJECT_OVERRIDE_MODES:
+    if mode not in _project_override_modes:
         raise SystemExit(f"FAIL: unsupported project override mode: {mode}")
     path = _project_override_reader.project_overrides_path(project_root)
     data = _project_override_reader.load_project_overrides(project_root)
@@ -14242,7 +14148,7 @@ def command_project_override_doctor(args: argparse.Namespace) -> int:
     checks.append(check("PASS" if data.get("kind") in {None, "processforge.project_overrides"} else "FAIL", "project overrides kind valid"))
     for entry in _project_override_reader.project_override_entries(project_root):
         mode = str(entry.get("mode") or "")
-        checks.append(check("PASS" if mode in PROJECT_OVERRIDE_MODES else "FAIL", f"{entry.get('kind')} {entry.get('target')} mode valid"))
+        checks.append(check("PASS" if mode in _project_override_modes else "FAIL", f"{entry.get('kind')} {entry.get('target')} mode valid"))
         override_path = _project_override_reader.project_override_path(project_root, entry)
         if override_path:
             checks.append(check("PASS" if path_is_relative_to(override_path, locate_flow_root(project_root)) else "FAIL", f"{entry.get('target')} override path is project-local"))
@@ -14869,7 +14775,7 @@ def build_parser() -> argparse.ArgumentParser:
         project_override_add=command_project_override_add,
         project_override_doctor=command_project_override_doctor,
         project_override_list=command_project_override_list,
-        override_modes=PROJECT_OVERRIDE_MODES,
+        override_modes=_project_override_modes,
     )
     overrides_commands.register(sub.add_parser)
 
@@ -15237,6 +15143,12 @@ _release_command_plan = ReleaseCommandPlanBuilder()
 
 _resource_identity_policy = ResourceIdentityPolicy()
 _workplace_catalog_reader = WorkplaceCatalogReader(inputs=_context_contract_inputs)
+_project_parameter_resolver = ProjectParameterResolver(ROOT)
+_project_parameter_resolver._inputs = _context_contract_inputs
+_project_parameter_resolver._parameter_source_service = _parameter_source_service
+_project_parameter_resolver._specialization_catalog_reader = _specialization_catalog_reader
+_project_parameter_resolver._project_override_reader = _project_override_reader
+_project_parameter_resolver._project_platform_selection_service = _project_platform_selection_service
 
 if __name__ == "__main__":
     sys.exit(main())

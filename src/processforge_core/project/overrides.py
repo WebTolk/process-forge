@@ -16,6 +16,8 @@ from ..documents.reader import YamlDocumentReader
 from ..resources.buckets import default_resource_buckets, dedupe_sorted, merge_resource_buckets
 from ..work.context_documents import ContextContractInputs
 
+PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
+
 PROJECT_OVERRIDE_KINDS = {
     "template": "templates",
     "templates": "templates",
