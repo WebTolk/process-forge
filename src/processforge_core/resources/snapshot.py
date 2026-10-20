@@ -4,18 +4,14 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 from pathlib import Path
-import re
 from typing import Any
 
 from ..common.paths import rel
 from ..project.metadata import ProjectMetadataReader
 from ..work.context_documents import ContextContractInputs
-from .registries import WorkplaceRegistryReader
-from .identity import ResourceIdentityPolicy
+from .workplace_catalog import WorkplaceCatalogReader
 
 __all__ = ()
-
-
 
 
 @dataclass
@@ -29,14 +25,12 @@ class _PackageRootResolution:
     entry: dict[str, Any] | None = None
 
 @dataclass(frozen=True)
-class WorkspacePathReferenceReader(WorkplaceRegistryReader, ResourceIdentityPolicy):
+class WorkspacePathReferenceReader(WorkplaceCatalogReader):
     """Own the existing package/registry read graph, with concrete Core inputs."""
     project_root: Path
     workplace_root: Path | None
     workplace_manifest: Path | None = field(default=None, kw_only=True)
     inputs: ContextContractInputs = field(default_factory=ContextContractInputs, kw_only=True, repr=False, compare=False)
-
-
 
     def workplace_path_resolution(self, workplace_root: Path, raw_path: str | None) -> dict[str, Any]:
         manifest = workplace_root / 'workplace.yaml'
@@ -148,23 +142,6 @@ class WorkspacePathReferenceReader(WorkplaceRegistryReader, ResourceIdentityPoli
         if 'resources' not in data or not isinstance(data.get('resources'), list):
             data['resources'] = []
         return (path, data, root)
-
-    def workspace_registry_specs(self) -> dict[str, tuple[str, str, str]]:
-        return {'knowledge_roots': ('knowledge_roots', 'knowledge-roots.yaml', 'knowledge_roots'), 'template_roots': ('template_roots', 'templates.yaml', 'template_roots'), 'templates': ('templates', 'templates.yaml', 'templates'), 'package_roots': ('package_roots', 'package-roots.yaml', 'package_roots'), 'tools': ('tools', 'tools.yaml', 'tools'), 'mcp': ('mcp', 'mcp.yaml', 'mcp_servers'), 'private_resource_paths': ('private_resource_paths', 'private-resource-paths.yaml', 'private_resource_paths')}
-
-    def workplace_registry_entry(self, workplace_manifest: Path | None, registry: str, ref_id: str) -> dict[str, Any] | None:
-        spec = self.workspace_registry_specs().get(registry)
-        if not spec or not workplace_manifest:
-            return None
-        registry_key, default_name, collection_key = spec
-        data = self.load_workplace_registry(workplace_manifest, registry_key, default_name)
-        entries = data.get(collection_key) if isinstance(data, dict) else None
-        if not isinstance(entries, list):
-            return None
-        for entry in entries:
-            if isinstance(entry, dict) and str(entry.get('id') or '') == ref_id:
-                return entry
-        return None
 
     def resolve(self, path_ref: dict[str, Any]) -> dict[str, Any]:
         project_root = self.project_root

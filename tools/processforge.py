@@ -54,6 +54,8 @@ def _bootstrap_repo_src() -> Path:
 ROOT = _bootstrap_repo_src()
 
 from processforge_core.resources.identity import ResourceIdentityPolicy, RESOURCE_ID_PATTERN as _resource_id_pattern, WINDOWS_RESERVED_DEVICE_BASENAMES as _windows_reserved_device_basenames
+from processforge_core.resources.workplace_catalog import WorkplaceCatalogReader
+from processforge_core.work.context_documents import PATH_CONSTANT_PATTERN as _path_constant_pattern
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -694,7 +696,6 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
 
 
 
-PATH_CONSTANT_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 
 
 
@@ -1271,60 +1272,14 @@ def normalize_path_string(value: str) -> str:
     return value.replace("\\", "/")
 
 
-def load_workplace_path_constants(workplace_manifest: Path | None, workplace_root: Path | None = None) -> dict[str, str]:
-    root = workplace_root or (workplace_manifest.parent if workplace_manifest else Path(".").resolve())
-    constants = dict(_core_resources_registries.DEFAULT_PATH_CONSTANTS)
-    if workplace_manifest and workplace_manifest.is_file():
-        data = load_yaml_document(workplace_manifest)
-        raw_constants = data.get("path_constants") if isinstance(data, dict) else None
-        if isinstance(raw_constants, dict):
-            for key, value in raw_constants.items():
-                if isinstance(key, str):
-                    constants[key] = "" if value is None else str(value)
-    constants.setdefault("PF_WORKPLACE", ".")
-    constants["_WORKPLACE_ROOT"] = root.as_posix()
-    return constants
 
 
-def expand_path_constants(raw_path: str, constants: dict[str, str]) -> tuple[str, list[str], list[str]]:
-    expanded = raw_path
-    used: list[str] = []
-    errors: list[str] = []
-    visiting: list[str] = []
-
-    def expand_const(name: str) -> str:
-        if name in visiting:
-            errors.append("cyclic path constant reference: " + " -> ".join([*visiting, name]))
-            return "${" + name + "}"
-        if name not in constants:
-            errors.append(f"unknown path constant: {name}")
-            return "${" + name + "}"
-        value = str(constants.get(name, ""))
-        if value == "":
-            errors.append(f"empty path constant: {name}")
-            return ""
-        used.append(name)
-        visiting.append(name)
-        result = PATH_CONSTANT_PATTERN.sub(lambda match: expand_const(match.group(1)), value)
-        visiting.pop()
-        return result
-
-    for _ in range(20):
-        if not PATH_CONSTANT_PATTERN.search(expanded):
-            break
-        before = expanded
-        expanded = PATH_CONSTANT_PATTERN.sub(lambda match: expand_const(match.group(1)), expanded)
-        if expanded == before:
-            break
-    if PATH_CONSTANT_PATTERN.search(expanded):
-        errors.append("unresolved path constant reference remains")
-    return expanded, sorted(set(used)), sorted(set(errors))
 
 
 def resolve_path_with_constants(raw_path: str | None, base_dir: Path, constants: dict[str, str] | None = None) -> dict[str, Any]:
     original = "" if raw_path is None else str(raw_path)
-    constants = constants or load_workplace_path_constants(None, base_dir)
-    expanded, used_constants, errors = expand_path_constants(original, constants)
+    constants = constants or _workplace_registry_reader.load_workplace_path_constants(None, base_dir)
+    expanded, used_constants, errors = _workplace_registry_reader.expand_path_constants(original, constants)
     expanded = normalize_path_string(expanded)
     status = "resolved"
     if errors:
@@ -1355,7 +1310,7 @@ def resolve_path_with_constants(raw_path: str | None, base_dir: Path, constants:
 
 def workplace_path_resolution(workplace_root: Path, raw_path: str | None) -> dict[str, Any]:
     manifest = workplace_root / "workplace.yaml"
-    return resolve_path_with_constants(raw_path, workplace_root, load_workplace_path_constants(manifest, workplace_root))
+    return resolve_path_with_constants(raw_path, workplace_root, _workplace_registry_reader.load_workplace_path_constants(manifest, workplace_root))
 
 
 def path_resolution_to_path(resolution: dict[str, Any]) -> Path:
@@ -1970,7 +1925,7 @@ def path_constant_checks(workplace_root: Path, workplace_manifest: Path) -> list
     data = load_yaml_document(workplace_manifest)
     constants_data = data.get("path_constants") if isinstance(data, dict) else None
     checks.append(check("PASS" if isinstance(constants_data, dict) else "WARN", "path_constants configured" if isinstance(constants_data, dict) else "path_constants missing; defaults will be used"))
-    constants = load_workplace_path_constants(workplace_manifest, workplace_root)
+    constants = _workplace_registry_reader.load_workplace_path_constants(workplace_manifest, workplace_root)
     for name, value in constants.items():
         if name.startswith("_"):
             continue
@@ -4502,31 +4457,8 @@ def write_package_manifest_and_index(workplace_root: Path, package_id: str, pack
 
 
 
-def workspace_registry_specs() -> dict[str, tuple[str, str, str]]:
-    return {
-        "knowledge_roots": ("knowledge_roots", "knowledge-roots.yaml", "knowledge_roots"),
-        "template_roots": ("template_roots", "templates.yaml", "template_roots"),
-        "templates": ("templates", "templates.yaml", "templates"),
-        "package_roots": ("package_roots", "package-roots.yaml", "package_roots"),
-        "tools": ("tools", "tools.yaml", "tools"),
-        "mcp": ("mcp", "mcp.yaml", "mcp_servers"),
-        "private_resource_paths": ("private_resource_paths", "private-resource-paths.yaml", "private_resource_paths"),
-    }
 
 
-def workplace_registry_entry(workplace_manifest: Path | None, registry: str, ref_id: str) -> dict[str, Any] | None:
-    spec = workspace_registry_specs().get(registry)
-    if not spec or not workplace_manifest:
-        return None
-    registry_key, default_name, collection_key = spec
-    data = _workplace_registry_reader.load_workplace_registry(workplace_manifest, registry_key, default_name)
-    entries = data.get(collection_key) if isinstance(data, dict) else None
-    if not isinstance(entries, list):
-        return None
-    for entry in entries:
-        if isinstance(entry, dict) and str(entry.get("id") or "") == ref_id:
-            return entry
-    return None
 
 
 def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, workplace_manifest: Path | None = None) -> dict[str, Any]:
@@ -4861,7 +4793,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         if isinstance(item, dict) and str(item.get("id") or "")
     )
     for template_id in sorted(template_ids):
-        entry = workplace_registry_entry(workplace_manifest_path, "templates", template_id)
+        entry = _workplace_catalog_reader.workplace_registry_entry(workplace_manifest_path, "templates", template_id)
         if entry and str(entry.get("status") or "available") not in {"missing", "disabled"}:
             local_search_resources.append(
                 {
@@ -15304,6 +15236,7 @@ _release_manifest_policy = ReleaseManifestPolicy(file_digests=FileDigestReader()
 _release_command_plan = ReleaseCommandPlanBuilder()
 
 _resource_identity_policy = ResourceIdentityPolicy()
+_workplace_catalog_reader = WorkplaceCatalogReader(inputs=_context_contract_inputs)
 
 if __name__ == "__main__":
     sys.exit(main())

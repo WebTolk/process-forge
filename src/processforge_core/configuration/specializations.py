@@ -9,7 +9,7 @@ from ..common.paths import path_is_relative_to
 from ..common.yaml_io import yaml_error
 from ..maintenance.documents import UpdateDocumentReader
 from ..project.metadata import ProjectMetadataReader
-from ..resources.snapshot import WorkspacePathReferenceReader
+from ..resources.workplace_catalog import WorkplaceCatalogReader
 from ..work.context_documents import ContextContractInputs
 
 
@@ -19,7 +19,7 @@ class SpecializationCatalogReader:
     def __init__(self, distribution_root: Path) -> None:
         self._update_document_reader = UpdateDocumentReader(distribution_root)
         self._inputs = ContextContractInputs()
-        self._references = WorkspacePathReferenceReader(distribution_root, None)
+        self._references = WorkplaceCatalogReader()
 
     def resource_id(self, raw: str) -> str:
         return raw if raw.startswith("specialization.") or "." in raw else f"specialization.{raw}"
