@@ -1,0 +1,36 @@
+{
+  "task-doctor": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "bin/pf.py",
+      "task-doctor",
+      "--project-root",
+      ".",
+      "--task",
+      "pf-http-client-mcp-feasibility-20261020"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: task.schema_version present\r\nPASS: task.id present\r\nPASS: task.title present\r\nPASS: task.run_id present\r\nPASS: task.process present\r\nPASS: task.status present\r\nPASS: task.iterations present\r\nPASS: task.result present\r\nPASS: task status valid: open\r\nPASS: referenced run exists: pf-http-client-future-backlog-20261020\r\nPASS: process exists: software-feature-development\r\nPASS: .pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml has no private absolute paths\r\n",
+    "stderr": ""
+  },
+  "run-doctor": {
+    "command": [
+      "python",
+      "-B",
+      "-X",
+      "utf8",
+      "bin/pf.py",
+      "run-doctor",
+      "--project-root",
+      ".",
+      "--run",
+      "pf-http-client-future-backlog-20261020"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: run.schema_version present\r\nPASS: run.id present\r\nPASS: run.title present\r\nPASS: run.process present\r\nPASS: run.status present\r\nPASS: run.created_at present\r\nPASS: run.updated_at present\r\nPASS: run.tasks present\r\nPASS: run status valid: draft\r\nPASS: summary artifact not yet required: .pf/runs/pf-http-client-future-backlog-20261020/summary.md\r\nPASS: task index status matches run: draft\r\nPASS: handoff artifact not yet required: .pf/handoffs/runs/pf-http-client-future-backlog-20261020-handoff.md\r\nPASS: process exists: software-feature-development\r\nPASS: .pf/runs/pf-http-client-future-backlog-20261020/run.yaml has no private absolute paths\r\nPASS: task id unique: pf-http-client-mcp-feasibility-20261020\r\nPASS: task status valid for pf-http-client-mcp-feasibility-20261020: open\r\nPASS: assignment exists for pf-http-client-mcp-feasibility-20261020: .pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml\r\nPASS: pf-http-client-mcp-feasibility-20261020 run_id matches run\r\n",
+    "stderr": ""
+  }
+}

@@ -1,0 +1,3 @@
+# Run Plan: pf-http-client-planning-20261020: Register only a separate deferred future resea
+
+Objective: pf-http-client-planning-20261020: Register only a separate deferred future research task answering why agents create temporary Python HTTP scripts and whether ProcessForge should offer a reusable HTTP client or an MCP HTTP request tool. Do not implement a client, add dependencies, execute remote API requests, or change the ongoing uptime Work. Use a separate draft backlog so its registration scope does not overlap the active maintenance executor. Verify the new planning card and run, commit only owned artifacts, push to both dev remotes using token-only GitVerse, then return to the exact still-active uptime Work.

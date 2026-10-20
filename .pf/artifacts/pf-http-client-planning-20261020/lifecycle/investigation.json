@@ -1,0 +1,264 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "architecture-plan",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "domain-notes",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "domain-model",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "domain-rules",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-http-client-planning-20261020-register-only-a-separate-deferred-futur",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "domain-notes",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "domain-model",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "domain-rules",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "domain-rules-captured"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "domain-modeling"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:b19e35e4105efd9ba553649525ed0f0a750bff4e522236918e1d8a722bb561b1",
+    "id": "pf-http-client-planning-20261020-register-only-a-separate-deferred-futur-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:8bc34f06f2c5a981b2867d5dc489b5c29cbce8ecef2e88730e0b17eac8bfdf22",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "domain-modeling",
+        "parameters": {},
+        "produced_artifacts": [
+          "domain-notes",
+          "domain-model",
+          "domain-rules"
+        ],
+        "required_capabilities": [
+          "repository_read"
+        ],
+        "required_inputs": [
+          "investigation-report",
+          "impact-analysis"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-http-client-planning-20261020/**",
+      ".pf/artifacts/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml",
+      ".pf/handoffs/pf-http-client-planning-20261020.md",
+      ".pf/logs/pf-http-client-planning-20261020.md",
+      ".pf/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/tmp/pf-http-client-planning-20261020/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-http-client-planning-20261020/**",
+      ".pf/artifacts/python-quality-context.md",
+      ".pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-http-client-planning-20261020.md",
+      ".pf/logs/pf-http-client-planning-20261020.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/tmp/pf-http-client-planning-20261020/**",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/deliver.py",
+      "AGENTS.md",
+      "bin/pf.py",
+      "schemas/assignment.schema.json",
+      "schemas/run.schema.json",
+      "tools/processforge.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "investigation-complete",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md",
+          "recorded_at": "2026-10-20T17:59:50Z",
+          "sha256": "sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c",
+          "status": "passed",
+          "summary": "Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей."
+        },
+        "id": "investigation-complete",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      },
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "impact-understood",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md",
+          "recorded_at": "2026-10-20T17:59:50Z",
+          "sha256": "sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c",
+          "status": "passed",
+          "summary": "Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей."
+        },
+        "id": "impact-understood",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "domain-rules-captured",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "domain-notes",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "domain-model",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "domain-rules",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "domain-rules-captured"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "domain-modeling"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "domain-modeling",
+  "obligations": [],
+  "previous_stage_id": "investigation",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "investigation-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md",
+        "recorded_at": "2026-10-20T17:59:50Z",
+        "sha256": "sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c",
+        "status": "ready",
+        "summary": "Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей."
+      },
+      "id": "investigation-report",
+      "kind": "input",
+      "satisfied": true
+    },
+    {
+      "evidence": {
+        "artifact_id": "impact-analysis",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md",
+        "recorded_at": "2026-10-20T17:59:50Z",
+        "sha256": "sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c",
+        "status": "ready",
+        "summary": "Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей."
+      },
+      "id": "impact-analysis",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-http-client-planning-20261020-register-only-a-separate-deferre",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "domain-modeling",
+    "status": "in_progress",
+    "title": "Domain Modeling"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

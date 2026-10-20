@@ -1,0 +1,28 @@
+schema_version: 1
+id: pf-http-client-future-backlog-20261020
+title: Будущие исследования HTTP-клиента и MCP PF
+process: software-feature-development
+status: draft
+created_at: '2026-10-20T18:00:07Z'
+updated_at: '2026-10-20T18:00:20Z'
+objective: Отложенная задача-вопрос о повторяющихся HTTP-скриптах и целесообразности общего клиента или MCP-инструмента. Только регистрация; не входит в текущий ночной блок выполнения.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-http-client-mcp-feasibility-20261020
+    assignment: .pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml
+    status: open
+    order: 1
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true

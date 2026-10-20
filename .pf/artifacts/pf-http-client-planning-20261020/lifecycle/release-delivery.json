@@ -1,0 +1,205 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "evolution-report",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-http-client-planning-20261020-register-only-a-separate-deferred-futur",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "evolution-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "evolution-captured"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "evolve"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:b19e35e4105efd9ba553649525ed0f0a750bff4e522236918e1d8a722bb561b1",
+    "id": "pf-http-client-planning-20261020-register-only-a-separate-deferred-futur-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:8bc34f06f2c5a981b2867d5dc489b5c29cbce8ecef2e88730e0b17eac8bfdf22",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "evolve",
+        "parameters": {},
+        "produced_artifacts": [
+          "evolution-report",
+          "updated-rules-or-extensions",
+          "instruction-update-proposal",
+          "knowledge-update-proposal"
+        ],
+        "required_capabilities": [
+          "review"
+        ],
+        "required_inputs": [
+          "delivery-report"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-http-client-planning-20261020/**",
+      ".pf/artifacts/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml",
+      ".pf/handoffs/pf-http-client-planning-20261020.md",
+      ".pf/logs/pf-http-client-planning-20261020.md",
+      ".pf/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/tmp/pf-http-client-planning-20261020/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-http-client-planning-20261020/**",
+      ".pf/artifacts/python-quality-context.md",
+      ".pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-http-client-planning-20261020.md",
+      ".pf/logs/pf-http-client-planning-20261020.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/tmp/pf-http-client-planning-20261020/**",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/deliver.py",
+      "AGENTS.md",
+      "bin/pf.py",
+      "schemas/assignment.schema.json",
+      "schemas/run.schema.json",
+      "tools/processforge.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "release-readiness-decided",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md",
+          "recorded_at": "2026-10-20T18:01:59Z",
+          "sha256": "sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692",
+          "status": "passed",
+          "summary": "Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются."
+        },
+        "id": "release-readiness-decided",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "evolution-captured",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "evolution-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "evolution-captured"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "evolve"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "evolve",
+  "obligations": [],
+  "previous_stage_id": "release-delivery",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "delivery-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md",
+        "recorded_at": "2026-10-20T18:01:59Z",
+        "sha256": "sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692",
+        "status": "ready",
+        "summary": "Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются."
+      },
+      "id": "delivery-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-http-client-planning-20261020-register-only-a-separate-deferre",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "evolve",
+    "status": "in_progress",
+    "title": "Evolve"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

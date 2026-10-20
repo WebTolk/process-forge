@@ -1,0 +1,238 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "evolve",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "delivery-report",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-http-client-planning-20261020-register-only-a-separate-deferred-futur",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "delivery-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "release-readiness-decided"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "delivery-profile-run-or-skipped-with-reason"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "release-delivery"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:b19e35e4105efd9ba553649525ed0f0a750bff4e522236918e1d8a722bb561b1",
+    "id": "pf-http-client-planning-20261020-register-only-a-separate-deferred-futur-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:8bc34f06f2c5a981b2867d5dc489b5c29cbce8ecef2e88730e0b17eac8bfdf22",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "release-delivery",
+        "parameters": {},
+        "produced_artifacts": [
+          "release-notes",
+          "migration-notes",
+          "patch",
+          "delivery-plan",
+          "delivery-report"
+        ],
+        "required_capabilities": [
+          "test_running"
+        ],
+        "required_inputs": [
+          "test-report",
+          "code-quality-report"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-http-client-planning-20261020/**",
+      ".pf/artifacts/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml",
+      ".pf/handoffs/pf-http-client-planning-20261020.md",
+      ".pf/logs/pf-http-client-planning-20261020.md",
+      ".pf/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/tmp/pf-http-client-planning-20261020/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-http-client-planning-20261020/**",
+      ".pf/artifacts/python-quality-context.md",
+      ".pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-http-client-planning-20261020.md",
+      ".pf/logs/pf-http-client-planning-20261020.md",
+      ".pf/process-forge.yaml",
+      ".pf/runs/pf-http-client-future-backlog-20261020/**",
+      ".pf/tmp/pf-http-client-planning-20261020/**",
+      ".pf/tmp/pf-specialization-resource-task-register-20261020/deliver.py",
+      "AGENTS.md",
+      "bin/pf.py",
+      "schemas/assignment.schema.json",
+      "schemas/run.schema.json",
+      "tools/processforge.py"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "assurance-complete",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md",
+          "recorded_at": "2026-10-20T18:01:59Z",
+          "sha256": "sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb",
+          "status": "passed",
+          "summary": "Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется."
+        },
+        "id": "assurance-complete",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "release-readiness-decided",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      },
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "delivery-profile-run-or-skipped-with-reason",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "delivery-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "release-readiness-decided"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "delivery-profile-run-or-skipped-with-reason"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "release-delivery"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "release-delivery",
+  "obligations": [],
+  "previous_stage_id": "code-assurance",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "test-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md",
+        "recorded_at": "2026-10-20T18:01:59Z",
+        "sha256": "sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb",
+        "status": "ready",
+        "summary": "Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется."
+      },
+      "id": "test-report",
+      "kind": "input",
+      "satisfied": true
+    },
+    {
+      "evidence": {
+        "artifact_id": "code-quality-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md",
+        "recorded_at": "2026-10-20T18:01:59Z",
+        "sha256": "sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb",
+        "status": "ready",
+        "summary": "Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется."
+      },
+      "id": "code-quality-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-http-client-planning-20261020-register-only-a-separate-deferre",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "release-delivery",
+    "status": "in_progress",
+    "title": "Release Delivery"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "task": "pf-http-client-mcp-feasibility-20261020",
+  "run": "pf-http-client-future-backlog-20261020",
+  "status": "open",
+  "run_status": "draft",
+  "execution_mode": "planning_only",
+  "writer": false,
+  "execution_capsule": null,
+  "implementation": "not_started",
+  "night_execution": "not_included"
+}

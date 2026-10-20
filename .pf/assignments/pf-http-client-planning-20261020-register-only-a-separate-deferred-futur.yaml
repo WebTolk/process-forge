@@ -1,0 +1,647 @@
+schema_version: 1
+id: pf-http-client-planning-20261020-register-only-a-separate-deferred-futur
+title: 'pf-http-client-planning-20261020: Register only a separate deferred future resea'
+run_id: garage-pf-http-client-planning-20261020-register-only-a-separate-deferre
+process: software-feature-development
+status: done
+created_at: '2026-10-20T17:55:34Z'
+updated_at: '2026-10-20T18:02:00Z'
+objective: 'pf-http-client-planning-20261020: Register only a separate deferred future research task answering why agents create temporary Python HTTP scripts and whether ProcessForge should offer a reusable HTTP client or an MCP HTTP request tool. Do not implement a client, add dependencies, execute remote API requests, or change the ongoing uptime Work. Use a separate draft backlog so its registration scope does not overlap the active maintenance executor. Verify the new planning card and run, commit only owned artifacts, push to both dev remotes using token-only GitVerse, then return to the exact still-active uptime Work.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Handoff evolve: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.'
+  artifacts:
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/implementation.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/orchestration.md
+    - .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: false
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-20T18:01:59Z'
+  evidence:
+    -
+      kind: input
+      input_id: delivery-report
+      path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+      status: ready
+      summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+      recorded_at: '2026-10-20T18:01:59Z'
+      sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+      status: ready
+      summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+      recorded_at: '2026-10-20T18:01:59Z'
+      sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+    -
+      kind: gate
+      gate_id: release-readiness-decided
+      path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+      status: passed
+      summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+      recorded_at: '2026-10-20T18:01:59Z'
+      sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+      status: passed
+      summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+      recorded_at: '2026-10-20T18:01:59Z'
+      sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+  notes: 'Handoff evolve: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.'
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-20T17:55:34Z'
+    completed_at: '2026-10-20T17:59:49Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/orchestration.md
+        status: ready
+        summary: Только регистрация будущего вопроса пользователя о временных HTTP-скриптах и возможности MCP HTTP tool. Отдельный draft backlog выбран для непересечения с активной uptime Work. Один основной исполнитель, без делегирования; после регистрации вернуться к сохранённым uptime selectors.
+        recorded_at: '2026-10-20T17:59:49Z'
+        sha256: 'sha256:f21cf1f43995be61ca6996f53ccb12a377748009713d32e8ccd6d98ce08a42e8'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/orchestration.md
+        status: ready
+        summary: Только регистрация будущего вопроса пользователя о временных HTTP-скриптах и возможности MCP HTTP tool. Отдельный draft backlog выбран для непересечения с активной uptime Work. Один основной исполнитель, без делегирования; после регистрации вернуться к сохранённым uptime selectors.
+        recorded_at: '2026-10-20T17:59:49Z'
+        sha256: 'sha256:f21cf1f43995be61ca6996f53ccb12a377748009713d32e8ccd6d98ce08a42e8'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/orchestration.md
+        status: ready
+        summary: Только регистрация будущего вопроса пользователя о временных HTTP-скриптах и возможности MCP HTTP tool. Отдельный draft backlog выбран для непересечения с активной uptime Work. Один основной исполнитель, без делегирования; после регистрации вернуться к сохранённым uptime selectors.
+        recorded_at: '2026-10-20T17:59:49Z'
+        sha256: 'sha256:f21cf1f43995be61ca6996f53ccb12a377748009713d32e8ccd6d98ce08a42e8'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/orchestration.md
+        status: passed
+        summary: Только регистрация будущего вопроса пользователя о временных HTTP-скриптах и возможности MCP HTTP tool. Отдельный draft backlog выбран для непересечения с активной uptime Work. Один основной исполнитель, без делегирования; после регистрации вернуться к сохранённым uptime selectors.
+        recorded_at: '2026-10-20T17:59:49Z'
+        sha256: 'sha256:f21cf1f43995be61ca6996f53ccb12a377748009713d32e8ccd6d98ce08a42e8'
+    notes: 'Handoff orchestration: Только регистрация будущего вопроса пользователя о временных HTTP-скриптах и возможности MCP HTTP tool. Отдельный draft backlog выбран для непересечения с активной uptime Work. Один основной исполнитель, без делегирования; после регистрации вернуться к сохранённым uptime selectors.'
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-20T17:59:49Z'
+    completed_at: '2026-10-20T17:59:50Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: input
+        input_id: execution-context-summary
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: ready
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+      -
+        kind: input
+        input_id: lifecycle-mode-decision
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: ready
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: ready
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: ready
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: ready
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: passed
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/intake-scope.md
+        status: passed
+        summary: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:ab6c9324ac9456775eb51389aa36e402cab189bd5caa9813c55bddeb6c942196'
+    notes: 'Handoff intake-scope: Требуется будущая оценка повторного использования HTTP-средств Python/PF и целесообразности MCP-инструмента. Реализация и ночной блок не расширяются. Наличие стандартных urllib.request/http.client подтверждено локальным PF индексом библиотеки и официальной справкой; временный сценарий может быть предметной обвязкой.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-20T17:59:50Z'
+    completed_at: '2026-10-20T17:59:50Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: input
+        input_id: scope
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+        status: ready
+        summary: 'Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c'
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+        status: ready
+        summary: 'Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+        status: ready
+        summary: 'Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+        status: passed
+        summary: 'Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+        status: passed
+        summary: 'Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/investigation.md
+        status: passed
+        summary: 'Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+        recorded_at: '2026-10-20T17:59:50Z'
+        sha256: 'sha256:2ba0fded3e1b06529bd585fac1c8a253b8b7f44ed5d0e60e58e8ad351d46a55c'
+    notes: 'Handoff investigation: Поиск дубликата по формулировкам HTTP-клиента, MCP HTTP и временных API-скриптов не обнаружил существующую карточку. Локально прочитан выбранный docs.python:root/standard-library.md; подробные отдельные страницы модулей не найдены, стандартные возможности сверены с официальной справкой. Само исследование существующих HTTP-интеграций PF остаётся будущей задачей.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-20T17:59:50Z'
+    completed_at: '2026-10-20T17:59:51Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: input
+        input_id: investigation-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: ready
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: input
+        input_id: impact-analysis
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: ready
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: ready
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: ready
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: ready
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: passed
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: passed
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/domain-modeling.md
+        status: passed
+        summary: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:d34750d235128a4495c605b80ba0e9213b1f6bf65a3c3b5b60a31ec2e5baae2e'
+    notes: 'Handoff domain-modeling: Постановка различает HTTP-транспорт, повторяющуюся обвязку авторизации/JSON/таймаутов, предметную обработку и предоставление операции через MCP. Решение должно опираться на реальные сценарии и может заключаться в повторном использовании существующего средства; временные сценарии не объявляются ошибкой по умолчанию.'
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-20T17:59:51Z'
+    completed_at: '2026-10-20T17:59:51Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: input
+        input_id: domain-rules
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+        status: ready
+        summary: 'Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:c1f70a0a6459902c43e3fa620fba84b8c594ccfeffe9b5ba75b412ddb3b0537d'
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+        status: ready
+        summary: 'Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:c1f70a0a6459902c43e3fa620fba84b8c594ccfeffe9b5ba75b412ddb3b0537d'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+        status: ready
+        summary: 'Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:c1f70a0a6459902c43e3fa620fba84b8c594ccfeffe9b5ba75b412ddb3b0537d'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+        status: ready
+        summary: 'Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:c1f70a0a6459902c43e3fa620fba84b8c594ccfeffe9b5ba75b412ddb3b0537d'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+        status: passed
+        summary: 'Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:c1f70a0a6459902c43e3fa620fba84b8c594ccfeffe9b5ba75b412ddb3b0537d'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/architecture-plan.md
+        status: passed
+        summary: 'Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+        recorded_at: '2026-10-20T17:59:51Z'
+        sha256: 'sha256:c1f70a0a6459902c43e3fa620fba84b8c594ccfeffe9b5ba75b412ddb3b0537d'
+    notes: 'Handoff architecture-plan: Добавить одну future planning_only карточку writer=false без продуктового scope/capsule в отдельный draft Run. Будущие варианты: существующие PF/stdlib средства, общий Python клиент/CLI, MCP tool. Технический выбор и реализация сейчас не выполняются; текущая uptime Work остаётся активной.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-20T17:59:51Z'
+    completed_at: '2026-10-20T18:01:58Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: input
+        input_id: implementation-plan
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/implementation.md
+        status: ready
+        summary: Native run-create/task-create plan/apply создали отдельный draft Run и одну future карточку open/planning_only/writer=false без продуктовой записи и capsule. HTTP/MCP не реализуются; текущий uptime Work сохранён.
+        recorded_at: '2026-10-20T18:01:58Z'
+        sha256: 'sha256:3e80604ab29595e5b1418ac4c11b833baab4525a7122f379dd315fd3fc7fdbdc'
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/implementation.md
+        status: ready
+        summary: Native run-create/task-create plan/apply создали отдельный draft Run и одну future карточку open/planning_only/writer=false без продуктовой записи и capsule. HTTP/MCP не реализуются; текущий uptime Work сохранён.
+        recorded_at: '2026-10-20T18:01:58Z'
+        sha256: 'sha256:3e80604ab29595e5b1418ac4c11b833baab4525a7122f379dd315fd3fc7fdbdc'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/implementation.md
+        status: ready
+        summary: Native run-create/task-create plan/apply создали отдельный draft Run и одну future карточку open/planning_only/writer=false без продуктовой записи и capsule. HTTP/MCP не реализуются; текущий uptime Work сохранён.
+        recorded_at: '2026-10-20T18:01:58Z'
+        sha256: 'sha256:3e80604ab29595e5b1418ac4c11b833baab4525a7122f379dd315fd3fc7fdbdc'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/implementation.md
+        status: passed
+        summary: Native run-create/task-create plan/apply создали отдельный draft Run и одну future карточку open/planning_only/writer=false без продуктовой записи и capsule. HTTP/MCP не реализуются; текущий uptime Work сохранён.
+        recorded_at: '2026-10-20T18:01:58Z'
+        sha256: 'sha256:3e80604ab29595e5b1418ac4c11b833baab4525a7122f379dd315fd3fc7fdbdc'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/implementation.md
+        status: passed
+        summary: Native run-create/task-create plan/apply создали отдельный draft Run и одну future карточку open/planning_only/writer=false без продуктовой записи и capsule. HTTP/MCP не реализуются; текущий uptime Work сохранён.
+        recorded_at: '2026-10-20T18:01:58Z'
+        sha256: 'sha256:3e80604ab29595e5b1418ac4c11b833baab4525a7122f379dd315fd3fc7fdbdc'
+    notes: 'Handoff implementation: Native run-create/task-create plan/apply создали отдельный draft Run и одну future карточку open/planning_only/writer=false без продуктовой записи и capsule. HTTP/MCP не реализуются; текущий uptime Work сохранён.'
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-20T18:01:58Z'
+    completed_at: '2026-10-20T18:01:59Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: input
+        input_id: change-summary
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: ready
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: ready
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: ready
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: ready
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: ready
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: artifact
+        artifact_id: code-quality-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: ready
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: passed
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/code-assurance.md
+        status: passed
+        summary: 'Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:7acd362a03f9e25dd2dba9239b3b4fc0ec14abfe50daa401c0cc41a6f1e1f7bb'
+    notes: 'Handoff code-assurance: Регистрационные проверки PASS: native task-doctor/run-doctor exit 0, одна уникальная карточка и правильные состояния. Продуктовый Python отсутствует, pytest/Ruff/mypy к этой регистрации неприменимы. Реализация HTTP не проверялась и не заявляется.'
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-20T18:01:59Z'
+    completed_at: '2026-10-20T18:01:59Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: input
+        input_id: test-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+        status: ready
+        summary: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692'
+      -
+        kind: input
+        input_id: code-quality-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+        status: ready
+        summary: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692'
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+        status: ready
+        summary: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+        status: passed
+        summary: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+        status: passed
+        summary: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/release-delivery.md
+        status: passed
+        summary: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:733fa6c45cde5f3ce8657a1990746e6785f47af9658c300abd05ad3da8247692'
+    notes: 'Handoff release-delivery: Публикация, пакетирование и инфраструктура не требуются. Регистрационные артефакты подготовлены к отдельному коммиту и одинаковой доставке в origin/dev и token-backed gitverse/dev. Чужие dirty/staged изменения сохраняются.'
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-20T18:01:59Z'
+    completed_at: '2026-10-20T18:02:00Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: input
+        input_id: delivery-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+        status: ready
+        summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+        status: ready
+        summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+        status: passed
+        summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/pf-http-client-planning-20261020/stages/evolve.md
+        status: passed
+        summary: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.
+        recorded_at: '2026-10-20T18:01:59Z'
+        sha256: 'sha256:772c2a91b20ccf26bffc287b560c9fa974421b30d5101ae95dfe8fb0dc105fc5'
+    notes: 'Handoff evolve: Вопрос HTTP-клиента и MCP остаётся будущим исследованием без реализации. По новому уточнению пользователя выполнить только одну продуктовую задачу uptime, с полными согласованными проверками и доставкой, затем остановиться. Вернуться к точным всё ещё активным uptime selectors; scope этой registration Work не расширять.'
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261020-072238-da5df2
+  snapshot_checksum: 'sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a'
+  assignment_capsule: .pf/contexts/assignment-capsules/pf-http-client-planning-20261020-register-only-a-separate-deferred-futur.capsule.yaml
+  assignment_capsule_checksum: 'sha256:b19e35e4105efd9ba553649525ed0f0a750bff4e522236918e1d8a722bb561b1'
+allowed_actions:
+  - read
+  - write_artifact
+allowed_files:
+  - .pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml
+  - .pf/runs/pf-http-client-future-backlog-20261020/**
+  - .pf/artifacts/runs/pf-http-client-future-backlog-20261020/**
+  - .pf/artifacts/pf-http-client-planning-20261020/**
+  - .pf/tmp/pf-http-client-planning-20261020/**
+  - .pf/logs/pf-http-client-planning-20261020.md
+  - .pf/handoffs/pf-http-client-planning-20261020.md
+allowed_read_files:
+  - AGENTS.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/python-quality-context.md
+  - schemas/assignment.schema.json
+  - schemas/run.schema.json
+  - bin/pf.py
+  - tools/processforge.py
+  - .pf/tmp/pf-specialization-resource-task-register-20261020/deliver.py
+  - .pf/assignments/pf-http-client-mcp-feasibility-20261020.yaml
+  - .pf/runs/pf-http-client-future-backlog-20261020/**
+  - .pf/artifacts/pf-http-client-planning-20261020/**
+  - .pf/tmp/pf-http-client-planning-20261020/**
+  - .pf/logs/pf-http-client-planning-20261020.md
+  - .pf/handoffs/pf-http-client-planning-20261020.md
+ownership:
+  owner_id: pf-http-client-planning-20261020
+  role: single-primary-planning-registrar
+  writer: true
+forbidden_actions:
+  - write_product
+forbidden_files:
+  - src/**
+  - tools/**
+  - tests/**
+  - VERSION
+  - release/**
+  - checksums/**
+  - .pf/runtime/**
+  - .pf/contexts/**
+required_sources:
+  - .pf/AGENTS.md
+expected_report:
+  artifact: .pf/artifacts/pf-http-client-planning-20261020/report.md
+  format: markdown
+  language: ru
