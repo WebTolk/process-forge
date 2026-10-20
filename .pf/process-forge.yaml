@@ -180,3 +180,22 @@ validation:
       command: python tools/processforge.py --help
     - id: doctor-context
       command: python tools/processforge.py doctor-context --project-root .
+
+context_requirements:
+  tools:
+  - id: python-ruff
+    required: true
+  - id: python-formatter
+    required: true
+  - id: python-pytest
+    required: true
+  - id: python-mypy
+    required: true
+  - id: python-docstrings
+    required: false
+  - id: python-coverage
+    required: false
+  - id: python-bandit
+    required: false
+  - id: python-pip-audit
+    required: false

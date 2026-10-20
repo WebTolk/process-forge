@@ -1,0 +1,34 @@
+overrides:
+  tools:
+    -
+      target: python-ruff
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-formatter
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-pytest
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-mypy
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-docstrings
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-coverage
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-bandit
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
+    -
+      target: python-pip-audit
+      mode: extension
+      reason: Operator requires shared Python QA tools in permanent project context for normal assurance.
