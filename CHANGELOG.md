@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## 1.3.0-alpha1 - 2026-10-20
+
+### Changed
+
+- Freeze the accepted development checkpoint as the first 1.3.0 alpha while
+  preserving public CLI/MCP contracts and file-only operation.
+- Continue the accepted internal Core separation across resource readers,
+  project context, lifecycle and update owners. Further refactoring remains
+  outside this frozen release.
+- Provide portable shared Python QA tools and explicit assurance requirements,
+  keeping quality dependencies outside the installed Core.
+- Configure the supported native Codex hooks during Forge initialization while
+  preserving existing user settings.
+
+### Fixed
+
+- Keep official-pack context freshness consistent between CLI and MCP when
+  identical text uses LF or CRLF line endings, without refreshing the snapshot.
+- Handle disconnected HTTP clients without retrying accepted responses and
+  retain the qualified console-free Windows App Server launch.
+- Order update prereleases correctly so a later alpha and the final release
+  can follow an installed alpha; ignore build metadata for precedence while
+  preserving existing resource constraints and channel selection.
+- Restore the missing Path import in the focused runtime hardcode-policy smoke.
+
+See the [alpha release notes](docs/releases/1.3.0-alpha1.md). This prerelease
+does not replace the stable 1.2.0 channel.
+
 ## 1.2.0 - 2026-10-18
 
 ### Changed
