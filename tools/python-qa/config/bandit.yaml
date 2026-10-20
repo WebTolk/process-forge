@@ -1,0 +1,7 @@
+exclude_dirs:
+  - .git
+  - .pf
+  - .venv
+  - venv
+  - build
+  - dist
