@@ -1,0 +1,7 @@
+{
+  "command": "python -B -X utf8 tools/processforge.py run-doctor --project-root . --run garage-pf-context-connected-verify-20261020-complete-only-the-post-resta",
+  "exit_code": 0,
+  "status": "pass",
+  "observed_after_native_run_completed": true,
+  "summary": "Native doctor passed completed status, task consistency, summary, index and handoff checks."
+}

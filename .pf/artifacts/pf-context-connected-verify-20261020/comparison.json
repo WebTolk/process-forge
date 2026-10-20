@@ -1,0 +1,38 @@
+{
+  "observed_at": "2026-10-20T13:14:22.455845+00:00",
+  "status": "pass",
+  "context": {
+    "status": "fresh",
+    "policy_action": "continue",
+    "recommended_action": "continue",
+    "snapshot_id": "ctx-20261020-072238-da5df2"
+  },
+  "source_installed_context_equal": true,
+  "source_installed_readiness_equal": true,
+  "cli_readiness": {
+    "context": {
+      "status": "fresh"
+    },
+    "execution": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "resources": {
+      "blockers": [],
+      "status": "fresh"
+    }
+  },
+  "mcp_resource_search_status": "ready",
+  "exact_work_validation": "valid",
+  "exact_work_execution_readiness": "ready",
+  "positive_resource": "docs.python:root",
+  "negative_resource_reason": "resource_not_in_work",
+  "snapshot_sha256": "sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+  "actual_connected_mcp_used": true,
+  "preserved_limits": [
+    "derived reports stale",
+    "partial project metadata coverage",
+    "historical isolated stale-input tests remain source evidence"
+  ]
+}

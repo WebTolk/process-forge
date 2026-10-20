@@ -1,0 +1,38 @@
+{
+  "observed_at": "2026-10-20T13:12:00.204357+00:00",
+  "snapshot_id": "ctx-20261020-072238-da5df2",
+  "snapshot_sha256": "bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a",
+  "mcp_started_after_apply": true,
+  "mcp_bound_by_same_host_ancestry": true,
+  "mcp_started_utc": "2026-10-20T12:55:39.2280140Z",
+  "configured_installed_core_entry": true,
+  "source_version": "1.2.0",
+  "installed_version": "1.2.0",
+  "module_fingerprints": [
+    {
+      "module": "src/processforge_core/project/source_check.py",
+      "source_sha256": "af8314e3b85d33e79f6fb438c5b195f5362cfdc3f3fc8b7c74bec14e17a09930",
+      "installed_sha256": "af8314e3b85d33e79f6fb438c5b195f5362cfdc3f3fc8b7c74bec14e17a09930",
+      "raw_equal": true,
+      "lf_normalized_equal": true
+    },
+    {
+      "module": "src/processforge_core/project/snapshot_sources.py",
+      "source_sha256": "457af97c65af39d6921eea296495e0d316dda32a282dbcd3abde7dc90ddba169",
+      "installed_sha256": "457af97c65af39d6921eea296495e0d316dda32a282dbcd3abde7dc90ddba169",
+      "raw_equal": true,
+      "lf_normalized_equal": true
+    },
+    {
+      "module": "tools/pf_runtime/mcp_server.py",
+      "source_sha256": "1a523f767a75a13f14b2c7072ed73928d7634886d2aabb2ca5824b05c084e757",
+      "installed_sha256": "1a523f767a75a13f14b2c7072ed73928d7634886d2aabb2ca5824b05c084e757",
+      "raw_equal": true,
+      "lf_normalized_equal": true
+    }
+  ],
+  "original_index_sha256": "0768b4cb1debf8dd7c17b2a0202581339f32416558a6f222721d34d7258700cc",
+  "independent_stdio_used": false,
+  "refreshed": false,
+  "applied_update": false
+}

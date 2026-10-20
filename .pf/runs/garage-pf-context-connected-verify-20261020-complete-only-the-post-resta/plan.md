@@ -1,0 +1,3 @@
+# Run Plan: pf-context-connected-verify-20261020: Complete only the post-restart actual conn
+
+Objective: pf-context-connected-verify-20261020: Complete only the post-restart actual connected MCP versus installed/source CLI verification for unchanged snapshot ctx-20261020-072238-da5df2 and already installed fix 526c5d13. Record provenance and readiness, close the satisfied historical pf-cli-mcp-context-consistency-20261019 card through native PF operations if all acceptance evidence is met, deliver this artifact-only task. User authorized three narrow tasks; OOP refactoring paused. No code, refresh, update/restart, ZIP inspection, alpha packaging or publication.
