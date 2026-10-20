@@ -14107,50 +14107,6 @@ def platform_authoring_values(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def platform_contract_from_values(values: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "schema_version": 1,
-        "id": values["contract_id"],
-        "title": values["title"],
-        "type": "platform_contract",
-        "version": values["version"],
-        "status": "draft",
-        "project_type_hints": values["project_types"],
-        "applies_to": {
-            "platforms": [values["platform_id"]],
-            "project_type_hints": values["project_types"],
-        },
-        "requires": {
-            "capabilities": ["filesystem.read", "filesystem.write"],
-            "knowledge_packages": values["required_packages"],
-            "tools": values["required_tools"],
-            "mcp": values["required_mcp"],
-            "templates": values["required_templates"],
-        },
-        "recommends": {
-            "knowledge_packages": values["recommended_packages"],
-            "templates": values["recommended_templates"],
-            "tools": values["recommended_tools"],
-            "mcp": values["recommended_mcp"],
-        },
-        "optional": {
-            "knowledge_packages": values["optional_packages"],
-            "templates": values["optional_templates"],
-            "tools": values["optional_tools"],
-            "mcp": values["optional_mcp"],
-        },
-        "includes": {
-            "knowledge_packages": values["optional_packages"],
-            "templates": values["optional_templates"],
-            "tools": values["optional_tools"],
-            "mcp": values["optional_mcp"],
-            "processes": values["processes"],
-        },
-        "policies": {
-            "missing_required_capability": "block",
-            "missing_optional_resource": "warn",
-        },
-    }
 
 
 
@@ -14215,7 +14171,7 @@ def build_platform_authoring_plan(
     force = bool(getattr(args, "force", False))
     if contract_path.exists() and not force:
         raise SystemExit(f"FAIL: platform contract already exists: {contract_path}")
-    contract = platform_contract_from_values(values)
+    contract = _platform_document_builder.platform_contract_from_values(values)
     _update_schema_checks.require(
         contract,
         "platform-contract.schema.json",

@@ -1182,3 +1182,28 @@ mark still has its original behavior. Operational worker observation, overlap
 materialization, the remaining workspace-access workflow and lifecycle/recovery
 retain their earlier owners. These groups add no product feature and do not
 complete OOP epics or archive/install/Runtime/connected-host qualification.
+
+### Resource rules, parameters and Work presentation
+
+| Responsibility | Canonical owner |
+| --- | --- |
+| Resource identity and declared-root containment | `resources.identity.ResourceIdentityPolicy` |
+| Workplace registry catalog | `resources.workplace_catalog.WorkplaceCatalogReader` |
+| Live path constants | `resources.registries.WorkplaceRegistryReader` |
+| Project and assignment parameter composition | `configuration.project_parameters.ProjectParameterResolver`, `configuration.assignment_parameters.AssignmentParameterResolver` |
+| Package manifest and index documents | `resources.package_write.PackageManifestWriter` |
+| Private resource path publication | `resources.private_paths.PrivateResourcePathWriter` |
+| Work task indexes and run summaries | `presentation.work_summaries.WorkSummaryRenderer` |
+| Platform definition values | `project.platform_documents.PlatformDocumentBuilder` |
+
+The root-independent catalog shares the actual resource rules and registry
+reader. Snapshot readers retain their existing constructor and dataclass fields.
+Parameter and package writers receive the actual distribution root; source
+composition reuses the existing concrete dependencies. Mutable policy constants
+have one owner beside their rules.
+
+Work summary rendering is an explicit optional dependency in execution,
+continuation and Runtime composition. A missing renderer retains the existing
+fallback; controlled fixtures supply their existing callbacks through that input.
+Dataclass fields and positional constructors remain unchanged. These moves do
+not introduce device indexing, scheduling or another product operation.

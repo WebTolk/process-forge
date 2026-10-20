@@ -200,16 +200,18 @@ def test_platform_staged_semantics(root: Path) -> None:
     workplace = root / "platform-semantics-workplace"
     init_workplace(workplace)
     before = fingerprint(workplace)
-    original = processforge.platform_contract_from_values
+    from processforge_core.project.platform_documents import PlatformDocumentBuilder
 
-    def with_missing_parent(values: dict) -> dict:
-        contract = original(values)
+    original = PlatformDocumentBuilder.platform_contract_from_values
+
+    def with_missing_parent(self, values: dict) -> dict:
+        contract = original(self, values)
         contract.setdefault("requires", {})["platforms"] = [
             {"id": "platform.missing-parent", "required": True}
         ]
         return contract
 
-    processforge.platform_contract_from_values = with_missing_parent
+    PlatformDocumentBuilder.platform_contract_from_values = with_missing_parent
     try:
         args = processforge.build_parser().parse_args(
             [
@@ -230,7 +232,7 @@ def test_platform_staged_semantics(root: Path) -> None:
         else:
             raise AssertionError("schema-valid platform with missing parent was committed")
     finally:
-        processforge.platform_contract_from_values = original
+        PlatformDocumentBuilder.platform_contract_from_values = original
     assert fingerprint(workplace) == before, "staged semantic failure mutated workplace"
 
 
