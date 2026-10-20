@@ -17,7 +17,8 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
 from processforge_core.agents.process_events import ProcessEventRecorder
-from processforge_core.composition import bind_process_events
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 import process_execution_smoke_support as support
 import prepared_executor
 from processforge_core.egress.contracts import EgressError, binding_for, digest, encoded, require_v2
@@ -44,7 +45,7 @@ def run_checks():
         old_bytes = old_path.read_bytes()
         old = yaml.safe_load(old_bytes)
         task = support.assignment(project, original)
-        service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
+        service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
         assert old["execution_contract"]["contract_version"] == 1 and "egress" not in old["execution_contract"]
         from processforge_core.work.paths import WorkPaths
         valid = validate_execution_contract(project, WorkPaths().assignment_document(project, task["id"]), task, old, core, require_ready=True)

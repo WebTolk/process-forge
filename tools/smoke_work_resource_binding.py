@@ -24,7 +24,8 @@ from processforge_core.work.resource_material import DEFAULT_LIMITS, MaterialBud
 from processforge_core.work.resources import WorkResourceService
 import processforge as core
 from processforge_core.agents.process_events import ProcessEventRecorder
-from processforge_core.composition import bind_process_events
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from process_execution_smoke_support import assignment, fixture, run
 from garage_search_smoke_support import register_fixture_resource, run_cli, select_fixture_resource
 from smoke_garage_mode_not_promoted_by_session import call_mcp
@@ -170,7 +171,7 @@ def resource_order_checks() -> None:
 
         old = change_capsule(project, work, old_order)
         try:
-            state = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()).state(run_id=work["run_id"], assignment_id=work["assignment_id"])
+            state = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer()).state(run_id=work["run_id"], assignment_id=work["assignment_id"])
             require(state["context"]["validation"]["status"] == "valid", state)
             read()  # Existing native capsules remain byte-identical and usable.
         finally:

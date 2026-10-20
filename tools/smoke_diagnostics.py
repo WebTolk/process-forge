@@ -21,7 +21,8 @@ from unittest.mock import Mock, patch
 
 import processforge as core
 from processforge_core.agents.process_events import ProcessEventRecorder
-from processforge_core.composition import bind_process_events
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from processforge_core import diagnostics as d
 from processforge_core.process_execution import ProcessExecutionService
 
@@ -138,7 +139,7 @@ def failure_correlation_journal(root):
         assert stderr.getvalue().count("diagnostic_delivery_failed") == 1
     # Same process event/evidence across every profile, using the actual durable writer.
     events, detail_counts = [], []
-    service = bind_process_events(ProcessExecutionService(root, root, core), ProcessEventRecorder())
+    service = bind_work_summaries(bind_process_events(ProcessExecutionService(root, root, core), ProcessEventRecorder()), WorkSummaryRenderer())
     for profile in d.PROFILES:
         records = []
         logger = d.Logger(config(profile=profile), sinks=[records.append])

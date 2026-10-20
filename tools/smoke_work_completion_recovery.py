@@ -8,7 +8,8 @@ from unittest.mock import patch
 import yaml
 import processforge as core
 from processforge_core.agents.process_events import ProcessEventRecorder
-from processforge_core.composition import bind_process_events
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
 from process_execution_smoke_support import fixture, stage_evidence
 
@@ -108,7 +109,7 @@ def test_failure_matrix():
     targets = ["run", "intent", "assignment", "summary", "handoff", "index", "projection", "event", "cleanup"]
     with fixture() as (workplace, project, first):
         for index, (target, when) in enumerate((target, when) for target in targets for when in ["before", "after"]):
-            service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
+            service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
             started = first if index == 0 else service.start(objective=f"Recover {when} {target}")
             require(started["action"] == "created_new", started)
             proof, evidence = prepare(service, started, project)
@@ -116,7 +117,7 @@ def test_failure_matrix():
             pending = paths(project, started)["intent"].exists()
             if pending:
                 proof.write_text("changed after commit intent", encoding="utf-8")
-            fresh = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
+            fresh = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
             selection = ({"run_id": started["run_id"]}, {"assignment_id": started["assignment_id"]}, {})[index % 3] if pending else {"run_id": started["run_id"]}
             operation = fresh.complete if index % 4 == 3 else fresh.transition
             result = operation(**selection, outcome="ignored-invalid-outcome" if pending else "completed", notes="ignored retry note" if pending else "original completion note")
@@ -132,7 +133,7 @@ def test_failure_matrix():
 
 def test_invalid_intents_fail_closed():
     with fixture() as (workplace, project, started):
-        service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
+        service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
         _proof, evidence = prepare(service, started, project)
         intent = interrupt(service, started, project, evidence, "assignment", "before")
         owned = paths(project, started)
@@ -150,11 +151,11 @@ def test_invalid_intents_fail_closed():
             value["fingerprint"] = canonical_fingerprint({key: item for key, item in value.items() if key != "fingerprint"})
         for value in ["invalid: [yaml", *malformed]:
             owned["intent"].write_text(value if isinstance(value, str) else yaml.safe_dump(value), encoding="utf-8")
-            result = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()).transition(run_id=started["run_id"], outcome="completed")
+            result = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer()).transition(run_id=started["run_id"], outcome="completed")
             require(result.get("reason") == "completion_intent_invalid", result)
             require(files == {key: path.read_bytes() if path.exists() else None for key, path in owned.items() if key != "intent"}, "invalid journal wrote terminal files")
         owned["intent"].write_bytes(original)
-        recovered = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()).transition(run_id=started["run_id"], outcome="completed")
+        recovered = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer()).transition(run_id=started["run_id"], outcome="completed")
         require(recovered.get("action") == "run_completed", recovered)
         verify_final(project, started, intent)
         print("PASS: malformed journals rejected without writes", flush=True)

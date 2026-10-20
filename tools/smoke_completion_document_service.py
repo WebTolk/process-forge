@@ -40,7 +40,7 @@ def suite(cls,root):
             if custom:
                 def render(base,value):assert base==root and value is run;log.append(['render']);return 'custom\n'
                 core.render_task_index=render
-            svc=fixture(cls,root,core=core,_run_path=path,_atomic_text=atomic)
+            svc=fixture(cls,root,core=core,_work_summaries=SimpleNamespace(render_task_index=render) if custom else None,_run_path=path,_atomic_text=atomic)
             original=copy.deepcopy(run)
             assert svc._write_task_index(run) is None and run==original
             assert log[0]==['path','r'] and log[-1][1]=='.pf/runs/r/task-index.md'
@@ -51,7 +51,7 @@ def suite(cls,root):
         error=OSError(failure);log=[];run={'id':'r','tasks':[]}
         def fail(*a):raise error
         core=SimpleNamespace(render_task_index=fail if failure=='render' else lambda *a:'text')
-        svc=fixture(cls,root,core=core,_run_path=fail if failure=='path' else lambda rid:root/'run.yaml',_atomic_text=fail if failure=='write' else lambda *a:log.append('write'))
+        svc=fixture(cls,root,core=core,_work_summaries=SimpleNamespace(render_task_index=core.render_task_index),_run_path=fail if failure=='path' else lambda rid:root/'run.yaml',_atomic_text=fail if failure=='write' else lambda *a:log.append('write'))
         try:svc._write_task_index(run)
         except OSError as actual:assert actual is error
         else:raise AssertionError('publication failure hidden')

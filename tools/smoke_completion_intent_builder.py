@@ -43,7 +43,7 @@ def make(cls,root,log,custom=False,failure=None):
     def task_index(base,run):record('task_index');return 'injected index\n'
     core=SimpleNamespace(rel=rel,project_id=project_id)
     if custom:core.render_task_index=task_index
-    svc=fixture(cls,root,core=core,_accumulated_evidence=evidence,_set_run_task_status=status,_run_path=run_path,_assignment_path=assignment_path,_flow_root=flow,_render_summary=summary,_completion_intent_path=intent_path)
+    svc=fixture(cls,root,core=core,_work_summaries=SimpleNamespace(render_task_index=task_index) if custom else None,_accumulated_evidence=evidence,_set_run_task_status=status,_run_path=run_path,_assignment_path=assignment_path,_flow_root=flow,_render_summary=summary,_completion_intent_path=intent_path)
     return svc,error
 def suite(cls,root):
     rows=[]

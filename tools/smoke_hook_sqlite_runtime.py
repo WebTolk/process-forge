@@ -10,7 +10,8 @@ from unittest.mock import patch
 import processforge as core
 from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher
 from processforge_core.agents.process_events import ProcessEventRecorder
-from processforge_core.composition import bind_process_events
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from processforge_core.configuration import ProjectPFConfig
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.raw_hook_journal import RawHookJournal
@@ -95,10 +96,10 @@ def main():
 
         _core_common_yaml_io.write_yaml_file(config, ProjectPFConfig().with_changes({"logging.events": False}).to_dict())
         before = ProcessEventJournal().count(RunTaskInputReader().event_runtime_paths(project)[0])
-        service = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder())
+        service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
         _proof, evidence = prepare(service, started, project)
         intent = interrupt(service, started, project, evidence, "event", "after")
-        result = bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()).transition(run_id=started["run_id"], outcome="completed")
+        result = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer()).transition(run_id=started["run_id"], outcome="completed")
         assert result["action"] == "run_completed", result
         assert not paths(project, started)["intent"].exists()
         assert ProcessEventJournal().count(RunTaskInputReader().event_runtime_paths(project)[0]) == before

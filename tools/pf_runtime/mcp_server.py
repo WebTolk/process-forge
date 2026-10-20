@@ -214,7 +214,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         operation = "cancel_work" if name == "pf.work.cancel" else name.rsplit(".", 1)[1]
         if operation == "resume":
             request["session_id"] = supplied_session
-        return ContinuationService(bound_project, workplace, core, events=getattr(runtime, "_process_events", None)).request(operation, **request)
+        return ContinuationService(bound_project, workplace, core, events=getattr(runtime, "_process_events", None), summaries=getattr(runtime, "_work_summaries", None)).request(operation, **request)
     if name == "pf.work.start":
         if set(arguments) - {"session_id", "project_root", "objective", "process_id", "scope_intent"}:
             raise session_read.SessionReadError("invalid_arguments")
@@ -225,7 +225,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
                 scope_intent = CreationScopeService.validate(arguments["scope_intent"])
             except ContextContractError as exc:
                 raise session_read.SessionReadError(str(exc) or "work_scope_invalid") from exc
-        return build_process_execution_service(bound_project, workplace, core, events=getattr(runtime, "_process_events", None)).start(
+        return build_process_execution_service(bound_project, workplace, core, events=getattr(runtime, "_process_events", None), summaries=getattr(runtime, "_work_summaries", None)).start(
             objective=str(arguments.get("objective") or ""),
             process_id=str(arguments.get("process_id") or "").strip(),
             session_id=supplied_session,
@@ -233,7 +233,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         )
     if name == "pf.work.transition":
         bound_project = resolve_garage_project()
-        return build_process_execution_service(bound_project, workplace, core, events=getattr(runtime, "_process_events", None)).transition(
+        return build_process_execution_service(bound_project, workplace, core, events=getattr(runtime, "_process_events", None), summaries=getattr(runtime, "_work_summaries", None)).transition(
             outcome=str(arguments.get("outcome") or ""),
             evidence=arguments.get("evidence"),
             notes=str(arguments.get("notes") or ""),

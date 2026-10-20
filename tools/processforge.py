@@ -61,6 +61,7 @@ from processforge_core.project.overrides import PROJECT_OVERRIDE_MODES as _proje
 from processforge_core.configuration.assignment_parameters import AssignmentParameterResolver
 from processforge_core.resources.package_write import PackageManifestWriter
 from processforge_core.resources.private_paths import PrivateResourcePathWriter
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from processforge_core.chat.writer import ChatTranscriptWriter
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -6439,38 +6440,12 @@ def require_official_process_active(project_root: Path, process_id: str) -> None
 
 
 
-def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
-    tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
-    lines = [
-        f"# Task Index: {run.get('id', 'run')}",
-        "",
-        f"Run status: `{run.get('status', 'unknown')}`",
-        "",
-        "| Order | Task | Status | Assignment |",
-        "| --- | --- | --- | --- |",
-    ]
-    for item in sorted([task for task in tasks if isinstance(task, dict)], key=lambda value: int(value.get("order", 0) or 0)):
-        lines.append(f"| {item.get('order', '')} | `{item.get('id', '')}` | `{item.get('status', '')}` | `{item.get('assignment', '')}` |")
-    if not tasks:
-        lines.append("| | No tasks yet | | |")
-    return "\n".join(lines) + "\n"
 
 
 
 
 
 
-def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
-    run_id = str(run.get("id", "run"))
-    lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
-    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-        if isinstance(item, dict):
-            task = load_yaml_document(_work_paths.assignment_document(project_root, str(item.get("id", ""))))
-            result = task.get("result") if isinstance(task.get("result"), dict) else {}
-            lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
-    if len(lines) == 7:
-        lines.append("- No tasks recorded.")
-    return "\n".join(lines) + "\n"
 
 
 def render_run_handoff(project_root: Path, run: dict[str, Any]) -> str:
@@ -6484,15 +6459,15 @@ def write_run_artifact_bundle(project_root: Path, run: dict[str, Any], *, includ
     run_id = str(run.get("id", "run"))
     root = _work_paths.run_root(project_root, run_id)
     if include_summary_handoff:
-        write_text_file_atomic(_work_paths.summary(project_root, run_id), render_run_summary(project_root, run))
+        write_text_file_atomic(_work_paths.summary(project_root, run_id), _work_summary_renderer.render_run_summary(project_root, run))
         write_text_file_atomic(_work_paths.handoff(project_root, run_id), render_run_handoff(project_root, run))
-    write_text_file_atomic(root / "task-index.md", render_task_index(project_root, run))
+    write_text_file_atomic(root / "task-index.md", _work_summary_renderer.render_task_index(project_root, run))
     write_yaml_file_atomic(_work_paths.run_document(project_root, run_id), run)
 
 
 def write_task_index(project_root: Path, run: dict[str, Any]) -> None:
     run_id = str(run.get("id", "run"))
-    write_text_file_atomic(_work_paths.run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
+    write_text_file_atomic(_work_paths.run_root(project_root, run_id) / "task-index.md", _work_summary_renderer.render_task_index(project_root, run))
 
 
 def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
@@ -8883,7 +8858,7 @@ def continuation_command(args: argparse.Namespace, operation: str, **request: An
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
-    result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__], events=_process_event_recorder).request(operation, **request)
+    result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__], events=_process_event_recorder, summaries=_work_summary_renderer).request(operation, **request)
     print(json.dumps(result, ensure_ascii=False, indent=2) if getattr(args, "json", False) else dump_yaml(result))
     return 1 if result.get("status") == "blocked" else 0
 
@@ -10521,7 +10496,7 @@ def process_execution_service(project_root: Path, explicit_workplace: str | None
 
     manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, explicit_workplace)
     workplace_root = manifest.parent if manifest is not None else None
-    return build_process_execution_service(project_root, workplace_root, sys.modules[__name__], events=_process_event_recorder)
+    return build_process_execution_service(project_root, workplace_root, sys.modules[__name__], events=_process_event_recorder, summaries=_work_summary_renderer)
 
 
 def work_resource_service(project_root: Path, explicit_workplace: str | None = None) -> WorkResourceService:
@@ -15072,6 +15047,7 @@ _package_manifest_writer.indexes = _knowledge_resource_index_service
 _package_manifest_writer.records = _resource_record_service
 _private_resource_path_writer = PrivateResourcePathWriter(ROOT)
 _private_resource_path_writer.registry = _workplace_registry_writer
+_work_summary_renderer = WorkSummaryRenderer()
 
 if __name__ == "__main__":
     sys.exit(main())

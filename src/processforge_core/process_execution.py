@@ -24,6 +24,7 @@ from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
     from .agents.process_events import ProcessEventRecorder
+    from .presentation.work_summaries import WorkSummaryRenderer
     from .work.metadata import WorkMetadataReadPass
     from .completion.request import WorkCompletionRequestService
     from .work.record_catalog import WorkRecordCatalogService
@@ -195,6 +196,7 @@ class ProcessExecutionService:
     _clock: Callable[[], str] = field(default_factory=lambda: _canonical_clock.now_utc, init=False, repr=False, compare=False)
     # Instance composition preserves the original dataclass field contract.
     _process_events = None  # type: ProcessEventRecorder | None
+    _work_summaries = None  # type: WorkSummaryRenderer | None
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
@@ -771,7 +773,7 @@ class ProcessExecutionService:
     def _bound_work_selection(self, session_id: str) -> dict[str, Any] | None:
         from .work.continuation import ContinuationService
 
-        return ContinuationService(self.project_root, self.workplace_root, self.core, events=self._process_events).selected(session_id)
+        return ContinuationService(self.project_root, self.workplace_root, self.core, events=self._process_events, summaries=self._work_summaries).selected(session_id)
 
     def _select_work(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> tuple[dict[str, Any], dict[str, Any]] | None:
         return self._work_selection_service().select(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
@@ -892,7 +894,7 @@ class ProcessExecutionService:
         from .composition import build_completion_intent_builder
 
         return build_completion_intent_builder(
-            project_root=self.project_root, accumulated_evidence=lambda assignment: self._accumulated_evidence(assignment), set_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status), run_path=lambda run_id: self._run_path(run_id), assignment_path=lambda assignment_id: self._assignment_path(assignment_id), flow_root=lambda: self._flow_root(), summary=lambda run, assignment: self._render_summary(run, assignment), has_task_index=lambda: hasattr(self.core, 'render_task_index'), task_index=lambda root, run: self.core.render_task_index(root, run), rel=lambda path, root: self.core.rel(path, root), intent_path=lambda run_id: self._completion_intent_path(run_id), project_id=lambda root: self.core.project_id(root), fingerprint=canonical_fingerprint
+            project_root=self.project_root, accumulated_evidence=lambda assignment: self._accumulated_evidence(assignment), set_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status), run_path=lambda run_id: self._run_path(run_id), assignment_path=lambda assignment_id: self._assignment_path(assignment_id), flow_root=lambda: self._flow_root(), summary=lambda run, assignment: self._render_summary(run, assignment), has_task_index=lambda: self._work_summaries is not None and hasattr(self._work_summaries, 'render_task_index'), task_index=lambda root, run: self._work_summaries.render_task_index(root, run), rel=lambda path, root: self.core.rel(path, root), intent_path=lambda run_id: self._completion_intent_path(run_id), project_id=lambda root: self.core.project_id(root), fingerprint=canonical_fingerprint
         )
 
     def _build_completion_intent(
@@ -966,7 +968,7 @@ class ProcessExecutionService:
         from .composition import build_completion_document_service
 
         return build_completion_document_service(
-            project_root=self.project_root, run_path=lambda run_id: self._run_path(run_id), has_task_index=lambda: hasattr(self.core, 'render_task_index'), task_index=lambda root, run: self.core.render_task_index(root, run), atomic_text=lambda path, text: self._atomic_text(path, text)
+            project_root=self.project_root, run_path=lambda run_id: self._run_path(run_id), has_task_index=lambda: self._work_summaries is not None and hasattr(self._work_summaries, 'render_task_index'), task_index=lambda root, run: self._work_summaries.render_task_index(root, run), atomic_text=lambda path, text: self._atomic_text(path, text)
         )
 
     def _render_summary(self, run: dict[str, Any], assignment: dict[str, Any]) -> str:

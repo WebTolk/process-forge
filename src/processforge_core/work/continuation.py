@@ -18,6 +18,7 @@ from .resources import WorkResourceError, WorkResourceService
 
 if TYPE_CHECKING:
     from ..agents.process_events import ProcessEventRecorder
+    from ..presentation.work_summaries import WorkSummaryRenderer
     from .continuation_publication import ContinuationPublicationService
     from .cancellation_replay import CancellationReplayService
     from .continuation_work import ContinuationContractValidator, ContinuationWorkReadService
@@ -30,11 +31,12 @@ class ContinuationError(ValueError):
 
 
 class ContinuationService:
-    def __init__(self, project_root: Path, workplace_root: Path | None, core: Any, *, events: ProcessEventRecorder | None = None):
+    def __init__(self, project_root: Path, workplace_root: Path | None, core: Any, *, events: ProcessEventRecorder | None = None, summaries: WorkSummaryRenderer | None = None):
         self.project = project_root.resolve()
         self.workplace, self.core = workplace_root, core
         self.work = ProcessExecutionService(self.project, workplace_root, core)
         object.__setattr__(self.work, "_process_events", events)
+        object.__setattr__(self.work, "_work_summaries", summaries)
         self.flow = core.locate_flow_root(self.project)
 
     def request(self, operation: str, **args: Any) -> dict:
