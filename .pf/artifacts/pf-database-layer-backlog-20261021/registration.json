@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "pf-database-layer-and-journals-20261021",
+  "run_id": "pf-database-layer-backlog-20261021",
+  "task_status": "open",
+  "run_status": "draft",
+  "execution_mode": "planning_only",
+  "code_changes_allowed": false,
+  "writer": false,
+  "product_write_grants": [],
+  "research_snapshots": 4,
+  "local_markdown_links_verified": 4,
+  "native_checks": [
+    {
+      "name": "task-doctor",
+      "exit_code": 0,
+      "passed": 12,
+      "warnings": [
+        "WARN: required output pending: .pf/artifacts/pf-database-layer-backlog-20261021/future-report.md",
+        "WARN: expected report pending: .pf/artifacts/pf-database-layer-backlog-20261021/future-report.md"
+      ]
+    },
+    {
+      "name": "run-doctor",
+      "exit_code": 0,
+      "passed": 18,
+      "warnings": []
+    }
+  ],
+  "implementation_started": false,
+  "library_selected": false,
+  "dependency_installed": false
+}

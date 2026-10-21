@@ -1,0 +1,30 @@
+schema_version: 1
+id: pf-database-layer-backlog-20261021
+title: 'Будущая задача: общий слой БД и журналы PF'
+process: software-feature-development
+status: draft
+created_at: '2026-10-21T05:42:40Z'
+updated_at: '2026-10-21T05:42:47Z'
+objective: Сохранить отдельную будущую задачу общего доступа к БД для Core PF и процессов, единых журналов и независимого оперативного учёта; реализацию сейчас не начинать.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-database-layer-and-journals-20261021
+    assignment: .pf/assignments/pf-database-layer-and-journals-20261021.yaml
+    status: open
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-database-layer-backlog-20261021/summary.md
+  - .pf/handoffs/runs/pf-database-layer-backlog-20261021-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+privacy:
+  public_safe: true

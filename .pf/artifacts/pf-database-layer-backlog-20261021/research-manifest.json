@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-21T05:42:39.626800+00:00",
+  "sources": [
+    {
+      "source": ".pf/artifacts/pf-device-dev-update-20261021/journal-storage-requirements.md",
+      "source_sha256": "5d449b18ed3313e6b9b685e5cea0dbe6850e558e1f8763ab111bf79f2dc8f263",
+      "snapshot": ".pf/artifacts/pf-database-layer-backlog-20261021/research/journal-storage-requirements.md",
+      "snapshot_sha256": "f64015ece405409ed9992a2667f06571e6e608f788fe87c364cc26f650db4c66",
+      "transformations": "UTF-8/LF snapshot; local cross-references rebased; historical scope status clarified"
+    },
+    {
+      "source": ".pf/artifacts/pf-device-dev-update-20261021/python-data-layer-comparison.md",
+      "source_sha256": "41f9aa063df72b7bb152ce25772cd3d3dbaf83b4c2671a25e132b6fe9c67c6ac",
+      "snapshot": ".pf/artifacts/pf-database-layer-backlog-20261021/research/python-data-layer-comparison.md",
+      "snapshot_sha256": "5d4f12ed8ad61616a256d79c18a0d357eca76ec16bda6988df2795e2fd5959c1",
+      "transformations": "UTF-8/LF snapshot; local cross-references rebased; historical scope status clarified"
+    },
+    {
+      "source": ".pf/artifacts/pf-device-dev-update-20261021/joomla-database-python-analogs.md",
+      "source_sha256": "ab79b54f1c7123af37b81d840b3bf7d83a7ec21fdd66a88ebf1d6e39d6859b24",
+      "snapshot": ".pf/artifacts/pf-database-layer-backlog-20261021/research/joomla-database-python-analogs.md",
+      "snapshot_sha256": "ab79b54f1c7123af37b81d840b3bf7d83a7ec21fdd66a88ebf1d6e39d6859b24",
+      "transformations": "UTF-8/LF snapshot; local cross-references rebased; historical scope status clarified"
+    },
+    {
+      "source": ".pf/artifacts/pf-device-dev-update-20261021/maintenance-guard.md",
+      "source_sha256": "cdba1cd7987254453fbfc2fa5f84d5448ed42c5b4dc22d175ef870783e3717e3",
+      "snapshot": ".pf/artifacts/pf-database-layer-backlog-20261021/research/runtime-stop-case.md",
+      "snapshot_sha256": "cc37bfd216bcc30ef482a8e8754b539dff65c72f433c02155e8d6e0717d4886c",
+      "transformations": "UTF-8/LF snapshot; local cross-references rebased; historical scope status clarified"
+    }
+  ],
+  "hash_basis": {
+    "source_sha256": "raw captured source bytes",
+    "snapshot_sha256": "UTF-8 text with CRLF normalized to LF"
+  }
+}
