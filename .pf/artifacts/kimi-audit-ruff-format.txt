@@ -1,0 +1,277 @@
+unformatted: File would be reformatted
+  --> tools\pf_runtime\builtin_provider_adapters.py:2:1
+   |
+1  | """Explicit trusted composition root. Never derive imports from event fields."""
+2  +
+3  | from .codex_adapters import CodexHooksPolicy, CodexWorkerPolicy
+4  | from .kimi_adapters import KimiHooksPolicy
+5  | from .provider_adapters import AdapterRegistry, RuntimeLegacyPolicy
+6  |
+   - DEFAULT_ADAPTER_REGISTRY = AdapterRegistry((
+   -     RuntimeLegacyPolicy("processforge", "runtime-legacy", "none"),
+   -     CodexHooksPolicy("codex", "codex-hooks"),
+   -     CodexWorkerPolicy("processforge", "pf-codex-exec-worker", "worker"),
+   -     KimiHooksPolicy("kimi", "kimi-hooks"),
+   - ))
+7  + DEFAULT_ADAPTER_REGISTRY = AdapterRegistry(
+8  +     (
+9  +         RuntimeLegacyPolicy("processforge", "runtime-legacy", "none"),
+10 +         CodexHooksPolicy("codex", "codex-hooks"),
+11 +         CodexWorkerPolicy("processforge", "pf-codex-exec-worker", "worker"),
+12 +         KimiHooksPolicy("kimi", "kimi-hooks"),
+13 +     )
+14 + )
+   |
+
+unformatted: File would be reformatted
+   --> tools\pf_runtime\kimi_adapters.py:2:1
+    |
+1   | """Kimi Code hook and PF Kimi-driver provenance policies."""
+2   +
+3   | from __future__ import annotations
+--------------------------------------------------------------------------------
+18  |     def valid_raw_identity(self, envelope: dict[str, Any]) -> bool:
+    -         return (envelope.get("native_event_id") is None and envelope.get("native_id_scope") == "session"
+    -                 and envelope.get("native_event_id_stable") is False and envelope.get("payload_version") == "kimi-hooks.v1")
+19  +         return (
+20  +             envelope.get("native_event_id") is None
+21  +             and envelope.get("native_id_scope") == "session"
+22  +             and envelope.get("native_event_id_stable") is False
+23  +             and envelope.get("payload_version") == "kimi-hooks.v1"
+24  +         )
+25  |
+--------------------------------------------------------------------------------
+32  |             return False
+    -         if any(envelope.get(key) != expected.get(key) for key in ("native_event_type", "source_session_id", "source_project_ref", "native_event_id", "native_id_scope", "payload_version")):
+33  +         if any(
+34  +             envelope.get(key) != expected.get(key)
+35  +             for key in (
+36  +                 "native_event_type",
+37  +                 "source_session_id",
+38  +                 "source_project_ref",
+39  +                 "native_event_id",
+40  +                 "native_id_scope",
+41  +                 "payload_version",
+42  +             )
+43  +         ):
+44  |             return False
+--------------------------------------------------------------------------------
+51  |                 return False
+    -             if any(derived.get(key) != canonical.get(key) for key in ("event_type", "event_id", "session_id", "project_root", "agent_id")):
+52  +             if any(
+53  +                 derived.get(key) != canonical.get(key)
+54  +                 for key in (
+55  +                     "event_type",
+56  +                     "event_id",
+57  +                     "session_id",
+58  +                     "project_root",
+59  +                     "agent_id",
+60  +                 )
+61  +             ):
+62  |                 return False
+63  |             source = derived.get("source") or {}
+64  |             if not isinstance(source, dict) or source.get("adapter") != self.adapter:
+65  |                 return False
+    -             if any(key not in canonical or value != canonical[key] for key, value in derived.items() if key != "source"):
+66  +             if any(
+67  +                 key not in canonical or value != canonical[key]
+68  +                 for key, value in derived.items()
+69  +                 if key != "source"
+70  +             ):
+71  |                 return False
+    -             if any(value != canonical["source"].get(key) for key, value in source.items()):
+72  +             if any(
+73  +                 value != canonical["source"].get(key) for key, value in source.items()
+74  +             ):
+75  |                 return False
+--------------------------------------------------------------------------------
+79  |         expected = native_envelope(envelope["raw_payload"]) or {}
+    -         fields = ("message_role", "participant", "content", "content_source", "turn_id", "delivery", "parent_message_id")
+    -         return any(all(item.get(key) == message.get(key) for key in fields)
+    -                    and str(item.get("session_id") or envelope.get("source_session_id") or "") == str(message.get("session_id") or "")
+    -                    for message in expected.get("derived_conversation_messages", []))
+80  +         fields = (
+81  +             "message_role",
+82  +             "participant",
+83  +             "content",
+84  +             "content_source",
+85  +             "turn_id",
+86  +             "delivery",
+87  +             "parent_message_id",
+88  +         )
+89  +         return any(
+90  +             all(item.get(key) == message.get(key) for key in fields)
+91  +             and str(item.get("session_id") or envelope.get("source_session_id") or "")
+92  +             == str(message.get("session_id") or "")
+93  +             for message in expected.get("derived_conversation_messages", [])
+94  +         )
+95  |
+    -     def fallback_participants(self, envelope: dict[str, Any], item: dict[str, Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    -         if envelope.get("native_event_type") == "SessionEnd" and item.get("message_role") == "assistant":
+96  +     def fallback_participants(
+97  +         self, envelope: dict[str, Any], item: dict[str, Any]
+98  +     ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+99  +         if (
+100 +             envelope.get("native_event_type") == "SessionEnd"
+101 +             and item.get("message_role") == "assistant"
+102 +         ):
+103 |             return ("kimi",), ("subagent",)
+    |
+
+unformatted: File would be reformatted
+   --> tools\pf_runtime\kimi_hooks.py:22:22
+    |
+21  | EVENTS = {
+    -     "SessionStart": {"startup": "agent.session.started", "resume": "agent.session.resumed", "clear": "agent.session.started", "compact": "agent.session.compacted", "default": "agent.session.started"},
+22  +     "SessionStart": {
+23  +         "startup": "agent.session.started",
+24  +         "resume": "agent.session.resumed",
+25  +         "clear": "agent.session.started",
+26  +         "compact": "agent.session.compacted",
+27  +         "default": "agent.session.started",
+28  +     },
+29  |     "SessionEnd": {"default": "agent.session.ended"},
+--------------------------------------------------------------------------------
+98  |     tool_name = str(payload.get("tool_name") or "")
+    -     data = {key: payload[key] for key in ("turn_id", "tool_name", "tool_use_id", "model", "permission_mode", "reason") if payload.get(key) not in (None, "")}
+99  +     data = {
+100 +         key: payload[key]
+101 +         for key in (
+102 +             "turn_id",
+103 +             "tool_name",
+104 +             "tool_use_id",
+105 +             "model",
+106 +             "permission_mode",
+107 +             "reason",
+108 +         )
+109 +         if payload.get(key) not in (None, "")
+110 +     }
+111 |     if hook == "PostToolUse" and tool_name and tool_name != "Bash":
+--------------------------------------------------------------------------------
+147 |     prompt = payload.get("prompt")
+    -     if hook == "UserPromptSubmit" and isinstance(prompt, str) and prompt.strip() and envelope["source_session_id"]:
+148 +     if (
+149 +         hook == "UserPromptSubmit"
+150 +         and isinstance(prompt, str)
+151 +         and prompt.strip()
+152 +         and envelope["source_session_id"]
+153 +     ):
+154 |         envelope["derived_conversation_messages"] = [
+--------------------------------------------------------------------------------
+171 |     assistant_message = payload.get("last_assistant_message")
+    -     if hook in {"Stop", "SubagentStop", "SessionEnd"} and isinstance(assistant_message, str) and assistant_message.strip() and envelope["source_session_id"]:
+172 +     if (
+173 +         hook in {"Stop", "SubagentStop", "SessionEnd"}
+174 +         and isinstance(assistant_message, str)
+175 +         and assistant_message.strip()
+176 +         and envelope["source_session_id"]
+177 +     ):
+178 |         is_subagent = hook == "SubagentStop"
+179 |         agent_id = str(payload.get("agent_id") or "")
+    -         participant_id = f"subagent:{agent_id}" if is_subagent and agent_id else ("subagent" if is_subagent else "kimi")
+180 +         participant_id = (
+181 +             f"subagent:{agent_id}"
+182 +             if is_subagent and agent_id
+183 +             else ("subagent" if is_subagent else "kimi")
+184 +         )
+185 |         envelope.setdefault("derived_conversation_messages", []).append(
+186 |             {
+187 |                 "message_role": "assistant",
+    -                 "participant": {"id": participant_id, "type": "subagent" if is_subagent else "agent", "role": "subagent" if is_subagent else "assistant"},
+188 +                 "participant": {
+189 +                     "id": participant_id,
+190 +                     "type": "subagent" if is_subagent else "agent",
+191 +                     "role": "subagent" if is_subagent else "assistant",
+192 +                 },
+193 |                 "session_id": envelope["source_session_id"],
+--------------------------------------------------------------------------------
+225 |     workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+    -     _configuration, collect = host.hook_configuration(project_root, workplace_root, core)
+226 +     _configuration, collect = host.hook_configuration(
+227 +         project_root, workplace_root, core
+228 +     )
+229 |     if not collect:
+--------------------------------------------------------------------------------
+244 |             body = json.loads(output.getvalue()) if output.getvalue().strip() else {}
+    -             if isinstance(body, dict) and body.get("routing_status") in {"ignored", "denied"}:
+245 +             if isinstance(body, dict) and body.get("routing_status") in {
+246 +                 "ignored",
+247 +                 "denied",
+248 +             }:
+249 |                 return {**body, "status": "ignored", "transport": "runtime"}
+--------------------------------------------------------------------------------
+265 |     from processforge_core import diagnostics
+266 +
+267 |     hook = ""
+268 |     debug = os.environ.get("PF_KIMI_HOOK_DEBUG") == "1"
+    -     options = diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
+269 +     options = (
+270 +         diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
+271 +     )
+272 |     logger = diagnostics.for_project(Path.cwd(), invocation=options)
+--------------------------------------------------------------------------------
+277 |         hook = _event_name(payload) if isinstance(payload, dict) else ""
+    -         if isinstance(payload, dict) and isinstance(_project_ref(payload), str) and _project_ref(payload):
+    -             logger = diagnostics.for_project(Path(_project_ref(payload)), session_id=_session_id(payload), invocation=options)
+    -             if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+278 +         if (
+279 +             isinstance(payload, dict)
+280 +             and isinstance(_project_ref(payload), str)
+281 +             and _project_ref(payload)
+282 +         ):
+283 +             logger = diagnostics.for_project(
+284 +                 Path(_project_ref(payload)),
+285 +                 session_id=_session_id(payload),
+286 +                 invocation=options,
+287 +             )
+288 +             if logger is diagnostics.NULL and (
+289 +                 debug or os.environ.get("PF_DIAGNOSTICS")
+290 +             ):
+291 |                 logger = diagnostics.for_stderr(options)
+    -         with diagnostics.operation(logger, "hooks", "hook.dispatch", session_id=_session_id(payload) if isinstance(payload, dict) else None, build=diagnostics.identity_for(logger, __file__)):
+292 +         with diagnostics.operation(
+293 +             logger,
+294 +             "hooks",
+295 +             "hook.dispatch",
+296 +             session_id=_session_id(payload) if isinstance(payload, dict) else None,
+297 +             build=diagnostics.identity_for(logger, __file__),
+298 +         ):
+299 |             result = dispatch(payload if isinstance(payload, dict) else {})
+--------------------------------------------------------------------------------
+304 |             session_id = _session_id(payload)
+    -             print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project."}}, ensure_ascii=False))
+    -         logger.debug("hook.result", {"status": result.get("status"), "transport": result.get("transport"), "reason": result.get("reason"),
+    -                                      "normalized_event_count": len(result.get("normalized_event_ids") or [])}, component="hooks", code="hook.result")
+305 +             print(
+306 +                 json.dumps(
+307 +                     {
+308 +                         "hookSpecificOutput": {
+309 +                             "hookEventName": "SessionStart",
+310 +                             "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project.",
+311 +                         }
+312 +                     },
+313 +                     ensure_ascii=False,
+314 +                 )
+315 +             )
+316 +         logger.debug(
+317 +             "hook.result",
+318 +             {
+319 +                 "status": result.get("status"),
+320 +                 "transport": result.get("transport"),
+321 +                 "reason": result.get("reason"),
+322 +                 "normalized_event_count": len(result.get("normalized_event_ids") or []),
+323 +             },
+324 +             component="hooks",
+325 +             code="hook.result",
+326 +         )
+327 |     except Exception as exc:
+328 |         if hook in {"Stop", "SubagentStop"}:
+329 |             print("{}")
+    -         logger.error("hook.ignored", {"exception": exc}, component="hooks", code="hook.ignored")
+330 +         logger.error(
+331 +             "hook.ignored", {"exception": exc}, component="hooks", code="hook.ignored"
+332 +         )
+333 |     return 0
+    |
+
+3 files would be reformatted

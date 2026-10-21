@@ -1,0 +1,17 @@
+tools\pf_runtime\provider_adapters.py:83: error: Argument 1 to "get" of "Mapping" has incompatible type "tuple[Any | None, Any | None]"; expected "tuple[str, str]"  [arg-type]
+tools\pf_runtime\codex_hooks.py:106: error: Incompatible types in assignment (expression has type "list[dict[str, dict[str, object] | dict[str, str] | Literal[True] | str | dict[str, Any] | None]]", target has type "bool | str | dict[str, Any] | None")  [assignment]
+tools\pf_runtime\codex_hooks.py:128: error: No overload variant of "setdefault" of "MutableMapping" matches argument types "str", "list[Never]"  [call-overload]
+tools\pf_runtime\codex_hooks.py:128: note: Possible overload variants:
+tools\pf_runtime\codex_hooks.py:128: note:     def setdefault(self, str, None = ..., /) -> None
+tools\pf_runtime\codex_hooks.py:128: note:     def setdefault(self, str, bool | str | dict[str, Any] | None, /) -> bool | str | dict[str, Any] | None
+tools\pf_runtime\codex_hooks.py:158: error: Cannot find implementation or library stub for module named "processforge_core.work.consistency"  [import-not-found]
+tools\pf_runtime\codex_hooks.py:203: error: Cannot find implementation or library stub for module named "processforge_core"  [import-not-found]
+tools\pf_runtime\kimi_hooks.py:154: error: Incompatible types in assignment (expression has type "list[dict[str, dict[str, object] | dict[str, str] | Literal[True] | str | dict[str, Any] | None]]", target has type "bool | str | dict[str, Any] | None")  [assignment]
+tools\pf_runtime\kimi_hooks.py:185: error: No overload variant of "setdefault" of "MutableMapping" matches argument types "str", "list[Never]"  [call-overload]
+tools\pf_runtime\kimi_hooks.py:185: note: Possible overload variants:
+tools\pf_runtime\kimi_hooks.py:185: note:     def setdefault(self, str, None = ..., /) -> None
+tools\pf_runtime\kimi_hooks.py:185: note:     def setdefault(self, str, bool | str | dict[str, Any] | None, /) -> bool | str | dict[str, Any] | None
+tools\pf_runtime\kimi_hooks.py:219: error: Cannot find implementation or library stub for module named "processforge_core.work.consistency"  [import-not-found]
+tools\pf_runtime\kimi_hooks.py:219: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+tools\pf_runtime\kimi_hooks.py:265: error: Cannot find implementation or library stub for module named "processforge_core"  [import-not-found]
+Found 9 errors in 3 files (checked 3 source files)

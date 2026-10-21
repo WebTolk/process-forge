@@ -1,0 +1,7 @@
+[
+  {"artifact_id": "task-record", "path": ".pf/artifacts/processforge-pf-outbox-2/task-record.md", "status": "ready"},
+  {"artifact_id": "execution-context-summary", "path": ".pf/artifacts/processforge-pf-outbox-2/execution-context-summary.md", "status": "ready"},
+  {"artifact_id": "lifecycle-mode-decision", "path": ".pf/artifacts/processforge-pf-outbox-2/lifecycle-mode-decision.md", "status": "ready"},
+  {"gate_id": "context-ready", "artifact_id": "context-ready", "path": ".pf/artifacts/processforge-pf-outbox-2/context-ready.md", "status": "ready"},
+  {"artifact_id": "handoff", "path": ".pf/artifacts/processforge-pf-outbox-2/handoff.md", "status": "ready"}
+]
