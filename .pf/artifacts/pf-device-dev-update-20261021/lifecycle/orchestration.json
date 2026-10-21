@@ -1,0 +1,249 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "investigation",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "brief",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "scope",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "task-record",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "pf-device-dev-update-20261021-perform-the-explicitly-user-authorized-ope",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "brief",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "scope",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "task-record",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "scope-accepted"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "intake-scope"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "context": {
+    "checksum": "sha256:45b316d3a7e6ffb64377e39a63e790fc739d433f90c5fe1a9565f865b6dbd11a",
+    "id": "pf-device-dev-update-20261021-perform-the-explicitly-user-authorized-ope-capsule",
+    "identity_source": "assignment_process_pin",
+    "validation": {
+      "assignment_intent_checksum": "sha256:04ce5b2721b697d2beaf66a7bbdc4b256a662aba83dd4628fdcb33b4138dfccf",
+      "contract_version": 1,
+      "readiness": {
+        "blockers": [],
+        "status": "ready"
+      },
+      "stage_view": {
+        "id": "intake-scope",
+        "parameters": {},
+        "produced_artifacts": [
+          "brief",
+          "scope",
+          "task-record"
+        ],
+        "required_capabilities": [
+          "process_coordination"
+        ],
+        "required_inputs": [
+          "execution-context-summary",
+          "lifecycle-mode-decision"
+        ]
+      },
+      "status": "valid"
+    }
+  },
+  "evidence": [],
+  "execution_readiness": {
+    "allowed_actions": [
+      "read",
+      "write_artifact",
+      "write_product"
+    ],
+    "allowed_files": [
+      ".pf/artifacts/pf-device-dev-update-20261021/**",
+      ".pf/handoffs/pf-device-dev-update-20261021.md",
+      ".pf/logs/pf-device-dev-update-20261021.md",
+      ".pf/tmp/pf-device-dev-update-20261021/**"
+    ],
+    "allowed_read_files": [
+      ".pf/AGENTS.md",
+      ".pf/artifacts/pf-device-dev-update-20261021/**",
+      ".pf/artifacts/pf-monitor-uptime-execution-20261020/**",
+      ".pf/artifacts/python-quality-context.md",
+      ".pf/contexts/project-context.snapshot.yaml",
+      ".pf/handoffs/pf-device-dev-update-20261021.md",
+      ".pf/handoffs/pf-monitor-uptime-execution-20261020.md",
+      ".pf/logs/pf-device-dev-update-20261021.md",
+      ".pf/process-forge.yaml",
+      ".pf/tmp/pf-device-dev-update-20261021/**",
+      ".pf/tmp/pf-monitor-uptime-execution-20261020/candidate-manifest.json",
+      ".pf/tmp/pf-monitor-uptime-execution-20261020/git-delivery.json",
+      "VERSION",
+      "bin/pf.py",
+      "checksums/processforge.sha256",
+      "docs/**",
+      "release/updates/**",
+      "tools/pf_runtime/**",
+      "tools/processforge.py",
+      "updates/**"
+    ],
+    "blockers": [],
+    "remediation": "none",
+    "status": "ready"
+  },
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "context-ready",
+          "kind": "gate",
+          "path": ".pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md",
+          "recorded_at": "2026-10-21T03:06:37Z",
+          "sha256": "sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd",
+          "status": "passed",
+          "summary": "Fresh valid context; exact current user scope, private device targets kept outside public file grants."
+        },
+        "id": "context-ready",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "scope-accepted",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "brief",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "scope",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "task-record",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "scope-accepted"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "intake-scope"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "intake-scope",
+  "obligations": [],
+  "previous_stage_id": "orchestration",
+  "process": {
+    "fingerprint": "sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.2.1"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "execution-context-summary",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md",
+        "recorded_at": "2026-10-21T03:06:37Z",
+        "sha256": "sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd",
+        "status": "ready",
+        "summary": "One-task operator update/monitor plan and explicit evidence-layer boundaries recorded."
+      },
+      "id": "execution-context-summary",
+      "kind": "input",
+      "satisfied": true
+    },
+    {
+      "evidence": {
+        "artifact_id": "lifecycle-mode-decision",
+        "kind": "artifact",
+        "path": ".pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md",
+        "recorded_at": "2026-10-21T03:06:37Z",
+        "sha256": "sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd",
+        "status": "ready",
+        "summary": "One-task operator update/monitor plan and explicit evidence-layer boundaries recorded."
+      },
+      "id": "lifecycle-mode-decision",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-pf-device-dev-update-20261021-perform-the-explicitly-user-authori",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "intake-scope",
+    "status": "in_progress",
+    "title": "Intake And Scope"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "docs.python-devguide:root",
+      "docs.python-packaging:root",
+      "docs.python-peps:root",
+      "docs.python-practices:root",
+      "docs.python:root",
+      "project.process-forge:project-artifacts",
+      "project.process-forge:project-profile"
+    ]
+  }
+}

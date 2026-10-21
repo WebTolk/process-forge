@@ -1,0 +1,3 @@
+# Run Plan: pf-runtime-shutdown-budget-fix-20261021: fix the narrowly scoped update/restart
+
+Objective: pf-runtime-shutdown-budget-fix-20261021: fix the narrowly scoped update/restart blocker caused by bounded historical worker observation. Preserve real active-work and unknown-state protection, released CLI/MCP contracts, and history. Do not implement the separate future database/journal layer. Work alone, run full applicable PF tests and registered Python QA, commit and push the one completed task to both existing dev remotes with GitVerse token authentication. Prepare and validate a fixed dev archive for the already authorized device update; actual device apply remains in its existing operator Work.

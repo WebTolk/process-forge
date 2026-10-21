@@ -1,0 +1,94 @@
+schema_version: 1
+id: pf-runtime-shutdown-budget-fix-20261021-fix-the-narrowly-scoped-update-r
+title: 'pf-runtime-shutdown-budget-fix-20261021: fix the narrowly scoped update/restart '
+run_id: garage-pf-runtime-shutdown-budget-fix-20261021-fix-the-narrowly-scoped-u
+process: software-feature-development
+status: cancelled
+created_at: '2026-10-21T05:56:53Z'
+updated_at: '2026-10-21T06:14:05Z'
+objective: 'pf-runtime-shutdown-budget-fix-20261021: fix the narrowly scoped update/restart blocker caused by bounded historical worker observation. Preserve real active-work and unknown-state protection, released CLI/MCP contracts, and history. Do not implement the separate future database/journal layer. Work alone, run full applicable PF tests and registered Python QA, commit and push the one completed task to both existing dev remotes with GitVerse token authentication. Prepare and validate a fixed dev archive for the already authorized device update; actual device apply remains in its existing operator Work.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: cancelled
+  summary: The user explicitly selected and authorized the one-time native stop --force, prepared dev update and monitor in the existing operator Work. This alternative source-code fix was not selected; preserve its research, capsule and history, with no product changes.
+  artifacts:
+    - .pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/report.md
+    - .pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/orchestration.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: orchestration
+stage_status: in_progress
+stage_execution:
+  started_at: '2026-10-21T05:56:53Z'
+  evidence:
+    []
+  notes: ""
+stage_history:
+  []
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261020-072238-da5df2
+  snapshot_checksum: 'sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a'
+  assignment_capsule: .pf/contexts/assignment-capsules/pf-runtime-shutdown-budget-fix-20261021-fix-the-narrowly-scoped-update-r.capsule.yaml
+  assignment_capsule_checksum: 'sha256:bfe6f296135701cb144f298382a52528209c38c57f84710fbfb7604320d27725'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_files:
+  - src/processforge_core/runtime/metrics.py
+  - tools/smoke_runtime_metrics.py
+  - checksums/processforge.sha256
+  - .pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/**
+  - .pf/tmp/pf-runtime-shutdown-budget-fix-20261021/**
+  - .pf/logs/pf-runtime-shutdown-budget-fix-20261021.md
+  - .pf/handoffs/pf-runtime-shutdown-budget-fix-20261021.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/python-quality-context.md
+  - .pf/artifacts/pf-device-dev-update-20261021/**
+  - .pf/artifacts/pf-database-layer-backlog-20261021/research/runtime-stop-case.md
+  - .pf/adr/**
+  - src/processforge_core/AGENTS.md
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/smoke_runtime_metrics.py
+  - tools/smoke_*.py
+  - tools/python-qa/**
+  - tools/processforge.py
+  - bin/pf.py
+  - docs/**
+  - schemas/runtime-metrics.schema.json
+  - VERSION
+  - checksums/processforge.sha256
+ownership:
+  owner_id: main-executor
+  role: runtime-shutdown-fix
+  writer: true
+required_outputs:
+  -
+    id: fix-report
+    path: .pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/report.md
+    type: markdown
+    required: true
+expected_report:
+  artifact: .pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/report.md
+  format: markdown
+  language: ru

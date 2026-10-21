@@ -1,0 +1,551 @@
+schema_version: 1
+id: pf-device-dev-update-20261021-perform-the-explicitly-user-authorized-ope
+title: 'pf-device-dev-update-20261021: Perform the explicitly user-authorized operator u'
+run_id: garage-pf-device-dev-update-20261021-perform-the-explicitly-user-authori
+process: software-feature-development
+status: done
+created_at: '2026-10-21T03:04:07Z'
+updated_at: '2026-10-21T06:22:39Z'
+objective: 'pf-device-dev-update-20261021: Perform the explicitly user-authorized operator update of this device to the accepted current dev build and launch the installed PF monitor visibly to verify the new uptime display. This project Work records the operation in scoped project artifacts/tmp/log/handoff only. Device paths and native operation receipts stay private; external Core replacement and Workplace migrations use the manifest-controlled core-update operator service, not arbitrary worker file edits. Read native status, qualify exact dev source/archive with existing source evidence, plan and preserve local customizations, apply once with confirmation, verify installed Core and Workplace, reload existing Runtime safely if necessary, and inspect structured plus interactive monitor output. Preserve frozen alpha1 and unrelated dirty/staged project work; no new product implementation, no broad ZIP audit, no force against unrelated activity, no host-session termination. Complete native lifecycle and commit/push only task artifacts to both dev remotes using token-backed GitVerse; stop.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Operator objective complete: explicitly authorized maintenance stop, one verified dev install, new healthy ready Runtime, visible live monitor. Connected host reload is pending and excluded from acceptance. Existing future database task stays future. Preserve handoff and exact receipts; native record validation and isolated metadata-only commit/push to both remotes are the remaining delivery steps, then stop.'
+  artifacts:
+    - .pf/artifacts/pf-device-dev-update-20261021/code-quality-report.md
+    - .pf/artifacts/pf-device-dev-update-20261021/delivery-report.md
+    - .pf/artifacts/pf-device-dev-update-20261021/evolution-report.md
+    - .pf/artifacts/pf-device-dev-update-20261021/review-findings.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/architecture-plan.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/code-assurance.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/domain-modeling.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/implementation.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/intake-scope.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+    - .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+    - .pf/artifacts/pf-device-dev-update-20261021/test-cases.md
+    - .pf/artifacts/pf-device-dev-update-20261021/test-plan.md
+    - .pf/artifacts/pf-device-dev-update-20261021/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: false
+  subagent_policy:
+    allow: false
+  operator_actions:
+    authorization: 'Explicit current user request: update this device to dev release and launch PF monitor'
+    native_core_update:
+      - status
+      - plan
+      - apply_once_with_confirm
+      - post_apply_status
+    native_runtime:
+      - status
+      - safe_restart_if_needed_to_load_updated_build
+    native_monitor:
+      - structured_snapshot
+      - visible_interactive_launch
+    boundary: Native operator service actions only; no arbitrary external file edits, forced interruption, public release publication or host-session termination.
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-10-21T06:22:00Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/pf-device-dev-update-20261021/evolution-report.md
+      status: ready
+      summary: Budget/history, explicit maintenance authorization, version/provenance distinctions, manifest backup semantics and UTF-8 lessons captured; existing future DB task preserved.
+      recorded_at: '2026-10-21T06:22:38Z'
+      sha256: 'sha256:7d5ffb39c4357364eeb4535a3169cc670881d63b016472c3eb50cb2ed37f6a41'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/pf-device-dev-update-20261021/evolution-report.md
+      status: passed
+      decision: captured_no_further_implementation
+      summary: Future database task remains planning-only; code alternative cancelled; no additional product or infrastructure work initiated.
+      recorded_at: '2026-10-21T06:22:38Z'
+      sha256: 'sha256:7d5ffb39c4357364eeb4535a3169cc670881d63b016472c3eb50cb2ed37f6a41'
+  notes: 'Operator objective complete: explicitly authorized maintenance stop, one verified dev install, new healthy ready Runtime, visible live monitor. Connected host reload is pending and excluded from acceptance. Existing future database task stays future. Preserve handoff and exact receipts; native record validation and isolated metadata-only commit/push to both remotes are the remaining delivery steps, then stop.'
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-21T03:04:07Z'
+    completed_at: '2026-10-21T03:06:37Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+        status: ready
+        summary: One-task operator update/monitor plan and explicit evidence-layer boundaries recorded.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+        status: ready
+        summary: One-task operator update/monitor plan and explicit evidence-layer boundaries recorded.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+        status: ready
+        summary: One-task operator update/monitor plan and explicit evidence-layer boundaries recorded.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+        status: passed
+        summary: Fresh valid context; exact current user scope, private device targets kept outside public file grants.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd'
+    notes: 'Handoff: proceed within the explicit operator device-update and monitor boundary; next stage follows the pinned process.'
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-21T03:06:37Z'
+    completed_at: '2026-10-21T03:06:37Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: input
+        input_id: execution-context-summary
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+        status: ready
+        summary: Explicit current-device operator request and scoped lifecycle accepted.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd'
+      -
+        kind: input
+        input_id: lifecycle-mode-decision
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/orchestration.md
+        status: ready
+        summary: Explicit current-device operator request and scoped lifecycle accepted.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:4c32d0022aefef4b0b146fed8820089be92d599dc2e03ae64aa6eea171d4ddcd'
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/intake-scope.md
+        status: ready
+        summary: One-task operator update/monitor plan and explicit evidence-layer boundaries recorded.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:78b2ee68b66eaa08144cadfc9e83e0c77fb7fe7940ddedeff1b815abe2588737'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/intake-scope.md
+        status: ready
+        summary: One-task operator update/monitor plan and explicit evidence-layer boundaries recorded.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:78b2ee68b66eaa08144cadfc9e83e0c77fb7fe7940ddedeff1b815abe2588737'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/intake-scope.md
+        status: ready
+        summary: One-task operator update/monitor plan and explicit evidence-layer boundaries recorded.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:78b2ee68b66eaa08144cadfc9e83e0c77fb7fe7940ddedeff1b815abe2588737'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/intake-scope.md
+        status: passed
+        summary: Fresh valid context; exact current user scope, private device targets kept outside public file grants.
+        recorded_at: '2026-10-21T03:06:37Z'
+        sha256: 'sha256:78b2ee68b66eaa08144cadfc9e83e0c77fb7fe7940ddedeff1b815abe2588737'
+    notes: 'Handoff: proceed within the explicit operator device-update and monitor boundary; next stage follows the pinned process.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-21T03:06:37Z'
+    completed_at: '2026-10-21T03:10:58Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: input
+        input_id: scope
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/intake-scope.md
+        status: ready
+        summary: Prior approved stage evidence retained.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:78b2ee68b66eaa08144cadfc9e83e0c77fb7fe7940ddedeff1b815abe2588737'
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+        status: ready
+        summary: Actual installed Core 1.2.0, no incomplete update, existing Runtime ready; accepted dev and unchanged shipped-source qualification verified.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:87701c94574fe6e907a301b1f1b01d7a4ac3cdc4c315c97f8d13ab22695bd1e3'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+        status: ready
+        summary: Actual installed Core 1.2.0, no incomplete update, existing Runtime ready; accepted dev and unchanged shipped-source qualification verified.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:87701c94574fe6e907a301b1f1b01d7a4ac3cdc4c315c97f8d13ab22695bd1e3'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+        status: passed
+        summary: Actual installed Core 1.2.0, no incomplete update, existing Runtime ready; accepted dev and unchanged shipped-source qualification verified.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:87701c94574fe6e907a301b1f1b01d7a4ac3cdc4c315c97f8d13ab22695bd1e3'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+        status: passed
+        summary: Actual installed Core 1.2.0, no incomplete update, existing Runtime ready; accepted dev and unchanged shipped-source qualification verified.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:87701c94574fe6e907a301b1f1b01d7a4ac3cdc4c315c97f8d13ab22695bd1e3'
+    notes: 'Handoff: follow the explicit native operator sequence and resolve its concrete plan/backup/readiness prerequisites before dependent actions.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-21T03:10:58Z'
+    completed_at: '2026-10-21T03:10:58Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: input
+        input_id: investigation-report
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+        status: ready
+        summary: Prior approved stage evidence retained.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:87701c94574fe6e907a301b1f1b01d7a4ac3cdc4c315c97f8d13ab22695bd1e3'
+      -
+        kind: input
+        input_id: impact-analysis
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/investigation.md
+        status: ready
+        summary: Prior approved stage evidence retained.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:87701c94574fe6e907a301b1f1b01d7a4ac3cdc4c315c97f8d13ab22695bd1e3'
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/domain-modeling.md
+        status: ready
+        summary: Source/archive/installed Core/Workplace/Runtime/monitor/connected host separated; native ownership, apply-once and safe activity guards preserved.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:8b1edd45e402b2fbb1b02e719468b0d63198350f72a0ed87ec6c8aa9ce044ed7'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/domain-modeling.md
+        status: ready
+        summary: Source/archive/installed Core/Workplace/Runtime/monitor/connected host separated; native ownership, apply-once and safe activity guards preserved.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:8b1edd45e402b2fbb1b02e719468b0d63198350f72a0ed87ec6c8aa9ce044ed7'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/domain-modeling.md
+        status: ready
+        summary: Source/archive/installed Core/Workplace/Runtime/monitor/connected host separated; native ownership, apply-once and safe activity guards preserved.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:8b1edd45e402b2fbb1b02e719468b0d63198350f72a0ed87ec6c8aa9ce044ed7'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/domain-modeling.md
+        status: passed
+        summary: Source/archive/installed Core/Workplace/Runtime/monitor/connected host separated; native ownership, apply-once and safe activity guards preserved.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:8b1edd45e402b2fbb1b02e719468b0d63198350f72a0ed87ec6c8aa9ce044ed7'
+    notes: 'Handoff: follow the explicit native operator sequence and resolve its concrete plan/backup/readiness prerequisites before dependent actions.'
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-21T03:10:58Z'
+    completed_at: '2026-10-21T03:10:58Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: input
+        input_id: domain-rules
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/domain-modeling.md
+        status: ready
+        summary: Prior approved stage evidence retained.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:8b1edd45e402b2fbb1b02e719468b0d63198350f72a0ed87ec6c8aa9ce044ed7'
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/architecture-plan.md
+        status: ready
+        summary: Concrete clean dev package, native plan/backup/one apply/integrity/doctor/safe Runtime reload and visible monitor plan accepted; no source implementation.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:64950cf68ee6d5c8f8e2d20b282512a9897336f47d0093506b42849832fd6cff'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/architecture-plan.md
+        status: ready
+        summary: Concrete clean dev package, native plan/backup/one apply/integrity/doctor/safe Runtime reload and visible monitor plan accepted; no source implementation.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:64950cf68ee6d5c8f8e2d20b282512a9897336f47d0093506b42849832fd6cff'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/architecture-plan.md
+        status: ready
+        summary: Concrete clean dev package, native plan/backup/one apply/integrity/doctor/safe Runtime reload and visible monitor plan accepted; no source implementation.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:64950cf68ee6d5c8f8e2d20b282512a9897336f47d0093506b42849832fd6cff'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/architecture-plan.md
+        status: passed
+        summary: Concrete clean dev package, native plan/backup/one apply/integrity/doctor/safe Runtime reload and visible monitor plan accepted; no source implementation.
+        recorded_at: '2026-10-21T03:10:58Z'
+        sha256: 'sha256:64950cf68ee6d5c8f8e2d20b282512a9897336f47d0093506b42849832fd6cff'
+    notes: 'Handoff: follow the explicit native operator sequence and resolve its concrete plan/backup/readiness prerequisites before dependent actions.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-21T03:10:58Z'
+    completed_at: '2026-10-21T06:19:00Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/implementation.md
+        status: ready
+        summary: Authorized native maintenance stop and one dev apply completed; installed integrity/backups, ready Runtime and live monitor verified; source unchanged.
+        recorded_at: '2026-10-21T06:19:00Z'
+        sha256: 'sha256:cdea087d38e697dc72cd64d4225f77052ac084ed82d70b09a4f7333fa3f34c30'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/implementation.md
+        status: ready
+        summary: Authorized native maintenance stop and one dev apply completed; installed integrity/backups, ready Runtime and live monitor verified; source unchanged.
+        recorded_at: '2026-10-21T06:19:00Z'
+        sha256: 'sha256:cdea087d38e697dc72cd64d4225f77052ac084ed82d70b09a4f7333fa3f34c30'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/implementation.md
+        status: passed
+        summary: Native actions matched the user's explicit approval and immutable operator scope. MCP host and product source untouched.
+        recorded_at: '2026-10-21T06:19:00Z'
+        sha256: 'sha256:cdea087d38e697dc72cd64d4225f77052ac084ed82d70b09a4f7333fa3f34c30'
+    notes: 'Implementation complete. Native update core-update-20261021T060534Z, 1460 owned hashes and 9 backup preimages verified, 197 doctor passes, ready new Runtime and live monitor. Handoff to assurance: review the same-source QA reuse and device checks; retain metadata/statistics/connected-MCP limitations.'
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-21T06:19:00Z'
+    completed_at: '2026-10-21T06:20:38Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/pf-device-dev-update-20261021/review-findings.md
+        status: ready
+        summary: Operator acceptance passed; exact-byte prior source QA reused, new installed/device checks and limits recorded.
+        recorded_at: '2026-10-21T06:20:38Z'
+        sha256: 'sha256:db32ad963f0cdae8cf689b69c8cc69b133865e124eda17985976453230526eb0'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/pf-device-dev-update-20261021/test-plan.md
+        status: ready
+        summary: Operator acceptance passed; exact-byte prior source QA reused, new installed/device checks and limits recorded.
+        recorded_at: '2026-10-21T06:20:38Z'
+        sha256: 'sha256:8dbfc5b838b3865e5def209f88c419ecbfb4448ab0800719eee599f9e8fc3898'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/pf-device-dev-update-20261021/test-cases.md
+        status: ready
+        summary: Operator acceptance passed; exact-byte prior source QA reused, new installed/device checks and limits recorded.
+        recorded_at: '2026-10-21T06:20:38Z'
+        sha256: 'sha256:c2fd251a65ab75e1fe2ff825c79a5b94acd236c6c15c288ae66f339c5192e017'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/pf-device-dev-update-20261021/test-report.md
+        status: ready
+        summary: Operator acceptance passed; exact-byte prior source QA reused, new installed/device checks and limits recorded.
+        recorded_at: '2026-10-21T06:20:38Z'
+        sha256: 'sha256:91056ffa47ca5d72823f6080900fe5a0ebeabf7d9cbe70c8be626a5284e17d8b'
+      -
+        kind: artifact
+        artifact_id: code-quality-report
+        path: .pf/artifacts/pf-device-dev-update-20261021/code-quality-report.md
+        status: ready
+        summary: Operator acceptance passed; exact-byte prior source QA reused, new installed/device checks and limits recorded.
+        recorded_at: '2026-10-21T06:20:38Z'
+        sha256: 'sha256:221b00269a5116683fd82ce9d6650260bfaa5c05d496ab58516d67112d058915'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/pf-device-dev-update-20261021/stages/code-assurance.md
+        status: passed
+        summary: Native device checks, installed hashes/backups, process provenance, live monitor and four exact Work doctors passed. No executable source change; no false connected-host acceptance.
+        recorded_at: '2026-10-21T06:20:38Z'
+        sha256: 'sha256:16fceb79704354c80808eb60e78de9d9d84b6aee11bc603a70f74f458845c7dd'
+    notes: Assurance complete for authorized installed Core/Runtime/monitor scope. Four native Work doctors pass without findings. Previous full PF/Python receipts reused for identical source bytes. Hand off delivery with actual MCP reload pending and metadata/statistics limitations explicit.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-10-21T06:20:38Z'
+    completed_at: '2026-10-21T06:22:00Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/pf-device-dev-update-20261021/delivery-report.md
+        status: ready
+        summary: Dev archive delivered to the actual device, installed integrity and new ready Runtime/live monitor accepted; connected host reload explicitly pending.
+        recorded_at: '2026-10-21T06:21:59Z'
+        sha256: 'sha256:19927cb136aebcd1aee0635b65b0ee5729188fe92a8367707adc4d7674f921d7'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/pf-device-dev-update-20261021/delivery-report.md
+        status: passed
+        decision: accepted_device_update_with_connected_host_boundary
+        summary: One authorized operator update completed; public tag/assets/channel publication outside requested device scope. Metadata-only Git delivery follows native closure.
+        recorded_at: '2026-10-21T06:21:59Z'
+        sha256: 'sha256:19927cb136aebcd1aee0635b65b0ee5729188fe92a8367707adc4d7674f921d7'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/pf-device-dev-update-20261021/delivery-report.md
+        status: passed
+        decision: operator_device_profile_executed_public_publication_not_applicable
+        summary: One authorized operator update completed; public tag/assets/channel publication outside requested device scope. Metadata-only Git delivery follows native closure.
+        recorded_at: '2026-10-21T06:21:59Z'
+        sha256: 'sha256:19927cb136aebcd1aee0635b65b0ee5729188fe92a8367707adc4d7674f921d7'
+    notes: 'Authorized device delivery accepted with a precise connected-host boundary. No stable publication required. Handoff evolve: capture existing future journal task and version/budget lessons, then close native lifecycle, deliver only task metadata and stop.'
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-10-21T06:22:00Z'
+    completed_at: '2026-10-21T06:22:39Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/pf-device-dev-update-20261021/evolution-report.md
+        status: ready
+        summary: Budget/history, explicit maintenance authorization, version/provenance distinctions, manifest backup semantics and UTF-8 lessons captured; existing future DB task preserved.
+        recorded_at: '2026-10-21T06:22:38Z'
+        sha256: 'sha256:7d5ffb39c4357364eeb4535a3169cc670881d63b016472c3eb50cb2ed37f6a41'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/pf-device-dev-update-20261021/evolution-report.md
+        status: passed
+        decision: captured_no_further_implementation
+        summary: Future database task remains planning-only; code alternative cancelled; no additional product or infrastructure work initiated.
+        recorded_at: '2026-10-21T06:22:38Z'
+        sha256: 'sha256:7d5ffb39c4357364eeb4535a3169cc670881d63b016472c3eb50cb2ed37f6a41'
+    notes: 'Operator objective complete: explicitly authorized maintenance stop, one verified dev install, new healthy ready Runtime, visible live monitor. Connected host reload is pending and excluded from acceptance. Existing future database task stays future. Preserve handoff and exact receipts; native record validation and isolated metadata-only commit/push to both remotes are the remaining delivery steps, then stop.'
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261020-072238-da5df2
+  snapshot_checksum: 'sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a'
+  assignment_capsule: .pf/contexts/assignment-capsules/pf-device-dev-update-20261021-perform-the-explicitly-user-authorized-ope.capsule.yaml
+  assignment_capsule_checksum: 'sha256:45b316d3a7e6ffb64377e39a63e790fc739d433f90c5fe1a9565f865b6dbd11a'
+allowed_actions:
+  - read
+  - write_artifact
+  - write_product
+allowed_files:
+  - .pf/artifacts/pf-device-dev-update-20261021/**
+  - .pf/tmp/pf-device-dev-update-20261021/**
+  - .pf/logs/pf-device-dev-update-20261021.md
+  - .pf/handoffs/pf-device-dev-update-20261021.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/python-quality-context.md
+  - .pf/artifacts/pf-monitor-uptime-execution-20261020/**
+  - .pf/handoffs/pf-monitor-uptime-execution-20261020.md
+  - .pf/tmp/pf-monitor-uptime-execution-20261020/candidate-manifest.json
+  - .pf/tmp/pf-monitor-uptime-execution-20261020/git-delivery.json
+  - .pf/artifacts/pf-device-dev-update-20261021/**
+  - .pf/tmp/pf-device-dev-update-20261021/**
+  - .pf/logs/pf-device-dev-update-20261021.md
+  - .pf/handoffs/pf-device-dev-update-20261021.md
+  - docs/**
+  - VERSION
+  - checksums/processforge.sha256
+  - bin/pf.py
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - updates/**
+  - release/updates/**
+forbidden_files:
+  - src/**
+  - tools/**
+  - VERSION
+  - release/**
+  - .pf/process-forge.yaml
+  - .pf/contexts/**
+ownership:
+  owner_id: pf-device-dev-update-20261021
+  role: device-update-executor
+  writer: true
+required_sources:
+  - .pf/AGENTS.md
+  - .pf/handoffs/pf-monitor-uptime-execution-20261020.md
+  - docs/ru/concepts/core-update-manifest.md
+  - docs/ru/concepts/runtime-monitor.md
+required_outputs:
+  -
+    id: device-update-report
+    path: .pf/artifacts/pf-device-dev-update-20261021/report.md
+    required: true
+    type: report
+expected_report:
+  artifact: .pf/artifacts/pf-device-dev-update-20261021/report.md
+  format: markdown
+  language: ru
