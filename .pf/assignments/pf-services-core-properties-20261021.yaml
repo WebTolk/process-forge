@@ -1,0 +1,86 @@
+schema_version: 1
+id: pf-services-core-properties-20261021
+title: Сервисы PF получают свойства и версию из общего ООП-ядра
+run_id: pf-core-properties-backlog-20261021
+process: software-feature-development
+status: open
+created_at: '2026-10-21T06:34:07Z'
+updated_at: '2026-10-21T06:34:07Z'
+objective: Общий объектный контракт свойств ядра для CLI, Runtime/App Server, монитора и MCP; устранить дублирующие release-константы, различать installed/loaded identity и protocol/spec versions. Подробные требования и критерии сохранены в spec.md; сейчас только регистрация будущей задачи.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/pf-core-properties-backlog-20261021/spec.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/artifacts/pf-core-properties-backlog-20261021/evidence.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/artifacts/pf-core-properties-backlog-20261021/evidence.json
+    role: input
+    required: true
+    mutable_by_worker: false
+required_sources:
+  - .pf/artifacts/pf-core-properties-backlog-20261021/spec.md
+workspace_access:
+  knowledge_resources:
+    - 'docs.python:root'
+    - 'docs.python-practices:root'
+    - 'docs.python-devguide:root'
+    - 'docs.python-packaging:root'
+    - 'docs.python-peps:root'
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+allowed_read_files:
+  - .pf/artifacts/pf-core-properties-backlog-20261021/spec.md
+  - .pf/artifacts/pf-core-properties-backlog-20261021/evidence.md
+  - .pf/artifacts/pf-core-properties-backlog-20261021/evidence.json
+ownership:
+  owner_id: future-executor
+  owner_label: worker-future-executor
+  role: core-properties-design
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: future-report
+    path: .pf/artifacts/pf-core-properties-backlog-20261021/future-report.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-core-properties-backlog-20261021/future-report.md
+  format: concise_markdown
+  include:
+    - future-report

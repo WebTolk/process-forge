@@ -1,0 +1,30 @@
+schema_version: 1
+id: pf-core-properties-backlog-20261021
+title: 'Будущая задача: общие свойства ООП-ядра для сервисов PF'
+process: software-feature-development
+status: draft
+created_at: '2026-10-21T06:34:06Z'
+updated_at: '2026-10-21T06:34:14Z'
+objective: Сохранить отдельную будущую задачу общего объектного контракта свойств Core и устранения хардкода release identity в сервисах; реализацию не начинать.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-services-core-properties-20261021
+    assignment: .pf/assignments/pf-services-core-properties-20261021.yaml
+    status: open
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-core-properties-backlog-20261021/summary.md
+  - .pf/handoffs/runs/pf-core-properties-backlog-20261021-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+privacy:
+  public_safe: true

@@ -1,0 +1,25 @@
+{
+  "task": "pf-services-core-properties-20261021",
+  "run": "pf-core-properties-backlog-20261021",
+  "task_status": "open",
+  "run_status": "draft",
+  "planning_only": true,
+  "writer": false,
+  "product_write_grants": [],
+  "implementation_started": false,
+  "native_validation": {
+    "task-doctor": {
+      "exit_code": 0,
+      "pass_count": 12,
+      "warnings": [
+        "WARN: required output pending: .pf/artifacts/pf-core-properties-backlog-20261021/future-report.md",
+        "WARN: expected report pending: .pf/artifacts/pf-core-properties-backlog-20261021/future-report.md"
+      ]
+    },
+    "run-doctor": {
+      "exit_code": 0,
+      "pass_count": 18,
+      "warnings": []
+    }
+  }
+}

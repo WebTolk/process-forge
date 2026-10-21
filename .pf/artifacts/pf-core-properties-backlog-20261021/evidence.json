@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-21T06:34:05.366999+00:00",
+  "source_commit": "cc690b263b65daaa0e85a21186de89944b1064a9",
+  "registration_base_commit": "7d021e90593188210303942deab706800a9f48ba",
+  "case": {
+    "installed_manifest": "1.3.0-alpha1",
+    "VERSION": "1.3.0-alpha1",
+    "fresh_monitor_cli_label": "1.2.0",
+    "runtime_instance_label": "1.0.0-poc",
+    "installed_managed_hashes_verified": 1460
+  },
+  "sources": [
+    {
+      "path": "tools/processforge.py",
+      "sha256": "0900f3a4afd65cec43fa9e40d8b3c08ce9bc93efa5354a25ed0e76407c12a1c0",
+      "matches": [
+        {
+          "line": 457,
+          "text": "PROCESSFORGE_VERSION = \"1.2.0\""
+        },
+        {
+          "line": 3605,
+          "text": "    version_file = ROOT / \"VERSION\""
+        },
+        {
+          "line": 3606,
+          "text": "    version = version_file.read_text(encoding=\"utf-8\", errors=\"replace\").strip() if version_file.is_file() else PROCESSFORGE_VERSION"
+        }
+      ]
+    },
+    {
+      "path": "tools/pf_runtime/monitor.py",
+      "sha256": "691a8778716f840f54016a51e9a1e4169f0ff552a67753624c6765a4d1279c00",
+      "matches": [
+        {
+          "line": 843,
+          "text": "        snapshot = collect_snapshot(workplace, core.PROCESSFORGE_VERSION)"
+        }
+      ]
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "sha256": "4aae1914382ab05758ec37375f25237394ad9237faef5e72fee40705c10bfc06",
+      "matches": [
+        {
+          "line": 39,
+          "text": "RUNTIME_VERSION = \"1.0.0-poc\""
+        },
+        {
+          "line": 142,
+          "text": "        \"processforge_core_version\": getattr(core, \"PROCESSFORGE_VERSION\", \"\"),"
+        },
+        {
+          "line": 1045,
+          "text": "    payload[\"installed_pf\"] = {\"version\": str(getattr(core, \"PROCESSFORGE_VERSION\", \"\"))}"
+        }
+      ]
+    },
+    {
+      "path": "src/processforge_core/common/release_identity.py",
+      "sha256": "c133f03e7bddc2123b2aed4302ea94a84c3dfc0e766f04a12868829ae71f0d97",
+      "matches": [
+        {
+          "line": 6,
+          "text": "RELEASE_ARCHIVE_VERSION = \"1.3.0-alpha1\""
+        }
+      ]
+    },
+    {
+      "path": "VERSION",
+      "sha256": "2f95439204cc93e4259706da235cb32f92f010acee1f7e9a40df761a76869466",
+      "matches": [
+        {
+          "line": 1,
+          "text": "1.3.0-alpha1"
+        }
+      ]
+    }
+  ]
+}
