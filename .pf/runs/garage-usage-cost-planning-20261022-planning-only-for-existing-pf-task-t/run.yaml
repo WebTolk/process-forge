@@ -2,9 +2,9 @@ schema_version: 1
 id: garage-usage-cost-planning-20261022-planning-only-for-existing-pf-task-t
 title: usage-cost-planning-20261022 Planning only for existing pf-task-token-usage-logs
 process: software-feature-development
-status: in_progress
+status: completed
 created_at: '2026-10-22T10:03:10Z'
-updated_at: '2026-10-22T10:31:06Z'
+updated_at: '2026-10-22T10:34:43Z'
 objective: 'usage-cost-planning-20261022 Planning only for existing pf-task-token-usage-logs-20261020: source-grounded domain and implementation plan for agent time, tokens and project costs in one local workplace view, shared by future Control Center/Monitor TUI, Codex plugin and optional REST synchronization to remote Control Center. Keep provider drivers at collection boundary, clear Work/attempt identity and accounting semantics, simple architecture with extensible consumers. Do not implement product, plugin, REST server/sync, pricing fetch, infrastructure or start next task. Existing implementation card stays open/planning_only. Produce reviewable plan, acceptance examples, source evidence and bounded phases; native planning cycle, dual dev docs delivery and stop.'
 platform: ""
 selected_specializations:
@@ -16,15 +16,22 @@ tasks:
   -
     id: usage-cost-planning-20261022-planning-only-for-existing-pf-task-token-us
     assignment: .pf/assignments/usage-cost-planning-20261022-planning-only-for-existing-pf-task-token-us.yaml
-    status: in_progress
+    status: done
     order: 1
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/garage-usage-cost-planning-20261022-planning-only-for-existing-pf-task-t/summary.md
+  - .pf/handoffs/runs/garage-usage-cost-planning-20261022-planning-only-for-existing-pf-task-t-handoff.md
 events:
   emitted:
     - run.created
     - process.stage.started
+    - process.stage.completed
+    - process.stage.transitioned
+    - task.completed
+    - assignment.completed
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true
 process_execution:
