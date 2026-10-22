@@ -1,0 +1,14 @@
+[
+  {
+    "test": "smoke_hook_sqlite_support.py",
+    "exit_code": 0
+  },
+  {
+    "test": "smoke_hook_sqlite_migration.py",
+    "exit_code": 0
+  },
+  {
+    "test": "smoke_hook_sqlite_configuration.py",
+    "exit_code": 0
+  }
+]

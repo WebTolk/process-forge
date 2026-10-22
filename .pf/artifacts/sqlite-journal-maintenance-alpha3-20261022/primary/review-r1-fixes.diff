@@ -1,0 +1,397 @@
+--- review-r1/docs/concepts/sqlite-journal-maintenance.md
++++ candidate-r3/docs/concepts/sqlite-journal-maintenance.md
+@@ -78,6 +78,13 @@
+ verification; conflicting evidence is refused. Keep the manifest and binary
+ members together, along with the unchanged source journals and operator report.
+ 
++If scanning stops after capturing corruption, the retained
++`manifest.incomplete-*.json` preserves the captured bytes and provenance with
++`scan_complete: false` and a failure code. It does not certify the full source
++scan. A completed manifest from an earlier pass stays intact. Import failure
++evidence marks incomplete preflight explicitly; its counters do not certify a
++complete scan. Identity conflicts and source drift still require investigation.
++
+ ## Explicit import and repeat execution
+ 
+ Coordinate the cutover of legacy journal writers through existing operator
+--- review-r1/docs/ru/concepts/sqlite-journal-maintenance.md
++++ candidate-r3/docs/ru/concepts/sqlite-journal-maintenance.md
+@@ -77,6 +77,13 @@
+ проверки; конфликтующие отклоняются. Сохраняйте манифест, бинарные файлы,
+ неизменённые исходные журналы и операторский отчёт вместе.
+ 
++Если проверка прервана после обнаружения повреждения, файл
++`manifest.incomplete-*.json` сохраняет уже захваченные байты и provenance с
++`scan_complete: false` и кодом причины. Он не подтверждает полную проверку
++источника. Готовый манифест предыдущего прохода сохраняется. Доказательства отказа
++импорта явно отмечают незавершённый preflight; их счётчики не подтверждают полный
++проход. Конфликты ID и дрейф источников по-прежнему требуют исследования.
++
+ ## Явный импорт и повторный запуск
+ 
+ До применения согласуйте переключение старых писателей журналов через обычные
+--- review-r1/src/processforge_core/maintenance/journal_scan.py
++++ candidate-r3/src/processforge_core/maintenance/journal_scan.py
+@@ -285,7 +285,13 @@
+         _exclusive_bytes(self.directory / member, line)
+         self.records.append({**metadata, "file": member})
+ 
+-    def finish(self, sources: list[JsonObject]) -> JsonObject:
++    def finish(
++        self,
++        sources: list[JsonObject],
++        *,
++        complete: bool = True,
++        failure: str | None = None,
++    ) -> JsonObject:
+         for record in self.records:
+             try:
+                 snapshot = _snapshot(self.directory / record["file"])
+@@ -303,15 +309,23 @@
+             "sources": sources,
+             "records": self.records,
+         }
++        if not complete:
++            manifest.update(scan_complete=False, scan_failure=failure)
+         data = _json_bytes(manifest) + b"\n"
+-        path = self.directory / "manifest.json"
++        digest = hashlib.sha256(data).hexdigest()
++        # An aborted later pass must not replace a completed earlier manifest.
++        filename = "manifest.json" if complete else f"manifest.incomplete-{digest}.json"
++        path = self.directory / filename
+         _exclusive_bytes(path, data)
+-        return {
+-            "status": "verified",
++        receipt = {
++            "status": "verified" if complete else "incomplete",
+             "manifest": str(path),
+-            "sha256": hashlib.sha256(data).hexdigest(),
++            "sha256": digest,
+             "records": len(self.records),
+         }
++        if not complete:
++            receipt.update(scan_complete=False, records_verified=True)
++        return receipt
+ 
+ 
+ def _identity(
+@@ -438,7 +452,8 @@
+         fields are reset per call; unrelated report fields are retained. Source
+         manifests include full hashes and must also be compared between passes
+         when the caller uses separate reports. Closing an unfinished iterator
+-        releases its index but does not certify a completed scan or manifest.
++        releases its index but does not certify a completed scan. With explicit
++        quarantine, an aborted pass preserves verified incomplete provenance.
+         """
+         project = project.resolve()
+         sources = list(sources)
+@@ -453,30 +468,47 @@
+         quarantine = (
+             _Quarantine(quarantine_dir, project) if quarantine_dir is not None else None
+         )
++        if quarantine is not None:
++            report["quarantine"] = {
++                "status": "requested",
++                "directory": str(quarantine.directory),
++            }
+         # Empty filename creates a disk-backed temporary SQLite index removed
+         # on close. Neither identities nor native keys grow an in-memory set.
+-        with closing(sqlite3.connect("")) as index:
+-            index.execute("PRAGMA cache_size=-2048")
+-            index.execute(
+-                "CREATE TABLE identities(kind TEXT, id TEXT, digest TEXT, "
+-                "PRIMARY KEY(kind,id))"
+-            )
+-            index.execute("CREATE TABLE native(id TEXT PRIMARY KEY, digest TEXT)")
+-            for (kind, path), snapshot in zip(sources, baseline, strict=True):
+-                yield from self._source_rows(
+-                    kind,
+-                    path,
+-                    project,
+-                    snapshot,
+-                    index,
+-                    report,
+-                    skip_invalid,
+-                    quarantine,
++        try:
++            with closing(sqlite3.connect("")) as index:
++                index.execute("PRAGMA cache_size=-2048")
++                index.execute(
++                    "CREATE TABLE identities(kind TEXT, id TEXT, digest TEXT, "
++                    "PRIMARY KEY(kind,id))"
+                 )
+-                report["sources"].append(snapshot)
+-            # Recheck earlier files after later sources, including complete hashes.
+-            if [_snapshot(path) for _kind, path in sources] != baseline:
+-                raise MaintenanceError("migration_source_changed")
++                index.execute("CREATE TABLE native(id TEXT PRIMARY KEY, digest TEXT)")
++                for (kind, path), snapshot in zip(sources, baseline, strict=True):
++                    yield from self._source_rows(
++                        kind,
++                        path,
++                        project,
++                        snapshot,
++                        index,
++                        report,
++                        skip_invalid,
++                        quarantine,
++                    )
++                    report["sources"].append(snapshot)
++                # Recheck earlier files after later sources, including full hashes.
++                if [_snapshot(path) for _kind, path in sources] != baseline:
++                    raise MaintenanceError("migration_source_changed")
++        except BaseException as error:
++            if quarantine is not None:
++                failure = (
++                    error.code
++                    if isinstance(error, MaintenanceError)
++                    else "scan_interrupted"
++                )
++                report["quarantine"] = quarantine.finish(
++                    baseline, complete=False, failure=failure
++                )
++            raise
+         if quarantine is not None:
+             report["quarantine"] = quarantine.finish(report["sources"])
+ 
+--- review-r1/src/processforge_core/maintenance/journals.py
++++ candidate-r3/src/processforge_core/maintenance/journals.py
+@@ -210,8 +210,9 @@
+             tuple[ProcessEventJournal | RawHookJournal, Path, tuple[int, int] | None]
+         ] = []
+         events, raw = ProcessEventJournal(), RawHookJournal()
++        scan_evidence = operation / "quarantine" if operation else evidence_dir
++        preflight_complete = False
+         try:
+-            scan_evidence = operation / "quarantine" if operation else evidence_dir
+             report.update(
+                 self._scan.preflight(
+                     project,
+@@ -220,6 +221,7 @@
+                     evidence_dir=scan_evidence,
+                 )
+             )
++            preflight_complete = True
+             report["evidence_dir"] = str(operation) if operation else None
+             report["status"] = "blocked" if report["blocked"] else "planned"
+             self._counts(report, skip_invalid)
+@@ -333,6 +335,13 @@
+             _evidence(operation, "result", report)
+             return report
+         except BaseException as error:
++            if scan_evidence is not None and not preflight_complete:
++                report["quarantine"] = {
++                    "status": "incomplete",
++                    "directory": str(scan_evidence),
++                    "scan_complete": False,
++                }
++                report["scan_complete"] = False
+             # Cross-database completion is not atomic. Reassert both barriers if
+             # a later finish/evidence write fails; never restore or delete data.
+             states: JsonObject = {}
+@@ -559,6 +568,8 @@
+ 
+     @staticmethod
+     def _verify_raw(connection: sqlite3.Connection, record: JsonObject) -> None:
++        from pf_runtime.raw_ingress_kernel import raw_payload_hash
++
+         row = connection.execute(
+             "SELECT r.raw_payload_hash, h.record FROM receipts r "
+             "JOIN raw_events h ON h.raw_event_id = r.raw_event_id "
+@@ -574,7 +585,7 @@
+             or stored.get("raw_event_id") != record["raw_event_id"]
+             or stored.get("raw_payload_hash") != record["raw_payload_hash"]
+             or not isinstance(stored.get("raw_payload"), dict)
+-            or _encoded(stored["raw_payload"]) != _encoded(record["raw_payload"])
++            or raw_payload_hash(stored["raw_payload"]) != record["raw_payload_hash"]
+         ):
+             raise MaintenanceError("migration_record_mismatch")
+ 
+--- review-r1/tests/maintenance_scan/test_journal_scan.py
++++ candidate-r3/tests/maintenance_scan/test_journal_scan.py
+@@ -60,6 +60,99 @@
+         )
+     )
+     return rows, report
++
++
++def _assert_incomplete(report: JsonObject, damage: bytes) -> JsonObject:
++    receipt = report["quarantine"]
++    assert receipt["status"] == "incomplete"
++    assert receipt["scan_complete"] is False and receipt["records_verified"] is True
++    path = Path(receipt["manifest"])
++    assert path.name.startswith("manifest.incomplete-")
++    assert hashlib.sha256(path.read_bytes()).hexdigest() == receipt["sha256"]
++    manifest = json.loads(path.read_text(encoding="utf-8"))
++    assert manifest["scan_complete"] is False
++    assert len(manifest["records"]) == 1
++    record = manifest["records"][0]
++    assert record["line"] == 1 and record["offset"] == 0
++    assert record["length"] == len(damage)
++    assert record["sha256"] == hashlib.sha256(damage).hexdigest()
++    assert record["code"] == "json_invalid"
++    assert (path.parent / record["file"]).read_bytes() == damage
++    return manifest
++
++
++@pytest.mark.parametrize("skip_invalid", [False, True])
++def test_corruption_then_identity_conflict_retains_incomplete_provenance(
++    tmp_path: Path, skip_invalid: bool
++) -> None:
++    damage = b"{broken\x00\r\n"
++    source = _source(
++        tmp_path,
++        damage + _line(_event("same", value=1)) + _line(_event("same", value=2)),
++    )
++    original = source.read_bytes()
++    report: JsonObject = {}
++    with pytest.raises(MaintenanceError, match="migration_event_id_conflict"):
++        list(
++            JournalScanService().rows(
++                [("events", source)],
++                tmp_path,
++                report,
++                skip_invalid=skip_invalid,
++                quarantine_dir=tmp_path / "evidence",
++            )
++        )
++    manifest = _assert_incomplete(report, damage)
++    assert manifest["scan_failure"] == "migration_event_id_conflict"
++    assert Path(manifest["sources"][0]["path"]) == source
++    assert source.read_bytes() == original
++
++
++@pytest.mark.parametrize("complete_before", [False, True])
++def test_corruption_then_source_drift_retains_incomplete_provenance(
++    tmp_path: Path, complete_before: bool
++) -> None:
++    damage = b"{broken\x00\r\n"
++    source = _source(tmp_path, damage + _line(_event("first")))
++    evidence = tmp_path / "evidence"
++    complete: bytes | None = None
++    if complete_before:
++        _scan(source, skip_invalid=True, evidence=evidence)
++        complete = (evidence / "manifest.json").read_bytes()
++    report: JsonObject = {}
++    iterator = JournalScanService().rows(
++        [("events", source)],
++        tmp_path,
++        report,
++        skip_invalid=True,
++        quarantine_dir=evidence,
++    )
++    assert next(iterator)[1]["event_id"] == "first"
++    source.write_bytes(source.read_bytes() + _line(_event("late")))
++    with pytest.raises(MaintenanceError, match="migration_source_changed"):
++        list(iterator)
++    manifest = _assert_incomplete(report, damage)
++    assert manifest["scan_failure"] == "migration_source_changed"
++    if complete is not None:
++        assert (evidence / "manifest.json").read_bytes() == complete
++
++
++def test_closing_after_captured_corruption_retains_incomplete_provenance(
++    tmp_path: Path,
++) -> None:
++    damage = b"{broken\n"
++    source = _source(tmp_path, damage + _line(_event("first")))
++    report: JsonObject = {}
++    iterator = JournalScanService().rows(
++        [("events", source)],
++        tmp_path,
++        report,
++        skip_invalid=True,
++        quarantine_dir=tmp_path / "evidence",
++    )
++    next(iterator)
++    iterator.close()
++    assert _assert_incomplete(report, damage)["scan_failure"] == "scan_interrupted"
+ 
+ 
+ def _raw(
+--- review-r1/tests/maintenance_service/test_journals.py
++++ candidate-r3/tests/maintenance_service/test_journals.py
+@@ -56,7 +56,7 @@
+     )
+ 
+ 
+-def _raw(project: Path) -> JsonObject:
++def _raw(project: Path, *, answer: str = "kept") -> JsonObject:
+     from pf_runtime.raw_ingress_kernel import (
+         NativeAgentEvent,
+         raw_event_id,
+@@ -69,7 +69,7 @@
+         adapter="native",
+         native_event_type="message",
+         native_event_id="native-1",
+-        raw_payload={"answer": "kept"},
++        raw_payload={"answer": answer},
+         source_session_id="session-1",
+         source_project_ref=str(project.resolve()),
+     )
+@@ -114,6 +114,65 @@
+     raw_record = _raw(project)
+     raw.write_bytes(_line(raw_record) + (_line(raw_record) if duplicates else b""))
+     return _Files(project, workplace, events, raw)
++
++
++@pytest.mark.parametrize("first", ["caf\u00e9", "cafe\u0301"])
++def test_nfc_equivalent_raw_payloads_import_once_and_replay(
++    tmp_path: Path, first: str
++) -> None:
++    from pf_runtime.raw_ingress_kernel import raw_payload_hash
++
++    files = _layout(tmp_path)
++    second = "cafe\u0301" if first == "caf\u00e9" else "caf\u00e9"
++    one = _raw(files.project, answer=first)
++    two = _raw(files.project, answer=second)
++    # Stable native IDs use payload hash for conflict checks; both observations
++    # are the same native identity under the existing NFC hash policy.
++    for field in ("raw_event_id", "native_identity_key", "raw_payload_hash"):
++        assert one[field] == two[field]
++    files.raw.write_bytes(_line(one) + _line(two))
++    originals = files.events.read_bytes(), files.raw.read_bytes()
++    service = JournalMaintenanceService()
++    first_result = service.migrate(files.project, files.workplace, apply=True)
++    assert first_result["status"] == "ready"
++    assert first_result["stored_counts"] == {"events": 1, "raw": 1}
++    replay = service.migrate(files.project, files.workplace, apply=True)
++    assert replay["status"] == "ready" and replay["imported_counts"] == {
++        "events": 0,
++        "raw": 0,
++    }
++    stored = list(RawHookJournal().records(files.raw_db))[0]["record"]
++    assert raw_payload_hash(stored["raw_payload"]) == one["raw_payload_hash"]
++    assert originals == (files.events.read_bytes(), files.raw.read_bytes())
++
++
++def test_preflight_conflict_keeps_incomplete_quarantine_and_truthful_failure(
++    tmp_path: Path,
++) -> None:
++    damage = b"{broken\x00\r\n"
++    files = _layout(tmp_path)
++    files.events.write_bytes(
++        damage
++        + _line({"event_id": "same", "value": 1})
++        + _line({"event_id": "same", "value": 2})
++    )
++    before = files.events.read_bytes(), files.raw.read_bytes()
++    with pytest.raises(MaintenanceError, match="migration_event_id_conflict"):
++        JournalMaintenanceService().migrate(files.project, files.workplace, apply=True)
++    failed = _failure(files)
++    assert failed["quarantine"]["status"] == "incomplete"
++    assert failed["scan_complete"] is False
++    directory = Path(failed["quarantine"]["directory"])
++    manifests = list(directory.glob("manifest.incomplete-*.json"))
++    assert len(manifests) == 1
++    manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
++    assert manifest["scan_complete"] is False
++    record = manifest["records"][0]
++    assert record["line"] == 1 and record["offset"] == 0
++    assert record["sha256"] == hashlib.sha256(damage).hexdigest()
++    assert (directory / record["file"]).read_bytes() == damage
++    assert not files.event_db.exists() and not files.raw_db.exists()
++    assert before == (files.events.read_bytes(), files.raw.read_bytes())
+ 
+ 
+ def _failure(files: _Files) -> JsonObject:

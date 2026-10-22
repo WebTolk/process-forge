@@ -1,0 +1,139 @@
+{
+  "workers": {
+    "backup": {
+      "run_id": "garage-a3-file-backup-20261022-native-file-only-contribution-implement-c",
+      "assignment_id": "a3-file-backup-20261022-native-file-only-contribution-implement-complete",
+      "context_id": "a3-file-backup-20261022-native-file-only-contribution-implement-complete-capsule",
+      "status": "completed",
+      "exit_code": 0,
+      "attempt": 1,
+      "finished_at": "2026-10-22T19:01:24Z",
+      "work_closure": {
+        "action": "run_completed",
+        "stage": {
+          "id": "evolve",
+          "status": "completed",
+          "title": "Evolve"
+        },
+        "assignment": {
+          "id": "a3-file-backup-20261022-native-file-only-contribution-implement-complete",
+          "status": "done"
+        },
+        "run": {
+          "id": "garage-a3-file-backup-20261022-native-file-only-contribution-implement-c",
+          "status": "completed"
+        },
+        "missing": [],
+        "blockers": []
+      }
+    },
+    "scan": {
+      "run_id": "garage-a3-file-scan-20261022-native-file-only-contribution-implement-com",
+      "assignment_id": "a3-file-scan-20261022-native-file-only-contribution-implement-complete-j",
+      "context_id": "a3-file-scan-20261022-native-file-only-contribution-implement-complete-j-capsule",
+      "status": "completed",
+      "exit_code": 0,
+      "attempt": 1,
+      "finished_at": "2026-10-22T18:54:33Z",
+      "work_closure": {
+        "action": "run_completed",
+        "stage": {
+          "id": "evolve",
+          "status": "completed",
+          "title": "Evolve"
+        },
+        "assignment": {
+          "id": "a3-file-scan-20261022-native-file-only-contribution-implement-complete-j",
+          "status": "done"
+        },
+        "run": {
+          "id": "garage-a3-file-scan-20261022-native-file-only-contribution-implement-com",
+          "status": "completed"
+        },
+        "missing": [],
+        "blockers": []
+      }
+    },
+    "service": {
+      "run_id": "garage-a3-file-service-20261022-native-file-only-contribution-implement",
+      "assignment_id": "a3-file-service-20261022-native-file-only-contribution-implement-complet",
+      "context_id": "a3-file-service-20261022-native-file-only-contribution-implement-complet-capsule",
+      "status": "completed",
+      "exit_code": 0,
+      "attempt": 1,
+      "finished_at": "2026-10-22T19:01:30Z",
+      "work_closure": {
+        "action": "run_completed",
+        "stage": {
+          "id": "evolve",
+          "status": "completed",
+          "title": "Evolve"
+        },
+        "assignment": {
+          "id": "a3-file-service-20261022-native-file-only-contribution-implement-complet",
+          "status": "done"
+        },
+        "run": {
+          "id": "garage-a3-file-service-20261022-native-file-only-contribution-implement",
+          "status": "completed"
+        },
+        "missing": [],
+        "blockers": []
+      }
+    },
+    "cli": {
+      "run_id": "garage-a3-file-cli-20261022-native-file-only-contribution-implement-thin",
+      "assignment_id": "a3-file-cli-20261022-native-file-only-contribution-implement-thin-journa",
+      "context_id": "a3-file-cli-20261022-native-file-only-contribution-implement-thin-journa-capsule",
+      "status": "completed",
+      "exit_code": 0,
+      "attempt": 1,
+      "finished_at": "2026-10-22T18:58:41Z",
+      "work_closure": {
+        "action": "run_completed",
+        "stage": {
+          "id": "evolve",
+          "status": "completed",
+          "title": "Evolve"
+        },
+        "assignment": {
+          "id": "a3-file-cli-20261022-native-file-only-contribution-implement-thin-journa",
+          "status": "done"
+        },
+        "run": {
+          "id": "garage-a3-file-cli-20261022-native-file-only-contribution-implement-thin",
+          "status": "completed"
+        },
+        "missing": [],
+        "blockers": []
+      }
+    }
+  },
+  "reviews": {
+    "r1": {
+      "action": "run_completed",
+      "run": {
+        "id": "garage-a3-independent-review-r1-20261022-independent-clean-native-review",
+        "status": "completed"
+      },
+      "assignment": {
+        "id": "a3-independent-review-r1-20261022-independent-clean-native-review-of-pri",
+        "status": "done"
+      },
+      "blockers": []
+    },
+    "r2": {
+      "action": "run_completed",
+      "run": {
+        "id": "garage-a3-independent-review-r2-20261022-second-clean-context-review-by",
+        "status": "completed"
+      },
+      "assignment": {
+        "id": "a3-independent-review-r2-20261022-second-clean-context-review-by-the-sam",
+        "status": "done"
+      },
+      "blockers": []
+    }
+  }
+}
+

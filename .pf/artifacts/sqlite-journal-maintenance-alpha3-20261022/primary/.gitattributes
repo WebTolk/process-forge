@@ -1,0 +1,2 @@
+# Keep the exact bytes of this result's immutable evidence and receipts.
+* -text whitespace=blank-at-eol,space-before-tab,cr-at-eol,-blank-at-eof

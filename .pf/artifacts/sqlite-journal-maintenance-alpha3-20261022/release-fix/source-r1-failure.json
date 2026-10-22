@@ -1,0 +1,12 @@
+{
+  "status": "failed-preserved",
+  "native_exit_code": 1,
+  "elapsed_seconds": 554.847,
+  "stdout_sha256": "e60544c3ea98d57cce9354dc503bf7fb3fcfd86ceae6d134c3d07de0dd238454",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "failed_smoke": "smoke_evidence_validation_service",
+  "smoke_details": "Two missing-root errors and one early-root callback-order assertion in unchanged existing owners",
+  "additional_public_blocker": "Four tracked previous development distributions",
+  "qualification_directory": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qualification/source-r1",
+  "native_report_and_trace_retained": true
+}

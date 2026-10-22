@@ -1,0 +1,273 @@
+{
+  "at": "2026-10-22T21:11:12.860068+00:00",
+  "status": "pass",
+  "work_count": 11,
+  "check_count": 22,
+  "warning_count": 0,
+  "results": {
+    "parent": {
+      "run_id": "garage-sqlite-journal-maintenance-alpha3-scoped-20261022-complete-the-us",
+      "assignment_id": "sqlite-journal-maintenance-alpha3-scoped-20261022-complete-the-user-auth",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "e232c168d79ce9bdeecc7d41fc0adb8406eb28b976433e37a8298ff738baf55b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 34,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "release-fix": {
+      "run_id": "garage-a3-release-gates-20261022-bounded-prerequisite-repair-for-the-alr",
+      "assignment_id": "a3-release-gates-20261022-bounded-prerequisite-repair-for-the-already-au",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "06de6584316faa07f0aaef0f48beafc57745a1c3bef0d542e2b15cb58e395989",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "backup": {
+      "run_id": "garage-a3-file-backup-20261022-native-file-only-contribution-implement-c",
+      "assignment_id": "a3-file-backup-20261022-native-file-only-contribution-implement-complete",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "e667ef833a380b9314169ad53b5b438a5999c315dc61b74e4444b6d9c2ef3727",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "scan": {
+      "run_id": "garage-a3-file-scan-20261022-native-file-only-contribution-implement-com",
+      "assignment_id": "a3-file-scan-20261022-native-file-only-contribution-implement-complete-j",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "0b8e9df1f7656c126f5e6198fced838c142c3ac5e63c39100d962c454f087f90",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "service": {
+      "run_id": "garage-a3-file-service-20261022-native-file-only-contribution-implement",
+      "assignment_id": "a3-file-service-20261022-native-file-only-contribution-implement-complet",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "1497c36234062dd77c6daf211863a5caf8984839bab3ff601ad664c2b08b7b5f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "cli": {
+      "run_id": "garage-a3-file-cli-20261022-native-file-only-contribution-implement-thin",
+      "assignment_id": "a3-file-cli-20261022-native-file-only-contribution-implement-thin-journa",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "c9823713288ba1e0a4e2410f302bafdc284f15c8fa64abae7a5fdb660396e97f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "smoke": {
+      "run_id": "garage-a3-primary-smoke-20261022-adapt-the-existing-migration-smoke-inje",
+      "assignment_id": "a3-primary-smoke-20261022-adapt-the-existing-migration-smoke-injection-t",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "c4f5b5b3fed616e7ac711ace3cbcefd43eb1f8bf8b3861fcfb4a8f52d36f1552",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "metadata": {
+      "run_id": "garage-a3-primary-metadata-20261022-record-the-actual-qualified-alpha3-p",
+      "assignment_id": "a3-primary-metadata-20261022-record-the-actual-qualified-alpha3-prerelea",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "e280d39c7b85575c40b3c0212904dc8d455f93341b60545acd3fc367fd4718d1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "review-r1": {
+      "run_id": "garage-a3-independent-review-r1-20261022-independent-clean-native-review",
+      "assignment_id": "a3-independent-review-r1-20261022-independent-clean-native-review-of-pri",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "07ff80aa621ce72c9668153d36fa65c464059f0c205b5c813d32524f765a685f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "review-r2": {
+      "run_id": "garage-a3-independent-review-r2-20261022-second-clean-context-review-by",
+      "assignment_id": "a3-independent-review-r2-20261022-second-clean-context-review-by-the-sam",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "59fb2bb8ca2f6612258e85b6bdd9ff18d4a9ca4d95d151e19a69f64839520b9d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "review-r3": {
+      "run_id": "garage-a3-independent-review-r3-20261022-final-clean-context-review-by-t",
+      "assignment_id": "a3-independent-review-r3-20261022-final-clean-context-review-by-the-same",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "11a392836d86655728d2922402d2cffb5d5d3d6ef2ed7fa90be12ee4e0b290f5",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 21,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "status": "GO",
+  "version": "1.3.0-alpha3",
+  "at": "2026-10-22T22:45:11.319816+00:00",
+  "source_commit": "18fd59e24d7b3ee7c79da26fb2b9001ee94469cd",
+  "metadata_commit": "44882373a08fa42469bc141f6a06c0b411d92687",
+  "archive_sha256": "b595a818827a286d6e4a9498991d1d4067935bea49e6c2018150bef9078a2022",
+  "archive_bytes": 2884284,
+  "source_profile": {
+    "source_commit": "18fd59e24d7b3ee7c79da26fb2b9001ee94469cd",
+    "result": "PASS",
+    "checks": 274,
+    "statuses": {
+      "PASS": 274
+    },
+    "public": true,
+    "elapsed_seconds": 2800.337
+  },
+  "archive_consumer_profile": {
+    "result": "PASS",
+    "checks": 272,
+    "statuses": {
+      "PASS": 272
+    },
+    "public": true,
+    "elapsed_seconds": 2666.95
+  },
+  "both_provider_publication_verified": true,
+  "both_metadata_dev_readbacks_verified": true,
+  "alpha_latest": "1.3.0-alpha3",
+  "stable_feed_preserved": true,
+  "independent_review": "R3 CODE GO; previous R1/R2 retained",
+  "foreign_guards_preserved": true,
+  "qualification_limit": "Windows CPython source and unpacked archive consumer; installed-device, connected-host and native POSIX acceptance are separate."
+}

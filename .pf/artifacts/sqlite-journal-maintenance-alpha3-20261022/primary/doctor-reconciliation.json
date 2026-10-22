@@ -1,0 +1,42 @@
+{
+  "status": "explained_terminal_diagnostics",
+  "native_doctors_passed": false,
+  "native_check_count": 22,
+  "native_failed_checks": [
+    "backup:capsule",
+    "cli:capsule",
+    "parent:capsule",
+    "parent:run",
+    "scan:capsule",
+    "service:capsule"
+  ],
+  "unexplained_failures": [],
+  "prepublication_doctors": "22 pass / 0 warnings before original card completion",
+  "admission_source": {
+    "path": ".pf/assignments/pf-maintenance-sqlite-journals-20261019.yaml",
+    "original_sha256": "ace11aafbf781530630226c9a5320314931126fa6221b089d9e4608895c6d18a",
+    "current_sha256": "74135fe9dbd7e54d3a691bad9470629fa1940b4d2d9a1f8ae465fd922341b687",
+    "exact_admission_copy": ".pf/artifacts/sqlite-journal-maintenance-alpha3-20261022/primary/original-task-at-admission.yaml",
+    "objective_words_unchanged": true,
+    "changed_fields": [
+      "status",
+      "updated_at",
+      "objective whitespace serialization",
+      "result"
+    ],
+    "explanation": "Native task-complete records completion of the original mutable backlog card. Five immutable historical capsules still correctly pin its original admission bytes; no capsule is repinned."
+  },
+  "run_index": {
+    "cancelled_preparations": [
+      "a3m-backup-20261022-exec",
+      "a3m-scan-20261022-exec",
+      "a3m-service-20261022-exec",
+      "a3m-cli-20261022-exec"
+    ],
+    "replacement_results": "The four separately scoped native v3 contributions completed with exit 0 and run_completed; identities/reports are in native-contribution-closure.json and governance-closeout.json.",
+    "explanation": "Native work.transition completed the selected parent while run-doctor counts cancelled blocking preparation rows as unfinished. The diagnostic/index discrepancy remains recorded; no cancelled task is falsely marked done and no run YAML is edited."
+  },
+  "actual_work_closure": "11 native run_completed, assignment done, valid context projection, zero Work blockers",
+  "project_context": "fresh / continue on ctx-20261021-162229-c46ea2",
+  "qualification_effect": "No change to source/archive QA, R3 review, published immutable assets or all seven functional criteria. This is a post-completion historical/accounting diagnostic limit, not a claim that final doctors passed."
+}

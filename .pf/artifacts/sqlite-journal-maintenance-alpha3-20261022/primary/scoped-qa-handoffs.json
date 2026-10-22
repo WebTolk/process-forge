@@ -1,0 +1,38 @@
+{
+  "scan": {
+    "native_attempt": 1,
+    "native_exit": 0,
+    "collected": true,
+    "primary_scope": "same exact scanner Work, transitioned to code-assurance",
+    "primary_change": "Annotate existing JSON field selection as JsonObject before NativeAgentEvent unpacking; preserve values and identity algorithm. No source/test behavior change.",
+    "reason": "strict mypy JSON kwargs diagnostic",
+    "report_immutable": true,
+    "worker_resumed": false,
+    "primary_additional_changes": [
+      "Add standalone conftest package roots",
+      "Ruff format"
+    ]
+  },
+  "old_smoke": {
+    "primary_change": "Update internal monkeypatch owners; source bootstrap E402 exemption documented; old migration behavior assertions retained.",
+    "initial_result": "quarantine_evidence_conflict in in-flight scanner",
+    "after_worker_windows_fix": "PASS"
+  },
+  "all_four": {
+    "native_exit": 0,
+    "stage": "code-assurance",
+    "primary_only_scoped_writer": true,
+    "capsules_and_native_reports_immutable": true
+  },
+  "service": {
+    "primary_changes": [
+      "Fix staticmethod-preserving batch failure test patch",
+      "Add standalone conftest package roots",
+      "Document exact no-untyped-call waiver for existing RawHookJournal._accept only",
+      "Ruff format"
+    ],
+    "batch_failure_retry": "single regression PASS"
+  },
+  "source_script_bootstrap": "Ruff E402 exemption restricted to two standalone source scripts, needed to add source package paths before importing Core",
+  "actual_windows_junction_test": "Added to primary integration suite to cover real reparse-point refusal without symlink privilege; direct junction fixture creation PASS"
+}

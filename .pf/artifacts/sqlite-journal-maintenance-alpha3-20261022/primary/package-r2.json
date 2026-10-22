@@ -1,0 +1,21 @@
+{
+  "version": "1.3.0-alpha3",
+  "tag": "v1.3.0-alpha3",
+  "source_commit": "18fd59e24d7b3ee7c79da26fb2b9001ee94469cd",
+  "source_tree": "bcc5a3d5e17a4308c7441562c171a8817a884ee3",
+  "archive": {
+    "path": ".pf/artifacts/sqlite-journal-maintenance-alpha3-20261022/primary/release/r2/processforge-1.3.0-alpha3.zip",
+    "name": "processforge-1.3.0-alpha3.zip",
+    "sha256": "b595a818827a286d6e4a9498991d1d4067935bea49e6c2018150bef9078a2022",
+    "bytes": 2884284
+  },
+  "sidecar": {
+    "path": ".pf/artifacts/sqlite-journal-maintenance-alpha3-20261022/primary/release/r2/processforge-1.3.0-alpha3.manifest.json",
+    "name": "processforge-1.3.0-alpha3.manifest.json",
+    "sha256": "f37c799e638319edec95464adcce5f3789f485d697dcf4eced367ff6ea2b9062",
+    "bytes": 270480
+  },
+  "native_archive_entry_count": 1487,
+  "archive_qualification": "pending",
+  "source_gate": "source-r2"
+}

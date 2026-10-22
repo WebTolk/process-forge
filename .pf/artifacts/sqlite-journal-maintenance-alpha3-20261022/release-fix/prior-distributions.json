@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "path": "dist/processforge-1.3.0-alpha2-dev-20261022.manifest.json",
+      "sha256": "5b52f86960693f5a62f4d8c1f5766fac4da7421db095e4e842aa49a5af2bca4f",
+      "bytes": 268680
+    },
+    {
+      "path": "dist/processforge-1.3.0-alpha2-dev-20261022.zip",
+      "sha256": "9f9506b3cb2321723e9bee6ff9ef50b71566895ebce9fb27af0195f665466220",
+      "bytes": 2852154
+    },
+    {
+      "path": "dist/processforge-usage-accounting-dev-20261022.manifest.json",
+      "sha256": "de8868744d8ef349ec7ddd4a6106d1d7199f86476d459d9343936f0246211745",
+      "bytes": 268684
+    },
+    {
+      "path": "dist/processforge-usage-accounting-dev-20261022.zip",
+      "sha256": "f689b41d4a67d14d68d94d974c7e648c224841af1acd07e2d9f7242af0701d71",
+      "bytes": 2852160
+    }
+  ],
+  "preserve_original_working_tree_bytes": true
+}

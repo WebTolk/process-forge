@@ -1,0 +1,9 @@
+# CLI contribution — implementation summary
+
+- Added standalone `register_journal_maintenance(add_parser, *, execute)` for backup, verify, restore, inspect and import. The primary owns actual Main registration.
+- Added cold `JournalMaintenanceCommand` with backup/scanner/maintenance factories and direct Core owner defaults. It preserves backend path validation and avoids common CLI eager project logging through dedicated internal selectors.
+- Every handled operation prints one finite JSON object. Success/planned exits 0; blocked/failed/unknown status or expected backend/input/I/O failure exits 1. Argparse syntax/help retains 2/0.
+- Added EN/RU operator concepts covering immediate local writes, verified bundles/restore, plan/apply, exact-byte quarantine, explicit skip, replay/counts, private evidence and maintenance boundaries.
+- Added pytest-discoverable unittest behavior tests using actual owners and synthetic owned scratch. Tests cover parser boundaries, cold imports/factories, WAL backup, tamper, exclusive output, NUL byte/hash/offset evidence, source immutability, corruption refusal, explicit skip/replay/conflict and real registered entrypoint flows.
+- Only standard-library local checks are authorized for this executor. Registered pytest, Ruff, format, mypy, coverage/security and parent/release assurance are primary duties. The real local check result and candidate hashes are retained beside this summary.
+- Final local command: `python -B .pf/tmp/sqlite-maintenance-cli-v3-20261022/check_local.py --registered`; Python 3.14.3, exit 0, 24 tests in 9.323s, including four real registered-entrypoint tests. `local-checks.txt` and `changed-files.json` identify the tested bytes. Initial sandbox fixture failure was corrected in owned tests; 13 inaccessible empty directories remain retained in owned scratch as failure evidence.

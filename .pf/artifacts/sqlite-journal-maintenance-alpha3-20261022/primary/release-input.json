@@ -1,0 +1,6 @@
+{
+  "assurance_decision": "assurance-decision-r2.json",
+  "source_delivery": "source-delivery-r2.json",
+  "candidate_manifest": "source-candidate-r4.json",
+  "qualification_attempt": "r2"
+}

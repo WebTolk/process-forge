@@ -1,0 +1,40 @@
+{
+  "status": "pass",
+  "source_commit": "18fd59e24d7b3ee7c79da26fb2b9001ee94469cd",
+  "candidate": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/delivery-candidate",
+  "checks": [
+    {
+      "exit_code": 0,
+      "stdout_sha256": "8f1dad04bd0646987e535af2a767ba3613005edbba40dbe717120d1a6f4290a6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "operation": "write"
+    },
+    {
+      "exit_code": 0,
+      "stdout_sha256": "3de22b720cb66cb7a18225ff56f193b04d1768ef93d84ade54309630668e1564",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "operation": "validate"
+    }
+  ],
+  "inventory_sha256": "5112a0d7c201224f2a4e73bdd45732a98e44efdf17d0181c7f6e30fffb3ee5e1",
+  "inventory_changed": false,
+  "release_metadata_outside_checksum_surface": true,
+  "clean_main_preserved": true,
+  "metadata_files": [
+    {
+      "path": "release/updates/processforge-alpha.json",
+      "sha256": "4d2bf83c6d980cb132c0cdfe3bc07e042316c1c087b55013f530876d17becb28",
+      "bytes": 4576
+    },
+    {
+      "path": "release/1.3.0-alpha3/processforge-1.3.0-alpha3.manifest.json",
+      "sha256": "f37c799e638319edec95464adcce5f3789f485d697dcf4eced367ff6ea2b9062",
+      "bytes": 270480
+    },
+    {
+      "path": "release/1.3.0-alpha3/.gitattributes",
+      "sha256": "ec023b26c957bfbf5feb463908b88e28255ec05e44f0eb9aee66b5458abbd287",
+      "bytes": 43
+    }
+  ]
+}

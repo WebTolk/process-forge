@@ -1,0 +1,28 @@
+--- base/tools/processforge.py
++++ candidate/tools/processforge.py
+@@ -344,6 +344,7 @@
+ from pf_cli.commands.agent_actions import ActionsCommand
+ from pf_cli.commands.configuration import ConfigurationCommand
+ from pf_cli.commands.usage import UsageCommand
++from pf_cli.commands.journal_maintenance import JournalMaintenanceCommand
+ from pf_cli.commands.search_index import (
+     SearchIndexStatusCommand,
+     SearchIndexRefreshCommand,
+@@ -367,6 +368,7 @@
+ from pf_cli.parsers.catalog import ProcessCatalogCommandParser
+ from pf_cli.parsers.configuration import ConfigurationCommandParser
+ from pf_cli.parsers.usage import UsageCommandParser
++from pf_cli.parsers.journal_maintenance import register_journal_maintenance
+ from pf_cli.parsers.context import ProjectContextCommandParser
+ from pf_cli.parsers.continuation import ContinuationCommandParser
+ from pf_cli.parsers.coordination import (
+@@ -14477,6 +14479,9 @@
+     sub = parser.add_subparsers(dest="command", required=True)
+ 
+     UsageCommandParser(execute=UsageCommand().execute).register(sub.add_parser)
++    register_journal_maintenance(
++        sub.add_parser, execute=JournalMaintenanceCommand().execute
++    )
+ 
+     ActionsCommandParser(execute=ActionsCommand(
+         parser_factory=build_parser,

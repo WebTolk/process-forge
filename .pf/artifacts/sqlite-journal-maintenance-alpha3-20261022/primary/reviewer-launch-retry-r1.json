@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-22T19:34:17.085904+00:00",
+  "first_attempt": "MCP native launch created PID20100, no heartbeat/usage/child Codex/message/report after9minutes; process CPU0.015625s, stdout/stderr empty",
+  "action": "Stopped only own reviewer attempt via native worker-run-stop; same active Work/capsule prepared and started through existing source PF CLI, model forwarded unchanged",
+  "infrastructure_restarted": false,
+  "capsule_modified": false,
+  "product_modified": false,
+  "review_acceptance_claimed": false
+}

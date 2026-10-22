@@ -1,0 +1,19 @@
+{
+  "policy": "Retain invocation-owned scratch as audit evidence; no unrelated cleanup.",
+  "retained": [
+    {
+      "path": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022",
+      "reason": "Raw successful/failed QA and native qualification receipts/logs; exact clean candidates, retained consumer, original preservation guards, reproducible delivery helpers."
+    },
+    {
+      "path": ".pf/tmp/sqlite-maintenance-alpha3-metadata-20261022",
+      "reason": "Exact pre-change alpha baseline, native schema logs and publication metadata procedure."
+    },
+    {
+      "path": ".pf/runtime/agent-runs",
+      "reason": "Existing PF-managed native worker/report/usage records; only this result identities are referenced, nothing broadly deleted."
+    }
+  ],
+  "public_archive": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha3",
+  "archive_sha256": "b595a818827a286d6e4a9498991d1d4067935bea49e6c2018150bef9078a2022"
+}

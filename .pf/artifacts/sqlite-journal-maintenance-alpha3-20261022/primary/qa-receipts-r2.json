@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-22T20:04:24.477211+00:00",
+  "candidate_manifest": "source-candidate-r3.json",
+  "checks": [
+    {
+      "label": "candidate-components-r3",
+      "exit_code": 0,
+      "elapsed_seconds": 81.723,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-components-r3/receipt.json",
+      "receipt_sha256": "9bd885d3b7a331b56e989cdbaa3c8079053344bfd5070103bbe4eaebc1293c69",
+      "stdout_sha256": "c54bb4cce92c8bbcb5397619d92daee5d8fdd02f1b7c34a83c5438c99b1b64e1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-regression-r3",
+      "exit_code": 0,
+      "elapsed_seconds": 198.172,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-regression-r3/receipt.json",
+      "receipt_sha256": "0e8b0e5cf771a60f26c19884adbdd83ae3a4e7c77a2ec7f89ee42e4187fe44bb",
+      "stdout_sha256": "06485d78cc76b0e18de0013d4a99d570210813d2c8a047539a3e2c62a839f9c1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-lint-r3",
+      "exit_code": 0,
+      "elapsed_seconds": 0.874,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-lint-r3/receipt.json",
+      "receipt_sha256": "e7c0ba02c8b8c9cb694873b2badb79e328763d7275c9a95584c0f999807327cd",
+      "stdout_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-types-r3",
+      "exit_code": 0,
+      "elapsed_seconds": 3.886,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-types-r3/receipt.json",
+      "receipt_sha256": "edf8b6a170faad3fa945b12856936ec48cc195b4d10e98aff8557c827753c4c5",
+      "stdout_sha256": "e2702f9afc4c0f80ff1e8624f77af7a7d2689ca184512114aae5967a76229ba8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-format-r3",
+      "exit_code": 0,
+      "elapsed_seconds": 0.799,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-format-r3/receipt.json",
+      "receipt_sha256": "9f24f11a56dc6456e154f7db1b9d360733ff2106a39544533662bdb212d08161",
+      "stdout_sha256": "ff581aaa8f1b2a77e28a682a7cae7b738f926730737e49664d06c810bcd5aa03",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-security-r3",
+      "exit_code": 0,
+      "elapsed_seconds": 3.372,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-security-r3/receipt.json",
+      "receipt_sha256": "cfe8b8aa72d1a8233c8c94d027d9904ce4f65ac0fc54e1684a729948c330813c",
+      "stdout_sha256": "ba220aa49715b29afe747f40fb2ff41d7db6785d009676ee3a8119d2de0ab47f",
+      "stderr_sha256": "987adcc81881fcfde6507031937d20472ab1834d8aefc96b6ebf10929c65f443"
+    }
+  ]
+}

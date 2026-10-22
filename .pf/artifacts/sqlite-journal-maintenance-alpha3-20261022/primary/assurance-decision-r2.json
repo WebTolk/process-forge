@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "independent_review": "CODE GO",
+  "review_report": ".pf/artifacts/sqlite-journal-maintenance-alpha3-20261022/review/r3/report.md",
+  "review_sha256": "f986aae9f5597122c7002408d15fe838b39c27cb4ebec2cbeaa1686c0a97bcd7",
+  "candidate_manifest": "source-candidate-r4.json",
+  "candidate_manifest_sha256": "513c34bbc5a5138e38f00096e8b16f52c8a3d6eb87b68f135a4003848cc9c645",
+  "test_report": "test-report-r3.md",
+  "quality_report": "code-quality-report-r3.md",
+  "whole_passed": 530,
+  "whole_skipped": 7,
+  "original_evidence_smoke_passed": 10,
+  "public_source_and_full_archive_gate": "repeat pending; first failure retained",
+  "live_device_update": "outside_scope"
+}

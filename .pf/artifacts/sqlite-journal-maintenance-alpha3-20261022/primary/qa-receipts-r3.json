@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-22T20:54:38.212384+00:00",
+  "candidate_manifest": "source-candidate-r4.json",
+  "checks": [
+    {
+      "label": "candidate-regression-r4",
+      "exit_code": 0,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-regression-r4/receipt.json",
+      "receipt_sha256": "3174290b20b08966529afea23e2a2d06cb9af00d150c4d8c2ca8cbc076992618",
+      "stdout_sha256": "278f0356f307b32c20b6b59564d2f2427031c4f0def09777faa66a0bf6ad7cf8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-lint-r4",
+      "exit_code": 0,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-lint-r4/receipt.json",
+      "receipt_sha256": "9c7741f31b8c5f88e0f1ab2f3acc441040468dafc784e354a5a7a0e8581c7d44",
+      "stdout_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-types-r4",
+      "exit_code": 0,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-types-r4/receipt.json",
+      "receipt_sha256": "408d9840fb096e292074f1ecf183047c90215c0c592b492511dcc5131db90d71",
+      "stdout_sha256": "7aefcacc6d445354a115cf76fcdea696165be7ad8cf9b86a60ea98727c6e96f6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-format-r4",
+      "exit_code": 0,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-format-r4/receipt.json",
+      "receipt_sha256": "ae54a1cc42208cb60a583db315fd49b29e884f6393e41e46331e52b294272bb7",
+      "stdout_sha256": "c4fd3f494556e5e7cf4355131a1080dbdcf0bbf09664638af9984db197ad88c0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-security-r4",
+      "exit_code": 0,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-security-r4/receipt.json",
+      "receipt_sha256": "e6a9f199fab86b332d3963f1a13c6d8b507098941ef457595ece7d791ba7e995",
+      "stdout_sha256": "aaa48c043ebd621c345762e9383a9af93972938ab8460b875aae21dbafb1ba93",
+      "stderr_sha256": "987adcc81881fcfde6507031937d20472ab1834d8aefc96b6ebf10929c65f443"
+    },
+    {
+      "label": "candidate-evidence-smoke-r4",
+      "exit_code": 0,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-evidence-smoke-r4/receipt.json",
+      "receipt_sha256": "8676eb745dadc0a60f58eb1df425b8b62d6214cd12305737d7c946cde97499e8",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "21f131ba6d3ec238c93dc0df1267f980050af6ff1dfb5c106f8376a0a7e0f452"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-22T19:21:52.728907+00:00",
+  "candidate_manifest": "source-candidate-r2.json",
+  "checks": [
+    {
+      "label": "candidate-components",
+      "exit_code": 0,
+      "elapsed_seconds": 73.192,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-components/receipt.json",
+      "receipt_sha256": "6cabfe0a3b988b7bdd7c83614bc11d1437db4757268d88583be46702db3a6a5c",
+      "stdout_sha256": "78e97e5d1d1a6af6482d96ba08d0100243b9dcb75f7f8a92595621f5b4bd9fbb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-regression",
+      "exit_code": 0,
+      "elapsed_seconds": 192.473,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-regression/receipt.json",
+      "receipt_sha256": "94b4326f39e3876778c2c6ef16b7606069629b9fe6c3ca48eb67f62c47b54c5c",
+      "stdout_sha256": "3143f053a1490da49a75adef34a162055d9aaf9944261e86cf923f624dc64cae",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-junction",
+      "exit_code": 0,
+      "elapsed_seconds": 15.451,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-junction/receipt.json",
+      "receipt_sha256": "a353942e4ed42a276d7bbb3a5ee6e87c63575d750ac5893a35c1af229d5da83f",
+      "stdout_sha256": "cf0c1d3e936289d1f0a4c58c66bdf5c4a6274acd7e86e7b267926579a89eee69",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-quality",
+      "exit_code": 0,
+      "elapsed_seconds": 0.539,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-quality/receipt.json",
+      "receipt_sha256": "2f72d5ce58823b487bf11c5960eb2787d2f87df259f0f2f9e6cb144b6641224c",
+      "stdout_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-junction-lint",
+      "exit_code": 0,
+      "elapsed_seconds": 0.491,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-junction-lint/receipt.json",
+      "receipt_sha256": "c813d0a69f8fc2c92ff7dca943560b24f50f6b7133697fffcf27f11ee35593fb",
+      "stdout_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-format",
+      "exit_code": 0,
+      "elapsed_seconds": 0.928,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-format/receipt.json",
+      "receipt_sha256": "8a6946bda44cf377577e67fead1270df75fe4f89237efeb5fb6596f30a13daf9",
+      "stdout_sha256": "ff581aaa8f1b2a77e28a682a7cae7b738f926730737e49664d06c810bcd5aa03",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "types-r2",
+      "exit_code": 0,
+      "elapsed_seconds": 4.375,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/types-r2/receipt.json",
+      "receipt_sha256": "f253a4d5e512aab6666db2dde4d824a249e5fff5eba1637188fba734bc0bcee0",
+      "stdout_sha256": "e2702f9afc4c0f80ff1e8624f77af7a7d2689ca184512114aae5967a76229ba8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "candidate-security",
+      "exit_code": 0,
+      "elapsed_seconds": 1.647,
+      "private_receipt": ".pf/tmp/sqlite-journal-maintenance-alpha3-20261022/qa/candidate-security/receipt.json",
+      "receipt_sha256": "6def26fa9821b4905bdcae33a80af4d3af210b17ea0dc411fc6b38a3c946a9de",
+      "stdout_sha256": "6ec6d4925b74f9488da5670a84d3ec6ba81fff4d6af497e29f54d4535a89bcec",
+      "stderr_sha256": "987adcc81881fcfde6507031937d20472ab1834d8aefc96b6ebf10929c65f443"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "status": "complete",
+  "work_count": 11,
+  "works": {
+    "parent": {
+      "run_id": "garage-sqlite-journal-maintenance-alpha3-scoped-20261022-complete-the-us",
+      "assignment_id": "sqlite-journal-maintenance-alpha3-scoped-20261022-complete-the-user-auth",
+      "context_id": "sqlite-journal-maintenance-alpha3-scoped-20261022-complete-the-user-auth-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:c1f0fa0629356404a97223b89a02a9e09cab8f52d569af7301ce2952732ddbd4",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "backup": {
+      "run_id": "garage-a3-file-backup-20261022-native-file-only-contribution-implement-c",
+      "assignment_id": "a3-file-backup-20261022-native-file-only-contribution-implement-complete",
+      "context_id": "a3-file-backup-20261022-native-file-only-contribution-implement-complete-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:21286413fcd8aff2a9b8a1028a22a31d291e09ad86c14eeb4530bf201e341f0b",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "scan": {
+      "run_id": "garage-a3-file-scan-20261022-native-file-only-contribution-implement-com",
+      "assignment_id": "a3-file-scan-20261022-native-file-only-contribution-implement-complete-j",
+      "context_id": "a3-file-scan-20261022-native-file-only-contribution-implement-complete-j-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:54c9dea0407bc2fb6027cdcf19b614181d878b7f43aceb59e861fe6cd925c14e",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "service": {
+      "run_id": "garage-a3-file-service-20261022-native-file-only-contribution-implement",
+      "assignment_id": "a3-file-service-20261022-native-file-only-contribution-implement-complet",
+      "context_id": "a3-file-service-20261022-native-file-only-contribution-implement-complet-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:f6df5a96b5ab9ef676315797d42a0967270c292a6294a21502c6577149210fd6",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "cli": {
+      "run_id": "garage-a3-file-cli-20261022-native-file-only-contribution-implement-thin",
+      "assignment_id": "a3-file-cli-20261022-native-file-only-contribution-implement-thin-journa",
+      "context_id": "a3-file-cli-20261022-native-file-only-contribution-implement-thin-journa-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:e9b69c657242957924d1e40540c529ddc91cc979c669a01b683ea0ac17b30ee4",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "smoke": {
+      "run_id": "garage-a3-primary-smoke-20261022-adapt-the-existing-migration-smoke-inje",
+      "assignment_id": "a3-primary-smoke-20261022-adapt-the-existing-migration-smoke-injection-t",
+      "context_id": "a3-primary-smoke-20261022-adapt-the-existing-migration-smoke-injection-t-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:f0dab155a3d427d68dbc59ac012741a5a97dbccd3a17e5041f477d897eb47699",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "metadata": {
+      "run_id": "garage-a3-primary-metadata-20261022-record-the-actual-qualified-alpha3-p",
+      "assignment_id": "a3-primary-metadata-20261022-record-the-actual-qualified-alpha3-prerelea",
+      "context_id": "a3-primary-metadata-20261022-record-the-actual-qualified-alpha3-prerelea-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:719b131b3f321ce2911ed4a83205208f6be3f0656636cb264061c7b1b68edb2b",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "release_fix": {
+      "run_id": "garage-a3-release-gates-20261022-bounded-prerequisite-repair-for-the-alr",
+      "assignment_id": "a3-release-gates-20261022-bounded-prerequisite-repair-for-the-already-au",
+      "context_id": "a3-release-gates-20261022-bounded-prerequisite-repair-for-the-already-au-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:4c4615192d5124809874d57fc4f95e5da5a9b641e42117d86f132096843a79bc",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "review_r1": {
+      "run_id": "garage-a3-independent-review-r1-20261022-independent-clean-native-review",
+      "assignment_id": "a3-independent-review-r1-20261022-independent-clean-native-review-of-pri",
+      "context_id": "a3-independent-review-r1-20261022-independent-clean-native-review-of-pri-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:166691ca0c1132bfe7940f22510645602fd1567d555c11aedd5a06895d558183",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "review_r2": {
+      "run_id": "garage-a3-independent-review-r2-20261022-second-clean-context-review-by",
+      "assignment_id": "a3-independent-review-r2-20261022-second-clean-context-review-by-the-sam",
+      "context_id": "a3-independent-review-r2-20261022-second-clean-context-review-by-the-sam-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:af9a0db4e2f65a55bfc7852d100c477186f4fd41f6cee9c0731485981e09df12",
+      "context_valid": "valid",
+      "blocker_count": 0
+    },
+    "review_r3": {
+      "run_id": "garage-a3-independent-review-r3-20261022-final-clean-context-review-by-t",
+      "assignment_id": "a3-independent-review-r3-20261022-final-clean-context-review-by-the-same",
+      "context_id": "a3-independent-review-r3-20261022-final-clean-context-review-by-the-same-capsule",
+      "action": "run_completed",
+      "run_status": "completed",
+      "assignment_status": "done",
+      "stage": "evolve",
+      "capsule_checksum": "sha256:1a2008a4d1a1063d24a7b9a663888013d70f8edfa4b655e2063b3dfee928ba7d",
+      "context_valid": "valid",
+      "blocker_count": 0
+    }
+  },
+  "original_backlog_task": "pf-maintenance-sqlite-journals-20261019",
+  "original_backlog_status": "done via native task-complete",
+  "user_stop_boundary": true,
+  "remaining_action": "Only final authorized evidence Git delivery/readback and attendance check-out."
+}
