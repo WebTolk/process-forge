@@ -146,6 +146,60 @@ separate [advanced workflow](../getting-started/task-batch-workflow.md). Do not
 add `run-complete` or `run-summary` to close this governed Work: the final
 transition owns completion. Host session lifecycle remains separate.
 
+## Advisory authoring review
+
+New evidence submissions can include a text artifact and optional declarations:
+
+```json
+{
+  "kind": "artifact",
+  "artifact_id": "test-report",
+  "status": "ready",
+  "path": ".pf/artifacts/current-test-report.md",
+  "authoring": {
+    "required_sections": ["Summary", "Results"],
+    "placeholders": ["{{result}}"]
+  }
+}
+```
+
+PF records `evidence.authoring_review` with advisory findings, coverage and the
+digest of inspected bytes. It replaces any caller-supplied review. For Markdown,
+plain text and rST files up to 1 MiB, it checks strict UTF-8, common artifact-template
+markers and explicit literal placeholders, required Markdown headings/content,
+and simple inline Markdown file links. Declarations accept at most 32 nonempty
+strings of up to 200 characters per list; invalid declarations produce warnings.
+Missing sections and `<summary>` left as content are reported. Fenced, inline and
+indented code are excluded from prose checks; a code-only section can be filled.
+No language or ASCII-percentage heuristic determines quality.
+
+Local link checks probe existence only within the authorized project boundary;
+they do not read targets or fetch external URLs. At most 64 simple inline links
+and 32 findings are retained per submission. `limits_reached` records any reached
+limit even when findings are truncated. The limited Markdown check does not validate
+remote URLs, anchors or reference-style links. Unsupported, oversized,
+changed-during-inspection or unreadable files have
+explicit skipped/partial coverage, never a clean-content claim.
+
+Existing structural `not_applicable` validation remains unchanged. A concrete
+reason with supporting evidence is accepted. Bare `N/A`, `not_applicable` or
+`не применимо` receives a request for context; known unfilled reason/support
+markers also receive warnings. These are advisory observations, not a decision
+about applicability. A document consisting only of generic N/A prose also receives
+a warning; a concrete explanation with evidence is not classified as a bare reply.
+These checks do not establish the truth of the justification. All prior
+path/digest/status rules still
+apply, and authoring warnings add no new transition blocker.
+
+The shared CLI/MCP `authoring_review` projection shows stored observations for
+`current_stage` and `last_completed_stage`, each with stage ID and evidence index.
+Warnings therefore remain visible after a successful transition. Inspection occurs
+only on new submission; reading state does not rescan or rewrite historical files
+or evidence. Legacy records without reviews are `not_recorded`. The inspected
+digest describes submission-time bytes; existing freshness diagnostics separately
+decide whether saved file evidence is still current. Review these warnings before
+submitting a corrected revision; automatic checks do not prove semantic quality.
+
 ## Internal iterations and nested work
 
 A Run can contain repeated investigation, domain/architecture reasoning, approved

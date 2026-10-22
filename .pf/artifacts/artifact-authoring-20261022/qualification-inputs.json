@@ -1,0 +1,51 @@
+{
+  "base": "a88607af49dbde56fb6672f6ad658a184dec3381",
+  "separate_planning_commit": "61595a9269673951353b51c6a1abd2327e6f2b71",
+  "scope": "clean source plus owned files only",
+  "files": {
+    "docs/concepts/declarative-process-execution.md": {
+      "raw_sha256": "8d36098fbb47221083a35714d9e3fda13b7efc2a7baa50d1bc1c0908c99c9277",
+      "lf_sha256": "8d36098fbb47221083a35714d9e3fda13b7efc2a7baa50d1bc1c0908c99c9277"
+    },
+    "docs/ru/concepts/declarative-process-execution.md": {
+      "raw_sha256": "94460932ef3bd27e13760554c3790c48cb84f992803a17e89354b2250845868d",
+      "lf_sha256": "94460932ef3bd27e13760554c3790c48cb84f992803a17e89354b2250845868d"
+    },
+    "src/processforge_core/evidence/authoring.py": {
+      "raw_sha256": "7139865db621ccd474045d1c7c0228ff4040f74292e07c8b9861e45c46b2d70e",
+      "lf_sha256": "7139865db621ccd474045d1c7c0228ff4040f74292e07c8b9861e45c46b2d70e"
+    },
+    "src/processforge_core/evidence/validation.py": {
+      "raw_sha256": "95d7fdcc8b29d267710ccc0ef61e55f554199a33791de586ab5c2476cf70d120",
+      "lf_sha256": "07c91f9d0d3258533d3b1b1c94d4be51398d50d0a40a3b60fca6cf7eea71cdc0"
+    },
+    "src/processforge_core/work/state.py": {
+      "raw_sha256": "efb1d9d66251928a305537c6369223da2f9679f9d57e6fe880506d4a3f8f61b0",
+      "lf_sha256": "efb1d9d66251928a305537c6369223da2f9679f9d57e6fe880506d4a3f8f61b0"
+    },
+    "tests/artifact_authoring/conftest.py": {
+      "raw_sha256": "5300303324824f64bb2108ef09a46891ba21eb8ac0025f741a7e7b55f2109fb1",
+      "lf_sha256": "5300303324824f64bb2108ef09a46891ba21eb8ac0025f741a7e7b55f2109fb1"
+    },
+    "tests/artifact_authoring/test_artifact_execution.py": {
+      "raw_sha256": "e4acdcc9ab1ecf07806a6d75d8ea072b40ae41d051d97ddcc8cf85865797b319",
+      "lf_sha256": "e4acdcc9ab1ecf07806a6d75d8ea072b40ae41d051d97ddcc8cf85865797b319"
+    },
+    "tests/artifact_authoring/test_review.py": {
+      "raw_sha256": "b8757de3f53b1cbd8ce472fa417386d2707b235517881ac40d35ae1853288ea1",
+      "lf_sha256": "b8757de3f53b1cbd8ce472fa417386d2707b235517881ac40d35ae1853288ea1"
+    },
+    "tests/evidence_guidance/conftest.py": {
+      "raw_sha256": "5300303324824f64bb2108ef09a46891ba21eb8ac0025f741a7e7b55f2109fb1",
+      "lf_sha256": "5300303324824f64bb2108ef09a46891ba21eb8ac0025f741a7e7b55f2109fb1"
+    },
+    "tests/evidence_guidance/test_execution.py": {
+      "raw_sha256": "26f8d2edce3718b010c4f450bbc2c9697dc81db025ba3d6579d960738808aec5",
+      "lf_sha256": "26f8d2edce3718b010c4f450bbc2c9697dc81db025ba3d6579d960738808aec5"
+    },
+    "tests/evidence_guidance/test_guidance.py": {
+      "raw_sha256": "660555f7a705cad2d62642d16fa542ca6da40d7c54f1e796cb6d28277dab67d4",
+      "lf_sha256": "660555f7a705cad2d62642d16fa542ca6da40d7c54f1e796cb6d28277dab67d4"
+    }
+  }
+}

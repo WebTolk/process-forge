@@ -6,6 +6,7 @@ import copy
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from processforge_core.evidence.authoring import project_authoring_reviews
 from processforge_core.evidence.guidance import EvidenceGuidancePolicy
 
 __all__ = ()
@@ -170,5 +171,8 @@ class WorkStatePolicy:
         }
         state["evidence_guidance"] = EvidenceGuidancePolicy().project(
             state, process=process
+        )
+        state["authoring_review"] = project_authoring_reviews(
+            assignment, current_evidence
         )
         return state
