@@ -1,0 +1,9 @@
+# Qualified local dev archive
+
+2026-10-22. Source 3e59ac024391cc1d4daf7bdef1ee6167e4fa00db is published at both dev remotes, GitVerse through token-backed helper. Source inventory differs from c38b4b09 only in the three required Kimi entries. Native release-pack succeeded from a clean detached checkout: 1463 archive entries. Archive SHA-256: 2e8ac4dc93843feea959e98e105560ecdd1e6770d17c0f449839fbe92d736e3b; size 2800899 bytes. Version remains 1.3.0-alpha1 for this local dev checkpoint.
+
+Native release-archive-test --extracted-test quick passed: archive/sidecar/source parity, both CLI help paths and eight selected extracted checks (compile, schemas, public cleanliness, checksums, Core bootstrap, central ingress, conversation completeness, central replay). Clean-source pytest also passed 85 tests and 13 subtests. Prior lint/format/mypy and provider-admission evidence remains valid for identical Kimi bytes. This bounded local dev checkpoint does not claim the full cumulative public stable-release gate.
+
+Native update plan has two added files, two changed, 1458 unchanged, no removals, no local modifications, no missing owned files or blockers; Workplace migration is not applicable. Preservation baseline records 22 Workplace config/registry/driver files and 74 unowned Core files. One apply has not started. Guarded server stop refused with 409; native bounded observation is partial/budget, full observation is complete with zero running workers, fresh leases held=0. A one-time guard bypass awaits the user's answer before dependent operator work. Existing Runtime/MCP continue running.
+
+Receipts/logs containing private device details remain local. Prepared archive is retained under the task's owned .pf/tmp namespace. Handoff: proceed only after the required maintenance authorization, recheck preservation/window, and apply once through native updater.

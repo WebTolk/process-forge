@@ -1,0 +1,23 @@
+{
+  "source_commit": "3e59ac024391cc1d4daf7bdef1ee6167e4fa00db",
+  "fix_commit": "c38b4b09710cf88a336bcf78e86b04c5e78c70dc",
+  "archive_sha256": "2e8ac4dc93843feea959e98e105560ecdd1e6770d17c0f449839fbe92d736e3b",
+  "clean_candidate_pytest": {
+    "passed": 85,
+    "subtests_passed": 13,
+    "exit_code": 0
+  },
+  "archive_extracted_profile": "quick",
+  "archive_exit_code": 0,
+  "preserved_live_files": 78,
+  "configuration_baseline_files": 22,
+  "unowned_core_baseline_files": 74,
+  "native_plan_conflicts": 0,
+  "native_stop_status": 409,
+  "native_stop_reason": "runtime_busy_or_activity_unknown",
+  "full_worker_observation": "complete",
+  "running_workers": 0,
+  "held_leases": 0,
+  "apply_started": false,
+  "pending": "user authorization for one native guarded-stop bypass"
+}
