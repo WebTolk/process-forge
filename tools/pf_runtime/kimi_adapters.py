@@ -1,18 +1,20 @@
-"""Kimi Code hook and PF Kimi-driver provenance policies."""
+"""Provenance policy for real Kimi Code host hooks, not worker drivers."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from .kimi_hooks import EVENTS, native_envelope
+from .kimi_hooks import SUPPORTED_HOOKS, native_envelope
 from .provider_adapters import AdapterPolicy
 
 
 class KimiHooksPolicy(AdapterPolicy):
     def can_register_session(self, envelope: dict[str, Any]) -> bool:
         hook = envelope.get("native_event_type")
-        return bool(envelope.get("source_session_id")) and hook in (
-            set(EVENTS) - {"SessionEnd"} | {"UserPromptSubmit", "Stop", "SubagentStop"}
+        return (
+            bool(envelope.get("source_session_id"))
+            and isinstance(hook, str)
+            and hook in SUPPORTED_HOOKS - {"SessionEnd"}
         )
 
     def valid_raw_identity(self, envelope: dict[str, Any]) -> bool:
@@ -33,6 +35,8 @@ class KimiHooksPolicy(AdapterPolicy):
         if any(
             envelope.get(key) != expected.get(key)
             for key in (
+                "provider",
+                "adapter",
                 "native_event_type",
                 "source_session_id",
                 "source_project_ref",
@@ -45,60 +49,15 @@ class KimiHooksPolicy(AdapterPolicy):
         if envelope.get("native_event_id_stable") is not False:
             return False
         derived = envelope.get("derived_event")
-        if derived is not None:
-            canonical = expected.get("derived_event")
-            if not isinstance(derived, dict) or not isinstance(canonical, dict):
-                return False
-            if any(
-                derived.get(key) != canonical.get(key)
-                for key in (
-                    "event_type",
-                    "event_id",
-                    "session_id",
-                    "project_root",
-                    "agent_id",
-                )
-            ):
-                return False
-            source = derived.get("source") or {}
-            if not isinstance(source, dict) or source.get("adapter") != self.adapter:
-                return False
-            if any(
-                key not in canonical or value != canonical[key]
-                for key, value in derived.items()
-                if key != "source"
-            ):
-                return False
-            if any(
-                value != canonical["source"].get(key) for key, value in source.items()
-            ):
-                return False
+        if derived is not None and derived != expected.get("derived_event"):
+            return False
+        messages = envelope.get("derived_conversation_messages")
+        if messages is not None and messages != expected.get(
+            "derived_conversation_messages", []
+        ):
+            return False
         return True
 
     def allows_message(self, envelope: dict[str, Any], item: dict[str, Any]) -> bool:
         expected = native_envelope(envelope["raw_payload"]) or {}
-        fields = (
-            "message_role",
-            "participant",
-            "content",
-            "content_source",
-            "turn_id",
-            "delivery",
-            "parent_message_id",
-        )
-        return any(
-            all(item.get(key) == message.get(key) for key in fields)
-            and str(item.get("session_id") or envelope.get("source_session_id") or "")
-            == str(message.get("session_id") or "")
-            for message in expected.get("derived_conversation_messages", [])
-        )
-
-    def fallback_participants(
-        self, envelope: dict[str, Any], item: dict[str, Any]
-    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
-        if (
-            envelope.get("native_event_type") == "SessionEnd"
-            and item.get("message_role") == "assistant"
-        ):
-            return ("kimi",), ("subagent",)
-        return (), ()
+        return item in expected.get("derived_conversation_messages", [])

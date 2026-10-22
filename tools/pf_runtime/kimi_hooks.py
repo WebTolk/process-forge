@@ -1,7 +1,7 @@
-"""Thin Kimi Code lifecycle-hook adapter for the local PF Runtime.
+"""Observe Kimi Code 2.3 native hooks without blocking the host.
 
-It converts documented hook facts into normalized events and deliberately
-returns success when the current directory is not a ProcessForge project.
+Capture real text parts and subagent responses. Stop/SessionEnd do not carry
+the main assistant's answer. Other content remains in the private raw journal.
 """
 
 from __future__ import annotations
@@ -15,6 +15,11 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from pf_runtime.raw_ingress_kernel import raw_payload_hash  # noqa: E402
 
 _RUNTIME_BOOTSTRAP: Any | None = None
 
@@ -30,8 +35,10 @@ EVENTS = {
     "PreCompact": {"default": "agent.session.compaction.started"},
     "PostCompact": {"default": "agent.session.compacted"},
     "PostToolUse": {"default": "agent.command.completed"},
+    "PostToolUseFailure": {"default": "agent.command.completed"},
     "PreToolUse": {"default": "agent.command.started"},
 }
+SUPPORTED_HOOKS = frozenset(EVENTS) | {"UserPromptSubmit", "Stop", "SubagentStop"}
 
 
 def runtime_bootstrap() -> Any:
@@ -52,36 +59,41 @@ def runtime_bootstrap() -> Any:
     return _RUNTIME_BOOTSTRAP
 
 
+def _string(payload: dict[str, Any], key: str) -> str:
+    value = payload.get(key)
+    return value if isinstance(value, str) and value.strip() else ""
+
+
 def _event_name(payload: dict[str, Any]) -> str:
-    """Resolve the native event name from a Kimi Code hook payload."""
-    for key in ("hook_event_name", "event", "event_name", "hook"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ""
+    """Read the native snake_case field, without guessing other providers."""
+    return _string(payload, "hook_event_name")
 
 
 def _session_id(payload: dict[str, Any]) -> str:
-    for key in ("session_id", "sessionId", "sid"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ""
+    return _string(payload, "session_id")
 
 
 def _project_ref(payload: dict[str, Any]) -> str:
-    for key in ("cwd", "project_root", "projectRoot", "workspace", "project"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ""
+    return _string(payload, "cwd")
 
 
 def _source(payload: dict[str, Any]) -> str:
-    value = payload.get("source")
-    if isinstance(value, str) and value:
-        return value
-    return "startup"
+    return _string(payload, "source") or "startup"
+
+
+def _text(content: Any) -> str:
+    """Extract provider text, leaving non-text content in the raw payload."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            part["text"]
+            for part in content
+            if isinstance(part, dict)
+            and part.get("type") == "text"
+            and isinstance(part.get("text"), str)
+        )
+    return ""
 
 
 def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -95,24 +107,39 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
     session_id = _session_id(payload)
     if not event_type or not cwd or not session_id:
         return None
-    tool_name = str(payload.get("tool_name") or "")
+    tool_name = _string(payload, "tool_name")
     data = {
         key: payload[key]
         for key in (
             "turn_id",
             "tool_name",
-            "tool_use_id",
+            "tool_call_id",
             "model",
             "permission_mode",
             "reason",
+            "trigger",
+            "token_count",
+            "estimated_token_count",
         )
         if payload.get(key) not in (None, "")
     }
-    if hook == "PostToolUse" and tool_name and tool_name != "Bash":
-        event_type = "agent.tool.completed"
-    event_id = f"kimi:{hook}:{session_id}:{payload.get('turn_id', '')}:{payload.get('tool_use_id', '')}"
-    if hook == "SessionStart" and source != "startup":
-        event_id += f":{source}"
+    if hook in {"PreToolUse", "PostToolUse", "PostToolUseFailure"}:
+        if tool_name and tool_name != "Bash":
+            event_type = (
+                "agent.tool.started" if hook == "PreToolUse" else "agent.tool.completed"
+            )
+        if hook == "PostToolUseFailure":
+            data["status"] = "failed"
+    # Kimi tool hooks have tool_call_id, not Codex's tool_use_id/turn_id.
+    # ID-less hooks use the existing raw canonicalization, so distinct payloads
+    # remain distinct while an exact replay has the same derived effect.
+    call_id = (
+        _string(payload, "tool_call_id")
+        if hook in {"PreToolUse", "PostToolUse", "PostToolUseFailure"}
+        else ""
+    )
+    occurrence = call_id or raw_payload_hash(payload)
+    event_id = f"kimi:{hook}:{session_id}:{occurrence}"
     return {
         "schema_version": 1,
         "event_type": event_type,
@@ -122,6 +149,38 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
         "agent_id": "kimi",
         "source": {"adapter": "kimi-hooks", "agent": "kimi", "session_id": session_id},
         "payload": data,
+    }
+
+
+def _conversation_message(
+    payload: dict[str, Any], content: str, *, subagent: bool
+) -> dict[str, Any]:
+    hook = _event_name(payload)
+    name = _string(payload, "agent_name")
+    return {
+        "message_role": "assistant" if subagent else "user",
+        "participant": {
+            "id": (f"subagent:{name}" if name else "subagent")
+            if subagent
+            else "operator",
+            "type": "subagent" if subagent else "human",
+            "role": "subagent" if subagent else "operator",
+        },
+        "session_id": _session_id(payload),
+        "turn_id": _string(payload, "turn_id") or None,
+        "content": content,
+        "content_source": {
+            "kind": "kimi_hook",
+            "provider": "kimi",
+            "adapter": "kimi-hooks",
+            "native_event_type": hook,
+            "content_provenance": "provider_payload",
+        },
+        "delivery": {
+            "state": "complete",
+            "sequence": 1 if subagent else 0,
+            "final": True,
+        },
     }
 
 
@@ -144,68 +203,30 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
         "raw_payload": dict(payload),
         "derived_event": normalized_event(payload),
     }
-    prompt = payload.get("prompt")
-    if (
-        hook == "UserPromptSubmit"
-        and isinstance(prompt, str)
-        and prompt.strip()
-        and envelope["source_session_id"]
-    ):
+    content = ""
+    if hook == "UserPromptSubmit":
+        content = _text(payload.get("prompt"))
+    elif hook == "SubagentStop":
+        content = _text(payload.get("response"))
+    if content.strip() and envelope["source_session_id"]:
         envelope["derived_conversation_messages"] = [
-            {
-                "message_role": "user",
-                "participant": {"id": "operator", "type": "human", "role": "operator"},
-                "session_id": envelope["source_session_id"],
-                "turn_id": str(payload.get("turn_id") or "") or None,
-                "content": prompt,
-                "content_source": {
-                    "kind": "kimi_hook",
-                    "provider": "kimi",
-                    "adapter": "kimi-hooks",
-                    "native_event_type": "UserPromptSubmit",
-                    "content_provenance": "provider_payload",
-                },
-                "delivery": {"state": "complete", "sequence": 0, "final": True},
-            }
+            _conversation_message(payload, content, subagent=hook == "SubagentStop")
         ]
-    assistant_message = payload.get("last_assistant_message")
-    if (
-        hook in {"Stop", "SubagentStop", "SessionEnd"}
-        and isinstance(assistant_message, str)
-        and assistant_message.strip()
-        and envelope["source_session_id"]
-    ):
-        is_subagent = hook == "SubagentStop"
-        agent_id = str(payload.get("agent_id") or "")
-        participant_id = (
-            f"subagent:{agent_id}"
-            if is_subagent and agent_id
-            else ("subagent" if is_subagent else "kimi")
-        )
-        messages = envelope.setdefault("derived_conversation_messages", [])
-        assert isinstance(messages, list)
-        messages.append(
-            {
-                "message_role": "assistant",
-                "participant": {
-                    "id": participant_id,
-                    "type": "subagent" if is_subagent else "agent",
-                    "role": "subagent" if is_subagent else "assistant",
-                },
-                "session_id": envelope["source_session_id"],
-                "turn_id": str(payload.get("turn_id") or "") or None,
-                "content": assistant_message,
-                "content_source": {
-                    "kind": "kimi_hook",
-                    "provider": "kimi",
-                    "adapter": "kimi-hooks",
-                    "native_event_type": hook,
-                    "content_provenance": "provider_payload",
-                },
-                "delivery": {"state": "complete", "sequence": 1, "final": True},
-            }
-        )
     return envelope
+
+
+def _delivery_result(body: Any, transport: str) -> dict[str, Any]:
+    """Keep admission failures terminal; transport success is not acceptance."""
+    if not isinstance(body, dict):
+        raise ValueError("runtime hook response is not an object")
+    routing = body.get("routing_status")
+    if routing == "ignored":
+        return {**body, "status": "ignored", "transport": transport}
+    if routing in {"denied", "quarantined"} or body.get("accepted") is False:
+        return {**body, "status": "denied", "transport": transport}
+    if routing not in {"routed", "captured"} or body.get("accepted") is not True:
+        raise ValueError("runtime hook response has no valid ingress receipt")
+    return {**body, "status": "delivered", "transport": transport}
 
 
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
@@ -242,22 +263,31 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 "/event",
                 envelope,
             )
-        if exit_code == 0:
-            body = json.loads(output.getvalue()) if output.getvalue().strip() else {}
-            if isinstance(body, dict) and body.get("routing_status") in {
-                "ignored",
-                "denied",
-            }:
-                return {**body, "status": "ignored", "transport": "runtime"}
-            return {"status": "delivered", "transport": "runtime"}
-    except (OSError, SystemExit, ValueError):
+    except (OSError, SystemExit):
         pass
+    else:
+        # A running Runtime's HTTP rejection is terminal even when its CLI
+        # wrapper returns nonzero. Only unavailable transport permits fallback.
+        try:
+            body = json.loads(output.getvalue())
+            if exit_code != 0:
+                return {
+                    **(body if isinstance(body, dict) else {}),
+                    "status": "denied",
+                    "transport": "runtime",
+                    "reason": "runtime_request_rejected",
+                }
+            return _delivery_result(body, "runtime")
+        except ValueError:
+            return {
+                "status": "denied",
+                "transport": "runtime",
+                "reason": "runtime_invalid_receipt",
+            }
 
     with contextlib.redirect_stdout(io.StringIO()):
         result = host.ingest_event(envelope, None, core)
-    if result.get("routing_status") in {"ignored", "denied"}:
-        return {**result, "status": "ignored", "transport": "ledger-fallback"}
-    return {"status": "delivered", "transport": "ledger-fallback", **result}
+    return _delivery_result(result, "ledger-fallback")
 
 
 def main() -> int:
@@ -302,35 +332,28 @@ def main() -> int:
         hook = _event_name(payload) if isinstance(payload, dict) else ""
         if hook in {"Stop", "SubagentStop"}:
             print("{}")
-        elif hook == "SessionStart" and result.get("status") == "delivered":
-            session_id = _session_id(payload)
-            print(
-                json.dumps(
-                    {
-                        "hookSpecificOutput": {
-                            "hookEventName": "SessionStart",
-                            "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project.",
-                        }
-                    },
-                    ensure_ascii=False,
-                )
-            )
-        logger.debug(
+        logger.log(
+            "warning" if result.get("status") == "denied" else "debug",
             "hook.result",
             {
                 "status": result.get("status"),
                 "transport": result.get("transport"),
                 "reason": result.get("reason"),
                 "normalized_event_count": len(result.get("normalized_event_ids") or []),
+                "diagnostics": result.get("diagnostics"),
             },
             component="hooks",
             code="hook.result",
         )
-    except Exception as exc:
+    except (Exception, SystemExit) as exc:
         if hook in {"Stop", "SubagentStop"}:
             print("{}")
-        logger.error(
-            "hook.ignored", {"exception": exc}, component="hooks", code="hook.ignored"
+        logger.log(
+            "error",
+            "hook.ignored",
+            {"exception": exc},
+            component="hooks",
+            code="hook.ignored",
         )
     return 0
 
