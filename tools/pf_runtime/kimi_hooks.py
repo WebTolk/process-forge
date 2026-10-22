@@ -224,7 +224,10 @@ def _delivery_result(body: Any, transport: str) -> dict[str, Any]:
         return {**body, "status": "ignored", "transport": transport}
     if routing in {"denied", "quarantined"} or body.get("accepted") is False:
         return {**body, "status": "denied", "transport": transport}
-    if routing not in {"routed", "captured"} or body.get("accepted") is not True:
+    if (
+        routing not in {"routed", "raw_accepted", "duplicate_raw"}
+        or body.get("accepted") is not True
+    ):
         raise ValueError("runtime hook response has no valid ingress receipt")
     return {**body, "status": "delivered", "transport": transport}
 

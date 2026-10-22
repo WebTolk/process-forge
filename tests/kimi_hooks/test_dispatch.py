@@ -58,7 +58,16 @@ def test_runtime_denial_never_uses_local_fallback(
 
 
 @pytest.mark.parametrize(
-    "body", [{}, [], {"status": "ok"}, {"routing_status": "routed"}]
+    "body",
+    [
+        {},
+        [],
+        {"status": "ok"},
+        {"routing_status": "routed"},
+        {"routing_status": "raw_accepted"},
+        {"routing_status": "duplicate_raw"},
+        {"accepted": True, "routing_status": "captured"},
+    ],
 )
 def test_empty_http_success_is_not_hook_acceptance(body: Any) -> None:
     with pytest.raises(ValueError):

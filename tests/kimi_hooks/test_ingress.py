@@ -10,8 +10,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import pytest
 from pf_runtime.host import ingest_event, ledger_session
-from pf_runtime.kimi_hooks import native_envelope
+from pf_runtime.kimi_hooks import _delivery_result, native_envelope
 from smoke_conversation_completeness import events, remove_event, transcript
 
 
@@ -68,6 +69,31 @@ def test_prompt_enrolls_and_captures_text_once_without_public_content(
     assert isinstance(message, dict)
     assert message["content"] == marker
     assert marker not in json.dumps(events(project))
+
+
+@pytest.mark.parametrize("hook", ["UserPromptSubmit", "SubagentStop"])
+@pytest.mark.parametrize("transport", ["runtime", "ledger-fallback"])
+def test_dispatch_accepts_real_conversation_only_receipts(
+    source_ingress: tuple[Path, Path, Any],
+    native_payload: Callable[..., dict[str, Any]],
+    hook: str,
+    transport: str,
+) -> None:
+    """Actual Host receipts keep raw status when capture has no derived event."""
+    payload = native_payload(hook, session_id=f"kimi-actual-receipt-{hook}-{transport}")
+    first = send(source_ingress, payload)
+    replay = send(source_ingress, payload)
+    assert first["routing_status"] == "raw_accepted"
+    assert replay["routing_status"] == "duplicate_raw"
+    assert first["normalized_event_ids"] == replay["normalized_event_ids"] == []
+    assert len(first["chat_message_ids"]) == 1
+    assert replay["chat_message_ids"] == first["chat_message_ids"]
+    for receipt in (first, replay):
+        result = _delivery_result(receipt, transport)
+        assert result["status"] == "delivered"
+        assert result["transport"] == transport
+        assert result["chat_message_ids"] == first["chat_message_ids"]
+        assert result["routing_status"] == receipt["routing_status"]
 
 
 def test_subagent_response_captured_under_native_name(

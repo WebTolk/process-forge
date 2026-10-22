@@ -1,0 +1,7 @@
+# Kimi receipt correction
+
+2026-10-22. Live installed-Runtime qualification found a defect in the remediation's client classifier: conversation-only capture returns native raw_accepted/duplicate_raw receipts, while the classifier expected an invented captured status. The original message was actually captured; only the client's delivery diagnosis was wrong. Failed live evidence is preserved in the previous operator artifact root.
+
+The client now accepts the actual native receipt statuses only with accepted=true, retaining receipt details and terminal denial/malformed-response behavior. Real Host ingress tests cover first delivery and replay for prompt arrays and native subagent summaries through both transport classifiers. Missing acceptance and invented receipt statuses remain invalid.
+
+Final source QA: 92 tests and 13 subtests pass, Ruff lint/format and mypy pass. Commands, final hashes, exits and logs are retained locally in qa-final.json. An initial test-format failure was corrected and all applicable final checks repeated. Only _delivery_result changes in the shipped module; native_envelope, derivation, server-used definitions and Runtime policy are unchanged by AST comparison. Exactly one generated checksum entry changes. Build/install a distinct qualified corrective archive; preserve the already restarted healthy server. This report does not claim a real Kimi model run or host MCP reload.
