@@ -44,6 +44,14 @@ expected_report:
   include:
     []
 context_artifacts:
+  - path: .pf/artifacts/usage-accounting-scope-20261022/storage-decision.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  - path: .pf/artifacts/usage-accounting-scope-20261022/scope-amendment.md
+    role: input
+    required: true
+    mutable_by_worker: false
   - path: .pf/artifacts/pf-task-token-usage-logs-20261020/driver-usage-and-project-costs.md
     role: input
     required: true

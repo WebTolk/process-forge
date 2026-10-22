@@ -1,0 +1,3 @@
+# Run Plan: usage-accounting-scope-20261022: planning-only amendment to completed token/time
+
+Objective: usage-accounting-scope-20261022: planning-only amendment to completed token/time accounting plan. Operator excludes all tariffs, monetary calculations, money flows and billing from PF: PF only records execution/time/token data. Document this authoritative scope correction and compare storage options, recommending one workplace accounting database partitioned by project_id without implementing it. Preserve sealed prior plan as history; append immutable amendment input to existing open pf-task-token-usage-logs-20261020 card. Complete only this bounded documentation cycle and stop.
