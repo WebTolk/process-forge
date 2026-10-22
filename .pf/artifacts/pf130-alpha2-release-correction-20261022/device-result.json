@@ -1,0 +1,58 @@
+{
+  "version": "1.3.0-alpha2",
+  "update_id": "core-update-20261022T162745Z",
+  "status": "applied",
+  "counts": {
+    "added": 0,
+    "changed": 3,
+    "locally_modified": 0,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1473
+  },
+  "backup_preimages": 3,
+  "workplace_doctor": {
+    "pass": 197,
+    "fail": 0
+  },
+  "incomplete_update": false,
+  "repair_status": "nothing_to_repair",
+  "database_preserved_during_update": true,
+  "configuration_files_preserved": 3,
+  "runtime_restarted": true,
+  "runtime_health": "ready",
+  "scheduler": [
+    {
+      "name": "director",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "inspector",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "ledger",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "metrics",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "projection",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "temporary_files",
+      "last_result": "unknown",
+      "freshness": "unknown"
+    }
+  ],
+  "host_provenance_limit": "Existing MCP hosts were not reconnected; installed CLI and new App Server are qualified separately."
+}

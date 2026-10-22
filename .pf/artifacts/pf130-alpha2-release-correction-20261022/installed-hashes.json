@@ -1,0 +1,11 @@
+{
+  "version": "1.3.0-alpha2",
+  "source": {
+    "commit": "fe0f15072538fee9525792ae5b8c1e634b13a928",
+    "dirty": false,
+    "tree": "ec8f0c49ee4fe5b63d5b4fe3709742592fae8992",
+    "vcs": "git"
+  },
+  "managed_files": 1476,
+  "all_hashes_match": true
+}
