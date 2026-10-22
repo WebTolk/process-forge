@@ -4,10 +4,10 @@
     "id": "processforge",
     "name": "ProcessForge"
   },
-  "generated_at": "2026-10-20T14:25:38Z",
+  "generated_at": "2026-10-22T22:41:32Z",
   "channels": {
     "alpha": {
-      "latest": "1.3.0-alpha1"
+      "latest": "1.3.0-alpha3"
     }
   },
   "subjects": [
@@ -16,6 +16,65 @@
       "id": "processforge",
       "name": "ProcessForge",
       "versions": [
+        {
+          "version": "1.3.0-alpha3",
+          "channels": [
+            "alpha"
+          ],
+          "stability": "alpha",
+          "prerelease": true,
+          "released_at": "2026-10-22",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.3.0-alpha3",
+            "commit": "18fd59e24d7b3ee7c79da26fb2b9001ee94469cd"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha3"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha3/processforge-1.3.0-alpha3.zip",
+              "size": 2884284,
+              "sha256": "b595a818827a286d6e4a9498991d1d4067935bea49e6c2018150bef9078a2022",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha3/processforge-1.3.0-alpha3.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "maintenance",
+              "summary": "Verified SQLite backup/restore, legacy preflight, exact-byte quarantine, explicit skip-invalid and idempotent journal import"
+            },
+            {
+              "area": "usage",
+              "summary": "Shared usage accounting and operator usage CLI"
+            },
+            {
+              "area": "hooks",
+              "summary": "Kimi ingress and hook compatibility"
+            },
+            {
+              "area": "monitor",
+              "summary": "Calendar uptime presentation"
+            },
+            {
+              "area": "work",
+              "summary": "Evidence guidance and advisory artifact review with deferred project-root access"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0-alpha3/docs/releases/1.3.0-alpha3.md"
+          }
+        },
         {
           "version": "1.3.0-alpha1",
           "channels": [
