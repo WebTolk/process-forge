@@ -230,8 +230,11 @@ def _text_findings(
 
 @dataclass(frozen=True)
 class ArtifactAuthoringService:
-    project_root: Path
+    project_root: Path | Callable[[], Path]
     resolve_path: Callable[[str], Path | None]
+
+    def _root(self) -> Path:
+        return self.project_root() if callable(self.project_root) else self.project_root
 
     def _link_finding(self, path: Path, raw: str, line: int) -> dict[str, Any] | None:
         raw = raw.strip()
@@ -259,11 +262,12 @@ class ArtifactAuthoringService:
             if not parts.path:
                 return None  # Anchor in the current document, not a file probe.
             decoded = unquote(parts.path, errors="strict")
-            relative = (path.parent / decoded).relative_to(self.project_root).as_posix()
+            root = self._root()
+            relative = (path.parent / decoded).relative_to(root).as_posix()
             resolved = self.resolve_path(relative)
             if resolved is None:
                 return _finding("local_link_unresolved", line=line)
-            resolved.resolve().relative_to(self.project_root.resolve())
+            resolved.resolve().relative_to(root.resolve())
             if not resolved.exists():
                 return _finding("local_link_missing", line=line)
         except (ValueError, UnicodeError, RuntimeError):
@@ -316,7 +320,7 @@ class ArtifactAuthoringService:
             )
         else:
             try:
-                path.resolve().relative_to(self.project_root.resolve())
+                path.resolve().relative_to(self._root().resolve())
                 with path.open("rb") as stream:
                     content = stream.read(MAX_BYTES + 1)
                 if len(content) > MAX_BYTES:

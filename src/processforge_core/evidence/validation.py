@@ -39,7 +39,7 @@ class EvidenceValidationService:
         normalized: list[dict[str, Any]] = []
         blockers: list[dict[str, Any]] = []
         now = self.now_utc()
-        authoring = ArtifactAuthoringService(self._root(), self._path)
+        authoring = ArtifactAuthoringService(self._root, self._path)
         for index, value in enumerate(values):
             item: dict[str, Any]
             if isinstance(value, str):

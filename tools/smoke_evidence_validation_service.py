@@ -110,6 +110,7 @@ class ValidationTests(unittest.TestCase):
 
     def test_material_failures_and_facade_callback_order(self):
         class FakePath:
+            suffix = ""  # Matches the extensionless 'file' exercised below.
             def __init__(self,fail):self.fail=fail
             def exists(self):
                 if self.fail=='exists':raise OSError('exists denied')
@@ -198,7 +199,8 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(validator.normalize('note')[1]);self.assertEqual(trace,['clock'])
         trace.clear()
         self.assertEqual(validator.normalize({'path':'valid.txt'})[0][0]['sha256'],'sha256:digest')
-        self.assertEqual(trace,['clock','root','root','rel','hash'])
+        # Material checks retain their order; advisory text review follows them.
+        self.assertEqual(trace,['clock','root','root','rel','hash','root'])
         selected[0]=self.root/'dir';trace.clear()
         self.assertEqual(validator.safe_path('valid.txt'),self.root/'dir'/'valid.txt')
         self.assertEqual(trace,['root','root'])
