@@ -1,0 +1,3 @@
+# investigation
+
+2026-10-22. Live synthetic session reached restarted installed Runtime. SessionStart/End routed; UserPromptSubmit was stored with accepted=true, routing_status=raw_accepted, one chat_message_id, zero normalized_event_ids. Persisted SQLite response confirms capture; client rejected it because its status set contained an invented captured value. RawHookJournal uses raw_accepted for new raw input and duplicate_raw for replay; Host leaves that status when conversation-only capture has no derived event. Existing source tests checked capture but not dispatcher classification. Handoff: model raw acceptance separately from normalized routing.

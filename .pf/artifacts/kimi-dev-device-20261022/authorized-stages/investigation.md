@@ -1,0 +1,3 @@
+# investigation
+
+2026-10-22. Read local update-system and manifest/Runtime operator contracts; new capsule resolves project artifacts. Archive SHA256 2e8ac4dc93843feea959e98e105560ecdd1e6770d17c0f449839fbe92d736e3b passed source/archive parity and quick extracted tests. Clean-source 85 tests and 13 subtests passed; prior Ruff/mypy/admission evidence covers identical Kimi bytes. Plan: 2 added, 2 changed, 1458 unchanged, no conflicts or migration. Existing guard observation is partial/budget; full native observation was complete/running0 and held leases0. Recheck now before stop. Handoff: keep evidence layers distinct.

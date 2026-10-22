@@ -1,0 +1,3 @@
+# Implementation
+
+2026-10-22. Source e4420e6a3b27480bcf0199a7a4ce4acc3eb1da1a changes only client _delivery_result accepted status vocabulary, real-ingress regression tests and one generated checksum entry. Native envelope/server definitions unchanged by AST comparison. Both dev remotes read back exact source, GitVerse using token helper. Clean detached candidate passes native checksum validator; native pack produced 1463 entries, SHA256 09f0133d7ea81bbc04f155d4746d2cf6acae1a8fe216a0e3ea6a9dc97a81e7ed. Current source QA and clean candidate each pass 92 tests/13 subtests; source lint/format/mypy pass. Handoff: source assurance, then archive-qualified native client-only installation and live receipt check. No extra Runtime restart.

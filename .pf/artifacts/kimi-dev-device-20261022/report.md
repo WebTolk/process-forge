@@ -1,0 +1,11 @@
+# Kimi dev installation and PF App Server restart
+
+2026-10-22. Completed the user-authorized device installation and restart. One native server stop --force followed fresh complete idle observation (two projects, running workers=0, active leases=0). No process was killed and host MCP stayed running. PF App Server restarted once, ready and scheduler healthy.
+
+First archive 3e59ac02 was installed once as core-update-20261022T052545Z. It introduced the trusted Kimi registry and adapters. Live integration then exposed my client's receipt-classification error: PF captured the prompt, but client rejected native raw_accepted. The separately governed corrective Work fixed that client function, passed 92 tests and 13 subtests plus Ruff/mypy and archive checks, and installed the distinct final archive once as core-update-20261022T053739Z. Server-used definitions did not change, so no second restart was needed. Both original receipts and the failed live test remain preserved.
+
+Final installed dev source: e4420e6a3b27480bcf0199a7a4ce4acc3eb1da1a; version 1.3.0-alpha1. Final ZIP SHA256: 09f0133d7ea81bbc04f155d4746d2cf6acae1a8fe216a0e3ea6a9dc97a81e7ed. Final installed integrity: 1462 managed files, 2 final backup preimages, 22 Workplace configuration files and 74 unowned Core files preserved, doctor-workplace 197 PASS, status complete and repair nothing_to_repair. All 78 original project preservation files remain unchanged.
+
+Installed client through actual running Runtime: 9 accepted HTTP deliveries, 8 unique raw receipts, 5 normalized events, 3 private chat messages; tool identity/replay, prompt arrays, native subagent response, failure status and session checkout pass. These are clearly labeled synthetic events in a separate qualification session, not a real Kimi model run.
+
+The existing CLI constant 1.2.0 and Runtime protocol label 1.0.0-poc remain distinct from installed VERSION/manifest 1.3.0-alpha1; canonical identity work remains separate. Historical session/work/worker metric coverage remains partial. Host MCP was not restarted or qualified as reloaded. No stable tag/assets/channel publication or Kimi host permission changes were performed. The user owns the next real K2.7/K3 run.

@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-22T05:39:35.553903+00:00",
+  "result": "pass",
+  "synthetic_session": true,
+  "native_http_receipts": 9,
+  "unique_raw_receipts": 8,
+  "normalized_events": 5,
+  "chat_messages": 3,
+  "distinct_tool_calls": true,
+  "replay_idempotent": true,
+  "failed_status_verified": true,
+  "private_tool_content_excluded": true,
+  "subagent_identity_verified": true,
+  "session_checked_out": true,
+  "all_transport_runtime": true,
+  "client_module_matches_installed_manifest": true,
+  "source_commit": "e4420e6a3b27480bcf0199a7a4ce4acc3eb1da1a",
+  "real_kimi_model_run": false,
+  "read_only_verification": true,
+  "harness_correction": "Normalized event records use data, not native envelope payload; initial harness result and full receipts preserved."
+}

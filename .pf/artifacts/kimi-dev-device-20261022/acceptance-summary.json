@@ -1,0 +1,33 @@
+{
+  "result": "accepted_local_dev_device",
+  "version": "1.3.0-alpha1",
+  "source_commit": "e4420e6a3b27480bcf0199a7a4ce4acc3eb1da1a",
+  "archive_sha256": "09f0133d7ea81bbc04f155d4746d2cf6acae1a8fe216a0e3ea6a9dc97a81e7ed",
+  "final_update_id": "core-update-20261022T053739Z",
+  "initial_update_id": "core-update-20261022T052545Z",
+  "native_server_restarts": 1,
+  "extra_restart_for_client_correction": false,
+  "managed_files_verified": 1462,
+  "final_backup_preimages_verified": 2,
+  "configuration_files_preserved": 22,
+  "unowned_core_files_preserved": 74,
+  "original_project_files_preserved": 78,
+  "doctor_workplace_pass": 197,
+  "tests_pass": 92,
+  "subtests_pass": 13,
+  "ruff_lint": "pass",
+  "ruff_format": "pass",
+  "mypy": "pass",
+  "extracted_archive_profile": "quick",
+  "live_synthetic_http_receipts": 9,
+  "unique_raw_receipts": 8,
+  "normalized_events": 5,
+  "private_chat_messages": 3,
+  "synthetic_session_closed": true,
+  "real_kimi_model_run": false,
+  "connected_host_reloaded": false,
+  "native_run_doctor_pass": {
+    "operator": 21,
+    "client_correction": 21
+  }
+}

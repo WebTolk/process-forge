@@ -1,0 +1,3 @@
+# architecture-plan
+
+2026-10-22. Replace invented captured status with actual raw_accepted/duplicate_raw acceptance under accepted=true. Add real-ingress first/replay tests for prompts and subagent messages, plus invalid/denied response checks. Run applicable pytest/Ruff/mypy and admission smoke. Prepare clean exact candidate including generated inventory, commit and build distinct ZIP; qualify native archive checks and update plan. Only client file and checksum may differ in installed payload; compare every server-used AST definition unchanged. Native apply that distinct artifact once without restarting current ready server. Repeat installed/live Runtime synthetic session, report exact outcome and finish operator handoff.
