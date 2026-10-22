@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "check": "lint",
+      "command": "registered python-qa --project-root . lint -- src/processforge_core/common/release_identity.py",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "check": "format",
+      "command": "registered python-qa --project-root . format -- src/processforge_core/common/release_identity.py",
+      "exit_code": 0,
+      "output": "1 file already formatted\n"
+    },
+    {
+      "check": "types",
+      "command": "registered python-qa --project-root . typecheck -- --follow-imports=silent src/processforge_core/common/release_identity.py",
+      "exit_code": 0,
+      "output": "Success: no issues found in 1 source file\r\n"
+    },
+    {
+      "check": "versions",
+      "command": "registered python-qa --project-root . test -- tests/update_versions/test_selection.py -q",
+      "exit_code": 0,
+      "output": ".................                                                        [100%]\r\n17 passed in 0.07s\r\n"
+    }
+  ],
+  "scope": "VERSION, archive identity and generated checksum lines only; no new behavior tests added"
+}
