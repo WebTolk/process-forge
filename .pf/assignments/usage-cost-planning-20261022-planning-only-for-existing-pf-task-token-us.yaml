@@ -1,0 +1,338 @@
+schema_version: 1
+id: usage-cost-planning-20261022-planning-only-for-existing-pf-task-token-us
+title: usage-cost-planning-20261022 Planning only for existing pf-task-token-usage-logs
+run_id: garage-usage-cost-planning-20261022-planning-only-for-existing-pf-task-t
+process: software-feature-development
+status: in_progress
+created_at: '2026-10-22T10:03:10Z'
+updated_at: '2026-10-22T10:31:06Z'
+objective: 'usage-cost-planning-20261022 Planning only for existing pf-task-token-usage-logs-20261020: source-grounded domain and implementation plan for agent time, tokens and project costs in one local workplace view, shared by future Control Center/Monitor TUI, Codex plugin and optional REST synchronization to remote Control Center. Keep provider drivers at collection boundary, clear Work/attempt identity and accounting semantics, simple architecture with extensible consumers. Do not implement product, plugin, REST server/sync, pricing fetch, infrastructure or start next task. Existing implementation card stays open/planning_only. Produce reviewable plan, acceptance examples, source evidence and bounded phases; native planning cycle, dual dev docs delivery and stop.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+stage: release-delivery
+stage_status: in_progress
+stage_execution:
+  started_at: '2026-10-22T10:31:06Z'
+  evidence:
+    []
+  notes: ""
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-10-22T10:03:10Z'
+    completed_at: '2026-10-22T10:15:22Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/usage-cost-planning-20261022/orchestration.md
+        status: passed
+        recorded_at: '2026-10-22T10:15:22Z'
+        sha256: 'sha256:707d68b1286bdebbcf44bafa77c9a9c01a31d074a1c6203b83beff222df14f19'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/usage-cost-planning-20261022/orchestration.md
+        status: passed
+        recorded_at: '2026-10-22T10:15:22Z'
+        sha256: 'sha256:707d68b1286bdebbcf44bafa77c9a9c01a31d074a1c6203b83beff222df14f19'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/usage-cost-planning-20261022/orchestration.md
+        status: passed
+        recorded_at: '2026-10-22T10:15:22Z'
+        sha256: 'sha256:707d68b1286bdebbcf44bafa77c9a9c01a31d074a1c6203b83beff222df14f19'
+      -
+        kind: gate
+        gate_id: context-ready
+        status: passed
+        path: .pf/artifacts/usage-cost-planning-20261022/orchestration.md
+        recorded_at: '2026-10-22T10:15:22Z'
+        sha256: 'sha256:707d68b1286bdebbcf44bafa77c9a9c01a31d074a1c6203b83beff222df14f19'
+    notes: Planning-only scope and exact identity verified. Original implementation card stays open; no product writes. Proceed to bounded intake.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-10-22T10:15:22Z'
+    completed_at: '2026-10-22T10:16:15Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/usage-cost-planning-20261022/scope.md
+        status: passed
+        recorded_at: '2026-10-22T10:16:15Z'
+        sha256: 'sha256:9d7adbd06dd4416584a743d6a5ddc974c3166eeb05df600067059611526eac48'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/usage-cost-planning-20261022/scope.md
+        status: passed
+        recorded_at: '2026-10-22T10:16:15Z'
+        sha256: 'sha256:9d7adbd06dd4416584a743d6a5ddc974c3166eeb05df600067059611526eac48'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/usage-cost-planning-20261022/scope.md
+        status: passed
+        recorded_at: '2026-10-22T10:16:15Z'
+        sha256: 'sha256:9d7adbd06dd4416584a743d6a5ddc974c3166eeb05df600067059611526eac48'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/usage-cost-planning-20261022/scope.md
+        status: passed
+        recorded_at: '2026-10-22T10:16:15Z'
+        sha256: 'sha256:9d7adbd06dd4416584a743d6a5ddc974c3166eeb05df600067059611526eac48'
+    notes: User planning scope recorded; future implementation and clients separated. Next inspect real collector surfaces and data identities.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-10-22T10:16:15Z'
+    completed_at: '2026-10-22T10:20:42Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/usage-cost-planning-20261022/source-map.md
+        status: passed
+        recorded_at: '2026-10-22T10:20:42Z'
+        sha256: 'sha256:83f79d4f719a9a56d580cff27fc432cc7281f546d4a6a9ce77953d3f6ccbc11c'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/usage-cost-planning-20261022/source-map.md
+        status: passed
+        recorded_at: '2026-10-22T10:20:42Z'
+        sha256: 'sha256:83f79d4f719a9a56d580cff27fc432cc7281f546d4a6a9ce77953d3f6ccbc11c'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/usage-cost-planning-20261022/source-map.md
+        status: passed
+        recorded_at: '2026-10-22T10:20:42Z'
+        sha256: 'sha256:83f79d4f719a9a56d580cff27fc432cc7281f546d4a6a9ce77953d3f6ccbc11c'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/usage-cost-planning-20261022/source-map.md
+        status: passed
+        recorded_at: '2026-10-22T10:20:42Z'
+        sha256: 'sha256:83f79d4f719a9a56d580cff27fc432cc7281f546d4a6a9ce77953d3f6ccbc11c'
+    notes: Source inventory and bounded impact verified. Kimi primary-source lookup resolves context-size field and identifies per-step usage candidate; installed source coverage remains explicit implementation gate.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-10-22T10:20:42Z'
+    completed_at: '2026-10-22T10:24:23Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/usage-cost-planning-20261022/domain.md
+        status: passed
+        recorded_at: '2026-10-22T10:24:23Z'
+        sha256: 'sha256:03313e04110c08fdc8365736b6b51d96a0e876a66c17a63526de7657095f0563'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/usage-cost-planning-20261022/domain.md
+        status: passed
+        recorded_at: '2026-10-22T10:24:23Z'
+        sha256: 'sha256:03313e04110c08fdc8365736b6b51d96a0e876a66c17a63526de7657095f0563'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/usage-cost-planning-20261022/domain.md
+        status: passed
+        recorded_at: '2026-10-22T10:24:23Z'
+        sha256: 'sha256:03313e04110c08fdc8365736b6b51d96a0e876a66c17a63526de7657095f0563'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/usage-cost-planning-20261022/domain.md
+        status: passed
+        recorded_at: '2026-10-22T10:24:23Z'
+        sha256: 'sha256:03313e04110c08fdc8365736b6b51d96a0e876a66c17a63526de7657095f0563'
+    notes: Domain records and invariants documented; no product implementation. Modern installed Kimi 2.3.0 usage.record semantics verified in bundle and primary upstream; old Wire treated separately. Proceed to architecture.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-10-22T10:24:23Z'
+    completed_at: '2026-10-22T10:28:22Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/usage-cost-planning-20261022/implementation-plan.md
+        status: passed
+        recorded_at: '2026-10-22T10:28:22Z'
+        sha256: 'sha256:69c7dbc323056cd3b8844c1e7e757e851e9de47a88393d09e4cbb1960736f062'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/usage-cost-planning-20261022/implementation-plan.md
+        status: passed
+        recorded_at: '2026-10-22T10:28:22Z'
+        sha256: 'sha256:69c7dbc323056cd3b8844c1e7e757e851e9de47a88393d09e4cbb1960736f062'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/usage-cost-planning-20261022/decisions.md
+        status: passed
+        recorded_at: '2026-10-22T10:28:22Z'
+        sha256: 'sha256:7dc9f4a924a099f615a47d33dbd1056c12e8dc188924f6d777d5a488b142d597'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/usage-cost-planning-20261022/implementation-plan.md
+        status: passed
+        recorded_at: '2026-10-22T10:28:22Z'
+        sha256: 'sha256:69c7dbc323056cd3b8844c1e7e757e851e9de47a88393d09e4cbb1960736f062'
+    notes: Architecture and phased implementation plan complete. Single optional local accounting capability, thin future clients/sync, explicit source qualification. Proceed only to finalize planning documents and backlog input link.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-10-22T10:28:22Z'
+    completed_at: '2026-10-22T10:29:17Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/usage-cost-planning-20261022/changes.md
+        status: passed
+        recorded_at: '2026-10-22T10:29:17Z'
+        sha256: 'sha256:4e963fb2878b4bb50b3eb0bec49472b685fe79d3af7e26fd68d87bc27a71100e'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/usage-cost-planning-20261022/changes.md
+        status: passed
+        recorded_at: '2026-10-22T10:29:17Z'
+        sha256: 'sha256:4e963fb2878b4bb50b3eb0bec49472b685fe79d3af7e26fd68d87bc27a71100e'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/usage-cost-planning-20261022/changes.md
+        status: passed
+        recorded_at: '2026-10-22T10:29:17Z'
+        sha256: 'sha256:4e963fb2878b4bb50b3eb0bec49472b685fe79d3af7e26fd68d87bc27a71100e'
+    notes: Planning deliverables finalized and linked as exact immutable input to original open card. No product writes. Proceed to documents-only assurance/self-review.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-10-22T10:29:17Z'
+    completed_at: '2026-10-22T10:31:06Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/usage-cost-planning-20261022/assurance.md
+        status: passed
+        recorded_at: '2026-10-22T10:31:06Z'
+        sha256: 'sha256:f7888eddf780cbef129f220150de605b1d78ddc69e4b333b7db7c0a975fd6fc1'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/usage-cost-planning-20261022/assurance.md
+        status: passed
+        recorded_at: '2026-10-22T10:31:06Z'
+        sha256: 'sha256:f7888eddf780cbef129f220150de605b1d78ddc69e4b333b7db7c0a975fd6fc1'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/usage-cost-planning-20261022/assurance.md
+        status: passed
+        recorded_at: '2026-10-22T10:31:06Z'
+        sha256: 'sha256:f7888eddf780cbef129f220150de605b1d78ddc69e4b333b7db7c0a975fd6fc1'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/usage-cost-planning-20261022/assurance.md
+        status: passed
+        recorded_at: '2026-10-22T10:31:06Z'
+        sha256: 'sha256:f7888eddf780cbef129f220150de605b1d78ddc69e4b333b7db7c0a975fd6fc1'
+      -
+        kind: artifact
+        artifact_id: code-quality-report
+        path: .pf/artifacts/usage-cost-planning-20261022/assurance.md
+        status: passed
+        recorded_at: '2026-10-22T10:31:06Z'
+        sha256: 'sha256:f7888eddf780cbef129f220150de605b1d78ddc69e4b333b7db7c0a975fd6fc1'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/usage-cost-planning-20261022/assurance.md
+        status: passed
+        recorded_at: '2026-10-22T10:31:06Z'
+        sha256: 'sha256:f7888eddf780cbef129f220150de605b1d78ddc69e4b333b7db7c0a975fd6fc1'
+    notes: 'Documentation-only assurance passed: exact original card mutation, links/reference arithmetic, whitespace, native doctor and fresh context. Primary self-review only by capsule. No product tests or runtime qualification claimed. Proceed to planning-document delivery.'
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261021-162229-c46ea2
+  snapshot_checksum: 'sha256:c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be'
+  assignment_capsule: .pf/contexts/assignment-capsules/usage-cost-planning-20261022-planning-only-for-existing-pf-task-token-us.capsule.yaml
+  assignment_capsule_checksum: 'sha256:efb0512530d80622e5b130d84035030daf04a9da202458c925eb40c8f3702163'
+allowed_actions:
+  - read
+  - write_artifact
+forbidden_actions:
+  - write_product
+allowed_read_files:
+  - '**'
+allowed_files:
+  - .pf/artifacts/usage-cost-planning-20261022/**
+  - .pf/logs/usage-cost-planning-20261022.md
+  - .pf/tmp/usage-cost-planning-20261022/**
+  - .pf/assignments/pf-task-token-usage-logs-20261020.yaml
+ownership:
+  owner_id: usage-cost-planning-20261022-primary
+  role: planner
+  writer: false
+expected_report:
+  language: ru
+  format: concise_markdown
+  artifact: .pf/artifacts/usage-cost-planning-20261022/implementation-plan.md
+required_outputs:
+  -
+    id: implementation-plan
+    path: .pf/artifacts/usage-cost-planning-20261022/implementation-plan.md
+    type: markdown
+    required: true

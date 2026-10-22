@@ -48,3 +48,7 @@ context_artifacts:
     role: input
     required: true
     mutable_by_worker: false
+  - path: .pf/artifacts/usage-cost-planning-20261022/implementation-plan.md
+    role: input
+    required: true
+    mutable_by_worker: false
