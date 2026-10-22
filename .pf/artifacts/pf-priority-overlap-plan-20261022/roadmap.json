@@ -1,0 +1,386 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-22",
+  "basis_commit": "34b57d75e53c8597a104c1643be40193156a15da",
+  "recommendation_only": true,
+  "sort": [
+    "priority ascending P1-P4",
+    "complexity descending 5-1"
+  ],
+  "complexity_scale": {
+    "1": "локальная правка",
+    "2": "ограниченный адаптер/исследование",
+    "3": "связный срез с несколькими потребителями",
+    "4": "сквозной контракт/миграция/несколько компонентов",
+    "5": "многосрезовая архитектурная программа"
+  },
+  "rows": [
+    {
+      "key": "R01",
+      "priority": 1,
+      "complexity": 4,
+      "title": "Резервирование, целостность и восстановление SQLite/журналов",
+      "tasks": [
+        "pf-maintenance-sqlite-journals-20261019"
+      ],
+      "epics": [
+        "OOP-02"
+      ],
+      "result": "Один проверенный backup/restore/quarantine контракт для существующих журналов и accounting.sqlite3; использовать имеющиеся SQLite backup primitives.",
+      "depends": [],
+      "scope": "ограниченная программа обслуживания"
+    },
+    {
+      "key": "R02",
+      "priority": 1,
+      "complexity": 4,
+      "title": "Оперативные исполнения отдельно от накопленной истории",
+      "tasks": [
+        "pf-database-layer-and-journals-20261021"
+      ],
+      "epics": [
+        "OOP-02",
+        "OOP-03",
+        "OOP-05"
+      ],
+      "result": "Первая очередь DB-задачи: текущее состояние и stop/busy guard не зависят от обхода завершённых JSON-run records; SQLite и управляемая миграция.",
+      "depends": [
+        "R01"
+      ],
+      "scope": "фаза I DB, без multi-backend DAL"
+    },
+    {
+      "key": "R03",
+      "priority": 1,
+      "complexity": 4,
+      "title": "Единые свойства Core и installed/loaded provenance",
+      "tasks": [
+        "pf-services-core-properties-20261021"
+      ],
+      "epics": [
+        "OOP-01",
+        "OOP-05"
+      ],
+      "result": "Один объектный источник identity для CLI/MCP/Runtime/monitor; устранить подтверждённое 1.2.0 и различать загруженную и установленную сборки.",
+      "depends": [],
+      "scope": "один сквозной контракт и все его потребители"
+    },
+    {
+      "key": "R04",
+      "priority": 1,
+      "complexity": 4,
+      "title": "Разделить project-context refresh и workplace индексацию",
+      "tasks": [
+        "pf-context-refresh-indexing-separation-20261019"
+      ],
+      "epics": [
+        "OOP-01",
+        "OOP-02",
+        "OOP-05"
+      ],
+      "result": "Refresh читает состояние поиска; owner индексации — отдельное обслуживание workplace. Подтверждён текущий вызов maintenance, динамическая длительность здесь не измерялась.",
+      "depends": [],
+      "scope": "граница ответственности; scheduler/manual maintenance отдельными срезами"
+    },
+    {
+      "key": "R05",
+      "priority": 1,
+      "complexity": 3,
+      "title": "Довести сохранённый кандидат OOP54–55 до независимой приёмки",
+      "tasks": [
+        "p121-oop2-primary-20261020-continue-the-explicitly-authorized-progressiv",
+        "p121-oop2-c-20261020-implement-coherent-existing-blocks-55-own-the-exist"
+      ],
+      "epics": [
+        "OOP-02",
+        "OOP-04"
+      ],
+      "result": "Rootless workplace path resolution и PlatformRootResolver: актуализировать delta, пройти review и закрыть потребителей. 6 из 8 файлов candidate-v2 сохранили raw hashes; Main/checksums изменились.",
+      "depends": [],
+      "scope": "остаток двух срезов, без возобновления cancelled Work"
+    },
+    {
+      "key": "R06",
+      "priority": 2,
+      "complexity": 5,
+      "title": "Остаток Core: независимая композиция, state repositories, lifecycle и тонкие адаптеры",
+      "tasks": [
+        "evolve-20261005-oop-01",
+        "evolve-20261005-oop-02",
+        "evolve-20261005-oop-03",
+        "evolve-20261005-oop-05"
+      ],
+      "epics": [
+        "OOP-01",
+        "OOP-02",
+        "OOP-03",
+        "OOP-05"
+      ],
+      "result": "Оставшиеся normal composition/use cases без возврата в монолит, не повторяя владельцев и части, уже отнесённые к R01–R05.",
+      "depends": [],
+      "scope": "многосрезовая программа, не одна большая Work"
+    },
+    {
+      "key": "R07",
+      "priority": 2,
+      "complexity": 5,
+      "title": "Единый управляемый сценарий обновления и окончательная проверка",
+      "tasks": [
+        "pf-upgrade-integrated-verification-20261019"
+      ],
+      "epics": [
+        "OOP-03",
+        "OOP-05"
+      ],
+      "result": "Собрать backup, plan/apply, реестры, recovery и фактически подключённый host на готовых контрактах.",
+      "depends": [
+        "R01",
+        "R03",
+        "R09",
+        "R10"
+      ],
+      "scope": "несколько этапов; operator delivery отдельно"
+    },
+    {
+      "key": "R08",
+      "priority": 2,
+      "complexity": 4,
+      "title": "Целевое unit coverage и регрессии критических контрактов",
+      "tasks": [
+        "pf-core-unit-coverage-20261020",
+        "pf-filesystem-path-unicode-20261014"
+      ],
+      "epics": [
+        "OOP-01",
+        "OOP-02",
+        "OOP-03",
+        "OOP-04",
+        "OOP-05"
+      ],
+      "result": "Проверять затрагиваемые owners, отказы, live reads и parity. Сверить acceptance хвосты старого аудита; наличие UTF-8/maxItems/HTTP guards уже подтверждено статически.",
+      "depends": [],
+      "scope": "сопровождает каждый срез; широкий residual coverage отдельно"
+    },
+    {
+      "key": "R09",
+      "priority": 2,
+      "complexity": 4,
+      "title": "Раздельная диагностика Runtime, контекста и полноты статистики",
+      "tasks": [
+        "pf-health-readiness-statistics-20261019"
+      ],
+      "epics": [
+        "OOP-01",
+        "OOP-03",
+        "OOP-05"
+      ],
+      "result": "Единая семантика ready/stale/partial/unknown, область неполноты и конкретные операторские действия.",
+      "depends": [],
+      "scope": "развитие существующих DTO/collectors, без второго health engine"
+    },
+    {
+      "key": "R10",
+      "priority": 2,
+      "complexity": 3,
+      "title": "Матрица совместимости обновлений и проверяемые команды руководства",
+      "tasks": [
+        "pf-upgrade-compatibility-matrix-20261019"
+      ],
+      "epics": [
+        "OOP-05"
+      ],
+      "result": "Определить поддерживаемые переходы и реально исполнимые команды исходных версий; итоговые E2E поверх R07.",
+      "depends": [],
+      "scope": "политика и план до R07; финальная квалификация после него"
+    },
+    {
+      "key": "R11",
+      "priority": 2,
+      "complexity": 3,
+      "title": "Документация и ownership/API-карта Core",
+      "tasks": [
+        "pf-core-documentation-20261020"
+      ],
+      "epics": [
+        "OOP-01",
+        "OOP-02",
+        "OOP-03",
+        "OOP-04",
+        "OOP-05"
+      ],
+      "result": "Содержательные docstrings/примеры обновлять с принятой областью; глобальный каталог API постепенно.",
+      "depends": [],
+      "scope": "сопровождает срезы; не массовое переописание до изменения owners"
+    },
+    {
+      "key": "R12",
+      "priority": 3,
+      "complexity": 5,
+      "title": "Общий расширяемый DB API и дополнительные backend drivers",
+      "tasks": [
+        "pf-database-layer-and-journals-20261021"
+      ],
+      "epics": [
+        "OOP-02",
+        "OOP-04"
+      ],
+      "result": "Фаза II+ исходной DB-задачи: профили PFConfig, возможности драйверов, SQL/types/query API, разные СУБД; переиспользовать R01/R02/accounting contracts.",
+      "depends": [
+        "R01",
+        "R02"
+      ],
+      "scope": "платформенная программа; не prerequisite для первой SQLite-фазы"
+    },
+    {
+      "key": "R13",
+      "priority": 3,
+      "complexity": 4,
+      "title": "Остаток контрактов расширений и conformance",
+      "tasks": [
+        "evolve-20261005-oop-04"
+      ],
+      "epics": [
+        "OOP-04"
+      ],
+      "result": "Довести типизированные границы существующих process/platform/toolchain/driver механизмов, регистрации и конфликтов.",
+      "depends": [],
+      "scope": "существующие расширения, без новой системы плагинов"
+    },
+    {
+      "key": "R14",
+      "priority": 3,
+      "complexity": 4,
+      "title": "Дополнительные agent hooks и квалификация native capture",
+      "tasks": [
+        "pf-forge-agent-hooks-adapters-20261020"
+      ],
+      "epics": [
+        "OOP-04",
+        "OOP-05"
+      ],
+      "result": "Выбрать конкретного агента/версию, native init/capture/replay и permissions; использовать готовый AccountingService. Kimi hooks и Kimi usage capture — разные приёмки.",
+      "depends": [],
+      "scope": "один агент за раз; full generic extension framework не prerequisite"
+    },
+    {
+      "key": "R15",
+      "priority": 3,
+      "complexity": 3,
+      "title": "Дальнейшее развитие монитора: Textual, проекты и детали",
+      "tasks": [
+        "pf-app-server-window-ux-20261019"
+      ],
+      "epics": [
+        "OOP-05"
+      ],
+      "result": "Только будущий UX-остаток/идеи: серверный launch slice уже принят. Textual/autostart/project drilldown требуют отдельного решения.",
+      "depends": [
+        "R03",
+        "R09"
+      ],
+      "scope": "captured future scope, не повтор закрытой server-window реализации"
+    },
+    {
+      "key": "R16",
+      "priority": 3,
+      "complexity": 2,
+      "title": "Готовый Windows-запуск существующего монитора и TERM=dumb",
+      "tasks": [
+        "pf-windows-monitor-launch-20261019"
+      ],
+      "epics": [
+        "OOP-05"
+      ],
+      "result": "Тонкий launcher, отдельное интерактивное окно и объяснение одноразового snapshot; текущий monitor не требует Textual.",
+      "depends": [],
+      "scope": "не зависит от R15; закрытие монитора не останавливает Runtime"
+    },
+    {
+      "key": "R17",
+      "priority": 4,
+      "complexity": 4,
+      "title": "Обязательные ресурсы специализаций и явный выбор/допуск Work",
+      "tasks": [
+        "pf-specialization-required-resource-selection-20261020"
+      ],
+      "epics": [
+        "OOP-02",
+        "OOP-04",
+        "OOP-05"
+      ],
+      "result": "Разделить декларацию, проектный выбор и фактические grants; сохранить минимальный доступ и immutable capsules.",
+      "depends": [],
+      "scope": "явно отложенный пользователем горизонт; не автоматическая выдача прав"
+    },
+    {
+      "key": "R18",
+      "priority": 4,
+      "complexity": 2,
+      "title": "Исследовать необходимость общего HTTP-клиента/MCP-инструмента",
+      "tasks": [
+        "pf-http-client-mcp-feasibility-20261020"
+      ],
+      "epics": [
+        "OOP-04",
+        "OOP-05"
+      ],
+      "result": "Проверить реальные повторяющиеся операции и готовые средства; результатом может быть отказ от нового инструмента.",
+      "depends": [],
+      "scope": "исследование, не заранее обязательная реализация"
+    }
+  ],
+  "evidence_sources": [
+    ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+    ".pf/artifacts/pf-core-properties-backlog-20261021/spec.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/spec.md",
+    ".pf/artifacts/pf121-oop-blocks54-55-20261020/primary/deadline-checkpoint.json",
+    ".pf/artifacts/pf121-oop-blocks54-55-20261020/primary/candidate-v2.json",
+    ".pf/artifacts/python-framework-20261005/program.md",
+    ".pf/artifacts/audit-followups-20261014/root/task-proposals.json",
+    ".pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/report.md",
+    ".pf/artifacts/pf-app-server-dev-device-20261019/primary/report.md",
+    "src/processforge_core/bootstrap.py",
+    "src/processforge_core/composition.py",
+    "src/processforge_core/accounting/storage.py",
+    "src/processforge_core/sqlite_storage.py",
+    "tools/processforge.py",
+    "tools/pf_runtime/mcp_server.py",
+    "tools/pf_runtime/service.py"
+  ],
+  "observed": {
+    "context": "fresh/continue",
+    "snapshot_id": "ctx-20261021-162229-c46ea2",
+    "refactor_candidate": {
+      "accepted_range_at_checkpoint": "18-53",
+      "unaccepted": [
+        54,
+        55
+      ],
+      "unchanged_candidate_files": 6,
+      "total_candidate_files": 8,
+      "changed": [
+        "tools/processforge.py",
+        "checksums/processforge.sha256"
+      ]
+    },
+    "active_issue": {
+      "core_version_constant": "1.2.0",
+      "runtime_shutdown_code_fix": "cancelled; no product changes; one-time force was operator action",
+      "refresh_calls": "search_index_maintenance_for_known_projects"
+    },
+    "existing_mechanisms": [
+      "AccountingService/SQLite repository and consistent backup",
+      "shared sqlite_storage transaction/database helpers",
+      "MCP UTF-8 stdio configuration",
+      "MCP minItems/maxItems validation",
+      "Runtime HTTP body length/finite JSON validation"
+    ]
+  },
+  "limits": [
+    "Static planning and task reconciliation only; no new runtime execution, benchmarks, full audit or functional acceptance.",
+    "Complexity is a relative estimate with uncertainty, not hours/tokens/completion percent.",
+    "Priorities are proposed; existing cards, dependency graphs, capsules and ownership are not changed.",
+    "Legacy cancelled Work is not resumed. Native scopes/process/action permissions must be admitted separately.",
+    "P1 risk from historical scale failure is recorded; current live stop was not retested."
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "basis_commit": "34b57d75e53c8597a104c1643be40193156a15da",
+  "note": "Current source/artifact bytes, including explicitly identified WIP; not installed acceptance.",
+  "pins": [
+    {
+      "path": ".pf/artifacts/pf-upgrade-maintenance-backlog-20261019/backlog.md",
+      "sha256": "8232905ab5fbfc3bd404b613e19fc3061095edaa37cbb5a1153953d89be3fe9c"
+    },
+    {
+      "path": ".pf/artifacts/pf-core-properties-backlog-20261021/spec.md",
+      "sha256": "d841255e498669a69ccbb68e59fa21f19e9e962a7ef8376f01829701c360fda4"
+    },
+    {
+      "path": ".pf/artifacts/pf-database-layer-backlog-20261021/spec.md",
+      "sha256": "6a3a0ca4c430e503af1a4f65bc8126d7cd5f875120d99a8fe3882029020af5cb"
+    },
+    {
+      "path": ".pf/artifacts/pf121-oop-blocks54-55-20261020/primary/deadline-checkpoint.json",
+      "sha256": "89543789553295a953a3a21ec844cdeb1dafec5ce21ec507260a698fd02bd486"
+    },
+    {
+      "path": ".pf/artifacts/pf121-oop-blocks54-55-20261020/primary/candidate-v2.json",
+      "sha256": "42f34eeda3ef82deb4a140166e372bd2a1cc7b92712bc9c1057c4efcf95ff6bb"
+    },
+    {
+      "path": ".pf/artifacts/python-framework-20261005/program.md",
+      "sha256": "a7874c6dd7facf4966bbd47a4280f43a459be3c01929027f4f6e503b19b708b1"
+    },
+    {
+      "path": ".pf/artifacts/audit-followups-20261014/root/task-proposals.json",
+      "sha256": "77cc984db55a2dbaa2e4f6ee2229eb8701b45955b6afb76592022f5c4166ab12"
+    },
+    {
+      "path": ".pf/artifacts/pf-runtime-shutdown-budget-fix-20261021/report.md",
+      "sha256": "344cfe2d7093b3669d7e082ba42b9316898e702ecf03079ec4819644e90e4459"
+    },
+    {
+      "path": ".pf/artifacts/pf-app-server-dev-device-20261019/primary/report.md",
+      "sha256": "e84195b91fe684f35777c5ba7d44f2c6388fbe32b0aec56ea18bf40178313da3"
+    },
+    {
+      "path": "src/processforge_core/bootstrap.py",
+      "sha256": "67365a7278e3648d08c9b2d73b66142c60ecca408fe78ec6faa2b5cb301f2903"
+    },
+    {
+      "path": "src/processforge_core/composition.py",
+      "sha256": "53d0dcd14c6fd4bab43d722af3f4f24f8ea91dbcc5d3c894286fec8b93c8d981"
+    },
+    {
+      "path": "src/processforge_core/accounting/storage.py",
+      "sha256": "13296d07d2418257f23a50e483f48f33b8f338482a59ca7098b66342505c197d"
+    },
+    {
+      "path": "src/processforge_core/sqlite_storage.py",
+      "sha256": "74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572"
+    },
+    {
+      "path": "tools/processforge.py",
+      "sha256": "e0a4d3238210fdb5b99a5973b71294cb3f13607106b9cb310ba744d905de50b4"
+    },
+    {
+      "path": "tools/pf_runtime/mcp_server.py",
+      "sha256": "1a523f767a75a13f14b2c7072ed73928d7634886d2aabb2ca5824b05c084e757"
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "sha256": "4aae1914382ab05758ec37375f25237394ad9237faef5e72fee40705c10bfc06"
+    }
+  ]
+}
