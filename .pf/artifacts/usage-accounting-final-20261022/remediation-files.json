@@ -1,0 +1,18 @@
+[
+    {
+        "path":  "src/processforge_core/accounting/binding.py",
+        "sha256":  "11b37869cce018761ba39f9a949e9a250f688795b01406630b62de2bd9581dfd"
+    },
+    {
+        "path":  "tools/codex_exec_worker.py",
+        "sha256":  "592d474bacdb6855e456842439fadb2cd1cff35df777ee4cbc6669387cf1379a"
+    },
+    {
+        "path":  "tests/usage_collectors/test_collectors.py",
+        "sha256":  "f56f027c41a08fe1fb8c1da8aecc05fe316c8e7e4daf6441570fe50be8765d6c"
+    },
+    {
+        "path":  "tests/usage_cli/test_cli.py",
+        "sha256":  "d6376b694e3521bbdd64df974ccb017fd0ac1d938fcb4682d6eaf26b738e3040"
+    }
+]

@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "run": "usage-accounting-workers-20261022",
+  "task": "usage-accounting-review-20261022",
+  "attempt": 1,
+  "source_sha256": "892364ae203e9e7052d02bb41e06b4c8a4665185fb62eca8dc5f1f7537306813",
+  "actual_terminal_usage": {
+    "input_tokens": 1942651,
+    "cached_input_tokens": 1836416,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 15117,
+    "reasoning_output_tokens": 6510
+  },
+  "normalized_totals": {
+    "input_cache_read": 1836416,
+    "input_cache_write": 0,
+    "input_total": 1942651,
+    "output_reasoning": 6510,
+    "output_total": 15117,
+    "reported_total": null,
+    "total": 1957768
+  },
+  "execution_seconds": 533.9269311000826,
+  "occupied_seconds": 533.930739,
+  "clock_quality": {
+    "aligned": 0,
+    "discrepant": 1,
+    "monotonic_only": 0,
+    "reversed": 0,
+    "unknown": 0,
+    "utc_only": 0
+  },
+  "replays": [
+    {
+      "activity_stored": 0,
+      "complete": false,
+      "error": null,
+      "lines": 82,
+      "status": "partial",
+      "stored": 0
+    },
+    {
+      "activity_stored": 0,
+      "complete": false,
+      "error": null,
+      "lines": 82,
+      "status": "partial",
+      "stored": 0
+    }
+  ],
+  "project_totals_unchanged": true,
+  "coverage_complete": false,
+  "qualification_limit": "One completed managed Codex attempt; no claim of native Kimi or device-wide completeness."
+}

@@ -10,8 +10,11 @@ import os
 import shutil
 import subprocess
 import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 
 def read_text(path: Path) -> str:
@@ -22,7 +25,9 @@ def resolved_workspace_dirs(workspace_access: Path) -> list[Path]:
     if not workspace_access.is_file():
         return []
     data = json.loads(workspace_access.read_text(encoding="utf-8"))
-    grants = data.get("grants") if isinstance(data.get("grants"), dict) else {}
+    grants = data.get("grants")
+    if not isinstance(grants, dict):
+        grants = {}
     paths: list[Path] = []
     for items in grants.values():
         if not isinstance(items, list):
@@ -30,7 +35,9 @@ def resolved_workspace_dirs(workspace_access: Path) -> list[Path]:
         for item in items:
             if not isinstance(item, dict):
                 continue
-            resolution = item.get("resolution") if isinstance(item.get("resolution"), dict) else {}
+            resolution = item.get("resolution")
+            if not isinstance(resolution, dict):
+                resolution = {}
             if str(resolution.get("status") or "") not in {"resolved", "missing"}:
                 continue
             raw_path = resolution.get("path")
@@ -45,12 +52,16 @@ def resolved_workspace_dirs(workspace_access: Path) -> list[Path]:
 
 
 def codex_executable() -> str:
-    explicit = os.environ.get("PF_CODEX_EXECUTABLE") or os.environ.get("CODEX_EXECUTABLE")
+    explicit = os.environ.get("PF_CODEX_EXECUTABLE") or os.environ.get(
+        "CODEX_EXECUTABLE"
+    )
     if explicit:
         return explicit
     found = shutil.which("codex") or shutil.which("codex.cmd")
     if not found:
-        raise SystemExit("FAIL: codex executable not found; set PF_CODEX_EXECUTABLE or install Codex CLI")
+        raise SystemExit(
+            "FAIL: codex executable not found; set PF_CODEX_EXECUTABLE or install Codex CLI"
+        )
     return found
 
 
@@ -64,7 +75,9 @@ def codex_config_args(*, effort: str, memories: str) -> list[str]:
     # ProcessForge is a local, assignment-scoped control plane. Without this
     # override Codex discovers pf.* tools but cannot call them under the
     # non-interactive `never` approval policy used by shell workers.
-    args.extend(["-c", 'mcp_servers.processforge.default_tools_approval_mode="approve"'])
+    args.extend(
+        ["-c", 'mcp_servers.processforge.default_tools_approval_mode="approve"']
+    )
     return args
 
 
@@ -111,14 +124,25 @@ def managed_hook_trust_args(project_root: Path) -> list[str]:
     return ["--dangerously-bypass-hook-trust"]
 
 
-def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path, prepared: dict[str, Any] | None = None) -> str:
-    introduction = read_text(worker_prompt).rstrip() if prepared is None else "\n".join([
-        "You are a worker executing exactly the immutable prepared input below.",
-        "Use only its scope, actions, outputs, inline inputs and explicitly declared file references.",
-        "Metadata-only grants do not authorize body reads. Do not copy private paths into public reports.",
-        "Do not bootstrap ProcessForge, start another Work, reselect the process or rebuild context.",
-        "No ProcessForge MCP connection is required. Stop and report if scope or input is insufficient.",
-    ])
+def prompt_payload(
+    worker_prompt: Path,
+    capsule: Path,
+    workspace_access: Path,
+    prepared: dict[str, Any] | None = None,
+) -> str:
+    introduction = (
+        read_text(worker_prompt).rstrip()
+        if prepared is None
+        else "\n".join(
+            [
+                "You are a worker executing exactly the immutable prepared input below.",
+                "Use only its scope, actions, outputs, inline inputs and explicitly declared file references.",
+                "Metadata-only grants do not authorize body reads. Do not copy private paths into public reports.",
+                "Do not bootstrap ProcessForge, start another Work, reselect the process or rebuild context.",
+                "No ProcessForge MCP connection is required. Stop and report if scope or input is insufficient.",
+            ]
+        )
+    )
     return "\n".join(
         [
             introduction,
@@ -131,9 +155,15 @@ def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path, p
             "",
             "## Prepared Execution Input" if prepared else "## Assignment Capsule",
             "",
-            json.dumps(prepared, ensure_ascii=False, sort_keys=True) if prepared else read_text(capsule).rstrip(),
+            json.dumps(prepared, ensure_ascii=False, sort_keys=True)
+            if prepared
+            else read_text(capsule).rstrip(),
             "",
-            *(["## Workspace Access File", "", str(workspace_access)] if prepared is None else []),
+            *(
+                ["## Workspace Access File", "", str(workspace_access)]
+                if prepared is None
+                else []
+            ),
             "",
         ]
     )
@@ -150,8 +180,12 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
     from pf_runtime import host
 
     project_root = Path(os.environ.get("PF_PROJECT_ROOT") or Path.cwd()).resolve()
-    run_id = str(os.environ.get("PF_RUN_ID") or os.environ.get("PF_WORKER_RUN_ID") or "")
-    task_id = str(os.environ.get("PF_TASK_ID") or os.environ.get("PF_WORKER_TASK_ID") or "")
+    run_id = str(
+        os.environ.get("PF_RUN_ID") or os.environ.get("PF_WORKER_RUN_ID") or ""
+    )
+    task_id = str(
+        os.environ.get("PF_TASK_ID") or os.environ.get("PF_WORKER_TASK_ID") or ""
+    )
     attempt = str(os.environ.get("PF_WORKER_ATTEMPT") or "1")
     if not run_id or not task_id:
         # The helper remains usable by the pre-existing direct CLI smoke.  A
@@ -163,21 +197,45 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
     try:
         expected_report = output.resolve().relative_to(project_root).as_posix()
     except ValueError as exc:
-        raise SystemExit("FAIL: expected report must remain inside the project") from exc
+        raise SystemExit(
+            "FAIL: expected report must remain inside the project"
+        ) from exc
     payload_hash = "sha256:" + hashlib.sha256(payload_text.encode("utf-8")).hexdigest()
     session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
-    summary = host.worker_input_summary(run_id, task_id, attempt, payload_hash, expected_report)
+    summary = host.worker_input_summary(
+        run_id, task_id, attempt, payload_hash, expected_report
+    )
     agent_run_dir_raw = os.environ.get("PF_AGENT_RUN_DIR") or ""
     if not agent_run_dir_raw:
         raise SystemExit("FAIL: PF worker input capture requires PF_AGENT_RUN_DIR")
     agent_run_dir = Path(agent_run_dir_raw).resolve()
-    expected_run_dir = project_root / ".pf" / "runtime" / "agent-runs" / core.safe_id(run_id, "run") / core.safe_id(task_id, "task")
+    expected_run_dir = (
+        project_root
+        / ".pf"
+        / "runtime"
+        / "agent-runs"
+        / core.safe_id(run_id, "run")
+        / core.safe_id(task_id, "task")
+    )
     if agent_run_dir != expected_run_dir.resolve():
-        raise SystemExit("FAIL: PF worker input capture run directory does not match run/task identity")
-    input_contract = {"schema_version": 1, "run_id": run_id, "task_id": task_id, "attempt": attempt, "stdin_payload_hash": payload_hash, "expected_report": expected_report, "summary": summary}
+        raise SystemExit(
+            "FAIL: PF worker input capture run directory does not match run/task identity"
+        )
+    input_contract = {
+        "schema_version": 1,
+        "run_id": run_id,
+        "task_id": task_id,
+        "attempt": attempt,
+        "stdin_payload_hash": payload_hash,
+        "expected_report": expected_report,
+        "summary": summary,
+    }
     contract_path = agent_run_dir / "worker-input-contract.json"
     contract_tmp = contract_path.with_suffix(".json.tmp")
-    contract_tmp.write_text(json.dumps(input_contract, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    contract_tmp.write_text(
+        json.dumps(input_contract, ensure_ascii=False, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     contract_tmp.replace(contract_path)
     envelope = {
         "provider": "processforge",
@@ -200,11 +258,21 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
         "derived_conversation_messages": [
             {
                 "message_role": "system",
-                "participant": {"id": "processforge-runtime", "type": "agent", "role": "worker_launcher"},
+                "participant": {
+                    "id": "processforge-runtime",
+                    "type": "agent",
+                    "role": "worker_launcher",
+                },
                 "session_id": session_id,
                 "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
                 "content": summary,
-                "content_source": {"kind": "pf_codex_exec_input", "provider": "processforge", "adapter": "pf-codex-exec-worker", "native_event_type": "WorkerPromptPayloadSubmitted", "content_provenance": "pf_owned_safe_summary"},
+                "content_source": {
+                    "kind": "pf_codex_exec_input",
+                    "provider": "processforge",
+                    "adapter": "pf-codex-exec-worker",
+                    "native_event_type": "WorkerPromptPayloadSubmitted",
+                    "content_provenance": "pf_owned_safe_summary",
+                },
                 "delivery": {"state": "complete", "sequence": 0, "final": True},
             }
         ],
@@ -216,12 +284,16 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
     return result
 
 
-def write_heartbeat(path: Path | None, status: str, extra: dict[str, Any] | None = None) -> None:
+def write_heartbeat(
+    path: Path | None, status: str, extra: dict[str, Any] | None = None
+) -> None:
     if not path:
         return
     payload = {"status": status, **(extra or {})}
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def write_exit_contract(path: Path | None, returncode: int) -> None:
@@ -232,8 +304,198 @@ def write_exit_contract(path: Path | None, returncode: int) -> None:
     payload = {"schema_version": 1, "exit_code": returncode, "status": status}
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f".{path.name}.tmp")
-    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    tmp.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     os.replace(tmp, path)
+
+
+class ManagedUsageCapture:
+    """Persist attempt receipts even if optional accounting storage is unavailable."""
+
+    def __init__(self, project_root: Path, output: Path, model: str) -> None:
+        self.project_root = project_root
+        self.output = output
+        self.model = model
+        self.receipt: Any = None
+        self.directory: Path | None = None
+        self.started = datetime.now(timezone.utc)
+        self.monotonic_start = time.monotonic()
+        self.binding: Any = None
+        self.composition: Any = None
+        self.timing: dict[str, Any] = {}
+
+    def _error(self, phase: str) -> None:
+        """Emit bounded safe evidence; never expose exception text or change exit."""
+        payload = {
+            "schema_version": 1,
+            "status": "backlog",
+            "error": "usage_collection_failed",
+            "phase": phase,
+        }
+        print(json.dumps(payload), file=sys.stderr)
+        if self.directory is not None:
+            try:
+                self._write_json("collection-error.json", payload)
+            except OSError:
+                pass
+
+    def _write_json(self, name: str, data: dict[str, Any]) -> None:
+        assert self.directory is not None
+        path = self.directory / name
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        with temporary.open("w", encoding="utf-8") as stream:
+            json.dump(data, stream, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+
+    def begin(self) -> Any:
+        """Start one attempt-local JSON stream without truncating prior evidence."""
+        try:
+            attempt = int(os.environ.get("PF_WORKER_ATTEMPT") or "1")
+            run = (
+                os.environ.get("PF_RUN_ID")
+                or os.environ.get("PF_WORKER_RUN_ID")
+                or None
+            )
+            task = (
+                os.environ.get("PF_TASK_ID")
+                or os.environ.get("PF_WORKER_TASK_ID")
+                or None
+            )
+            run_directory = os.environ.get("PF_AGENT_RUN_DIR")
+            directory = Path(run_directory) if run_directory else self.output.parent
+            suffix = str(attempt) if run_directory else uuid4().hex
+            capture_directory = directory / ("usage-attempt-" + suffix)
+            capture_directory.mkdir(parents=True, exist_ok=False)
+            self.directory = capture_directory
+            self.receipt = (self.directory / "codex.jsonl").open("xb")
+            # Reset immediately before subprocess execution. Timing is never
+            # sourced from Ledger presence or added to a parent interval.
+            self.started = datetime.now(timezone.utc)
+            self.monotonic_start = time.monotonic()
+            identity = {
+                "run_id": run,
+                "assignment_id": task,
+                "attempt": attempt if task else None,
+            }
+            source_id = (
+                "codex-"
+                + hashlib.sha256(
+                    json.dumps(
+                        {
+                            **identity,
+                            "project_ref": str(self.project_root.resolve()),
+                            "direct": suffix if not run_directory else None,
+                        },
+                        sort_keys=True,
+                    ).encode()
+                ).hexdigest()
+            )
+            session_id = "pf-worker-" + source_id
+            self.timing = {
+                "schema_version": 1,
+                "source_id": source_id,
+                "start": self.started.isoformat(),
+                "wall_end": None,
+                "elapsed_seconds": None,
+                "revision": 0,
+                "attribution": None,
+            }
+            self._write_json("timing.json", self.timing)
+            from processforge_core.accounting.binding import CollectionBinding
+            from processforge_core.accounting.composition import WorkplaceAccounting
+            from processforge_core.accounting.model import Attribution
+
+            self.composition = WorkplaceAccounting.discover(self.project_root)
+            origin_id = self.composition.ensure_identity()
+            attr = Attribution(
+                project_id=self.composition.project_id,
+                agent_instance_id=session_id,
+                session_id=session_id,
+                provider="codex",
+                model=self.model,
+                run_id=run,
+                assignment_id=task,
+                attempt=attempt if task else None,
+            )
+            self.binding = CollectionBinding(
+                origin_id=origin_id,
+                source_id=source_id,
+                profile="codex-exec-v1",
+                attribution=attr,
+                observed_at=self.started,
+            )
+            self._write_json(
+                "binding.json",
+                {
+                    "schema_version": 1,
+                    "primary_records": True,
+                    "origin_id": origin_id,
+                    "source_id": source_id,
+                    "profile": "codex-exec-v1",
+                    "attribution": vars(attr),
+                    "observed_at": self.started.isoformat(),
+                },
+            )
+            self.timing["attribution"] = vars(attr)
+            self._write_json("timing.json", self.timing)
+            from processforge_core.accounting.collectors import import_timing
+
+            service = self.composition.service(create=True)
+            assert service is not None
+            # Publish an unknown-duration open revision before optional setup
+            # finishes; final revision measures only the subprocess invocation.
+            import_timing(self.directory / "timing.json", self.binding, service)
+        except Exception:
+            self._error("capture_start")
+        return self.receipt
+
+    def start_execution(self) -> None:
+        """Start the monotonic measurement after optional accounting setup."""
+        # Pair observations without metadata I/O between them. The persisted
+        # open revision remains an unknown-duration capture until finish writes
+        # the actual execution endpoints; it never invents a crash duration.
+        self.started = datetime.now(timezone.utc)
+        self.monotonic_start = time.monotonic()
+        if self.timing:
+            self.timing["start"] = self.started.isoformat()
+            self.timing["revision"] = 1
+
+    def finish(self) -> None:
+        """Close receipts then normalize usage/time without affecting worker exit."""
+        elapsed = time.monotonic() - self.monotonic_start
+        wall_end = datetime.now(timezone.utc)
+        try:
+            if self.receipt is not None:
+                self.receipt.flush()
+                os.fsync(self.receipt.fileno())
+                self.receipt.close()
+            if self.directory is None or not self.timing:
+                return
+            self.timing.update(
+                wall_end=wall_end.isoformat(), elapsed_seconds=elapsed, revision=2
+            )
+            self._write_json("timing.json", self.timing)
+            if self.binding is None or self.composition is None:
+                self._error("binding_unavailable")
+                return
+            from processforge_core.accounting.collectors import (
+                ProviderCollector,
+                import_timing,
+            )
+
+            service = self.composition.service(create=True)
+            assert service is not None
+            import_timing(self.directory / "timing.json", self.binding, service)
+            result = ProviderCollector().collect(
+                self.directory / "codex.jsonl", self.binding, service
+            )
+            self._write_json("collection.json", result.to_dict())
+        except Exception:
+            self._error("capture_finish")
 
 
 def main() -> int:
@@ -250,11 +512,17 @@ def main() -> int:
     workspace_access = Path(args.workspace_access).expanduser().resolve()
     output = Path(args.output).expanduser().resolve()
     heartbeat = Path(args.heartbeat).expanduser().resolve() if args.heartbeat else None
-    exit_contract = Path(os.environ["PF_AGENT_EXIT_PATH"]).expanduser().resolve() if os.environ.get("PF_AGENT_EXIT_PATH") else None
+    exit_contract = (
+        Path(os.environ["PF_AGENT_EXIT_PATH"]).expanduser().resolve()
+        if os.environ.get("PF_AGENT_EXIT_PATH")
+        else None
+    )
 
     model = os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or ""
     if not model:
-        raise SystemExit("FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL")
+        raise SystemExit(
+            "FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL"
+        )
     effort = os.environ.get("PF_CODEX_REASONING_EFFORT") or ""
     sandbox = os.environ.get("PF_CODEX_SANDBOX") or "read-only"
     memories = (os.environ.get("PF_CODEX_MEMORIES") or "false").strip().lower()
@@ -265,10 +533,18 @@ def main() -> int:
     prepared_path = os.environ.get("PF_PREPARED_INPUT_FILE")
     if prepared_path:
         from prepared_executor import ExecutorError, load_and_validate_manifest
+
         try:
-            prepared = load_and_validate_manifest(argparse.Namespace(prepared_input=prepared_path,
-                prepared_sha256=os.environ.get("PF_PREPARED_INPUT_SHA256", "")), dict(os.environ))
-            if (Path(project_root) / prepared["input"]["capsule"]["path"]).resolve() != capsule:
+            prepared = load_and_validate_manifest(
+                argparse.Namespace(
+                    prepared_input=prepared_path,
+                    prepared_sha256=os.environ.get("PF_PREPARED_INPUT_SHA256", ""),
+                ),
+                dict(os.environ),
+            )
+            if (
+                Path(project_root) / prepared["input"]["capsule"]["path"]
+            ).resolve() != capsule:
                 raise ValueError("prepared_capsule_pointer_mismatch")
             report = prepared["input"]["outputs"]["expected_report"]["artifact"]
             if (Path(project_root) / report).resolve() != output:
@@ -288,22 +564,28 @@ def main() -> int:
 
     project_path = Path(project_root).expanduser().resolve()
     command = [codex_executable(), *managed_hook_trust_args(project_path), "exec"]
-    command.extend([
-        "-m",
-        model,
-        "--sandbox",
-        sandbox,
-        "--cd",
-        project_root,
-    ])
+    command.extend(
+        [
+            "-m",
+            model,
+            "--sandbox",
+            sandbox,
+            "--cd",
+            project_root,
+        ]
+    )
     config_args = codex_config_args(effort=effort, memories=memories)
     command.extend(config_args)
     for path in add_dirs:
         command.extend(["--add-dir", str(path)])
-    command.extend(["-o", str(output), "-"])
+    command.extend(["--json", "-o", str(output), "-"])
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    write_heartbeat(heartbeat, "starting", {"model": model, "workspace_dirs": [str(path) for path in add_dirs]})
+    write_heartbeat(
+        heartbeat,
+        "starting",
+        {"model": model, "workspace_dirs": [str(path) for path in add_dirs]},
+    )
     # Codex CLI reads its stdin as UTF-8.  ``text=True`` would encode this
     # payload with the Windows console/code-page default, corrupting a valid
     # non-ASCII assignment (for example a Russian project path) before the
@@ -314,14 +596,38 @@ def main() -> int:
     if src_root not in sys.path:
         sys.path.insert(0, src_root)
     from processforge_core import diagnostics
+
     logger = diagnostics.for_project(project_path, run_id=os.environ.get("PF_RUN_ID"))
-    with diagnostics.operation(logger, "worker", "worker.subprocess", run_id=os.environ.get("PF_RUN_ID"),
-                               assignment_id=os.environ.get("PF_TASK_ID"), attempt=os.environ.get("PF_WORKER_ATTEMPT"),
-                               build=diagnostics.identity_for(logger, __file__)):
-        result = subprocess.run(command, input=payload_text.encode("utf-8"), check=False)
-        diagnostics.emit("error" if result.returncode else "info", "worker.exit", {"exit_code": result.returncode}, component="worker")
+    with diagnostics.operation(
+        logger,
+        "worker",
+        "worker.subprocess",
+        run_id=os.environ.get("PF_RUN_ID"),
+        assignment_id=os.environ.get("PF_TASK_ID"),
+        attempt=os.environ.get("PF_WORKER_ATTEMPT"),
+        build=diagnostics.identity_for(logger, __file__),
+    ):
+        usage_capture = ManagedUsageCapture(project_path, output, model)
+        receipt = usage_capture.begin()
+        usage_capture.start_execution()
+        try:
+            result = subprocess.run(
+                command, input=payload_text.encode("utf-8"), check=False, stdout=receipt
+            )
+        finally:
+            usage_capture.finish()
+        diagnostics.emit(
+            "error" if result.returncode else "info",
+            "worker.exit",
+            {"exit_code": result.returncode},
+            component="worker",
+        )
     write_exit_contract(exit_contract, int(result.returncode))
-    write_heartbeat(heartbeat, "completed" if result.returncode == 0 else "failed", {"exit_code": result.returncode})
+    write_heartbeat(
+        heartbeat,
+        "completed" if result.returncode == 0 else "failed",
+        {"exit_code": result.returncode},
+    )
     return int(result.returncode)
 
 

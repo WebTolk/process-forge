@@ -343,6 +343,7 @@ from pf_cli.application import CliApplication
 from pf_cli.commands.agent_entry import AgentEntryCommand, AgentStartPromptCommand
 from pf_cli.commands.agent_actions import ActionsCommand
 from pf_cli.commands.configuration import ConfigurationCommand
+from pf_cli.commands.usage import UsageCommand
 from pf_cli.commands.search_index import (
     SearchIndexStatusCommand,
     SearchIndexRefreshCommand,
@@ -365,6 +366,7 @@ from pf_cli.parsers.agents import (
 from pf_cli.parsers.authoring import ProcessAuthoringCommandParser
 from pf_cli.parsers.catalog import ProcessCatalogCommandParser
 from pf_cli.parsers.configuration import ConfigurationCommandParser
+from pf_cli.parsers.usage import UsageCommandParser
 from pf_cli.parsers.context import ProjectContextCommandParser
 from pf_cli.parsers.continuation import ContinuationCommandParser
 from pf_cli.parsers.coordination import (
@@ -14473,6 +14475,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--diagnostic-components", help="Comma-separated optional diagnostic components.")
     parser.add_argument("--diagnostic-sink", choices=["jsonl", "stderr", "both", "none"])
     sub = parser.add_subparsers(dest="command", required=True)
+
+    UsageCommandParser(execute=UsageCommand().execute).register(sub.add_parser)
 
     ActionsCommandParser(execute=ActionsCommand(
         parser_factory=build_parser,

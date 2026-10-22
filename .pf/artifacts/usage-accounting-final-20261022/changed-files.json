@@ -1,0 +1,70 @@
+[
+    {
+        "path":  "src/processforge_core/accounting/__init__.py",
+        "sha256":  "e1910b449b976a8f0930f799f1e45e87a05712e65ed2287e93a129872f6d24b4"
+    },
+    {
+        "path":  "src/processforge_core/accounting/model.py",
+        "sha256":  "2f170e2c01ded1a62e64fadf93ff82838b0b71756e2c12670f4cd19cc5b41f60"
+    },
+    {
+        "path":  "src/processforge_core/accounting/rules.py",
+        "sha256":  "dd971ad61f24d2e51f5b46355d34a1fd494c0285fc7481351b88e39dafec9b47"
+    },
+    {
+        "path":  "src/processforge_core/accounting/storage.py",
+        "sha256":  "13296d07d2418257f23a50e483f48f33b8f338482a59ca7098b66342505c197d"
+    },
+    {
+        "path":  "src/processforge_core/accounting/service.py",
+        "sha256":  "c7fb17758da30706f163a2a0bb1dbeaac415e598d569bb39ee908be42563ca20"
+    },
+    {
+        "path":  "src/processforge_core/accounting/collectors.py",
+        "sha256":  "8a55d02e29616f85e3f5bad1b8def55ea85a54733ad8889d234ceb9e0f05ddc7"
+    },
+    {
+        "path":  "src/processforge_core/accounting/binding.py",
+        "sha256":  "d12655d7270090261cba9a22176968fd2e9cef8bf314c725b215f223378a88d0"
+    },
+    {
+        "path":  "src/processforge_core/accounting/composition.py",
+        "sha256":  "08ec66c8db93467e815ff82e7dee606662d2a7a26cfd4c20c011793fb60b3c16"
+    },
+    {
+        "path":  "tools/pf_cli/parsers/usage.py",
+        "sha256":  "87490e3ad97b996a2dde71cf9b0d2273ff433ae7f96b6e393543abd5d94291d8"
+    },
+    {
+        "path":  "tools/pf_cli/commands/usage.py",
+        "sha256":  "1a54cbce9cea8d4b4d8e5e27a50ac58a6536f3210ce4361e4ebeb481d8d197ca"
+    },
+    {
+        "path":  "tools/codex_exec_worker.py",
+        "sha256":  "a05c9bb5e9f94334ddcc617a9f1800fcb1bc5b266a0c440d034aa1d56c207480"
+    },
+    {
+        "path":  "tests/accounting/test_core.py",
+        "sha256":  "1dedc83859b80a615f9a783a53c9f7547b2fc91f443b01d69e45eb7a772e454a"
+    },
+    {
+        "path":  "tests/usage_collectors/test_collectors.py",
+        "sha256":  "15c96df3944d4c029ad5f783e7405b33c37869e35513701621bd9e667b4e287d"
+    },
+    {
+        "path":  "tests/usage_cli/test_cli.py",
+        "sha256":  "a63b7c33ad99aa615fd714f507e383c9fa553b1e6aaf363dc3548f95b290a4a0"
+    },
+    {
+        "path":  "tools/processforge.py",
+        "sha256":  "e0a4d3238210fdb5b99a5973b71294cb3f13607106b9cb310ba744d905de50b4"
+    },
+    {
+        "path":  "docs/concepts/usage-accounting.md",
+        "sha256":  "15ef6ea674c7fc6d531c06a4c915eeffc12760b7d6ddeccd618583321eb58b1e"
+    },
+    {
+        "path":  "docs/ru/concepts/usage-accounting.md",
+        "sha256":  "f6a10d09ee63bdd68e3d76a9787938eecdc806cd18042750e4827bb0ec58209c"
+    }
+]

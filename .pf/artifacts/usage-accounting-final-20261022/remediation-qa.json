@@ -1,0 +1,34 @@
+{
+  "checks": [
+    {
+      "check": "lint",
+      "command": "registered python-qa --project-root . lint -- src/processforge_core/accounting/__init__.py src/processforge_core/accounting/model.py src/processforge_core/accounting/rules.py src/processforge_core/accounting/storage.py src/processforge_core/accounting/service.py src/processforge_core/accounting/collectors.py src/processforge_core/accounting/binding.py src/processforge_core/accounting/composition.py tools/pf_cli/parsers/usage.py tools/pf_cli/commands/usage.py tools/codex_exec_worker.py tests/accounting/test_core.py tests/usage_collectors/test_collectors.py tests/usage_cli/test_cli.py",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "check": "format",
+      "command": "registered python-qa --project-root . format -- src/processforge_core/accounting/__init__.py src/processforge_core/accounting/model.py src/processforge_core/accounting/rules.py src/processforge_core/accounting/storage.py src/processforge_core/accounting/service.py src/processforge_core/accounting/collectors.py src/processforge_core/accounting/binding.py src/processforge_core/accounting/composition.py tools/pf_cli/parsers/usage.py tools/pf_cli/commands/usage.py tools/codex_exec_worker.py tests/accounting/test_core.py tests/usage_collectors/test_collectors.py tests/usage_cli/test_cli.py",
+      "exit_code": 0,
+      "output": "14 files already formatted\n"
+    },
+    {
+      "check": "types",
+      "command": "registered python-qa --project-root . typecheck -- --follow-imports=silent src/processforge_core/accounting/__init__.py src/processforge_core/accounting/model.py src/processforge_core/accounting/rules.py src/processforge_core/accounting/storage.py src/processforge_core/accounting/service.py src/processforge_core/accounting/collectors.py src/processforge_core/accounting/binding.py src/processforge_core/accounting/composition.py tools/pf_cli/parsers/usage.py tools/pf_cli/commands/usage.py tools/codex_exec_worker.py",
+      "exit_code": 0,
+      "output": "Success: no issues found in 11 source files\r\n"
+    },
+    {
+      "check": "tests",
+      "command": "registered python-qa --project-root . test -- tests/accounting/test_core.py tests/usage_collectors/test_collectors.py tests/usage_cli/test_cli.py -q",
+      "exit_code": 0,
+      "output": "....................................................................                                         [100%]\r\n68 passed, 36 subtests passed in 4.80s\r\n"
+    },
+    {
+      "check": "driver-smoke",
+      "command": "python tools/smoke_codex_exec_worker.py",
+      "exit_code": 0,
+      "output": "PASS: codex exec worker smoke\r\n"
+    }
+  ]
+}
