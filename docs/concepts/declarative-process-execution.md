@@ -75,9 +75,58 @@ call. Check the Assignment and capsule permissions before writing an artifact.
 For an existing Work, use [continuation](work-continuation.md) rather than
 rewording the objective in another start call. Gate status accepts
 `passed`, `approved`, or justified `not_applicable`; `pass` does not satisfy it.
-Artifact evidence identifies an existing file; gate evidence is an attestation
+Artifact evidence may identify an existing file; gate evidence is an attestation
 of a check actually performed, not independent proof of semantic quality.
 Never invent checks or use `not_applicable` merely to bypass a required gate.
+
+## Evidence guidance
+
+The shared CLI/MCP Work projection includes additive `evidence_guidance`.
+For active Work with valid pinned context and ready permissions it lists
+unsatisfied requirements, exact accepted kinds, ID keys and statuses, examples,
+and explanations of existing diagnostics. Its `transition_template` preserves
+the returned selectors. Replace placeholders and supply truthful evidence only
+after doing the work. With multiple outcomes, choose an offered outcome yourself.
+Terminal, invalid or blocked Work receives no actionable template.
+
+The following IDs are illustrative; use the IDs from your own response:
+
+| Requirement | Positive record | Negative record and reason |
+| --- | --- | --- |
+| Artifact `change` | `{"kind":"artifact","artifact_id":"change","status":"ready"}` | `{"kind":"gate","id":"change","status":"approved"}` has the wrong kind. |
+| Input `brief` | `{"kind":"input","input_id":"brief","status":"present"}` | `{"kind":"input","id":"brief-typo","status":"ready"}` has the wrong ID. |
+| Evidence `review` | `{"kind":"attestation","evidence_id":"review","status":"ready"}` | `{"kind":"attestation","artifact_id":"review","status":"ready"}` uses the wrong ID field. |
+| Gate `build-ready` | `{"kind":"gate","gate_id":"build-ready","status":"approved"}` | `{"kind":"gate","id":"build-ready","status":"pass"}` has an unacceptable status. |
+| Justified exception | `{"kind":"gate","gate_id":"optional-check","status":"not_applicable","reason":"No UI changed","evidence":["reviewed-diff"]}` | The same record without a reason or with an empty supporting `evidence` list is rejected. |
+
+Artifact, input and required-evidence statuses accept `ready`, `present`,
+`passed`, `approved`, and justified `not_applicable`. Gates accept only `passed`,
+`approved`, and justified `not_applicable`. Artifact IDs use `artifact_id` or
+`id`; inputs also accept artifact records and `input_id`, `artifact_id` or
+`id`; required evidence accepts kinds `attestation`/`evidence` and `evidence_id`
+or `id`. Gate matching uses a nonempty `gate_id` before its fallback `id`.
+The latest matching record controls readiness, including a later failing record.
+Inputs/entry gates use accumulated evidence; outputs/exit gates use current-stage
+evidence. A saved supplemental or mismatched record may remain in evidence without
+satisfying a requirement; `unmatched_evidence` is advisory, not a new rejection.
+
+`conditional_next_entry_gates` comes from the pinned process and each offered
+outcome. These gates may already be satisfied by accumulated evidence; guidance
+does not evaluate them or select a route. If a transition reports
+`entry_gate_evidence_missing`, use the corresponding conditional example.
+Required handoff text belongs in `transition.notes`.
+
+A file `path` is optional under the existing evidence contract. If supplied,
+it must identify an existing regular file within the authorized project root;
+`missing.md`, `../outside.md`, a directory, or an absolute path is invalid.
+PF computes the digest from that file, replacing any caller-supplied `sha256`.
+A missing saved digest or a file changed since submission leaves the requirement
+unsatisfied. Review and resubmit the actual file; a hint never repairs or accepts
+it. Normalization failures retain their existing blocker codes and add
+`evidence_guidance.request_errors` explanations with evidence indexes.
+
+Guidance performs no file access, grants no scope, and changes no evidence or
+transition decisions. All examples use the same matcher vocabulary as readiness.
 
 The successful response is `stage_transitioned` here. When the response includes
 the complete current Work projection, use it for the next action. Call
