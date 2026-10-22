@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-22",
+  "baseline_commit": "26dab5ad6783ce0aa56828f86d7f9453e626c638",
+  "source_release_commit": "fe0f15072538fee9525792ae5b8c1e634b13a928",
+  "update_id": "core-update-20261022T162745Z",
+  "version": "1.3.0-alpha2",
+  "context": {
+    "snapshot_id": "ctx-20261021-162229-c46ea2",
+    "snapshot_sha256": "sha256:c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+    "source": "fresh",
+    "installed": "fresh",
+    "mcp": "fresh",
+    "policy_action": "continue",
+    "execution_readiness": "ready"
+  },
+  "comparison": {
+    "catalogue_source_installed_mcp_equal": true,
+    "summary_source_installed_equal_except_as_of": true,
+    "catalogue_fingerprint": "sha256:4c84586c70354ae26ecf81ed88f26ddd1ec21244b1b9b3277d13f5a2c684ba70",
+    "usage_schema_fingerprints": [
+      {
+        "action_id": "cli:usage attempt",
+        "schema_fingerprint": "sha256:2de07e075242e9da20c0734400447c94424bc0ebde9cfb87d889394d29b2d1b8"
+      },
+      {
+        "action_id": "cli:usage collect",
+        "schema_fingerprint": "sha256:fcc06882d6d453cfbe519a6fc29b96d7ead95a71274e8b85296816b82266450e"
+      },
+      {
+        "action_id": "cli:usage details",
+        "schema_fingerprint": "sha256:775321f4fc1c6a3cdcd94230d8c4f828d8331ddb9842657cd25880afc0c35775"
+      },
+      {
+        "action_id": "cli:usage import",
+        "schema_fingerprint": "sha256:0338a578ff7f03cdaade4e7386da460495756193925e942a5f0e7259da46f0cb"
+      },
+      {
+        "action_id": "cli:usage project",
+        "schema_fingerprint": "sha256:d67317366cec2d29314c7da1f45eef3cc2f6cf868c42413549a8de22a82bf15f"
+      },
+      {
+        "action_id": "cli:usage projects",
+        "schema_fingerprint": "sha256:cc8b64800e53664c5f668c9ad5680372d5da5497a820b5cc03938549955285e7"
+      },
+      {
+        "action_id": "cli:usage replay",
+        "schema_fingerprint": "sha256:4386b53ab007d788859c9897427b44ff9f20640bb697fc52e1ae46307b5f8432"
+      },
+      {
+        "action_id": "cli:usage run",
+        "schema_fingerprint": "sha256:d9f2d305d7c7e1a865991079b32f681edda65a8026857ee006a1a61a9243857a"
+      },
+      {
+        "action_id": "cli:usage summary",
+        "schema_fingerprint": "sha256:4d35fe57571813714e4547cfaf389180e334fe0322d8ebb24bed5e55bc539b01"
+      },
+      {
+        "action_id": "cli:usage task",
+        "schema_fingerprint": "sha256:fcc2fac94606aebcbea1b7b5d6623e8d123ed93ee6578e37821f82c837e6db4b"
+      }
+    ],
+    "usage_totals": {
+      "input_cache_read": 3437440,
+      "input_cache_write": 0,
+      "input_total": 3673006,
+      "output_reasoning": 7141,
+      "output_total": 43020,
+      "reported_total": null,
+      "total": 3716026
+    },
+    "execution_seconds": 1414.7816799001303,
+    "occupied_seconds": 762.006762,
+    "coverage": {
+      "activity_intervals": 3,
+      "basis": "observed_facts_and_declared_sources",
+      "clock_quality": {
+        "aligned": 0,
+        "discrepant": 2,
+        "monotonic_only": 1,
+        "reversed": 0,
+        "unknown": 0,
+        "utc_only": 0
+      },
+      "complete": false,
+      "declared_sources": {
+        "available": 0,
+        "missing": 0,
+        "partial": 3,
+        "unsupported": 0
+      },
+      "inventory_known": true,
+      "latest_source_observation": "2026-10-22T16:28:29.510384+00:00",
+      "observed_sources": 3,
+      "open_tail_policy": "confirmed_lower_bound_only",
+      "partial_activity": 3,
+      "partial_usage": 3,
+      "quarantine_excluded": true,
+      "unknown_activity": 0,
+      "unknown_duration": 0,
+      "unknown_metrics": {
+        "input_cache_read": 0,
+        "input_cache_write": 1,
+        "input_total": 0,
+        "output_reasoning": 1,
+        "output_total": 0,
+        "reported_total": 3,
+        "total": 0
+      },
+      "unknown_usage": 0,
+      "unsupported_metrics": {
+        "activity": 1,
+        "input_cache_read": 0,
+        "input_cache_write": 1,
+        "input_total": 0,
+        "output_reasoning": 1,
+        "output_total": 0,
+        "reported_total": 3
+      },
+      "usage_records": 3
+    }
+  },
+  "installed_integrity": {
+    "version": "1.3.0-alpha2",
+    "managed_files": 1476,
+    "missing": [],
+    "mismatched": [],
+    "manifest_identity": {
+      "generated_at": "2026-10-22T16:23:56Z",
+      "kind": "processforge.core_manifest",
+      "schema_version": 1,
+      "source": {
+        "commit": "fe0f15072538fee9525792ae5b8c1e634b13a928",
+        "dirty": false,
+        "tree": "ec8f0c49ee4fe5b63d5b4fe3709742592fae8992",
+        "vcs": "git"
+      },
+      "version": "1.3.0-alpha2"
+    }
+  },
+  "previous_work": {
+    "action": "run_completed",
+    "run": {
+      "id": "garage-pf130-alpha2-release-correction-20261022-operator-corrects-prior",
+      "status": "completed"
+    },
+    "assignment": {
+      "id": "pf130-alpha2-release-correction-20261022-operator-corrects-prior-dev-rel",
+      "status": "done"
+    }
+  },
+  "mcp_process": {
+    "started_utc": "2026-10-22T16:47:18.1405390Z",
+    "installed_entrypoint": true,
+    "started_after_update": true,
+    "build_reported_by_protocol": "unknown",
+    "build_conclusion": "Consistent with updated installed code by process start, installed entrypoint, current file integrity and matching catalogue/schema; no direct loaded-module hash attestation."
+  },
+  "observations": {
+    "catalogue_reported_version": "1.2.0",
+    "hardcoded_core_version": "1.2.0",
+    "monitor_cli_version": "1.2.0",
+    "runtime_health": "ready",
+    "temporary_files": "partial",
+    "usage_mcp_tools_present": false,
+    "usage_mcp_status": "future_client_per_current_documentation"
+  },
+  "limits": [
+    "Read-only product verification; existing real accounting receipts were queried without import or replay.",
+    "No new worker launch, native Kimi capture, stable/public release or loaded-module memory-hash attestation.",
+    "MCP usage query transport is planned; MCP currently discovers the CLI usage contract."
+  ]
+}
