@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## 1.3.0-alpha3 - 2026-10-22
+
+### Added
+
+- Add explicit SQLite journal maintenance: consistent backup bundles through the
+  SQLite backup API, manifest/hash/integrity verification and restoration to a
+  new destination. See [journal maintenance](docs/concepts/sqlite-journal-maintenance.md).
+- Preserve corrupt legacy journal lines byte for byte in a verifiable quarantine,
+  including NUL bytes, with source offsets and hashes. Import refuses invalid
+  rows unless `--skip-invalid` is explicit; counts, replay and migration barriers
+  remain visible. The existing migration script delegates to the shared service.
+- Explain required evidence and accepted evidence shapes in shared Work responses.
+  Artifact authoring findings are advisory and retain the reviewed content hash.
+- Store available native-worker token usage and execution time in a shared
+  accounting store, with CLI inspection/export and explicit partial coverage.
+
+### Changed
+
+- Display monitor calendar uptime in years, months, days, hours and minutes.
+- Keep the new maintenance services independent of Main and Host composition;
+  CLI adapters compose narrow backup/scanning ports and existing journal owners.
+
+### Fixed
+
+- Accept the supported Kimi native hook and raw-conversation payloads while
+  preserving ingress policy and historical evidence bytes.
+
+This cumulative prerelease includes accepted changes after alpha1 and the
+qualified alpha2 development archives. See the [alpha3 release notes](docs/releases/1.3.0-alpha3.md).
+
 ## 1.3.0-alpha1 - 2026-10-20
 
 ### Changed

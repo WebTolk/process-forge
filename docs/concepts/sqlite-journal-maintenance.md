@@ -1,0 +1,142 @@
+# SQLite backup and journal maintenance
+
+`journal-maintenance` is an explicit local operator command over the shared Core
+maintenance services. It supports verified single-database backups, safe restore
+to a new path, preflight inspection and import of legacy event/raw journals.
+Run commands from the source checkout as shown below, or use the corresponding
+installed PF entrypoint. All example paths are placeholders.
+
+| Operation | Required options | Persistent effects |
+| --- | --- | --- |
+| `backup` | `--database PATH --output BUNDLE` | Immediately creates a new verified bundle. |
+| `verify` | `--backup BUNDLE` | Validates the existing bundle. |
+| `restore` | `--backup BUNDLE --destination NEW_PATH` | Immediately creates a new database. |
+| `inspect` | `--project-root ROOT --workplace ROOT` | Checks journals; explicit `--evidence-dir DIR` writes quarantine evidence. |
+| `import` | `--project-root ROOT --workplace ROOT` | Plans by default. `--apply` permits import and writes backups/evidence. Explicit `--evidence-dir DIR` can write quarantine during a plan. |
+
+Every operation accepts `--json` and always prints exactly one JSON object to
+stdout, including handled operation failures. Exit `0` means success or a usable
+plan; exit `1` means refusal, corrupt/tampered input, verification failure or an
+I/O error. Argument syntax errors retain argparse's exit `2` and stderr usage;
+help exits `0`. Reports contain operator-selected private source and artifact
+locations. Store them with restricted maintenance evidence before sharing a
+redacted copy publicly. Error codes omit record contents and raw exception text.
+
+## Backup, verification and restore
+
+Choose a new bundle directory whose parent already exists:
+
+```sh
+python -B tools/processforge.py journal-maintenance backup --database "DATABASE_PATH" --output "NEW_BACKUP_BUNDLE" --json
+python -B tools/processforge.py journal-maintenance verify --backup "NEW_BACKUP_BUNDLE" --json
+python -B tools/processforge.py journal-maintenance restore --backup "NEW_BACKUP_BUNDLE" --destination "NEW_DATABASE_PATH" --json
+```
+
+`backup` and `restore` write immediately and take no `--apply` flag. Existing
+bundle directories and restore destinations are refused. The destination's
+parent must already exist. Unsafe symlinks/reparse paths or unexpected bundle
+members are refused by the backend.
+
+A bundle contains `database.sqlite3` and `manifest.json`. The source is opened
+read-only and copied with SQLite's backup API, including committed WAL data.
+Verification checks manifest structure, members, stable SHA256 hashes and SQLite
+`PRAGMA integrity_check`. Restore verifies the bundle before creating a new
+destination, checks the restored database and retains the backup. Keep the
+manifest beside its database; hashes detect changes against that manifest and
+provide no independent signature or provenance guarantee.
+
+Each backup is one database snapshot. Backups of multiple databases have
+independent snapshot boundaries. Restore produces a separate database file;
+installation cutover and selection of active databases use existing operator
+procedures.
+
+## Inspect before importing
+
+Use an existing project with `.pf/process-forge.yaml` and an explicit workplace
+root. Source discovery reads the project's legacy `runtime/events/events.ndjson`
+under its PF flow root, former shared raw shards under the workplace's
+`runtime/agent-events/raw/v1/`, and the supported project-local legacy raw layout.
+Only raw records for the selected project qualify for import.
+
+```sh
+python -B tools/processforge.py journal-maintenance inspect --project-root "PROJECT_ROOT" --workplace "WORKPLACE_ROOT" --json
+python -B tools/processforge.py journal-maintenance inspect --project-root "PROJECT_ROOT" --workplace "WORKPLACE_ROOT" --evidence-dir "NEW_QUARANTINE_DIR" --json
+python -B tools/processforge.py journal-maintenance import --project-root "PROJECT_ROOT" --workplace "WORKPLACE_ROOT" --json
+```
+
+Inspect and import planning leave destination databases unchanged. Without an
+explicit evidence directory, these operations create no lasting project evidence.
+An explicit directory permits quarantine writes, including when preflight refuses
+corruption. `inspect` has no skip option. Invalid rows produce status `blocked`
+and exit `1`. Duplicate identity with different content remains an error even
+when an import permits invalid rows to be skipped.
+
+Quarantine preserves each invalid line's exact bytes, including NUL and line
+endings. `manifest.json` records source, line number, byte offset, byte length,
+SHA256, reason and the corresponding `records/*.bin` member. The report supplies
+the manifest path/hash. Existing identical evidence is reusable only after
+verification; conflicting evidence is refused. Keep the manifest and binary
+members together, along with the unchanged source journals and operator report.
+
+If scanning stops after capturing corruption, the retained
+`manifest.incomplete-*.json` preserves the captured bytes and provenance with
+`scan_complete: false` and a failure code. It does not certify the full source
+scan. A completed manifest from an earlier pass stays intact. Import failure
+evidence marks incomplete preflight explicitly; its counters do not certify a
+complete scan. Identity conflicts and source drift still require investigation.
+
+## Explicit import and repeat execution
+
+Coordinate the cutover of legacy journal writers through existing operator
+procedures before applying. Review the plan and retain originals and evidence.
+
+```sh
+python -B tools/processforge.py journal-maintenance import --project-root "PROJECT_ROOT" --workplace "WORKPLACE_ROOT" --apply --evidence-dir "MAINTENANCE_EVIDENCE_BASE" --json
+```
+
+Applying creates a unique operation directory under the explicit evidence base,
+or under the project's `.pf/runtime/journal-maintenance/` by default. It preserves
+invalid bytes even when import is refused. It creates verified backups of each
+existing destination database before mutation and records missing destinations.
+The destinations are `runtime/events/events.sqlite3` and
+`runtime/agent-events/hooks.sqlite3` under the project flow root.
+
+Skipping corruption requires an explicit operator choice after reviewing it:
+
+```sh
+python -B tools/processforge.py journal-maintenance import --project-root "PROJECT_ROOT" --workplace "WORKPLACE_ROOT" --apply --skip-invalid --evidence-dir "MAINTENANCE_EVIDENCE_BASE" --json
+```
+
+`--skip-invalid` also works with a plan, and never implies `--apply`. Valid IDs and
+original envelopes are preserved. Successful import checks source stability,
+SQLite integrity, unique IDs/counts, migration state and semantic replay. Repeating
+the explicit import uses existing journal deduplication; already present records
+are reported rather than inserted twice. Each applied attempt retains its own
+evidence and backups.
+
+The import report's `counts` distinguishes `read`, `valid`, `imported`,
+`already_present`, `skipped` and `corrupted`. Inspect also reports `read_rows`,
+`valid_rows`, `invalid_rows`, `skipped_rows`, `duplicate_rows`, blank/filtered rows
+and per-kind totals. Valid rows include duplicates. Skipped import counts include
+other-project raw records and corrupt rows only when skip was explicit; inspect
+reports filtering separately. Corrupted records remain corrupted in evidence.
+
+An interrupted import retains incomplete migration barriers and recovery evidence.
+Use the retained phase/failure reports to review destination state before an
+explicit retry. Required backup/evidence/verification failures remain failures.
+Source drift or identity conflicts require operator investigation; there is no
+force option or automatic source rewriting.
+
+## Maintenance boundary
+
+Maintenance preserves source journals and historical PF artifacts. It does not
+repair project contexts, create/resume historical Work, change grants, update an
+installation, or start/stop Runtime, MCP or other services. SQLite source/hash
+checks detect observed changes; operator procedures control the writer cutover.
+This CLI adds no MCP endpoint or shell passthrough.
+
+The existing `tools/migrate-hook-journals.py` keeps its explicit plan/apply/skip
+entrypoint as a thin delegate to the same maintenance service; its optional
+`--evidence-dir` selects evidence storage. See
+[Project journals in SQLite](hook-journal-sqlite.md) for journal ownership and
+cutover context.
