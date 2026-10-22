@@ -43,3 +43,8 @@ expected_report:
   format: concise_markdown
   include:
     []
+context_artifacts:
+  - path: .pf/artifacts/pf-task-token-usage-logs-20261020/driver-usage-and-project-costs.md
+    role: input
+    required: true
+    mutable_by_worker: false
