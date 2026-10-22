@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "source_commit": "f2aeea95f672893dbeaf1420517183b6390d5c82",
+  "records": [
+    {
+      "kind": "native_completion_receipt",
+      "action": "run_completed",
+      "run": {
+        "id": "garage-usage-accounting-final-20261022-primary-bounded-integration-assur",
+        "status": "completed"
+      },
+      "assignment": {
+        "id": "usage-accounting-final-20261022-primary-bounded-integration-assurance-of",
+        "status": "done"
+      },
+      "stage": {
+        "id": "evolve",
+        "status": "completed",
+        "title": "Evolve"
+      },
+      "context": {
+        "id": "usage-accounting-final-20261022-primary-bounded-integration-assurance-of-capsule",
+        "checksum": "sha256:a82f2896abcd7d32f73a208e4b8bbc21d79f639ec95ac7c59e8fdca062bbe2c8"
+      },
+      "blockers": []
+    },
+    {
+      "kind": "native_completion_receipt",
+      "action": "run_completed",
+      "run": {
+        "id": "garage-usage-accounting-implementation-20261022-orchestrate-authorized-i",
+        "status": "completed"
+      },
+      "assignment": {
+        "id": "usage-accounting-implementation-20261022-orchestrate-authorized-implemen",
+        "status": "done"
+      },
+      "stage": {
+        "id": "evolve",
+        "status": "completed",
+        "title": "Evolve"
+      },
+      "context": {
+        "id": "usage-accounting-implementation-20261022-orchestrate-authorized-implemen-capsule",
+        "checksum": "sha256:7ba62924c07805e4ae55031b2ab122e6b0d71ad1a025c405fc9838124985cacc"
+      },
+      "blockers": []
+    }
+  ],
+  "worker_run": {
+    "id": "usage-accounting-workers-20261022",
+    "status": "completed",
+    "run_doctor": "PASS"
+  },
+  "original_card": {
+    "id": "pf-task-token-usage-logs-20261020",
+    "status": "done"
+  },
+  "scope": "Native completion tool receipts only; no terminal Work resumed and no post-acceptance product edit."
+}
