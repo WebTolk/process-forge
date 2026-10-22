@@ -1,0 +1,61 @@
+{
+  "update_id": "core-update-20261022T125025Z",
+  "status": "applied",
+  "counts": {
+    "added": 14,
+    "changed": 9,
+    "locally_modified": 0,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1453
+  },
+  "backup_preimages": 9,
+  "managed_files": 1476,
+  "all_managed_hashes_match": true,
+  "preserved_configuration_files": 3,
+  "database_integrity": "ok",
+  "database_preserved_during_apply": true,
+  "runtime_health": "ready",
+  "connected_context_status": "fresh",
+  "connected_snapshot_id": "ctx-20261021-162229-c46ea2",
+  "host_provenance_limit": "Existing MCP host processes were not reconnected; a fresh context response is not proof that those hosts reloaded Core modules.",
+  "workplace_doctor": {
+    "pass": 197,
+    "fail": 0,
+    "exit_code": 0
+  },
+  "runtime_restarted": true,
+  "scheduler": [
+    {
+      "name": "director",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "inspector",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "ledger",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "metrics",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "projection",
+      "last_result": "ok",
+      "freshness": "fresh"
+    },
+    {
+      "name": "temporary_files",
+      "last_result": "unknown",
+      "freshness": "unknown"
+    }
+  ]
+}

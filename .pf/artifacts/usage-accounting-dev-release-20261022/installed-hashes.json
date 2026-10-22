@@ -1,0 +1,11 @@
+{
+  "managed_files": 1476,
+  "all_hashes_match": true,
+  "version": "1.3.0-alpha1",
+  "source": {
+    "commit": "48985ffae9130d09e72ac8c9fd8e908cbb41aa3a",
+    "dirty": false,
+    "tree": "62be0ee5b4a5418df12a30ffff4a41ce5b45678c",
+    "vcs": "git"
+  }
+}

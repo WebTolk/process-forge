@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "installed_cli": true,
+  "real_project_totals": {
+    "input_cache_read": 3437440,
+    "input_cache_write": 0,
+    "input_total": 3673006,
+    "output_reasoning": 7141,
+    "output_total": 43020,
+    "reported_total": null,
+    "total": 3716026
+  },
+  "real_project_execution_seconds": 1414.7816799001303,
+  "real_usage_records": 3,
+  "real_replays": [
+    {
+      "activity_stored": 0,
+      "complete": false,
+      "error": null,
+      "lines": 37,
+      "status": "partial",
+      "stored": 0
+    },
+    {
+      "activity_stored": 0,
+      "complete": false,
+      "error": null,
+      "lines": 37,
+      "status": "partial",
+      "stored": 0
+    }
+  ],
+  "project_totals_unchanged": true,
+  "installed_driver_modules_verified": true,
+  "synthetic_capture": {
+    "exit_code": 17,
+    "totals": {
+      "input_cache_read": 2,
+      "input_cache_write": 0,
+      "input_total": 7,
+      "output_reasoning": 1,
+      "output_total": 3,
+      "reported_total": null,
+      "total": 10
+    },
+    "execution_seconds": 0.058958200039342046
+  },
+  "coverage_complete": false
+}
