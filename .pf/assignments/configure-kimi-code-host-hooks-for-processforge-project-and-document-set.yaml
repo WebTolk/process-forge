@@ -1,0 +1,54 @@
+schema_version: 1
+id: configure-kimi-code-host-hooks-for-processforge-project-and-document-set
+title: Configure Kimi Code host hooks for ProcessForge project and document setup in pr
+run_id: garage-configure-kimi-code-host-hooks-for-processforge-project-and-docum
+process: software-feature-development
+status: cancelled
+created_at: '2026-10-21T16:03:08Z'
+updated_at: '2026-10-22T06:50:14Z'
+objective: Configure Kimi Code host hooks for ProcessForge project and document setup in project artifacts
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: cancelled
+  summary: 'Explicit operator request: close abandoned Kimi-created tasks. This original Work is withdrawn from execution and superseded by the completed independent review, adapter remediation, qualified dev installation and live synthetic Runtime acceptance. Preserve original Kimi evidence and immutable capsule; do not certify its original PASS claims or a real Kimi model run. No original stage execution is resumed.'
+  artifacts:
+    - .pf/artifacts/kimi-independent-review-20261022/review-summary.md
+    - .pf/artifacts/kimi-dev-device-20261022/acceptance-summary.json
+    - .pf/artifacts/kimi-receipt-finalization-20261022/delivery-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: orchestration
+stage_status: in_progress
+stage_execution:
+  started_at: '2026-10-21T16:03:08Z'
+  evidence:
+    -
+      kind: attestation
+      id: attestation-1
+      status: ready
+      summary: .pf/artifacts/kimi-hooks-setup-20261021/setup-report.md
+      recorded_at: '2026-10-21T16:04:21Z'
+  notes: Created Kimi Code host hook adapter, registered it in PF runtime, updated Kimi Code host config with hooks and Kimi identity, documented setup in project artifacts. Project coordination is already Forge/organized via workplace inheritance.
+stage_history:
+  []
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261020-072238-da5df2
+  snapshot_checksum: 'sha256:bd7dc7f033fe9f95f4c6903ea168868251db7666ef536c12479f7bcae667a05a'
+  assignment_capsule: .pf/contexts/assignment-capsules/configure-kimi-code-host-hooks-for-processforge-project-and-document-set.capsule.yaml
+  assignment_capsule_checksum: 'sha256:4057e89a0c1677f272e5070c02080d393eb11574e175ac8804179dd3d92a92c0'

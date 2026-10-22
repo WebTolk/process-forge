@@ -1,0 +1,118 @@
+schema_version: 1
+id: e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in
+title: Запуск e2e smoke и unit-тестов runtime drivers, agent-entry adapters, hook deliv
+run_id: garage-e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery
+process: software-feature-development
+status: cancelled
+created_at: '2026-10-21T16:25:32Z'
+updated_at: '2026-10-22T06:50:16Z'
+objective: Запуск e2e smoke и unit-тестов runtime drivers, agent-entry adapters, hook delivery, raw ingress и PF events; сбор evidence и отчёт
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: cancelled
+  summary: 'Explicit operator request: close abandoned Kimi-created tasks. This original Work is withdrawn from execution and superseded by the completed independent review, adapter remediation, qualified dev installation and live synthetic Runtime acceptance. Preserve original Kimi evidence and immutable capsule; do not certify its original PASS claims or a real Kimi model run. No original stage execution is resumed.'
+  artifacts:
+    - .pf/artifacts/kimi-independent-review-20261022/review-summary.md
+    - .pf/artifacts/kimi-dev-device-20261022/acceptance-summary.json
+    - .pf/artifacts/kimi-receipt-finalization-20261022/delivery-report.md
+execution_mode:
+  kind: assurance
+  artifact_changes_allowed: true
+  code_changes_allowed: false
+  requires_review: false
+stage: orchestration
+stage_status: in_progress
+stage_execution:
+  started_at: '2026-10-21T16:25:32Z'
+  evidence:
+    -
+      artifact_id: task-record
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/task-record.md
+      status: ready
+      recorded_at: '2026-10-21T16:26:16Z'
+      sha256: 'sha256:cb60abcfeda579a3322d5d92bbb59068f655a622eaf94489f898ef87fb18f6e9'
+    -
+      artifact_id: execution-context-summary
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/execution-context-summary.md
+      status: ready
+      recorded_at: '2026-10-21T16:26:16Z'
+      sha256: 'sha256:2d821ecb35a0a492d32c4ad156b5f7bfaafc4ba260b339da87d498af0996e99c'
+    -
+      artifact_id: lifecycle-mode-decision
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/lifecycle-mode-decision.md
+      status: ready
+      recorded_at: '2026-10-21T16:26:16Z'
+      sha256: 'sha256:ca3e65ba470173e7cd8437b7fe6b768aef7a8fa707d9b1a7f9dd292b43acfbc3'
+    -
+      gate_id: context-ready
+      kind: artifact
+      artifact_id: context-ready
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/context-ready.md
+      status: ready
+      recorded_at: '2026-10-21T16:26:16Z'
+      sha256: 'sha256:bc3057915d7b66be87fe662789c24afeddecc1af379e43384cb026c3d7301b4d'
+    -
+      artifact_id: handoff-note
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/handoff.md
+      status: ready
+      recorded_at: '2026-10-21T16:28:20Z'
+      sha256: 'sha256:5de799868a90be0793130cbc2d10c13afc12227961016156763c1697a88a2c1d'
+    -
+      artifact_id: test-report
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/test-report.md
+      status: ready
+      recorded_at: '2026-10-21T16:32:20Z'
+      sha256: 'sha256:5bdbad971239385949be6aa17c331e1870c06a6ca98c84efe34538ae99cfde6a'
+    -
+      artifact_id: test-evidence
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/test-evidence.json
+      status: ready
+      recorded_at: '2026-10-21T16:32:20Z'
+      sha256: 'sha256:845a628d96ac5551ebbf89809e45dc782b83511e906a0d025f2321abc31ac682'
+    -
+      artifact_id: handoff
+      kind: artifact
+      path: .pf/artifacts/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in/handoff-orchestration-to-intake.md
+      status: ready
+      recorded_at: '2026-10-21T16:33:04Z'
+      sha256: 'sha256:5de799868a90be0793130cbc2d10c13afc12227961016156763c1697a88a2c1d'
+  notes: ""
+stage_history:
+  []
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.2.1
+  process_fingerprint: 'sha256:d1f11d76240fc06ecefc7d5aba54ae6b6382650b766bb814def330f268e1adb6'
+  snapshot_id: ctx-20261021-162229-c46ea2
+  snapshot_checksum: 'sha256:c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be'
+  assignment_capsule: .pf/contexts/assignment-capsules/e2e-smoke-unit-runtime-drivers-agent-entry-adapters-hook-delivery-raw-in.capsule.yaml
+  assignment_capsule_checksum: 'sha256:681fe0ea9c97e7f65a7bef3623f3b5c67837658b040eabcb4f50000498cfc894'
+allowed_actions:
+  - read
+  - write_artifact
+allowed_read_files:
+  - src/processforge_core/runtime/*.py
+  - src/processforge_core/agent_entry/*.py
+  - src/processforge_core/raw_hook_journal.py
+  - src/processforge_core/process_event_journal.py
+  - tools/smoke_*.py
+  - tests/**/*.py
+  - tools/pf_runtime/*.py
+allowed_files:
+  - .pf/artifacts/e2e-*
