@@ -1,0 +1,21 @@
+{
+  "version": "1.3.0-alpha4",
+  "commit": "23ae166133390275a67ba92c1f00357bc757533a",
+  "source_tree": "281fb0fc91f4e223d67894e7a4c9af83854231c7",
+  "at": "2026-10-23T11:41:42.873986+00:00",
+  "remotes": {
+    "origin": {
+      "ref": "refs/heads/dev",
+      "observed_commit": "23ae166133390275a67ba92c1f00357bc757533a",
+      "matches": true
+    },
+    "gitverse": {
+      "ref": "refs/heads/dev",
+      "observed_commit": "23ae166133390275a67ba92c1f00357bc757533a",
+      "matches": true
+    }
+  },
+  "reviewed_manifest": "source-candidate-r16.json",
+  "reviewed_public_files": 41,
+  "foreign_guards_preserved": true
+}

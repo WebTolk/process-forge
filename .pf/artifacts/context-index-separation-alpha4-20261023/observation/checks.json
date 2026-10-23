@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "assignment_id": "alpha4-native-observation-contribution-under-frozen-1-1-4-architecture-i",
+  "attempt": 3,
+  "status": "blocked_scope",
+  "python": "3.14.3",
+  "stdlib_run": {
+    "cwd": ".pf/tmp/context-index-alpha4-observation-20261023",
+    "command": "python -I -S -B ../../../tests/context_index_separation/test_observation.py",
+    "exit_code": 1,
+    "tests": 22,
+    "passed": 20,
+    "failures": 2,
+    "errors": 0,
+    "duration_seconds": 8.662,
+    "failures_detail": [
+      {
+        "test": "IndexObservationTests.test_index_disappearing_before_open_is_never_recreated",
+        "actual": "Observation recreated the disappeared SQLite database",
+        "owner": "src/processforge_core/resources/local_search.py:index_status"
+      },
+      {
+        "test": "IndexObservationTests.test_index_read_does_not_wait_for_database_writer",
+        "actual_elapsed_seconds": 7.510307699907571,
+        "required_upper_bound_seconds": 1,
+        "owner": "src/processforge_core/resources/local_search.py:index_status"
+      }
+    ]
+  },
+  "first_run": {
+    "tests": 22,
+    "setup_and_cleanup_errors": 44,
+    "exit_code": 1,
+    "cause": "TemporaryDirectory-created fixture directories refused access; replaced with ordinary mkdir inside owned scratch, without ACL changes"
+  },
+  "syntax_check": {
+    "exit_code": 0,
+    "method": "compile() in memory with python -I -S -B",
+    "files": [
+      {
+        "file": "src/processforge_core/resources/access.py",
+        "sha256": "1df0d482138a4beef1ff8c8f753f09151d453faa2242ebceff864df0a25fa89d",
+        "syntax": "passed"
+      },
+      {
+        "file": "src/processforge_core/resources/index_observation.py",
+        "sha256": "8343811d4fe68d91bb01760929c629b89bb92d6ad399485c826d25add07149df",
+        "syntax": "passed"
+      },
+      {
+        "file": "tests/context_index_separation/test_observation.py",
+        "sha256": "e6a702358ebc70c69effe039092e9b502a187cd5f5d9138eeae409265145d1e1",
+        "syntax": "passed"
+      }
+    ]
+  },
+  "limitations": [
+    "Nonempty catalogues are injected at runtime_snapshot boundary; full YAML-enabled catalogue QA belongs to primary.",
+    "No external QA, pytest, Ruff, mypy, installation, Git, PF lifecycle, infrastructure or subagents.",
+    "Canonical SQLite status/query connection changes require an authorized scope including local_search.py."
+  ],
+  "cleanup": {
+    "status": "not_completed",
+    "reason": "Recursive cleanup command rejected: blocked by policy; inaccessible fixture directories retained within owned scratch, no ACL repair attempted"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-23T12:46:08.033063+00:00",
+  "status": "pass",
+  "candidate_manifest": "source-candidate-r20.json",
+  "checks": [
+    {
+      "file": "tools/smoke_garage_no_hooks_sessionless.py",
+      "exit_code": 0,
+      "elapsed_seconds": 43.676,
+      "original_if_assert_predicates": 6,
+      "new_if_assert_predicates": 9,
+      "all_original_guards_preserved": true,
+      "stdout_sha256": "f3806e1b3329ec150421abdbf974c181d3c63bb510169976d2f48e0be5e86013",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "tools/smoke_garage_session_enhanced.py",
+      "exit_code": 0,
+      "elapsed_seconds": 34.544,
+      "original_if_assert_predicates": 6,
+      "new_if_assert_predicates": 6,
+      "all_original_guards_preserved": true,
+      "stdout_sha256": "e5c0c05389508a48b4dfc62dfea77199274d054d65d28e5e75e21b15d1fe118a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "tools/smoke_garage_cross_project_security.py",
+      "exit_code": 0,
+      "elapsed_seconds": 72.653,
+      "original_if_assert_predicates": 13,
+      "new_if_assert_predicates": 13,
+      "all_original_guards_preserved": true,
+      "stdout_sha256": "26290d83b4fc2d80e0ef1b4adc061b12c9a460fda80768e1d472cddaa46760a5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "tools/smoke_user_like_garage_path.py",
+      "exit_code": 0,
+      "elapsed_seconds": 36.724,
+      "original_if_assert_predicates": 6,
+      "new_if_assert_predicates": 9,
+      "all_original_guards_preserved": true,
+      "stdout_sha256": "a1d42a0bf9360238bc606aa24ddef640bbf7c96a6b071cb7e9e55de3a1f254d7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "all_candidate_hashes_preserved": true,
+  "qualification": "Targeted acceptance only; repeat full source/archive profiles required."
+}

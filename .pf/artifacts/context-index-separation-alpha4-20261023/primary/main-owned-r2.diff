@@ -1,0 +1,342 @@
+--- base/tools/processforge.py
++++ candidate/tools/processforge.py
+@@ -345,6 +345,11 @@
+ from pf_cli.commands.configuration import ConfigurationCommand
+ from pf_cli.commands.usage import UsageCommand
+ from pf_cli.commands.journal_maintenance import JournalMaintenanceCommand
++from processforge_core.resources.index_maintenance import (
++    WorkplaceIndexMaintenanceService,
++)
++from pf_cli.commands.search_maintenance import WorkplaceIndexMaintenanceCommand
++from pf_cli.parsers.search_maintenance import register_search_index_maintenance
+ from pf_cli.commands.search_index import (
+     SearchIndexStatusCommand,
+     SearchIndexRefreshCommand,
+@@ -1719,7 +1724,7 @@
+         "workplace.doctor.passed" if doctor_status == 0 else "workplace.doctor.failed",
+         payload={"status": "pass" if doctor_status == 0 else "fail"},
+     )
+-    maintenance = search_index_maintenance_for_known_projects(root, reason="workplace-init")
++    maintenance = defer_search_index_maintenance(root, reason="workplace-init")
+     _workplace_resource_events.append_workplace_event(root, "workplace.initialization.completed", payload={"files": [rel(result.target, root) for result in results], "doctor_status": doctor_status})
+     print_search_index_maintenance_summary(maintenance)
+     for result in results:
+@@ -2790,10 +2795,10 @@
+     search_index: dict[str, Any] | None = None
+     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, request.get("workplace"))
+     if workplace_manifest:
+-        search_index = search_index_maintenance_for_known_projects(
++        search_index = observe_search_index_for_project(
+             workplace_manifest.parent,
+             reason="project-onboarding",
+-            project_roots=[project_root],
++            project_root=project_root,
+         )
+     _process_event_recorder.emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
+     return {
+@@ -2819,10 +2824,10 @@
+     search_index: dict[str, Any] | None = None
+     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, workplace)
+     if workplace_manifest:
+-        search_index = search_index_maintenance_for_known_projects(
++        search_index = observe_search_index_for_project(
+             workplace_manifest.parent,
+             reason="project-repair",
+-            project_roots=[project_root],
++            project_root=project_root,
+         )
+     return {
+         "status": "complete" if doctor_status == 0 else "blocked",
+@@ -5593,10 +5598,10 @@
+     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
+     maintenance: dict[str, Any] | None = None
+     if workplace_manifest:
+-        maintenance = search_index_maintenance_for_known_projects(
++        maintenance = observe_search_index_for_project(
+             workplace_manifest.parent,
+             reason="project-context-refresh",
+-            project_roots=[project_root],
++            project_root=project_root,
+         )
+     print(f"STATUS: {status}")
+     for path in paths.values():
+@@ -12383,7 +12388,7 @@
+     print(f"BACKUP: {rel(backup_dir, workplace_root)}")
+     if marked:
+         print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="update-apply"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="update-apply"))
+     return 0
+ 
+ 
+@@ -12427,7 +12432,7 @@
+     print(f"RESTORE_PATH: {rel(restore_path, workplace_root)}")
+     if marked:
+         print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="update-rollback"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="update-rollback"))
+     return 0
+ 
+ 
+@@ -12490,86 +12495,82 @@
+     return WorkplaceSearchCatalogReader(workplace_root, distribution_root=ROOT).runtime_snapshot()
+ 
+ 
+-def search_index_project_label(project_root: Path, workplace_root: Path) -> str:
+-    try:
+-        return rel(project_root, workplace_root)
+-    except ValueError:
+-        return project_root.name or str(project_root)
+-
+-
+-def write_search_index_maintenance_runtime_report(workplace_root: Path, payload: dict[str, Any]) -> Path:
+-    report_path = workplace_root / "runtime" / "search" / "latest-maintenance.yaml"
+-    report_path.parent.mkdir(parents=True, exist_ok=True)
+-    report_path.write_text(ensure_trailing_newline(dump_yaml(payload)), encoding="utf-8")
+-    return report_path
+-
+-
+-def search_index_maintenance_for_known_projects(
++def observe_search_index_for_project(
+     workplace_root: Path,
+     *,
+     reason: str,
+-    project_roots: list[Path] | None = None,
+-    verify_files: bool = True,
++    project_root: Path | None = None,
+ ) -> dict[str, Any]:
+-    """Maintain the one Workplace index without consulting project Runtime state.
+-
+-    The retained name is a compatibility shim for existing resource-management
+-    call sites.  ``project_roots`` is intentionally ignored: selection is a
+-    query-time project-snapshot concern, never an index-maintenance concern.
+-    """
+-    from processforge_core.resources.local_search import ResourceSearchIndex
+-
+-    del project_roots
+-    payload: dict[str, Any] = {
++    """Observe physical availability with authorized counts for project callers."""
++    from processforge_core.resources.index_observation import IndexObservationService
++
++    state = IndexObservationService(workplace_root, distribution_root=ROOT).observe()
++    row: dict[str, Any] = {
++        "scope": "workplace",
++        "status": "ok" if state.get("status") == "fresh" else "degraded",
++        "action": "none",
++        "search_status": state.get("status"),
++        "generation": state.get("generation"),
++        "document_count": state.get("document_count"),
++        "stale_resource_count": state.get("stale_resource_count"),
++        "failed_file_count": state.get("failed_file_count"),
++    }
++    if project_root is not None:
++        from processforge_core.project.snapshot import load_snapshot
++        from processforge_core.resources.local_search import authorized_coverage
++
++        try:
++            snapshot = load_snapshot(project_root)
++        except (OSError, ValueError):
++            snapshot = {}
++        coverage = authorized_coverage(
++            project_root, snapshot, workplace_root=workplace_root
++        )
++        row.update(
++            {
++                "document_count": coverage["document_count"],
++                "stale_resource_count": None,
++                "failed_file_count": None,
++            }
++        )
++    if state.get("error"):
++        row["error"] = state["error"]
++    report = workplace_root / "runtime" / "search" / "latest-maintenance.yaml"
++    return {
+         "schema_version": 1,
+         "kind": "pf.search_index.maintenance",
+         "created_at": _core_common_clock.now_utc(),
+         "reason": reason,
+         "scope": "workplace",
+         "project_count": 0,
+-        "results": [],
++        "results": [row],
++        "report": rel(report, workplace_root) if report.is_file() else None,
+     }
+-    results = payload["results"]
+-    assert isinstance(results, list)
+-    row: dict[str, Any] = {"scope": "workplace", "status": "pending"}
++
++
++def defer_search_index_maintenance(
++    workplace_root: Path, *, reason: str
++) -> dict[str, Any]:
++    """Publish lossless invalidation without scanning or waiting for an active writer."""
++    from processforge_core.resources.index_maintenance import IndexMaintenanceError
++
++    error = None
+     try:
+-        from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
+-
+-        snapshot = WorkplaceSearchCatalogReader(workplace_root, distribution_root=ROOT).runtime_snapshot()
+-        tick = ResourceSearchIndex(workplace_root, snapshot, workplace_root).maintenance_tick(verify_files=verify_files)
+-        after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
+-        row.update(
+-            {
+-                "status": "ok" if after.get("status") == "fresh" else "degraded",
+-                "action": tick.get("action"),
+-                "search_status": after.get("status"),
+-                "generation": after.get("generation"),
+-                "document_count": after.get("document_count"),
+-                "stale_resource_count": after.get("stale_resource_count"),
+-                "failed_file_count": after.get("failed_file_count"),
+-            }
+-        )
+-        if after.get("error"):
+-            row["error"] = after.get("error")
+-    except Exception as exc:  # pragma: no cover - defensive CLI boundary.
+-        row.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+-    results.append(row)
+-    report_path = write_search_index_maintenance_runtime_report(workplace_root, payload)
+-    payload["report"] = rel(report_path, workplace_root)
+-    try:
+-        _workplace_resource_events.append_workplace_event(
+-            workplace_root,
+-            "search.index.maintenance.completed",
+-            payload={
+-                "reason": reason,
+-                "project_count": payload["project_count"],
+-                "report": payload["report"],
+-                "statuses": [row.get("status") for row in results if isinstance(row, dict)],
+-            },
+-        )
+-    except Exception:
+-        pass
++        WorkplaceIndexMaintenanceService(
++            workplace_root, distribution_root=ROOT
++        ).mark_dirty(reason=reason)
++    except IndexMaintenanceError as failure:
++        error = failure.code
++    payload = observe_search_index_for_project(workplace_root, reason=reason)
++    if error:
++        payload["results"][0].update({"status": "error", "error": error})
+     return payload
++
++
++
++
++
++
+ 
+ 
+ def print_search_index_maintenance_summary(payload: dict[str, Any]) -> None:
+@@ -13161,7 +13162,7 @@
+     print(f"PACKAGE_ROOT: {package_root.root_id}")
+     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
+     print(f"INDEX: {rel(index_path, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-add-url"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="knowledge-add-url"))
+     return 0
+ 
+ 
+@@ -13190,7 +13191,7 @@
+     print(f"PACKAGE_ROOT: {package_root.root_id}")
+     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
+     print(f"INDEX: {rel(index_path, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-add-resource"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="knowledge-add-resource"))
+     return 0
+ 
+ 
+@@ -13234,7 +13235,7 @@
+     print(f"PACKAGE_ROOT: {package_root.root_id}")
+     print(f"INDEX: {rel(index_path, workplace_root)}")
+     print(f"REPORT: {rel(report, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-index-refresh"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="knowledge-index-refresh"))
+     return 0
+ 
+ 
+@@ -13670,7 +13671,7 @@
+     _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.doctor.passed" if doctor_status == 0 else "template.doctor.failed", target={"template_id": template_id}, status="passed" if doctor_status == 0 else "failed", message="template doctor completed"))
+     _workplace_resource_events.append_workplace_resource_event(workplace_root, _workplace_resource_events.resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.completed", target={"template_id": template_id}, status="completed", message="template authoring completed"))
+     print(f"TEMPLATE: {rel(target, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="template-create"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="template-create"))
+     return doctor_status
+ 
+ 
+@@ -13772,7 +13773,7 @@
+     report = write_resource_management_report(workplace_root, slug, "Tool Register Report", [f"- tool: {tool_id}", f"- status: {result}"])
+     print(f"{result.upper()}: {tool_id}")
+     print(f"REPORT: {rel(report, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="tool-register"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="tool-register"))
+     return 0
+ 
+ 
+@@ -13809,7 +13810,7 @@
+     report = write_resource_management_report(workplace_root, slug, "MCP Register Report", [f"- mcp: {mcp_id}", f"- status: {result}"])
+     print(f"{result.upper()}: {mcp_id}")
+     print(f"REPORT: {rel(report, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="mcp-register"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="mcp-register"))
+     return 0
+ 
+ 
+@@ -14352,7 +14353,7 @@
+         return 0
+     execute_authoring_plan(plan)
+     print(f"PLATFORM: {rel(contract_path, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="platform-create"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="platform-create"))
+     return 0
+ 
+ 
+@@ -14408,7 +14409,7 @@
+         return 0
+     execute_authoring_plan(plan)
+     print(f"CONTRACT: {rel(contract_path, workplace_root)}")
+-    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="platform-contract-install"))
++    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="platform-contract-install"))
+     return 0
+ 
+ 
+@@ -14587,6 +14588,16 @@
+         ).execute,
+     )
+     navigation_commands.register(sub.add_parser)
++    register_search_index_maintenance(
++        sub.add_parser,
++        execute=WorkplaceIndexMaintenanceCommand(
++            maintenance_factory=lambda workplace: WorkplaceIndexMaintenanceService(
++                workplace,
++                distribution_root=ROOT,
++            ),
++        ).execute,
++    )
++
+ 
+     core_update_commands = CoreUpdateCommandParser(
+         core_update_apply=command_core_update_apply,
+@@ -14953,11 +14964,17 @@
+ 
+ 
+ def main(argv: list[str] | None = None) -> int:
+-    return CliApplication(
+-        parser_factory=build_parser,
+-        project_id_resolver=project_id,
+-        entry_file=__file__,
+-    ).run(argv)
++    from processforge_core.resources.index_maintenance import IndexMaintenanceError
++
++    try:
++        return CliApplication(
++            parser_factory=build_parser,
++            project_id_resolver=project_id,
++            entry_file=__file__,
++        ).run(argv)
++    except IndexMaintenanceError as error:
++        print(f"FAIL: {error.code}")
++        return 1
+ 
+ 
+ 

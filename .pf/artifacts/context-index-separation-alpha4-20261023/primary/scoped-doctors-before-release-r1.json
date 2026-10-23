@@ -1,0 +1,154 @@
+{
+  "at": "2026-10-23T06:23:30.820959+00:00",
+  "status": "pass",
+  "work_count": 6,
+  "check_count": 12,
+  "warning_count": 0,
+  "results": {
+    "parent": {
+      "run_id": "garage-alpha4-revised-common-indexing-delivery-fully-deliver-context-ind",
+      "assignment_id": "alpha4-revised-common-indexing-delivery-fully-deliver-context-index-sepa",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "f27981f6c9618eb42acb254dc10d51e96933e0fc97e61ddea658a5b09471405c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "schedule": {
+      "run_id": "garage-alpha4-revised-schedule-native-contribution-in-1-1-4-implement-on",
+      "assignment_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3ddea7f1cfb3daa137737c744715921e250a978f380ea692e78dc5b654562e00",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "integration": {
+      "run_id": "garage-alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs",
+      "assignment_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "57d9c71fc2cfd1283a9f4de8243e7040da8480048bb1e68f81f806dabd332797",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "readonly": {
+      "run_id": "garage-alpha4-primary-read-only-sqlite-index-repair-preserve-actual-obse",
+      "assignment_id": "alpha4-primary-read-only-sqlite-index-repair-preserve-actual-observation",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "9a81ec9f0356e4b8eb1b8e46cae0f51faab65bf001a068d6783919ae95bde311",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "integration-qa": {
+      "run_id": "garage-alpha4-primary-integration-assurance-corrections-after-completed",
+      "assignment_id": "alpha4-primary-integration-assurance-corrections-after-completed-native",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "9dac8581ec32765146523b1ddb1a2e5379bd76c6a18d82c76511bed79037b27a",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "reviewer-created": {
+      "run_id": "garage-alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only",
+      "assignment_id": "alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only-the-ex",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "2e461a353ec7e312781585a307f6659820016783ae9769c4784d586b0e4da11b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    }
+  },
+  "scope": "Current alpha4 delivery/review Works. Historical failed and canceled handoff predecessors are retained separately, not reported as completed."
+}

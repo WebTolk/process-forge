@@ -1,0 +1,37 @@
+{
+  "commit": "171036e694f165f212256fef76af721679c3efb6",
+  "qualified_source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "files": [
+    {
+      "path": "release/updates/processforge-alpha.json",
+      "sha256": "f144f1d591b46a5580368baaa39b5bd957b683bb5969205e2630ee44fb34bc66",
+      "bytes": 7164
+    },
+    {
+      "path": "release/1.3.0-alpha4/processforge-1.3.0-alpha4.manifest.json",
+      "sha256": "31f2faaf99fc33823b7b66642b274ca8ac1d2c496ecb618e4beadb7c1289246c",
+      "bytes": 272491
+    },
+    {
+      "path": "release/1.3.0-alpha4/.gitattributes",
+      "sha256": "ec023b26c957bfbf5feb463908b88e28255ec05e44f0eb9aee66b5458abbd287",
+      "bytes": 43
+    }
+  ],
+  "at": "2026-10-23T14:59:38.683544+00:00",
+  "remotes": {
+    "origin": {
+      "ref": "refs/heads/dev",
+      "observed_commit": "171036e694f165f212256fef76af721679c3efb6",
+      "matches": true
+    },
+    "gitverse": {
+      "ref": "refs/heads/dev",
+      "observed_commit": "171036e694f165f212256fef76af721679c3efb6",
+      "matches": true
+    }
+  },
+  "public_alpha_feed_url": "https://raw.githubusercontent.com/WebTolk/process-forge/dev/release/updates/processforge-alpha.json",
+  "public_alpha_feed_sha256": "f144f1d591b46a5580368baaa39b5bd957b683bb5969205e2630ee44fb34bc66",
+  "public_alpha_latest": "1.3.0-alpha4"
+}

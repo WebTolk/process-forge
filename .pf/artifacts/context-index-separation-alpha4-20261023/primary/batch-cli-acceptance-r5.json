@@ -1,0 +1,70 @@
+{
+  "status": "pass",
+  "scope": "Actual isolated CLI, native authoring, SQLite and explicit full maintenance; no live workplace",
+  "dry_run_unchanged": true,
+  "mixed_results_preserved": true,
+  "qualified_successes_only": true,
+  "exactly_one_final_index_attempt": true,
+  "unselected_rows_unchanged": true,
+  "url_metadata_only_no_fetch": true,
+  "known_selection_restores_search": true,
+  "manual_full_updates_unselected_afterward": true,
+  "checks": [
+    {
+      "label": "init",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "elapsed_seconds": 2.809,
+      "stdout_sha256": "e8ec384d7c55e3bd0acd4f74d85cef103c8d0720abe593685a3c57c11c795702",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "package",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "elapsed_seconds": 2.736,
+      "stdout_sha256": "cda79af7370c2d6c16d20cda1a9db92f04985e7ed1cc716f6153c7fa11be902a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "prior-add",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "elapsed_seconds": 2.876,
+      "stdout_sha256": "aa1c3b731d96ab40a962802af65843c760d9e232e9d9044eddd4f5758278270a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "prior-index",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "elapsed_seconds": 2.798,
+      "stdout_sha256": "25e66f409c7c7d6a3e0ec4a15958a26505b506f04ab36bdde129864572870419",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "preview",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "elapsed_seconds": 2.442,
+      "stdout_sha256": "85624fde25008a976a73e8f3d23d5b7151d39b600f5d50995e4e44b7af83c996",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "apply",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "elapsed_seconds": 2.583,
+      "stdout_sha256": "223592682b4e7b6389ca59193f3114fb659f328423675deeda0e20373b0cf305",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "manual-full",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "elapsed_seconds": 2.509,
+      "stdout_sha256": "5b8b0def44284e82e9286e78eb26b08b6c8ab109d6ee6edd68dba5cd6314a569",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

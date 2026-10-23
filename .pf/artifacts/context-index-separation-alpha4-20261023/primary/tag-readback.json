@@ -1,0 +1,19 @@
+{
+  "tag": "v1.3.0-alpha4",
+  "remotes": {
+    "origin": {
+      "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+      "refs": {
+        "refs/tags/v1.3.0-alpha4": "ecbd541a36900ad3de40eafac2300fa065faf5cb",
+        "refs/tags/v1.3.0-alpha4^{}": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f"
+      }
+    },
+    "gitverse": {
+      "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+      "refs": {
+        "refs/tags/v1.3.0-alpha4": "ecbd541a36900ad3de40eafac2300fa065faf5cb",
+        "refs/tags/v1.3.0-alpha4^{}": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f"
+      }
+    }
+  }
+}

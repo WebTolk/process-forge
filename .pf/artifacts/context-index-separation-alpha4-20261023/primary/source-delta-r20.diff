@@ -1,0 +1,776 @@
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index ad0f8268..d776060f 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -898,7 +898,7 @@ f58cb0fb8141b2f3bb2b96fc033d88abeaefe62105fbb80c3dde9e8915ce4961  src/processfor
+ 63df258fe6142f8a747988a73d175c88fbb82ba21860adc4a5f65cf439aa51ee  src/processforge_core/resources/index_observation.py
+ 39e004e8037bb87712fceeeeb5474bf15f6547b1d51b6de023c87b260a22635a  src/processforge_core/resources/index_schedule.py
+ 6805993a8fcadd15dad592b11b1a144a2887bc56ae682647071ef6dfd476a16a  src/processforge_core/resources/knowledge_batch.py
+-05875f13132487feaa1f95b3da0559bdc4da01deddcbb0a696a031bb7cc1ac37  src/processforge_core/resources/local_search.py
++959ffac3e365429c1c6c629a172a57f3fa050e6830732693b82d0544038f9d2a  src/processforge_core/resources/local_search.py
+ 72db3d06b5624f88189093fdafe7e06bfd227da24b565bbd3c3fc8a003836110  src/processforge_core/resources/package_checks.py
+ 2194a40f55970ad786d84e0c0b9f4a4e1d2b95fcf394264e8e998d708cb2ad53  src/processforge_core/resources/package_write.py
+ 19e19de76438ab22820216e9d955f7cd3fe9f76ec5133cb33a5b670be04cb188  src/processforge_core/resources/private_paths.py
+@@ -1251,13 +1251,13 @@ f64e8bf5831edb4307aed7ad03cdd7b98d056a91fc95e39618605a62c751b6d6  tools/smoke_ex
+ e013a8e08b247b14271c807c849373ab093a2f5f7c2637ee241a63f36cf847c0  tools/smoke_expected_report_containment.py
+ fc4fc04e94e89a79051e2d8e2334e3baa788d441e7834524407bde329969e09c  tools/smoke_first_run.py
+ 9a8451e4179170e5f4d0276654b9cc581e2660d0ad9570160e975064960d3a53  tools/smoke_fulltext_article_indexing.py
+-15898115d4a2fe40fa46157a93ed1b9d00d7ab7670490d71d003f5d4cdd7bb96  tools/smoke_garage_cross_project_security.py
++a1d63b2a3d9e68c5aa62d21d6fe2a01f96505d312a496fff0893404744193bc0  tools/smoke_garage_cross_project_security.py
+ c3c85b46ac17a2b57f24605a47614b765cd2996b5e54096db1bbcde48b59d27a  tools/smoke_garage_hook_policy.py
+ 06ca06acece4c45e7ff5621fd585c0f198a0252cc17a3809c980e68663e392fc  tools/smoke_garage_mode_not_promoted_by_session.py
+ 07a502f19c40da9d3fc4081268b1e452c952606ea2d7102393d15a0e0973af0d  tools/smoke_garage_mode_snapshot_composition.py
+-6239fe21d90c3f5b7e573b454b888ac16d68b27f767d1a80ff95b5c8f630402c  tools/smoke_garage_no_hooks_sessionless.py
++adb7f718c7c749fc1d703fda82af32b07b211559a8cee0eb5deb5668dd4e3e57  tools/smoke_garage_no_hooks_sessionless.py
+ 92028c71a22fab472c9c97c3e8f5525cbf75285420059edee33f68912e63fa31  tools/smoke_garage_real_joomla_search.py
+-274c4fb12d08b538a1d8ab138e6444c912acfda4e4f6bc03c6e860f4368b791c  tools/smoke_garage_session_enhanced.py
++cd881febdc2cc87f99d42cd86a3f0ecdcf8520dd7ce12963242bfccfdedfe77d  tools/smoke_garage_session_enhanced.py
+ 1e47eb61b174ba059197326b5d5fd2ff70933b63bb8708b49809bb6636d1f9fb  tools/smoke_garage_snapshot_read_composition.py
+ 02c88f63b81e47db8cf0bf54ad6988bcd6175f7026415ad9bbe1d9a8d5eb4bc7  tools/smoke_garage_work_start_session_bound.py
+ 82dba12118eeb4dc7934ebeab35b87cb695a590ff45ef4a7c394ddb67533e6c2  tools/smoke_garage_work_start_sessionless.py
+@@ -1447,7 +1447,7 @@ de5c9fbd69a4a04609076ee263d019b77305e77482c85d7e049f746a18c3658f  tools/smoke_up
+ 02a83bb96a027215678f2f0920e60b5eaf79c996dd76ebb9610038a1e0d0a6d3  tools/smoke_update_notifications.py
+ df7e795313afeddcc07ecc8d07ca4129d935130c9638f6860c7fc7031223933c  tools/smoke_update_sites_schema.py
+ 1bdf2418625d0ea361d2d86fcfeda3713c5368ead1c7206496bc5099c6f85733  tools/smoke_update_stage_verify_apply_file_provider.py
+-dbe384274993e099bfed4130a3bd39cf04752f616ef37d8e4eaaf854e631c025  tools/smoke_user_like_garage_path.py
++4dbc92d73ff5ba6b6564ead33dd54bbf559a1d23c7eae2625c38bdd1f79a6916  tools/smoke_user_like_garage_path.py
+ 6eec6db552aa82a84f203b5d89e4dc1f14cdcdc181913a77f305456d9f83315d  tools/smoke_verification_current_work_state.py
+ 848fe532b3c5e4ba7c4153f4152b5a49d632f55c4196c28023d094fa4128c882  tools/smoke_windows_utf8_docs.py
+ b3bdd980656650c407a9ac1bb1e927942309baaa36b0975c041e4f37a862fe6a  tools/smoke_work_boundary_advisory_service.py
+diff --git a/src/processforge_core/resources/local_search.py b/src/processforge_core/resources/local_search.py
+index 70ca92d2..87aab29f 100644
+--- a/src/processforge_core/resources/local_search.py
++++ b/src/processforge_core/resources/local_search.py
+@@ -1397,9 +1397,23 @@ def index_status(
+                 row = db.execute(
+                     "SELECT count(*), count(*), COALESCE((SELECT count(*) FROM documents), 0), 0, max(indexed_at), max(indexed_at) FROM resources"
+                 ).fetchone()
++                # A completed workplace reconciliation may legitimately leave
++                # no resources. Distinguish that maintained empty corpus from
++                # a merely initialized schema, without creating any state here.
++                maintained_empty = (
++                    row is not None
++                    and row[0] == 0
++                    and row[2] == 0
++                    and db.execute(
++                        "SELECT 1 FROM index_state WHERE scope_key='workplace' AND status='fresh' AND resource_count=0 AND document_count=0 AND failed_file_count=0 AND allowed_resource_ids='[]'"
++                    ).fetchone()
++                    is not None
++                )
+                 payload.update(
+                     {
+-                        "status": "fresh" if row and row[0] else "missing",
++                        "status": "fresh"
++                        if row and (row[0] or maintained_empty)
++                        else "missing",
+                         "resource_count": int(row[1] or 0) if row else 0,
+                         "document_count": int(row[2] or 0) if row else 0,
+                         "failed_file_count": int(row[3] or 0) if row else 0,
+diff --git a/tests/context_index_separation/test_review_regressions.py b/tests/context_index_separation/test_review_regressions.py
+index 1ab24b37..af8d677b 100644
+--- a/tests/context_index_separation/test_review_regressions.py
++++ b/tests/context_index_separation/test_review_regressions.py
+@@ -491,6 +491,64 @@ def test_resolved_root_disappearing_during_collection_retains_database(
+     assert service.run()["results"][0]["document_count"] == 3
+ 
+ 
++@pytest.mark.parametrize("established", [False, True])
++def test_explicit_empty_workplace_is_queryable_after_reconciliation(
++    corpus, established
++):
++    root, snapshot, _files = corpus
++    service = WorkplaceIndexMaintenanceService(root)
++    if established:
++        assert service.run()["results"][0]["document_count"] == 3
++    snapshot["local_search_resources"] = []
++    assert service.run()["results"][0]["status"] == "ok"
++    assert IndexObservationService(root).observe()["status"] == "fresh"
++    physical = local_search.index_status(root, workplace_root=root)
++    assert physical["status"] == "fresh"
++    assert physical["resource_count"] == physical["document_count"] == 0
++    answer = ResourceSearchService(root, root, Reads(selected(snapshot, 0))).search(
++        query="commonneedle"
++    )
++    assert answer["search_status"] == "fresh"
++    assert answer["search"]["status"] == "empty"
++    assert answer["total"] == 0 and answer["results"] == []
++
++
++@pytest.mark.parametrize(
++    "status,resources,documents,allowed",
++    [
++        ("stale", 0, 0, "[]"),
++        ("fresh", 1, 0, "[]"),
++        ("fresh", 0, 1, "[]"),
++        ("fresh", 0, 0, '["phantom"]'),
++    ],
++)
++def test_unscoped_empty_status_requires_consistent_fresh_workplace_state(
++    corpus, status, resources, documents, allowed
++):
++    root, snapshot, _files = corpus
++    snapshot["local_search_resources"] = []
++    assert WorkplaceIndexMaintenanceService(root).run()["results"][0]["status"] == "ok"
++    with closing(sqlite3.connect(local_search.index_path(root, root))) as db:
++        db.execute(
++            "UPDATE index_state SET status=?,resource_count=?,document_count=?,allowed_resource_ids=? WHERE scope_key='workplace'",
++            (status, resources, documents, allowed),
++        )
++        db.commit()
++    assert local_search.index_status(root, workplace_root=root)["status"] != "fresh"
++
++
++def test_schema_only_empty_database_is_not_a_maintained_corpus(tmp_path):
++    database = local_search.index_path(tmp_path, tmp_path)
++    database.parent.mkdir(parents=True)
++    with closing(sqlite3.connect(database)) as db:
++        local_search._ensure_schema(db)
++        db.commit()
++    assert (
++        local_search.index_status(tmp_path, workplace_root=tmp_path)["status"]
++        == "missing"
++    )
++
++
+ def test_actual_audit_replay_retries_required_notification_until_delivered(
+     corpus, monkeypatch
+ ):
+diff --git a/tools/smoke_garage_cross_project_security.py b/tools/smoke_garage_cross_project_security.py
+index 3278989f..55f65d63 100644
+--- a/tools/smoke_garage_cross_project_security.py
++++ b/tools/smoke_garage_cross_project_security.py
+@@ -14,23 +14,38 @@ PF = ROOT / "tools" / "processforge.py"
+ MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+ sys.path.insert(0, str(ROOT / "tools"))
+ 
+-from garage_search_smoke_support import empty_fixture_authorization, register_fixture_resource, run_cli, select_fixture_resource
+ 
+-
+-def call_mcp(workplace: Path, name: str, arguments: dict[str, object], *, expect_error: bool = False) -> dict[str, object]:
+-    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
++def call_mcp(
++    workplace: Path,
++    name: str,
++    arguments: dict[str, object],
++    *,
++    expect_error: bool = False,
++) -> dict[str, object]:
++    request = {
++        "jsonrpc": "2.0",
++        "id": 1,
++        "method": "tools/call",
++        "params": {"name": name, "arguments": arguments},
++    }
+     result = subprocess.run(
+         [sys.executable, str(MCP), "--workplace", str(workplace)],
+         cwd=ROOT,
++        check=False,
+         text=True,
+         encoding="utf-8",
+-        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
++        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"})
++        + "\n"
++        + json.dumps(request)
++        + "\n",
+         capture_output=True,
+         timeout=120,
+     )
+     if result.returncode != 0:
+         raise AssertionError(result.stderr)
+-    response = [json.loads(line) for line in result.stdout.splitlines() if line.strip()][-1]
++    response = [
++        json.loads(line) for line in result.stdout.splitlines() if line.strip()
++    ][-1]
+     text = response["result"]["content"][0]["text"]
+     if response["result"].get("isError"):
+         if expect_error:
+@@ -42,6 +57,13 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object], *, expect
+ 
+ 
+ def main() -> int:
++    from garage_search_smoke_support import (
++        empty_fixture_authorization,
++        register_fixture_resource,
++        run_cli,
++        select_fixture_resource,
++    )
++
+     with tempfile.TemporaryDirectory(prefix="pf-garage-cross-project-") as raw:
+         root = Path(raw)
+         workplace = root / "workplace"
+@@ -52,47 +74,153 @@ def main() -> int:
+             workplace,
+             "fixture.search-a",
+             "a",
+-            {"one.md": "SharedGarageNeedle ProjectANeedle", "two.md": "SharedGarageNeedle ProjectASecondNeedle"},
++            {
++                "one.md": "SharedGarageNeedle ProjectANeedle",
++                "two.md": "SharedGarageNeedle ProjectASecondNeedle",
++            },
+             title="Fixture A",
+         )
+         resource_b = register_fixture_resource(
+             workplace,
+             "fixture.search-b",
+             "b",
+-            {"one.md": "SharedGarageNeedle ProjectBNeedle", "two.md": "SharedGarageNeedle ProjectBSecondNeedle"},
++            {
++                "one.md": "SharedGarageNeedle ProjectBNeedle",
++                "two.md": "SharedGarageNeedle ProjectBSecondNeedle",
++            },
+             title="Fixture B",
+         )
+-        run_cli("project-onboard", "--project-root", str(project_a), "--workplace", str(workplace), "--type", "generic", "--apply")
+-        run_cli("project-onboard", "--project-root", str(project_b), "--workplace", str(workplace), "--type", "generic", "--apply")
++        run_cli(
++            "project-onboard",
++            "--project-root",
++            str(project_a),
++            "--workplace",
++            str(workplace),
++            "--type",
++            "generic",
++            "--apply",
++        )
++        run_cli(
++            "project-onboard",
++            "--project-root",
++            str(project_b),
++            "--workplace",
++            str(workplace),
++            "--type",
++            "generic",
++            "--apply",
++        )
+         select_fixture_resource(project_a, workplace, "fixture.search-a", "a")
+         select_fixture_resource(project_b, workplace, "fixture.search-b", "b")
+ 
+-        positive_b = call_mcp(workplace, "pf.search", {"project_root": str(project_b), "query": "ProjectBNeedle"})
+-        if positive_b.get("total") != 1 or positive_b.get("results", [{}])[0].get("resource_id") != resource_b:
++        run_cli("search-index-maintain", "--workplace", str(workplace), "--apply")
++        positive_b = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project_b), "query": "ProjectBNeedle"},
++        )
++        if (
++            positive_b.get("total") != 1
++            or positive_b.get("results", [{}])[0].get("resource_id") != resource_b
++        ):
+             raise AssertionError(positive_b)
+-        shared_page_0 = call_mcp(workplace, "pf.search", {"project_root": str(project_a), "query": "SharedGarageNeedle", "limit": 1, "offset": 0})
+-        shared_page_1 = call_mcp(workplace, "pf.search", {"project_root": str(project_a), "query": "SharedGarageNeedle", "limit": 1, "offset": 1})
+-        if shared_page_0.get("total") != 2 or len(shared_page_0.get("results", [])) != 1 or len(shared_page_1.get("results", [])) != 1:
++        shared_page_0 = call_mcp(
++            workplace,
++            "pf.search",
++            {
++                "project_root": str(project_a),
++                "query": "SharedGarageNeedle",
++                "limit": 1,
++                "offset": 0,
++            },
++        )
++        shared_page_1 = call_mcp(
++            workplace,
++            "pf.search",
++            {
++                "project_root": str(project_a),
++                "query": "SharedGarageNeedle",
++                "limit": 1,
++                "offset": 1,
++            },
++        )
++        if (
++            shared_page_0.get("total") != 2
++            or len(shared_page_0.get("results", [])) != 1
++            or len(shared_page_1.get("results", [])) != 1
++        ):
+             raise AssertionError({"page0": shared_page_0, "page1": shared_page_1})
+-        if any(item.get("resource_id") != resource_a for item in shared_page_0.get("results", []) + shared_page_1.get("results", [])):
++        if any(
++            item.get("resource_id") != resource_a
++            for item in shared_page_0.get("results", [])
++            + shared_page_1.get("results", [])
++        ):
+             raise AssertionError({"page0": shared_page_0, "page1": shared_page_1})
+-        search_a_for_b = call_mcp(workplace, "pf.search", {"project_root": str(project_a), "query": "ProjectBNeedle"})
++        search_a_for_b = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project_a), "query": "ProjectBNeedle"},
++        )
+         if search_a_for_b.get("total") != 0 or search_a_for_b.get("results") != []:
+             raise AssertionError(search_a_for_b)
+-        positive_b_after_a = call_mcp(workplace, "pf.search", {"project_root": str(project_b), "query": "ProjectBNeedle"})
+-        if positive_b_after_a.get("total") != 1 or positive_b_after_a.get("results", [{}])[0].get("resource_id") != resource_b:
++        positive_b_after_a = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project_b), "query": "ProjectBNeedle"},
++        )
++        if (
++            positive_b_after_a.get("total") != 1
++            or positive_b_after_a.get("results", [{}])[0].get("resource_id")
++            != resource_b
++        ):
+             raise AssertionError(positive_b_after_a)
+         empty_project = root / "project-empty"
+-        run_cli("project-onboard", "--project-root", str(empty_project), "--workplace", str(workplace), "--type", "generic", "--apply")
++        run_cli(
++            "project-onboard",
++            "--project-root",
++            str(empty_project),
++            "--workplace",
++            str(workplace),
++            "--type",
++            "generic",
++            "--apply",
++        )
+         empty_fixture_authorization(empty_project, workplace)
+-        empty = call_mcp(workplace, "pf.search", {"project_root": str(empty_project), "query": "SharedGarageNeedle"})
++        empty = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(empty_project), "query": "SharedGarageNeedle"},
++        )
+         if empty.get("total") != 0 or empty.get("results") != []:
+             raise AssertionError(empty)
+-        denied = call_mcp(workplace, "pf.resolve", {"project_root": str(project_a), "resource_id": resource_b})
++        denied = call_mcp(
++            workplace,
++            "pf.resolve",
++            {"project_root": str(project_a), "resource_id": resource_b},
++        )
+         if denied.get("resource", {}).get("status") != "denied":
+             raise AssertionError(denied)
+-        run_cli("agent-checkin", "--workplace", str(workplace), "--agent", "fixture-agent", "--session", "session-a", "--project-root", str(project_a))
+-        mismatch = call_mcp(workplace, "pf.search", {"project_root": str(project_b), "session_id": "session-a", "query": "ProjectBNeedle"}, expect_error=True)
++        run_cli(
++            "agent-checkin",
++            "--workplace",
++            str(workplace),
++            "--agent",
++            "fixture-agent",
++            "--session",
++            "session-a",
++            "--project-root",
++            str(project_a),
++        )
++        mismatch = call_mcp(
++            workplace,
++            "pf.search",
++            {
++                "project_root": str(project_b),
++                "session_id": "session-a",
++                "query": "ProjectBNeedle",
++            },
++            expect_error=True,
++        )
+         if mismatch.get("error", {}).get("code") != "session_project_mismatch":
+             raise AssertionError(mismatch)
+         print("PASS: Garage resource authorization is snapshot-bound across projects")
+diff --git a/tools/smoke_garage_no_hooks_sessionless.py b/tools/smoke_garage_no_hooks_sessionless.py
+index ebdf1f58..825fc932 100644
+--- a/tools/smoke_garage_no_hooks_sessionless.py
++++ b/tools/smoke_garage_no_hooks_sessionless.py
+@@ -15,17 +15,26 @@ PF = ROOT / "tools" / "processforge.py"
+ MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+ sys.path.insert(0, str(ROOT / "tools"))
+ 
+-from garage_search_smoke_support import register_fixture_resource, run_cli, select_fixture_resource
+ 
+-
+-def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[str, object]:
+-    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
++def call_mcp(
++    workplace: Path, name: str, arguments: dict[str, object]
++) -> dict[str, object]:
++    request = {
++        "jsonrpc": "2.0",
++        "id": 1,
++        "method": "tools/call",
++        "params": {"name": name, "arguments": arguments},
++    }
+     result = subprocess.run(
+         [sys.executable, str(MCP), "--workplace", str(workplace)],
+         cwd=ROOT,
++        check=False,
+         text=True,
+         encoding="utf-8",
+-        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
++        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"})
++        + "\n"
++        + json.dumps(request)
++        + "\n",
+         capture_output=True,
+         timeout=120,
+     )
+@@ -40,6 +49,12 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[s
+ 
+ 
+ def main() -> int:
++    from garage_search_smoke_support import (
++        register_fixture_resource,
++        run_cli,
++        select_fixture_resource,
++    )
++
+     with tempfile.TemporaryDirectory(prefix="pf-garage-no-hooks-") as raw:
+         root = Path(raw)
+         workplace = root / "workplace"
+@@ -52,20 +67,64 @@ def main() -> int:
+             {"garage.md": "GarageNoHooksNeedle proves sessionless PF search."},
+             title="Garage article",
+         )
+-        run_cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
+-        shutil.rmtree(project / ".codex", ignore_errors=True)
+-        select_fixture_resource(project, workplace, "fixture.search-nohooks", "garage-article")
++        run_cli(
++            "project-onboard",
++            "--project-root",
++            str(project),
++            "--workplace",
++            str(workplace),
++            "--type",
++            "generic",
++            "--apply",
++        )
++        hook_root = (project / ".codex").resolve()
++        assert hook_root.is_relative_to(project.resolve())
++        shutil.rmtree(hook_root, ignore_errors=True)
++        select_fixture_resource(
++            project, workplace, "fixture.search-nohooks", "garage-article"
++        )
+ 
+         context = call_mcp(workplace, "pf.context", {"project_root": str(project)})
+-        if context.get("kind") != "pf.context" or context.get("context", {}).get("status") != "fresh":
++        if (
++            context.get("kind") != "pf.context"
++            or context.get("context", {}).get("status") != "fresh"
++        ):
+             raise AssertionError(context)
+-        search = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "GarageNoHooksNeedle"})
+-        if search.get("total") != 1 or search.get("results", [{}])[0].get("resource_id") != resource_id:
++        database = workplace / "runtime/search/local-resource-search.sqlite"
++        if database.exists():
++            raise AssertionError("context unexpectedly created the fixture index")
++        pending = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project), "query": "GarageNoHooksNeedle"},
++        )
++        if (
++            pending.get("search_status") == "fresh"
++            or pending.get("total") != 0
++            or database.exists()
++        ):
++            raise AssertionError(pending)
++        run_cli("search-index-maintain", "--workplace", str(workplace), "--apply")
++        search = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project), "query": "GarageNoHooksNeedle"},
++        )
++        if (
++            search.get("total") != 1
++            or search.get("results", [{}])[0].get("resource_id") != resource_id
++        ):
+             raise AssertionError(search)
+-        resolved = call_mcp(workplace, "pf.resolve", {"project_root": str(project), "resource_id": resource_id})
++        resolved = call_mcp(
++            workplace,
++            "pf.resolve",
++            {"project_root": str(project), "resource_id": resource_id},
++        )
+         if resolved.get("resource", {}).get("status") != "available":
+             raise AssertionError(resolved)
+-        print("PASS: Garage context/search/resolve work without hooks, session, or daemon")
++        print(
++            "PASS: Garage context/search/resolve work without hooks, session, or daemon"
++        )
+     return 0
+ 
+ 
+diff --git a/tools/smoke_garage_session_enhanced.py b/tools/smoke_garage_session_enhanced.py
+index 5b47f843..d46fe3a6 100644
+--- a/tools/smoke_garage_session_enhanced.py
++++ b/tools/smoke_garage_session_enhanced.py
+@@ -9,8 +9,10 @@ import sys
+ import tempfile
+ from pathlib import Path
+ 
+-from garage_search_smoke_support import register_fixture_resource, select_fixture_resource
+-
++from garage_search_smoke_support import (
++    register_fixture_resource,
++    select_fixture_resource,
++)
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ PF = ROOT / "tools" / "processforge.py"
+@@ -18,26 +20,47 @@ MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+ 
+ 
+ def cli(*args: str) -> subprocess.CompletedProcess[str]:
+-    result = subprocess.run([sys.executable, str(PF), *args], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=120)
++    result = subprocess.run(
++        [sys.executable, str(PF), *args],
++        cwd=ROOT,
++        check=False,
++        text=True,
++        encoding="utf-8",
++        capture_output=True,
++        timeout=120,
++    )
+     if result.returncode != 0:
+         raise AssertionError(result.stdout + result.stderr)
+     return result
+ 
+ 
+-def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[str, object]:
+-    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
++def call_mcp(
++    workplace: Path, name: str, arguments: dict[str, object]
++) -> dict[str, object]:
++    request = {
++        "jsonrpc": "2.0",
++        "id": 1,
++        "method": "tools/call",
++        "params": {"name": name, "arguments": arguments},
++    }
+     result = subprocess.run(
+         [sys.executable, str(MCP), "--workplace", str(workplace)],
+         cwd=ROOT,
++        check=False,
+         text=True,
+         encoding="utf-8",
+-        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
++        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"})
++        + "\n"
++        + json.dumps(request)
++        + "\n",
+         capture_output=True,
+         timeout=120,
+     )
+     if result.returncode != 0:
+         raise AssertionError(result.stderr)
+-    response = [json.loads(line) for line in result.stdout.splitlines() if line.strip()][-1]
++    response = [
++        json.loads(line) for line in result.stdout.splitlines() if line.strip()
++    ][-1]
+     text = response["result"]["content"][0]["text"]
+     if response["result"].get("isError"):
+         raise AssertionError(text)
+@@ -51,23 +74,69 @@ def main() -> int:
+         project = root / "project"
+         cli("workplace-init", "--workplace", str(workplace), "--apply")
+         resource_id = register_fixture_resource(
+-            workplace, "fixture.docs", "session",
++            workplace,
++            "fixture.docs",
++            "session",
+             {"session.md": "GarageSessionNeedle proves stable authorization."},
+             title="Session authorization fixture",
+         )
+-        cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
++        cli(
++            "project-onboard",
++            "--project-root",
++            str(project),
++            "--workplace",
++            str(workplace),
++            "--type",
++            "generic",
++            "--apply",
++        )
+         select_fixture_resource(project, workplace, "fixture.docs", "session")
+-        cli("agent-checkin", "--workplace", str(workplace), "--agent", "fixture-agent", "--session", "fixture-session", "--project-root", str(project))
++        cli(
++            "agent-checkin",
++            "--workplace",
++            str(workplace),
++            "--agent",
++            "fixture-agent",
++            "--session",
++            "fixture-session",
++            "--project-root",
++            str(project),
++        )
+ 
+-        base = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "GarageSessionNeedle"})
+-        enhanced = call_mcp(workplace, "pf.search", {"project_root": str(project), "session_id": "fixture-session", "query": "GarageSessionNeedle"})
+-        if (base.get("total") != 1 or enhanced.get("total") != 1
+-                or not base.get("results") or not enhanced.get("results")
+-                or base["results"][0].get("resource_id") != resource_id
+-                or enhanced["results"][0].get("resource_id") != resource_id):
++        cli("search-index-maintain", "--workplace", str(workplace), "--apply")
++        base = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project), "query": "GarageSessionNeedle"},
++        )
++        enhanced = call_mcp(
++            workplace,
++            "pf.search",
++            {
++                "project_root": str(project),
++                "session_id": "fixture-session",
++                "query": "GarageSessionNeedle",
++            },
++        )
++        if (
++            base.get("total") != 1
++            or enhanced.get("total") != 1
++            or not base.get("results")
++            or not enhanced.get("results")
++            or base["results"][0].get("resource_id") != resource_id
++            or enhanced["results"][0].get("resource_id") != resource_id
++        ):
+             raise AssertionError({"base": base, "enhanced": enhanced})
+-        context = call_mcp(workplace, "pf.context", {"project_root": str(project), "session_id": "fixture-session"})
+-        if context.get("mode") != "garage" or context.get("session", {}).get("status") != "bound" or context.get("session", {}).get("id") != "fixture-session":
++        context = call_mcp(
++            workplace,
++            "pf.context",
++            {"project_root": str(project), "session_id": "fixture-session"},
++        )
++        if (
++            context.get("mode") != "garage"
++            or context.get("session", {}).get("status") != "bound"
++            or context.get("session", {}).get("id") != "fixture-session"
++        ):
+             raise AssertionError(context)
+     print("PASS: Garage session-aware mode preserves resource authorization")
+     return 0
+diff --git a/tools/smoke_user_like_garage_path.py b/tools/smoke_user_like_garage_path.py
+index be7ff752..0b2a0d6c 100644
+--- a/tools/smoke_user_like_garage_path.py
++++ b/tools/smoke_user_like_garage_path.py
+@@ -1,14 +1,13 @@
+ #!/usr/bin/env python3
+ """Smoke test for the user-like Garage path without infrastructure instructions."""
+ 
+-from smoke_garage_mode_not_promoted_by_session import call_mcp, cli
+-
+ import json
+ import subprocess
+ import sys
+ import tempfile
+ from pathlib import Path
+ 
++from smoke_garage_mode_not_promoted_by_session import call_mcp, cli
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+@@ -19,15 +18,21 @@ def tools_list(workplace: Path) -> list[str]:
+     result = subprocess.run(
+         [sys.executable, str(MCP), "--workplace", str(workplace)],
+         cwd=ROOT,
++        check=False,
+         text=True,
+         encoding="utf-8",
+-        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
++        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"})
++        + "\n"
++        + json.dumps(request)
++        + "\n",
+         capture_output=True,
+         timeout=120,
+     )
+     if result.returncode != 0:
+         raise AssertionError(result.stderr)
+-    response = [json.loads(line) for line in result.stdout.splitlines() if line.strip()][-1]
++    response = [
++        json.loads(line) for line in result.stdout.splitlines() if line.strip()
++    ][-1]
+     return [item["name"] for item in response["result"]["tools"]]
+ 
+ 
+@@ -37,30 +42,76 @@ def main() -> int:
+         workplace = root / "workplace"
+         project = root / "project"
+         cli("workplace-init", "--workplace", str(workplace), "--apply")
+-        cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
++        cli(
++            "project-onboard",
++            "--project-root",
++            str(project),
++            "--workplace",
++            str(workplace),
++            "--type",
++            "generic",
++            "--apply",
++        )
++        database = workplace / "runtime/search/local-resource-search.sqlite"
++        initial_index = database.read_bytes() if database.exists() else None
+         listed = tools_list(workplace)
+         for required in ["pf.context", "pf.search", "pf.resolve", "pf.work.start"]:
+             if required not in listed:
+                 raise AssertionError(listed)
+         context = call_mcp(workplace, "pf.context", {"project_root": str(project)})
+         project_id = context.get("project", {}).get("id")
+-        search = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "project-profile"})
+-        resolved = call_mcp(workplace, "pf.resolve", {"project_root": str(project), "resource_id": f"project.{project_id}:project-profile"})
+-        work = call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Perform task from task.md"})
++        search = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project), "query": "project-profile"},
++        )
++        resolved = call_mcp(
++            workplace,
++            "pf.resolve",
++            {
++                "project_root": str(project),
++                "resource_id": f"project.{project_id}:project-profile",
++            },
++        )
++        work = call_mcp(
++            workplace,
++            "pf.work.start",
++            {"project_root": str(project), "objective": "Perform task from task.md"},
++        )
++        if context.get("context", {}).get("status") != "fresh":
++            raise AssertionError(context)
++        if search.get("search_status") == "fresh" or search.get("total") != 0:
++            raise AssertionError(search)
++        if (database.read_bytes() if database.exists() else None) != initial_index:
++            raise AssertionError("Garage reads or Work start changed the index")
++        # Work was started with a nonfresh index. Explicit maintenance now
++        # establishes the empty corpus for the original first-run assertions.
++        cli("search-index-maintain", "--workplace", str(workplace), "--apply")
++        search = call_mcp(
++            workplace,
++            "pf.search",
++            {"project_root": str(project), "query": "project-profile"},
++        )
+         # A new project selects its generated profile for context/resolve, but
+         # the one physical search index is built only from registered Workplace
+         # resources. An empty fresh corpus is therefore a valid first-run
+         # Garage state and must not block starting governed work.
+-        if (context.get("mode") != "garage"
+-                or search.get("total") != 0
+-                or search.get("search", {}).get("status") != "empty"):
++        if (
++            context.get("mode") != "garage"
++            or search.get("total") != 0
++            or search.get("search", {}).get("status") != "empty"
++        ):
+             raise AssertionError({"context": context, "search": search})
+-        if (resolved.get("resource", {}).get("status") != "available"
+-                or resolved.get("resource", {}).get("scope") != "project_context"):
++        if (
++            resolved.get("resource", {}).get("status") != "available"
++            or resolved.get("resource", {}).get("scope") != "project_context"
++        ):
+             raise AssertionError(resolved)
+         if work.get("action") != "created_new":
+             raise AssertionError(work)
+-    print("PASS: user-like Garage path reaches governed work without manual infrastructure")
++    print(
++        "PASS: user-like Garage path reaches governed work without manual infrastructure"
++    )
+     return 0
+ 
+ 

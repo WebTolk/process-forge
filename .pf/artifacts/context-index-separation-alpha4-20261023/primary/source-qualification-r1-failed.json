@@ -1,0 +1,838 @@
+{
+  "status": "fail",
+  "source_commit": "23ae166133390275a67ba92c1f00357bc757533a",
+  "checks": [
+    {
+      "label": "py_compile",
+      "status": "PASS",
+      "elapsed_seconds": 1.52
+    },
+    {
+      "label": "clean release artifacts",
+      "status": "PASS",
+      "elapsed_seconds": 9.712
+    },
+    {
+      "label": "smoke_cli_audit_f0608",
+      "status": "PASS",
+      "elapsed_seconds": 16.109
+    },
+    {
+      "label": "smoke_core_update_missing_owned",
+      "status": "PASS",
+      "elapsed_seconds": 0.614
+    },
+    {
+      "label": "smoke_search_source_integrity",
+      "status": "PASS",
+      "elapsed_seconds": 0.694
+    },
+    {
+      "label": "smoke_search_file_root_containment",
+      "status": "PASS",
+      "elapsed_seconds": 0.455
+    },
+    {
+      "label": "smoke_search_multiple_roots",
+      "status": "PASS",
+      "elapsed_seconds": 0.772
+    },
+    {
+      "label": "smoke_classifier_distribution_parity",
+      "status": "PASS",
+      "elapsed_seconds": 2.429
+    },
+    {
+      "label": "smoke_runtime_scheduler_failure_isolation",
+      "status": "PASS",
+      "elapsed_seconds": 5.228
+    },
+    {
+      "label": "smoke_runtime_singleton_orphan",
+      "status": "PASS",
+      "elapsed_seconds": 5.169
+    },
+    {
+      "label": "smoke_core_update_migration_sources",
+      "status": "PASS",
+      "elapsed_seconds": 0.671
+    },
+    {
+      "label": "smoke_expected_report_containment",
+      "status": "PASS",
+      "elapsed_seconds": 25.934
+    },
+    {
+      "label": "smoke_authenticated_report_content",
+      "status": "PASS",
+      "elapsed_seconds": 28.131
+    },
+    {
+      "label": "smoke_mcp_jsonrpc_validation",
+      "status": "PASS",
+      "elapsed_seconds": 3.142
+    },
+    {
+      "label": "smoke_action_discovery",
+      "status": "PASS",
+      "elapsed_seconds": 7.978
+    },
+    {
+      "label": "smoke_mcp_action_tools",
+      "status": "PASS",
+      "elapsed_seconds": 0.466
+    },
+    {
+      "label": "smoke_mcp_stdio_unicode",
+      "status": "PASS",
+      "elapsed_seconds": 11.2
+    },
+    {
+      "label": "smoke_diagnostics",
+      "status": "PASS",
+      "elapsed_seconds": 79.776
+    },
+    {
+      "label": "smoke_diagnostics_process_invariance",
+      "status": "PASS",
+      "elapsed_seconds": 115.94
+    },
+    {
+      "label": "smoke_work_resource_binding",
+      "status": "PASS",
+      "elapsed_seconds": 134.523
+    },
+    {
+      "label": "smoke_work_capsule_contract_parity",
+      "status": "PASS",
+      "elapsed_seconds": 18.228
+    },
+    {
+      "label": "smoke_session_identity_roundtrip",
+      "status": "PASS",
+      "elapsed_seconds": 36.482
+    },
+    {
+      "label": "smoke_codex_lifecycle_identity",
+      "status": "PASS",
+      "elapsed_seconds": 12.842
+    },
+    {
+      "label": "smoke_raw_ingress_incremental_recovery",
+      "status": "PASS",
+      "elapsed_seconds": 0.482
+    },
+    {
+      "label": "schema validation",
+      "status": "PASS",
+      "elapsed_seconds": 29.877
+    },
+    {
+      "label": "public cleanliness",
+      "status": "PASS",
+      "elapsed_seconds": 4.261
+    },
+    {
+      "label": "smoke_public_cleanliness",
+      "status": "PASS",
+      "elapsed_seconds": 0.646
+    },
+    {
+      "label": "smoke_processforge_core_package_bootstrap",
+      "status": "PASS",
+      "elapsed_seconds": 3.255
+    },
+    {
+      "label": "smoke_yaml_inventory",
+      "status": "PASS",
+      "elapsed_seconds": 3.033
+    },
+    {
+      "label": "smoke_core_read_composition",
+      "status": "PASS",
+      "elapsed_seconds": 4.077
+    },
+    {
+      "label": "smoke_core_work_state",
+      "status": "PASS",
+      "elapsed_seconds": 3.211
+    },
+    {
+      "label": "smoke_work_record_read_composition",
+      "status": "PASS",
+      "elapsed_seconds": 1.092
+    },
+    {
+      "label": "smoke_work_context_read_composition",
+      "status": "PASS",
+      "elapsed_seconds": 1.932
+    },
+    {
+      "label": "smoke_process_definition_read_composition",
+      "status": "PASS",
+      "elapsed_seconds": 2.062
+    },
+    {
+      "label": "smoke_project_snapshot_read_composition",
+      "status": "PASS",
+      "elapsed_seconds": 1.808
+    },
+    {
+      "label": "smoke_garage_snapshot_read_composition",
+      "status": "PASS",
+      "elapsed_seconds": 1.962
+    },
+    {
+      "label": "smoke_resource_search_snapshot_composition",
+      "status": "PASS",
+      "elapsed_seconds": 1.281
+    },
+    {
+      "label": "smoke_resource_resolve_snapshot_composition",
+      "status": "PASS",
+      "elapsed_seconds": 2.377
+    },
+    {
+      "label": "smoke_garage_mode_snapshot_composition",
+      "status": "PASS",
+      "elapsed_seconds": 3.191
+    },
+    {
+      "label": "smoke_evidence_collection_policy",
+      "status": "PASS",
+      "elapsed_seconds": 1.326
+    },
+    {
+      "label": "smoke_evidence_validation_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.932
+    },
+    {
+      "label": "smoke_automation_readiness",
+      "status": "PASS",
+      "elapsed_seconds": 0.478
+    },
+    {
+      "label": "smoke_work_selection_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.924
+    },
+    {
+      "label": "smoke_process_selection_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.715
+    },
+    {
+      "label": "smoke_process_pin_read_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.552
+    },
+    {
+      "label": "smoke_run_completion_policy",
+      "status": "PASS",
+      "elapsed_seconds": 1.383
+    },
+    {
+      "label": "smoke_completion_intent_validation_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.987
+    },
+    {
+      "label": "smoke_transition_rejection_policy",
+      "status": "PASS",
+      "elapsed_seconds": 0.677
+    },
+    {
+      "label": "smoke_work_boundary_advisory_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.82
+    },
+    {
+      "label": "smoke_completion_document_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.587
+    },
+    {
+      "label": "smoke_completion_intent_builder",
+      "status": "PASS",
+      "elapsed_seconds": 0.643
+    },
+    {
+      "label": "smoke_completion_intent_read_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.423
+    },
+    {
+      "label": "smoke_completion_intent_replay_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.412
+    },
+    {
+      "label": "smoke_work_transition_commit_service",
+      "status": "PASS",
+      "elapsed_seconds": 0.597
+    },
+    {
+      "label": "smoke_stage_readiness_policy",
+      "status": "PASS",
+      "elapsed_seconds": 1.687
+    },
+    {
+      "label": "smoke_subprocess_capture",
+      "status": "PASS",
+      "elapsed_seconds": 3.614
+    },
+    {
+      "label": "smoke_central_event_ingress",
+      "status": "PASS",
+      "elapsed_seconds": 19.64
+    },
+    {
+      "label": "smoke_provider_adapter_admission",
+      "status": "PASS",
+      "elapsed_seconds": 7.065
+    },
+    {
+      "label": "smoke_prepared_execution_context",
+      "status": "PASS",
+      "elapsed_seconds": 54.385
+    },
+    {
+      "label": "smoke_prepared_execution_recovery",
+      "status": "PASS",
+      "elapsed_seconds": 53.683
+    },
+    {
+      "label": "smoke_core_has_no_domain_knowledge_seeds",
+      "status": "PASS",
+      "elapsed_seconds": 0.106
+    },
+    {
+      "label": "smoke_empty_workplace_has_no_domain_resources",
+      "status": "PASS",
+      "elapsed_seconds": 3.025
+    },
+    {
+      "label": "smoke_project_classification_data_driven",
+      "status": "PASS",
+      "elapsed_seconds": 2.144
+    },
+    {
+      "label": "smoke_classifier_inventory_pruning",
+      "status": "PASS",
+      "elapsed_seconds": 2.511
+    },
+    {
+      "label": "smoke_project_onboard_platform_selection",
+      "status": "PASS",
+      "elapsed_seconds": 1.82
+    },
+    {
+      "label": "smoke_no_hardcoded_file_project_detection",
+      "status": "PASS",
+      "elapsed_seconds": 1.685
+    },
+    {
+      "label": "smoke_optional_domain_pack_not_default",
+      "status": "PASS",
+      "elapsed_seconds": 1.753
+    },
+    {
+      "label": "smoke_domain_pack_can_classify_after_install",
+      "status": "PASS",
+      "elapsed_seconds": 1.905
+    },
+    {
+      "label": "smoke_core_process_catalog_domain_neutral",
+      "status": "PASS",
+      "elapsed_seconds": 1.836
+    },
+    {
+      "label": "smoke_core_prompts_domain_neutral",
+      "status": "PASS",
+      "elapsed_seconds": 0.102
+    },
+    {
+      "label": "smoke_runtime_no_domain_file_patterns",
+      "status": "PASS",
+      "elapsed_seconds": 2.256
+    },
+    {
+      "label": "smoke_official_packs_not_examples",
+      "status": "PASS",
+      "elapsed_seconds": 0.319
+    },
+    {
+      "label": "smoke_official_pack_manifest_schema",
+      "status": "PASS",
+      "elapsed_seconds": 0.365
+    },
+    {
+      "label": "smoke_official_software_process_available",
+      "status": "PASS",
+      "elapsed_seconds": 8.427
+    },
+    {
+      "label": "smoke_official_pack_not_kernel",
+      "status": "PASS",
+      "elapsed_seconds": 0.812
+    },
+    {
+      "label": "smoke_generic_workplace_no_domain_pack_active",
+      "status": "PASS",
+      "elapsed_seconds": 2.018
+    },
+    {
+      "label": "smoke_software_profile_activates_official_pack",
+      "status": "PASS",
+      "elapsed_seconds": 7.04
+    },
+    {
+      "label": "smoke_official_pack_classifier_data_driven",
+      "status": "PASS",
+      "elapsed_seconds": 7.677
+    },
+    {
+      "label": "smoke_official_process_can_start_minimal_run",
+      "status": "PASS",
+      "elapsed_seconds": 16.148
+    },
+    {
+      "label": "smoke_core_domain_neutral_still_passes",
+      "status": "PASS",
+      "elapsed_seconds": 18.599
+    },
+    {
+      "label": "smoke_examples_do_not_shadow_official_processes",
+      "status": "PASS",
+      "elapsed_seconds": 0.246
+    },
+    {
+      "label": "checksum",
+      "status": "PASS",
+      "elapsed_seconds": 0.595
+    },
+    {
+      "label": "smoke_first_run",
+      "status": "PASS",
+      "elapsed_seconds": 9.14
+    },
+    {
+      "label": "smoke_runtime_driver_registry",
+      "status": "PASS",
+      "elapsed_seconds": 11.812
+    },
+    {
+      "label": "smoke_worker_run_shell",
+      "status": "PASS",
+      "elapsed_seconds": 40.828
+    },
+    {
+      "label": "smoke_worker_environment_secret_redaction",
+      "status": "PASS",
+      "elapsed_seconds": 1.511
+    },
+    {
+      "label": "smoke_worker_workspace_access",
+      "status": "PASS",
+      "elapsed_seconds": 7.136
+    },
+    {
+      "label": "smoke_codex_exec_worker",
+      "status": "PASS",
+      "elapsed_seconds": 10.081
+    },
+    {
+      "label": "smoke_codex_worker_governance",
+      "status": "PASS",
+      "elapsed_seconds": 1.567
+    },
+    {
+      "label": "smoke_mcp_codex_contract",
+      "status": "PASS",
+      "elapsed_seconds": 4.932
+    },
+    {
+      "label": "smoke_runtime_mcp_autostart",
+      "status": "PASS",
+      "elapsed_seconds": 0.311
+    },
+    {
+      "label": "smoke_central_event_replay",
+      "status": "PASS",
+      "elapsed_seconds": 6.204
+    },
+    {
+      "label": "smoke_conversation_completeness",
+      "status": "PASS",
+      "elapsed_seconds": 52.05
+    },
+    {
+      "label": "smoke_process_supervisor_tick",
+      "status": "PASS",
+      "elapsed_seconds": 6.611
+    },
+    {
+      "label": "smoke_director_inspector_boundary",
+      "status": "PASS",
+      "elapsed_seconds": 14.003
+    },
+    {
+      "label": "smoke_process_run_task_batch",
+      "status": "PASS",
+      "elapsed_seconds": 59.487
+    },
+    {
+      "label": "smoke_agent_ledger",
+      "status": "PASS",
+      "elapsed_seconds": 9.89
+    },
+    {
+      "label": "smoke_single_agent_session_flow",
+      "status": "PASS",
+      "elapsed_seconds": 13.466
+    },
+    {
+      "label": "smoke_multi_project_agent_sessions",
+      "status": "PASS",
+      "elapsed_seconds": 11.008
+    },
+    {
+      "label": "smoke_runtime_host_poc",
+      "status": "PASS",
+      "elapsed_seconds": 17.709
+    },
+    {
+      "label": "smoke_long_lived_runtime",
+      "status": "PASS",
+      "elapsed_seconds": 68.437
+    },
+    {
+      "label": "smoke_multi_agent_as_composed_sessions",
+      "status": "PASS",
+      "elapsed_seconds": 12.405
+    },
+    {
+      "label": "smoke_project_coordination_modes",
+      "status": "PASS",
+      "elapsed_seconds": 13.896
+    },
+    {
+      "label": "smoke_mixed_workplace_projects",
+      "status": "PASS",
+      "elapsed_seconds": 8.174
+    },
+    {
+      "label": "smoke_worker_awareness_of_director",
+      "status": "PASS",
+      "elapsed_seconds": 6.587
+    },
+    {
+      "label": "smoke_error_workflow",
+      "status": "PASS",
+      "elapsed_seconds": 6.959
+    },
+    {
+      "label": "smoke_process_transition_handoff",
+      "status": "PASS",
+      "elapsed_seconds": 10.701
+    },
+    {
+      "label": "smoke_agent_director_tick",
+      "status": "PASS",
+      "elapsed_seconds": 7.93
+    },
+    {
+      "label": "smoke_config_behavior_contracts",
+      "status": "PASS",
+      "elapsed_seconds": 38.814
+    },
+    {
+      "label": "smoke_orchestrator_shell_agents_with_subagent_policy",
+      "status": "PASS",
+      "elapsed_seconds": 11.119
+    },
+    {
+      "label": "smoke_builtin_process_catalog",
+      "status": "PASS",
+      "elapsed_seconds": 1.873
+    },
+    {
+      "label": "smoke_process_directory_layout",
+      "status": "PASS",
+      "elapsed_seconds": 1.738
+    },
+    {
+      "label": "smoke_process_resolver_multiple_roots",
+      "status": "PASS",
+      "elapsed_seconds": 1.733
+    },
+    {
+      "label": "smoke_process_list_origin_filters",
+      "status": "PASS",
+      "elapsed_seconds": 2.055
+    },
+    {
+      "label": "smoke_process_authoring_writes_user_root",
+      "status": "PASS",
+      "elapsed_seconds": 1.955
+    },
+    {
+      "label": "smoke_legacy_flat_process_layout_warning",
+      "status": "PASS",
+      "elapsed_seconds": 1.645
+    },
+    {
+      "label": "smoke_release_pack_excludes_user_processes",
+      "status": "PASS",
+      "elapsed_seconds": 0.17
+    },
+    {
+      "label": "smoke_process_id_stable_after_move",
+      "status": "PASS",
+      "elapsed_seconds": 1.632
+    },
+    {
+      "label": "smoke_process_root_collision_policy",
+      "status": "PASS",
+      "elapsed_seconds": 1.656
+    },
+    {
+      "label": "smoke_project_scan_excludes_distribution_root",
+      "status": "PASS",
+      "elapsed_seconds": 0.242
+    },
+    {
+      "label": "smoke_project_scan_excludes_workplace_root",
+      "status": "PASS",
+      "elapsed_seconds": 0.285
+    },
+    {
+      "label": "smoke_project_scan_excludes_knowledge_roots",
+      "status": "PASS",
+      "elapsed_seconds": 0.243
+    },
+    {
+      "label": "smoke_processforge_core_project_requires_explicit_type",
+      "status": "PASS",
+      "elapsed_seconds": 1.555
+    },
+    {
+      "label": "smoke_project_local_package_index_detection",
+      "status": "PASS",
+      "elapsed_seconds": 1.54
+    },
+    {
+      "label": "smoke_agent_workspace_platform_availability_snapshot",
+      "status": "PASS",
+      "elapsed_seconds": 1.513
+    },
+    {
+      "label": "smoke_platform_create_include_levels",
+      "status": "PASS",
+      "elapsed_seconds": 3.189
+    },
+    {
+      "label": "smoke_release_test_trace_timeout_reporting",
+      "status": "PASS",
+      "elapsed_seconds": 2.698
+    },
+    {
+      "label": "smoke_release_test_extracted_archive",
+      "status": "PASS",
+      "elapsed_seconds": 0.192
+    },
+    {
+      "label": "smoke_windows_utf8_docs",
+      "status": "PASS",
+      "elapsed_seconds": 0.126
+    },
+    {
+      "label": "smoke_pf_project_process_refs_follow_layout",
+      "status": "PASS",
+      "elapsed_seconds": 0.643
+    },
+    {
+      "label": "smoke_no_removed_process_refs",
+      "status": "PASS",
+      "elapsed_seconds": 0.289
+    },
+    {
+      "label": "smoke_update_sites_schema",
+      "status": "PASS",
+      "elapsed_seconds": 2.98
+    },
+    {
+      "label": "smoke_update_candidate_discovery",
+      "status": "PASS",
+      "elapsed_seconds": 2.843
+    },
+    {
+      "label": "smoke_update_notifications",
+      "status": "PASS",
+      "elapsed_seconds": 6.412
+    },
+    {
+      "label": "smoke_update_stage_verify_apply_file_provider",
+      "status": "PASS",
+      "elapsed_seconds": 5.971
+    },
+    {
+      "label": "smoke_core_update_manifest",
+      "status": "PASS",
+      "elapsed_seconds": 6.815
+    },
+    {
+      "label": "smoke_project_pf_upgrade_assessment_boundary",
+      "status": "PASS",
+      "elapsed_seconds": 6.638
+    },
+    {
+      "label": "smoke_tool_update_policy",
+      "status": "PASS",
+      "elapsed_seconds": 3.801
+    },
+    {
+      "label": "smoke_resource_versioning_modes",
+      "status": "PASS",
+      "elapsed_seconds": 4.249
+    },
+    {
+      "label": "smoke_project_context_snapshot_lock_model",
+      "status": "PASS",
+      "elapsed_seconds": 2.273
+    },
+    {
+      "label": "smoke_project_context_freshness_policies",
+      "status": "PASS",
+      "elapsed_seconds": 5.368
+    },
+    {
+      "label": "smoke_context_freshness_vs_execution_readiness",
+      "status": "PASS",
+      "elapsed_seconds": 17.663
+    },
+    {
+      "label": "smoke_project_context_capability_records_real_core",
+      "status": "PASS",
+      "elapsed_seconds": 2.503
+    },
+    {
+      "label": "smoke_continuation_work",
+      "status": "PASS",
+      "elapsed_seconds": 44.831
+    },
+    {
+      "label": "smoke_process_catalog_not_implicit_execution_route",
+      "status": "PASS",
+      "elapsed_seconds": 7.575
+    },
+    {
+      "label": "smoke_project_init_local_search_mcp",
+      "status": "PASS",
+      "elapsed_seconds": 21.428
+    },
+    {
+      "label": "smoke_resource_indexing_policy_acceptance",
+      "status": "PASS",
+      "elapsed_seconds": 0.426
+    },
+    {
+      "label": "smoke_project_init_acceptance",
+      "status": "PASS",
+      "elapsed_seconds": 23.185
+    },
+    {
+      "label": "smoke_project_init_entry",
+      "status": "PASS",
+      "elapsed_seconds": 39.655
+    },
+    {
+      "label": "smoke_agent_entry",
+      "status": "PASS",
+      "elapsed_seconds": 14.895
+    },
+    {
+      "label": "smoke_agent_entry_release",
+      "status": "PASS",
+      "elapsed_seconds": 1.796
+    },
+    {
+      "label": "smoke_agent_start_prompt",
+      "status": "PASS",
+      "elapsed_seconds": 20.046
+    },
+    {
+      "label": "smoke_agent_entry_profiles",
+      "status": "PASS",
+      "elapsed_seconds": 6.843
+    },
+    {
+      "label": "smoke_agent_entry_adapters",
+      "status": "PASS",
+      "elapsed_seconds": 9.077
+    },
+    {
+      "label": "smoke_project_init_codex_integration",
+      "status": "PASS",
+      "elapsed_seconds": 6.472
+    },
+    {
+      "label": "smoke_no_production_example_update_urls",
+      "status": "PASS",
+      "elapsed_seconds": 0.136
+    },
+    {
+      "label": "smoke_docs_garage_no_runtime_required",
+      "status": "PASS",
+      "elapsed_seconds": 0.121
+    },
+    {
+      "label": "smoke_docs_mcp_host_owned_stdio",
+      "status": "PASS",
+      "elapsed_seconds": 0.116
+    },
+    {
+      "label": "smoke_docs_agent_no_manual_infra",
+      "status": "PASS",
+      "elapsed_seconds": 0.113
+    },
+    {
+      "label": "smoke_docs_current_code_contract",
+      "status": "PASS",
+      "elapsed_seconds": 2.218
+    },
+    {
+      "label": "smoke_docs_codex_hooks_optional",
+      "status": "PASS",
+      "elapsed_seconds": 0.097
+    },
+    {
+      "label": "smoke_doctor_gitignore_effective_protection",
+      "status": "PASS",
+      "elapsed_seconds": 3.786
+    },
+    {
+      "label": "smoke_mcp_missing_session_diagnostics",
+      "status": "PASS",
+      "elapsed_seconds": 0.268
+    },
+    {
+      "label": "smoke_session_projection_expiry",
+      "status": "PASS",
+      "elapsed_seconds": 4.654
+    },
+    {
+      "label": "smoke_fulltext_article_indexing",
+      "status": "PASS",
+      "elapsed_seconds": 0.256
+    },
+    {
+      "label": "smoke_garage_no_hooks_sessionless",
+      "status": "FAIL",
+      "elapsed_seconds": 9.68
+    }
+  ],
+  "native_report_sha256": "e8afecfd7b089e3cf98eae653ecc5839f442d26b8607bb4e0da63a43a60a920f",
+  "qualification": "Rejected full source attempt, never accepted or published."
+}

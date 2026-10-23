@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-23T15:12:13.379686+00:00",
+  "status": "pass",
+  "closed_product_works": 13,
+  "finalizer": {
+    "run_id": "garage-alpha4-final-evidence-delivery-20261023-after-native-completion-o",
+    "assignment_id": "alpha4-final-evidence-delivery-20261023-after-native-completion-of-all-1",
+    "context_id": "alpha4-final-evidence-delivery-20261023-after-native-completion-of-all-1-capsule"
+  },
+  "finalizer_capsule_checksum": "sha256:6ad6a1cbcf986250da26c995bcad8c8063a8c7308508cab4751fcd28e76ab774",
+  "metadata_commit": "171036e694f165f212256fef76af721679c3efb6",
+  "preservation": {
+    "foreign_bytes_preserved": true,
+    "prior_alpha3_assets_preserved": true,
+    "stable_feed_preserved": true
+  },
+  "private_originals_retained": true,
+  "primary_log_line_endings": "LF"
+}

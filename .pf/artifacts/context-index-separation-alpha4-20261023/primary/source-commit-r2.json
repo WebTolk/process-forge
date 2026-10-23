@@ -1,0 +1,8 @@
+{
+  "commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "tree": "3e9178c718058db1e8cefb15c5082b19c6a0320f",
+  "version": "1.3.0-alpha4",
+  "manifest": "source-candidate-r20.json",
+  "all_reviewed_blobs_match": true,
+  "predecessor_source_commit": "23ae166133390275a67ba92c1f00357bc757533a"
+}

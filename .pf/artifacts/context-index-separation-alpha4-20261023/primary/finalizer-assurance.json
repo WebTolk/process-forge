@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-23T15:14:49.669551+00:00",
+  "status": "pass",
+  "scope": "Artifact-only finalizer; no product bytes changed or new product tests required.",
+  "portable_files_examined_before_this_receipt": 193,
+  "json_documents_parsed": 83,
+  "private_or_sealed_local_only_files": 23,
+  "privacy": "Each selected UTF-8 file passed the exact delivery privacy filter; originals excluded rather than rewritten.",
+  "doctors": {
+    "works": 14,
+    "checks": 28,
+    "warnings": 0,
+    "receipt": "scoped-doctors-final.json"
+  },
+  "closed_product_works": 13,
+  "backlog_status": "done",
+  "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "metadata_commit": "171036e694f165f212256fef76af721679c3efb6",
+  "local_tag_peels_to_source": true,
+  "metadata_delta_only_three_release_files": true,
+  "preservation": {
+    "foreign_bytes_preserved": true,
+    "prior_alpha3_assets_preserved": true,
+    "stable_feed_preserved": true
+  },
+  "parent_report_sha256": "2edc1235d7a33eefbb110c45adf857fa36c24f645ca8454da95ee9ad4f2ed742",
+  "final_report_sha256": "2acc97e5a9ee9a287427071799b50ce1097b0ac4fa4e69989d44ee19d8c9515a",
+  "native_completion_recovery": "native-closeout-recovery.json",
+  "remaining": "Git exact-byte/staged-whitespace checks, commit, dual push/readback and native finalizer completion."
+}

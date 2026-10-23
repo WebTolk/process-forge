@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-23T11:40:02.351232+00:00",
+  "status": "pass",
+  "candidate_manifest": "source-candidate-r16.json",
+  "reviewed_files": 41,
+  "independent_review": "CODE GO",
+  "review_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r3/report.md",
+  "review_report_sha256": "727d404a553c398e71342eed5fc4fd7d5382741a94ca9d1ffdf0d2f11f89264c",
+  "review_identity": {
+    "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-3-same-single-logic",
+    "assignment_id": "alpha4-fresh-independent-final-reviewer-round-3-same-single-logical-revi",
+    "context_id": "alpha4-fresh-independent-final-reviewer-round-3-same-single-logical-revi-capsule"
+  },
+  "review_capsule_checksum": "sha256:84139beda76764fbb6ccb7e42c4ef8aa34527bdb9d4f832cb9973d736236e668",
+  "native_review_exit_code": 0,
+  "native_review_attempt": 1,
+  "actual_read_ack_captured": true,
+  "qa": "qa-receipts-r5.json",
+  "test_report": "test-report-r5.md",
+  "code_quality_report": "code-quality-report-r5.md",
+  "review_disposition": "review-disposition-r6.md",
+  "preservation": {
+    "foreign_bytes_preserved": true,
+    "prior_alpha3_assets_preserved": true,
+    "stable_feed_preserved": true
+  },
+  "release_qualification": "Full source and exact archive native public profiles pending; this is CODE assurance only."
+}

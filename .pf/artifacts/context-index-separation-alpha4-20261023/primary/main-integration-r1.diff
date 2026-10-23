@@ -1,0 +1,77 @@
+--- before/tools/processforge.py
++++ after/tools/processforge.py
+@@ -2758,10 +2758,9 @@
+     search_index: dict[str, Any] | None = None
+     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, request.get("workplace"))
+     if workplace_manifest:
+-        search_index = search_index_maintenance_for_known_projects(
++        search_index = observe_search_index_for_project(
+             workplace_manifest.parent,
+             reason="project-onboarding",
+-            project_roots=[project_root],
+         )
+     _process_event_recorder.emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
+     return {
+@@ -2787,10 +2786,9 @@
+     search_index: dict[str, Any] | None = None
+     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, workplace)
+     if workplace_manifest:
+-        search_index = search_index_maintenance_for_known_projects(
++        search_index = observe_search_index_for_project(
+             workplace_manifest.parent,
+             reason="project-repair",
+-            project_roots=[project_root],
+         )
+     return {
+         "status": "complete" if doctor_status == 0 else "blocked",
+@@ -5561,10 +5559,9 @@
+     workplace_manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
+     maintenance: dict[str, Any] | None = None
+     if workplace_manifest:
+-        maintenance = search_index_maintenance_for_known_projects(
++        maintenance = observe_search_index_for_project(
+             workplace_manifest.parent,
+             reason="project-context-refresh",
+-            project_roots=[project_root],
+         )
+     print(f"STATUS: {status}")
+     for path in paths.values():
+@@ -12458,6 +12455,38 @@
+     return WorkplaceSearchCatalogReader(workplace_root, distribution_root=ROOT).runtime_snapshot()
+ 
+ 
++def observe_search_index_for_project(
++    workplace_root: Path, *, reason: str,
++) -> dict[str, Any]:
++    """Project operations observe search state without starting maintenance."""
++    from processforge_core.resources.index_observation import IndexObservationService
++
++    state = IndexObservationService(workplace_root, distribution_root=ROOT).observe()
++    row: dict[str, Any] = {
++        "scope": "workplace",
++        "status": "ok" if state.get("status") == "fresh" else "degraded",
++        "action": "none",
++        "search_status": state.get("status"),
++        "generation": state.get("generation"),
++        "document_count": state.get("document_count"),
++        "stale_resource_count": state.get("stale_resource_count"),
++        "failed_file_count": state.get("failed_file_count"),
++    }
++    if state.get("error"):
++        row["error"] = state["error"]
++    report = workplace_root / "runtime" / "search" / "latest-maintenance.yaml"
++    return {
++        "schema_version": 1,
++        "kind": "pf.search_index.maintenance",
++        "created_at": _core_common_clock.now_utc(),
++        "reason": reason,
++        "scope": "workplace",
++        "project_count": 0,
++        "results": [row],
++        "report": rel(report, workplace_root) if report.is_file() else None,
++    }
++
++
+ def search_index_project_label(project_root: Path, workplace_root: Path) -> str:
+     try:
+         return rel(project_root, workplace_root)

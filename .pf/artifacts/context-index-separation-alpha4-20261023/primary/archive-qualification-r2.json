@@ -1,0 +1,35 @@
+{
+  "status": "pass",
+  "version": "1.3.0-alpha4",
+  "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "archive_sha256": "52474515eb6cbf59c7a307481a16ab717391c1616a6c924fd6d9156e8ee1aaf2",
+  "sidecar_sha256": "31f2faaf99fc33823b7b66642b274ca8ac1d2c496ecb618e4beadb7c1289246c",
+  "extracted_test": "full retained native public profile; no only/skip filters",
+  "native_archive_inspection": {
+    "extracted_test": "skip; full profile separately retained",
+    "exit_code": 0,
+    "stdout_sha256": "9523c8daf57129e144e6e1dd75f41c17d9d6d8f3963a1e6406ce576af17dd6b1",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "consumer_help_exit_codes": [
+    0,
+    0
+  ],
+  "consumer_profile": {
+    "result": "PASS",
+    "checks": 272,
+    "statuses": {
+      "PASS": 272
+    },
+    "public": true,
+    "elapsed_seconds": 2874.917
+  },
+  "consumer_files_unchanged": true,
+  "consumer_root": ".pf/tmp/context-index-separation-alpha4-20261023/consumer-r2",
+  "native_exit_code": 0,
+  "elapsed_seconds": 2877.089,
+  "stdout_sha256": "5bde95fd1e9536d336b8c59e90cf4f105e25bffcc74566f932318633af73fe47",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tracked_source_unchanged": true,
+  "qualification_limit": "Windows CPython source and unpacked archive consumer; no installed-device, connected-host or native POSIX acceptance"
+}

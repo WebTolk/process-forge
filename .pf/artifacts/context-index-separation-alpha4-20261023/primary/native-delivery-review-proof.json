@@ -1,0 +1,156 @@
+{
+  "logical_topology": "1 primary, 1 logical independent reviewer, 4 logical native contributors",
+  "contributors": [
+    {
+      "contributor": "observation",
+      "run_id": "garage-alpha4-native-observation-contribution-under-frozen-1-1-4-archite",
+      "assignment_id": "alpha4-native-observation-contribution-under-frozen-1-1-4-architecture-i",
+      "context_id": "alpha4-native-observation-contribution-under-frozen-1-1-4-architecture-i-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 3,
+      "actual_read_ack_attempt": 3,
+      "actual_final_message_attempt": 3,
+      "report_sha256": "95b4add72b99a133e80ee5f30e87346eee22ccc94a26c99fb0cb6de00124b407",
+      "status_record_sha256": "f81d9b407ce480143a81300c20daf76801ebfa7ba30cad8f4b5e81c00d4cb69d",
+      "handoff": "Observation/maintenance reservations were natively canceled after completed output and handed to a valid primary QA successor; historical reports are not a claim of final release acceptance."
+    },
+    {
+      "contributor": "maintenance",
+      "run_id": "garage-alpha4-revised-maintenance-native-contribution-in-1-1-4-implement",
+      "assignment_id": "alpha4-revised-maintenance-native-contribution-in-1-1-4-implement-the-si",
+      "context_id": "alpha4-revised-maintenance-native-contribution-in-1-1-4-implement-the-si-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "26a60d02edddd18a656b86005d7cbd5e5e49b41f45aaa60dc8e6262e44114a6c",
+      "status_record_sha256": "0c238d8f75ec9dfce15a6e0966a22ef65608cc20c9694187f5bf39ae4359b646",
+      "handoff": "Observation/maintenance reservations were natively canceled after completed output and handed to a valid primary QA successor; historical reports are not a claim of final release acceptance."
+    },
+    {
+      "contributor": "schedule",
+      "run_id": "garage-alpha4-revised-schedule-native-contribution-in-1-1-4-implement-on",
+      "assignment_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co",
+      "context_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "5e6fb844d7cbc500ee6c5d13e303f626465a3e49d667209a074dd8ea75699837",
+      "status_record_sha256": "96944b02dcbac2083c84ae061942fda0b65cb70366e495a361e8f38d4e93ef88",
+      "handoff": "Completed native output handed to primary registered QA and independent review."
+    },
+    {
+      "contributor": "integration",
+      "run_id": "garage-alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs",
+      "assignment_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after",
+      "context_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "f9456d4e7d6eb458031e21a0eaa51068573b2ee314e9b9266063a5061fee7310",
+      "status_record_sha256": "b512236ea514b299816eeac09cc783faddd47799e6a0ef1aea3f7c4f16c12fad",
+      "handoff": "Completed native output handed to primary registered QA and independent review."
+    }
+  ],
+  "primary_forwarded_actual_messages": true,
+  "bounded_successor_and_review_receipts": [
+    {
+      "at": "2026-10-23T08:55:40.762933+00:00",
+      "logical_role": "existing maintenance contributor",
+      "selectors": {
+        "run_id": "garage-alpha4-same-logical-native-maintenance-contributor-batch-successo",
+        "assignment_id": "alpha4-same-logical-native-maintenance-contributor-batch-successor-imple",
+        "context_id": "alpha4-same-logical-native-maintenance-contributor-batch-successor-imple-capsule"
+      },
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "attempt": 2,
+      "actual_read_ack_attempt": 2,
+      "actual_final_message_attempt": 2,
+      "report_sha256": "87478b89bb5a5864b58d802baffaa6596f2328b6c51a72bcc31dd3b38835de0d",
+      "status_sha256": "c2fe9677f3109aab54a2220d5de269166219f021a1d9ced86875b08d06c1c37f",
+      "primary_forwarded_actual_messages": true,
+      "retained_earlier_error_count": 1
+    },
+    {
+      "at": "2026-10-23T10:06:48.339724+00:00",
+      "logical_role": "one independent reviewer",
+      "selectors": {
+        "run_id": "garage-alpha4-final-independent-native-reviewer-same-single-logical-revi",
+        "assignment_id": "alpha4-final-independent-native-reviewer-same-single-logical-reviewer-in",
+        "context_id": "alpha4-final-independent-native-reviewer-same-single-logical-reviewer-in-capsule"
+      },
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "b5b9874d9d7c9884fcf2b7e223b295db7539ff568f33b3b9b4987f0e61d35c70",
+      "status_sha256": "7cff1967f0482b1aba471bcacabcf15cdede1e76dfd2b2de22b2275e7dfdf104",
+      "primary_forwarded_actual_messages": true,
+      "retained_earlier_error_count": 0
+    },
+    {
+      "at": "2026-10-23T11:10:24.199853+00:00",
+      "logical_role": "one independent reviewer",
+      "selectors": {
+        "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-2-same-single-revie",
+        "assignment_id": "alpha4-fresh-independent-final-reviewer-round-2-same-single-reviewer-in",
+        "context_id": "alpha4-fresh-independent-final-reviewer-round-2-same-single-reviewer-in-capsule"
+      },
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "a3f296c785cedbe8a15e4e3ec1f2b8c35e0c2d9799e710b2ab5aa34369484f3a",
+      "status_sha256": "67a813a39758d120689966b04eda760b60d472b606883ca0ec2a2a0578b72870",
+      "primary_forwarded_actual_messages": true,
+      "retained_earlier_error_count": 0
+    },
+    {
+      "at": "2026-10-23T11:39:16.101368+00:00",
+      "logical_role": "one independent reviewer",
+      "selectors": {
+        "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-3-same-single-logic",
+        "assignment_id": "alpha4-fresh-independent-final-reviewer-round-3-same-single-logical-revi",
+        "context_id": "alpha4-fresh-independent-final-reviewer-round-3-same-single-logical-revi-capsule"
+      },
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "727d404a553c398e71342eed5fc4fd7d5382741a94ca9d1ffdf0d2f11f89264c",
+      "status_sha256": "0c1a9d7d24c7510a22f3acbc0b391e9159bab9947fa907a3a999d9a5833bd934",
+      "primary_forwarded_actual_messages": true,
+      "retained_earlier_error_count": 0
+    },
+    {
+      "at": "2026-10-23T13:10:54.625194+00:00",
+      "logical_role": "one independent reviewer",
+      "selectors": {
+        "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-4-same-single-logic",
+        "assignment_id": "alpha4-fresh-independent-final-reviewer-round-4-same-single-logical-revi",
+        "context_id": "alpha4-fresh-independent-final-reviewer-round-4-same-single-logical-revi-capsule"
+      },
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "08a716dd1a813a654179e86234f4abf9be5bc8f435905fb1ec7cd509942bf9cc",
+      "status_sha256": "1953913a8b4863595011971886f21eaa4cb4f1e17bb52b0f3b18331df698cb13",
+      "primary_forwarded_actual_messages": true,
+      "retained_earlier_error_count": 0
+    }
+  ],
+  "accepted_decision": "assurance-decision-r2.json",
+  "history_policy": "Negative reviews/canceled scopes/real failed attempts retain their original identity and are not product CODE GO."
+}

@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-23T13:11:42.396601+00:00",
+  "status": "pass",
+  "candidate_manifest": "source-candidate-r20.json",
+  "reviewed_files": 45,
+  "independent_review": "CODE GO",
+  "review_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r4/report.md",
+  "review_report_sha256": "08a716dd1a813a654179e86234f4abf9be5bc8f435905fb1ec7cd509942bf9cc",
+  "review_identity": {
+    "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-4-same-single-logic",
+    "assignment_id": "alpha4-fresh-independent-final-reviewer-round-4-same-single-logical-revi",
+    "context_id": "alpha4-fresh-independent-final-reviewer-round-4-same-single-logical-revi-capsule"
+  },
+  "review_capsule_checksum": "sha256:123919c05b95358147390e43419a064c9a38634abe433e2fe024797770ceea7c",
+  "native_review_exit_code": 0,
+  "native_review_attempt": 1,
+  "actual_read_ack_captured": true,
+  "qa": "qa-receipts-r6.json",
+  "test_report": "test-report-r6.md",
+  "code_quality_report": "code-quality-report-r6.md",
+  "previous_decision": "assurance-decision.json",
+  "rejected_release_gate": "source-qualification-r1-failed.json",
+  "preservation": {
+    "foreign_bytes_preserved": true,
+    "prior_alpha3_assets_preserved": true,
+    "stable_feed_preserved": true
+  },
+  "release_qualification": "Full unfiltered source r2 and exact archive r2 remain pending."
+}

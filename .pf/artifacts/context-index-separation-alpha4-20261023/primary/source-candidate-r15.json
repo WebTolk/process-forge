@@ -1,0 +1,257 @@
+{
+  "candidate": ".pf/tmp/context-index-separation-alpha4-20261023/candidate-r14",
+  "base_commit": "9cd730a9ca3875f75dd371c1b81193c6514dccb4",
+  "version": "1.3.0-alpha4",
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "14f35fc7b57fac709c3297df7f05a8f1e3d4d5d6c5039a1f13ba760f34b9a869",
+      "bytes": 15931,
+      "working_source_sha256": "14f35fc7b57fac709c3297df7f05a8f1e3d4d5d6c5039a1f13ba760f34b9a869"
+    },
+    {
+      "path": "VERSION",
+      "sha256": "b38e28029e2ac4a05e3ddc0e62fe964499ba13aca9d5c899c7bedc5013681896",
+      "bytes": 13,
+      "working_source_sha256": "b38e28029e2ac4a05e3ddc0e62fe964499ba13aca9d5c899c7bedc5013681896"
+    },
+    {
+      "path": "docs/concepts/project-context-snapshot.md",
+      "sha256": "18629531aba73a4e0f63b9542ce058d6cbcf8db2cdb314db5032704699d5798e",
+      "bytes": 8446,
+      "working_source_sha256": "18629531aba73a4e0f63b9542ce058d6cbcf8db2cdb314db5032704699d5798e"
+    },
+    {
+      "path": "docs/concepts/resource-search-index.md",
+      "sha256": "021988816e18faf479bf169d20a9cb157db1d31c82c27f682079406c0c075a50",
+      "bytes": 13099,
+      "working_source_sha256": "021988816e18faf479bf169d20a9cb157db1d31c82c27f682079406c0c075a50"
+    },
+    {
+      "path": "docs/releases/1.3.0-alpha4.md",
+      "sha256": "21b2a587d279018d924ca9b2b7d5b6bd55da223d963020f2b765959c4b3eab55",
+      "bytes": 2816,
+      "working_source_sha256": "21b2a587d279018d924ca9b2b7d5b6bd55da223d963020f2b765959c4b3eab55"
+    },
+    {
+      "path": "docs/ru/concepts/project-context-snapshot.md",
+      "sha256": "e148e1c0e7db9932bedaa6f06796bd54160e57e688b472952d975e4e65814805",
+      "bytes": 8456,
+      "working_source_sha256": "e148e1c0e7db9932bedaa6f06796bd54160e57e688b472952d975e4e65814805"
+    },
+    {
+      "path": "docs/ru/concepts/resource-search-index.md",
+      "sha256": "991fc687487d4a6b822323226fe9bb396c4b46828b85e2ad85615803455453d6",
+      "bytes": 17678,
+      "working_source_sha256": "991fc687487d4a6b822323226fe9bb396c4b46828b85e2ad85615803455453d6"
+    },
+    {
+      "path": "docs/ru/releases/1.3.0-alpha4.md",
+      "sha256": "9b28ed71c282939790da60b9c150dcb6cf25416559ca3b2ee158f4d90f63e04f",
+      "bytes": 4789,
+      "working_source_sha256": "9b28ed71c282939790da60b9c150dcb6cf25416559ca3b2ee158f4d90f63e04f"
+    },
+    {
+      "path": "src/processforge_core/common/release_identity.py",
+      "sha256": "d729153055ace3167599c6d42ed70dc2a19f8eb00e8c3134055f8c25c5d778a2",
+      "bytes": 192,
+      "working_source_sha256": "d729153055ace3167599c6d42ed70dc2a19f8eb00e8c3134055f8c25c5d778a2"
+    },
+    {
+      "path": "src/processforge_core/composition.py",
+      "sha256": "7babf420f759b0ae721c7600c30b1d35a2b5c6f1fdabc685246f25443b54f35e",
+      "bytes": 41777,
+      "working_source_sha256": "7babf420f759b0ae721c7600c30b1d35a2b5c6f1fdabc685246f25443b54f35e"
+    },
+    {
+      "path": "src/processforge_core/maintenance/schema_checks.py",
+      "sha256": "25030e4b5bde4a13981c800296b4aa752576238a6be3f81d1e67eb9149bc4839",
+      "bytes": 10316,
+      "working_source_sha256": "25030e4b5bde4a13981c800296b4aa752576238a6be3f81d1e67eb9149bc4839"
+    },
+    {
+      "path": "src/processforge_core/resources/access.py",
+      "sha256": "73178e9b881d8aacec18d52b910ec47b70feac56ba6b81f569a6f00c892760d6",
+      "bytes": 12299,
+      "working_source_sha256": "73178e9b881d8aacec18d52b910ec47b70feac56ba6b81f569a6f00c892760d6"
+    },
+    {
+      "path": "src/processforge_core/resources/index_backend.py",
+      "sha256": "9dc6dedae6df7215820d8c3570b853e44724f816fbb78e6be4a53d8cba143384",
+      "bytes": 1180,
+      "working_source_sha256": "9dc6dedae6df7215820d8c3570b853e44724f816fbb78e6be4a53d8cba143384"
+    },
+    {
+      "path": "src/processforge_core/resources/index_maintenance.py",
+      "sha256": "150e702bc09f549425338756203d95f0eede87a3f95a0164d79f6c7e12c056f2",
+      "bytes": 26649,
+      "working_source_sha256": "150e702bc09f549425338756203d95f0eede87a3f95a0164d79f6c7e12c056f2"
+    },
+    {
+      "path": "src/processforge_core/resources/index_observation.py",
+      "sha256": "63df258fe6142f8a747988a73d175c88fbb82ba21860adc4a5f65cf439aa51ee",
+      "bytes": 9858,
+      "working_source_sha256": "63df258fe6142f8a747988a73d175c88fbb82ba21860adc4a5f65cf439aa51ee"
+    },
+    {
+      "path": "src/processforge_core/resources/index_schedule.py",
+      "sha256": "39e004e8037bb87712fceeeeb5474bf15f6547b1d51b6de023c87b260a22635a",
+      "bytes": 2282,
+      "working_source_sha256": "39e004e8037bb87712fceeeeb5474bf15f6547b1d51b6de023c87b260a22635a"
+    },
+    {
+      "path": "src/processforge_core/resources/knowledge_batch.py",
+      "sha256": "6805993a8fcadd15dad592b11b1a144a2887bc56ae682647071ef6dfd476a16a",
+      "bytes": 10754,
+      "working_source_sha256": "6805993a8fcadd15dad592b11b1a144a2887bc56ae682647071ef6dfd476a16a"
+    },
+    {
+      "path": "src/processforge_core/resources/local_search.py",
+      "sha256": "42f0e9eb77a922f5415a15ca4180fbafb8dd4106b8e253b9cd34efd1074531d4",
+      "bytes": 63017,
+      "working_source_sha256": "42f0e9eb77a922f5415a15ca4180fbafb8dd4106b8e253b9cd34efd1074531d4"
+    },
+    {
+      "path": "src/processforge_core/resources/workplace_events.py",
+      "sha256": "47f90c9c7e38f2ab62c1dad757bfd58435c3bdb9c39fbc532c425efd5595e7bd",
+      "bytes": 6037,
+      "working_source_sha256": "47f90c9c7e38f2ab62c1dad757bfd58435c3bdb9c39fbc532c425efd5595e7bd"
+    },
+    {
+      "path": "tests/context_index_separation/conftest.py",
+      "sha256": "8cf1f5248f0fa931a3f48173a6ce38088c421c6ffe5ffc3e6a1621309c602bea",
+      "bytes": 357,
+      "working_source_sha256": "8cf1f5248f0fa931a3f48173a6ce38088c421c6ffe5ffc3e6a1621309c602bea"
+    },
+    {
+      "path": "tests/context_index_separation/test_backend.py",
+      "sha256": "bb518f1d5f8cb48f5ec0b6863a8ad8bbf9b3584a1a37b614f76a17254ef7d3d7",
+      "bytes": 6772,
+      "working_source_sha256": "bb518f1d5f8cb48f5ec0b6863a8ad8bbf9b3584a1a37b614f76a17254ef7d3d7"
+    },
+    {
+      "path": "tests/context_index_separation/test_backend_contract.py",
+      "sha256": "c1025c140a92057664eeffc1730c0a8a600fa8719ba2a2d1a4499de8d3680eb1",
+      "bytes": 14036,
+      "working_source_sha256": "c1025c140a92057664eeffc1730c0a8a600fa8719ba2a2d1a4499de8d3680eb1"
+    },
+    {
+      "path": "tests/context_index_separation/test_indexing_schema.py",
+      "sha256": "dcfc35755a14d3b2f68cd7101189118d1e62ca66cf07da6d3a74e8053c133d09",
+      "bytes": 2137,
+      "working_source_sha256": "dcfc35755a14d3b2f68cd7101189118d1e62ca66cf07da6d3a74e8053c133d09"
+    },
+    {
+      "path": "tests/context_index_separation/test_integration.py",
+      "sha256": "61858714b69c2d0901370b5d1ab087da2d2fdc20caa184f49f8084eee737fe9c",
+      "bytes": 38346,
+      "working_source_sha256": "61858714b69c2d0901370b5d1ab087da2d2fdc20caa184f49f8084eee737fe9c"
+    },
+    {
+      "path": "tests/context_index_separation/test_knowledge_batch.py",
+      "sha256": "8dad60bc05bb2a43d52b148e04404cf99376d135faf804c775a78307fc5ef86b",
+      "bytes": 35572,
+      "working_source_sha256": "8dad60bc05bb2a43d52b148e04404cf99376d135faf804c775a78307fc5ef86b"
+    },
+    {
+      "path": "tests/context_index_separation/test_maintenance.py",
+      "sha256": "07ceb74df700a97748b6b17c8e737bbd3565472bec0735f1b18631d00e418717",
+      "bytes": 26836,
+      "working_source_sha256": "07ceb74df700a97748b6b17c8e737bbd3565472bec0735f1b18631d00e418717"
+    },
+    {
+      "path": "tests/context_index_separation/test_observation.py",
+      "sha256": "e5a95adfe60287e66cdc0f40b802472aac3c9bd2d359731e6c72d38a82a67c67",
+      "bytes": 23001,
+      "working_source_sha256": "e5a95adfe60287e66cdc0f40b802472aac3c9bd2d359731e6c72d38a82a67c67"
+    },
+    {
+      "path": "tests/context_index_separation/test_readonly.py",
+      "sha256": "56c28ddf5c689450def4d95e93e5d2e8e0a9a18ff1f358aa3a4bfaedf586618e",
+      "bytes": 5658,
+      "working_source_sha256": "56c28ddf5c689450def4d95e93e5d2e8e0a9a18ff1f358aa3a4bfaedf586618e"
+    },
+    {
+      "path": "tests/context_index_separation/test_refresh.py",
+      "sha256": "adfe0a3aea0c04b40ab309b52ad5e521d065755416399b0b336f2506c3bd1e6b",
+      "bytes": 5796,
+      "working_source_sha256": "adfe0a3aea0c04b40ab309b52ad5e521d065755416399b0b336f2506c3bd1e6b"
+    },
+    {
+      "path": "tests/context_index_separation/test_review_regressions.py",
+      "sha256": "9bec765c92213cedc2e081fb6ecbd4384d42240de6fab66001267c8eb19bf74e",
+      "bytes": 42119,
+      "working_source_sha256": "9bec765c92213cedc2e081fb6ecbd4384d42240de6fab66001267c8eb19bf74e"
+    },
+    {
+      "path": "tests/context_index_separation/test_schedule.py",
+      "sha256": "e64ecc7ff8286fa8a4e9695bacd1543fb86b45080c156d984c522802e29e48cf",
+      "bytes": 11781,
+      "working_source_sha256": "e64ecc7ff8286fa8a4e9695bacd1543fb86b45080c156d984c522802e29e48cf"
+    },
+    {
+      "path": "tools/pf_cli/commands/knowledge_batch.py",
+      "sha256": "fe657c8b1a2922bb731b404c6aaddfa10b7b49b01f5b272b86d44f878770d654",
+      "bytes": 3120,
+      "working_source_sha256": "fe657c8b1a2922bb731b404c6aaddfa10b7b49b01f5b272b86d44f878770d654"
+    },
+    {
+      "path": "tools/pf_cli/commands/search_index.py",
+      "sha256": "5dcdcf3f493c37433c9f03300bebad2a42153bbca03b31940945f9b21997fda0",
+      "bytes": 8255,
+      "working_source_sha256": "5dcdcf3f493c37433c9f03300bebad2a42153bbca03b31940945f9b21997fda0"
+    },
+    {
+      "path": "tools/pf_cli/commands/search_maintenance.py",
+      "sha256": "98a3fdb7050f30ddc7203f6c3dc376f2b8396d735c553e327c44f8e74aabec91",
+      "bytes": 2914,
+      "working_source_sha256": "98a3fdb7050f30ddc7203f6c3dc376f2b8396d735c553e327c44f8e74aabec91"
+    },
+    {
+      "path": "tools/pf_cli/parsers/knowledge_batch.py",
+      "sha256": "f9b55ed8adfa1ae4c71652475bd8d09771d97a54e8693fa8a61ff8d53f73e18b",
+      "bytes": 1332,
+      "working_source_sha256": "f9b55ed8adfa1ae4c71652475bd8d09771d97a54e8693fa8a61ff8d53f73e18b"
+    },
+    {
+      "path": "tools/pf_cli/parsers/search_maintenance.py",
+      "sha256": "3e324939c7c103e3668feeb9afd7636dcbed7257570527358a1ea6e618197258",
+      "bytes": 1240,
+      "working_source_sha256": "3e324939c7c103e3668feeb9afd7636dcbed7257570527358a1ea6e618197258"
+    },
+    {
+      "path": "tools/processforge.py",
+      "sha256": "0fdeedce943af4146cb43074fdc99370baa792516d0c9ec5ee806f4d8bcc80b4",
+      "bytes": 734793,
+      "working_source_sha256": "2fe02928a2ce7bda63e999b0a00914dfb6eb561d6056811f2d65899de25d8e81"
+    },
+    {
+      "path": "tools/smoke_context_freshness_vs_execution_readiness.py",
+      "sha256": "9d0bd601592992735a372361fd9ce4695050a0797d49e7478094cab510cfb2c0",
+      "bytes": 11206,
+      "working_source_sha256": "9d0bd601592992735a372361fd9ce4695050a0797d49e7478094cab510cfb2c0"
+    },
+    {
+      "path": "tools/smoke_project_init_local_search_mcp.py",
+      "sha256": "0fe011f371b0f07ad08d825b13a57fdbfb94d92a40adaf83a837013ec993fe07",
+      "bytes": 23212,
+      "working_source_sha256": "0fe011f371b0f07ad08d825b13a57fdbfb94d92a40adaf83a837013ec993fe07"
+    },
+    {
+      "path": "tools/smoke_resource_search_snapshot_composition.py",
+      "sha256": "1457d343cccc2fe1a5355ab453ec536b4e28a2207e00081bb68cb5f6ad8c476a",
+      "bytes": 19146,
+      "working_source_sha256": "1457d343cccc2fe1a5355ab453ec536b4e28a2207e00081bb68cb5f6ad8c476a"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "sha256": "7a6be405ad8f26968ccf5727cd0580f9d7ebdb5dd96c5760382d65fa73964282",
+      "bytes": 163104,
+      "working_source_sha256": "7a6be405ad8f26968ccf5727cd0580f9d7ebdb5dd96c5760382d65fa73964282"
+    }
+  ],
+  "deleted_from_source": [],
+  "foreign_work_preserved": true,
+  "main_uses_clean_head_projection": true,
+  "native_checksum_write_exit": 0
+}

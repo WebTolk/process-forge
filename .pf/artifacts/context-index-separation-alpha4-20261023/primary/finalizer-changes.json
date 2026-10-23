@@ -1,0 +1,11 @@
+{
+  "scope": "Artifact-only final evidence delivery; no product source, feed, release asset or capsule edits.",
+  "primary_artifacts_created": ["governance-closeout.json", "finalizer-plan.md", "backlog-completion.json", "native-delivery-review-proof.json", "independent-review-r3-public.md", "independent-review-r4-public.md", "final-report.md", "final-evidence-preparation.json", "scoped-doctors-final.json", "finalizer-assurance.json", "finalizer-changes.json"],
+  "primary_artifacts_corrected": {"native-closeout-recovery.json": "Removed the rounded annotation time; exact native events retain actual timestamps."},
+  "mutable_log": ".pf/logs/context-index-separation-alpha4-20261023-primary.md",
+  "native_backlog_reconciliation_only": [".pf/assignments/pf-context-refresh-indexing-separation-20261019.yaml", ".pf/runs/pf-upgrade-maintenance-backlog-20261019/run.yaml"],
+  "private_helpers_and_raw_receipts": ".pf/tmp/context-index-separation-alpha4-20261023/",
+  "originals_preserved": ["primary/report.md", "all sealed independent original reports", "all context capsules", "failed qualification and review evidence"],
+  "delivery_generated_receipts": ["public-evidence-inventory.json", "final-remote-readback.json", "owned-agent-checkout.json"],
+  "verification": "finalizer-assurance.json; scoped-doctors-final.json; final evidence delivery checks gate commit and push."
+}

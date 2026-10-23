@@ -1,0 +1,226 @@
+{
+  "at": "2026-10-23T11:18:50.985575+00:00",
+  "status": "pass",
+  "work_count": 9,
+  "check_count": 18,
+  "warning_count": 0,
+  "results": {
+    "parent": {
+      "run_id": "garage-alpha4-revised-common-indexing-delivery-fully-deliver-context-ind",
+      "assignment_id": "alpha4-revised-common-indexing-delivery-fully-deliver-context-index-sepa",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "f27981f6c9618eb42acb254dc10d51e96933e0fc97e61ddea658a5b09471405c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "schedule": {
+      "run_id": "garage-alpha4-revised-schedule-native-contribution-in-1-1-4-implement-on",
+      "assignment_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3ddea7f1cfb3daa137737c744715921e250a978f380ea692e78dc5b654562e00",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "integration": {
+      "run_id": "garage-alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs",
+      "assignment_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "57d9c71fc2cfd1283a9f4de8243e7040da8480048bb1e68f81f806dabd332797",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "review-fixes": {
+      "run_id": "garage-alpha4-primary-review-correction-successor-implement-all-four-acc",
+      "assignment_id": "alpha4-primary-review-correction-successor-implement-all-four-accepted-i",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "d0c473d7a37e76896c0b98537733f96cfc5260575e34cbf57211276491cb9847",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "batch": {
+      "run_id": "garage-alpha4-same-logical-native-maintenance-contributor-batch-successo",
+      "assignment_id": "alpha4-same-logical-native-maintenance-contributor-batch-successor-imple",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "603fea4ba29070c9e22422cf5063505ddc625cc772a5ec345124b2f605d74ddf",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "acceptance": {
+      "run_id": "garage-alpha4-bounded-primary-acceptance-correction-required-by-the-actu",
+      "assignment_id": "alpha4-bounded-primary-acceptance-correction-required-by-the-actual-know",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "6cd1a5b90a160015f40a33c6f634baaf2fd64076fa063d8debaec9dcf29131af",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "reviewer-created": {
+      "run_id": "garage-alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only",
+      "assignment_id": "alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only-the-ex",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "2e461a353ec7e312781585a307f6659820016783ae9769c4784d586b0e4da11b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "reviewer-final-created": {
+      "run_id": "garage-alpha4-final-independent-native-reviewer-same-single-logical-revi",
+      "assignment_id": "alpha4-final-independent-native-reviewer-same-single-logical-reviewer-in",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "b2d62e3209a2ebe9be94342a029c61f56e7bc2ca9a114f6f12894c86479330ae",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    },
+    "reviewer-final-r2-created": {
+      "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-2-same-single-revie",
+      "assignment_id": "alpha4-fresh-independent-final-reviewer-round-2-same-single-reviewer-in",
+      "checks": [
+        {
+          "kind": "run",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "ebc9dd98c0d84bb60580d42bbc4644a60da7d62d78c390dd4cad14a9c8017af8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 18,
+          "warn_lines": 0
+        },
+        {
+          "kind": "capsule",
+          "exit_code": 0,
+          "pass": true,
+          "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pass_lines": 12,
+          "warn_lines": 0
+        }
+      ]
+    }
+  },
+  "scope": "Current alpha4 delivery/review Works. Historical failed and canceled handoff predecessors are retained separately, not reported as completed."
+}

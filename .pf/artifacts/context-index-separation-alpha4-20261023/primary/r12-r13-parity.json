@@ -1,0 +1,29 @@
+{
+  "status": "pass",
+  "tested_manifest": "source-candidate-r12.json",
+  "final_manifest": "source-candidate-r13.json",
+  "changes": [
+    {
+      "path": "tests/context_index_separation/test_knowledge_batch.py",
+      "before_sha256": "6e74b6429caa243ac5a5e3f7ae086cbf08a69cf46c39b231f622c8a7df904964",
+      "after_sha256": "8dad60bc05bb2a43d52b148e04404cf99376d135faf804c775a78307fc5ef86b",
+      "ast_identical": true
+    },
+    {
+      "path": "tools/smoke_context_freshness_vs_execution_readiness.py",
+      "before_sha256": "096e9e78851b1c842049656f0cd1f868e7dcb3cd8871ca06954a99df6ba76fb9",
+      "after_sha256": "9d0bd601592992735a372361fd9ce4695050a0797d49e7478094cab510cfb2c0",
+      "ast_identical": true
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "before_sha256": "8a6e59711b6e15f77b99416fa13d164d5258e4b07dfaf6b28751d492d47ffcb7",
+      "after_sha256": "2962942e2e221b6e03bf47a9181e80b45582d4611c22de7aa9f99fbb4add70ba",
+      "ast_identical": false
+    }
+  ],
+  "all_production_bytes_identical": true,
+  "all_python_ast_identical": true,
+  "tested_bytes_retained": ".pf/tmp/context-index-separation-alpha4-20261023/tested-r12",
+  "candidate_base_and_ownership_verified": true
+}

@@ -1,0 +1,140 @@
+{
+  "status": "complete",
+  "works": {
+    "schedule": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-revised-schedule-native-contribution-in-1-1-4-implement-on",
+      "assignment_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co",
+      "context_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co-capsule",
+      "capsule_checksum": "sha256:4bb439c9ee97e83d27b75991f2c74452c5d02d04c1aa9a2146c8b4363f294f55",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/schedule-r3/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/schedule-r3/report.md",
+      "negative_review_mission": false
+    },
+    "integration": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs",
+      "assignment_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after",
+      "context_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after-capsule",
+      "capsule_checksum": "sha256:e8778440cf15d6db38e62236bbcdce5cd3503350960bb5128af3d6f14070aa93",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/integration/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/integration/report.md",
+      "negative_review_mission": false
+    },
+    "review-fixes": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-primary-review-correction-successor-implement-all-four-acc",
+      "assignment_id": "alpha4-primary-review-correction-successor-implement-all-four-accepted-i",
+      "context_id": "alpha4-primary-review-correction-successor-implement-all-four-accepted-i-capsule",
+      "capsule_checksum": "sha256:4aab5f9401b4f97a416ddd1bff7a7798eb6debb7a710411035b3ce08aff04863",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/review-fixes-r2/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-fixes-r2/report.md",
+      "negative_review_mission": false
+    },
+    "batch": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-same-logical-native-maintenance-contributor-batch-successo",
+      "assignment_id": "alpha4-same-logical-native-maintenance-contributor-batch-successor-imple",
+      "context_id": "alpha4-same-logical-native-maintenance-contributor-batch-successor-imple-capsule",
+      "capsule_checksum": "sha256:f507dbecbf6c6d618b062db4f5a96fd208e279f796799822bfc81dbfcb1e02a6",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/batch-native/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/batch-native/report.md",
+      "negative_review_mission": false
+    },
+    "acceptance": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-bounded-primary-acceptance-correction-required-by-the-actu",
+      "assignment_id": "alpha4-bounded-primary-acceptance-correction-required-by-the-actual-know",
+      "context_id": "alpha4-bounded-primary-acceptance-correction-required-by-the-actual-know-capsule",
+      "capsule_checksum": "sha256:f1abf36f909cc40c22c221fbdf7ea53ba483767dfffd037be24f97e6d90111fa",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/acceptance-fix/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/acceptance-fix/report.md",
+      "negative_review_mission": false
+    },
+    "release-smoke": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-bounded-release-smoke-acceptance-correction-update-only-th",
+      "assignment_id": "alpha4-bounded-release-smoke-acceptance-correction-update-only-three-leg",
+      "context_id": "alpha4-bounded-release-smoke-acceptance-correction-update-only-three-leg-capsule",
+      "capsule_checksum": "sha256:984d1154caab81ff473401e17c9d6a3cef5e2d088fef46e4379db3582b4ba7ed",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/release-smoke-fixes/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/release-smoke-fixes/report.md",
+      "negative_review_mission": false
+    },
+    "release-userlike": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-disjoint-user-like-garage-release-fixture-correction-only",
+      "assignment_id": "alpha4-disjoint-user-like-garage-release-fixture-correction-only-tools-s",
+      "context_id": "alpha4-disjoint-user-like-garage-release-fixture-correction-only-tools-s-capsule",
+      "capsule_checksum": "sha256:b3c4b786d88e1740adb6844cc918eccfffd736e6713db880766271fdaf2b47c9",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/release-userlike-fix/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/release-userlike-fix/report.md",
+      "negative_review_mission": false
+    },
+    "reviewer-created": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only",
+      "assignment_id": "alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only-the-ex",
+      "context_id": "alpha4-independent-native-reviewer-in-required-1-1-4-inspect-only-the-ex-capsule",
+      "capsule_checksum": "sha256:e89e329b2b35b88424b47990c682fde765476a531f3acdb906a2b90443eb408f",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/review-r1/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-r1/report.md",
+      "negative_review_mission": true
+    },
+    "reviewer-final-created": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-final-independent-native-reviewer-same-single-logical-revi",
+      "assignment_id": "alpha4-final-independent-native-reviewer-same-single-logical-reviewer-in",
+      "context_id": "alpha4-final-independent-native-reviewer-same-single-logical-reviewer-in-capsule",
+      "capsule_checksum": "sha256:05e802105bb3aa5bc543905a0245f407e66b67000430c9cd59a50fe74a57df11",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final/report.md",
+      "negative_review_mission": true
+    },
+    "reviewer-final-r2-created": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-2-same-single-revie",
+      "assignment_id": "alpha4-fresh-independent-final-reviewer-round-2-same-single-reviewer-in",
+      "context_id": "alpha4-fresh-independent-final-reviewer-round-2-same-single-reviewer-in-capsule",
+      "capsule_checksum": "sha256:ff6d494180348325b57eb6637ed8625cd170ccc989a080c5d5870ecae34d46e2",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r2/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r2/report.md",
+      "negative_review_mission": true
+    },
+    "reviewer-final-r3-created": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-3-same-single-logic",
+      "assignment_id": "alpha4-fresh-independent-final-reviewer-round-3-same-single-logical-revi",
+      "context_id": "alpha4-fresh-independent-final-reviewer-round-3-same-single-logical-revi-capsule",
+      "capsule_checksum": "sha256:84139beda76764fbb6ccb7e42c4ef8aa34527bdb9d4f832cb9973d736236e668",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r3/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r3/report.md",
+      "negative_review_mission": false
+    },
+    "reviewer-final-r4-created": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-fresh-independent-final-reviewer-round-4-same-single-logic",
+      "assignment_id": "alpha4-fresh-independent-final-reviewer-round-4-same-single-logical-revi",
+      "context_id": "alpha4-fresh-independent-final-reviewer-round-4-same-single-logical-revi-capsule",
+      "capsule_checksum": "sha256:123919c05b95358147390e43419a064c9a38634abe433e2fe024797770ceea7c",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r4/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/review-final-r4/report.md",
+      "negative_review_mission": false
+    },
+    "parent": {
+      "action": "run_completed",
+      "run_id": "garage-alpha4-revised-common-indexing-delivery-fully-deliver-context-ind",
+      "assignment_id": "alpha4-revised-common-indexing-delivery-fully-deliver-context-index-sepa",
+      "context_id": "alpha4-revised-common-indexing-delivery-fully-deliver-context-index-sepa-capsule",
+      "capsule_checksum": "sha256:cb247e484f70a0deb8f016f67746b7ff05ba42589ca5e82bae034f03ba257ef1",
+      "closure_path": ".pf/artifacts/context-index-separation-alpha4-20261023/primary/closure.md",
+      "original_report": ".pf/artifacts/context-index-separation-alpha4-20261023/primary/report.md",
+      "negative_review_mission": false
+    }
+  },
+  "scope": "Exact 13 current alpha4 product/contribution/review Works; canceled predecessors remain canceled. This is native completion evidence, not manual lifecycle editing.",
+  "native_recovery": {
+    "initial_receipt": "native-closeout-recovery.json",
+    "additional_events": []
+  }
+}

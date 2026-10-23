@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-23T15:01:04.378400+00:00",
+  "status": "GO",
+  "scope": "Authorized alpha4 source and exact archive prerelease delivery on Windows CPython; installed device and actual connected-host acceptance are separate.",
+  "version": "1.3.0-alpha4",
+  "qualified_source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "metadata_commit": "171036e694f165f212256fef76af721679c3efb6",
+  "independent_review": "CODE GO",
+  "candidate_manifest": "source-candidate-r20.json",
+  "qa_receipts": "qa-receipts-r6.json",
+  "source_profile": {
+    "result": "PASS",
+    "checks": 274,
+    "statuses": {
+      "PASS": 274
+    },
+    "public": true,
+    "elapsed_seconds": 2925.192
+  },
+  "consumer_profile": {
+    "result": "PASS",
+    "checks": 272,
+    "statuses": {
+      "PASS": 272
+    },
+    "public": true,
+    "elapsed_seconds": 2874.917
+  },
+  "archive_sha256": "52474515eb6cbf59c7a307481a16ab717391c1616a6c924fd6d9156e8ee1aaf2",
+  "sidecar_sha256": "31f2faaf99fc33823b7b66642b274ca8ac1d2c496ecb618e4beadb7c1289246c",
+  "release_urls": {
+    "github": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha4",
+    "gitverse": "https://gitverse.ru/webtolk/process-forge/releases/tag/v1.3.0-alpha4"
+  },
+  "publication_assets_verified": 4,
+  "metadata_readbacks_match": true,
+  "public_alpha_latest": "1.3.0-alpha4",
+  "preservation": {
+    "foreign_bytes_preserved": true,
+    "prior_alpha3_assets_preserved": true,
+    "stable_feed_preserved": true
+  },
+  "installed_device": "not updated in this Work",
+  "actual_connected_host_acceptance": "not claimed; independent fixture stdio MCP is a separate evidence layer",
+  "native_posix_acceptance": "not claimed",
+  "periodic_scheduler": "future work; cold common-owner callable only",
+  "remaining": "Complete current PF Works, perform fresh bounded evidence finalization and verify both final dev heads."
+}

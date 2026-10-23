@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "inventory_sha256": "e17e5c37e285572f4738ab81e9753cc962cc8e2a74cbbcb16159c9218c9dbd5a",
+  "inventory_changed": false,
+  "native_write_and_check_exit_codes": [
+    0,
+    0
+  ],
+  "stdout_sha256": "babf980e87d6733a34e0fa9246afea81823cd1a56f7bf8a5ba096b53b2001960"
+}

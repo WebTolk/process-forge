@@ -1,0 +1,14 @@
+{
+  "scope": "schedule contribution completion",
+  "initial_result": "read_failed",
+  "readback": {
+    "stage": "evolve",
+    "stage_status": "completed",
+    "assignment_status": "done",
+    "run_status": "in_progress",
+    "completion": "complete"
+  },
+  "native_retry_result": "run_completed",
+  "recovered": true,
+  "method": "Only the offered native completed outcome was retried after exact state readback; no state, capsule or infrastructure edits."
+}

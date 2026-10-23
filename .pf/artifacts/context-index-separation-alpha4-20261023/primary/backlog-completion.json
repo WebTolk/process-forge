@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-23T15:11:28.371872+00:00",
+  "status": "done",
+  "task_id": "pf-context-refresh-indexing-separation-20261019",
+  "run_id": "pf-upgrade-maintenance-backlog-20261019",
+  "native_exit_code": 0,
+  "summary": "Delivered the explicitly approved alpha4 scope: context/index separation, common manual/scoped CLI and cold future-scheduler owner, selected successful-ID batch indexing, regression/quality review and qualified dual-provider release. Actual periodic scheduler execution and additional backends remain deferred as specified by user steering and the alpha4 scope; no claim that those original future capabilities were implemented. All current delivery Works completed natively; evidence finalization is separately governed.",
+  "stdout_sha256": "1dc3f7429450c7e4d41e8ec0e9e7b3bb97331f36acdac98b9b7441ad2a50037a",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "original_admission_copy_sha256": "a7938c2970cc956412e3f045ea5b5c67ed505e9ae7ec12a1ede1a2e140c06150",
+  "finalizer_run_id": "garage-alpha4-final-evidence-delivery-20261023-after-native-completion-o"
+}

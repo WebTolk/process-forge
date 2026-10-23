@@ -1,0 +1,21 @@
+{
+  "version": "1.3.0-alpha4",
+  "tag": "v1.3.0-alpha4",
+  "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "source_tree": "3e9178c718058db1e8cefb15c5082b19c6a0320f",
+  "archive": {
+    "path": ".pf/artifacts/context-index-separation-alpha4-20261023/primary/release/r2/processforge-1.3.0-alpha4.zip",
+    "name": "processforge-1.3.0-alpha4.zip",
+    "sha256": "52474515eb6cbf59c7a307481a16ab717391c1616a6c924fd6d9156e8ee1aaf2",
+    "bytes": 2923007
+  },
+  "sidecar": {
+    "path": ".pf/artifacts/context-index-separation-alpha4-20261023/primary/release/r2/processforge-1.3.0-alpha4.manifest.json",
+    "name": "processforge-1.3.0-alpha4.manifest.json",
+    "sha256": "31f2faaf99fc33823b7b66642b274ca8ac1d2c496ecb618e4beadb7c1289246c",
+    "bytes": 272491
+  },
+  "native_archive_entry_count": 1498,
+  "archive_qualification": "pending",
+  "source_gate": "source-r2"
+}

@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-23T06:27:30.064393+00:00",
+  "composition": "1 primary, 1 independent native reviewer, 4 native contributors",
+  "contributors": [
+    {
+      "contributor": "observation",
+      "run_id": "garage-alpha4-native-observation-contribution-under-frozen-1-1-4-archite",
+      "assignment_id": "alpha4-native-observation-contribution-under-frozen-1-1-4-architecture-i",
+      "context_id": "alpha4-native-observation-contribution-under-frozen-1-1-4-architecture-i-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 3,
+      "actual_read_ack_attempt": 3,
+      "actual_final_message_attempt": 3,
+      "report_sha256": "95b4add72b99a133e80ee5f30e87346eee22ccc94a26c99fb0cb6de00124b407",
+      "status_record_sha256": "f81d9b407ce480143a81300c20daf76801ebfa7ba30cad8f4b5e81c00d4cb69d",
+      "handoff": "Observation/maintenance reservations were natively canceled after completed output and handed to a valid primary QA successor; historical reports are not a claim of final release acceptance."
+    },
+    {
+      "contributor": "maintenance",
+      "run_id": "garage-alpha4-revised-maintenance-native-contribution-in-1-1-4-implement",
+      "assignment_id": "alpha4-revised-maintenance-native-contribution-in-1-1-4-implement-the-si",
+      "context_id": "alpha4-revised-maintenance-native-contribution-in-1-1-4-implement-the-si-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "26a60d02edddd18a656b86005d7cbd5e5e49b41f45aaa60dc8e6262e44114a6c",
+      "status_record_sha256": "0c238d8f75ec9dfce15a6e0966a22ef65608cc20c9694187f5bf39ae4359b646",
+      "handoff": "Observation/maintenance reservations were natively canceled after completed output and handed to a valid primary QA successor; historical reports are not a claim of final release acceptance."
+    },
+    {
+      "contributor": "schedule",
+      "run_id": "garage-alpha4-revised-schedule-native-contribution-in-1-1-4-implement-on",
+      "assignment_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co",
+      "context_id": "alpha4-revised-schedule-native-contribution-in-1-1-4-implement-only-a-co-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "5e6fb844d7cbc500ee6c5d13e303f626465a3e49d667209a074dd8ea75699837",
+      "status_record_sha256": "96944b02dcbac2083c84ae061942fda0b65cb70366e495a361e8f38d4e93ef88",
+      "handoff": "Completed native output handed to primary registered QA and independent review."
+    },
+    {
+      "contributor": "integration",
+      "run_id": "garage-alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs",
+      "assignment_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after",
+      "context_id": "alpha4-fourth-native-contributor-integration-tests-and-en-ru-docs-after-capsule",
+      "native_status": "completed",
+      "native_exit_code": 0,
+      "native_attempt": 1,
+      "actual_read_ack_attempt": 1,
+      "actual_final_message_attempt": 1,
+      "report_sha256": "f9456d4e7d6eb458031e21a0eaa51068573b2ee314e9b9266063a5061fee7310",
+      "status_record_sha256": "b512236ea514b299816eeac09cc783faddd47799e6a0ef1aea3f7c4f16c12fad",
+      "handoff": "Completed native output handed to primary registered QA and independent review."
+    }
+  ],
+  "primary_forwarded_actual_messages": true,
+  "independent_review": "running; not accepted yet"
+}

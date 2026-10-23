@@ -1,0 +1,14 @@
+{
+  "base_commit": "23ae166133390275a67ba92c1f00357bc757533a",
+  "files": [
+    "tools/smoke_garage_no_hooks_sessionless.py",
+    "tools/smoke_garage_session_enhanced.py",
+    "tools/smoke_garage_cross_project_security.py",
+    "tools/smoke_user_like_garage_path.py",
+    "src/processforge_core/resources/local_search.py",
+    "tests/context_index_separation/test_review_regressions.py",
+    "checksums/processforge.sha256"
+  ],
+  "reviewed_manifest": "source-candidate-r20.json",
+  "only_owned_reviewed_delta": true
+}

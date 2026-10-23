@@ -1,0 +1,543 @@
+{
+  "status": "diagnostic_finished",
+  "qualification": false,
+  "source_commit": "23ae166133390275a67ba92c1f00357bc757533a",
+  "checks": [
+    {
+      "label": "smoke_garage_session_enhanced",
+      "status": "FAIL",
+      "elapsed_seconds": 10.406
+    },
+    {
+      "label": "smoke_garage_cross_project_security",
+      "status": "FAIL",
+      "elapsed_seconds": 14.957
+    },
+    {
+      "label": "smoke_garage_real_joomla_search",
+      "status": "PASS",
+      "elapsed_seconds": 0.415
+    },
+    {
+      "label": "smoke_garage_mode_not_promoted_by_session",
+      "status": "PASS",
+      "elapsed_seconds": 9.439
+    },
+    {
+      "label": "smoke_garage_work_start_sessionless",
+      "status": "PASS",
+      "elapsed_seconds": 8.196
+    },
+    {
+      "label": "smoke_garage_work_start_session_bound",
+      "status": "PASS",
+      "elapsed_seconds": 5.383
+    },
+    {
+      "label": "smoke_multi_process_work_capsule",
+      "status": "PASS",
+      "elapsed_seconds": 38.748
+    },
+    {
+      "label": "smoke_governed_work_stage_resolution",
+      "status": "PASS",
+      "elapsed_seconds": 6.192
+    },
+    {
+      "label": "smoke_governed_work_duplicate_prevention",
+      "status": "PASS",
+      "elapsed_seconds": 6.253
+    },
+    {
+      "label": "smoke_current_work_ignores_bootstrap_placeholder",
+      "status": "PASS",
+      "elapsed_seconds": 4.171
+    },
+    {
+      "label": "smoke_process_execution_initial_stage",
+      "status": "PASS",
+      "elapsed_seconds": 6.297
+    },
+    {
+      "label": "smoke_work_start_no_stage_guessing",
+      "status": "PASS",
+      "elapsed_seconds": 6.244
+    },
+    {
+      "label": "smoke_work_state_current_stage",
+      "status": "PASS",
+      "elapsed_seconds": 7.577
+    },
+    {
+      "label": "smoke_work_transition_linear",
+      "status": "PASS",
+      "elapsed_seconds": 9.729
+    },
+    {
+      "label": "smoke_work_transition_blocks_missing_gate",
+      "status": "PASS",
+      "elapsed_seconds": 9.241
+    },
+    {
+      "label": "smoke_work_transition_recovers_after_invalid_evidence",
+      "status": "PASS",
+      "elapsed_seconds": 15.759
+    },
+    {
+      "label": "smoke_work_transition_records_evidence",
+      "status": "PASS",
+      "elapsed_seconds": 14.052
+    },
+    {
+      "label": "smoke_work_evidence_freshness",
+      "status": "PASS",
+      "elapsed_seconds": 144.327
+    },
+    {
+      "label": "smoke_work_completion_recovery",
+      "status": "PASS",
+      "elapsed_seconds": 40.918
+    },
+    {
+      "label": "smoke_work_transition_updates_assignment_stage",
+      "status": "PASS",
+      "elapsed_seconds": 15.052
+    },
+    {
+      "label": "smoke_work_transition_emits_stage_events",
+      "status": "PASS",
+      "elapsed_seconds": 13.055
+    },
+    {
+      "label": "smoke_work_transition_final_stage_completes_run",
+      "status": "PASS",
+      "elapsed_seconds": 16.103
+    },
+    {
+      "label": "smoke_work_transition_snapshot_pinned_process",
+      "status": "PASS",
+      "elapsed_seconds": 19.341
+    },
+    {
+      "label": "smoke_work_transition_branching_if_supported",
+      "status": "PASS",
+      "elapsed_seconds": 15.557
+    },
+    {
+      "label": "smoke_process_execution_integrity",
+      "status": "PASS",
+      "elapsed_seconds": 61.62
+    },
+    {
+      "label": "smoke_derived_report_stale_marking",
+      "status": "PASS",
+      "elapsed_seconds": 6.095
+    },
+    {
+      "label": "smoke_runtime_status_version_truth",
+      "status": "PASS",
+      "elapsed_seconds": 2.634
+    },
+    {
+      "label": "smoke_runtime_monitor",
+      "status": "PASS",
+      "elapsed_seconds": 16.881
+    },
+    {
+      "label": "smoke_runtime_metrics",
+      "status": "PASS",
+      "elapsed_seconds": 3.716
+    },
+    {
+      "label": "smoke_workplace_configuration",
+      "status": "PASS",
+      "elapsed_seconds": 14.025
+    },
+    {
+      "label": "smoke_server_operator",
+      "status": "PASS",
+      "elapsed_seconds": 6.5
+    },
+    {
+      "label": "smoke_diagnostics_configure",
+      "status": "PASS",
+      "elapsed_seconds": 5.82
+    },
+    {
+      "label": "smoke_process_event_concurrency",
+      "status": "PASS",
+      "elapsed_seconds": 20.208
+    },
+    {
+      "label": "smoke_user_like_garage_path",
+      "status": "FAIL",
+      "elapsed_seconds": 14.684
+    },
+    {
+      "label": "smoke_parameter_cascade_resolution",
+      "status": "PASS",
+      "elapsed_seconds": 1.46
+    },
+    {
+      "label": "smoke_parameter_freshness",
+      "status": "PASS",
+      "elapsed_seconds": 2.589
+    },
+    {
+      "label": "smoke_parameter_assignment_capsule",
+      "status": "PASS",
+      "elapsed_seconds": 2.645
+    },
+    {
+      "label": "smoke_session_start_context_check",
+      "status": "PASS",
+      "elapsed_seconds": 3.89
+    },
+    {
+      "label": "smoke_update_apply_marks_context_stale",
+      "status": "PASS",
+      "elapsed_seconds": 14.174
+    },
+    {
+      "label": "smoke_capsule_pins_context_snapshot",
+      "status": "PASS",
+      "elapsed_seconds": 10.93
+    },
+    {
+      "label": "smoke_no_builtin_user_capability_satisfaction",
+      "status": "PASS",
+      "elapsed_seconds": 2.118
+    },
+    {
+      "label": "smoke_capability_resolution_data_driven_only",
+      "status": "PASS",
+      "elapsed_seconds": 3.22
+    },
+    {
+      "label": "smoke_doctor_project_capability_waiver",
+      "status": "PASS",
+      "elapsed_seconds": 6.286
+    },
+    {
+      "label": "smoke_domain_neutral_music_video_fixtures",
+      "status": "PASS",
+      "elapsed_seconds": 3.529
+    },
+    {
+      "label": "smoke_runtime_no_domain_capability_constants",
+      "status": "PASS",
+      "elapsed_seconds": 0.282
+    },
+    {
+      "label": "smoke_specialization_nested_workflow_fields_rejected",
+      "status": "PASS",
+      "elapsed_seconds": 0.207
+    },
+    {
+      "label": "smoke_specialization_freshness_tracks_definition_change",
+      "status": "PASS",
+      "elapsed_seconds": 3.39
+    },
+    {
+      "label": "smoke_project_specialization_override_applies",
+      "status": "PASS",
+      "elapsed_seconds": 1.839
+    },
+    {
+      "label": "smoke_specialization_schema",
+      "status": "PASS",
+      "elapsed_seconds": 39.243
+    },
+    {
+      "label": "smoke_specialization_registry",
+      "status": "PASS",
+      "elapsed_seconds": 0.132
+    },
+    {
+      "label": "smoke_specialization_create_workplace_resource",
+      "status": "PASS",
+      "elapsed_seconds": 1.249
+    },
+    {
+      "label": "smoke_specialization_platform_binding",
+      "status": "PASS",
+      "elapsed_seconds": 4.529
+    },
+    {
+      "label": "smoke_specialization_context_resolution",
+      "status": "PASS",
+      "elapsed_seconds": 1.756
+    },
+    {
+      "label": "smoke_specialization_same_platform_different_context",
+      "status": "PASS",
+      "elapsed_seconds": 2.472
+    },
+    {
+      "label": "smoke_specialization_no_tool_leakage",
+      "status": "PASS",
+      "elapsed_seconds": 4.507
+    },
+    {
+      "label": "smoke_specialization_no_workflow_ownership",
+      "status": "PASS",
+      "elapsed_seconds": 0.215
+    },
+    {
+      "label": "smoke_process_owns_acceptance_not_specialization",
+      "status": "PASS",
+      "elapsed_seconds": 1.679
+    },
+    {
+      "label": "smoke_process_capability_requirement_resolution",
+      "status": "PASS",
+      "elapsed_seconds": 6.499
+    },
+    {
+      "label": "smoke_specialization_process_policy",
+      "status": "PASS",
+      "elapsed_seconds": 0.587
+    },
+    {
+      "label": "smoke_specialization_handoff_routing",
+      "status": "PASS",
+      "elapsed_seconds": 3.802
+    },
+    {
+      "label": "smoke_specialization_garage_mode_switch",
+      "status": "PASS",
+      "elapsed_seconds": 3.462
+    },
+    {
+      "label": "smoke_specialization_snapshot_fields",
+      "status": "PASS",
+      "elapsed_seconds": 1.387
+    },
+    {
+      "label": "smoke_specialization_capsule_activation",
+      "status": "PASS",
+      "elapsed_seconds": 3.023
+    },
+    {
+      "label": "smoke_specialization_no_core_id_hardcode",
+      "status": "PASS",
+      "elapsed_seconds": 0.161
+    },
+    {
+      "label": "smoke_project_overrides_schema",
+      "status": "PASS",
+      "elapsed_seconds": 26.222
+    },
+    {
+      "label": "smoke_project_overrides_resolution",
+      "status": "PASS",
+      "elapsed_seconds": 2.792
+    },
+    {
+      "label": "smoke_project_overrides_snapshot_fingerprint",
+      "status": "PASS",
+      "elapsed_seconds": 4.066
+    },
+    {
+      "label": "smoke_project_overrides_freshness",
+      "status": "PASS",
+      "elapsed_seconds": 3.171
+    },
+    {
+      "label": "smoke_project_overrides_capsule_summary",
+      "status": "PASS",
+      "elapsed_seconds": 2.812
+    },
+    {
+      "label": "smoke_project_override_does_not_mutate_workspace",
+      "status": "PASS",
+      "elapsed_seconds": 2.272
+    },
+    {
+      "label": "smoke_process_authoring_materialization_parity",
+      "status": "PASS",
+      "elapsed_seconds": 5.755
+    },
+    {
+      "label": "smoke_process_definition_schema_contract",
+      "status": "PASS",
+      "elapsed_seconds": 5.852
+    },
+    {
+      "label": "smoke_builtin_process_pack_completeness",
+      "status": "PASS",
+      "elapsed_seconds": 1.105
+    },
+    {
+      "label": "smoke_evolve_process_agnostic_contract",
+      "status": "PASS",
+      "elapsed_seconds": 0.244
+    },
+    {
+      "label": "smoke_process_authoring_evolve_questions",
+      "status": "PASS",
+      "elapsed_seconds": 0.175
+    },
+    {
+      "label": "smoke_process_authoring_materializes_evolve",
+      "status": "PASS",
+      "elapsed_seconds": 6.413
+    },
+    {
+      "label": "smoke_generated_processes_include_evolve",
+      "status": "PASS",
+      "elapsed_seconds": 0.276
+    },
+    {
+      "label": "smoke_builtin_processes_explicit_evolve",
+      "status": "PASS",
+      "elapsed_seconds": 1.85
+    },
+    {
+      "label": "smoke_authoring_crash_recovery",
+      "status": "PASS",
+      "elapsed_seconds": 1.78
+    },
+    {
+      "label": "smoke_release_manifest_provenance_contract",
+      "status": "PASS",
+      "elapsed_seconds": 11.745
+    },
+    {
+      "label": "smoke_evolve_candidate_schema",
+      "status": "PASS",
+      "elapsed_seconds": 1.283
+    },
+    {
+      "label": "smoke_evolve_candidate_targeting_schema",
+      "status": "PASS",
+      "elapsed_seconds": 5.907
+    },
+    {
+      "label": "smoke_evolve_candidate_narrowest_scope",
+      "status": "PASS",
+      "elapsed_seconds": 4.907
+    },
+    {
+      "label": "smoke_evolve_candidate_split_guidance",
+      "status": "PASS",
+      "elapsed_seconds": 0.184
+    },
+    {
+      "label": "smoke_workplace_learning_queue",
+      "status": "PASS",
+      "elapsed_seconds": 4.793
+    },
+    {
+      "label": "smoke_evolve_candidate_export",
+      "status": "PASS",
+      "elapsed_seconds": 7.134
+    },
+    {
+      "label": "smoke_evolve_privacy_sanitizer",
+      "status": "PASS",
+      "elapsed_seconds": 8.065
+    },
+    {
+      "label": "smoke_evolve_targeting_privacy_sanitizer",
+      "status": "PASS",
+      "elapsed_seconds": 5.618
+    },
+    {
+      "label": "smoke_knowledge_hub_import",
+      "status": "PASS",
+      "elapsed_seconds": 6.556
+    },
+    {
+      "label": "smoke_knowledge_hub_routes_by_target",
+      "status": "PASS",
+      "elapsed_seconds": 8.173
+    },
+    {
+      "label": "smoke_child_platform_not_promoted_to_parent",
+      "status": "PASS",
+      "elapsed_seconds": 11.348
+    },
+    {
+      "label": "smoke_knowledge_package_build_from_candidates",
+      "status": "PASS",
+      "elapsed_seconds": 7.277
+    },
+    {
+      "label": "smoke_knowledge_package_release_update_manifest",
+      "status": "PASS",
+      "elapsed_seconds": 8.839
+    },
+    {
+      "label": "smoke_evolve_learning_loop_end_to_end",
+      "status": "PASS",
+      "elapsed_seconds": 14.69
+    },
+    {
+      "label": "smoke_process_authoring_evolve_targeting",
+      "status": "PASS",
+      "elapsed_seconds": 6.986
+    },
+    {
+      "label": "smoke_software_process_uses_common_evolve",
+      "status": "PASS",
+      "elapsed_seconds": 0.394
+    },
+    {
+      "label": "smoke_software_lifecycle_process_contract",
+      "status": "PASS",
+      "elapsed_seconds": 0.327
+    },
+    {
+      "label": "smoke_software_lifecycle_artifacts",
+      "status": "PASS",
+      "elapsed_seconds": 0.336
+    },
+    {
+      "label": "smoke_software_lifecycle_description_alignment",
+      "status": "PASS",
+      "elapsed_seconds": 0.311
+    },
+    {
+      "label": "smoke_software_lifecycle_prompt_alignment",
+      "status": "PASS",
+      "elapsed_seconds": 0.162
+    },
+    {
+      "label": "smoke_delivery_profile_not_process",
+      "status": "PASS",
+      "elapsed_seconds": 1.266
+    },
+    {
+      "label": "smoke_software_lifecycle_compact_mode",
+      "status": "PASS",
+      "elapsed_seconds": 0.457
+    },
+    {
+      "label": "release-check",
+      "status": "PASS",
+      "elapsed_seconds": 4.018
+    },
+    {
+      "label": "examples-check",
+      "status": "PASS",
+      "elapsed_seconds": 1.083
+    },
+    {
+      "label": "events-validate",
+      "status": "PASS",
+      "elapsed_seconds": 1.026
+    },
+    {
+      "label": "doctor-project",
+      "status": "PASS",
+      "elapsed_seconds": 1.378
+    },
+    {
+      "label": "release package",
+      "status": "PASS",
+      "elapsed_seconds": 12.555
+    }
+  ],
+  "native_report_sha256": "267746f80fda52066827a61a5e89fbc4950226f2f3ec7d33284b6a0dc2d0d18f"
+}

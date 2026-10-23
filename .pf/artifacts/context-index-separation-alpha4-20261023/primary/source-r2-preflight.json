@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-23T13:06:05.350280+00:00",
+  "status": "pass",
+  "base_source_commit": "23ae166133390275a67ba92c1f00357bc757533a",
+  "dev_refs": {
+    "origin": {
+      "refs/heads/dev": "23ae166133390275a67ba92c1f00357bc757533a"
+    },
+    "gitverse": {
+      "refs/heads/dev": "23ae166133390275a67ba92c1f00357bc757533a"
+    }
+  },
+  "alpha4_tags_absent": true,
+  "github_latest_stable": "v1.2.0",
+  "read_only": true
+}
