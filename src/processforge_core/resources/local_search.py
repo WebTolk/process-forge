@@ -1397,9 +1397,23 @@ def index_status(
                 row = db.execute(
                     "SELECT count(*), count(*), COALESCE((SELECT count(*) FROM documents), 0), 0, max(indexed_at), max(indexed_at) FROM resources"
                 ).fetchone()
+                # A completed workplace reconciliation may legitimately leave
+                # no resources. Distinguish that maintained empty corpus from
+                # a merely initialized schema, without creating any state here.
+                maintained_empty = (
+                    row is not None
+                    and row[0] == 0
+                    and row[2] == 0
+                    and db.execute(
+                        "SELECT 1 FROM index_state WHERE scope_key='workplace' AND status='fresh' AND resource_count=0 AND document_count=0 AND failed_file_count=0 AND allowed_resource_ids='[]'"
+                    ).fetchone()
+                    is not None
+                )
                 payload.update(
                     {
-                        "status": "fresh" if row and row[0] else "missing",
+                        "status": "fresh"
+                        if row and (row[0] or maintained_empty)
+                        else "missing",
                         "resource_count": int(row[1] or 0) if row else 0,
                         "document_count": int(row[2] or 0) if row else 0,
                         "failed_file_count": int(row[3] or 0) if row else 0,

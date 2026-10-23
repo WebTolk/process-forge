@@ -491,6 +491,64 @@ def test_resolved_root_disappearing_during_collection_retains_database(
     assert service.run()["results"][0]["document_count"] == 3
 
 
+@pytest.mark.parametrize("established", [False, True])
+def test_explicit_empty_workplace_is_queryable_after_reconciliation(
+    corpus, established
+):
+    root, snapshot, _files = corpus
+    service = WorkplaceIndexMaintenanceService(root)
+    if established:
+        assert service.run()["results"][0]["document_count"] == 3
+    snapshot["local_search_resources"] = []
+    assert service.run()["results"][0]["status"] == "ok"
+    assert IndexObservationService(root).observe()["status"] == "fresh"
+    physical = local_search.index_status(root, workplace_root=root)
+    assert physical["status"] == "fresh"
+    assert physical["resource_count"] == physical["document_count"] == 0
+    answer = ResourceSearchService(root, root, Reads(selected(snapshot, 0))).search(
+        query="commonneedle"
+    )
+    assert answer["search_status"] == "fresh"
+    assert answer["search"]["status"] == "empty"
+    assert answer["total"] == 0 and answer["results"] == []
+
+
+@pytest.mark.parametrize(
+    "status,resources,documents,allowed",
+    [
+        ("stale", 0, 0, "[]"),
+        ("fresh", 1, 0, "[]"),
+        ("fresh", 0, 1, "[]"),
+        ("fresh", 0, 0, '["phantom"]'),
+    ],
+)
+def test_unscoped_empty_status_requires_consistent_fresh_workplace_state(
+    corpus, status, resources, documents, allowed
+):
+    root, snapshot, _files = corpus
+    snapshot["local_search_resources"] = []
+    assert WorkplaceIndexMaintenanceService(root).run()["results"][0]["status"] == "ok"
+    with closing(sqlite3.connect(local_search.index_path(root, root))) as db:
+        db.execute(
+            "UPDATE index_state SET status=?,resource_count=?,document_count=?,allowed_resource_ids=? WHERE scope_key='workplace'",
+            (status, resources, documents, allowed),
+        )
+        db.commit()
+    assert local_search.index_status(root, workplace_root=root)["status"] != "fresh"
+
+
+def test_schema_only_empty_database_is_not_a_maintained_corpus(tmp_path):
+    database = local_search.index_path(tmp_path, tmp_path)
+    database.parent.mkdir(parents=True)
+    with closing(sqlite3.connect(database)) as db:
+        local_search._ensure_schema(db)
+        db.commit()
+    assert (
+        local_search.index_status(tmp_path, workplace_root=tmp_path)["status"]
+        == "missing"
+    )
+
+
 def test_actual_audit_replay_retries_required_notification_until_delivered(
     corpus, monkeypatch
 ):
