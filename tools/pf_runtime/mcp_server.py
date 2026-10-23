@@ -133,9 +133,13 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
             parser_factory=core.build_parser,
             native_command=core.main,
             registered_driver_ref=registered_driver_ref,
-            work_state=lambda **selectors: build_process_execution_service(bound_project, workplace, core).state(session_id=supplied_session, **selectors),
-            session_record=lambda: host.ledger_session(supplied_session, workplace, core),
-            version=str(getattr(core, "PROCESSFORGE_VERSION", "unknown")),
+            work_state=lambda **selectors: build_process_execution_service(
+                bound_project, workplace, core
+            ).state(session_id=supplied_session, **selectors),
+            session_record=lambda: host.ledger_session(
+                supplied_session, workplace, core
+            ),
+            version=runtime.properties.loaded.version,
         )
         return ActionToolService(dependencies, bound_project, workplace, supplied_session).execute(name, arguments)
 
@@ -618,13 +622,12 @@ def _respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> di
 
 
 def respond_valid(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
-    core = runtime.core
     method = str(request.get("method") or "")
     request_id = request.get("id")
     if method == "notifications/initialized":
         return {"jsonrpc": "2.0", "id": request_id, "result": {}}
     if method == "initialize":
-        return {"jsonrpc": "2.0", "id": request_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "processforge", "version": str(getattr(core, "PROCESSFORGE_VERSION", "1"))}, "capabilities": {"tools": {}}}}
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "processforge", "version": runtime.properties.loaded.version}, "capabilities": {"tools": {}}}}
     if method == "tools/list":
         tools = [{"name": name, "description": description, "inputSchema": tool_schema(name), "annotations": tool_annotations(name)} for name, description in TOOLS.items()]
         return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}

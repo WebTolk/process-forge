@@ -92,7 +92,8 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/agents/process_events.py`, `agents/hook_dispatch.py` | Existing event admission, journal append, diagnostics and hook dispatch with concrete Core dependencies; Work composition supplies an optional recorder explicitly. |
 | `src/processforge_core/chat/writer.py` | Existing chat append, locking, duplicate handling, event recording and export synchronization. |
 | `src/processforge_core/maintenance/release_manifest.py`, `maintenance/release_plan.py`, `maintenance/release_commands.py` | Existing release-manifest rules, ordered command plans and command records; execution remains with its current adapter. |
-| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Shared existing Markdown list formatting and canonical release name/version/hash pattern. |
+| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Shared existing Markdown list formatting, canonical release name and hash pattern. |
+| `src/processforge_core/common/properties.py` | CoreIdentity frozen value, CoreIdentityReadPort, bounded DistributionMetadataReader and CoreProperties; canonical loaded and live installed distribution metadata. |
 | `src/processforge_core/resources/project_packages.py` | Project package manifests, root records, current candidate/index reads, duplicate tracking and dependency IDs through concrete Core paths/documents. |
 | `src/processforge_core/project/platform_resolution.py` | Existing recursive platform hierarchy and resource/dependency aggregation with concrete catalog, projection and package owners. |
 | `src/processforge_core/process_catalog/semantics.py` | Existing authoring coverage, semantic projections and ordered compatibility comparison. |
@@ -223,6 +224,17 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/composition.py` | Explicit service factories and the remaining LegacyResourceSearchReadAdapter; migrated current-work, context, definition and resource-resolve readers use concrete Core owners. |
 | `src/processforge_core/bootstrap.py` | Existing runtime module assembly and lazy access to the service factories. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade and transport/host/provider adapters. |
+
+`build_core_properties()` captures one process-bound `CoreProperties` object on
+its first call, deriving the owning distribution root from the Core module rather
+than cwd. The CLI facade captures it at boot; `RuntimeBootstrap.properties` returns
+the same owner. Constructor injection supports library use without CLI/Host.
+`loaded` remains frozen while `installed()` rereads the bound distribution.
+This cache holds no project, Work, grants or request documents. Release/build
+identity, honest partial/unknown reasons, relocation and independent spec/schema,
+Runtime component and protocol versions are described in
+[Core properties](core-properties.md). Metadata identity does not verify payload
+integrity or qualify an archive, installation or connected-host restart.
 
 `build_current_work_service(project_root, *, documents=None)` constructs the concrete CurrentWorkService with Core YAML and inventory readers. RuntimeBootstrap, context and start consumers call this owner directly; LegacyWorkReadAdapter and WorkReadCorePort are removed. Construction performs no I/O and introduces no global service cache or DI container. Remaining bootstrap/lifecycle callback edges still require separate migration.
 

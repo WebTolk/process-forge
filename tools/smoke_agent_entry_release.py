@@ -14,6 +14,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
 from processforge_core.agent_entry.contract import encoded, load_contract
+# Core imports require the source path bootstrap above.
+from processforge_core.common.properties import CoreProperties  # noqa: E402
 from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 from smoke_remediation_checksum_surface import load_release_module, load_validator
 
@@ -40,6 +42,7 @@ def main() -> int:
         source = base / "source"
         (source / "templates").mkdir(parents=True)
         (source / ".pf").mkdir()
+        (source / "VERSION").write_text("7.4.1-dev.3+entry\n", encoding="utf-8")
         for name in ("agent-entry-contract.md", "agent-entry-contract.json", "project-agents-template.md"):
             shutil.copyfile(ROOT / "templates" / name, source / "templates" / name)
         root, hidden = source / "AGENTS.md", source / ".pf/AGENTS.md"
@@ -100,8 +103,11 @@ def main() -> int:
         inventory.parent.mkdir()
         inventory.write_text(validator.build_inventory(source), encoding="utf-8")
         files = ReleaseSourcePolicy().release_source_files(source)
-        from processforge_core.common.release_identity import RELEASE_ARCHIVE_VERSION
-        owned = release.release_core_manifest(files, version=RELEASE_ARCHIVE_VERSION, source=None, generated_at="2026-01-01T00:00:00Z")
+        version = CoreProperties.from_distribution(source).loaded.version
+        assert version != "unknown"
+        owned = release.release_core_manifest(
+            files, version=version, source=None, generated_at="2026-01-01T00:00:00Z"
+        )
         archive_path = base / "candidate.zip"
         entries = release.write_release_zip(archive_path, files, 1767225600,
                     extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(owned))])

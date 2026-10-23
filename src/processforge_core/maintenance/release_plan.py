@@ -5,7 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from processforge_core.common.release_identity import RELEASE_ARCHIVE_VERSION, RELEASE_NAME
+from processforge_core.common.properties import CoreProperties
+from processforge_core.common.release_identity import RELEASE_NAME
 from processforge_core.maintenance.release_commands import ReleaseCommand
 
 
@@ -287,7 +288,8 @@ class ReleaseCommandPlanBuilder:
         if clean_first:
             commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
             if (root / ".git").exists():
-                commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
+                version = CoreProperties.from_distribution(root).loaded.version
+                commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{version}.zip")], 120))
         if public:
             commands = [item for item in commands if item.public_gate]
         return commands

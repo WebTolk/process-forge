@@ -18,8 +18,6 @@ from pf_runtime import service  # noqa: E402
 
 
 class CoreStub:
-    PROCESSFORGE_VERSION = "smoke"
-
     @staticmethod
     def iter_agent_presence(_workplace_root: Path) -> list[dict[str, object]]:
         return []

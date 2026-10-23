@@ -250,7 +250,8 @@ print('PASS: isolated Core')
                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=30)
     assert listed.returncode == 0, listed.stderr
     payload = json.loads(listed.stdout)
-    assert payload["returned"] == 1 and payload["provenance"]["version"] == pf.PROCESSFORGE_VERSION
+    assert payload["returned"] == 1
+    assert payload["provenance"]["version"] == pf.CORE_PROPERTIES.loaded.version
     partial = subprocess.run([sys.executable, "-B", "tools/processforge.py", "actions", "list", "--project-root", "missing-project", "--run", "r", "--json"],
                              cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=30)
     assert partial.returncode == 1 and json.loads(partial.stdout)["reason"] == "work_selectors_required"

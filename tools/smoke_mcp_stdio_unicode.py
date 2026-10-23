@@ -113,8 +113,10 @@ def controlled_server(module, data: dict, run_root: Path, events: list):
     package.session_read = ModuleType("pf_runtime.session_read")
     sys.modules["pf_runtime"] = package
     sys.modules["pf_runtime.session_read"] = package.session_read
-    runtime = SimpleNamespace(core=SimpleNamespace(resolve_workplace_root=Path,
-                                                   PROCESSFORGE_VERSION="fixture"))
+    runtime = SimpleNamespace(
+        core=SimpleNamespace(resolve_workplace_root=Path),
+        properties=SimpleNamespace(loaded=SimpleNamespace(version="fixture")),
+    )
     module.runtime_bootstrap = lambda: runtime
 
     def sink(name, arguments, workplace, session, core_runtime):

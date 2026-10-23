@@ -23,6 +23,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pf_runtime import console, linux_console, service, windows_console
 from pf_runtime.monitor import banner
 
+from processforge_core.common.properties import CoreIdentity, CoreProperties
+
+
+def fixture_properties(version):
+    identity = CoreIdentity(version=version)
+    return CoreProperties(SimpleNamespace(read=lambda: identity))
+
 
 class TTY(io.StringIO):
     def __init__(self, encoding="utf-8"):
@@ -43,6 +50,15 @@ class TTY(io.StringIO):
 
 
 class PresentationChecks(unittest.TestCase):
+    def setUp(self):
+        self.properties = fixture_properties("test-core-987")
+        self.properties_factory = self.enterContext(
+            patch(
+                "processforge_core.composition.build_core_properties",
+                return_value=self.properties,
+            )
+        )
+
     def test_adapter_imports_do_not_touch_the_desktop_or_scan_processes(self):
         script = '''
 import ctypes, os, subprocess
@@ -57,15 +73,17 @@ with patch.object(ctypes, "WinDLL", side_effect=AssertionError("native bind duri
     def test_automatic_tty_logo_running_core_pid_and_foreground_lifecycle(self):
         for encoding, ascii_logo in (("utf-8", False), ("ascii", True), (None, True)):
             with self.subTest(encoding=encoding):
+                self.properties_factory.reset_mock()
                 stream = TTY(encoding)
                 args = argparse.Namespace(workplace="fixture", port=1234, interval=3, console=False)
-                core = SimpleNamespace(PROCESSFORGE_VERSION="test-core-987", resolve_workplace_root=Mock(return_value=Path("fixture")))
+                core = SimpleNamespace(resolve_workplace_root=Mock(return_value=Path("fixture")))
                 with patch.object(service, "RuntimeProcess") as process, patch.object(console, "minimize_console") as minimize, redirect_stdout(stream):
                     def serve(port):
                         self.assertIn("App Server Core test-core-987 | PID", stream.getvalue())
                         return 17
                     process.return_value.serve.side_effect = serve
                     self.assertEqual(service.command_serve(args, core), 17)
+                    self.properties_factory.assert_called_once_with()
                     process.assert_called_once_with(Path("fixture"), core, interval=3.0)
                     process.return_value.serve.assert_called_once_with(1234)
                     minimize.assert_not_called()
@@ -88,7 +106,7 @@ with patch.object(ctypes, "WinDLL", side_effect=AssertionError("native bind duri
                     self.assertEqual(stream.getvalue(), "")
 
     def test_tty_header_write_and_flush_failure_do_not_prevent_serve(self):
-        core = SimpleNamespace(PROCESSFORGE_VERSION="test-core", resolve_workplace_root=Mock(return_value=Path("fixture")))
+        core = SimpleNamespace(resolve_workplace_root=Mock(return_value=Path("fixture")))
         for operation in ("write", "flush"):
             for failure in (OSError, ValueError):
                 for minimized in (False, True):
@@ -102,7 +120,7 @@ with patch.object(ctypes, "WinDLL", side_effect=AssertionError("native bind duri
                             minimize.assert_not_called()
 
     def test_minimization_diagnostic_write_and_flush_failure_do_not_prevent_serve(self):
-        core = SimpleNamespace(PROCESSFORGE_VERSION="test-core", resolve_workplace_root=Mock(return_value=Path("fixture")))
+        core = SimpleNamespace(resolve_workplace_root=Mock(return_value=Path("fixture")))
         args = argparse.Namespace(workplace="fixture", console=False, minimized=True)
         for operation in ("write", "flush"):
             for failure in (OSError, ValueError):
@@ -130,7 +148,7 @@ with patch.object(ctypes, "WinDLL", side_effect=AssertionError("native bind duri
                 self.assertEqual("Window remains visible" in stream.getvalue(), outcome != "minimized")
 
     def test_adapter_failure_does_not_stop_foreground_runtime_or_expose_exception(self):
-        core = SimpleNamespace(PROCESSFORGE_VERSION="passed-core", resolve_workplace_root=Mock(return_value=Path("fixture")))
+        core = SimpleNamespace(resolve_workplace_root=Mock(return_value=Path("fixture")))
         args = argparse.Namespace(workplace="fixture", minimized=True, console=False)
         with patch.dict(os.environ, {}, clear=True), patch.object(sys, "platform", "win32"), patch.object(windows_console, "minimize_console", side_effect=RuntimeError("PRIVATE_CANARY")), patch.object(service, "RuntimeProcess") as process, redirect_stdout(TTY()) as stream:
             process.return_value.serve.return_value = 23

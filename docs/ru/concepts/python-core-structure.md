@@ -97,7 +97,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/agents/process_events.py`, `agents/hook_dispatch.py` | Прежние допуск событий, запись журнала, диагностика и выполнение hooks через конкретные зависимости Core; сборка Work явно передаёт необязательный recorder. |
 | `src/processforge_core/chat/writer.py` | Прежние добавление сообщений, блокировки, обработка повторов, запись событий и синхронизация экспорта. |
 | `src/processforge_core/maintenance/release_manifest.py`, `maintenance/release_plan.py`, `maintenance/release_commands.py` | Прежние правила манифеста выпуска, упорядоченные планы команд и их записи; выполнение остаётся у текущего адаптера. |
-| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Общие прежние форматирование Markdown-списков и имя, версия и шаблон хеша выпуска. |
+| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Общие прежние форматирование Markdown-списков, имя выпуска и шаблон хеша. |
+| `src/processforge_core/common/properties.py` | Frozen value CoreIdentity, CoreIdentityReadPort, ограниченный DistributionMetadataReader и CoreProperties; канонические loaded и live installed метаданные поставки. |
 | `src/processforge_core/resources/project_packages.py` | Манифесты пакетов проекта, записи корней, актуальные candidates/index, дубликаты и зависимости через конкретные пути и документы Core. |
 | `src/processforge_core/project/platform_resolution.py` | Прежнее рекурсивное разрешение иерархии платформ и сбор ресурсов/зависимостей через конкретные каталоги и правила Core. |
 | `src/processforge_core/process_catalog/semantics.py` | Прежняя полнота авторинга, проекции семантики и упорядоченное сравнение совместимости. |
@@ -228,6 +229,17 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/composition.py` | Общие фабрики сервисов и оставшийся LegacyResourceSearchReadAdapter; перенесённые читатели текущей работы, контекста, определений процессов и разрешения ресурсов используют конкретных владельцев Core. |
 | `src/processforge_core/bootstrap.py` | Существующая сборка runtime-модулей и ленивый доступ к фабрикам сервисов. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade, транспортные адаптеры, host и provider policies. |
+
+`build_core_properties()` при первом вызове захватывает один process-bound объект
+`CoreProperties`, определяя корень поставки по модулю Core, независимо от cwd.
+CLI facade захватывает его при boot; `RuntimeBootstrap.properties` возвращает
+того же владельца. Constructor injection поддерживает библиотечную работу без
+CLI/Host. `loaded` остаётся frozen, а `installed()` перечитывает выбранную поставку.
+Кеш не удерживает проект, Work, grants или документы запроса. Release/build
+identity, честные partial/unknown причины, перенос и независимые версии
+spec/schema, Runtime component и protocol описаны в
+[свойствах Core](core-properties.md). Идентичность метаданных не доказывает
+целостность payload или приёмку архива, установки и connected-host restart.
 
 `build_current_work_service(project_root, *, documents=None)` создаёт конкретный CurrentWorkService с читателями YAML и inventory из Core. RuntimeBootstrap, контекст и start вызывают этого владельца напрямую; LegacyWorkReadAdapter и WorkReadCorePort удалены. При сборке ввод-вывод не выполняется, общий кеш сервисов и DI-контейнер не вводятся. Оставшиеся обратные вызовы bootstrap/lifecycle требуют отдельных переносов.
 

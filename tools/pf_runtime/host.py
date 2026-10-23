@@ -429,10 +429,11 @@ def load_state(workplace_root: Path) -> dict[str, Any]:
 
 def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
     import processforge_core.common.clock as _core_common_clock
+    from processforge_core.composition import build_core_properties
 
     state["updated_at"] = _core_common_clock.now_utc()
     state["workplace_root"] = str(workplace_root)
-    state["processforge_core_version"] = getattr(core, "PROCESSFORGE_VERSION", "")
+    state["processforge_core_version"] = build_core_properties().loaded.version
     write_json(state_path(workplace_root), state)
 
 

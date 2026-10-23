@@ -134,12 +134,13 @@ def token_hash(token: str) -> str:
 
 def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = "", pid: int | None = None, instance_id: str = "") -> dict[str, Any]:
     import processforge_core.common.clock as _core_common_clock
+    from processforge_core.composition import build_core_properties
 
     return {
         "schema_version": 1,
         "runtime_version": RUNTIME_VERSION,
         "protocol_version": RUNTIME_PROTOCOL_VERSION,
-        "processforge_core_version": getattr(core, "PROCESSFORGE_VERSION", ""),
+        "processforge_core_version": build_core_properties().loaded.version,
         "pid": pid if pid is not None else os.getpid(),
         "instance_id": instance_id,
         "started_at": _core_common_clock.now_utc(),
@@ -906,6 +907,7 @@ class RuntimeProcess:
 
 
 def command_serve(args: argparse.Namespace, core: Any) -> int:
+    from processforge_core.composition import build_core_properties
     from processforge_core.configuration import ConfigurationError
 
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
@@ -914,7 +916,7 @@ def command_serve(args: argparse.Namespace, core: Any) -> int:
     except ConfigurationError as exc:
         raise SystemExit(f"FAIL: {exc.code}") from None
     from .console import show_server_console
-    show_server_console(str(getattr(core, "PROCESSFORGE_VERSION", "")), minimized=bool(getattr(args, "minimized", False)))
+    show_server_console(build_core_properties().loaded.version, minimized=bool(getattr(args, "minimized", False)))
     return runtime.serve(int(getattr(args, "port", 0) or 0))
 
 
@@ -1040,9 +1042,11 @@ def command_restart(args: argparse.Namespace, core: Any) -> int:
 
 
 def add_runtime_truth(payload: dict[str, Any], core: Any, *, running: bool) -> dict[str, Any]:
+    from processforge_core.composition import build_core_properties
+
     runtime_version = str(payload.get("runtime_version") or RUNTIME_VERSION)
     status = str(payload.get("status") or "")
-    payload["installed_pf"] = {"version": str(getattr(core, "PROCESSFORGE_VERSION", ""))}
+    payload["installed_pf"] = {"version": build_core_properties().installed().version}
     payload["runtime"] = {"running": bool(running), "status": status, "health": str(payload.get("health") or status)}
     if runtime_version:
         instance_status = "current" if running else ("historical" if status not in {"", "not_running"} else "not_available")
@@ -1089,13 +1093,20 @@ def command_status(args: argparse.Namespace, core: Any) -> int:
 
 
 def command_doctor(args: argparse.Namespace, core: Any) -> int:
+    from processforge_core.composition import build_core_properties
+
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     active, state = active_service(workplace_root, core)
     checks: list[Any] = []
     checks.append(core.check("PASS" if runtime_root(workplace_root).parent.is_dir() else "FAIL", "workplace runtime root exists"))
     checks.append(core.check("PASS" if token_path(workplace_root).is_file() else "WARN", "runtime auth token exists"))
     checks.append(core.check("PASS" if not active or state.get("protocol_version") == RUNTIME_PROTOCOL_VERSION else "FAIL", "runtime protocol version compatible"))
-    checks.append(core.check("PASS" if not active or state.get("processforge_core_version") == getattr(core, "PROCESSFORGE_VERSION", "") else "FAIL", "runtime core version compatible"))
+    installed = build_core_properties().installed()
+    core_version_compatible = not active or (
+        installed.version != "unknown"
+        and state.get("processforge_core_version") == installed.version
+    )
+    checks.append(core.check("PASS" if core_version_compatible else "FAIL", "runtime core version compatible"))
     checks.append(core.check("PASS" if active or not lock_path(workplace_root).exists() else "WARN", "singleton lock is not stale"))
     host_state = host.load_state(workplace_root)
     checks.append(core.check("PASS" if isinstance(host_state.get("projects"), list) else "FAIL", "project handle cache readable"))

@@ -12,6 +12,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "tools" / "processforge.py"
+sys.path.insert(0, str(ROOT / "src"))
+
+from processforge_core.common.properties import CoreProperties  # noqa: E402
 
 
 def main() -> int:
@@ -22,7 +25,8 @@ def main() -> int:
         if result.returncode != 0:
             raise AssertionError(result.stdout + result.stderr)
         payload = json.loads(result.stdout)
-        if not payload.get("installed_pf", {}).get("version"):
+        installed = CoreProperties.from_distribution(ROOT).installed()
+        if payload.get("installed_pf", {}).get("version") != installed.version:
             raise AssertionError(payload)
         if payload.get("runtime", {}).get("running") is not False:
             raise AssertionError(payload)

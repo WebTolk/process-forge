@@ -76,6 +76,9 @@ from processforge_core.project.workplace_templates import WorkplaceFileBuilder
 from processforge_core.project.workplace_terms import WorkplaceTermsBuilder
 import processforge_core.common.markdown as _core_common_markdown
 import processforge_core.common.release_identity as _core_common_release_identity
+# These Core imports require the source/distribution path bootstrap above.
+from processforge_core.common.properties import CoreProperties  # noqa: E402
+from processforge_core.composition import build_core_properties  # noqa: E402
 import processforge_core.maintenance.release_commands as _core_maintenance_release_commands
 import processforge_core.project.configuration_inputs as _core_project_configuration_inputs
 import processforge_core.project.initialization_discovery as _core_project_initialization_discovery
@@ -464,9 +467,7 @@ import processforge_core.work.consistency as _core_work_consistency
 
 
 PROJECT_FLOW_ROOT = ".pf"
-PROCESSFORGE_VERSION = "1.2.0"
-PROCESSFORGE_SPEC_VERSION = "1.0"
-PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
+CORE_PROPERTIES = build_core_properties()
 
 PROJECT_PRIVATE_GITIGNORE = [
     ".codex/hooks.json",
@@ -3612,11 +3613,9 @@ def command_dev_test(args: argparse.Namespace) -> int:
 
 
 def command_version(args: argparse.Namespace) -> int:
-    version_file = ROOT / "VERSION"
-    version = version_file.read_text(encoding="utf-8", errors="replace").strip() if version_file.is_file() else PROCESSFORGE_VERSION
-    print(f"ProcessForge {version}")
-    print(f"Spec: {PROCESSFORGE_SPEC_VERSION}")
-    print(f"Schema bundle: {PROCESSFORGE_SCHEMA_BUNDLE_VERSION}")
+    print(f"ProcessForge {CORE_PROPERTIES.loaded.version}")
+    print(f"Spec: {CORE_PROPERTIES.spec_version}")
+    print(f"Schema bundle: {CORE_PROPERTIES.schema_bundle_version}")
     return 0
 
 
@@ -3699,11 +3698,12 @@ def release_manifest_payload(
     manifest_files: list[dict[str, Any]],
     provenance: dict[str, Any],
 ) -> dict[str, Any]:
+    properties = CoreProperties.from_distribution(root)
     return {
         "schema_version": 1,
         "name": _core_common_release_identity.RELEASE_NAME,
-        "version": _core_common_release_identity.RELEASE_ARCHIVE_VERSION,
-        "schema_bundle_version": PROCESSFORGE_SCHEMA_BUNDLE_VERSION,
+        "version": properties.loaded.version,
+        "schema_bundle_version": properties.schema_bundle_version,
         "release_eligible": True,
         "build": {
             "source_date_epoch": provenance["source_date_epoch"],
@@ -3725,6 +3725,10 @@ def release_manifest_payload(
 
 def command_release_pack(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
+    properties = CoreProperties.from_distribution(root)
+    if properties.loaded.version == "unknown":
+        print(f"FAIL: release Core metadata unavailable: {properties.loaded.reason}")
+        return 1
     output = Path(args.output).expanduser()
     if not output.is_absolute():
         output = (root / output).resolve()
@@ -3742,13 +3746,26 @@ def command_release_pack(args: argparse.Namespace) -> int:
         command = [sys.executable, str(script), "--root", str(root)]
         if label == "checksum inventory":
             command.append("--check")
-        result = subprocess.run(command, cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
+        result = subprocess.run(
+            command,
+            cwd=root,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+        )
         if result.returncode != 0:
             print(f"FAIL: release-pack preflight {label}")
             print((result.stdout or result.stderr).strip())
             return 1
     patterns = _release_source_policy.release_ignore_patterns(root)
-    files = [(archive_path, path) for archive_path, path in _release_source_policy.release_source_files(root) if not _release_source_policy.release_ignore_match(archive_path, patterns) and not _release_source_policy.release_path_is_forbidden(archive_path)]
+    files = [
+        (archive_path, path)
+        for archive_path, path in _release_source_policy.release_source_files(root)
+        if not _release_source_policy.release_ignore_match(archive_path, patterns)
+        and not _release_source_policy.release_path_is_forbidden(archive_path)
+    ]
     if args.dry_run:
         print(f"DRY-RUN: would write {output}")
         print(f"DRY-RUN: would write {manifest_path}")
@@ -3762,11 +3779,24 @@ def command_release_pack(args: argparse.Namespace) -> int:
     provenance = _release_git_provenance.release_git_provenance(root)
     from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 
-    core_manifest = release_core_manifest(files, version=_core_common_release_identity.RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
+    core_manifest = release_core_manifest(
+        files,
+        version=properties.loaded.version,
+        source=provenance["source"],
+        generated_at=provenance["generated_at"],
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
-    manifest_files = write_release_zip(output, files, int(provenance["source_date_epoch"]), extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(core_manifest))])
+    manifest_files = write_release_zip(
+        output,
+        files,
+        int(provenance["source_date_epoch"]),
+        extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(core_manifest))],
+    )
     manifest = release_manifest_payload(root, output, manifest_files, provenance)
-    manifest_path.write_text(ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)), encoding="utf-8")
+    manifest_path.write_text(
+        ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)),
+        encoding="utf-8",
+    )
     consumer_checks = inspect_release_archive(output, manifest_path)
     consumer_failures = [item for item in consumer_checks if item.level == "FAIL"]
     if consumer_failures:
@@ -3831,21 +3861,42 @@ def expected_release_files_from_root(root: Path) -> list[tuple[str, Path]]:
     return expected
 
 
-def expected_release_manifest_from_root(root: Path, manifest_data: dict[str, Any] | None = None) -> dict[str, str]:
+def expected_release_manifest_from_root(
+    root: Path, manifest_data: dict[str, Any] | None = None
+) -> dict[str, str]:
     expected_files = expected_release_files_from_root(root)
-    expected = {archive_path: hashlib.sha256(release_file_content(source_path)).hexdigest() for archive_path, source_path in expected_files}
+    expected = {
+        archive_path: hashlib.sha256(release_file_content(source_path)).hexdigest()
+        for archive_path, source_path in expected_files
+    }
     if manifest_data:
-        from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
+        from processforge_core.maintenance.update import (
+            CORE_MANIFEST_NAME,
+            manifest_bytes,
+        )
 
-        build = manifest_data.get("build") if isinstance(manifest_data.get("build"), dict) else {}
-        source = manifest_data.get("source") if isinstance(manifest_data.get("source"), dict) else None
+        build = (
+            manifest_data.get("build")
+            if isinstance(manifest_data.get("build"), dict)
+            else {}
+        )
+        source = (
+            manifest_data.get("source")
+            if isinstance(manifest_data.get("source"), dict)
+            else None
+        )
         core_manifest = release_core_manifest(
             expected_files,
-            version=str(manifest_data.get("version") or _core_common_release_identity.RELEASE_ARCHIVE_VERSION),
+            version=str(
+                manifest_data.get("version")
+                or CoreProperties.from_distribution(root).loaded.version
+            ),
             source=source,
             generated_at=str(build.get("generated_at") or ""),
         )
-        expected[CORE_MANIFEST_NAME] = hashlib.sha256(manifest_bytes(core_manifest)).hexdigest()
+        expected[CORE_MANIFEST_NAME] = hashlib.sha256(
+            manifest_bytes(core_manifest)
+        ).hexdigest()
     return expected
 
 
@@ -14533,7 +14584,7 @@ def build_parser() -> argparse.ArgumentParser:
         execution_factory=process_execution_service,
         require_flow_root=_run_task_inputs.require_flow_root,
         dump_yaml=dump_yaml,
-        version=PROCESSFORGE_VERSION,
+        version=CORE_PROPERTIES.loaded.version,
     ).execute).register(sub.add_parser)
 
     DiagnosticsCommandParser(

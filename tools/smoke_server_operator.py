@@ -241,7 +241,7 @@ def main():
             assert bool(text) == stream.isatty()
             if text:
                 assert "ProcessForge" in text and "closing this window stops" in text
-                assert f"App Server Core {core.PROCESSFORGE_VERSION} | PID" in text
+                assert f"App Server Core {core.CORE_PROPERTIES.loaded.version} | PID" in text
                 assert all(ord(char) < 128 for char in text) and "\x1b" not in text
     assert smoke_server_console.main() == 0
     print("PASS: actual HTTP busy/unknown/inflight/owner/auth guards, force, old capability refusal, launcher and readonly JSON")

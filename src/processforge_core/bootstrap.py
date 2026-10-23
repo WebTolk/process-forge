@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from .common.properties import CoreProperties
     from .agents.process_events import ProcessEventRecorder
     from .presentation.work_summaries import WorkSummaryRenderer
     from .diagnostics import Logger
@@ -31,6 +32,13 @@ class RuntimeBootstrap:
     # Instance composition preserves the original dataclass field contract.
     _process_events = None  # type: ProcessEventRecorder | None
     _work_summaries = None  # type: WorkSummaryRenderer | None
+
+    @property
+    def properties(self) -> CoreProperties:
+        """Properties of the same Core distribution loaded by this bootstrap."""
+        from .composition import build_core_properties
+
+        return build_core_properties()
 
     def current_work_service(self, project_root: Path) -> CurrentWorkService:
         from .composition import build_current_work_service

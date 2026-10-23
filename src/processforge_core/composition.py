@@ -1,4 +1,4 @@
-"""Internal, explicit service composition; construction performs no I/O."""
+"""Explicit Core composition; distribution properties are captured on request."""
 
 from __future__ import annotations
 
@@ -8,12 +8,14 @@ from .common.yaml_dump import dump_yaml
 from dataclasses import dataclass
 from pathlib import Path
 import re
+from threading import Lock
 from typing import TYPE_CHECKING, Any, Callable
 
 from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
 from .work.records import CurrentWorkService, YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .common.properties import CoreProperties
     from .agents.process_events import ProcessEventRecorder
     from .presentation.work_summaries import WorkSummaryRenderer
     from .work.metadata import WorkMetadataReadPass
@@ -75,6 +77,21 @@ if TYPE_CHECKING:
     from .work.context_read import WorkContextReadService
 
 __all__ = ()
+_core_properties: CoreProperties | None = None
+_core_properties_lock = Lock()
+
+
+def build_core_properties() -> CoreProperties:
+    """Capture the owning Core distribution once per application process."""
+    from .common.properties import CoreProperties
+
+    global _core_properties
+    with _core_properties_lock:
+        if _core_properties is None:
+            _core_properties = CoreProperties.from_distribution(
+                Path(__file__).resolve().parents[2]
+            )
+        return _core_properties
 
 
 def build_work_material_reader(

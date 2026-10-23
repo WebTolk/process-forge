@@ -833,14 +833,16 @@ def run_view(
 
 
 def command_monitor(args: argparse.Namespace, core: Any) -> int:
+    from processforge_core.composition import build_core_properties
     from processforge_core.configuration import ConfigService, ConfigurationError
     from processforge_core.configuration.yaml_store import YamlConfigStore
 
     workplace = core.resolve_workplace_root(args.workplace)
     configuration = ConfigService(YamlConfigStore(workplace / "configuration.yaml"))
+    properties = build_core_properties()
 
     def collect():
-        snapshot = collect_snapshot(workplace, core.PROCESSFORGE_VERSION)
+        snapshot = collect_snapshot(workplace, properties.loaded.version)
         if snapshot["runtime"]["lifecycle"] != "ready":
             try:
                 snapshot["default_interval_seconds"] = (
