@@ -38,3 +38,11 @@ Next: native baseline/plan, установка once, installed checks и отд�
 2026-10-23T16:36:43.736036+00:00 | primary | Final scoped run/capsule doctors passed; installed 1497 hashes, Workplace config and foreign/source/alpha3/stable guards reverified. Remaining actual connected MCP reload and evidence Git delivery are tracked separately.
 
 2026-10-23T16:42:13.234192+00:00 | primary | Portable checkpoint delivery: installation and installed/fixture acceptance complete; actual connected MCP reload remains required. No Work completion or host acceptance is claimed; exact continuation retained. Curating own artifacts only for dual-dev push.
+
+## 2026-10-23T16:58:39.083551+00:00 — primary/session-close
+
+Task: operator deferred MCP verification and requested saving all remaining artifacts for session close.
+Files: session-close.md, session-close-retention.json, remaining postcommit receipts; private artifact inventory and assignment/capsule/run/snapshot copies.
+Status: preservation only; continuation ready with no missing artifacts; native Work remains implementation/in_progress pending actual MCP acceptance.
+Decisions: preserve all raw/private/failed evidence locally and sealed bytes unchanged; publish only portable receipts; no cleanup, update, restart, service stop, or further functional checks.
+Next: resume exact alpha4-device-mcp-reconnect-20261023 after the operator reconnects MCP; do not repeat apply/force.

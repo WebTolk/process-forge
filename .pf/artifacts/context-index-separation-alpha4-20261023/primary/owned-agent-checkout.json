@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-23T15:18:25.294573+00:00",
+  "status": "complete",
+  "sessions": [
+    {
+      "agent_id": "alpha4-revised-primary-20261023",
+      "session_id": "alpha4-revised-primary-20261023",
+      "exit_code": 0
+    },
+    {
+      "agent_id": "alpha4-observation-20261023",
+      "session_id": "alpha4-observation-20261023",
+      "exit_code": 0
+    },
+    {
+      "agent_id": "alpha4-maintenance-r3-20261023",
+      "session_id": "alpha4-maintenance-r3-20261023",
+      "exit_code": 0
+    },
+    {
+      "agent_id": "alpha4-schedule-r3-20261023",
+      "session_id": "alpha4-schedule-r3-20261023",
+      "exit_code": 0
+    },
+    {
+      "agent_id": "alpha4-integration-20261023",
+      "session_id": "alpha4-integration-20261023",
+      "exit_code": 0
+    },
+    {
+      "agent_id": "alpha4-reviewer-20261023",
+      "session_id": "alpha4-reviewer-20261023",
+      "exit_code": 0
+    }
+  ],
+  "scope": "Only the six logical-role sessions created for this engagement; no registry/profile deletion or infrastructure stop."
+}

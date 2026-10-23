@@ -1,0 +1,20 @@
+{
+  "commit": "1ffaf08f4d7d0c505a89ff7df4cfa039af5247d9",
+  "metadata_commit": "171036e694f165f212256fef76af721679c3efb6",
+  "public_evidence_files": 196,
+  "immutable_blank_eof_preserved": true,
+  "at": "2026-10-23T15:17:59.726649+00:00",
+  "remotes": {
+    "origin": {
+      "ref": "refs/heads/dev",
+      "observed_commit": "1ffaf08f4d7d0c505a89ff7df4cfa039af5247d9",
+      "matches": true
+    },
+    "gitverse": {
+      "ref": "refs/heads/dev",
+      "observed_commit": "1ffaf08f4d7d0c505a89ff7df4cfa039af5247d9",
+      "matches": true
+    }
+  },
+  "foreign_guards_preserved": true
+}
