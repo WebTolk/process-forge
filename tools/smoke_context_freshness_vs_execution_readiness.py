@@ -10,7 +10,6 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -114,12 +113,18 @@ def main() -> int:
             "--apply",
         )
 
-        for registry_name, collection in [("tools.yaml", "tools"), ("mcp.yaml", "mcp_servers")]:
+        for registry_name, collection in [
+            ("tools.yaml", "tools"),
+            ("mcp.yaml", "mcp_servers"),
+        ]:
             registry = project / ".pf" / "registries" / registry_name
             if registry.is_file():
                 data = yaml.safe_load(registry.read_text(encoding="utf-8")) or {}
                 data[collection] = []
-                registry.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+                registry.write_text(
+                    yaml.safe_dump(data, allow_unicode=True, sort_keys=False),
+                    encoding="utf-8",
+                )
 
         manifest_path = project / ".pf" / "process-forge.yaml"
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -127,13 +132,16 @@ def main() -> int:
         manifest.setdefault("knowledge_stack", []).append(
             {"id": "docs.example-domain", "version": "*", "source": "workplace"}
         )
-        manifest.setdefault("context_requirements", {}).setdefault("knowledge_packages", []).append(
-            {"id": "docs.example-domain", "constraint": "*", "required": True}
+        manifest.setdefault("context_requirements", {}).setdefault(
+            "knowledge_packages", []
+        ).append({"id": "docs.example-domain", "constraint": "*", "required": True})
+        manifest.setdefault("context_requirements", {}).setdefault(
+            "knowledge_resources", []
+        ).append({"id": "example-domain", "constraint": "*", "required": True})
+        manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
         )
-        manifest.setdefault("context_requirements", {}).setdefault("knowledge_resources", []).append(
-            {"id": "example-domain", "constraint": "*", "required": True}
-        )
-        manifest_path.write_text(yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
         run_cli(
             "project-context-refresh",
@@ -155,9 +163,22 @@ def main() -> int:
         )
         assert check["status"] == "fresh", check
         assert check["execution_readiness"]["status"] == "blocked", check
-        assert check["execution_readiness"]["missing_capabilities"][0]["capability"] == "filesystem.write", check
+        assert (
+            check["execution_readiness"]["missing_capabilities"][0]["capability"]
+            == "filesystem.write"
+        ), check
 
-        run_cli("search-index", "refresh", "--project-root", str(project), "--workplace", str(workplace))
+        run_cli(
+            "search-index",
+            "refresh",
+            "--project-root",
+            str(project),
+            "--workplace",
+            str(workplace),
+        )
+        # A project pass cannot acknowledge global registration invalidation.
+        # Prepare this fixture explicitly before the positive search assertions.
+        run_cli("search-index-maintain", "--workplace", str(workplace), "--apply")
         run_cli(
             "agent-checkin",
             "--workplace",
@@ -180,7 +201,10 @@ def main() -> int:
                     "jsonrpc": "2.0",
                     "id": 2,
                     "method": "tools/call",
-                    "params": {"name": "pf.session_context", "arguments": {"session_id": "readiness-session"}},
+                    "params": {
+                        "name": "pf.session_context",
+                        "arguments": {"session_id": "readiness-session"},
+                    },
                 },
                 {
                     "jsonrpc": "2.0",
@@ -188,7 +212,11 @@ def main() -> int:
                     "method": "tools/call",
                     "params": {
                         "name": "pf.search",
-                        "arguments": {"session_id": "readiness-session", "query": "Platform", "limit": 5},
+                        "arguments": {
+                            "session_id": "readiness-session",
+                            "query": "Platform",
+                            "limit": 5,
+                        },
                     },
                 },
                 {
@@ -197,19 +225,32 @@ def main() -> int:
                     "method": "tools/call",
                     "params": {
                         "name": "pf.resolve",
-                        "arguments": {"session_id": "readiness-session", "resource_id": "docs.example-domain:example-domain"},
+                        "arguments": {
+                            "session_id": "readiness-session",
+                            "resource_id": "docs.example-domain:example-domain",
+                        },
                     },
                 },
             ],
         )
         session_context = json.loads(responses[1]["result"]["content"][0]["text"])
-        assert session_context["context_freshness"]["status"] == "fresh", session_context
-        assert session_context["execution_readiness"]["status"] == "blocked", session_context
-        assert session_context["missing_capabilities"][0]["capability"] == "filesystem.write", session_context
+        assert session_context["context_freshness"]["status"] == "fresh", (
+            session_context
+        )
+        assert session_context["execution_readiness"]["status"] == "blocked", (
+            session_context
+        )
+        assert (
+            session_context["missing_capabilities"][0]["capability"]
+            == "filesystem.write"
+        ), session_context
         search_result = json.loads(responses[2]["result"]["content"][0]["text"])
         assert search_result["search_status"] == "fresh", search_result
         assert search_result["results"], search_result
-        assert search_result["results"][0]["resource_id"] == "docs.example-domain:example-domain", search_result
+        assert (
+            search_result["results"][0]["resource_id"]
+            == "docs.example-domain:example-domain"
+        ), search_result
         resolve_result = json.loads(responses[3]["result"]["content"][0]["text"])
         assert resolve_result["resource"]["status"] == "available", resolve_result
 
@@ -233,7 +274,10 @@ def main() -> int:
                     "method": "tools/call",
                     "params": {
                         "name": "pf.resolve",
-                        "arguments": {"session_id": "readiness-session", "resource_id": "docs.example-domain:example-domain"},
+                        "arguments": {
+                            "session_id": "readiness-session",
+                            "resource_id": "docs.example-domain:example-domain",
+                        },
                     },
                 },
             ],
@@ -274,9 +318,18 @@ def main() -> int:
                 "--json",
             )
         )
-        assert provider_check["execution_readiness"]["status"] == "ready", provider_check
-        refreshed_snapshot = yaml.safe_load((project / ".pf" / "contexts" / "project-context.snapshot.yaml").read_text(encoding="utf-8"))
-        assert refreshed_snapshot["capabilities"]["required"][0]["provider"] == "workplace:example-writer", refreshed_snapshot["capabilities"]
+        assert provider_check["execution_readiness"]["status"] == "ready", (
+            provider_check
+        )
+        refreshed_snapshot = yaml.safe_load(
+            (project / ".pf" / "contexts" / "project-context.snapshot.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert (
+            refreshed_snapshot["capabilities"]["required"][0]["provider"]
+            == "workplace:example-writer"
+        ), refreshed_snapshot["capabilities"]
 
     print("PASS: context freshness is separate from execution readiness")
     return 0

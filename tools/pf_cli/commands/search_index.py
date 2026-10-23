@@ -5,24 +5,40 @@ from __future__ import annotations
 import argparse
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+
+from processforge_core.resources.index_maintenance import (
+    IndexMaintenanceError,
+    WorkplaceIndexMaintenanceService,
+)
+from processforge_core.resources.index_observation import IndexObservationService
 
 if TYPE_CHECKING:
     from processforge_core.resources.local_search import ResourceSearchIndex
 
 
 def _print_status(payload: dict[str, Any]) -> None:
-    sqlite_info = payload.get("sqlite") if isinstance(payload.get("sqlite"), dict) else {}
+    sqlite_info = (
+        cast(dict[str, Any], payload.get("sqlite"))
+        if isinstance(payload.get("sqlite"), dict)
+        else {}
+    )
     print(f"STATUS: {payload.get('status')}")
     print(f"GENERATION: {payload.get('generation') or 'none'}")
     print(f"SQLITE_VERSION: {sqlite_info.get('sqlite_version') or 'unknown'}")
-    print(f"FTS5: {'available' if sqlite_info.get('fts5_available') else 'unavailable'}")
+    print(
+        f"FTS5: {'available' if sqlite_info.get('fts5_available') else 'unavailable'}"
+    )
     print(f"RESOURCES: {payload.get('resource_count')}")
     print(f"DOCUMENTS: {payload.get('document_count')}")
     print(f"STALE_RESOURCES: {payload.get('stale_resource_count')}")
     print(f"FAILED_FILES: {payload.get('failed_file_count')}")
-    print(f"LAST_SUCCESSFUL_REFRESH: {payload.get('last_successful_refresh') or 'none'}")
-    print(f"LAST_FULL_RECONCILIATION: {payload.get('last_full_reconciliation') or 'none'}")
+    print(
+        f"LAST_SUCCESSFUL_REFRESH: {payload.get('last_successful_refresh') or 'none'}"
+    )
+    print(
+        f"LAST_FULL_RECONCILIATION: {payload.get('last_full_reconciliation') or 'none'}"
+    )
     if payload.get("error"):
         print(f"ERROR: {payload.get('error')}")
     if payload.get("path"):
@@ -36,9 +52,7 @@ class SearchIndexStatusCommand:
         self,
         *,
         index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
-        snapshot_reader: Callable[
-            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
-        ],
+        snapshot_reader: Callable[[Path, Path], tuple[dict[str, Any], dict[str, Any]]],
     ) -> None:
         self._index_factory = index_factory
         self._snapshot_reader = snapshot_reader
@@ -47,7 +61,11 @@ class SearchIndexStatusCommand:
         project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
         _context, snapshot = self._snapshot_reader(project_root, workplace_root)
-        status = self._index_factory(project_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
+        status = IndexObservationService(workplace_root).observe_status(
+            lambda: self._index_factory(project_root, snapshot, workplace_root).status(
+                verify_files=bool(getattr(args, "verify_files", False))
+            )
+        )
         _print_status(status)
         return 1 if status.get("status") == "degraded" else 0
 
@@ -59,9 +77,7 @@ class SearchIndexRefreshCommand:
         self,
         *,
         index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
-        snapshot_reader: Callable[
-            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
-        ],
+        snapshot_reader: Callable[[Path, Path], tuple[dict[str, Any], dict[str, Any]]],
     ) -> None:
         self._index_factory = index_factory
         self._snapshot_reader = snapshot_reader
@@ -73,7 +89,13 @@ class SearchIndexRefreshCommand:
         if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             print(f"FAIL: project context is not fresh: {context.get('status')}")
             return 1
-        result = self._index_factory(project_root, snapshot, workplace_root).refresh()
+        try:
+            result = WorkplaceIndexMaintenanceService(
+                workplace_root, backend_factory=self._index_factory
+            ).run_scoped(project_root, snapshot, operation="refresh")
+        except IndexMaintenanceError as error:
+            print(f"FAIL: {error.code}")
+            return 1
         print(f"REFRESHED: {result.get('generation')}")
         print(f"RESOURCES: {result.get('resources')}")
         print(f"DOCUMENTS: {result.get('indexed')}")
@@ -87,9 +109,7 @@ class SearchIndexRebuildCommand:
         self,
         *,
         index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
-        snapshot_reader: Callable[
-            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
-        ],
+        snapshot_reader: Callable[[Path, Path], tuple[dict[str, Any], dict[str, Any]]],
     ) -> None:
         self._index_factory = index_factory
         self._snapshot_reader = snapshot_reader
@@ -101,7 +121,13 @@ class SearchIndexRebuildCommand:
         if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             print(f"FAIL: project context is not fresh: {context.get('status')}")
             return 1
-        result = self._index_factory(project_root, snapshot, workplace_root).rebuild()
+        try:
+            result = WorkplaceIndexMaintenanceService(
+                workplace_root, backend_factory=self._index_factory
+            ).run_scoped(project_root, snapshot, operation="rebuild")
+        except IndexMaintenanceError as error:
+            print(f"FAIL: {error.code}")
+            return 1
         print(f"REBUILT: {result.get('generation')}")
         print(f"RESOURCES: {result.get('resources')}")
         print(f"DOCUMENTS: {result.get('indexed')}")
@@ -115,9 +141,7 @@ class SearchIndexDoctorCommand:
         self,
         *,
         index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
-        snapshot_reader: Callable[
-            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
-        ],
+        snapshot_reader: Callable[[Path, Path], tuple[dict[str, Any], dict[str, Any]]],
         doctor_formatter: Callable[[dict[str, Any], dict[str, Any]], int],
     ) -> None:
         self._index_factory = index_factory
@@ -128,7 +152,9 @@ class SearchIndexDoctorCommand:
         project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
         context, snapshot = self._snapshot_reader(project_root, workplace_root)
-        status = self._index_factory(project_root, snapshot, workplace_root).status()
+        status = IndexObservationService(workplace_root).observe_status(
+            lambda: self._index_factory(project_root, snapshot, workplace_root).status()
+        )
         return self._doctor_formatter(status, context)
 
 
@@ -139,9 +165,7 @@ class SearchIndexTickCommand:
         self,
         *,
         index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
-        snapshot_reader: Callable[
-            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
-        ],
+        snapshot_reader: Callable[[Path, Path], tuple[dict[str, Any], dict[str, Any]]],
     ) -> None:
         self._index_factory = index_factory
         self._snapshot_reader = snapshot_reader
@@ -153,9 +177,24 @@ class SearchIndexTickCommand:
         if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             print(f"FAIL: project context is not fresh: {context.get('status')}")
             return 1
-        payload = self._index_factory(project_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
+        try:
+            payload = WorkplaceIndexMaintenanceService(
+                workplace_root, backend_factory=self._index_factory
+            ).run_scoped(
+                project_root,
+                snapshot,
+                operation="tick",
+                verify_files=not bool(getattr(args, "skip_file_verify", False)),
+            )
+        except IndexMaintenanceError as error:
+            print(f"FAIL: {error.code}")
+            return 1
         print(f"ACTION: {payload.get('action')}")
-        after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
+        after = (
+            cast(dict[str, Any], payload.get("after"))
+            if isinstance(payload.get("after"), dict)
+            else {}
+        )
         print(f"STATUS: {after.get('status')}")
         print(f"GENERATION: {after.get('generation') or 'none'}")
         print(f"DOCUMENTS: {after.get('document_count')}")

@@ -425,7 +425,7 @@ class LegacyResourceSearchReadAdapter:
     core: Any
 
     def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]:
-        from .resources.access import load_snapshot
+        from .project.snapshot import load_snapshot
 
         return load_snapshot(self.project_root, snapshots=snapshots)
 
@@ -438,7 +438,7 @@ class LegacyResourceSearchReadAdapter:
         return lambda root: WorkplaceSearchCatalogReader(root).runtime_snapshot()
 
     def search_roots_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
-        from .resources.access import snapshot_with_resolved_search_roots
+        from .resources.snapshot import snapshot_with_resolved_search_roots
 
         return lambda snapshot: snapshot_with_resolved_search_roots(self.project_root, snapshot, self.workplace_root)
 

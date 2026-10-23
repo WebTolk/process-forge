@@ -4,6 +4,45 @@ Project context snapshot is the computed operational map for a ProcessForge
 project. It is created during project init or project refresh and is read at
 session start before broad package or template scans.
 
+## Context And Search Readiness
+
+Project initialization, context refresh and refresh-only repair compute or
+validate project context and observe the existing workplace search index. First
+and repeated calls do not build, rebuild, queue or wait for document indexing.
+They remain usable in file-only mode without a running PF App Server.
+
+These states answer different questions:
+
+| State | Meaning |
+| --- | --- |
+| Context freshness and required-resource readiness | Whether current project inputs and required resources permit the requested work. |
+| Search observation | Whether the derived workplace index is available: `missing`, `stale`, `building`, `degraded` or `fresh`. |
+| Authorized coverage | Whether that index contains the resources selected for this project; physical freshness alone does not prove useful coverage. |
+
+A fresh context can coexist with a missing or incomplete search index. Search
+unavailability does not bypass required-resource checks, current access, Work
+identity or stage restrictions. If a requested operation requires search, its
+search dependency must still be satisfied.
+
+Observation reads catalogue/index metadata with `verify_files=False`; it does
+not scan document contents. Context validation still reads the current sources
+it needs. Selected Work material verification may read and hash authorized
+files; that is access/material validation, not workplace document indexing.
+External document edits are detected during explicit fingerprint verification
+or maintenance, rather than by every context refresh.
+
+Request separately authorized workplace maintenance when search is unavailable:
+
+```bash
+python bin/pf.py search-index-maintain --workplace <workplace> --apply --json
+```
+
+A project context or project Work does not authorize this workplace operation.
+Refresh does not start or repair infrastructure. Alpha4 supplies an explicit
+manual adapter and a cold callable for a future scheduler; periodic Runtime
+scheduling is not delivered. See [Resource Search Index](resource-search-index.md)
+for storage, scoped commands and recovery behavior.
+
 Default paths:
 
 ```text

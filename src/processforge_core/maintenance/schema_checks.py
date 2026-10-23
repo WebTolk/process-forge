@@ -14,7 +14,6 @@ class UpdateSchemaChecks:
     def __init__(self, distribution_root: Path) -> None:
         self.distribution_root = distribution_root
 
-
     def type_matches(self, value: Any, expected: str) -> bool:
         if expected == "object":
             return isinstance(value, dict)
@@ -42,10 +41,30 @@ class UpdateSchemaChecks:
             raise ValueError(f"ref {ref} does not resolve to schema object")
         return node
 
-    def validate(self, value: Any, node: dict[str, Any], root_schema: dict[str, Any], path: str) -> list[str]:
+    def validate(
+        self, value: Any, node: dict[str, Any], root_schema: dict[str, Any], path: str
+    ) -> list[str]:
         errors: list[str] = []
         if "$ref" in node:
-            return self.validate(value, self.resolve_ref(root_schema, str(node["$ref"])), root_schema, path)
+            if node["$ref"] == "resource-indexing.schema.json":
+                try:
+                    external = json.loads(
+                        (
+                            self.distribution_root
+                            / "schemas/resource-indexing.schema.json"
+                        ).read_text(encoding="utf-8")
+                    )
+                except (OSError, json.JSONDecodeError, UnicodeError):
+                    raise ValueError("bundled indexing schema unavailable") from None
+                if not isinstance(external, dict):
+                    raise ValueError("bundled indexing schema unavailable")
+                return self.validate(value, external, external, path)
+            return self.validate(
+                value,
+                self.resolve_ref(root_schema, str(node["$ref"])),
+                root_schema,
+                path,
+            )
 
         all_of = node.get("allOf")
         if isinstance(all_of, list):
@@ -80,7 +99,9 @@ class UpdateSchemaChecks:
                 and not self.validate(value, alternative, root_schema, path)
             )
             if matches != 1:
-                errors.append(f"{path}: expected exactly one oneOf alternative, got {matches}")
+                errors.append(
+                    f"{path}: expected exactly one oneOf alternative, got {matches}"
+                )
 
         excluded = node.get("not")
         if isinstance(excluded, dict) and not self.validate(
@@ -113,29 +134,61 @@ class UpdateSchemaChecks:
         expected_type = node.get("type")
         if isinstance(expected_type, list):
             if not any(self.type_matches(value, item) for item in expected_type):
-                errors.append(f"{path}: expected one of {expected_type}, got {type(value).__name__}")
+                errors.append(
+                    f"{path}: expected one of {expected_type}, got {type(value).__name__}"
+                )
                 return errors
-        elif isinstance(expected_type, str) and not self.type_matches(value, expected_type):
-            errors.append(f"{path}: expected {expected_type}, got {type(value).__name__}")
+        elif isinstance(expected_type, str) and not self.type_matches(
+            value, expected_type
+        ):
+            errors.append(
+                f"{path}: expected {expected_type}, got {type(value).__name__}"
+            )
             return errors
 
         if "const" in node and value != node["const"]:
             errors.append(f"{path}: expected const {node['const']!r}")
         if "enum" in node and value not in node["enum"]:
             errors.append(f"{path}: expected one of {node['enum']!r}")
-        if "minimum" in node and isinstance(value, (int, float)) and value < node["minimum"]:
+        if (
+            "minimum" in node
+            and isinstance(value, (int, float))
+            and value < node["minimum"]
+        ):
             errors.append(f"{path}: expected minimum {node['minimum']}")
-        if "minLength" in node and isinstance(value, str) and len(value) < node["minLength"]:
+        if (
+            "minLength" in node
+            and isinstance(value, str)
+            and len(value) < node["minLength"]
+        ):
             errors.append(f"{path}: expected minLength {node['minLength']}")
-        if "minItems" in node and isinstance(value, list) and len(value) < node["minItems"]:
+        if (
+            "minItems" in node
+            and isinstance(value, list)
+            and len(value) < node["minItems"]
+        ):
             errors.append(f"{path}: expected minItems {node['minItems']}")
-        if "uniqueItems" in node and node["uniqueItems"] is True and isinstance(value, list):
-            normalized = [json.dumps(item, ensure_ascii=False, sort_keys=True) for item in value]
+        if (
+            "uniqueItems" in node
+            and node["uniqueItems"] is True
+            and isinstance(value, list)
+        ):
+            normalized = [
+                json.dumps(item, ensure_ascii=False, sort_keys=True) for item in value
+            ]
             if len(normalized) != len(set(normalized)):
                 errors.append(f"{path}: expected uniqueItems")
-        if "minProperties" in node and isinstance(value, dict) and len(value) < node["minProperties"]:
+        if (
+            "minProperties" in node
+            and isinstance(value, dict)
+            and len(value) < node["minProperties"]
+        ):
             errors.append(f"{path}: expected minProperties {node['minProperties']}")
-        if "pattern" in node and isinstance(value, str) and not re.fullmatch(str(node["pattern"]), value):
+        if (
+            "pattern" in node
+            and isinstance(value, str)
+            and not re.fullmatch(str(node["pattern"]), value)
+        ):
             errors.append(f"{path}: does not match pattern {node['pattern']!r}")
 
         if isinstance(value, dict):
@@ -148,7 +201,11 @@ class UpdateSchemaChecks:
             if isinstance(properties, dict):
                 for key, child_schema in properties.items():
                     if key in value and isinstance(child_schema, dict):
-                        errors.extend(self.validate(value[key], child_schema, root_schema, f"{path}.{key}"))
+                        errors.extend(
+                            self.validate(
+                                value[key], child_schema, root_schema, f"{path}.{key}"
+                            )
+                        )
             additional = node.get("additionalProperties", True)
             if additional is False and isinstance(properties, dict):
                 for key in value:
@@ -157,27 +214,43 @@ class UpdateSchemaChecks:
             elif isinstance(additional, dict) and isinstance(properties, dict):
                 for key, child_schema in value.items():
                     if key not in properties:
-                        errors.extend(self.validate(child_schema, additional, root_schema, f"{path}.{key}"))
+                        errors.extend(
+                            self.validate(
+                                child_schema, additional, root_schema, f"{path}.{key}"
+                            )
+                        )
 
         if isinstance(value, list):
             items_schema = node.get("items")
             if isinstance(items_schema, dict):
                 for index, item in enumerate(value):
-                    errors.extend(self.validate(item, items_schema, root_schema, f"{path}[{index}]"))
+                    errors.extend(
+                        self.validate(
+                            item, items_schema, root_schema, f"{path}[{index}]"
+                        )
+                    )
 
         return errors
 
-    def append(self, checks: list[Check], data: Any, schema_name: str, label: str) -> None:
+    def append(
+        self, checks: list[Check], data: Any, schema_name: str, label: str
+    ) -> None:
         schema_path = self.distribution_root / "schemas" / schema_name
         try:
             schema = json.loads(schema_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            checks.append(check("FAIL", f"{label} schema {schema_name} could not be loaded: {exc}"))
+            checks.append(
+                check(
+                    "FAIL", f"{label} schema {schema_name} could not be loaded: {exc}"
+                )
+            )
             return
         try:
             errors = self.validate(data, schema, schema, "$")
         except (KeyError, ValueError) as exc:
-            checks.append(check("FAIL", f"{label} schema {schema_name} is unsupported: {exc}"))
+            checks.append(
+                check("FAIL", f"{label} schema {schema_name} is unsupported: {exc}")
+            )
             return
         for message in errors:
             checks.append(check("FAIL", f"{label} schema validation failed: {message}"))

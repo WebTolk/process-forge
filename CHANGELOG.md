@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+## 1.3.0-alpha4 - 2026-10-23
+
+### Changed
+
+- Separate project initialization, context refresh/repair, context observation and
+  search from workplace documentation indexing. Resource mutations mark derived
+  state stale; indexing runs through an explicit manual command.
+- Route workplace manual indexing, existing scoped CLI refresh/rebuild/tick and
+  the cold future-scheduler job through one Core indexing component. Keep SQLite
+  FTS5 as the default backend behind a narrow adapter contract.
+- Record durable maintenance state and serialize writers with an OS-owned lock,
+  preserving explicit interruption recovery and current query/access filters.
+
+### Added
+
+- Add `knowledge-add-batch` with per-item transaction results and one final
+  indexing pass limited to successfully added resource IDs; retain unrelated
+  documents, read-only dry-run and explicit global reconciliation.
+- Add `search-index-maintain --workplace <workplace> --apply [--json]` for explicit
+  authorized workplace maintenance. Periodic execution belongs to the future PF
+  scheduler; additional database/vector adapters and RAG remain separate work.
+
+### Fixed
+
+- Open index readers without database creation or the default SQLite lock wait,
+  preserving live WAL reads and safe unavailable-state reporting.
+- Keep context/required-resource readiness independent from search availability;
+  redact unknown diagnostics and preserve selected-resource query boundaries.
+
+See the [alpha4 release notes](docs/releases/1.3.0-alpha4.md).
+
 ## 1.3.0-alpha3 - 2026-10-22
 
 ### Added
