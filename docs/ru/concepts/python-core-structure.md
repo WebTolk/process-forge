@@ -240,6 +240,11 @@ identity, честные partial/unknown причины, перенос и не�
 spec/schema, Runtime component и protocol описаны в
 [свойствах Core](core-properties.md). Идентичность метаданных не доказывает
 целостность payload или приёмку архива, установки и connected-host restart.
+Общий owner также проверяет переносимые записи процесса и сравнивает frozen
+loaded с актуальными installed метаданными. Runtime/Host state schema2 и
+provenance реального MCP discovery contract2 показывают эту идентичность без
+смены полномочий и входных схем инструментов; одинаковый release label
+сам по себе не доказывает совпадение сборок.
 
 `build_current_work_service(project_root, *, documents=None)` создаёт конкретный CurrentWorkService с читателями YAML и inventory из Core. RuntimeBootstrap, контекст и start вызывают этого владельца напрямую; LegacyWorkReadAdapter и WorkReadCorePort удалены. При сборке ввод-вывод не выполняется, общий кеш сервисов и DI-контейнер не вводятся. Оставшиеся обратные вызовы bootstrap/lifecycle требуют отдельных переносов.
 

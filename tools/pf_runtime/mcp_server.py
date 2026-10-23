@@ -129,6 +129,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
                 raise ActionToolError("registered_driver_manifest_unavailable")
             return str(path.resolve())
 
+        properties = runtime.properties
         dependencies = ActionToolDependencies(
             parser_factory=core.build_parser,
             native_command=core.main,
@@ -139,7 +140,8 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
             session_record=lambda: host.ledger_session(
                 supplied_session, workplace, core
             ),
-            version=runtime.properties.loaded.version,
+            version=properties.loaded.version,
+            identity=lambda: dict(properties.report()),
         )
         return ActionToolService(dependencies, bound_project, workplace, supplied_session).execute(name, arguments)
 

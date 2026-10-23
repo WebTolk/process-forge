@@ -136,11 +136,15 @@ def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = 
     import processforge_core.common.clock as _core_common_clock
     from processforge_core.composition import build_core_properties
 
+    properties = build_core_properties()
+    identity: dict[str, Any] = dict(properties.report())
+    identity["required_action"] = "restart" if identity["reload_required"] else ("unknown" if identity["reload_required"] is None else "none")
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "runtime_version": RUNTIME_VERSION,
         "protocol_version": RUNTIME_PROTOCOL_VERSION,
-        "processforge_core_version": build_core_properties().loaded.version,
+        "processforge_core_version": properties.loaded.version,
+        "core_identity": identity,
         "pid": pid if pid is not None else os.getpid(),
         "instance_id": instance_id,
         "started_at": _core_common_clock.now_utc(),
@@ -539,7 +543,7 @@ class RuntimeProcess:
             payload["health"] = "degraded"
         if current_scheduler_error:
             payload["last_scheduler_error"] = current_scheduler_error
-        return payload
+        return add_runtime_truth(payload, self.core, running=True)
 
     def active_worker_count(self, roots: list[Path]) -> int:
         count = 0
@@ -1046,7 +1050,19 @@ def add_runtime_truth(payload: dict[str, Any], core: Any, *, running: bool) -> d
 
     runtime_version = str(payload.get("runtime_version") or RUNTIME_VERSION)
     status = str(payload.get("status") or "")
-    payload["installed_pf"] = {"version": build_core_properties().installed().version}
+    stored_identity = payload.get("core_identity")
+    loaded = (
+        stored_identity.get("loaded") if isinstance(stored_identity, dict) else None
+    )
+    identity: dict[str, Any] = dict(build_core_properties().report(loaded=loaded))
+    identity["required_action"] = (
+        "restart"
+        if running and identity["reload_required"]
+        else ("unknown" if running and identity["reload_required"] is None else "none")
+    )
+    payload["schema_version"] = 2
+    payload["core_identity"] = identity
+    payload["installed_pf"] = {"version": identity["installed"]["version"]}
     payload["runtime"] = {"running": bool(running), "status": status, "health": str(payload.get("health") or status)}
     if runtime_version:
         instance_status = "current" if running else ("historical" if status not in {"", "not_running"} else "not_available")
@@ -1101,12 +1117,31 @@ def command_doctor(args: argparse.Namespace, core: Any) -> int:
     checks.append(core.check("PASS" if runtime_root(workplace_root).parent.is_dir() else "FAIL", "workplace runtime root exists"))
     checks.append(core.check("PASS" if token_path(workplace_root).is_file() else "WARN", "runtime auth token exists"))
     checks.append(core.check("PASS" if not active or state.get("protocol_version") == RUNTIME_PROTOCOL_VERSION else "FAIL", "runtime protocol version compatible"))
-    installed = build_core_properties().installed()
+    stored_identity = state.get("core_identity")
+    loaded = (
+        stored_identity.get("loaded") if isinstance(stored_identity, dict) else None
+    )
+    identity = build_core_properties().report(loaded=loaded)
+    installed_version = identity["installed"]["version"]
     core_version_compatible = not active or (
-        installed.version != "unknown"
-        and state.get("processforge_core_version") == installed.version
+        installed_version != "unknown"
+        and state.get("processforge_core_version") == installed_version
     )
     checks.append(core.check("PASS" if core_version_compatible else "FAIL", "runtime core version compatible"))
+    if not active:
+        checks.append(
+            core.check("PASS", "runtime core build check not required (not running)")
+        )
+    elif identity["reload_required"]:
+        checks.append(
+            core.check(
+                "FAIL", "runtime core build differs from installed; restart required"
+            )
+        )
+    elif identity["status"] == "current":
+        checks.append(core.check("PASS", "runtime core build current"))
+    else:
+        checks.append(core.check("WARN", "runtime core build unknown; restart to capture build identity"))
     checks.append(core.check("PASS" if active or not lock_path(workplace_root).exists() else "WARN", "singleton lock is not stale"))
     host_state = host.load_state(workplace_root)
     checks.append(core.check("PASS" if isinstance(host_state.get("projects"), list) else "FAIL", "project handle cache readable"))

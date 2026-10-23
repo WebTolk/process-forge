@@ -3,49 +3,11 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import json
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
-
-from processforge_core import composition
-from processforge_core.bootstrap import RuntimeBootstrap
-
-
-@pytest.fixture
-def adapters(tmp_path, monkeypatch, write_distribution):
-    """Bind the actual adapters to one fixture owner without starting infrastructure."""
-    root = tmp_path / "distribution"
-    properties = write_distribution(root)
-    factory = Mock(return_value=properties)
-    monkeypatch.setattr(composition, "build_core_properties", factory)
-    cli = importlib.import_module("processforge")
-    monkeypatch.setattr(cli, "CORE_PROPERTIES", properties)
-    from pf_runtime import host, mcp_server, monitor, service
-
-    workplace = tmp_path / "workplace"
-    workplace.mkdir()
-    project = tmp_path / "project"
-    (project / ".pf").mkdir(parents=True)
-    (project / ".pf/process-forge.yaml").write_text(
-        "project:\n  id: fixture\n", encoding="utf-8"
-    )
-    runtime = RuntimeBootstrap(root, cli, host, service)
-    return SimpleNamespace(
-        root=root,
-        properties=properties,
-        factory=factory,
-        cli=cli,
-        host=host,
-        mcp=mcp_server,
-        monitor=monitor,
-        service=service,
-        workplace=workplace,
-        project=project,
-        runtime=runtime,
-    )
 
 
 @pytest.mark.parametrize("change", ["update", "malformed", "missing"])
@@ -118,7 +80,8 @@ def test_runtime_host_and_console_preserve_loaded_identity(
     assert state["protocol_version"] == a.service.RUNTIME_PROTOCOL_VERSION
     assert state["runtime_version"] == "1.0.0-poc"
     assert state["protocol_version"] == "pf-runtime-poc-1"
-    assert state["schema_version"] == 1
+    assert state["schema_version"] == 2
+    assert state["core_identity"]["loaded"] == a.properties.loaded.record()
     assert state["runtime_version"] != state["processforge_core_version"]
     a.factory.reset_mock()
     host_state = a.host.load_state(a.workplace)
@@ -126,11 +89,14 @@ def test_runtime_host_and_console_preserve_loaded_identity(
         "updated_at",
         "workplace_root",
         "processforge_core_version",
+        "core_identity",
     }
     a.host.save_state(a.workplace, host_state, object())
     a.factory.assert_called_once_with()
     written = json.loads(a.host.state_path(a.workplace).read_bytes())
     assert written["processforge_core_version"] == a.properties.loaded.version
+    assert written["schema_version"] == 2
+    assert written["core_identity"]["loaded"] == a.properties.loaded.record()
     assert written["runtime_protocol_version"] == a.service.RUNTIME_PROTOCOL_VERSION
     assert written.keys() == original_keys
     from pf_runtime import console
@@ -171,6 +137,13 @@ def test_runtime_truth_observes_disk_without_rewriting_loaded_fields(
     a.factory.assert_called_once_with()
     assert payload.keys() == keys
     assert payload["processforge_core_version"] == loaded.version
+    assert payload["core_identity"]["loaded"] == loaded.record()
+    assert payload["core_identity"]["installed"] == a.properties.installed().record()
+    if change in {"update", "same-label-build"}:
+        assert payload["core_identity"]["status"] == "reload_required"
+        assert payload["core_identity"]["required_action"] == "restart"
+    else:
+        assert payload["core_identity"]["status"] == "unknown"
     assert payload["installed_pf"] == {"version": a.properties.installed().version}
     assert payload["runtime"] == {"running": True, "status": "ready", "health": "ready"}
     assert payload["last_runtime_instance"] == {
@@ -304,4 +277,4 @@ def test_unknown_loaded_identity_uses_existing_adapter_fields(
     assert catalogue["provenance"]["version"] == "unknown"
     for payload in (response, catalogue):
         assert "PRIVATE_CANARY" not in json.dumps(payload)
-        assert unknown.loaded.reason not in json.dumps(payload)
+        assert str(a.root) not in json.dumps(payload)

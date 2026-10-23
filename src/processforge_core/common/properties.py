@@ -12,7 +12,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, TypedDict
 
 from processforge_core.maintenance.update import (
     CORE_MANIFEST_NAME,
@@ -27,6 +27,29 @@ _VERSION = re.compile(
 )
 _COMMIT = re.compile(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})")
 _MANIFEST_LIMIT = 8 * 1024 * 1024
+_OWN_LOADED = object()
+
+
+class CoreIdentityRecord(TypedDict):
+    """Describe the portable version1 identity record."""
+
+    version: str
+    build_id: str
+    source_commit: str
+    source_kind: str
+    status: str
+    reason: str
+
+
+class CoreIdentityReport(TypedDict):
+    """Describe metadata comparison without implying payload integrity."""
+
+    schema_version: int
+    loaded: CoreIdentityRecord
+    installed: CoreIdentityRecord
+    status: str
+    reason: str
+    reload_required: bool | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +62,60 @@ class CoreIdentity:
     source_kind: str = "unknown"
     status: str = "unknown"
     reason: str = "metadata_unavailable"
+
+    def record(self) -> CoreIdentityRecord:
+        """Return a fresh portable record of this immutable value."""
+        return {
+            "version": self.version,
+            "build_id": self.build_id,
+            "source_commit": self.source_commit,
+            "source_kind": self.source_kind,
+            "status": self.status,
+            "reason": self.reason,
+        }
+
+    @classmethod
+    def from_record(cls, value: object) -> CoreIdentity:
+        """Validate an observed process record without trusting arbitrary text."""
+        if not isinstance(value, dict):
+            return cls(reason="loaded_identity_unavailable")
+        names = (
+            "version",
+            "build_id",
+            "source_commit",
+            "source_kind",
+            "status",
+            "reason",
+        )
+        record: dict[str, str] = {}
+        for name in names:
+            item = value.get(name)
+            if not isinstance(item, str) or len(item) > 128:
+                return cls(reason="loaded_identity_invalid")
+            record[name] = item
+        if (
+            (
+                record["version"] != "unknown"
+                and not _VERSION.fullmatch(record["version"])
+            )
+            or not re.fullmatch(
+                r"unknown|manifest:sha256:[a-f0-9]{64}|git:(?:[a-f0-9]{40}|[a-f0-9]{64})",
+                record["build_id"],
+            )
+            or (
+                record["source_commit"] != "unknown"
+                and not _COMMIT.fullmatch(record["source_commit"])
+            )
+            or record["source_kind"]
+            not in {"unknown", "manifest", "source_checkout", "unmanaged"}
+            or record["status"] not in {"ready", "partial", "unknown"}
+            or (
+                record["reason"]
+                and not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", record["reason"])
+            )
+        ):
+            return cls(reason="loaded_identity_invalid")
+        return cls(**record)
 
 
 class CoreIdentityReadPort(Protocol):
@@ -227,6 +304,39 @@ class CoreProperties:
     def installed(self) -> CoreIdentity:
         """Observe current disk metadata without changing the loaded identity."""
         return self._reader.read()
+
+    def report(self, *, loaded: object = _OWN_LOADED) -> CoreIdentityReport:
+        """Compare captured or explicitly observed loaded identity to live disk.
+
+        An absent remote record stays unknown; it is never replaced by this
+        observer's own loaded build. Equal labels alone do not prove equality.
+        """
+        observed = (
+            self._loaded if loaded is _OWN_LOADED else CoreIdentity.from_record(loaded)
+        )
+        installed = self.installed()
+        reload_required: bool | None = None
+        status = "unknown"
+        if observed.version == "unknown" or observed.status == "unknown":
+            reason = "loaded_identity_unavailable"
+        elif installed.version == "unknown" or installed.status == "unknown":
+            reason = "installed_identity_unavailable"
+        elif observed.version != installed.version:
+            status, reason, reload_required = "reload_required", "release_changed", True
+        elif "unknown" in {observed.build_id, installed.build_id}:
+            reason = "build_identity_unavailable"
+        elif observed.build_id != installed.build_id:
+            status, reason, reload_required = "reload_required", "build_changed", True
+        else:
+            status, reason, reload_required = "current", "", False
+        return {
+            "schema_version": 1,
+            "loaded": observed.record(),
+            "installed": installed.record(),
+            "status": status,
+            "reason": reason,
+            "reload_required": reload_required,
+        }
 
     @property
     def spec_version(self) -> str:

@@ -8,7 +8,7 @@ the wider OOP migration or add a stable public transport API.
 
 ## Ownership and composition
 
-The cohesive module contains four related types:
+The cohesive module contains four related owners/values and two typed JSON records:
 
 | Type | Responsibility |
 | --- | --- |
@@ -16,6 +16,7 @@ The cohesive module contains four related types:
 | `CoreIdentityReadPort` | Narrow structural dependency: `read() -> CoreIdentity`. |
 | `DistributionMetadataReader(distribution_root)` | Bounded metadata reads from one explicitly selected distribution. |
 | `CoreProperties(reader)` | Capture one loaded value and expose separate live disk observations. |
+| `CoreIdentityRecord` / `CoreIdentityReport` | Typed shapes of portable identity and comparison output. |
 
 Normal application composition uses one shared factory:
 
@@ -102,8 +103,34 @@ reason. `partial` retains known fields and explains unavailable provenance.
 | Manifest lacks a usable source revision | `source_revision_unavailable` (`partial`) |
 | No manifest and no usable Git revision | `build_metadata_unavailable` (`partial`) |
 
-The value includes neither private roots nor exception text. Reasons are
-available through the object contract; existing transport schemas gain no keys.
+The value includes neither private roots nor exception text. `record()` returns
+fresh JSON containers; `from_record()` validates observed process records using
+bounded syntax and fixed reasons. An absent or invalid remote record stays
+unknown instead of borrowing the observing CLI's loaded identity.
+
+## Build-aware service diagnosis
+
+`properties.report()` returns an identity record with `schema_version=1`, frozen
+`loaded`, live `installed`, `status`, `reason` and `reload_required`. Different
+known release labels or build IDs require reload. Equal labels without build
+evidence remain `unknown`; equal known builds are `current`. This compares
+metadata and does not replace payload hash verification.
+
+Runtime state/status and Host state use schema2, preserving existing fields and
+adding `core_identity`. Runtime status refreshes the installed observation while
+retaining the reporting Runtime's loaded record, including when a newer CLI
+inspects an older process. Schema1 history lacks build evidence and reports
+unknown. A running mismatch names `required_action="restart"`; incomplete
+evidence uses `unknown`. Host state identifies its last writer and is not proof
+of the actually connected MCP process.
+
+Actual MCP `pf.actions.list` / `pf.actions.describe` provenance uses
+`contract_version=2`: existing `installed_build` and `connected_host_build`
+strings now identify the disk and serving process, and additive `core_identity`
+contains the shared schema1 report. A mismatch names
+`required_action="reconnect"`. MCP initialize, tool input schemas and existing
+action descriptors remain unchanged. CLI catalogue provenance retains its
+existing contract; CLI `runtime status --json` exposes the Runtime comparison.
 
 ## Independent versions and adapters
 
@@ -118,9 +145,11 @@ available through the object contract; existing transport schemas gain no keys.
 | Runtime `instance_version` / component version | Independent Runtime component version, currently `1.0.0-poc`. |
 | Runtime and MCP protocol versions | Their separate compatibility contracts (`pf-runtime-poc-1` and `2024-11-05`). |
 
-The current Runtime doctor compares its recorded Core version with the current
-installed version. This version comparison cannot detect a changed build with an
-unchanged label; the object-level build IDs remain separate from existing payloads.
+Runtime doctor retains its protocol/release checks and adds a build check. A
+same-label build replacement fails with an explicit restart message; absent
+loaded build evidence warns rather than claiming compatibility. It never
+restarts a process. Reconnect the actual host and inspect its discovery provenance
+to verify that MCP loaded the new build; a separate stdio probe is insufficient.
 
 Source/import checks, a package-shaped relocation fixture, a clean committed
 release archive, a device installation and a real connected host are separate

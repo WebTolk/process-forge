@@ -8,7 +8,7 @@
 
 ## Владение и композиция
 
-Один связный модуль содержит четыре типа:
+Один связный модуль содержит четыре связанных owner/value и два typed JSON record:
 
 | Тип | Обязанность |
 | --- | --- |
@@ -16,6 +16,7 @@
 | `CoreIdentityReadPort` | Узкая структурная зависимость: `read() -> CoreIdentity`. |
 | `DistributionMetadataReader(distribution_root)` | Ограниченное чтение метаданных одной явно выбранной поставки. |
 | `CoreProperties(reader)` | Захват загруженного значения и отдельные актуальные наблюдения диска. |
+| `CoreIdentityRecord` / `CoreIdentityReport` | Типизированные формы переносимой идентичности и результата сравнения. |
 
 Штатная композиция приложения использует общую фабрику:
 
@@ -102,8 +103,35 @@ release labels могут иметь разные build IDs. Ни этот хе�
 | В manifest нет пригодной source revision | `source_revision_unavailable` (`partial`) |
 | Нет manifest и пригодной Git revision | `build_metadata_unavailable` (`partial`) |
 
-Value не содержит private roots и текста исключений. Причины доступны через
-объектный контракт; ключи существующих transport schemas не добавляются.
+Value не содержит private roots и текста исключений. `record()` возвращает
+новые JSON-контейнеры; `from_record()` проверяет наблюдаемую запись процесса
+по ограниченному синтаксису и выдаёт фиксированную причину. Отсутствующая или
+повреждённая запись удалённого процесса остаётся unknown: идентичность
+проверяющей CLI не подставляется вместо неё.
+
+## Диагностика смены сборки
+
+`properties.report()` возвращает `schema_version=1`, frozen `loaded`, актуальный
+`installed`, `status`, `reason` и `reload_required`. Различие известных release
+labels или build IDs требует reload. Совпадение labels без сведений о build
+остаётся `unknown`; одинаковые известные сборки дают `current`. Это сравнение
+метаданных, которое не заменяет проверку хешей содержимого поставки.
+
+Runtime state/status и Host state используют schema2: прежние поля сохранены,
+добавлено `core_identity`. Runtime status обновляет наблюдение установленного
+Core и сохраняет загруженную идентичность именно сообщающего Runtime, в том
+числе при проверке старого процесса новой CLI. История schema1 не содержит
+доказательства build и даёт unknown. Расхождение работающего Runtime даёт
+`required_action="restart"`; неполные сведения — `unknown`. Host state относится
+к последнему записавшему процессу и не доказывает идентичность подключённого MCP.
+
+Provenance реального MCP `pf.actions.list` / `pf.actions.describe` имеет
+`contract_version=2`: существующие строки `installed_build` и
+`connected_host_build` отражают диск и обслуживающий процесс, а дополнительный
+`core_identity` содержит общий report schema1. При расхождении требуется
+`required_action="reconnect"`. MCP initialize, входные схемы инструментов и
+прежние action descriptors сохранены. Provenance каталога CLI сохраняет прежний
+контракт; CLI `runtime status --json` показывает сравнение сборок Runtime.
 
 ## Независимые версии и адаптеры
 
@@ -118,9 +146,12 @@ Value не содержит private roots и текста исключений. 
 | Runtime `instance_version` / component version | Самостоятельная версия компонента Runtime, сейчас `1.0.0-poc`. |
 | Версии протоколов Runtime и MCP | Отдельные compatibility contracts (`pf-runtime-poc-1` и `2024-11-05`). |
 
-Текущий Runtime doctor сравнивает записанную версию Core с актуальной версией
-установки. Такое сравнение версий не обнаруживает смену build при прежнем label;
-build IDs объектного контракта остаются отдельными от существующих payloads.
+Runtime doctor сохраняет проверки протокола/release и добавляет проверку build.
+Замена сборки с прежним label даёт FAIL с явным требованием restart; отсутствие
+сведений о загруженной сборке даёт WARN, а не ложную совместимость. Doctor
+не перезапускает процесс. После переподключения реального MCP его discovery
+provenance должна подтвердить новую сборку; отдельный stdio-процесс этого
+не доказывает.
 
 Проверки исходников/imports, макет поставки с переносом, чистый release archive
 из commit, установка на устройство и реальный connected host — отдельные

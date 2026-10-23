@@ -235,6 +235,10 @@ identity, honest partial/unknown reasons, relocation and independent spec/schema
 Runtime component and protocol versions are described in
 [Core properties](core-properties.md). Metadata identity does not verify payload
 integrity or qualify an archive, installation or connected-host restart.
+The shared owner also validates portable process records and compares frozen
+loaded versus live installed metadata. Runtime/Host state schema2 and actual MCP
+discovery provenance contract2 expose this identity without changing authority
+or tool input schemas; equal release labels alone do not prove equal builds.
 
 `build_current_work_service(project_root, *, documents=None)` constructs the concrete CurrentWorkService with Core YAML and inventory readers. RuntimeBootstrap, context and start consumers call this owner directly; LegacyWorkReadAdapter and WorkReadCorePort are removed. Construction performs no I/O and introduces no global service cache or DI container. Remaining bootstrap/lifecycle callback edges still require separate migration.
 

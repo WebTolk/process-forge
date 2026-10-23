@@ -93,6 +93,7 @@ class ActionToolDependencies:
     work_state: Callable[..., dict[str, Any]]
     session_record: Callable[[], dict[str, Any]]
     version: str
+    identity: Callable[[], dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True)
@@ -192,8 +193,27 @@ class ActionToolService:
             state = self._work(arguments, execution=False) if all(selectors) else None
             from pf_runtime.action_catalog import catalog_payload
 
-            return catalog_payload(self._dependencies.parser_factory, operation=name.rsplit(".", 1)[1], version=self._dependencies.version,
+            catalogue_payload = catalog_payload(self._dependencies.parser_factory, operation=name.rsplit(".", 1)[1], version=self._dependencies.version,
                                    **{key: arguments[key] for key in ("action_id", "query", "surface", "limit", "offset") if key in arguments}, work_state=state)
+            if (
+                self._dependencies.identity is not None
+                and "provenance" in catalogue_payload
+            ):
+                identity = deepcopy(self._dependencies.identity())
+                identity["required_action"] = (
+                    "reconnect"
+                    if identity["reload_required"]
+                    else ("unknown" if identity["reload_required"] is None else "none")
+                )
+                catalogue_payload["provenance"].update(
+                    {
+                        "contract_version": 2,
+                        "installed_build": identity["installed"]["build_id"],
+                        "connected_host_build": identity["loaded"]["build_id"],
+                        "core_identity": identity,
+                    }
+                )
+            return catalogue_payload
         if name.startswith("pf.runtime_driver."):
             result, rows = self._drivers()
             if result.exit_code:

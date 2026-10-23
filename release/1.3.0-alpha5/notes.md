@@ -15,6 +15,12 @@ Published CLI/MCP parameters and response fields are preserved. The Core owner
 supports constructor injection and library/file-only use without launching a
 transport or loading the CLI facade.
 
+Runtime/Host state schema2 adds portable `core_identity`; MCP action discovery
+provenance contract2 reports loaded and installed builds and names reconnect
+when they differ. Runtime doctor now diagnoses a changed build even when its
+release label is unchanged. Older state without build evidence remains unknown.
+MCP initialize, protocol and tool input schemas retain their existing contracts.
+
 This release includes the earlier alpha changes, including explicit shared
 search-index maintenance and verified SQLite maintenance/recovery. It remains
 an opt-in prerelease; stable 1.2.0 remains the stable release. Installation uses

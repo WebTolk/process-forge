@@ -433,7 +433,10 @@ def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
 
     state["updated_at"] = _core_common_clock.now_utc()
     state["workplace_root"] = str(workplace_root)
-    state["processforge_core_version"] = build_core_properties().loaded.version
+    properties = build_core_properties()
+    state["schema_version"] = 2
+    state["processforge_core_version"] = properties.loaded.version
+    state["core_identity"] = properties.report()
     write_json(state_path(workplace_root), state)
 
 
