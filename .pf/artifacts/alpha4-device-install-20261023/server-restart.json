@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-23T16:27:08.398375+00:00",
+  "status": "ready",
+  "guarded_attempts_refused": 3,
+  "force": true,
+  "force_count": 1,
+  "explicit_operator_approval": true,
+  "owner_changed": true,
+  "runtime": {
+    "health": "ready",
+    "instance_version": "1.0.0-poc",
+    "lifecycle": "ready",
+    "owner_alive": true,
+    "readiness": "ready"
+  },
+  "state_freshness": {
+    "age_seconds": 0.3,
+    "status": "fresh"
+  },
+  "issues": [],
+  "version_boundary": "Fresh App Server started after alpha4 apply; existing MCP stdio host is a separate process."
+}

@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-23T16:36:43.735373+00:00",
+  "status": "pass",
+  "managed_hashes": 1497,
+  "workplace_configuration_unchanged": true,
+  "source": {
+    "foreign_bytes_preserved": true,
+    "prior_alpha3_assets_preserved": true,
+    "stable_feed_preserved": true
+  },
+  "archive": "Qualified alpha4 ZIP and dev alias remain byte-identical; public release/tag/feed unchanged."
+}

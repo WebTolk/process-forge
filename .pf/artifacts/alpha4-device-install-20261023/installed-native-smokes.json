@@ -1,0 +1,150 @@
+{
+  "status": "pass",
+  "scope": "Exact installed managed payload copy, isolated fixtures including real stdio MCP; actual existing MCP host remains separate.",
+  "checks": [
+    {
+      "at": "2026-10-23T16:22:01.840382+00:00",
+      "label": "smoke_project_init_local_search_mcp",
+      "exit_code": 0,
+      "elapsed_seconds": 45.357,
+      "stdout_sha256": "c0eea7012679a29b6e5a506cf38725d843a8f4d517ca0fcbf8e30f3aab1b7e39",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:04.774324+00:00",
+      "label": "smoke_resource_search_snapshot_composition",
+      "exit_code": 0,
+      "elapsed_seconds": 2.932,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "c3cc4982839491a70d1b205f8d5826a02e1918ae1f6af0fca8d96fce6fbfa4c4"
+    },
+    {
+      "at": "2026-10-23T16:22:07.630298+00:00",
+      "label": "smoke_project_resource_narrowing_search",
+      "exit_code": 0,
+      "elapsed_seconds": 2.848,
+      "stdout_sha256": "c4e648191b46ed508a67044055959fab2926dd1ace3c12bd10a4b24fd301b008",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:12.079501+00:00",
+      "label": "smoke_project_context_snapshot_lock_model",
+      "exit_code": 0,
+      "elapsed_seconds": 4.444,
+      "stdout_sha256": "65934c4bff099045f10a21ae2913312227e994cf78b9f9d9ef589a417e40f723",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:14.910802+00:00",
+      "label": "smoke_search_update_operational_hardening",
+      "exit_code": 0,
+      "elapsed_seconds": 2.825,
+      "stdout_sha256": "165687ef5bc99e13b95de5b35dba9aa541b0640c325f7101e2c1c6a90bf99f7c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:17.448240+00:00",
+      "label": "smoke_workplace_search_index",
+      "exit_code": 0,
+      "elapsed_seconds": 2.534,
+      "stdout_sha256": "3ae0500fb6de6351cbe36cf7b27b467c6457de406468b73b786fd852305cc80a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:17.899539+00:00",
+      "label": "smoke_resource_indexing_policy_acceptance",
+      "exit_code": 0,
+      "elapsed_seconds": 0.436,
+      "stdout_sha256": "14a8700f4364775063584b7cb96d6507884c4000f54681475ffc3b6dbbb06b23",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:18.389705+00:00",
+      "label": "smoke_search_source_integrity",
+      "exit_code": 0,
+      "elapsed_seconds": 0.487,
+      "stdout_sha256": "596e45584825a3602144197390a811bbb9ca576784ce15e88fe29751a1de0ee6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:19.052231+00:00",
+      "label": "smoke_search_multiple_roots",
+      "exit_code": 0,
+      "elapsed_seconds": 0.658,
+      "stdout_sha256": "c79f9ec1ca6e26c72a4635394002da14540e99c70c16e36837bd73df97b43d47",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:19.370639+00:00",
+      "label": "smoke_search_file_root_containment",
+      "exit_code": 0,
+      "elapsed_seconds": 0.314,
+      "stdout_sha256": "ba819c35f510efe584b0bfbbc2068d804274f1eb9e260a0c2634ef7f8d44994b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:22:52.595207+00:00",
+      "label": "smoke_context_freshness_vs_execution_readiness",
+      "exit_code": 0,
+      "elapsed_seconds": 33.222,
+      "stdout_sha256": "dbc76ee1208f686f827b01ae10bc50c1099203f73003443db24254e7239a29e2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:23:19.077897+00:00",
+      "label": "smoke_garage_no_hooks_sessionless",
+      "exit_code": 0,
+      "elapsed_seconds": 26.474,
+      "stdout_sha256": "f3806e1b3329ec150421abdbf974c181d3c63bb510169976d2f48e0be5e86013",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:23:41.035695+00:00",
+      "label": "smoke_garage_session_enhanced",
+      "exit_code": 0,
+      "elapsed_seconds": 21.956,
+      "stdout_sha256": "e5c0c05389508a48b4dfc62dfea77199274d054d65d28e5e75e21b15d1fe118a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:24:34.615379+00:00",
+      "label": "smoke_garage_cross_project_security",
+      "exit_code": 0,
+      "elapsed_seconds": 53.577,
+      "stdout_sha256": "26290d83b4fc2d80e0ef1b4adc061b12c9a460fda80768e1d472cddaa46760a5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:24:57.420565+00:00",
+      "label": "smoke_user_like_garage_path",
+      "exit_code": 0,
+      "elapsed_seconds": 22.803,
+      "stdout_sha256": "a1d42a0bf9360238bc606aa24ddef640bbf7c96a6b071cb7e9e55de3a1f254d7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:25:00.759175+00:00",
+      "label": "smoke_hook_sqlite_migration",
+      "exit_code": 0,
+      "elapsed_seconds": 3.333,
+      "stdout_sha256": "5d8a3d482c6342bc0c32edbafaad61f06d13706147474117ec29237bba28ce4b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:25:23.030889+00:00",
+      "label": "smoke_runtime_monitor",
+      "exit_code": 0,
+      "elapsed_seconds": 22.266,
+      "stdout_sha256": "2022bd0b872ebc9a80de744e1b890a4b735fb0da0437b756f72efc87df72a7ec",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "at": "2026-10-23T16:25:23.844107+00:00",
+      "label": "smoke_evidence_validation_service",
+      "exit_code": 0,
+      "elapsed_seconds": 0.81,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "cdef40d7db0ab7ce5f893605ea9db1344cbb13b97a80f8ef045a25e9a70a3f54"
+    }
+  ]
+}

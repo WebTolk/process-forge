@@ -1,0 +1,27 @@
+{
+  "context": {
+    "policy_action": "continue",
+    "recommended_action": "continue",
+    "snapshot_id": "ctx-20261021-162229-c46ea2",
+    "status": "fresh"
+  },
+  "search": {
+    "authorized_coverage": {
+      "authorized_resource_count": 7,
+      "document_count": 78,
+      "indexed_resource_count": 5,
+      "missing_resource_ids": [
+        "project.process-forge:project-profile",
+        "project.process-forge:project-artifacts"
+      ],
+      "status": "partial"
+    },
+    "document_count": 163,
+    "reason": "fresh_index",
+    "remediation": "none",
+    "resource_count": 90,
+    "scope": "project_context",
+    "status": "ready"
+  },
+  "boundary": "Observed from actual connected host, whose long-lived process still predates the alpha4 update. Freshness is valid; new alpha4 code loading is unqualified until reconnect."
+}

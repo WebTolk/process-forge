@@ -1,0 +1,14 @@
+{
+  "counts": {
+    "added": 21,
+    "changed": 27,
+    "locally_modified": 0,
+    "missing_owned": 0,
+    "removed": 0,
+    "restored": 0,
+    "unchanged": 1449
+  },
+  "schema_version": 1,
+  "status": "applied",
+  "update_id": "core-update-20261023T161353Z"
+}

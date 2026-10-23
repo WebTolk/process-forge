@@ -1,0 +1,29 @@
+{
+  "files": [
+    ".pf/artifacts/alpha4-device-install-20261023/acceptance-provenance.json",
+    ".pf/artifacts/alpha4-device-install-20261023/apply.json",
+    ".pf/artifacts/alpha4-device-install-20261023/backup-verification.json",
+    ".pf/artifacts/alpha4-device-install-20261023/baseline.json",
+    ".pf/artifacts/alpha4-device-install-20261023/batch-cli-acceptance-installed-r1.json",
+    ".pf/artifacts/alpha4-device-install-20261023/code-quality-report.json",
+    ".pf/artifacts/alpha4-device-install-20261023/connected-mcp-before-reconnect.json",
+    ".pf/artifacts/alpha4-device-install-20261023/continuation.json",
+    ".pf/artifacts/alpha4-device-install-20261023/dev-package.json",
+    ".pf/artifacts/alpha4-device-install-20261023/final-doctors.json",
+    ".pf/artifacts/alpha4-device-install-20261023/final-preservation.json",
+    ".pf/artifacts/alpha4-device-install-20261023/forced-restart-authorization.json",
+    ".pf/artifacts/alpha4-device-install-20261023/implementation-summary.json",
+    ".pf/artifacts/alpha4-device-install-20261023/installed-native-smokes.json",
+    ".pf/artifacts/alpha4-device-install-20261023/installed-pytest.json",
+    ".pf/artifacts/alpha4-device-install-20261023/installed-verification.json",
+    ".pf/artifacts/alpha4-device-install-20261023/live-installed-checks.json",
+    ".pf/artifacts/alpha4-device-install-20261023/mcp-reconnect-handoff.md",
+    ".pf/artifacts/alpha4-device-install-20261023/plan.md",
+    ".pf/artifacts/alpha4-device-install-20261023/report.md",
+    ".pf/artifacts/alpha4-device-install-20261023/server-restart.json",
+    ".pf/artifacts/alpha4-device-install-20261023/test-report.json",
+    ".pf/artifacts/alpha4-device-install-20261023/update-plan.json",
+    ".pf/logs/alpha4-device-install-20261023-primary.md"
+  ],
+  "scope": "Install/test/restart receipts and exact pending MCP continuation; native raw records remain private. This checkpoint is not a completed Work or connected-host acceptance."
+}

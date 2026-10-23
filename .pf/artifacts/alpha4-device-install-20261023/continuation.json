@@ -1,0 +1,24 @@
+{
+  "action": "created",
+  "continuation_id": "alpha4-device-mcp-reconnect-20261023",
+  "kind": "pf.continuation.create",
+  "schema_version": 2,
+  "stage": {
+    "id": "implementation",
+    "status": "in_progress",
+    "title": "Implementation"
+  },
+  "status": "ready",
+  "waiting": {
+    "handoff_ready": true,
+    "missing_expected_artifacts": [],
+    "status": "ready"
+  },
+  "work": {
+    "assignment_id": "alpha4-dev-device-delivery-20261023-prepare-a-distinct-alpha4-dev-packag",
+    "capsule_checksum": "sha256:832ba15e62fd4d52d29f36cb8c36e6c7be514f16144631b1bd3038da91701667",
+    "context_id": "alpha4-dev-device-delivery-20261023-prepare-a-distinct-alpha4-dev-packag-capsule",
+    "project_id": "process-forge",
+    "run_id": "garage-alpha4-dev-device-delivery-20261023-prepare-a-distinct-alpha4-dev"
+  }
+}

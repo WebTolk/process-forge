@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-23T16:31:35.369304+00:00",
+  "context": {
+    "status": "fresh",
+    "policy_action": "continue",
+    "snapshot_id": "ctx-20261021-162229-c46ea2",
+    "snapshot_sha256": "sha256:c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+    "execution_readiness": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "health": {
+      "status": "warn"
+    }
+  },
+  "work_search": {
+    "kind": "pf.work.search",
+    "scope": "work_context",
+    "status": "ready",
+    "total": 79
+  },
+  "index_files_unchanged_by_context_and_work_search": true,
+  "index_files_observed": 2,
+  "actual_connected_mcp_host": "Separate older long-lived process; no reload claim."
+}

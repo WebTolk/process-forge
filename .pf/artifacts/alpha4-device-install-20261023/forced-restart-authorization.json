@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-23T16:27:01.020186+00:00",
+  "operator_instruction": "Разрешить один restart --force (рекомендуется)",
+  "limit": "One native restart --force; no standing permission and no MCP/host restart.",
+  "previous_guarded_refusals": 3,
+  "native_error": "runtime_busy_or_activity_unknown",
+  "fresh_expanded_read_only_worker_audit": {
+    "source": "worker_status_records",
+    "coverage": "complete",
+    "counts": {
+      "running": 0
+    },
+    "observed": {
+      "running": 0
+    },
+    "issues": []
+  },
+  "registered_projects": 2,
+  "registry_coverage_complete": true
+}

@@ -1,0 +1,12 @@
+{
+  "version": "1.3.0-alpha4",
+  "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "archive": "dist/processforge-1.3.0-alpha4-dev-20261023.zip",
+  "archive_sha256": "52474515eb6cbf59c7a307481a16ab717391c1616a6c924fd6d9156e8ee1aaf2",
+  "archive_bytes": 2923007,
+  "manifest": "dist/processforge-1.3.0-alpha4-dev-20261023.manifest.json",
+  "manifest_sha256": "34da2f777f2eb8ff045c0f9b9b833d765e3657594aa91c4733116198cc476dd8",
+  "managed_files": 1497,
+  "entries_verified": 1498,
+  "payload": "Byte-identical qualified published alpha4 ZIP; derived dev sidecar changes archive.filename only. Public release assets/tag/feeds unchanged."
+}

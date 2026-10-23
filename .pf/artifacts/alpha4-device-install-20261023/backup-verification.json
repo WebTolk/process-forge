@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-23T16:17:05.403623+00:00",
+  "status": "pass",
+  "update_id": "core-update-20261023T161353Z",
+  "changed_preimages_verified": 27,
+  "old_manifest_semantically_verified": true,
+  "new_manifest_semantically_verified": true,
+  "workplace_doctor": {
+    "status": "pass",
+    "pass_lines": 197,
+    "warning_lines": 0
+  }
+}

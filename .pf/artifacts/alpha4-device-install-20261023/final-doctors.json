@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-23T16:36:11.587899+00:00",
+  "status": "pass",
+  "scope": "Only this exact active device Work and immutable capsule",
+  "checks": [
+    {
+      "label": "run-doctor",
+      "exit_code": 0,
+      "pass_lines": 18,
+      "warn_lines": 0,
+      "stdout_sha256": "dcf248086d89f5a5f602346f48041cb877b37162256b8aaac047d8e8cc85e091",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "capsule-doctor",
+      "exit_code": 0,
+      "pass_lines": 12,
+      "warn_lines": 0,
+      "stdout_sha256": "3efc4b4d2b0938a5695e00c96ceac107a91640c0f06491fa5f085dd769dda7e1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

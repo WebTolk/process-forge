@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-23T16:39:44.208243+00:00",
+  "status": "pass-installed-and-fixtures",
+  "pytest": {
+    "at": "2026-10-23T16:26:36.237164+00:00",
+    "label": "pytest-all",
+    "exit_code": 0,
+    "elapsed_seconds": 319.762,
+    "stdout_sha256": "524dcf46904bdfe42bbaa4f49ee7645d8a968c92bceb94d21a2c0d98d6a8eddb",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scope": "All existing tests from qualified source against the exact installed managed payload copy; no Git repository copied.",
+    "summary": "732 passed, 7 skipped, 246 subtests passed in 315.26s (0:05:15)",
+    "sqlite_resource_warning_count": 0
+  },
+  "native_smoke_checks": 18,
+  "all_native_exits_zero": true,
+  "physical_installed_cli_checks": 7,
+  "all_cli_exits_expected": true,
+  "workplace_doctor": {
+    "status": "pass",
+    "pass_lines": 197,
+    "warning_lines": 0
+  },
+  "resource_warning_records_by_native_check": {},
+  "actual_connected_mcp": "Pending operator reconnect; fresh fixture stdio is not that acceptance."
+}

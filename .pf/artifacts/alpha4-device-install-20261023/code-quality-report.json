@@ -1,0 +1,17 @@
+{
+  "status": "pass-for-unchanged-installed-payload",
+  "product_python_changes_in_this_work": false,
+  "payload_hashes_verified": 1497,
+  "new_installed_tests": "732 passed, 7 skipped, 246 subtests passed in 315.26s (0:05:15)",
+  "registered_test_launcher": "python <shared-python-qa>/qa.py --project-root <installed-payload-copy> test -- tests -q",
+  "local_contract": "python/toolchain.json and project python-quality-context.md read; existing registered interpreter and tools used; no dependencies installed into Core.",
+  "reused_immutable_source_qa": "../context-index-separation-alpha4-20261023/primary/qa-receipts-r6.json",
+  "source_qualification": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "reused_checks": [
+    "Ruff lint and format: 34 Python files and four actual Main functions",
+    "strict mypy: 14 production modules",
+    "Bandit: 10 modules, no findings"
+  ],
+  "applicability": "No production source edits or dependency/config changes. Source QA belongs to the exact qualified installed payload; all installed function tests reran. Private one-off delivery helpers are not product code.",
+  "remaining": "Actual connected-host MCP provenance and operator reconnect are separate from code quality."
+}

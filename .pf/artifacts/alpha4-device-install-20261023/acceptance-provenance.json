@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-23T16:20:07.846135+00:00",
+  "scope": "Read-only copy of every installed managed payload byte plus existing test harness from qualified source commit; physical installed CLI is separately exercised by batch CLI probes.",
+  "installed_managed_files_copied_and_verified": 1497,
+  "test_source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "test_harness_sha256": "fa6c58f5a1ef689fbf18b46e9dac081d335986eeb3bfbaa84afcd65deee2c0e3",
+  "batch_harness_original_sha256": "56a6364989ffe92238dddc955686f10f40033ea23f5fd486db2418f1320e0d4f",
+  "batch_harness_changes": "Output/scratch roots and physical installed Core selection only; all seven CLI calls and original assertions preserved.",
+  "new_product_code": false
+}
