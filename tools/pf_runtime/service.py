@@ -576,6 +576,94 @@ class RuntimeProcess:
         )
         return workers["counts"]["running"]
 
+    def request_shutdown(
+        self, *, guarded: bool, expected_instance_id: str | None
+    ) -> str | None:
+        """Publish stopping under the gate exposed to capable start adapters.
+
+        No interprocess gate is acquired under a Runtime/host memory lock.
+        One absolute 500 ms budget covers routing, project gates and SQL reads.
+        """
+        from processforge_core.executions.model import ExecutionError
+        from processforge_core.project.metadata import ProjectMetadataReader
+        from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+        if guarded and expected_instance_id != self.instance_id:
+            return "owner_changed"
+        with self.state_lock:
+            if guarded and (
+                self.active_requests or self.scheduler_active or self.shutdown_check
+            ):
+                return "runtime_busy_or_activity_unknown"
+            self.shutdown_check = True
+        deadline = time.monotonic() + 0.5
+        budget = metrics_core().Budget(seconds=0.5)
+        budget.deadline = deadline
+        admission = ExecutionAdmission()
+        try:
+            with admission.shutdown(
+                self.workplace_root,
+                expected_instance_id=self.instance_id,
+                deadline=deadline,
+            ):
+                # The durable singleton can have changed during admission wait.
+                lock = budget.read(
+                    lock_path(self.workplace_root), self.workplace_root, maximum=65536
+                )
+                if (
+                    lock.get("instance_id") != self.instance_id
+                    or lock.get("pid") != os.getpid()
+                ):
+                    return "owner_changed"
+                if guarded:
+                    roots, _, complete = metrics_core().registered_projects(
+                        self.workplace_root, budget=budget
+                    )
+                    if not complete:
+                        return "runtime_busy_or_activity_unknown"
+                    keyed = []
+                    for root in roots:
+                        owner = ProjectMetadataReader(root).manifest().get("project")
+                        project_id = (
+                            owner.get("id") if isinstance(owner, dict) else None
+                        )
+                        if not isinstance(project_id, str) or not project_id.strip():
+                            return "runtime_busy_or_activity_unknown"
+                        keyed.append((project_id, str(root), root))
+                    keyed.sort()
+                    with contextlib.ExitStack() as gates:
+                        for _, _, root in keyed:
+                            gates.enter_context(
+                                admission.project(root, deadline=deadline)
+                            )
+                        workers = metrics_core().observe(
+                            "workers",
+                            self.workplace_root,
+                            roots,
+                            self.core,
+                            now=time.time(),
+                            coverage=complete,
+                            budget=budget,
+                        )
+                        if workers["counts"]["running"] != 0:
+                            return "runtime_busy_or_activity_unknown"
+                        budget.check()
+                        with self.state_lock:
+                            self.state["status"] = "stopping"
+                            self.state["health"] = "stopping"
+                        self.save()
+                else:
+                    with self.state_lock:
+                        self.state["status"] = "stopping"
+                        self.state["health"] = "stopping"
+                    self.save()
+            return None
+        except (ExecutionError, OSError, ValueError, TimeoutError, SystemExit):
+            return "runtime_busy_or_activity_unknown"
+        finally:
+            with self.state_lock:
+                self.shutdown_check = False
+
     def last_event(self, roots: list[Path]) -> dict[str, Any] | None:
         latest: dict[str, Any] | None = None
         for project_root in roots:
@@ -834,7 +922,9 @@ class RuntimeProcess:
                         handle = host.route_project(str(project_ref), runtime.workplace_root, runtime.core)
                         registration = {"event_type": "agent.session.started", "project_root": str(project_ref), "session_id": session, "agent_id": agent, "source": {"adapter": "runtime-session-register", "session_id": session, "agent": agent}}
                         host.ingest_event(registration, runtime.workplace_root, runtime.core)
-                        with host.state_lock():
+                        with host.registration_admission(
+                            runtime.workplace_root, [Path(handle["project_root"])],
+                        ), host.state_lock():
                             state = host.load_state(runtime.workplace_root)
                             host.remember_project(state, handle)
                             host.remember_session(state, session, handle, agent, runtime.core)
@@ -855,26 +945,13 @@ class RuntimeProcess:
                         self.send_json(200 if status == 0 else 500, result)
                     elif self.path == "/shutdown":
                         guarded = payload.get("require_idle") is True
-                        if guarded and payload.get("expected_instance_id") != runtime.instance_id:
-                            self.send_json(409, {"error": "owner_changed"})
+                        error = runtime.request_shutdown(
+                            guarded=guarded,
+                            expected_instance_id=payload.get("expected_instance_id"),
+                        )
+                        if error is not None:
+                            self.send_json(409, {"error": error})
                             return
-                        with runtime.state_lock:
-                            if guarded and (runtime.active_requests or runtime.scheduler_active or runtime.shutdown_check):
-                                self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
-                                return
-                            runtime.shutdown_check = True
-                        try:
-                            workers = metrics_core().shutdown_workers(runtime.workplace_root, runtime.core) if guarded else None
-                            with runtime.state_lock:
-                                if guarded and workers["counts"]["running"] != 0:
-                                    self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
-                                    return
-                                runtime.state["status"] = "stopping"
-                                runtime.state["health"] = "stopping"
-                        finally:
-                            with runtime.state_lock:
-                                runtime.shutdown_check = False
-                        runtime.save()
                         self.send_json(200, {"status": "stopping"})
                         runtime.stop_event.set()
                         if runtime.httpd:

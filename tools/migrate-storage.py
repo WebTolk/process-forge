@@ -74,6 +74,8 @@ def main(
             project_root=args.project_root,
         )
         snapshot = provider.snapshot()
+        if snapshot.errors:
+            raise MaintenanceError("storage_configuration_invalid")
         pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
         host = host_factory(
             project_root=args.project_root,

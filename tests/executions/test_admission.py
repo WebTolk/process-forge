@@ -9,7 +9,8 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
-from typing import cast
+from types import ModuleType
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -17,6 +18,10 @@ from processforge_core.executions.model import ExecutionError
 from processforge_core.runtime.execution_admission import ExecutionAdmission
 
 from .test_repository import isolated_path as isolated_path
+
+if TYPE_CHECKING:
+    from pf_runtime.service import RuntimeProcess
+
 
 LockFactory = Callable[..., AbstractContextManager[object]]
 _CLI = Path(__file__).resolve().parents[2] / "tools" / "processforge.py"
@@ -164,3 +169,227 @@ with ExecutionAdmission(module.registry_file_lock).start(Path(sys.argv[2]),Path(
         if child.poll() is None:
             child.kill()
             child.communicate(timeout=10)
+
+
+def test_native_core_guard_is_compatible_with_cli(isolated_path: Path) -> None:
+    """The moved primitive must contend with the unchanged CLI guard inode."""
+    from processforge_core.runtime.execution_admission import registry_file_lock
+
+    gate = isolated_path / "registry"
+    cli_lock = real_registry_lock()
+    with registry_file_lock(gate):
+        with pytest.raises(SystemExit, match="registry is locked"):
+            with cli_lock(gate, timeout_seconds=0.02):
+                pytest.fail("two registry owners")
+    with cli_lock(gate):
+        with pytest.raises(SystemExit, match="registry is locked"):
+            with registry_file_lock(gate, timeout_seconds=0.02):
+                pytest.fail("two registry owners")
+
+
+def test_nested_native_admission_tracks_current_thread(isolated_path: Path) -> None:
+    admission = ExecutionAdmission()
+    workplace = isolated_path / "workplace"
+    project = isolated_path / "project"
+    assert not admission.held(project, workplace)
+    with admission.workplace(workplace):
+        assert not admission.held(project, workplace)
+        with admission.project(project):
+            assert admission.held(project, workplace)
+            with admission.maintenance(project, workplace):
+                assert admission.held(project, workplace)
+    assert not admission.held(project, workplace)
+
+
+def test_exited_windows_root_with_retained_handle_is_absent() -> None:
+    """GetProcessTimes exit time is authoritative even before handle release."""
+    if sys.platform != "win32":
+        pytest.skip("Windows native handle regression")
+    from processforge_core.runtime.process_identity import (
+        capture_process,
+        probe_process,
+        tree_absence,
+    )
+
+    child = subprocess.Popen(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            "import sys; print('ready',flush=True); sys.stdin.readline()",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert child.stdout is not None
+        assert child.stdout.readline().strip() == "ready"
+        identity = capture_process(child.pid)
+        assert identity is not None
+        assert probe_process(identity) == "same"
+        _, error = child.communicate("exit\n", timeout=10)
+        assert child.returncode == 0, error
+        # Popen still retains the original Windows process handle here.
+        assert probe_process(identity) == "absent"
+        assert tree_absence(identity) is None
+    finally:
+        if child.poll() is None:
+            child.kill()
+            child.communicate(timeout=10)
+
+
+def native_runtime_fixture(root: Path) -> tuple[RuntimeProcess, ModuleType]:
+    """Use real Runtime policy and durable records without starting a service."""
+    import importlib
+    import os
+    import threading
+    from types import SimpleNamespace
+
+    sys.path.insert(0, str(_CLI.parent))
+    try:
+        service = importlib.import_module("pf_runtime.service")
+    finally:
+        sys.path.remove(str(_CLI.parent))
+    runtime = object.__new__(service.RuntimeProcess)
+    runtime.workplace_root = root
+    runtime.core = SimpleNamespace()
+    runtime.instance_id = "native-instance"
+    runtime.state = {"status": "ready", "instance_id": runtime.instance_id}
+    runtime.state_lock = threading.RLock()
+    runtime.active_requests = 0
+    runtime.scheduler_active = False
+    runtime.shutdown_check = False
+    service.write_json_atomic(
+        service.lock_path(root),
+        {"instance_id": runtime.instance_id, "pid": os.getpid()},
+    )
+    service.write_json_atomic(
+        root / "runtime/pf-runtime-host/state.json",
+        {"projects": [], "sessions": {}},
+    )
+    return runtime, service
+
+
+def test_runtime_stopping_is_durable_before_start_gate_release(
+    isolated_path: Path,
+) -> None:
+    runtime, service = native_runtime_fixture(isolated_path / "workplace")
+    assert (
+        runtime.request_shutdown(guarded=True, expected_instance_id=runtime.instance_id)
+        is None
+    )
+    assert (
+        service.read_json(service.service_path(runtime.workplace_root))["status"]
+        == "stopping"
+    )
+    with pytest.raises(ExecutionError, match="execution_activity_unknown"):
+        with ExecutionAdmission().start(
+            isolated_path / "project", runtime.workplace_root
+        ):
+            pytest.fail("new start bypassed stopping")
+    assert not runtime.shutdown_check
+
+
+def test_runtime_shutdown_refuses_unknown_registration_and_owner_change(
+    isolated_path: Path,
+) -> None:
+    runtime, service = native_runtime_fixture(isolated_path / "workplace")
+    assert (
+        runtime.request_shutdown(guarded=True, expected_instance_id="other-instance")
+        == "owner_changed"
+    )
+    service.write_json_atomic(
+        runtime.workplace_root / "runtime/pf-runtime-host/state.json",
+        {"projects": ["invalid"], "sessions": {}},
+    )
+    assert (
+        runtime.request_shutdown(guarded=True, expected_instance_id=runtime.instance_id)
+        == "runtime_busy_or_activity_unknown"
+    )
+    assert runtime.state["status"] == "ready"
+    assert not service.service_path(runtime.workplace_root).exists()
+
+
+@pytest.mark.parametrize("route", ["start", "registration"])
+def test_actual_shutdown_contends_with_independent_core_start(
+    isolated_path: Path,
+    route: str,
+) -> None:
+    runtime, service = native_runtime_fixture(isolated_path / "workplace")
+    script = """import sys
+from pathlib import Path
+from processforge_core.runtime.execution_admission import ExecutionAdmission
+if sys.argv[3] == "registration":
+    from pf_runtime.host import registration_admission
+    gate = registration_admission(Path(sys.argv[2]),[Path(sys.argv[1])])
+else:
+    gate = ExecutionAdmission().start(Path(sys.argv[1]),Path(sys.argv[2]))
+with gate:
+    print("start-held",flush=True)
+    sys.stdin.readline()
+"""
+    project = isolated_path / "project"
+    child = subprocess.Popen(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            script,
+            str(project),
+            str(runtime.workplace_root),
+            route,
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert child.stdout is not None
+        assert child.stdout.readline().strip() == "start-held"
+        started = time.monotonic()
+        assert (
+            runtime.request_shutdown(
+                guarded=True, expected_instance_id=runtime.instance_id
+            )
+            == "runtime_busy_or_activity_unknown"
+        )
+        assert time.monotonic() - started < 0.8
+        assert not service.service_path(runtime.workplace_root).exists()
+        _, error = child.communicate("release\n", timeout=10)
+        assert child.returncode == 0, error
+        assert (
+            runtime.request_shutdown(
+                guarded=True, expected_instance_id=runtime.instance_id
+            )
+            is None
+        )
+    finally:
+        if child.poll() is None:
+            child.kill()
+            child.communicate(timeout=10)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b'{"status":"stopping","status":"ready"}',
+        b'{"status":"ready","invalid":NaN}',
+        b'{"status":"unknown"}',
+        b"[]",
+        b" " * 65537,
+    ],
+    ids=["duplicate", "nonfinite", "unknown", "nonobject", "oversize"],
+)
+def test_corrupt_stopping_state_cannot_admit_start(
+    isolated_path: Path, raw: bytes
+) -> None:
+    workplace = isolated_path / "workplace"
+    path = workplace / "runtime/pf-runtime/service.json"
+    path.parent.mkdir(parents=True)
+    path.write_bytes(raw)
+    with pytest.raises(ExecutionError, match="execution_activity_unknown"):
+        with ExecutionAdmission().start(isolated_path / "project", workplace):
+            pytest.fail("invalid stopping state admitted start")

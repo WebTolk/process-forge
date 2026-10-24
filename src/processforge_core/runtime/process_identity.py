@@ -71,6 +71,10 @@ def _windows_identity(
             ctypes.byref(user),
         ):
             raise ExecutionError("execution_activity_unknown")
+        # An exited process object can remain queryable while handles survive.
+        # A nonzero exit FILETIME proves root exit, never descendant absence.
+        if exit_time.dwHighDateTime or exit_time.dwLowDateTime:
+            return None
         birth = (creation.dwHighDateTime << 32) | creation.dwLowDateTime
         if birth <= 0:
             raise ExecutionError("execution_activity_unknown")

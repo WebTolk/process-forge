@@ -6,6 +6,9 @@ workplace runtime state. Durable project facts remain in existing `.pf` files.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import AbstractContextManager
+
 import argparse
 import contextlib
 import hashlib
@@ -504,6 +507,30 @@ def ignored_hook() -> dict[str, Any]:
             "diagnostics": {"hook_collection": {"status": "disabled", "mode": "garage"}}}
 
 
+def registration_admission(
+    workplace_root: Path, project_roots: list[Path]
+) -> AbstractContextManager[None]:
+    """Fence routing publication before taking the host's memory lock."""
+    from contextlib import ExitStack, contextmanager
+
+    from processforge_core.project.metadata import ProjectMetadataReader
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    @contextmanager
+    def admitted() -> Iterator[None]:
+        admission = ExecutionAdmission()
+        with admission.workplace(workplace_root), ExitStack() as projects:
+            admission.check_stopping(workplace_root)
+            for root in sorted(
+                set(project_roots),
+                key=lambda root: (ProjectMetadataReader(root).project_id(), str(root)),
+            ):
+                projects.enter_context(admission.project(root))
+            yield
+
+    return admitted()
+
+
 def remember_project(state: dict[str, Any], handle: dict[str, Any]) -> None:
     projects = [item for item in state.get("projects", []) if isinstance(item, dict) and item.get("project_id") != handle["project_id"]]
     projects.append(handle)
@@ -657,7 +684,7 @@ def rebuild_projection(project_root: Path, core: Any) -> Path:
 def command_init(args: argparse.Namespace, core: Any) -> int:
     project_roots = [resolve_project(value, core) for value in getattr(args, "project_root", [])]
     workplace_root = resolve_workplace(args, project_roots[0] if project_roots else None, core)
-    with state_lock():
+    with registration_admission(workplace_root, project_roots), state_lock():
         state = load_state(workplace_root)
         for project_root in project_roots:
             remember_project(state, route_project(str(project_root), workplace_root, core))
@@ -685,7 +712,7 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         raise SystemExit("FAIL: runtime event requires --project-root or project_root/cwd in input")
     project_root = resolve_project(str(project_ref), core)
     workplace_root = workplace_root or core.resolve_workplace_root(None, project_root=project_root)
-    with state_lock():
+    with registration_admission(workplace_root, [project_root]), state_lock():
         handle = route_project(str(project_root), workplace_root, core)
         state = load_state(workplace_root)
         source = raw.get("source") if isinstance(raw.get("source"), dict) else {}
@@ -1205,7 +1232,13 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
     from processforge_core.work.consistency import RunTaskInputReader
 
     event_journal().count(RunTaskInputReader().event_runtime_paths(project_root)[0])
-    kernel = RawIngressKernel(workplace_root, flow_root=core.locate_flow_root(project_root), record_raw=settings.raw_hooks)
+    from processforge_core.configuration import ConfigurationProvider
+
+    pinned = ConfigurationProvider.pinned(configuration.config, errors=configuration.errors)
+    kernel = RawIngressKernel(
+        workplace_root, flow_root=core.locate_flow_root(project_root),
+        record_raw=settings.raw_hooks, configuration=pinned,
+    )
     receipt = kernel.ingest(native)
     response = _raw_receipt_payload(receipt)
     response["diagnostics"]["logging"] = {"raw_hooks": settings.raw_hooks, "events": settings.events}
@@ -1312,7 +1345,7 @@ def command_status(args: argparse.Namespace, core: Any) -> int:
 
 
 def status_payload(workplace_root: Path, project_roots: list[Path], core: Any) -> dict[str, Any]:
-    with state_lock():
+    with registration_admission(workplace_root, project_roots), state_lock():
         state = load_state(workplace_root)
         for project_root in project_roots:
             remember_project(state, route_project(str(project_root), workplace_root, core))
@@ -1537,7 +1570,7 @@ def tick_payload(
     wait_ttl: int = 3600,
     lease_ttl: int = 3600,
 ) -> tuple[dict[str, Any], int]:
-    with state_lock():
+    with registration_admission(workplace_root, project_roots), state_lock():
         state = load_state(workplace_root)
         core.update_stale_agent_presence(workplace_root)
         results: list[dict[str, Any]] = []

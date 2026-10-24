@@ -284,3 +284,29 @@ def test_public_script_actual_current_factory_result(storage: StorageHarness) ->
             "storage_activity_unknown",
             "owner_identity_required",
         }
+
+
+def test_script_rejects_snapshot_errors_before_host_factory(
+    storage: StorageHarness,
+) -> None:
+    namespace = runpy.run_path(str(_ROOT / "tools/migrate-storage.py"))
+    output = io.StringIO()
+
+    def forbidden_factory(**kwargs: object) -> migration.StorageMigrationHost:
+        pytest.fail("invalid configuration reached the migration host")
+
+    with redirect_stdout(output):
+        code = namespace["main"](
+            ["--project-root", str(storage.project), "--apply"],
+            configuration_builder=lambda **kwargs: ConfigurationProvider.pinned(
+                PFConfig(), errors=("configuration_invalid",)
+            ),
+            host_factory=forbidden_factory,
+        )
+    assert code == 1
+    assert len(output.getvalue().splitlines()) == 1
+    assert (
+        json.loads(output.getvalue())["error"]["code"]
+        == "storage_configuration_invalid"
+    )
+    assert not storage.slot
