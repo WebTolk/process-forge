@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_review",
+  "date": "2026-10-24",
+  "kind": "design_only",
+  "identity": {
+    "project_id": "process-forge",
+    "run_id": "pf-r02-design-20261024",
+    "assignment_id": "pf-r02-w4-migration-design-20261024",
+    "context_id": "pf-r02-w4-migration-design-20261024-capsule",
+    "attempt": 2
+  },
+  "input_fingerprint": "sha256:de083bd62dc4d781d17dc8ede8d7521a6c05ee2c95ac674301ec0b3b5c1311f2",
+  "capsule_checksum": "sha256:bcc31848f6d1ecc3323f487633a011503e8d1eaa2e50ca0c945013b226763a15",
+  "implementation_authorized_by_this_assignment": false,
+  "decision": "Предлагается явный перенос снимков worker-run в общую проектную SQL-базу; Core update, миграция данных и запуск новой версии остаются отдельными проверяемыми действиями.",
+  "existing_owners": [
+    {
+      "path": "src/processforge_core/maintenance/update.py",
+      "symbols": [
+        "build_plan",
+        "apply_update",
+        "workplace_migration_plan",
+        "apply_workplace_migration",
+        "recovery_assessment",
+        "repair_status"
+      ],
+      "reuse": "Core-owned файлы, две декларативные workplace-операции, update journal и классификация восстановления; не транспорт SQLite."
+    },
+    {
+      "path": "src/processforge_core/maintenance/backup.py",
+      "symbols": [
+        "SQLiteBackupService.create",
+        "SQLiteBackupService.verify",
+        "SQLiteBackupService.restore"
+      ],
+      "reuse": "Проверенная копия WAL-aware одной БД; restore только в новое назначение."
+    },
+    {
+      "path": "src/processforge_core/maintenance/journals.py",
+      "symbols": [
+        "JournalMaintenanceService.migrate"
+      ],
+      "reuse": "Эталон протокола preflight/backups/importing/batches/replay/ready; прежний import событий и raw не меняет семантику."
+    },
+    {
+      "path": "src/processforge_core/maintenance/journal_scan.py",
+      "symbols": [
+        "JournalScanService",
+        "_Quarantine"
+      ],
+      "reuse": "Выделить общий механизм доказательств и карантина без переписывания прежних форматов."
+    },
+    {
+      "path": "src/processforge_core/sqlite_storage.py",
+      "symbols": [
+        "transaction",
+        "database",
+        "metadata",
+        "set_metadata"
+      ],
+      "reuse": "Транзакционные примитивы; database сейчас ограничена user_version=1 и domain application_id, напрямую для общей БД непригодна."
+    },
+    {
+      "path": "src/processforge_core/accounting/storage.py",
+      "symbols": [
+        "SQLiteAccountingRepository.backup"
+      ],
+      "reuse": "Существующий accounting backup сохраняется; новая миграция его не заменяет и accounting не переносит."
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbols": [
+        "write_agent_run_state",
+        "load_agent_run_state",
+        "prepare_worker_run",
+        "command_project_upgrade_check"
+      ],
+      "reuse": "Текущий JSON-owner и assessment-адаптер; подключение SQL делает отдельный интегратор."
+    },
+    {
+      "path": "src/processforge_core/runtime/metrics.py",
+      "symbols": [
+        "observe",
+        "shutdown_workers"
+      ],
+      "reuse": "Устранение обхода status.json принадлежит W3."
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "symbols": [
+        "RuntimeProcess.active_worker_count"
+      ],
+      "reuse": "Метод active_worker_count по-прежнему перечисляет status.json; W3 переводит consumer на bounded current-state reader."
+    }
+  ],
+  "proposed_implementation": [
+    {
+      "owner": "W4",
+      "operation": "add",
+      "files": [
+        "src/processforge_core/maintenance/execution_migration.py"
+      ],
+      "symbols": [
+        "ExecutionMigrationService"
+      ],
+      "responsibility": "Версионированный план, импорт JSON worker snapshots, receipts, resume и атомарный cutover через контракты W1/W2/W3."
+    },
+    {
+      "owner": "W4",
+      "operation": "modify",
+      "files": [
+        "src/processforge_core/maintenance/journal_scan.py"
+      ],
+      "symbols": [
+        "ExecutionScanService",
+        "JournalScanService",
+        "_Quarantine"
+      ],
+      "responsibility": "Потоковое чтение status.json в явной миграции; повторное использование quarantine, точные байты, стабильность состава источников. Новые символы предложены."
+    },
+    {
+      "owner": "W4",
+      "operation": "modify",
+      "files": [
+        "src/processforge_core/maintenance/contracts.py"
+      ],
+      "symbols": [
+        "BackupPort",
+        "ExecutionScanPort"
+      ],
+      "responsibility": "Сохранить BackupPort; минимальный типизированный контракт scanner для нового потребителя."
+    },
+    {
+      "owner": "W4",
+      "operation": "modify",
+      "files": [
+        "tools/pf_cli/commands/journal_maintenance.py",
+        "tools/pf_cli/parsers/journal_maintenance.py"
+      ],
+      "symbols": [
+        "JournalMaintenanceCommand",
+        "register_journal_maintenance"
+      ],
+      "responsibility": "Предлагаемые дополнительные execution-inspect/execution-import в существующем адаптере; старые операции, флаги, JSON и exit codes сохраняются."
+    },
+    {
+      "owner": "W4",
+      "operation": "add",
+      "files": [
+        "tests/execution_migration/test_migration.py",
+        "tests/execution_migration/test_compatibility.py"
+      ],
+      "responsibility": "После реализации: отказ/повтор/cutover/старые клиенты/перенос проекта/Unicode и finite parity cases."
+    },
+    {
+      "owner": "W4",
+      "operation": "modify",
+      "files": [
+        "docs/ru/concepts/sqlite-journal-maintenance.md",
+        "docs/concepts/sqlite-journal-maintenance.md"
+      ],
+      "responsibility": "Детерминированная инструкция plan/apply/resume/recovery без обязательного LLM."
+    },
+    {
+      "owner": "W2",
+      "operation": "handoff_only",
+      "files": [
+        "src/processforge_core/sqlite_storage.py"
+      ],
+      "responsibility": "Общий connection/schema owner и module version ledger; W4 не пишет этот файл."
+    },
+    {
+      "owner": "W3",
+      "operation": "handoff_only",
+      "files": [
+        "src/processforge_core/runtime/metrics.py",
+        "src/processforge_core/runtime/observation_inputs.py",
+        "src/processforge_core/work/continuation_read.py",
+        "tools/pf_runtime/service.py"
+      ],
+      "responsibility": "Все runtime/current-state consumers, launch barrier, поколение писателя, bounded queries, loss/unknown semantics."
+    },
+    {
+      "owner": "integration_serial",
+      "operation": "handoff_only",
+      "files": [
+        "tools/processforge.py"
+      ],
+      "responsibility": "Один интегратор подключает W1/W2/W3; W4 передаёт требуемые вызовы и не пишет монолит одновременно."
+    }
+  ],
+  "reuse_without_changes": [
+    "src/processforge_core/maintenance/backup.py",
+    "src/processforge_core/maintenance/journals.py",
+    "src/processforge_core/maintenance/update.py",
+    "src/processforge_core/maintenance/versions.py",
+    "src/processforge_core/accounting/storage.py",
+    "tools/migrate-hook-journals.py",
+    "tools/pf_runtime/mcp_server.py"
+  ],
+  "required_interfaces": [
+    {
+      "from": "W1",
+      "needs": [
+        "Устойчивая project identity при перемещении; run/task/attempt identity",
+        "Терминальные/активные/неопределённые состояния; каноническое project task state не подменяется worker snapshot",
+        "Политика отсутствующего legacy attempt и неизвестных полей"
+      ]
+    },
+    {
+      "from": "W2",
+      "needs": [
+        "Единый путь основной project DB и workplace DB, application_id, module versions",
+        "Проверка поддержанной версии/descriptor checksum без DDL при обычном чтении",
+        "Транзакционные receipts, checkpoint и compare-and-swap поколения writer",
+        "Отсутствие backend fallback при ошибке SQL; reuse SQLiteBackupService"
+      ]
+    },
+    {
+      "from": "W3",
+      "needs": [
+        "Закрыть admission всех CLI/MCP/Runtime worker starts до frozen scan",
+        "Согласовать durable prepared/starting/running intent до запуска процесса",
+        "Сохранить status payload schema_version=1 и ошибки на внешней границе",
+        "Доказать quiescence либо остановить перенос при unknown; generation fencing для новых клиентов",
+        "Активные данные и историческая неполнота имеют раздельные статусы"
+      ]
+    }
+  ],
+  "migration_contract": {
+    "migration_id": "r02-worker-executions-v1",
+    "versions": "Release/process/startup-contract/schema/module/importer versions независимы; точные from/to DB versions фиксирует W2.",
+    "descriptor_fields": [
+      "migration_id",
+      "descriptor_version",
+      "source_format",
+      "source_schema_versions",
+      "target_module",
+      "from_schema_version",
+      "to_schema_version",
+      "transform_checksum",
+      "min_reader_version",
+      "min_writer_version"
+    ],
+    "plan_fingerprint": "SHA256 canonical descriptor + logical project identity + ordered source relative paths/size/SHA256 + target schema/generation; operation UUID и время отдельно.",
+    "first_slice": [
+      "Наличие и наблюдаемое содержимое legacy status.json по каждой run/task",
+      "Сохранённый attempt и исходный envelope/неизвестные поля",
+      "Оперативные нерешённые исполнения по политике W3; terminal snapshots в истории"
+    ],
+    "not_in_first_slice": [
+      "Консолидация accounting/events/hooks и Agent Ledger в одной операции",
+      "Перенос search FTS5, RAG, embeddings",
+      "Миграция canonical Work YAML/capsules",
+      "Чтение stdout/stderr/prepared-input bodies для восстановления отсутствующей истории",
+      "Удаление legacy bytes или запуск сервисов"
+    ],
+    "states": [
+      "planned",
+      "backed_up",
+      "importing",
+      "verified",
+      "ready"
+    ],
+    "failure_rule": "Отказ сохраняет последнюю доказанную фазу, checkpoint и ошибку; не объявляет ready.",
+    "preflight": [
+      "Полный inventory разрешён только явному migration command",
+      "Заморозить старых писателей; недостаточность текущей наблюдаемости блокирует cutover",
+      "Проверить формат, identity conflicts, source containment и destination schema",
+      "Скопировать точные frozen source bytes с SHA256; сохранить manifests/quarantine"
+    ],
+    "backup": "Существующая destination DB: SQLiteBackupService create+verify до первого изменения; absent фиксируется отдельно. Копии разных БД не являются общей транзакцией.",
+    "ordering": "Лексикографический порядок исходных project-relative путей по UTF-8 без locale/casefold/NFC; внутри источника исходный порядок. Не выдавать его за хронологию.",
+    "idempotency": "UNIQUE(project_id,run_id,task_id,attempt) + source checksum и semantic checksum; совпадение=no-op; другой payload той же identity=конфликт. Чекпойнт и вставки одним commit.",
+    "resume": "Проверить descriptor, source hashes, target identity/schema/generation и receipts; повторить незавершённый batch. SIGKILL после commit до отчёта не дублирует данные.",
+    "quarantine": "Точные bytes и provenance сохраняются; конфликт identity всегда blocked. Неопределённое текущее исполнение не скрывается через skip. Пропуск доказанной терминальной истории только явно.",
+    "cutover": "Проверить receipts/replay/counts/integrity и quiescence; в одной target DB transaction CAS generation+ready+SQL authority. Новые consumers читают marker в этой же БД; filesystem report advisory.",
+    "old_clients": "Legacy binary не читает новый marker: mixed-version writes после cutover не поддержаны и процедурно запрещены. Новые клиенты не пишут одновременно SQL и JSON как две истины.",
+    "rollback_before_cutover": "При сохранённом freeze продолжать legacy только после отключения нового writer; исходники неизменны. Нельзя удалять общую project DB с чужими таблицами.",
+    "recovery_after_cutover": "Предпочтительно resume/roll-forward; backup restore в новый файл и управляемое переключение при остановленных писателях. Старый Core после новых SQL commits требует отдельного lossless reverse export, которого сейчас нет.",
+    "project_move": "Переносить project main DB консистентно, immutable artifacts и проектную identity; workplace summary пересоздаётся. Пути разрешать от нового project root; активные исполнения/неясное прежнее владение блокируют перенос.",
+    "descriptor_selection": "Ровно один поддержанный descriptor для конкретного перехода; неоднозначность/неизвестная версия/расхождение checksum блокируют миграцию. Старый Core selector сейчас выбирает первый подходящий YAML по sorted archive names, это не универсальный registry миграций.",
+    "memory": "Батчи и постраничные receipts; упорядоченный source manifest/spool на диске, без загрузки 400000 envelopes/IDs в RAM. Полный проход допускается только явной миграции.",
+    "transitional_topology": "Новый worker consumer использует общую основную project DB, не worker-specific DB. Существующие events/hooks/accounting owners не консолидируются молча; их перенос требует отдельного frozen scope."
+  },
+  "verification_plan": [
+    {
+      "id": "V1",
+      "case": "План без source/destination/evidence mutations; явный evidence-dir допускает только заявленные доказательства."
+    },
+    {
+      "id": "V2",
+      "case": "Пусто/510/400000 terminal snapshots × 0/1/several active; обычный stop не перечисляет terminal files/history rows; EQP, file-read counts, memory и latency."
+    },
+    {
+      "id": "V3",
+      "case": "WAL backup+verify+restore, existing targets, symlink/junction, source/destination drift, backup timeout, disk full, locked files."
+    },
+    {
+      "id": "V4",
+      "case": "Crash перед/после backup, barrier, batch commit, verification, generation CAS и result write; resume без дублей и ложного ready."
+    },
+    {
+      "id": "V5",
+      "case": "Duplicate identical vs conflicting identity; NUL/bad JSON/duplicate keys/nonfinite/unknown schema; original bytes и quarantine hashes."
+    },
+    {
+      "id": "V6",
+      "case": "Concurrent CLI/MCP starts, spawn/crash gap, PID reuse, stale heartbeat, reconnect, old binary writes после freeze; unknown не превращается в zero."
+    },
+    {
+      "id": "V7",
+      "case": "Точные legacy CLI/MCP flags/payloads/errors; journal-maintenance stdout один JSON, exits 0/1/argparse 2; core-update --confirm и apply doctor exit 2."
+    },
+    {
+      "id": "V8",
+      "case": "Garage/file-only при выключенных сервисах; no network/no LLM; старый events/raw import и standalone script без семантических изменений."
+    },
+    {
+      "id": "V9",
+      "case": "Перенос project между workplace, смена absolute root, кириллица/пробелы/#/?/NFC-NFD; project identity/IDs неизменны и scope не расширяется."
+    },
+    {
+      "id": "V10",
+      "case": "Неподдержанная future schema/checksum drift/missing migration -> отказ без DDL и без JSON fallback; Core applied != project migrated."
+    },
+    {
+      "id": "V11",
+      "case": "После реализации зарегистрированные pytest, Ruff lint+format check, mypy; команды/версии/exit codes/hashes; независимый review после code complete."
+    }
+  ],
+  "existing_checks_to_reuse": [
+    "tests/maintenance_backup/test_backup.py",
+    "tests/maintenance_service/test_journals.py",
+    "tests/maintenance_scan/test_journal_scan.py",
+    "tests/maintenance_cli/test_journal_maintenance.py",
+    "tests/maintenance_integration/test_acceptance.py",
+    "tests/update_versions/test_selection.py",
+    "tools/smoke_core_update_manifest.py",
+    "tools/smoke_core_update_migration_sources.py",
+    "tools/smoke_core_update_missing_owned.py",
+    "tools/smoke_hook_sqlite_migration.py",
+    "tools/smoke_runtime_metrics.py",
+    "tools/smoke_worker_run_shell.py"
+  ],
+  "checks_executed": [],
+  "assurance": {
+    "status": "not_applicable",
+    "reason": "Вклад только design; код и тесты не менялись, запуск тестов в первой волне запрещён brief. Наличие тестов не считается результатом их выполнения."
+  },
+  "coordination": {
+    "handoff_read": true,
+    "retry_message_id": "msg_0dfd6b8a99194a6abcd99f9e7890ee6c",
+    "read_ack_appended": false,
+    "result_ready_appended": false,
+    "reason": "Prepared scope разрешает запись только собственных artifacts/tmp; записи chat/heartbeat вне scope, tools/mcp grants пусты. Transcript read-only; ограничения сообщены, сообщения не имитировались."
+  },
+  "limitations": [
+    "Предлагаемые interfaces/paths/symbols требуют сверки W1/W2/W3 и нового scoped Work",
+    "Матрица исходных релизов и target release не квалифицирована; поддержка всех прежних версий не заявлена",
+    "Только статический анализ; live migration/backup/stop и mixed-version режим не выполнялись",
+    "Перечисление tests целиком наткнулось на закрытые временные каталоги; затем прочитаны конкретные целевые тесты",
+    "Serena доступна; часть широких pattern queries вернула только locations из-за лимита, нужные symbols прочитаны адресно"
+  ],
+  "source_fingerprints": [
+    {
+      "path": "src/processforge_core/maintenance/update.py",
+      "sha256": "sha256:471bf04ec64a482720a7f2876cccd51bf91bf9596d011670c96dbd6e2bb09812"
+    },
+    {
+      "path": "src/processforge_core/maintenance/backup.py",
+      "sha256": "sha256:09b0c6bfcd86133b6e0f716d174b38a83f9e2bcb422b1cc133009899961227d2"
+    },
+    {
+      "path": "src/processforge_core/maintenance/journals.py",
+      "sha256": "sha256:1cdd536bf322f7b5035b37f2411b7a5361177dde49059d93f54cca2a87ea9395"
+    },
+    {
+      "path": "src/processforge_core/maintenance/journal_scan.py",
+      "sha256": "sha256:157afc92478d5756c27f9f4c2543ca3bd6aec7fece30c1690cbccff592bcd095"
+    },
+    {
+      "path": "src/processforge_core/maintenance/contracts.py",
+      "sha256": "sha256:1872ca7040f03979b782e82b7e8b4a341faff2293d728bbda819929428df8b9f"
+    },
+    {
+      "path": "src/processforge_core/maintenance/versions.py",
+      "sha256": "sha256:9b3dfa81a297603622c28c1846442b3d33190bc78a60d7e1edec3c7c2f9eebcd"
+    },
+    {
+      "path": "src/processforge_core/sqlite_storage.py",
+      "sha256": "sha256:74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572"
+    },
+    {
+      "path": "src/processforge_core/accounting/storage.py",
+      "sha256": "sha256:13296d07d2418257f23a50e483f48f33b8f338482a59ca7098b66342505c197d"
+    },
+    {
+      "path": "src/processforge_core/runtime/metrics.py",
+      "sha256": "sha256:56b5a3b6ba385785eda9def911050ada78a06602e903e26d1c495f251e961032"
+    },
+    {
+      "path": "src/processforge_core/runtime/observation_inputs.py",
+      "sha256": "sha256:4e1c82a676243aacb36619924b826da22665c6b8ce373d98f4ba8adb9cb9a84b"
+    },
+    {
+      "path": "src/processforge_core/work/continuation_read.py",
+      "sha256": "sha256:e0e6dba69c2ea4ab4c83f80e7a62db88d86bc4c63198c5d2564690273398fb0d"
+    },
+    {
+      "path": "src/processforge_core/work/paths.py",
+      "sha256": "sha256:9d9e6e3c59203a155feb89c55ee764f1bda2d9af6cbfbe87854b49980191d9d7"
+    },
+    {
+      "path": "tools/processforge.py",
+      "sha256": "sha256:2fe02928a2ce7bda63e999b0a00914dfb6eb561d6056811f2d65899de25d8e81"
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "sha256": "sha256:4aae1914382ab05758ec37375f25237394ad9237faef5e72fee40705c10bfc06"
+    },
+    {
+      "path": "tools/pf_runtime/mcp_server.py",
+      "sha256": "sha256:1a523f767a75a13f14b2c7072ed73928d7634886d2aabb2ca5824b05c084e757"
+    },
+    {
+      "path": "tools/pf_cli/commands/journal_maintenance.py",
+      "sha256": "sha256:d595c2c1cfe34085251c091c53be7058fa044c86a03fbd0f49d740c9da0f0fe9"
+    },
+    {
+      "path": "tools/pf_cli/parsers/journal_maintenance.py",
+      "sha256": "sha256:b49f76ba4b8d02546753834486e6eb74096bc840bb7d56ee63dd31aefd115e36"
+    }
+  ]
+}
