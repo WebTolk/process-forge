@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_review",
+  "implementation_authorized_by_this_assignment": false,
+  "identity": {
+    "project_id": "process-forge",
+    "run_id": "pf-r02-design-20261024",
+    "assignment_id": "pf-r02-w2-driver-design-20261024",
+    "context_id": "pf-r02-w2-driver-design-20261024-capsule",
+    "attempt": 2,
+    "worker": "pf-r02-w2-driver-20261024"
+  },
+  "basis": {
+    "date": "2026-10-24",
+    "method": "Статический анализ разрешённых исходников; исполняемый код не импортировался, БД не открывались.",
+    "prepared_input_fingerprint": "sha256:f98ff3c2fd5eb217dad5ea884090c944feb5ec56fde37a5a0e547a12ac73a1e0",
+    "capsule_sha256": "2565d730bf2fd92367b682f87c2039df15e0ad1016d50d2b492fb071cf1642a1",
+    "snapshot_sha256": "c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+    "assignment_sha256": "2fd11cbc9df4b7decfe5b10133005b286e8fb636e315b86cb175c7acf5bb6601",
+    "sources": [
+      {"path": "src/processforge_core/sqlite_storage.py", "sha256": "74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572"},
+      {"path": "src/processforge_core/accounting/storage.py", "sha256": "13296d07d2418257f23a50e483f48f33b8f338482a59ca7098b66342505c197d"},
+      {"path": "src/processforge_core/accounting/service.py", "sha256": "c7fb17758da30706f163a2a0bb1dbeaac415e598d569bb39ee908be42563ca20"},
+      {"path": "src/processforge_core/accounting/composition.py", "sha256": "08ec66c8db93467e815ff82e7dee606662d2a7a26cfd4c20c011793fb60b3c16"},
+      {"path": "src/processforge_core/configuration/models.py", "sha256": "18611e13c365e5988a486ea0f26595b40c1b84d3ab2e27bcb434e7d7fc33cd11"},
+      {"path": "src/processforge_core/configuration/service.py", "sha256": "c54e686f978a737f933cf952fc22f0f0fce5f9f8df28c883ee8120aa975134d8"},
+      {"path": "src/processforge_core/configuration/storage.py", "sha256": "94210abf00ab99b982ba9394d5c29c14ade6cb0bca95dcfc5a055835dfc05fe3"},
+      {"path": "src/processforge_core/configuration/resolution.py", "sha256": "cf571344eae346a7698870723eef3b7f6089045ec79da1ca861ea6d82fa1c49e"},
+      {"path": "src/processforge_core/configuration/yaml_store.py", "sha256": "fb6f27bdd50913d0b94fe82766655d58071a35916cddfaee5651ccac3fd560fb"},
+      {"path": "src/processforge_core/process_event_journal.py", "sha256": "441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1"},
+      {"path": "src/processforge_core/raw_hook_journal.py", "sha256": "3b0261da4d2801079f6db6a00dfa8bb681be315cd08af036c3851c1148e4e827"},
+      {"path": "src/processforge_core/maintenance/contracts.py", "sha256": "1872ca7040f03979b782e82b7e8b4a341faff2293d728bbda819929428df8b9f"},
+      {"path": "src/processforge_core/maintenance/backup.py", "sha256": "09b0c6bfcd86133b6e0f716d174b38a83f9e2bcb422b1cc133009899961227d2"},
+      {"path": "src/processforge_core/maintenance/journals.py", "sha256": "1cdd536bf322f7b5035b37f2411b7a5361177dde49059d93f54cca2a87ea9395"},
+      {"path": "schemas/workplace-configuration.schema.json", "sha256": "67f5bf958895346826ec94363ae22e23900c71266a5696feec3e1863ad203bed"},
+      {"path": "schemas/project-configuration.schema.json", "sha256": "a292b0fe9c17c0a077dcb7958fde25cf6c41fe89ad3527748d41a384f48bcad1"},
+      {"path": "src/processforge_core/composition.py", "sha256": "7babf420f759b0ae721c7600c30b1d35a2b5c6f1fdabc685246f25443b54f35e"},
+      {"path": "src/processforge_core/bootstrap.py", "sha256": "67365a7278e3648d08c9b2d73b66142c60ecca408fe78ec6faa2b5cb301f2903"},
+      {"path": "tests/accounting/test_core.py", "sha256": "1dedc83859b80a615f9a783a53c9f7547b2fc91f443b01d69e45eb7a772e454a"}
+    ],
+    "knowledge": [
+      "docs.python:root/typing.md: Protocol, ограничения runtime_checkable",
+      "docs.python:root/dataclasses.md: frozen и вложенная изменяемость",
+      "docs.python-practices:root/typing-guide.md",
+      "docs.python-practices:root/pep257.md",
+      "docs.python-peps:root/pep-0544.md"
+    ]
+  },
+  "observed": [
+    "sqlite_storage.database: operation-local sqlite3.Connection, read-only URI, WAL/FULL, application_id и user_version=1, journal_metadata и migration_state; helper не является DAL.",
+    "ProcessEventJournal и RawHookJournal имеют разные APPLICATION_ID и одинаковые служебные имена journal_metadata; простое объединение файлов невозможно.",
+    "SQLiteAccountingRepository: собственные маркеры схемы, FK, snapshot, bounded busy, backup и атомарный ingest; AccountingService также содержит SQL и sqlite3.Connection annotations, готового нейтрального repository port нет.",
+    "WorkplaceAccounting.database: data/accounting/accounting.sqlite3; service(create=False) не создаёт отсутствующую БД.",
+    "PFConfig/ProjectPFConfig: schema_version=1, строгие root fields runtime/logging, профилей DB нет. ConfigService и ConfigStore уже отделяют конфигурацию от YAML-хранилища.",
+    "ResourceIndexBackend относится только к поиску; SQLiteBackupService/BackupPort и JournalMaintenanceService уже владеют backup/restore и import barriers."
+  ],
+  "public_api_proposal": {
+    "package": "processforge_core.database",
+    "types": {
+      "SqlValue": "None | int | float | str | bytes; int signed-64, float finite; bool/datetime/Decimal/UUID/JSON кодирует и проверяет доменный codec явно",
+      "SqlStatement": "frozen value: text: str, params: tuple[SqlValue, ...], dialect: str; первый dialect=sqlite, placeholders=?; один statement, значения только bound params",
+      "SqlRow": "неизменяемые columns: tuple[str, ...], values: tuple[SqlValue, ...]; доступ по имени/индексу, неоднозначные имена колонок отвергаются",
+      "WriteResult": "affected_rows: int | None, last_insert_id: int | None; backend semantics объявляются capabilities, не общий бизнес-результат",
+      "DatabaseIdentity": "store_id, scope(workplace|project|application), owner_id; проверяется при открытии управляемого PF store",
+      "DatabaseCapabilities": "transactions, read_snapshots, unique_constraints, foreign_keys, transactional_ddl, generated_integer_ids, online_backup; read-only и неизвестные свойства fail closed"
+    },
+    "signatures": [
+      "DatabaseDriver.open(target, *, mode: Literal['ro','rw','create']) -> AbstractContextManager[SqlSession]",
+      "Database.read() -> AbstractContextManager[SqlSession]",
+      "Database.transaction() -> AbstractContextManager[SqlSession]",
+      "SqlSession.fetch_one(statement: SqlStatement) -> SqlRow | None",
+      "SqlSession.stream(statement: SqlStatement, *, batch_size: int = 256) -> AbstractContextManager[Iterator[SqlRow]]",
+      "SqlSession.execute(statement: SqlStatement) -> WriteResult",
+      "SqlSession.execute_many(text: str, rows: Sequence[tuple[SqlValue, ...]], *, dialect: str) -> WriteResult",
+      "SchemaManager.inspect(database, expected_identity, requirements) -> SchemaStatus",
+      "SchemaManager.initialize(database, identity, initial_schemas) -> SchemaStatus",
+      "SchemaManager.apply(database, migration_plan) -> SchemaStatus",
+      "DatabaseFactory.from_profile(config, profile_id, authorized_target, *, required_capabilities) -> Database"
+    ],
+    "semantics": [
+      "Конструкторы, import и from_profile выполняют только валидацию; сеть, mkdir, schema DDL и DB connect только в явно вызванных операциях.",
+      "read: mode=ro, BEGIN, все запросы одной операции в одном snapshot; ROLLBACK/close в finally. Отсутствующая DB не создаётся; SQLite WAL/SHM coordination может иметь побочные файловые эффекты.",
+      "transaction: mode=rw для существующего файла, BEGIN IMMEDIATE, COMMIT после успешного тела, ROLLBACK при BaseException; вложенные транзакции запрещены, без скрытых commits/retries. Ошибка commit возвращает failure и требует идемпотентного повтора владельцем.",
+      "stream закрывает cursor при early break/ошибке и до выхода session; запрещено использовать session/iterator вне context или в другом thread. execute_many ограничен 10000 rows, batch_size=1..1000.",
+      "SQLite: isolation_level=None, bounded busy_timeout из профиля, foreign_keys=ON с проверкой; WAL задаётся и проверяется только при явном initialize/apply, synchronous=FULL на write для PF stores. Не ослаблять durable acceptance.",
+      "ro запрещает мутации; rw исполняет записи только внутри transaction; transaction control, PRAGMA/DDL доступны административному SchemaManager, не пользовательскому execute. sqlite3.Connection/Cursor не выходят из драйвера.",
+      "SQL syntax не объявляется переносимым: sqlite statement отклоняется чужим driver. Будущий backend предоставляет свой repository SQL adapter; доменные use cases используют repository Protocol и DTO.",
+      "API доступен обычным Python import для Core и процессов без bootstrap_runtime/CLI/MCP/глобального singleton. Profile не выдаёт прав: validated target и область доступа задаёт вызывающий host; SQL-процессу нельзя выдавать общий workplace connection вместо project-scoped repository."
+    ],
+    "errors": [
+      "DatabaseError(code, retryable=False) без raw exception text, SQL, параметров, DSN, secrets и private paths",
+      "DatabaseConfigurationError: database_profile_invalid, database_driver_unsupported, database_dialect_unsupported",
+      "DatabaseUnavailable: database_missing, database_busy, database_io_failed",
+      "DatabaseIntegrityError: database_constraint_failed, database_corrupt",
+      "DatabaseSchemaError: database_foreign, database_schema_unsupported, database_migration_required",
+      "DatabaseCapabilityError: database_capability_unsupported",
+      "Доменные адаптеры сохраняют существующие JournalError/JournalMigrationRequired/AccountingStorageError/SchemaVersionError, публичные DTO, ошибки и exit codes; конфликт identity остаётся бизнес-ошибкой владельца."
+    ],
+    "future_backends": "MariaDB/MySQL/PostgreSQL/ClickHouse не реализованы и не квалифицированы. Driver id не импортирует произвольный модуль: для первого среза явный closed mapping sqlite -> SQLiteDriver. Нет pool/async/ORM/builder/plugin framework."
+  },
+  "configuration_proposal": {
+    "section": "необязательная PFConfig.database; schema_version=1 прежних документов остаётся читаемым, отсутствующая секция не добавляется в прежние serialization/payloads",
+    "shape": "database: {profiles: {<name>: {scope, driver, path, timeout_ms, driver_options}}, defaults: {workplace_main, project_main}}",
+    "sqlite_fields": "driver=sqlite; path: nonempty str, relative to explicit workplace root/project flow root; timeout_ms: integer 0..30000 (bool forbidden); driver_options: empty object in first slice; неизвестные ключи отвергаются",
+    "rules": [
+      "Имена профилей проверяются; каждый default обязан ссылаться на профиль правильного scope. Только одна активная main DB на workplace и одна на project; не отдельный профиль main на каждый журнал.",
+      "ProjectPFConfig может определять только project/application profiles и project_main; не переопределяет workplace profiles/default и не получает workplace grant через наследование. Коллизия имён отвергается.",
+      "Нет CWD/env expansion, скрытого DSN либо вычисления secret в to_dict/repr/log. Application database допускается только в отдельно разрешённой области и не становится ещё одним PF main store.",
+      "Будущие host/port/database/schema/secret_ref/TLS/pool options требуют типизированного драйвера и conformance; первый sqlite validator их отклоняет, а не молча игнорирует.",
+      "ConfigService/YamlConfigStore остаются каноническим config owner, настройка не зависит от БД. Не писать новые профили при чтении, reset старого ключа или отсутствии database section.",
+      "Смена профиля не мигрирует данные. Для managed main factory проверяет привязку store_id/owner_id и при смене target требует явного migration/cutover; не выбирает пустой другой store как прежний.",
+      "Новая database section не читается старым strict parser. W4 обновляет всех readers до записи расширенной конфигурации и сохраняет прежние bytes для rollback. Автоматический hot switch managed main при reload запрещён; применяется явно проверенное поколение config+store binding."
+    ]
+  },
+  "storage_and_schema_proposal": {
+    "status": "Предложение для совместного freeze W1/W4, текущие пути не изменены",
+    "locations": {
+      "workplace_main": "data/pf.sqlite3 относительно явно выбранного workplace",
+      "project_main": ".pf/data/pf.sqlite3 относительно проекта; вычисляется через фактический project flow root",
+      "search": "отдельный существующий производный index store; не подключать к основной DB и не переносить FTS-таблицы"
+    },
+    "ownership": "W2 разрешает и проверяет путь/identity; W1 владеет доменными таблицами, W3 execution tables, W4 переносом и cutover. Старт новой operational DB при оставленной независимой бухгалтерской основной DB не является завершённой консолидацией.",
+    "envelope": [
+      "Один физический application_id PF main и user_version=1 только для storage-envelope; числовой id фиксируется после сверки W1/W4, не переиспользовать три разных legacy id.",
+      "pf_store_meta(singleton INTEGER PRIMARY KEY CHECK(singleton=1), store_id TEXT UNIQUE NOT NULL, scope TEXT NOT NULL, owner_id TEXT NOT NULL, format_version INTEGER NOT NULL); одна строка, scope/owner проверяются до доменных чтений.",
+      "pf_schema_versions(namespace TEXT PRIMARY KEY, version INTEGER NOT NULL CHECK(version>=1), checksum TEXT NOT NULL); namespaces фиксируются в коде, не произвольным SQL input.",
+      "Изолированные префиксы accounting_, events_, hooks_, execution_ исключают коллизии; прикладные таблицы и индексы не принадлежат общему драйверу.",
+      "inspect ничего не создаёт/не мигрирует. initialize разрешён только для явно выбранного пустого нового store. Неизвестная/будущая/повреждённая схема и несовпадающая identity отвергаются без изменения.",
+      "Для каждого namespace version/checksum сверяются с pinned migration plan; SQLite DDL и запись новой версии атомарны в одной transaction. Повторное создание/апгрейд нормальным open запрещены.",
+      "Cross-store import checkpoints/barriers принадлежат W4; применимые участки блокируются при incomplete migration. Нельзя делать вид, что несколько отдельных БД имеют общий commit/backup snapshot."
+    ],
+    "migration_boundary": "До активации новых default путей W4 обеспечивает перенос затронутых legacy owners и one-writer cutover; иначе новый API остаётся неактивной foundation. Не удалять прежние файлы и не автоматизировать перенос на чтении."
+  },
+  "proposed_implementation_ownership": [
+    {"owner": "W2", "files": ["src/processforge_core/database/__init__.py", "src/processforge_core/database/contracts.py", "src/processforge_core/database/errors.py", "src/processforge_core/database/sqlite.py", "src/processforge_core/database/schema.py", "src/processforge_core/database/composition.py"], "work": "Публичный малый API, closed driver mapping, SQLite implementation, envelope и namespace versions; только новые файлы."},
+    {"owner": "W2", "files": ["src/processforge_core/configuration/database.py", "src/processforge_core/configuration/models.py", "src/processforge_core/configuration/__init__.py", "schemas/workplace-configuration.schema.json", "schemas/project-configuration.schema.json"], "work": "Опциональные типизированные профили и их точная сериализация; ConfigService/ConfigStore/YamlConfigStore не переписывать без отдельной необходимости."},
+    {"owner": "W2", "files": ["tests/database/test_contract.py", "tests/database/test_sqlite.py", "tests/database/test_schema.py", "tests/database/test_profiles.py", "docs/concepts/database-api.md", "docs/ru/concepts/database-api.md"], "work": "Следующая implementation Work: API/conformance, schema/config проверки и примеры Core/process import. В этой design Work тесты не создаются."},
+    {"owner": "W1", "files": ["src/processforge_core/accounting/storage.py", "src/processforge_core/accounting/service.py", "src/processforge_core/accounting/composition.py", "src/processforge_core/accounting/repository.py", "src/processforge_core/process_event_journal.py", "src/processforge_core/raw_hook_journal.py", "src/processforge_core/sqlite_storage.py", "tests/accounting/test_core.py"], "work": "Предложенное владение существующими доменными consumers; извлечь реальный repository/read-snapshot port, убрать SQL из service, сохранить receipts/IDs/pending/latest и внешнюю семантику. Проверить объём первого среза с W4."},
+    {"owner": "W3", "files": ["src/processforge_core/execution/repository.py", "src/processforge_core/execution/sqlite.py"], "work": "Предлагаемые новые пути; W3 подтверждает отсутствие конфликтов и фиксирует execution schema, active-only reads, heartbeat/PID identity и generation/fencing с stop guard в своей карте."},
+    {"owner": "W4", "files": ["src/processforge_core/maintenance/journals.py", "src/processforge_core/maintenance/journal_scan.py", "src/processforge_core/maintenance/backup.py", "src/processforge_core/maintenance/contracts.py", "src/processforge_core/maintenance/update.py", "tools/migrate-hook-journals.py"], "work": "Migration/updater contract и verified backup/import/cutover/recovery. W2 использует BackupPort/SQLiteBackupService; новую backup/restore систему не создаёт."},
+    {"owner": "serialized_integrator", "files": ["src/processforge_core/composition.py", "src/processforge_core/bootstrap.py", "tools/processforge.py", "tools/pf_runtime/service.py", "tools/pf_runtime/mcp_server.py", "src/processforge_core/configuration/resolution.py"], "work": "Только один назначенный исполнитель после freeze; узкая композиция, pin config/store generation и legacy error/payload mapping. Ни W2, ни параллельные writers не редактируют эти файлы одновременно."}
+  ],
+  "required_handoffs": [
+    {"from": "W1", "to": "W2", "requires": "Список namespace/table owners, immutable identities и repository DTO/ports; обязательные versus optional факты; никаких двух canonical writers."},
+    {"from": "W2", "to": "W3", "provides": "Database.read/transaction, typed rows/params, bounded stream, busy/error semantics, per-store schema requirements; одна execution transaction может записать current+history/outbox, если они в одной DB."},
+    {"from": "W3", "to": "W2", "requires": "Точный active-state query/index, schema namespace/version, максимальный lock/read budget и атомарные старт/выход/fencing требования. Driver timeout не подменяет end-to-end stop deadline."},
+    {"from": "W2", "to": "W4", "provides": "inspect/initialize/apply и identity/namespace versions; open не мигрирует; сбой commit не разрешает скрытый повтор."},
+    {"from": "W4", "to": "W2", "requires": "Подтверждённые конечные пути/store ids, upgrade compatibility всех readers, migration barriers/checkpoints, порядок config publication и writer cutover, rollback и сохранение opaque legacy locators."}
+  ],
+  "verification_plan": [
+    {"owner": "W2", "checks": "Real file SQLite: missing ro/rw does not create, import/construct no I/O, early stream close, wrong thread/session, nested transaction rejection, rollback on body/commit error, bounded lock and concurrent writers."},
+    {"owner": "W2", "checks": "Value matrix NULL/zero/empty/Unicode/blob/int64/finite floats, reject bool-as-int, overflow and nonfinite; placeholder binding and identifier separation, redaction, unsupported dialect/capability refusal."},
+    {"owner": "W2", "checks": "Single snapshot under concurrent commit, verified FK/WAL/FULL, unique/FK conflicts, foreign/future/partial schema refusal, atomic version+DDL, same/different checksum retry, owner/store mismatch, unsafe reparse/symlink paths."},
+    {"owner": "W2", "checks": "Old PFConfig/ProjectPFConfig docs/defaults/serialization/get/update/reset/unknown-key errors unchanged; project inheritance/revision conflicts; new optional profiles roundtrip, invalid reload, no automatic store switch or data transfer."},
+    {"owner": "W1/W4", "checks": "Reuse tests/accounting/test_core.py (idempotency, cursor rollback, scoped queries, snapshot, busy, backup, foreign/future schema); tests/maintenance_service/test_journals.py, tests/maintenance_scan/test_journal_scan.py, tests/maintenance_cli/test_journal_maintenance.py and applicable maintenance_backup/integration tests."},
+    {"owner": "W3", "checks": "0/~510/400000 completed executions with 0/1/multiple current; indexed active-only plan and measured work/latency/memory; concurrent history writer and stop/start race. This design supplies no benchmark or timing result."},
+    {"owner": "serialized_integrator", "checks": "Actual unchanged CLI/MCP flags, JSON payloads/error/exit codes and file-only workflows without Runtime/MCP/Ledger; config read and unrelated commands do not open DB. Import processforge_core.database without tools/processforge.py or host import."},
+    {"owner": "assurance_after_implementation", "checks": "Pinned PF Python QA pytest/Ruff lint/Ruff format/mypy on changed typed area, applicable full PF suite, exact versions/commands/exit codes/byte identity; independent reviewer after implementation."}
+  ],
+  "limitations": [
+    "Serena обнаружена в host tools, но prepared grants mcp=[]; не использовалась. Анализ выполнен bounded shell по разрешённым файлам.",
+    "READ_ACK/RESULT_READY/checkin/heartbeat не отправлены: текущий scope разрешает только read/write_artifact внутри W2, а не изменение Ledger/chat/telemetry. Использован Output Delivery Contract; координация остаётся за оператором/оркестратором.",
+    "Некоторые временные test directories недоступны; обход остановлен, анализировались точные source/test files. pyproject.toml в checkout отсутствует. Это не полная инвентаризация тестов.",
+    "В grants локального Python mirror нет sqlite3.md; SQLite-поведение установлено из текущих helpers и локальных проектных docs, новые гарантии сформулированы как план conformance, не как результаты исполнения.",
+    "QA и live CLI/MCP/file-only/400k не запускались: нет продуктового изменения, стадия planning_only; функциональная совместимость ещё не доказана. Существующие тестовые названия не означают успешного запуска.",
+    "Пути новых modules, store location, профиль database и ownership являются предложением для общего freeze, не изменением текущих контрактов или выдачей прав следующей Work."
+  ]
+}
