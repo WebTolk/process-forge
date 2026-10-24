@@ -15,7 +15,10 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
+
+if TYPE_CHECKING:
+    from processforge_core.executions.model import ProcessIdentity
 
 MAX_MANIFEST_BYTES = 4 * 1024 * 1024
 HEARTBEAT_INTERVAL_SECONDS = 2.0
@@ -49,6 +52,281 @@ def write_exit_contract(path: Path, exit_code: int) -> None:
     # Match codex_exec_worker.write_exit_contract's durable compatibility shape.
     status = "completed" if exit_code == 0 else "failed"
     _write_json_atomic(path, {"schema_version": 1, "exit_code": int(exit_code), "status": status})
+
+
+
+_LAUNCH_ENV = (
+    "PF_EXECUTION_PROJECT_ID", "PF_EXECUTION_RUN_ID", "PF_EXECUTION_TASK_ID",
+    "PF_EXECUTION_ATTEMPT", "PF_EXECUTION_LAUNCH_TOKEN",
+)
+
+
+def _kernel() -> Any:
+    import ctypes
+    from ctypes import wintypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    for name, arguments, result in (
+        ("CreateJobObjectW", (ctypes.c_void_p, wintypes.LPCWSTR), wintypes.HANDLE),
+        (
+            "OpenJobObjectW",
+            (wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR),
+            wintypes.HANDLE,
+        ),
+        (
+            "SetInformationJobObject",
+            (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD),
+            wintypes.BOOL,
+        ),
+        (
+            "QueryInformationJobObject",
+            (
+                wintypes.HANDLE,
+                ctypes.c_int,
+                ctypes.c_void_p,
+                wintypes.DWORD,
+                ctypes.c_void_p,
+            ),
+            wintypes.BOOL,
+        ),
+        ("AssignProcessToJobObject", (wintypes.HANDLE, wintypes.HANDLE), wintypes.BOOL),
+        ("TerminateJobObject", (wintypes.HANDLE, wintypes.UINT), wintypes.BOOL),
+        ("GetCurrentProcess", (), wintypes.HANDLE),
+        ("CloseHandle", (wintypes.HANDLE,), wintypes.BOOL),
+    ):
+        function = getattr(kernel, name)
+        function.argtypes, function.restype = arguments, result
+    return kernel
+
+
+def _create_job(name: str) -> Any:
+    """Own this wrapper and all inherited descendants before target creation."""
+    import ctypes
+    from ctypes import wintypes
+
+    class Limits(ctypes.Structure):
+        _fields_ = [
+            ("process_time", ctypes.c_int64),
+            ("job_time", ctypes.c_int64),
+            ("flags", wintypes.DWORD),
+            ("minimum", ctypes.c_size_t),
+            ("maximum", ctypes.c_size_t),
+            ("active", wintypes.DWORD),
+            ("affinity", ctypes.c_size_t),
+            ("priority", wintypes.DWORD),
+            ("scheduling", wintypes.DWORD),
+        ]
+
+    class Extended(ctypes.Structure):
+        _fields_ = [
+            ("basic", Limits),
+            ("io", ctypes.c_uint64 * 6),
+            ("memory", ctypes.c_size_t * 4),
+        ]
+
+    kernel = _kernel()
+    ctypes.set_last_error(0)
+    handle = kernel.CreateJobObjectW(None, name)
+    if not handle:
+        raise ExecutorError("execution_activity_unknown")
+    try:
+        if ctypes.get_last_error() == 183:
+            raise ExecutorError("execution_identity_conflict")
+        limits = Extended()
+        limits.basic.flags = 0x2000  # KILL_ON_JOB_CLOSE; no breakaway permission.
+        if not kernel.SetInformationJobObject(
+            handle, 9, ctypes.byref(limits), ctypes.sizeof(limits)
+        ):
+            raise ExecutorError("execution_activity_unknown")
+        if not kernel.AssignProcessToJobObject(handle, kernel.GetCurrentProcess()):
+            raise ExecutorError("execution_activity_unknown")
+        return handle
+    except BaseException:
+        kernel.CloseHandle(handle)
+        raise
+
+
+def owned_tree_absent(process: ProcessIdentity) -> bool | None:
+    """Query the receipt-bound kernel job/group; never infer tree from PID alone."""
+    from processforge_core.runtime.process_identity import probe_process
+
+    root = probe_process(process)
+    if root == "unknown" or process.tree_id is None:
+        return None
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        class Accounting(ctypes.Structure):
+            _fields_ = [
+                ("times", ctypes.c_int64 * 4),
+                ("faults", wintypes.DWORD),
+                ("total", wintypes.DWORD),
+                ("active", wintypes.DWORD),
+                ("terminated", wintypes.DWORD),
+            ]
+
+        if not process.tree_id.startswith("windows-job:Local\\pf-execution-"):
+            return None
+        kernel = _kernel()
+        handle = kernel.OpenJobObjectW(4, False, process.tree_id.split(":", 1)[1])
+        if not handle:
+            return True if root == "absent" and ctypes.get_last_error() == 2 else None
+        try:
+            accounting = Accounting()
+            if not kernel.QueryInformationJobObject(
+                handle, 1, ctypes.byref(accounting), ctypes.sizeof(accounting), None
+            ):
+                return None
+            return accounting.active == 0
+        finally:
+            kernel.CloseHandle(handle)
+    if (
+        sys.platform.startswith("linux")
+        and process.tree_id == f"linux-pgid:{process.pid}"
+    ):
+        try:
+            os.killpg(process.pid, 0)
+            return False
+        except ProcessLookupError:
+            return root == "absent"
+        except PermissionError:
+            return None
+    return None
+
+
+def signal_owned_tree(process: ProcessIdentity) -> None:
+    """Signal only the receipt-bound job or a live exact-root process group."""
+    from processforge_core.runtime.process_identity import probe_process
+
+    if probe_process(process) == "unknown":
+        raise ExecutorError("execution_activity_unknown")
+    if (
+        os.name == "nt"
+        and process.tree_id
+        and process.tree_id.startswith("windows-job:Local\\pf-execution-")
+    ):
+        kernel = _kernel()
+        handle = kernel.OpenJobObjectW(8, False, process.tree_id.split(":", 1)[1])
+        if not handle:
+            if owned_tree_absent(process) is True:
+                return
+            raise ExecutorError("execution_activity_unknown")
+        try:
+            if not kernel.TerminateJobObject(handle, 130):
+                raise ExecutorError("execution_activity_unknown")
+        finally:
+            kernel.CloseHandle(handle)
+        return
+    if (
+        sys.platform.startswith("linux")
+        and process.tree_id == f"linux-pgid:{process.pid}"
+        and probe_process(process) == "same"
+    ):
+        import signal
+
+        os.killpg(process.pid, signal.SIGTERM)
+        return
+    raise ExecutorError("execution_activity_unknown")
+
+
+class ExecutionReceipts:
+    """Atomic exact-attempt evidence; only the outermost wrapper owns receipts."""
+
+    def __init__(
+        self,
+        environment: dict[str, str],
+        document: dict[str, Any],
+        heartbeat: Path,
+        exit_path: Path,
+    ):
+        from dataclasses import asdict
+
+        from processforge_core.executions.model import ExecutionKey
+        from processforge_core.runtime.process_identity import capture_process
+
+        self.identity: dict[str, Any] = {}
+        self.process: dict[str, Any] = {}
+        self.sequence: dict[str, int] = {}
+        self.job: Any = None
+        self.heartbeat, self.exit_path = heartbeat, exit_path
+        if not any(name in environment for name in _LAUNCH_ENV):
+            return
+        identity = document["identity"]
+        values = tuple(environment.get(name, "") for name in _LAUNCH_ENV)
+        if values[:4] != (
+            identity["project_id"],
+            identity["run_id"],
+            identity["assignment_id"],
+            str(identity["attempt"]),
+        ):
+            raise ExecutorError("execution_identity_conflict")
+        if len(values[4]) != 32 or any(c not in "0123456789abcdef" for c in values[4]):
+            raise ExecutorError("execution_identity_conflict")
+        ExecutionKey(values[0], values[1], values[2], int(values[3]))
+        self.identity = dict(
+            zip(
+                ("project_id", "run_id", "task_id", "attempt", "launch_token"),
+                values,
+                strict=True,
+            )
+        )
+        self.identity["attempt"] = int(values[3])
+        if os.name == "nt":
+            name = "Local\\pf-execution-" + values[4]
+            self.job = _create_job(name)
+            tree_id = "windows-job:" + name
+        elif sys.platform.startswith("linux") and os.getpgrp() == os.getpid():
+            tree_id = f"linux-pgid:{os.getpid()}"
+        else:
+            raise ExecutorError("execution_activity_unknown")
+        process = capture_process(os.getpid(), tree_id=tree_id)
+        if process is None:
+            raise ExecutorError("execution_activity_unknown")
+        self.process = asdict(process)
+        self.publish(
+            heartbeat.with_name("process.json"),
+            "process",
+            {"pid": os.getpid(), "started_at": _utc_now()},
+        )
+
+    def publish(self, path: Path, kind: str, payload: dict[str, Any]) -> None:
+        if self.identity:
+            payload = {
+                **payload,
+                "schema_version": 1,
+                **self.identity,
+                "receipt_kind": kind,
+                "sequence": self.sequence.get(kind, 0),
+                "observed_at": _utc_now(),
+                "process": self.process,
+            }
+            self.sequence[kind] = payload["sequence"] + 1
+            raw = json.dumps(
+                payload,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+                allow_nan=False,
+            ).encode("utf-8")
+            payload["checksum"] = "sha256:" + hashlib.sha256(raw).hexdigest()
+        _write_json_atomic(path, payload)
+
+    def heartbeat_receipt(self, status: str) -> None:
+        self.publish(
+            self.heartbeat, "heartbeat", {"status": status, "updated_at": _utc_now()}
+        )
+
+    def exit_receipt(self, exit_code: int) -> None:
+        self.publish(
+            self.exit_path,
+            "exit",
+            {
+                "status": "completed" if exit_code == 0 else "failed",
+                "exit_code": exit_code,
+                "finished_at": _utc_now(),
+            },
+        )
 
 
 def _canonical_digest(value: Any) -> bool:
@@ -198,11 +476,26 @@ def run_target(
         print(f"FAIL: {reason}", file=sys.stderr)
         return 125
 
+    receipts = None
+    if any(name in current_env for name in _LAUNCH_ENV):
+        try:
+            receipts = ExecutionReceipts(current_env, document, heartbeat, exit_path)
+        except (ExecutorError, OSError, ValueError):
+            print("FAIL: execution_activity_unknown", file=sys.stderr)
+            return 125
+    child_environment = dict(current_env)
+    if receipts is not None:
+        # A nested Codex wrapper is part of this owned tree, not another writer.
+        for name in _LAUNCH_ENV:
+            child_environment.pop(name, None)
     started_at = _utc_now()
     try:
-        write_heartbeat(
-            heartbeat, "starting", sequence=0, extra={"started_at": started_at}
-        )
+        if receipts is None:
+            write_heartbeat(
+                heartbeat, "starting", sequence=0, extra={"started_at": started_at}
+            )
+        else:
+            receipts.heartbeat_receipt("starting")
         process = subprocess.Popen(
             target,
             shell=False,
@@ -210,10 +503,13 @@ def run_target(
             stdout=None,
             stderr=None,
             cwd=None,
-            env=current_env,
+            env=child_environment,
         )
     except Exception:
-        _write_failure(output_paths, 127, "target_launch_failed")
+        if receipts is None:
+            _write_failure(output_paths, 127, "target_launch_failed")
+        else:
+            receipts.exit_receipt(127)
         print("FAIL: target_launch_failed", file=sys.stderr)
         return 127
     sequence = 0
@@ -225,35 +521,48 @@ def run_target(
                 time.sleep(min(remaining, HEARTBEAT_INTERVAL_SECONDS))
             if time.monotonic() >= next_heartbeat and process.poll() is None:
                 sequence += 1
-                write_heartbeat(
-                    heartbeat,
-                    "running",
-                    sequence=sequence,
-                    extra={"pid": process.pid, "started_at": started_at},
-                )
+                if receipts is None:
+                    write_heartbeat(
+                        heartbeat,
+                        "running",
+                        sequence=sequence,
+                        extra={"pid": process.pid, "started_at": started_at},
+                    )
+                else:
+                    receipts.heartbeat_receipt("running")
                 next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
         exit_code = int(process.wait())
         status = "completed" if exit_code == 0 else "failed"
-        write_exit_contract(exit_path, exit_code)
-        write_heartbeat(
-            heartbeat,
-            status,
-            sequence=sequence + 1,
-            extra={
-                "pid": process.pid,
-                "exit_code": exit_code,
-                "started_at": started_at,
-                "finished_at": _utc_now(),
-            },
-        )
+        if receipts is None:
+            write_exit_contract(exit_path, exit_code)
+            write_heartbeat(
+                heartbeat,
+                status,
+                sequence=sequence + 1,
+                extra={
+                    "pid": process.pid,
+                    "exit_code": exit_code,
+                    "started_at": started_at,
+                    "finished_at": _utc_now(),
+                },
+            )
+        else:
+            receipts.exit_receipt(exit_code)
+            receipts.heartbeat_receipt(status)
         return exit_code
     except KeyboardInterrupt:
         _terminate_and_wait(process)
-        _write_failure(output_paths, 130, "target_interrupted")
+        if receipts is None:
+            _write_failure(output_paths, 130, "target_interrupted")
+        else:
+            receipts.exit_receipt(130)
         return 130
     except Exception:
         _terminate_and_wait(process)
-        _write_failure(output_paths, 125, "executor_lifecycle_failed")
+        if receipts is None:
+            _write_failure(output_paths, 125, "executor_lifecycle_failed")
+        else:
+            receipts.exit_receipt(125)
         print("FAIL: executor_lifecycle_failed", file=sys.stderr)
         return 125
 

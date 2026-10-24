@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import asdict, replace
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Literal, cast
@@ -420,6 +421,171 @@ class SQLiteExecutionRepository:
             )
             return record
 
+    def _finalize_prepared(
+        self, allocated: ExecutionRecord, payload_json: str
+    ) -> ExecutionRecord:
+        """Finalize attempt-local references after immutable preparation I/O.
+
+        This owner-private transition never manufactures physical execution.
+        A failed preparation remains planned and consumes its allocated number.
+        """
+        payload = compatibility_payload(payload_json, allocated.key)
+        if payload["status"] not in {"ready", "manual_required", "blocked"} or any(
+            payload[field] is not None
+            for field in (
+                "pid",
+                "started_at",
+                "finished_at",
+                "exit_code",
+                "last_heartbeat_at",
+            )
+        ):
+            raise ValueError("invalid prepared payload")
+        with self.database.transaction() as session:
+            state = self._writable(session, allocated.generation)
+            record = self._cas(
+                session, allocated.key, allocated.revision, allocated.generation
+            )
+            head = session.fetch_one(
+                SqlStatement(
+                    "SELECT latest_attempt FROM execution_heads WHERE project_id=? AND run_id=? AND task_id=?",
+                    (record.key.project_id, record.key.run_id, record.key.task_id),
+                )
+            )
+            if (
+                state["active_coverage"] != "complete"
+                or record.phase != "prepared"
+                or record.launch_token is not None
+                or record.collection != "pending"
+                or compatibility_payload(record.payload_json, record.key)["status"]
+                != "planned"
+                or head is None
+                or head[0] != record.key.attempt
+            ):
+                raise ExecutionError("execution_activity_unknown")
+            return self._save(
+                session,
+                replace(
+                    record,
+                    revision=record.revision + 1,
+                    payload_json=canonical_json(payload),
+                ),
+            )
+
+    def _update_unlaunched(
+        self,
+        expected: ExecutionRecord,
+        *,
+        status: Literal["blocked", "cancelled"],
+        reason: str,
+        finished_at: str | None = None,
+    ) -> ExecutionRecord:
+        """Block/cancel preparation without inventing a launch or history row."""
+        with self.database.transaction() as session:
+            self._writable(session, expected.generation)
+            record = self._cas(
+                session, expected.key, expected.revision, expected.generation
+            )
+            payload = compatibility_payload(record.payload_json, record.key)
+            if (
+                record.phase != "prepared"
+                or record.launch_token is not None
+                or record.process is not None
+                or record.collection != "pending"
+                or payload["status"]
+                not in {"planned", "ready", "manual_required", "blocked"}
+            ):
+                raise ExecutionError("execution_activity_unknown")
+            payload.update(
+                status=status, failure_reason=reason, finished_at=finished_at
+            )
+            return self._save(
+                session,
+                replace(
+                    record,
+                    revision=record.revision + 1,
+                    payload_json=canonical_json(payload),
+                ),
+            )
+
+    def _collect_manual(
+        self,
+        expected: ExecutionRecord,
+        collection: Literal["collected", "failed", "refused"],
+        *,
+        failure_reason: str | None = None,
+    ) -> ExecutionRecord:
+        """Record manual delivery independently of physical execution/history."""
+        if collection not in {"collected", "failed", "refused"}:
+            raise ValueError("invalid collection")
+        with self.database.transaction() as session:
+            self._writable(session, expected.generation)
+            record = self._cas(
+                session, expected.key, expected.revision, expected.generation
+            )
+            payload = compatibility_payload(record.payload_json, record.key)
+            if (
+                record.phase != "prepared"
+                or record.launch_token is not None
+                or record.process is not None
+                or payload["status"] != "manual_required"
+            ):
+                raise ExecutionError("execution_activity_unknown")
+            if failure_reason is not None:
+                payload["failure_reason"] = failure_reason
+            return self._save(
+                session,
+                replace(
+                    record,
+                    collection=collection,
+                    revision=record.revision + 1,
+                    payload_json=canonical_json(payload),
+                ),
+            )
+
+    def _launch_paths(
+        self,
+        expected: ExecutionRecord,
+        *,
+        heartbeat_path: str,
+        stdout_path: str,
+        stderr_path: str,
+    ) -> ExecutionRecord:
+        """Capture native attempt paths for an older immutable prepared input.
+
+        Only transport references change. The prepared reference, grants and
+        bytes remain unchanged; the host validates paths before this CAS.
+        """
+        with self.database.transaction() as session:
+            self._writable(session, expected.generation)
+            record = self._cas(
+                session, expected.key, expected.revision, expected.generation
+            )
+            payload = compatibility_payload(record.payload_json, record.key)
+            if (
+                record.phase != "prepared"
+                or record.launch_token is not None
+                or record.collection != "pending"
+                or payload["status"] != "ready"
+            ):
+                raise ExecutionError("execution_activity_unknown")
+            refs = dict(
+                heartbeat_path=heartbeat_path,
+                stdout_path=stdout_path,
+                stderr_path=stderr_path,
+            )
+            if all(payload[name] == value for name, value in refs.items()):
+                return record
+            payload.update(refs)
+            return self._save(
+                session,
+                replace(
+                    record,
+                    revision=record.revision + 1,
+                    payload_json=canonical_json(payload),
+                ),
+            )
+
     def reserve_start(
         self,
         key: ExecutionKey,
@@ -448,6 +614,9 @@ class SQLiteExecutionRepository:
             )
             if (
                 record.phase != "prepared"
+                or compatibility_payload(record.payload_json, record.key)["status"]
+                != "ready"
+                or record.collection != "pending"
                 or head is None
                 or head[0] != key.attempt
                 or current is not None
@@ -599,6 +768,10 @@ class SQLiteExecutionRepository:
                     batch_size=min(limit + 1, 1000),
                 ) as rows:
                     records = tuple(_record(row) for row in rows)
+                # SQLite's progress hook cannot interrupt Python DTO decoding.
+                # An overrun must still refuse an exact activity count.
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise DatabaseError("database_deadline_exceeded")
                 complete = (
                     readiness.active_coverage == "complete" and len(records) <= limit
                 )

@@ -10,9 +10,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 from processforge_core.composition import build_configuration_provider
+
+if TYPE_CHECKING:
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
+
 from processforge_core.configuration import ConfigurationProvider
 from processforge_core.database import DatabaseFactory, SQLiteDriver
 
@@ -48,6 +52,7 @@ def replay_session_raw_records(
     adapter: str = "codex-hooks",
     limit: int | None = None,
     configuration: ConfigurationProvider | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     """Replay accepted raw Codex records for one session and one project."""
 
@@ -73,6 +78,7 @@ def replay_session_raw_records(
         flow_root=core.locate_flow_root(project_root),
         configuration=pinned,
         driver=driver,
+        storage_host=storage_host,
     )
     root = kernel.root
     counts = _empty_counts()
@@ -81,7 +87,12 @@ def replay_session_raw_records(
     processed = 0
 
     for item in _iter_raw_records(
-        root, session_id=session_id, provider=provider, adapter=adapter, driver=driver
+        root,
+        session_id=session_id,
+        provider=provider,
+        adapter=adapter,
+        driver=driver,
+        storage_host=storage_host,
     ):
         if item.get("malformed"):
             counts["failed"] += 1
@@ -147,11 +158,15 @@ def checkpoint_path(
 
 
 def _iter_raw_records(
-    root: Path, *, driver: SQLiteDriver | None = None, **filters
+    root: Path,
+    *,
+    driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
+    **filters,
 ) -> Iterable[dict[str, Any]]:
     from processforge_core.raw_hook_journal import RawHookJournal
 
-    yield from RawHookJournal(driver=driver).records(
+    yield from RawHookJournal(driver=driver, storage_host=storage_host).records(
         contained_path(root, "hooks.sqlite3"), **filters
     )
 

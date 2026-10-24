@@ -6,9 +6,12 @@ import hashlib
 import json
 from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .database import SQLiteDriver
+
+if TYPE_CHECKING:
+    from .maintenance.storage_migration import StorageMigrationHost
 from .sqlite_storage import JournalError, database, metadata, set_metadata, transaction
 
 APPLICATION_ID = 0x50464556
@@ -41,8 +44,14 @@ class ProcessEventJournal:
     retained, so retries and Work readiness remain independent of logging.
     """
 
-    def __init__(self, *, driver: SQLiteDriver | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
+    ) -> None:
         self.driver = driver
+        self.storage_host = storage_host
 
     @staticmethod
     def connection(
@@ -51,6 +60,7 @@ class ProcessEventJournal:
         writable: bool = False,
         migrating: bool = False,
         driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
     ):
         return database(
             path,
@@ -60,6 +70,7 @@ class ProcessEventJournal:
             migrating=migrating,
             legacy_path=path.with_suffix(".ndjson"),
             driver=driver,
+            storage_host=storage_host,
         )
 
     def append(
@@ -92,7 +103,11 @@ class ProcessEventJournal:
         queue_dispatch: bool = False,
     ) -> int:
         with self.connection(
-            path, writable=True, migrating=migrating, driver=self.driver
+            path,
+            writable=True,
+            migrating=migrating,
+            driver=self.driver,
+            storage_host=self.storage_host,
         ) as connection:
             with transaction(connection):
                 return sum(
@@ -182,7 +197,9 @@ class ProcessEventJournal:
         if type(limit) is not int or not 1 <= limit <= 1000:
             raise ValueError("journal_limit_invalid")
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 if event_id is None:
                     rows = connection.execute(
                         "SELECT record FROM pending_dispatch ORDER BY seq LIMIT ?",
@@ -198,7 +215,9 @@ class ProcessEventJournal:
             return []
 
     def complete_dispatch(self, path: Path, event_id: str) -> None:
-        with self.connection(path, writable=True, driver=self.driver) as connection:
+        with self.connection(
+            path, writable=True, driver=self.driver, storage_host=self.storage_host
+        ) as connection:
             with transaction(connection):
                 connection.execute(
                     "DELETE FROM pending_dispatch WHERE event_id = ?", (event_id,)
@@ -206,7 +225,9 @@ class ProcessEventJournal:
 
     def contains(self, path: Path, event_id: str, *, event_id_value=None) -> bool:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 return (
                     connection.execute(
                         "SELECT 1 FROM admissions WHERE event_id = ?", (event_id,)
@@ -218,7 +239,9 @@ class ProcessEventJournal:
 
     def get(self, path: Path, event_id: str) -> dict[str, Any] | None:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 row = connection.execute(
                     "SELECT record FROM events WHERE event_id = ?", (event_id,)
                 ).fetchone()
@@ -228,7 +251,9 @@ class ProcessEventJournal:
 
     def latest(self, path: Path) -> dict[str, Any] | None:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 row = connection.execute(
                     "SELECT record FROM events ORDER BY seq DESC LIMIT 1"
                 ).fetchone()
@@ -238,14 +263,18 @@ class ProcessEventJournal:
 
     def count(self, path: Path) -> int:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 return int(metadata(connection, "history_count") or 0)
         except FileNotFoundError:
             return 0
 
     def verification_revision(self, path: Path) -> int:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 return int(metadata(connection, "verification_revision") or 0)
         except FileNotFoundError:
             return 0
@@ -258,7 +287,9 @@ class ProcessEventJournal:
         placeholders = ",".join("?" for _ in event_types)
         values = (assignment_id, *sorted(event_types))
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 candidates = []
                 for table in ("events", "verification_state"):
                     for column in ("assignment_id", "subject"):
@@ -305,7 +336,9 @@ class ProcessEventJournal:
                 clauses.append(column + " = ?")
                 values.append(value)
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 rows = connection.execute(
                     "SELECT seq, record FROM events WHERE "
                     + " AND ".join(clauses)
@@ -321,7 +354,9 @@ class ProcessEventJournal:
         after = 0
         while True:
             try:
-                with self.connection(path, driver=self.driver) as connection:
+                with self.connection(
+                    path, driver=self.driver, storage_host=self.storage_host
+                ) as connection:
                     rows = connection.execute(
                         "SELECT seq, record FROM events WHERE seq > ? ORDER BY seq LIMIT 1000",
                         (after,),
@@ -341,7 +376,11 @@ class ProcessEventJournal:
 
     def finish_migration(self, path: Path) -> None:
         with self.connection(
-            path, writable=True, migrating=True, driver=self.driver
+            path,
+            writable=True,
+            migrating=True,
+            driver=self.driver,
+            storage_host=self.storage_host,
         ) as connection:
             if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise JournalError("journal_integrity_check_failed")

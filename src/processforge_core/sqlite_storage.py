@@ -5,7 +5,12 @@ from __future__ import annotations
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
+
+if TYPE_CHECKING:
+    from .maintenance.contracts import StoreTarget
+    from .maintenance.storage_migration import StorageMigrationHost
+
 
 from .database import DatabaseFactory, SQLiteDriver
 
@@ -46,7 +51,7 @@ def set_metadata(connection: sqlite3.Connection, key: str, value: str) -> None:
 
 
 @contextmanager
-def database(
+def _database(
     path: Path,
     *,
     application_id: int,
@@ -55,6 +60,7 @@ def database(
     migrating: bool = False,
     legacy_path: Path | None = None,
     driver: SQLiteDriver | None = None,
+    identity: tuple[StoreTarget, str] | None = None,
 ) -> Iterator[sqlite3.Connection]:
     """Always close the operation-local connection in its calling thread.
 
@@ -115,7 +121,18 @@ def database(
                     )
                     connection.execute(f"PRAGMA application_id = {int(application_id)}")
                     connection.execute("PRAGMA user_version = 1")
+                    if identity is not None:
+                        from .maintenance.storage_migration import add_store_identity
+
+                        add_store_identity(connection, *identity)
                     actual_id, version = application_id, 1
+        if (
+            identity is None
+            and connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE name='pf_store_meta'"
+            ).fetchone()
+        ):
+            raise JournalError("storage_host_required")
         if actual_id != application_id or version != 1:
             raise JournalError("journal_schema_unsupported")
         if not migrating:
@@ -134,3 +151,64 @@ def database(
         raise JournalError("journal_database_error: " + str(exc)) from exc
     finally:
         connection.close()
+
+
+@contextmanager
+def adapter_identity_access(
+    path: Path, storage_host: StorageMigrationHost | None, *, writable: bool = False
+) -> Iterator[tuple[StoreTarget, str] | None]:
+    """Use the actual host-selected target and W4 gate; never discover an owner."""
+    if storage_host is None:
+        yield None
+        return
+    from .maintenance.contracts import MaintenanceError
+    from .maintenance.storage_migration import storage_identity_access
+
+    targets = [
+        target for target in storage_host.context.targets if target.target == path
+    ]
+    if len(targets) != 1 or targets[0].kind == "main":
+        raise MaintenanceError("storage_target_invalid")
+    target = targets[0]
+    if writable and not path.exists():
+        with storage_host.service.new_store_identity(
+            storage_host.context, target
+        ) as store_id:
+            yield target, store_id
+    else:
+        with storage_identity_access(
+            storage_host.context,
+            target,
+            registry_lock=storage_host.service.registry_lock,
+            driver=storage_host.service.driver,
+        ) as store_id:
+            yield None if store_id is None else (target, store_id)
+
+
+@contextmanager
+def database(
+    path: Path,
+    *,
+    application_id: int,
+    schema: tuple[str, ...],
+    writable: bool = False,
+    migrating: bool = False,
+    legacy_path: Path | None = None,
+    driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
+) -> Iterator[sqlite3.Connection]:
+    """Hold identity admission until the legacy connection is closed."""
+    with adapter_identity_access(
+        Path(path), storage_host, writable=writable
+    ) as identity:
+        with _database(
+            path,
+            application_id=application_id,
+            schema=schema,
+            writable=writable,
+            migrating=migrating,
+            legacy_path=legacy_path,
+            driver=driver,
+            identity=identity,
+        ) as connection:
+            yield connection

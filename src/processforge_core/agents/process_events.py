@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ..maintenance.storage_migration import StorageMigrationHost
 
 from ..configuration import ConfigurationProvider
 from ..database import DatabaseFactory
@@ -29,8 +32,13 @@ class ProcessEventRecorder:
         telemetry: TelemetryEventService | None = None,
         configuration: ProjectConfigurationReader | ConfigurationProvider | None = None,
         dispatcher: RuntimeHookDispatcher | None = None,
+        storage_host: StorageMigrationHost | None = None,
     ) -> None:
-        self.journal = journal if journal is not None else ProcessEventJournal()
+        self.journal = (
+            journal
+            if journal is not None
+            else ProcessEventJournal(storage_host=storage_host)
+        )
         self.inputs = inputs if inputs is not None else RunTaskInputReader()
         if hooks is None:
             hooks = (
@@ -68,7 +76,8 @@ class ProcessEventRecorder:
         journal = self.journal
         if type(journal) is ProcessEventJournal and journal.driver is None:
             journal = ProcessEventJournal(
-                driver=DatabaseFactory.resolve_driver(config.database)
+                driver=DatabaseFactory.resolve_driver(config.database),
+                storage_host=journal.storage_host,
             )
         inserted = journal.append(
             events_path,

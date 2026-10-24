@@ -16,7 +16,10 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
+
+if TYPE_CHECKING:
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
 
 from processforge_core.configuration import ConfigurationProvider
 from processforge_core.database import DatabaseFactory, SQLiteDriver
@@ -248,6 +251,7 @@ class RawIngressKernel:
         record_raw: bool | None = None,
         configuration: ConfigurationProvider | None = None,
         driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
     ) -> None:
         from processforge_core.raw_hook_journal import RawHookJournal
 
@@ -265,7 +269,7 @@ class RawIngressKernel:
         self.max_payload_bytes = max_payload_bytes
         self.record_raw = record_raw
         self.configuration = configuration
-        self.storage = RawHookJournal(driver=driver)
+        self.storage = RawHookJournal(driver=driver, storage_host=storage_host)
 
     def _operation(self):
         """Consume the host snapshot without discovering project configuration."""
@@ -277,7 +281,8 @@ class RawIngressKernel:
             config = self.configuration.current()
             if storage.driver is None:
                 storage = RawHookJournal(
-                    driver=DatabaseFactory.resolve_driver(config.database)
+                    driver=DatabaseFactory.resolve_driver(config.database),
+                    storage_host=storage.storage_host,
                 )
             if retain_raw is None:
                 retain_raw = config.logging.raw_hooks

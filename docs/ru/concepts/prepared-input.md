@@ -65,3 +65,30 @@ Codex использует существующую оболочку `tools/code
 Это контракты исходного checkout. Приёмка установленного Core, Workplace и реального Host проходит отдельно в T06; локальные проверки схем и smoke-тесты не подтверждают поведение установленной версии.
 
 См. [контекст Work](work-context.md), [чтение ресурсов Work](work-resources.md), [capsule контекста](context-capsule.md) и [драйверы выполнения](runtime-drivers.md).
+
+
+### SQL lifecycle и совместимость prepared input
+
+Для SQL-ready проекта attempt выделяется SQL до создания immutable input.
+Неудачная подготовка сохраняет planned attempt; повторная явная подготовка
+получает следующий номер. После записи input, prompt и captured paths приватный
+CAS переводит planned в ready/manual_required. Номер не выводится из каталогов.
+
+Перед Popen reservation фиксирует starting/current под workplace/project admission
+и task lock. Native wrapper публикует process/heartbeat/exit evidence с точной
+идентичностью attempt и checksum. Windows Job Object охватывает wrapper и его
+потомков; Linux использует отдельную process group. Exit receipt, смерть одного
+PID, таймаут и успешный сигнал сами по себе не доказывают отсутствие дерева.
+Неопределённость сохраняет current. Stop intent фиксируется до сигнала.
+
+Manual collection и отмена ready/manual до запуска не создают process, launch
+или физическую историю. Collection receipt/completion marker и SQL collection
+сверяются при повторе; отказ collection не возобновляет процесс. Status JSON
+служит восстанавливаемой проекцией; после binding CLI читает SQL даже при старой
+или недоступной проекции.
+
+Старый immutable prepared input без native configuration grant остаётся без
+sidecar body access. При capable wrapper native captured receipt paths могут
+переноситься в каталог его attempt приватным CAS; сам input, его checksum и
+scope не переписываются. Полная конфигурация закрепляется на время операции и
+передаётся новому wrapper только через точный native grant.

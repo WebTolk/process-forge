@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -13,6 +16,41 @@ from ..configuration import (
 )
 from ..work.context_documents import ContextContractInputs
 from .metadata import ProjectMetadataReader
+
+_OperationKey = tuple[Path | None, Path | None, Path | None, ProjectPFConfig | None]
+_OPERATION: ContextVar[tuple[_OperationKey, ConfigurationProvider] | None] = ContextVar(
+    "pf_configuration_operation", default=None
+)
+
+
+@contextmanager
+def configuration_operation(
+    project_root: Path | None,
+    workplace_root: Path | None,
+    *,
+    device_config_path: Path | None = None,
+    context_overrides: ProjectPFConfig | None = None,
+    configuration: ConfigurationProvider | None = None,
+) -> Iterator[ConfigurationProvider]:
+    """Pin one full native value for an exact operation, without project leakage."""
+    key = (project_root, workplace_root, device_config_path, context_overrides)
+    current = _OPERATION.get()
+    if current is not None and current[0] == key:
+        yield current[1]
+        return
+    provider = configuration or ProjectConfigurationReader().configuration_provider(
+        project_root,
+        workplace_root,
+        device_config_path=device_config_path,
+        context_overrides=context_overrides,
+    )
+    snapshot = provider.snapshot()
+    pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+    token = _OPERATION.set((key, pinned))
+    try:
+        yield pinned
+    finally:
+        _OPERATION.reset(token)
 
 
 @dataclass(frozen=True)
@@ -29,6 +67,14 @@ class ProjectConfigurationReader:
         context_overrides: ProjectPFConfig | None = None,
     ) -> ConfigurationProvider:
         """Bind already selected roots without discovery or reading any source."""
+        current = _OPERATION.get()
+        if current is not None and current[0] == (
+            project_root,
+            workplace_root,
+            device_config_path,
+            context_overrides,
+        ):
+            return current[1]
         return ConfigurationProvider(
             device_path=device_config_path,
             workplace_path=workplace_root / "configuration.yaml"

@@ -567,6 +567,15 @@ def main() -> int:
             raise SystemExit("FAIL: prepared input invalid: " + str(exc)) from exc
     elif os.environ.get("PF_AGENT_RUN_DIR"):
         raise SystemExit("FAIL: prepared_input_required")
+    execution_receipts = None
+    if any(name.startswith("PF_EXECUTION_") for name in os.environ):
+        if prepared is None or heartbeat is None or exit_contract is None:
+            raise SystemExit("FAIL: execution_identity_conflict")
+        from prepared_executor import ExecutionReceipts
+
+        execution_receipts = ExecutionReceipts(
+            dict(os.environ), prepared, heartbeat, exit_contract
+        )
     # Prepared references authorize exact material, never a whole external
     # directory. Native readers can consume the declared references directly.
     add_dirs = [] if prepared else resolved_workspace_dirs(workspace_access)
@@ -595,11 +604,14 @@ def main() -> int:
     command.extend(["--json", "-o", str(output), "-"])
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    write_heartbeat(
-        heartbeat,
-        "starting",
-        {"model": model, "workspace_dirs": [str(path) for path in add_dirs]},
-    )
+    if execution_receipts is not None:
+        execution_receipts.heartbeat_receipt("starting")
+    else:
+        write_heartbeat(
+            heartbeat,
+            "starting",
+            {"model": model, "workspace_dirs": [str(path) for path in add_dirs]},
+        )
     # Codex CLI reads its stdin as UTF-8.  ``text=True`` would encode this
     # payload with the Windows console/code-page default, corrupting a valid
     # non-ASCII assignment (for example a Russian project path) before the
@@ -628,7 +640,15 @@ def main() -> int:
         usage_capture.start_execution()
         try:
             result = subprocess.run(
-                command, input=payload_text.encode("utf-8"), check=False, stdout=receipt
+                command,
+                input=payload_text.encode("utf-8"),
+                check=False,
+                stdout=receipt,
+                env={
+                    key: value
+                    for key, value in os.environ.items()
+                    if not key.startswith("PF_EXECUTION_")
+                },
             )
         finally:
             usage_capture.finish()
@@ -638,12 +658,18 @@ def main() -> int:
             {"exit_code": result.returncode},
             component="worker",
         )
-    write_exit_contract(exit_contract, int(result.returncode))
-    write_heartbeat(
-        heartbeat,
-        "completed" if result.returncode == 0 else "failed",
-        {"exit_code": result.returncode},
-    )
+    if execution_receipts is not None:
+        execution_receipts.exit_receipt(int(result.returncode))
+        execution_receipts.heartbeat_receipt(
+            "completed" if result.returncode == 0 else "failed"
+        )
+    else:
+        write_exit_contract(exit_contract, int(result.returncode))
+        write_heartbeat(
+            heartbeat,
+            "completed" if result.returncode == 0 else "failed",
+            {"exit_code": result.returncode},
+        )
     return int(result.returncode)
 
 

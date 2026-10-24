@@ -11,6 +11,10 @@ import json
 import os
 import sqlite3
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .storage_migration import StorageMigrationHost
 from uuid import uuid4
 
 from processforge_core.configuration import ConfigurationProvider
@@ -130,6 +134,7 @@ class JournalMaintenanceService:
         *,
         configuration: ConfigurationProvider | None = None,
         driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
     ) -> None:
         """Bind operation ports without reading files or opening databases.
 
@@ -137,6 +142,7 @@ class JournalMaintenanceService:
             backup: Verified SQLite backup owner; defaults to SQLiteBackupService.
             scan: Legacy scan/quarantine owner; defaults to JournalScanService.
         """
+        self.storage_host = storage_host
         self.configuration = configuration
         self.driver = driver
         self._backup = backup
@@ -248,7 +254,10 @@ class JournalMaintenanceService:
         barriers: list[
             tuple[ProcessEventJournal | RawHookJournal, Path, tuple[int, int] | None]
         ] = []
-        events, raw = ProcessEventJournal(driver=driver), RawHookJournal(driver=driver)
+        events, raw = (
+            ProcessEventJournal(driver=driver, storage_host=self.storage_host),
+            RawHookJournal(driver=driver, storage_host=self.storage_host),
+        )
         scan_evidence = operation / "quarantine" if operation else evidence_dir
         preflight_complete = False
         try:
@@ -281,7 +290,11 @@ class JournalMaintenanceService:
                 # Initialization may commit a barrier before context exit fails.
                 barriers.append((owner, path, destinations[path]))
                 with owner.connection(
-                    path, writable=True, migrating=True, driver=owner.driver
+                    path,
+                    writable=True,
+                    migrating=True,
+                    driver=owner.driver,
+                    storage_host=owner.storage_host,
                 ) as connection:
                     destinations[path] = _database_identity(path)
                     barriers[-1] = (owner, path, destinations[path])
@@ -311,10 +324,16 @@ class JournalMaintenanceService:
 
             replay = _scan_report()
             with events.connection(
-                event_path, migrating=True, driver=events.driver
+                event_path,
+                migrating=True,
+                driver=events.driver,
+                storage_host=events.storage_host,
             ) as event_connection:
                 with raw.connection(
-                    raw_path, migrating=True, driver=raw.driver
+                    raw_path,
+                    migrating=True,
+                    driver=raw.driver,
+                    storage_host=raw.storage_host,
                 ) as raw_connection:
                     for kind, record, _location in self._scan.rows(
                         sources,
@@ -339,7 +358,11 @@ class JournalMaintenanceService:
             self._unchanged(project, workplace, flow, sources, report)
             for owner, path in ((events, event_path), (raw, raw_path)):
                 with owner.connection(
-                    path, writable=True, migrating=True, driver=owner.driver
+                    path,
+                    writable=True,
+                    migrating=True,
+                    driver=owner.driver,
+                    storage_host=owner.storage_host,
                 ) as connection:
                     with transaction(connection):
                         set_metadata(
@@ -366,7 +389,9 @@ class JournalMaintenanceService:
             events.finish_migration(event_path)
             raw.finish_migration(raw_path)
             for owner, path in ((events, event_path), (raw, raw_path)):
-                with owner.connection(path, driver=owner.driver) as connection:
+                with owner.connection(
+                    path, driver=owner.driver, storage_host=owner.storage_host
+                ) as connection:
                     if (
                         metadata(connection, "migration_state") != "ready"
                         or metadata(connection, "legacy_imported") != "1"
@@ -397,7 +422,11 @@ class JournalMaintenanceService:
                     if identity is None or current != identity:
                         raise MaintenanceError("migration_destination_changed")
                     with owner.connection(
-                        path, writable=True, migrating=True, driver=owner.driver
+                        path,
+                        writable=True,
+                        migrating=True,
+                        driver=owner.driver,
+                        storage_host=owner.storage_host,
                     ) as connection:
                         with transaction(connection):
                             set_metadata(connection, "migration_state", "importing")
@@ -563,7 +592,11 @@ class JournalMaintenanceService:
                 continue
             inserted = 0
             with owner.connection(
-                path, writable=True, migrating=True, driver=owner.driver
+                path,
+                writable=True,
+                migrating=True,
+                driver=owner.driver,
+                storage_host=owner.storage_host,
             ) as connection:
                 with transaction(connection):
                     for record, location in items:
@@ -659,7 +692,10 @@ class JournalMaintenanceService:
             ),
         ):
             with owner.connection(
-                path, migrating=True, driver=owner.driver
+                path,
+                migrating=True,
+                driver=owner.driver,
+                storage_host=owner.storage_host,
             ) as connection:
                 integrity = [
                     row[0] for row in connection.execute("PRAGMA integrity_check")

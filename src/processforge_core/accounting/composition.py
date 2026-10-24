@@ -8,7 +8,10 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
 from uuid import uuid4
 
 from processforge_core.accounting.model import identifier
@@ -37,8 +40,15 @@ def read_json(path: Path) -> dict[str, Any]:
 class _ReadOnlyRepository(SQLiteAccountingRepository):
     """Use Core's read snapshots without its creating/migrating constructor."""
 
-    def __init__(self, path: Path, *, driver: SQLiteDriver | None = None) -> None:
+    def __init__(
+        self,
+        path: Path,
+        *,
+        driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
+    ) -> None:
         self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
+        self.storage_host = storage_host
         self.path = path
         self.busy_timeout_ms = 1000
 
@@ -54,6 +64,7 @@ class WorkplaceAccounting:
     project_root: Path
     project_id: str
     configuration: ConfigurationProvider | None = None
+    storage_host: StorageMigrationHost | None = None
 
     @classmethod
     def discover(
@@ -204,9 +215,13 @@ class WorkplaceAccounting:
         self._safe_paths()
         if create:
             self.ensure_identity()
-            repository = SQLiteAccountingRepository(self.database, driver=driver)
+            repository = SQLiteAccountingRepository(
+                self.database, driver=driver, storage_host=self.storage_host
+            )
         elif self.database.is_file():
-            repository = _ReadOnlyRepository(self.database, driver=driver)
+            repository = _ReadOnlyRepository(
+                self.database, driver=driver, storage_host=self.storage_host
+            )
         else:
             return None
         return AccountingService(repository)

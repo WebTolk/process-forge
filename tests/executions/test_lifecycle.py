@@ -215,3 +215,590 @@ def test_linux_parser_handles_comm_parentheses(monkeypatch: pytest.MonkeyPatch) 
         observed.birth_id == "linux-start-ticks:56789"
         and observed.boot_id == "boot-identity"
     )
+
+
+def test_private_prepared_finalization_and_stale_cas(harness: Harness) -> None:
+    from processforge_core.executions.projection import canonical_json
+
+    from .test_repository import payload
+
+    template = json.loads(payload())
+    template["status"] = "planned"
+    planned = harness.repo.allocate_attempt(
+        "run", "task", canonical_json(template), generation=1
+    )
+    ready_payload = dict(
+        template,
+        status="ready",
+        prepared_input={
+            "path": "attempts/1/prepared-input.json",
+            "checksum": "sha256:" + "a" * 64,
+        },
+    )
+    ready = harness.repo._finalize_prepared(planned, canonical_json(ready_payload))
+    assert ready.revision == 2 and ready.phase == "prepared"
+    assert not harness.repo.current().records and ready.history_seq is None
+    with pytest.raises(ExecutionError, match="stale_revision"):
+        harness.repo._finalize_prepared(planned, canonical_json(ready_payload))
+    with pytest.raises(ExecutionError, match="execution_activity_unknown"):
+        harness.repo._finalize_prepared(ready, canonical_json(ready_payload))
+
+
+@pytest.mark.parametrize("collection", ["collected", "failed", "refused"])
+def test_private_manual_collection_never_invents_execution(
+    harness: Harness, collection: str
+) -> None:
+    from processforge_core.executions.projection import (
+        canonical_json,
+        projected_payload,
+    )
+
+    from .test_repository import payload
+
+    manual = json.loads(payload())
+    manual["status"] = "manual_required"
+    record = harness.repo.allocate_attempt(
+        "run", "task", canonical_json(manual), generation=1
+    )
+    changed = harness.repo._collect_manual(record, collection)
+    assert changed.collection == collection and changed.phase == "prepared"
+    assert (
+        changed.outcome
+        is changed.history_seq
+        is changed.launch_token
+        is changed.process
+        is None
+    )
+    assert projected_payload(changed)["status"] == (
+        "failed" if collection == "failed" else "manual_required"
+    )
+    assert harness.repo.current().records == ()
+    assert harness.repo.page_history().records == ()
+    with pytest.raises(ExecutionError, match="stale_revision"):
+        harness.repo._collect_manual(record, collection)
+
+
+@pytest.mark.parametrize("status", ["ready", "manual_required"])
+def test_private_cancel_before_reservation_has_no_physical_history(
+    harness: Harness, status: str
+) -> None:
+    from processforge_core.executions.projection import (
+        canonical_json,
+        projected_payload,
+    )
+
+    from .test_repository import payload
+
+    template = json.loads(payload())
+    template["status"] = status
+    record = harness.repo.allocate_attempt(
+        "run", "task", canonical_json(template), generation=1
+    )
+    cancelled = harness.repo._update_unlaunched(
+        record, status="cancelled", reason="stop requested", finished_at=STAMP
+    )
+    assert (
+        cancelled.phase == "prepared"
+        and projected_payload(cancelled)["status"] == "cancelled"
+    )
+    assert cancelled.history_seq is cancelled.outcome is cancelled.launch_token is None
+    assert harness.repo.current().records == harness.repo.page_history().records == ()
+    with pytest.raises(ExecutionError, match="execution_activity_unknown"):
+        harness.repo.reserve_start(
+            cancelled.key,
+            expected_revision=cancelled.revision,
+            generation=1,
+            launch_token="f" * 32,
+        )
+
+
+@pytest.mark.parametrize("descendant", [False, True])
+def test_native_wrapper_authenticated_tree_receipts(
+    isolated_path: Path, descendant: bool
+) -> None:
+    import hashlib
+    import subprocess
+    import sys
+    import time
+    from uuid import uuid4
+
+    import prepared_executor
+    import processforge as core
+
+    from processforge_core.executions.projection import canonical_json
+
+    from .test_repository import make_harness, payload
+
+    root = isolated_path
+    attempt = root / ".pf/runtime/agent-runs/run/task/attempts/1"
+    attempt.mkdir(parents=True)
+    document = {
+        "schema_version": 1,
+        "kind": "pf.prepared-input",
+        "project_root": str(root),
+        "identity": {
+            "project_id": "project",
+            "run_id": "run",
+            "assignment_id": "task",
+            "context_id": "context",
+            "attempt": 1,
+        },
+        "input": {},
+    }
+    manifest = attempt / "prepared-input.json"
+    raw = canonical_json(document).encode()
+    manifest.write_bytes(raw)
+    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+    token = uuid4().hex
+    environment = dict(os.environ)
+    for name in ("PF_CONFIGURATION_SNAPSHOT_PATH", "PF_CONFIGURATION_SNAPSHOT_SHA256"):
+        environment.pop(name, None)
+    environment.update(
+        PF_PROJECT_ROOT=str(root),
+        PF_WORKER_RUN_ID="run",
+        PF_WORKER_TASK_ID="task",
+        PF_WORKER_ATTEMPT="1",
+        PF_PREPARED_INPUT_FILE=str(manifest),
+        PF_PREPARED_INPUT_SHA256=digest,
+    )
+    environment.update(
+        dict(
+            zip(
+                prepared_executor._LAUNCH_ENV,
+                ("project", "run", "task", "1", token),
+                strict=True,
+            )
+        )
+    )
+    script = "import time; time.sleep(0.2)"
+    if descendant:
+        script = "import subprocess,sys; subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)'])"
+    wrapper = Path(prepared_executor.__file__)
+    argv = [
+        sys.executable,
+        "-B",
+        str(wrapper),
+        "--prepared-input",
+        str(manifest),
+        "--prepared-sha256",
+        digest,
+        "--heartbeat",
+        str(attempt / "heartbeat.json"),
+        "--exit-path",
+        str(attempt / "exit.json"),
+        "--",
+        sys.executable,
+        "-B",
+        "-c",
+        script,
+    ]
+    with (
+        (attempt / "wrapper.stdout").open("wb") as stdout,
+        (attempt / "wrapper.stderr").open("wb") as stderr,
+    ):
+        child = subprocess.Popen(
+            argv,
+            env=environment,
+            stdout=stdout,
+            stderr=stderr,
+            start_new_session=(os.name != "nt"),
+        )
+        try:
+            assert child.wait(timeout=12) == 0, (attempt / "wrapper.stderr").read_text()
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.wait()
+    hroot = root / "sql"
+    hroot.mkdir()
+    harness = make_harness(hroot)
+    template = json.loads(payload())
+    template["heartbeat_path"] = (
+        (attempt / "heartbeat.json").relative_to(root).as_posix()
+    )
+    prepared = harness.repo.allocate_attempt(
+        "run", "task", canonical_json(template), generation=1
+    )
+    reserved = harness.repo.reserve_start(
+        prepared.key, expected_revision=1, generation=1, launch_token=token
+    )
+    attached = core._sql_receipt(root, attempt / "process.json", reserved, "process")
+    # Windows venv launchers may delegate to a different native Python PID.
+    assert attached.process.pid > 0 and attached.process.birth_id
+    record = harness.repo.apply_observation(attached, expected_revision=2, generation=1)
+    exit_receipt = core._sql_receipt(root, attempt / "exit.json", record, "exit")
+    assert exit_receipt.exit_code == 0
+    record = harness.repo.apply_observation(
+        exit_receipt, expected_revision=record.revision, generation=1
+    )
+    assert record.phase == "unresolved" and harness.repo.current().records
+    deadline = time.monotonic() + 5
+    while (
+        time.monotonic() < deadline
+        and prepared_executor.owned_tree_absent(record.process) is not True
+    ):
+        time.sleep(0.02)
+    assert prepared_executor.owned_tree_absent(record.process) is True
+    receipt = json.loads((attempt / "heartbeat.json").read_bytes())
+    receipt["attempt"] = 2
+    (attempt / "heartbeat.json").write_text(canonical_json(receipt))
+    with pytest.raises(ExecutionError, match="receipt_conflict"):
+        core._sql_receipt(root, attempt / "heartbeat.json", record, "heartbeat")
+
+
+@pytest.fixture
+def sql_cli_fixture(isolated_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Real CLI/SQL/native I/O, with the upstream Work-context boundary isolated."""
+    import argparse
+    import sys
+    from uuid import uuid4
+
+    import processforge as core
+    from pf_runtime import host
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.configuration import DeviceConfigurationSource
+    from processforge_core.database import (
+        Database,
+        DatabaseIdentity,
+        DatabaseTarget,
+        SchemaManager,
+        SQLiteDriver,
+        SqlStatement,
+    )
+    from processforge_core.executions.schema import EXECUTION_SCHEMA
+    from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
+    from processforge_core.prepared import input as prepared_input
+    from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
+    from processforge_core.work import context
+    from processforge_core.work.paths import WorkPaths
+
+    root = isolated_path
+    monkeypatch.setattr(
+        DeviceConfigurationSource,
+        "default_path",
+        staticmethod(lambda: root / "device.yaml"),
+    )
+    flow = root / ".pf"
+    flow.mkdir()
+    write_yaml_file(flow / "process-forge.yaml", {"project": {"id": "project"}})
+    store_id = uuid4().hex
+    database = Database(
+        SQLiteDriver(),
+        DatabaseTarget(
+            flow / "data/pf.sqlite3", DatabaseIdentity(store_id, "project", "project")
+        ),
+    )
+    SchemaManager().initialize(database, (EXECUTION_SCHEMA,))
+    with database.transaction() as session:
+        session.execute(
+            SqlStatement(
+                "INSERT INTO execution_state VALUES(1,'project',1,'sql','ready','complete',0,1,NULL,NULL)"
+            )
+        )
+    repository = SQLiteExecutionRepository(database, "project")
+    core._core_common_json_io.json_write(
+        flow / "data/execution-storage.json",
+        {
+            "schema_version": 1,
+            "project_id": "project",
+            "store_id": store_id,
+            "profile_id": "project_main",
+            "target_relative_path": "data/pf.sqlite3",
+        },
+    )
+    task = {
+        "id": "task",
+        "run_id": "run",
+        "title": "SQL fixture",
+        "status": "running",
+        "allowed_files": [".pf/artifacts/report.md"],
+        "required_outputs": [
+            {"id": "report", "path": ".pf/artifacts/report.md", "required": True}
+        ],
+        "expected_report": {"artifact": ".pf/artifacts/report.md"},
+    }
+    paths = WorkPaths()
+    write_yaml_file(paths.assignment_document(root, "task"), task)
+    write_yaml_file(
+        paths.run_root(root, "run") / "run.yaml",
+        {"process_execution": {}, "status": "running"},
+    )
+    identity = {
+        "project_id": "project",
+        "run_id": "run",
+        "assignment_id": "task",
+        "context_id": "fixture-context",
+    }
+    capsule = {"execution_contract": {"identity": identity}}
+    write_yaml_file(core.assignment_capsule_path(root, "task"), capsule)
+    semantic = {
+        "identity": identity,
+        "outputs": {
+            "expected_report": task["expected_report"],
+            "required_outputs": task["required_outputs"],
+        },
+        "resources": {"grants": {}},
+    }
+    monkeypatch.setattr(
+        context, "validate_execution_contract", lambda *a, **k: {"status": "valid"}
+    )
+    monkeypatch.setattr(prepared_input, "semantic_input", lambda *a, **k: semantic)
+    monkeypatch.setattr(
+        core, "existing_capsule_status", lambda *a: ("fresh", "fixture-capsule")
+    )
+    monkeypatch.setattr(
+        core._process_event_recorder, "emit_process_event", lambda *a, **k: {}
+    )
+    monkeypatch.setattr(core, "emit_worker_completion_event", lambda *a, **k: {})
+    monkeypatch.setattr(
+        host,
+        "ingest_event",
+        lambda *a: {"accepted": True, "chat_message_ids": ["fixture-message"]},
+    )
+    monkeypatch.setattr(
+        core._worker_plan_validation_service, "subagent_outputs", lambda *a: []
+    )
+    driver = RuntimeDriverDefinitionPolicy().default_documents()["generic-shell"]
+    driver["id"] = "fixture-shell"
+    driver["security"]["require_explicit_executable"] = False
+    driver["environment"]["inherit"] = False
+    driver["environment"].setdefault("variables", {})["PYTHONDONTWRITEBYTECODE"] = "1"
+    script = "import os,pathlib; p=pathlib.Path(os.environ['PF_PROJECT_ROOT'])/'.pf/artifacts/report.md'; p.parent.mkdir(parents=True,exist_ok=True); p.write_text('# fixture result',encoding='utf-8')"
+    driver["command"] = {
+        "executable": sys.executable,
+        "args": ["-c", script],
+        "model_args": [],
+    }
+    driver_path = flow / "runtime/fixture-driver.yaml"
+    write_yaml_file(driver_path, driver)
+    args = argparse.Namespace(
+        project_root=str(root),
+        task="task",
+        driver=str(driver_path),
+        executable=None,
+        model=None,
+        reasoning_effort=None,
+        detach=False,
+    )
+    return root, repository, args, driver_path
+
+
+def test_real_sql_cli_prepare_start_status_collect_and_replay(sql_cli_fixture, capsys):
+    import processforge as core
+
+    root, repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    planned = repository.load_latest("run", "task")
+    assert planned.phase == "prepared" and planned.revision == 2
+    assert core.command_worker_run_start(args) == 0
+    finished = repository.load_latest("run", "task")
+    assert finished.phase == "absent" and finished.outcome == "completed"
+    status = core._work_paths.worker_run(root, "run", "task")["status"]
+    status.write_text('{"status":"running","attempt":999}')
+    assert core.command_worker_run_status(args) == 0
+    assert core.load_agent_run_state(root, "run", "task")["attempt"] == 1
+    assert core.command_worker_run_collect(args) == 0
+    assert repository.load_latest("run", "task").collection == "collected"
+    assert core.command_worker_run_collect(args) == 0
+    assert "COLLECTED:" in capsys.readouterr().out
+    assert not repository.current().records
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+def test_real_sql_cli_manual_collect_or_unlaunched_stop(
+    sql_cli_fixture, cancel, capsys
+):
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
+
+    root, repository, args, driver_path = sql_cli_fixture
+    driver = RuntimeDriverDefinitionPolicy().default_documents()["manual"]
+    driver["id"] = "fixture-manual"
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    if cancel:
+        assert core.command_worker_run_stop(args) == 0
+        assert core.command_worker_run_stop(args) == 0
+        assert core.load_agent_run_state(root, "run", "task")["status"] == "cancelled"
+    else:
+        assert core.command_worker_run_start(args) == 0
+        report = root / ".pf/artifacts/report.md"
+        report.parent.mkdir(parents=True, exist_ok=True)
+        report.write_text("manual report")
+        assert core.command_worker_run_collect(args) == 0
+        assert core.command_worker_run_collect(args) == 0
+        assert repository.load_latest("run", "task").collection == "collected"
+    record = repository.load_latest("run", "task")
+    assert (
+        record.phase == "prepared"
+        and record.launch_token
+        is record.process
+        is record.outcome
+        is record.history_seq
+        is None
+    )
+    assert repository.current().records == repository.page_history().records == ()
+
+
+@pytest.mark.parametrize("history,current", [(0, 0), (510, 3)])
+def test_scale_tool_uses_actual_guard_routes(
+    isolated_path: Path, history: int, current: int
+) -> None:
+    from smoke_worker_storage_scale import case
+
+    result = case(isolated_path, history, current)
+    assert result["running"] == current
+    assert result["attempt_rows"] == 2 * current
+    assert result["terminal_files_read"] == result["terminal_rows_visited"] == 0
+
+
+def test_old_prepared_input_launches_without_new_native_grants(sql_cli_fixture):
+    import processforge as core
+
+    from processforge_core.executions.projection import canonical_json
+    from processforge_core.prepared import input as prepared_input
+
+    root, repository, args, _driver = sql_cli_fixture
+    task = core._worker_assignment_service.load(root, "task")
+    capsule = core.load_yaml_document(core.assignment_capsule_path(root, "task"))
+    document = prepared_input.build(root, task, capsule, 1, core)
+    assert "native_launch" not in document
+    attempt_root = (
+        core._work_paths.worker_run(root, "run", "task")["root"] / "attempts/1"
+    )
+    path = attempt_root / "prepared-input.json"
+    reference = {
+        "path": path.relative_to(root).as_posix(),
+        "checksum": prepared_input.digest(prepared_input.encoded(document)),
+    }
+    prepared_input.write_once(path, document)
+    original = path.read_bytes()
+    driver = core._runtime_driver_selection_service.for_task(root, task, args.driver)
+    command, paths = core._worker_command_builder.build(
+        root, task, driver, attempt=1, prepared_input=reference
+    )
+    payload = core._agent_run_payload(root, task, driver, "ready", paths, 1)
+    payload["prepared_input"] = reference
+    repository.allocate_attempt("run", "task", canonical_json(payload), generation=1)
+    core._core_common_json_io.json_write(paths["command"], command)
+    assert core.command_worker_run_start(args) == 0
+    assert repository.load_latest("run", "task").phase == "absent"
+    assert (
+        path.read_bytes() == original
+        and not path.with_name("configuration.snapshot.json").exists()
+    )
+
+
+@pytest.mark.parametrize("denied", [False, True])
+def test_native_sql_detached_stop_and_signal_failure(
+    sql_cli_fixture, monkeypatch, denied
+):
+    import time
+
+    import prepared_executor
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    root, repository, args, driver_path = sql_cli_fixture
+    driver = core.load_yaml_document(driver_path)
+    driver["command"]["args"] = ["-c", "import time; time.sleep(20)"]
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    args.detach = True
+    assert core.command_worker_run_start(args) == 0
+    deadline = time.monotonic() + 7
+    while (
+        repository.load_latest("run", "task").process is None
+        and time.monotonic() < deadline
+    ):
+        assert core.command_worker_run_status(args) == 0
+        time.sleep(0.02)
+    record = repository.load_latest("run", "task")
+    assert record.process is not None
+    signal = prepared_executor.signal_owned_tree
+    try:
+        if denied:
+
+            def reject(_process):
+                raise prepared_executor.ExecutorError("execution_activity_unknown")
+
+            monkeypatch.setattr(prepared_executor, "signal_owned_tree", reject)
+        assert core.command_worker_run_stop(args) == (1 if denied else 0)
+        stopped = repository.load_latest("run", "task")
+        assert stopped.phase == "stopping" and repository.current().records
+    finally:
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
+        if repository.load_latest("run", "task").phase != "absent":
+            signal(record.process)
+    deadline = time.monotonic() + 7
+    while repository.current().records and time.monotonic() < deadline:
+        core.command_worker_run_status(args)
+        time.sleep(0.02)
+    assert not repository.current().records
+    assert repository.load_latest("run", "task").phase == "absent"
+
+
+def test_sql_ambiguous_spawn_retains_committed_current(sql_cli_fixture, monkeypatch):
+    import processforge as core
+
+    root, repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+
+    def ambiguous(*args, **kwargs):
+        raise OSError("fixture spawn ambiguity")
+
+    monkeypatch.setattr(core.subprocess, "Popen", ambiguous)
+    assert core.command_worker_run_start(args) == 1
+    record = repository.load_latest("run", "task")
+    assert record.phase == "starting" and record.launch_token is not None
+    assert record.history_seq is None and repository.current().records == (record,)
+
+
+def test_sql_collection_repairs_marker_before_sql_crash(sql_cli_fixture, monkeypatch):
+    import processforge as core
+
+    from processforge_core.database import DatabaseError
+
+    root, repository, args, _driver = sql_cli_fixture
+    assert (
+        core.command_worker_run_prepare(args)
+        == core.command_worker_run_start(args)
+        == 0
+    )
+    original = core._sql_collection_locked
+
+    def interrupted(*args, **kwargs):
+        raise DatabaseError("database_io_failed")
+
+    monkeypatch.setattr(core, "_sql_collection_locked", interrupted)
+    assert core.command_worker_run_collect(args) == 1
+    assert repository.load_latest("run", "task").collection == "pending"
+    monkeypatch.setattr(core, "_sql_collection_locked", original)
+    assert core.command_worker_run_collect(args) == 0
+    assert repository.load_latest("run", "task").collection == "collected"
+
+
+def test_native_stop_never_signals_a_foreign_host(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import prepared_executor
+
+    from .test_repository import PROCESS
+
+    monkeypatch.setattr(
+        prepared_executor, "_kernel", lambda: pytest.fail("foreign host signal")
+    )
+    with pytest.raises(
+        prepared_executor.ExecutorError, match="execution_activity_unknown"
+    ):
+        prepared_executor.signal_owned_tree(
+            replace(
+                PROCESS,
+                host_id="foreign-host",
+                tree_id="windows-job:Local\\pf-execution-" + "a" * 32,
+            )
+        )

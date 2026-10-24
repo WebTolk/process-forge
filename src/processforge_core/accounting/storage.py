@@ -9,7 +9,12 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from processforge_core.maintenance.contracts import StoreTarget
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
+
 
 from processforge_core.accounting.model import (
     ActivityInterval,
@@ -23,7 +28,7 @@ from processforge_core.accounting.model import (
     UsageRecord,
 )
 from processforge_core.database import DatabaseFactory, SQLiteDriver
-from processforge_core.sqlite_storage import transaction
+from processforge_core.sqlite_storage import adapter_identity_access, transaction
 
 Fact = UsageRecord | ActivityInterval
 Kind = Literal["usage", "activity"]
@@ -150,31 +155,47 @@ class SQLiteAccountingRepository:
         *,
         busy_timeout_ms: int = 1000,
         driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
     ) -> None:
         """Initialize only an empty database; reject foreign or unsupported schemas."""
         self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
+        self.storage_host = storage_host
         self.path = Path(path)
         if not self.path.is_absolute():
             raise ValueError("accounting database path must be absolute")
         if type(busy_timeout_ms) is not int or not 0 <= busy_timeout_ms <= 30_000:
             raise ValueError("busy_timeout_ms must be between 0 and 30000")
         self.busy_timeout_ms = busy_timeout_ms
-        with self._database(writable=True) as connection:
-            with transaction(connection):
-                application_id = connection.execute("PRAGMA application_id").fetchone()[
-                    0
-                ]
-                version = connection.execute("PRAGMA user_version").fetchone()[0]
-                tables = connection.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'"
-                ).fetchall()
-                if application_id == 0 and version == 0 and not tables:
-                    for statement in _SCHEMA:
-                        connection.execute(statement)
-                    connection.execute(f"PRAGMA application_id = {APPLICATION_ID}")
-                    connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
-                self._verify(connection)
-            connection.execute("PRAGMA journal_mode = WAL")
+        with self._database(writable=True, initializing=True):
+            pass
+
+    def _initialize(
+        self, connection: sqlite3.Connection, identity: tuple[StoreTarget, str] | None
+    ) -> None:
+        with transaction(connection):
+            application_id = connection.execute("PRAGMA application_id").fetchone()[0]
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+            tables = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+            if application_id == 0 and version == 0 and not tables:
+                for statement in _SCHEMA:
+                    connection.execute(statement)
+                connection.execute(f"PRAGMA application_id = {APPLICATION_ID}")
+                connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+            if (
+                identity is not None
+                and not connection.execute(
+                    "SELECT 1 FROM sqlite_master WHERE name='pf_store_meta'"
+                ).fetchone()
+            ):
+                from processforge_core.maintenance.storage_migration import (
+                    add_store_identity,
+                )
+
+                add_store_identity(connection, *identity)
+            self._verify(connection)
+        connection.execute("PRAGMA journal_mode = WAL")
 
     @staticmethod
     def _verify(connection: sqlite3.Connection) -> None:
@@ -190,7 +211,13 @@ class SQLiteAccountingRepository:
                 raise SchemaVersionError("accounting_schema_incomplete")
 
     @contextmanager
-    def _database(self, *, writable: bool = False) -> Iterator[sqlite3.Connection]:
+    def _database_unfenced(
+        self,
+        *,
+        writable: bool = False,
+        initializing: bool = False,
+        identity: tuple[StoreTarget, str] | None = None,
+    ) -> Iterator[sqlite3.Connection]:
         if self.path.is_symlink():
             raise AccountingStorageError("accounting_unsafe_path")
         connection: sqlite3.Connection | None = None
@@ -214,6 +241,15 @@ class SQLiteAccountingRepository:
             connection.execute("PRAGMA foreign_keys = ON")
             if writable:
                 connection.execute("PRAGMA synchronous = FULL")
+            if initializing:
+                self._initialize(connection, identity)
+            if (
+                identity is None
+                and connection.execute(
+                    "SELECT 1 FROM sqlite_master WHERE name='pf_store_meta'"
+                ).fetchone()
+            ):
+                raise AccountingStorageError("storage_host_required")
             yield connection
         except sqlite3.Error as exc:
             # SQLite error text may include private paths or submitted payloads.
@@ -222,6 +258,18 @@ class SQLiteAccountingRepository:
         finally:
             if connection is not None:
                 connection.close()
+
+    @contextmanager
+    def _database(
+        self, *, writable: bool = False, initializing: bool = False
+    ) -> Iterator[sqlite3.Connection]:
+        with adapter_identity_access(
+            self.path, self.storage_host, writable=writable
+        ) as identity:
+            with self._database_unfenced(
+                writable=writable, initializing=initializing, identity=identity
+            ) as connection:
+                yield connection
 
     @contextmanager
     def snapshot(self) -> Iterator[sqlite3.Connection]:

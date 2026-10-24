@@ -51,6 +51,12 @@ TOKEN = "a" * 32
 STAMP = "2026-10-24T16:00:00+00:00"
 
 
+def _required_row(session: SqlSession, statement: SqlStatement) -> SqlRow:
+    row = session.fetch_one(statement)
+    assert row is not None
+    return row
+
+
 def payload(task_id: str = "task", attempt: int = 1) -> str:
     """Construct an existing, complete schema-1 compatibility DTO."""
     return canonical_json(
@@ -262,10 +268,11 @@ def test_directory_only_floor_replay_has_no_execution_and_allocates_eight(
                     is None
                 )
             assert (
-                session.fetch_one(
+                _required_row(
+                    session,
                     SqlStatement(
                         "SELECT next_history_seq FROM execution_state WHERE singleton=1"
-                    )
+                    ),
                 )[0]
                 == 1
             )
@@ -308,10 +315,11 @@ def test_floor_checkpoint_rollback_and_resume_are_one_transaction(
             is None
         )
         assert (
-            session.fetch_one(
+            _required_row(
+                session,
                 SqlStatement(
                     "SELECT plan_checksum FROM execution_state WHERE singleton=1"
-                )
+                ),
             )[0]
             is None
         )
@@ -326,16 +334,18 @@ def test_floor_checkpoint_rollback_and_resume_are_one_transaction(
         )
     with h.database.read() as session:
         assert (
-            session.fetch_one(
-                SqlStatement("SELECT next_attempt FROM execution_allocation_floors")
+            _required_row(
+                session,
+                SqlStatement("SELECT next_attempt FROM execution_allocation_floors"),
             )[0]
             == 8
         )
         assert (
-            session.fetch_one(
+            _required_row(
+                session,
                 SqlStatement(
                     "SELECT plan_checksum FROM execution_state WHERE singleton=1"
-                )
+                ),
             )[0]
             == "checkpoint"
         )
@@ -401,9 +411,9 @@ def test_import_snapshot_absorbs_previously_saved_floor(isolated_path: Path) -> 
             next_attempt_floors=(),
         ) == (1, 0)
         assert (
-            session.fetch_one(SqlStatement("SELECT next_attempt FROM execution_heads"))[
-                0
-            ]
+            _required_row(
+                session, SqlStatement("SELECT next_attempt FROM execution_heads")
+            )[0]
             == 8
         )
         assert (
@@ -870,3 +880,21 @@ def test_current_snapshot_while_archived_collection_writer(harness: Harness) -> 
         observed = harness.repo.current()
         writer.result(timeout=5)
     assert observed.complete and observed.records == (active,)
+
+
+def test_current_python_decode_overrun_is_unknown(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import processforge_core.executions.sqlite_repository as module
+
+    harness.start()
+    original = module._record
+
+    def delayed(row: SqlRow) -> ExecutionRecord:
+        time.sleep(0.02)
+        return original(row)
+
+    monkeypatch.setattr(module, "_record", delayed)
+    snapshot = harness.repo.current(deadline=time.monotonic() + 0.01)
+    assert not snapshot.complete and not snapshot.readiness.ready
+    assert snapshot.readiness.reason == "database_deadline_exceeded"

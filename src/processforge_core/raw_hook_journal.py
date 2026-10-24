@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 from .database import SQLiteDriver
+
+if TYPE_CHECKING:
+    from .maintenance.storage_migration import StorageMigrationHost
 from .sqlite_storage import JournalError, database, metadata, set_metadata, transaction
 
 APPLICATION_ID = 0x50465257
@@ -33,8 +36,14 @@ def _encode(value: Any) -> str:
 
 
 class RawHookJournal:
-    def __init__(self, *, driver: SQLiteDriver | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
+    ) -> None:
         self.driver = driver
+        self.storage_host = storage_host
 
     @staticmethod
     def connection(
@@ -43,6 +52,7 @@ class RawHookJournal:
         writable: bool = False,
         migrating: bool = False,
         driver: SQLiteDriver | None = None,
+        storage_host: StorageMigrationHost | None = None,
     ):
         return database(
             path,
@@ -51,6 +61,7 @@ class RawHookJournal:
             writable=writable,
             migrating=migrating,
             driver=driver,
+            storage_host=storage_host,
         )
 
     def accept(
@@ -63,7 +74,11 @@ class RawHookJournal:
         legacy_location: str | None = None,
     ) -> dict[str, Any]:
         with self.connection(
-            path, writable=True, migrating=migrating, driver=self.driver
+            path,
+            writable=True,
+            migrating=migrating,
+            driver=self.driver,
+            storage_host=self.storage_host,
         ) as connection:
             with transaction(connection):
                 return self._accept(
@@ -158,7 +173,9 @@ class RawHookJournal:
         }
 
     def finish(self, path: Path, raw_event_id: str, response: dict[str, Any]) -> None:
-        with self.connection(path, writable=True, driver=self.driver) as connection:
+        with self.connection(
+            path, writable=True, driver=self.driver, storage_host=self.storage_host
+        ) as connection:
             with transaction(connection):
                 connection.execute(
                     "UPDATE receipts SET pending_record = NULL, response = ? WHERE raw_event_id = ?",
@@ -167,7 +184,9 @@ class RawHookJournal:
 
     def result(self, path: Path, raw_event_id: str) -> dict[str, Any] | None:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 row = connection.execute(
                     "SELECT response FROM receipts WHERE raw_event_id = ?",
                     (raw_event_id,),
@@ -203,7 +222,9 @@ class RawHookJournal:
             where += " AND "
         while True:
             try:
-                with self.connection(path, driver=self.driver) as connection:
+                with self.connection(
+                    path, driver=self.driver, storage_host=self.storage_host
+                ) as connection:
                     rows = connection.execute(
                         "SELECT r.seq, COALESCE(h.record, r.pending_record) AS record FROM receipts r "
                         "LEFT JOIN raw_events h ON h.raw_event_id = r.raw_event_id WHERE "
@@ -228,14 +249,20 @@ class RawHookJournal:
 
     def count(self, path: Path) -> int:
         try:
-            with self.connection(path, driver=self.driver) as connection:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
                 return int(metadata(connection, "history_count") or 0)
         except FileNotFoundError:
             return 0
 
     def finish_migration(self, path: Path) -> None:
         with self.connection(
-            path, writable=True, migrating=True, driver=self.driver
+            path,
+            writable=True,
+            migrating=True,
+            driver=self.driver,
+            storage_host=self.storage_host,
         ) as connection:
             if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise JournalError("journal_integrity_check_failed")

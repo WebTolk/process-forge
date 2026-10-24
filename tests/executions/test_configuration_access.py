@@ -1013,3 +1013,148 @@ def test_replay_raw_reader_uses_derived_driver(workspace, monkeypatch):
         not call[3] for call in driver.calls[initial_connections:]
     )  # finish() used the same transport.
     assert any(call[3] for call in driver.calls[initial_connections:])
+
+
+@pytest.mark.parametrize("kind", ["events", "raw", "accounting", "search"])
+def test_adopted_legacy_access_uses_exact_pin_and_search_keeps_uuid(workspace, kind):
+    from processforge_core.maintenance.backup import SQLiteBackupService
+    from processforge_core.maintenance.contracts import (
+        MaintenanceError,
+        MigrationSafety,
+        StorageMigrationContext,
+        StoreTarget,
+    )
+    from processforge_core.maintenance.storage_migration import (
+        StorageMigrationHost,
+        StorageMigrationService,
+        _publish_pin,
+        add_store_identity,
+    )
+    from processforge_core.runtime.execution_admission import (
+        ExecutionAdmission,
+        registry_file_lock,
+    )
+
+    project = workspace / "project"
+    _write(project / ".pf/process-forge.yaml", "project: {id: project}\n")
+    flow = project / ".pf"
+    if kind == "events":
+        path = flow / "runtime/events/events.sqlite3"
+        with ProcessEventJournal.connection(path, writable=True):
+            pass
+    elif kind == "raw":
+        path = flow / "runtime/agent-events/hooks.sqlite3"
+        with RawHookJournal.connection(path, writable=True):
+            pass
+    elif kind == "accounting":
+        path = flow / "data/accounting/accounting.sqlite3"
+        SQLiteAccountingRepository(path)
+        _write(flow / "data/accounting/identity.json", '{"origin_id":"project"}')
+    else:
+        path = local_search.index_path(project)
+        local_search.build_index(project, {})
+    target = StoreTarget(
+        kind, path, path.relative_to(flow).as_posix(), "project", "project"
+    )
+    context = StorageMigrationContext(
+        project, None, workspace / "device.yaml", (target,)
+    )
+    service = StorageMigrationService(
+        backup=SQLiteBackupService(),
+        admission=ExecutionAdmission(registry_file_lock),
+        registry_lock=registry_file_lock,
+        safety=lambda context: MigrationSafety(
+            "unknown", "fixture", ("not an installed-host proof",)
+        ),
+    )
+    host = StorageMigrationHost(context, service)
+    identifier = uuid4().hex
+    with sqlite3.connect(path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        add_store_identity(connection, target, identifier)
+    _publish_pin(flow, target, identifier, "sha256:" + "a" * 64, "pending")
+    if kind == "events":
+        with pytest.raises(MaintenanceError, match="storage_resume_required"):
+            ProcessEventJournal(storage_host=host).count(path)
+    elif kind == "raw":
+        with pytest.raises(MaintenanceError, match="storage_resume_required"):
+            RawHookJournal(storage_host=host).count(path)
+    elif kind == "accounting":
+        with pytest.raises(MaintenanceError, match="storage_resume_required"):
+            SQLiteAccountingRepository(path, storage_host=host)
+    else:
+        with pytest.raises(MaintenanceError, match="storage_resume_required"):
+            local_search.rebuild_index(project, {}, storage_host=host)
+    _publish_pin(flow, target, identifier, "sha256:" + "a" * 64, "ready")
+    if kind == "events":
+        with ProcessEventJournal.connection(
+            path, writable=True, storage_host=host
+        ) as connection:
+            assert (
+                connection.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+                == identifier
+            )
+            assert (
+                connection.execute("PRAGMA application_id").fetchone()[0] == 0x50464556
+            )
+        assert ProcessEventJournal(storage_host=host).count(path) == 0
+    elif kind == "raw":
+        assert RawHookJournal(storage_host=host).count(path) == 0
+    elif kind == "accounting":
+        with SQLiteAccountingRepository(
+            path, storage_host=host
+        ).snapshot() as connection:
+            assert (
+                connection.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+                == identifier
+            )
+    else:
+        inode = path.stat().st_ino
+        local_search.rebuild_index(project, {}, storage_host=host)
+        assert path.stat().st_ino == inode
+        assert (
+            local_search.index_status(project, {}, storage_host=host)["status"]
+            == "fresh"
+        )
+        with sqlite3.connect(path) as connection:
+            assert (
+                connection.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+                == identifier
+            )
+        # Ready UUID does not authorize an unexpected extra domain table.
+        with sqlite3.connect(path) as connection:
+            connection.execute("CREATE TABLE unexpected(value)")
+        with pytest.raises(MaintenanceError, match="storage_schema_unrecognized"):
+            local_search.rebuild_index(project, {}, storage_host=host)
+        with sqlite3.connect(path) as connection:
+            assert (
+                connection.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+                == identifier
+            )
+    with pytest.raises(MaintenanceError, match="storage_pin_conflict"):
+        _publish_pin(flow, target, identifier, "sha256:" + "a" * 64, "pending")
+
+
+def test_configuration_operation_pins_exact_scope_and_restores(workspace, monkeypatch):
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    project = workspace / "project"
+    reader = ProjectConfigurationReader()
+    reads = []
+    original = YamlConfigStore.read
+
+    def tracked(store):
+        reads.append(store.path)
+        return original(store)
+
+    monkeypatch.setattr(YamlConfigStore, "read", tracked)
+    with configuration_operation(project, None) as pinned:
+        assert reader.configuration_provider(project) is pinned
+        assert build_configuration_provider(project_root=project) is pinned
+        assert pinned.snapshot() is pinned.snapshot(refresh=True)
+        with configuration_operation(project, None) as nested:
+            assert nested is pinned
+        other = reader.configuration_provider(workspace / "other")
+        assert other is not pinned
+    assert reader.configuration_provider(project) is not pinned
+    assert reads == [workspace / "device.yaml", project / ".pf/configuration.yaml"]

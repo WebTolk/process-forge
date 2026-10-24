@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, suppress
 from dataclasses import replace
 from pathlib import Path
 from typing import cast
@@ -129,7 +129,14 @@ def projected_payload(record: ExecutionRecord) -> dict[str, object]:
     """Return the authoritative compatibility DTO with existing public statuses."""
     payload = compatibility_payload(record.payload_json, record.key)
     if record.phase == "prepared":
-        if payload["status"] not in {"planned", "ready", "manual_required", "blocked"}:
+        if payload["status"] not in {
+            "planned",
+            "ready",
+            "manual_required",
+            "blocked",
+            "cancelled",
+            "failed",
+        }:
             raise ValueError("invalid prepared payload")
     elif record.phase in {"starting", "running"}:
         payload["status"] = record.phase
@@ -173,23 +180,26 @@ class ExecutionProjection:
     def publish(self, run_id: str, task_id: str, destination: Path) -> bool:
         """Atomically replace the latest DTO, then CAS-ack its exact revision."""
         with self.task_lock(run_id, task_id):
-            record = self.repository.load_latest(run_id, task_id)
-            if record is None:
-                return False
-            raw = (canonical_json(projected_payload(record)) + "\n").encode("utf-8")
-            temporary = destination.with_name(
-                "." + destination.name + "." + uuid4().hex
-            )
-            try:
-                with temporary.open("xb") as handle:
-                    handle.write(raw)
-                    handle.flush()
-                    os.fsync(handle.fileno())
-                os.replace(temporary, destination)
-            except OSError:
-                return False
-            finally:
+            return self._publish_locked(run_id, task_id, destination)
+
+    def _publish_locked(self, run_id: str, task_id: str, destination: Path) -> bool:
+        """Publish when the host already holds the non-reentrant task lock."""
+        record = self.repository.load_latest(run_id, task_id)
+        if record is None:
+            return False
+        raw = (canonical_json(projected_payload(record)) + "\n").encode("utf-8")
+        temporary = destination.with_name("." + destination.name + "." + uuid4().hex)
+        try:
+            with temporary.open("xb") as handle:
+                handle.write(raw)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, destination)
+        except OSError:
+            return False
+        finally:
+            with suppress(OSError):
                 temporary.unlink(missing_ok=True)
-            return self.repository.ack_projection(
-                record.key, revision=record.revision, generation=record.generation
-            )
+        return self.repository.ack_projection(
+            record.key, revision=record.revision, generation=record.generation
+        )

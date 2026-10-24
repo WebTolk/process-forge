@@ -13,13 +13,21 @@ import json
 import os
 import sqlite3
 import stat
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, cast
+
+if TYPE_CHECKING:
+    from ..maintenance.contracts import StoreTarget
+    from ..maintenance.storage_migration import StorageMigrationHost
+
 
 from ..configuration import ConfigurationProvider
 from ..database import DatabaseFactory, SQLiteDriver
+from ..sqlite_storage import adapter_identity_access
 
 MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
@@ -85,6 +93,7 @@ class ResourceSearchIndex:
     workplace_root: Path | None = None
     configuration: ConfigurationProvider | None = None
     driver: SQLiteDriver | None = None
+    storage_host: StorageMigrationHost | None = None
 
     def _operation_driver(self) -> SQLiteDriver:
         if self.driver is not None:
@@ -111,6 +120,7 @@ class ResourceSearchIndex:
             workplace_root=self.workplace_root,
             verify_files=verify_files,
             driver=self._operation_driver(),
+            storage_host=self.storage_host,
         )
 
     def refresh(self) -> dict[str, Any]:
@@ -121,6 +131,7 @@ class ResourceSearchIndex:
             self.snapshot,
             workplace_root=self.workplace_root,
             driver=self._operation_driver(),
+            storage_host=self.storage_host,
         )
 
     def rebuild(self) -> dict[str, Any]:
@@ -131,6 +142,7 @@ class ResourceSearchIndex:
             self.snapshot,
             workplace_root=self.workplace_root,
             driver=self._operation_driver(),
+            storage_host=self.storage_host,
         )
 
     def mark_dirty(self, *, reason: str = "dirty") -> dict[str, Any]:
@@ -140,6 +152,7 @@ class ResourceSearchIndex:
             workplace_root=self.workplace_root,
             reason=reason,
             driver=self._operation_driver(),
+            storage_host=self.storage_host,
         )
 
     def maintenance_tick(self, *, verify_files: bool = True) -> dict[str, Any]:
@@ -151,6 +164,7 @@ class ResourceSearchIndex:
             workplace_root=self.workplace_root,
             verify_files=verify_files,
             driver=self._operation_driver(),
+            storage_host=self.storage_host,
         )
 
     def search(
@@ -172,6 +186,7 @@ class ResourceSearchIndex:
             offset=offset,
             workplace_root=self.workplace_root,
             driver=self._operation_driver(),
+            storage_host=self.storage_host,
         )
 
 
@@ -874,6 +889,7 @@ def authorized_coverage(
     *,
     workplace_root: Path | None = None,
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     """Describe physical index coverage, without equating it with material proof."""
     identifiers = authorized_resource_ids(snapshot)
@@ -889,9 +905,16 @@ def authorized_coverage(
         return result
     counts: dict[str, int] = {}
     try:
-        db = (
-            driver if driver is not None else DatabaseFactory.resolve_driver()
-        )._connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0)
+        stack = ExitStack()
+        db, identity = stack.enter_context(
+            _search_database(
+                path,
+                driver=driver,
+                storage_host=storage_host,
+                writable=False,
+                timeout=0.0,
+            )
+        )
         try:
             for start in range(0, len(identifiers), 128):
                 page = identifiers[start : start + 128]
@@ -903,7 +926,7 @@ def authorized_coverage(
                     ).fetchall()
                 )
         finally:
-            db.close()
+            stack.close()
     except (OSError, sqlite3.Error):
         return {**result, "status": "unavailable"}
     missing = [identifier for identifier in identifiers if identifier not in counts]
@@ -1174,6 +1197,34 @@ def _refresh_catalogue_metadata(
     )
 
 
+@contextmanager
+def _search_database(
+    path: Path,
+    *,
+    driver: SQLiteDriver | None,
+    storage_host: StorageMigrationHost | None,
+    writable: bool,
+    timeout: float,
+) -> Iterator[tuple[sqlite3.Connection, tuple[StoreTarget, str] | None]]:
+    with adapter_identity_access(path, storage_host, writable=writable) as identity:
+        db = (driver or DatabaseFactory.resolve_driver())._connect(
+            path if writable else path.resolve().as_uri() + "?mode=ro",
+            uri=not writable,
+            timeout=timeout,
+        )
+        try:
+            if (
+                identity is None
+                and db.execute(
+                    "SELECT 1 FROM sqlite_master WHERE name='pf_store_meta'"
+                ).fetchone()
+            ):
+                raise LocalSearchError("storage_host_required")
+            yield db, identity
+        finally:
+            db.close()
+
+
 def build_index(
     project_root: Path,
     snapshot: dict[str, Any],
@@ -1182,6 +1233,8 @@ def build_index(
     full_reconciliation: bool = False,
     _prepared: tuple[list[AuthorizedResource], list[dict[str, Any]]] | None = None,
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
+    _rebuild: bool = False,
 ) -> dict[str, Any]:
     if _prepared is None:
         resources = authorized_roots(
@@ -1193,6 +1246,7 @@ def build_index(
     resource_ids = indexable_resource_ids(resources)
     resource_fingerprints = _resource_fingerprints(resources)
     path = index_path(project_root, workplace_root)
+    was_present = path.is_file()
     path.parent.mkdir(parents=True, exist_ok=True)
     scope_key = _scope_key(snapshot)
     refreshed_at = _now_utc()
@@ -1203,11 +1257,20 @@ def build_index(
         for item in documents
     }
     generation = _scope_generation(snapshot, resource_ids, fingerprints)
-    db = (driver if driver is not None else DatabaseFactory.resolve_driver())._connect(
-        path
+    stack = ExitStack()
+    db, identity = stack.enter_context(
+        _search_database(
+            path, driver=driver, storage_host=storage_host, writable=True, timeout=5.0
+        )
     )
     try:
+        db.execute("BEGIN IMMEDIATE")
+        if _rebuild and was_present:
+            _check_schema(db)
         _ensure_schema(db)
+        if _rebuild:
+            for table in ("documents_fts", "documents", "resources", "index_state"):
+                db.execute("DELETE FROM " + table)
         # A Workplace refresh is an authoritative reconciliation of its
         # registered catalogue.  Retaining a removed package here would allow
         # an old project snapshot to query an orphaned document from the shared
@@ -1295,9 +1358,18 @@ def build_index(
             catalogue, dict
         ):
             _refresh_catalogue_metadata(db, project_root, catalogue, refreshed_at)
+        if (
+            identity is not None
+            and not db.execute(
+                "SELECT 1 FROM sqlite_master WHERE name='pf_store_meta'"
+            ).fetchone()
+        ):
+            from ..maintenance.storage_migration import add_store_identity
+
+            add_store_identity(db, *identity)
         db.commit()
     finally:
-        db.close()
+        stack.close()
     return {
         "status": "fresh",
         "indexed": len(documents),
@@ -1313,20 +1385,21 @@ def rebuild_index(
     *,
     workplace_root: Path | None = None,
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     resources = authorized_roots(
         project_root, snapshot, strict=True, workplace_root=workplace_root
     )
     documents = _documents(resources)
-    path = index_path(project_root, workplace_root)
-    path.unlink(missing_ok=True)
     return build_index(
         project_root,
         snapshot,
         workplace_root=workplace_root,
         full_reconciliation=True,
+        _rebuild=True,
         _prepared=(resources, documents),
         driver=driver,
+        storage_host=storage_host,
     )
 
 
@@ -1337,6 +1410,7 @@ def index_status(
     workplace_root: Path | None = None,
     verify_files: bool = False,
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     capability = sqlite_fts5_capability(driver=driver)
     path = index_path(project_root, workplace_root)
@@ -1361,9 +1435,16 @@ def index_status(
     if not path.is_file():
         return payload
     try:
-        db = (
-            driver if driver is not None else DatabaseFactory.resolve_driver()
-        )._connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0)
+        stack = ExitStack()
+        db, identity = stack.enter_context(
+            _search_database(
+                path,
+                driver=driver,
+                storage_host=storage_host,
+                writable=False,
+                timeout=0.0,
+            )
+        )
         try:
             _check_schema(db)
             scope_key = _scope_key(snapshot) if snapshot is not None else None
@@ -1473,7 +1554,7 @@ def index_status(
                     }
                 )
         finally:
-            db.close()
+            stack.close()
     except (OSError, sqlite3.Error, LocalSearchError, json.JSONDecodeError) as exc:
         payload["status"] = "degraded"
         payload["error"] = _error_code(exc) or "index_unreadable"
@@ -1487,6 +1568,7 @@ def mark_index_dirty(
     workplace_root: Path | None = None,
     reason: str = "dirty",
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     path = index_path(project_root, workplace_root)
     payload = {
@@ -1499,8 +1581,11 @@ def mark_index_dirty(
     }
     if not path.is_file():
         return payload
-    db = (driver if driver is not None else DatabaseFactory.resolve_driver())._connect(
-        path, timeout=0.0
+    stack = ExitStack()
+    db, identity = stack.enter_context(
+        _search_database(
+            path, driver=driver, storage_host=storage_host, writable=True, timeout=0.0
+        )
     )
     try:
         _check_schema(db)
@@ -1523,7 +1608,7 @@ def mark_index_dirty(
         payload["status"] = "stale" if cursor.rowcount else "missing"
         payload["marked_scope_count"] = int(cursor.rowcount or 0)
     finally:
-        db.close()
+        stack.close()
     return payload
 
 
@@ -1534,6 +1619,7 @@ def maintenance_tick(
     workplace_root: Path | None = None,
     verify_files: bool = True,
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     before = index_status(
         project_root,
@@ -1541,6 +1627,7 @@ def maintenance_tick(
         workplace_root=workplace_root,
         verify_files=verify_files,
         driver=driver,
+        storage_host=storage_host,
     )
     action = "none"
     result: dict[str, Any] | None = None
@@ -1557,12 +1644,20 @@ def maintenance_tick(
     try:
         if before.get("status") in {"missing", "stale"}:
             result = build_index(
-                project_root, snapshot, workplace_root=workplace_root, driver=driver
+                project_root,
+                snapshot,
+                workplace_root=workplace_root,
+                driver=driver,
+                storage_host=storage_host,
             )
             action = "refresh"
         elif before.get("status") == "degraded" and error != "fts5_unavailable":
             result = rebuild_index(
-                project_root, snapshot, workplace_root=workplace_root, driver=driver
+                project_root,
+                snapshot,
+                workplace_root=workplace_root,
+                driver=driver,
+                storage_host=storage_host,
             )
             action = "rebuild"
     except (OSError, sqlite3.Error, LocalSearchError) as exc:
@@ -1575,6 +1670,7 @@ def maintenance_tick(
             workplace_root=workplace_root,
             verify_files=False,
             driver=driver,
+            storage_host=storage_host,
         )
         after_failure["status"] = "degraded"
         after_failure["error"] = _error_code(exc)
@@ -1592,6 +1688,7 @@ def maintenance_tick(
         workplace_root=workplace_root,
         verify_files=False,
         driver=driver,
+        storage_host=storage_host,
     )
     return {
         "schema_version": 1,
@@ -1648,6 +1745,7 @@ def search(
     offset: Any = None,
     workplace_root: Path | None = None,
     driver: SQLiteDriver | None = None,
+    storage_host: StorageMigrationHost | None = None,
 ) -> dict[str, Any]:
     if not isinstance(query, str) or not query.strip():
         raise LocalSearchError("invalid_query")
@@ -1665,6 +1763,7 @@ def search(
         workplace_root=workplace_root,
         verify_files=False,
         driver=driver,
+        storage_host=storage_host,
     )
     if state.get("status") != "fresh":
         return _empty_search_result(query, page_limit, start, state)
@@ -1690,9 +1789,16 @@ def search(
             },
         }
     try:
-        db = (
-            driver if driver is not None else DatabaseFactory.resolve_driver()
-        )._connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0)
+        stack = ExitStack()
+        db, identity = stack.enter_context(
+            _search_database(
+                path,
+                driver=driver,
+                storage_host=storage_host,
+                writable=False,
+                timeout=0.0,
+            )
+        )
     except (OSError, sqlite3.Error) as exc:
         if isinstance(exc, sqlite3.Error) and _sqlite_busy(exc):
             return _empty_search_result(
@@ -1731,7 +1837,7 @@ def search(
                 else "search_unavailable"
             ) from exc
     finally:
-        db.close()
+        stack.close()
     expected = _snapshot_checksum(snapshot)
     items: list[dict[str, Any]] = []
     for row in rows:
