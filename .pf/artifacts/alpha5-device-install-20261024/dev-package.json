@@ -1,0 +1,14 @@
+{
+  "version": "1.3.0-alpha5",
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "archive": "dist/processforge-1.3.0-alpha5-dev-20261024.zip",
+  "archive_sha256": "5bba94c513b5bbf3261f1c64ca8a8f537b2d8e4aac47d89597a70ba230eb79d3",
+  "archive_bytes": 2938278,
+  "sidecar": "dist/processforge-1.3.0-alpha5-dev-20261024.manifest.json",
+  "sidecar_sha256": "319bd52a6f0195533370271e9d587a581a6b9fcc23bd1f0b9835214900dcb1bd",
+  "qualified_sidecar_sha256": "8d9ab711c2edda53c1037bb0ddd2bb2972462b34bdd0aa32b6d457606b5027e9",
+  "managed_files": 1500,
+  "entries": 1501,
+  "qualified_zip_byte_identical": true,
+  "derived_sidecar_semantic_change": "archive.filename only; serialization recorded separately"
+}

@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "kind": "pf.source_assurance_summary",
+  "at": "2026-10-23T23:13:27.842579+00:00",
+  "scope": "Frozen exact source; archive, installed payload, actual Runtime and actual connected host remain separate gates",
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "source_tree": "13c36327a4f4aa0561a61e66f822e9230eb503f8",
+  "changed_task_files": 31,
+  "independent_code_review": {
+    "result": "GO/pass",
+    "open_findings": 0,
+    "findings_sha256": "59608166105be380d517e0d2a77e6e56aa8fc594e40bab8fda554e4f5bc69868",
+    "candidate_manifest_sha256": "4deba3799e1aaa4dc4b76572e3b43286fb61fa5e9753e30a14b50dfc588fc210",
+    "resolved_original_no_go": "CP-A5-R01",
+    "all31working_and_committed_blobs_verified": true
+  },
+  "mode": "1-1-4: primary integration, four native PF contribution responsibilities, independent native final reviewer",
+  "contributions": [
+    {
+      "role": "primary",
+      "code_result": "pass_for_integrated_corrected_candidate",
+      "native_lifecycle_acceptance_claimed": false
+    },
+    {
+      "role": "runtime_monitor",
+      "code_result": "pass_for_integrated_corrected_candidate",
+      "native_lifecycle_acceptance_claimed": false
+    },
+    {
+      "role": "mcp_host",
+      "code_result": "pass_for_integrated_corrected_candidate",
+      "native_lifecycle_acceptance_claimed": false
+    },
+    {
+      "role": "tests",
+      "code_result": "pass_for_integrated_corrected_candidate",
+      "native_lifecycle_acceptance_claimed": false
+    },
+    {
+      "role": "documentation_distribution",
+      "code_result": "pass_for_integrated_corrected_candidate",
+      "native_lifecycle_acceptance_claimed": false
+    }
+  ],
+  "registered_tests": {
+    "full": {
+      "exit_code": 0,
+      "passed": 858,
+      "skipped": 7,
+      "subtests": 383,
+      "pytest_seconds": 404.24,
+      "launcher_seconds": 407.921,
+      "receipt_sha256": "5380921ced5ca927e3b124da3565bcc19e14d3e54ae2dbc7ad2e797b92d2eb3d"
+    },
+    "core_properties": {
+      "exit_code": 0,
+      "passed": 97,
+      "receipt_sha256": "84bcffbb9151a9617cd9395f6f8eb6d52d741c0626e72d2aa4847d712becd732"
+    }
+  },
+  "native_source_full": {
+    "exit_code": 0,
+    "checks": 274,
+    "pass": 274,
+    "fail": 0,
+    "warn": 0,
+    "skip": 0,
+    "native_elapsed_seconds": 2231.51,
+    "report_sha256": "0a184c7f65ff09cfc253b56c87d0f3936f467caf7e9a4244c42a75b91e11a46a",
+    "wrapper_receipt_sha256": "9d4c770aa09a506dfa86463213e141987ad5022c75485ebecfb74bacfad43611"
+  },
+  "quality": {
+    "ruff_new_owner_and_five_core_test_files": "pass",
+    "scoped_format_and_AST_checks": 24,
+    "strict_owner_mypy": "pass",
+    "action_adapter_mypy": "pass",
+    "owner_docstrings": "pass",
+    "owner_bandit": {
+      "issues": 0,
+      "lines": 308
+    },
+    "owner_combined_branch_coverage_percent": 97,
+    "owner_coverage_statements": 181,
+    "owner_missing_statements": 3,
+    "owner_branches": 56,
+    "owner_partial_branches": 4,
+    "legacy_affected_ruff": {
+      "baseline": 383,
+      "candidate": 381,
+      "introduced": 0
+    },
+    "legacy_runtime_mypy": {
+      "baseline": 53,
+      "candidate": 53,
+      "introduced": 0,
+      "raw_exit_code": 1,
+      "diagnostics_identical": true
+    },
+    "global_project_lint_type_clean": false,
+    "pinned_quality_report_sha256": "6da99d7c28478c40d60580f8b6bb0fbbb8dafc12d5c21f661c56c349bc3f7023"
+  },
+  "retained_negative_evidence": {
+    "first_candidate_code_no_go": true,
+    "first_native_source_failure": true,
+    "first_native_archive_timeout": true,
+    "generated_receipt_remediation": "separate native Work run_completed; original incident retained"
+  },
+  "device_archive_publication_claimed": false
+}

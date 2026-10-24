@@ -1,0 +1,31 @@
+{
+  "kind": "pf.native_cli_qualification",
+  "label": "native-archive-r3-native-result",
+  "at": "2026-10-24T00:58:53.885644+00:00",
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "archive_sha256": "5bba94c513b5bbf3261f1c64ca8a8f537b2d8e4aac47d89597a70ba230eb79d3",
+  "status": "pass",
+  "exit_code": 0,
+  "exit_code_scope": "Actual native bin/pf.py entrypoint; observed SystemExit propagated its delegated native CLI success. This is not the failed private observer wrapper exit.",
+  "native_cli_exit_code": 0,
+  "private_collector_exit_code": 1,
+  "profile": "release-archive-test --extracted-test full --timeout-scale 3",
+  "native_outer_budget_seconds": 3600,
+  "duration_seconds": 3453.345,
+  "native_full_extracted_profile_pass": true,
+  "native_stdout_final_result": "PASS",
+  "stdout_sha256": "dfe7c2677920b42617606f2b076f192fa103c670dc18d69f809e9f70e9ef7504",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "entrypoint_exit_receipt_sha256": "39e0ef34eb9bf54d9ac8a287860cec7f4f75977dcc469e74db1f16fc75f0e36d",
+  "original_private_wrapper_report": "native-archive-r3-report.json",
+  "original_private_wrapper_report_sha256": "3ba039a568a3dd6ef91cd08331fb1341d5bc77102c3dda61cb8ac946d5d4e30e",
+  "collector_status": "failed_to_follow_bin_subprocess; nested JSON not retained; original failure receipt preserved",
+  "nested_checks_count": null,
+  "no_nested_report_count_invented": true,
+  "product_native_arguments_guards_or_results_changed": false,
+  "prior_archive_failures_retained": [
+    "native-archive-report.json",
+    "native-archive-r2-report.json"
+  ],
+  "qualification_basis": "Actual complete native CLI exit0 plus explicit PASS of full extracted release-test and final RESULT PASS; all archive/sidecar/file/hash prechecks passed. The optional collector failure is not rewritten as success."
+}

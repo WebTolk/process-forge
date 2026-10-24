@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "pf.delivery_review_findings",
+  "product_code_changed": false,
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "independent_source_review": "GO/pass; no open source findings",
+  "additional_independent_delivery_code_review": "not_applicable: release_delivery Work changes no product code and requires_review is false",
+  "reviewer_impersonated": false,
+  "findings": [],
+  "pending_acceptance": [
+    "actual Runtime guarded restart and loaded build qualification",
+    "genuine client/MCP reconnect and live connected-host qualification"
+  ],
+  "assurance_complete": false
+}
