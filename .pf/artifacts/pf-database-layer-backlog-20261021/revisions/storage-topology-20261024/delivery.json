@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T04:40:47.946216+00:00",
+  "requirements_commit": "2a9778a5501939b6421e214fcbcf3eb4168afb57",
+  "parent": "c23838173ee582af8505d0258258905d3fe5207a",
+  "remotes": {
+    "origin": {
+      "commit": "2a9778a5501939b6421e214fcbcf3eb4168afb57",
+      "matches": true,
+      "gitverse_token_helper": false
+    },
+    "gitverse": {
+      "commit": "2a9778a5501939b6421e214fcbcf3eb4168afb57",
+      "matches": true,
+      "gitverse_token_helper": true
+    }
+  },
+  "both_dev_readbacks_match": true,
+  "sql_topology": "one primary SQLite workplace database and one per project in .pf",
+  "search_storage": "undecided",
+  "future_rag_implemented": false,
+  "product_or_database_changes": false,
+  "original_inputs_and_main_index_preserved": true,
+  "gitverse_authentication": "existing TOKEN askpass helper; credential.helper disabled; noninteractive GCM",
+  "followup_accounting_commit": "Contains this prior delivery receipt and append-only log; final exact readbacks retained privately and reported to operator"
+}

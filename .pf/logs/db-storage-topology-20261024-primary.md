@@ -20,3 +20,5 @@ Validation: JSON, revision hashes, relative links, whitespace, explicit undecide
 Next: native lifecycle recording and mirrored evidence delivery.
 
 2026-10-24T04:40:35.966222+00:00 | primary | Requirements-only successor run_completed; native run/capsule doctors21/12 PASS. SQL workplace/project topology recorded, search physical placement undecided, future RAG separate. Original inputs/index preserved. Publishing scoped documents through isolated Git index; both live dev parents match, GitVerse TOKEN helper enforced.
+
+2026-10-24T04:40:47.947069+00:00 | primary | Requirements commit 2a9778a5501939b6421e214fcbcf3eb4168afb57 published in parallel and read back exactly from both origin/dev and gitverse/dev using TOKEN. Final accounting records this receipt/log only; implementation remains unstarted, search physical placement undecided and protected original inputs/index preserved.
