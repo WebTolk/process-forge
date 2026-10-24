@@ -1,0 +1,537 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-24",
+  "status": "ready_for_review",
+  "recommendation_only": true,
+  "identity": {
+    "project_id": "process-forge",
+    "run_id": "pf-r02-design-20261024",
+    "assignment_id": "pf-r02-w1-domain-design-20261024",
+    "context_id": "pf-r02-w1-domain-design-20261024-capsule",
+    "attempt": 2
+  },
+  "basis": {
+    "input_fingerprint": "sha256:84a25f001ba286ef463b46d41c491af67bd1faa93bc6724cc048954c50d4f724",
+    "capsule_checksum": "sha256:0d04291dd40c7badce7efb818606f6435232dd6be8b88ad054b253564b0eca67",
+    "capsule_checksum_verified": true,
+    "scope": "analysis_and_artifacts_only",
+    "source_state": "current_checkout_bytes; no clean-tree or commit equivalence claim"
+  },
+  "observed_owners": [
+    {
+      "domain": "project_identity_config",
+      "authority": "project manifest and configured local references",
+      "files": [
+        "src/processforge_core/project/metadata.py",
+        "src/processforge_core/configuration/service.py",
+        "src/processforge_core/configuration/yaml_store.py"
+      ],
+      "symbols": [
+        "ProjectMetadataReader",
+        "ConfigService"
+      ],
+      "identity": [
+        "project_id"
+      ],
+      "notes": "ProjectMetadataReader verified directly; configuration remains an independent bootstrap input, not stored behind the database it configures."
+    },
+    {
+      "domain": "project_work",
+      "authority": ".pf/runs/<run_id>/run.yaml + .pf/assignments/<assignment_id>.yaml",
+      "files": [
+        "src/processforge_core/process_execution.py",
+        "src/processforge_core/work/start_publication.py",
+        "src/processforge_core/work/transition_commit.py",
+        "src/processforge_core/completion/intent_replay.py",
+        "src/processforge_core/work/records.py",
+        "tools/processforge.py"
+      ],
+      "symbols": [
+        "ProcessExecutionService",
+        "WorkStartPublicationService.publish",
+        "WorkTransitionCommitService.commit",
+        "CompletionIntentReplayService.replay",
+        "YamlWorkRecordReader",
+        "save_run",
+        "save_task"
+      ],
+      "identity": [
+        "project_id",
+        "run_id",
+        "assignment_id",
+        "context_id"
+      ],
+      "first_slice": "retain YAML authority; SQL/workplace summaries cannot independently change stages"
+    },
+    {
+      "domain": "pinned_inputs",
+      "authority": "immutable project capsule, prepared input and pinned process bytes",
+      "files": [
+        "src/processforge_core/work/worker_assignment.py",
+        "src/processforge_core/runtime/command.py"
+      ],
+      "symbols": [
+        "WorkerAssignmentService",
+        "WorkerCommandBuilder"
+      ],
+      "identity": [
+        "assignment_id",
+        "context_id",
+        "capsule_checksum",
+        "input_fingerprint",
+        "process_fingerprint"
+      ],
+      "first_slice": "retain immutable files and exact selectors"
+    },
+    {
+      "domain": "artifact_content",
+      "authority": "declared artifact bytes in project",
+      "files": [
+        "src/processforge_core/work/outputs.py",
+        "tools/pf_runtime/host.py"
+      ],
+      "symbols": [
+        "WorkOutputPolicy.path",
+        "WorkOutputPolicy.checks",
+        "output_fact",
+        "required_outputs_for_task"
+      ],
+      "identity": [
+        "project_id",
+        "run_id",
+        "assignment_id",
+        "output_id",
+        "relative_path",
+        "content_fingerprint"
+      ],
+      "first_slice": "keep semantic Markdown/file bodies; readiness/hash is a derived fact and must be revalidated"
+    },
+    {
+      "domain": "worker_attempt",
+      "authority": "latest status.json interpreted by controller; process/heartbeat/exit receipts written by distinct producers",
+      "files": [
+        "tools/processforge.py",
+        "src/processforge_core/work/paths.py",
+        "src/processforge_core/runtime/observation_inputs.py",
+        "tools/codex_exec_worker.py",
+        "tools/prepared_executor.py"
+      ],
+      "symbols": [
+        "write_agent_run_state",
+        "load_agent_run_state",
+        "command_worker_run_start",
+        "observe_worker_run",
+        "_collect_worker_run_locked",
+        "WorkPaths.worker_run",
+        "WorkerObservationInputService",
+        "write_heartbeat",
+        "write_exit_contract"
+      ],
+      "identity": [
+        "project_id",
+        "run_id",
+        "assignment_id",
+        "attempt"
+      ],
+      "first_slice": "project main SQL repository owns interpreted lifecycle; receipts remain evidence, legacy status is generated compatibility view after cutover"
+    },
+    {
+      "domain": "ledger_sessions_leases",
+      "authority": "workplace Agent Ledger; project current-session refs are projections",
+      "files": [
+        "src/processforge_core/agents/registry.py",
+        "src/processforge_core/agents/presence.py",
+        "src/processforge_core/agents/session_metadata.py",
+        "tools/processforge.py"
+      ],
+      "symbols": [
+        "AgentWorkplaceRegistry",
+        "AgentPresenceReader",
+        "SessionMetadataWriter",
+        "command_agent_checkin",
+        "command_agent_heartbeat",
+        "write_agent_presence",
+        "write_current_session_refs"
+      ],
+      "identity": [
+        "agent_id",
+        "session_id",
+        "project_id",
+        "lease_id"
+      ],
+      "first_slice": "no migration; online presence does not prove a worker process is running"
+    },
+    {
+      "domain": "chat_telemetry",
+      "authority": "project transcript and telemetry producers",
+      "files": [
+        "src/processforge_core/chat/writer.py",
+        "src/processforge_core/chat/transcripts.py",
+        "src/processforge_core/agents/telemetry.py"
+      ],
+      "symbols": [
+        "ChatTranscriptWriter.append_chat_message",
+        "ChatTranscriptReader",
+        "TelemetryEventService"
+      ],
+      "identity": [
+        "project_id",
+        "session_id",
+        "message_id",
+        "event_id"
+      ],
+      "first_slice": "no body migration; event journal keeps references, not a competing transcript"
+    },
+    {
+      "domain": "project_ingress_and_verification",
+      "authority": "ProcessEventJournal + RawHookJournal",
+      "files": [
+        "src/processforge_core/process_event_journal.py",
+        "src/processforge_core/raw_hook_journal.py"
+      ],
+      "symbols": [
+        "ProcessEventJournal.append_many",
+        "ProcessEventJournal.pending_dispatch",
+        "RawHookJournal.accept",
+        "RawHookJournal.finish"
+      ],
+      "identity": [
+        "event_id",
+        "raw_event_id",
+        "seq",
+        "assignment_id"
+      ],
+      "first_slice": "retain mandatory admissions, pending dispatch and verification even if history disabled; later consolidate into project main DB"
+    },
+    {
+      "domain": "accounting",
+      "authority": "workplace accounting repository",
+      "files": [
+        "src/processforge_core/accounting/storage.py",
+        "src/processforge_core/accounting/composition.py"
+      ],
+      "symbols": [
+        "SQLiteAccountingRepository",
+        "WorkplaceAccounting"
+      ],
+      "identity": [
+        "origin_id",
+        "source_id",
+        "record_id",
+        "revision",
+        "project_id"
+      ],
+      "first_slice": "retain existing accounting data; do not create a new workplace worker-only DB"
+    },
+    {
+      "domain": "workplace_views_and_stop",
+      "authority": "host maps and metrics are projections; shutdown is a fresh scoped observation",
+      "files": [
+        "tools/pf_runtime/host.py",
+        "tools/pf_runtime/service.py",
+        "src/processforge_core/runtime/metrics.py"
+      ],
+      "symbols": [
+        "state_path",
+        "declared_stage_obligations",
+        "RuntimeProcess.active_worker_count",
+        "registered_projects",
+        "observe",
+        "shutdown_workers"
+      ],
+      "identity": [
+        "project_id",
+        "session_id",
+        "runtime_instance_id",
+        "observed_at",
+        "coverage"
+      ],
+      "first_slice": "replace historical worker directory scans in guard and counter; preserve partial/null semantics"
+    },
+    {
+      "domain": "search",
+      "authority": "derived separate search index",
+      "files": [
+        "src/processforge_core/resources/index_backend.py"
+      ],
+      "symbols": [
+        "ResourceIndexBackend"
+      ],
+      "identity": [
+        "resource_id",
+        "generation"
+      ],
+      "first_slice": "exclude from operational SQL consolidation; search backend is not SQL DAL"
+    }
+  ],
+  "proposed_contract": {
+    "storage_topology": {
+      "project_main": "one main SQL database under each .pf; exact filename and schema namespace to be frozen by W2/W4",
+      "workplace_main": "one main SQL database; prefer compatible evolution/consolidation of existing accounting store, never an additional permanent subsystem database",
+      "search": "separate derived database",
+      "legacy_project_journals": "existing events/hooks databases remain transitional until explicit migration; no automatic move/delete"
+    },
+    "authority_rules": [
+      "One logical lifecycle writer service per attempt, used by CLI/MCP/Runtime; different processes serialize through the same repository contract.",
+      "Work state and execution state are separate: completed process is not approved task; completed task is not proof of exited process.",
+      "Ledger owns session binding; attempt links do not rebind sessions.",
+      "Artifacts and immutable capsules remain files; SQL owns indexes/references or explicitly migrated facts, not competing editable bodies.",
+      "Workplace project summaries carry source revision and coverage; they cannot mutate project state or prove idle from stale absence."
+    ],
+    "execution_identity": [
+      "project_id",
+      "run_id",
+      "assignment_id",
+      "attempt",
+      "execution_instance_id"
+    ],
+    "execution_instance_id": "proposed internal opaque generation; project-root path is routing, PID alone is not identity",
+    "state_dimensions": [
+      "execution_lifecycle",
+      "process_identity_and_observation",
+      "collection_readiness",
+      "source_revision",
+      "migration_readiness"
+    ],
+    "operational_tables": [
+      "execution_attempts (attempt identity, lifecycle, revision, provenance)",
+      "execution_current (only unresolved physical executions; FK/reference to attempt)",
+      "execution_receipt_admissions (idempotency/conflict boundary)",
+      "storage_domains/migration checkpoint metadata"
+    ],
+    "atomicity": "terminal attempt update and removal from execution_current in one project transaction; one versioned lifecycle fact, not independently mutable current/history copies",
+    "history": "indexed keyset pages on stable sequence; no full-history read on normal start/status/stop",
+    "receipt_authority": "heartbeat/exit files are producer evidence; one controller applies exact attempt-bound receipts, checks duplicate/conflicting IDs and projects legacy status.json",
+    "uncertainty": "unknown current execution blocks idle; missing optional old history does not. Proven absence of process can clear physical activity without inventing successful exit or successful collection.",
+    "start_stop": "durable reservation before Popen; launch/stop admission fence must cover CLI and Runtime together. Runtime state_lock alone is insufficient. W3 must freeze locking order and recovery with W2/W4 before implementation.",
+    "file_only": "direct local SQLite through Core, no daemon, MCP, network, server backend or LLM required; do not instantiate workplace storage when not needed by the existing command"
+  },
+  "minimal_slice": [
+    "Freeze database location/schema ownership and lifecycle ports; no new public CLI/MCP contract.",
+    "Implement SQLite project execution repository and explicit legacy import with readiness marker.",
+    "Route all attempt state readers/writers through one service; keep receipt and prepared-input paths compatible.",
+    "Replace shutdown_workers worker scan and RuntimeProcess.active_worker_count with indexed unresolved execution reads; reconcile only exact active attempt receipts.",
+    "Use workplace summaries only as projections; guard obtains complete current project observations and checks start/stop fencing.",
+    "Qualify old CLI/MCP/file-only behavior and 400000 completed attempts with 0/1/multiple active executions before accepting the cutover."
+  ],
+  "remaining_migration_order": [
+    {
+      "order": 1,
+      "domain": "worker attempts",
+      "gate": "R01 backup/restore contract + explicit import and writer switch"
+    },
+    {
+      "order": 2,
+      "domain": "project events and raw hooks",
+      "gate": "preserve admission IDs, minimal operational state, order and quarantine; consolidate existing two SQLite files into same project main DB"
+    },
+    {
+      "order": 3,
+      "domain": "workplace Ledger/presence/leases/resource events",
+      "gate": "retain session authority, security boundaries and existing public contracts; tables in the same workplace main DB"
+    },
+    {
+      "order": 4,
+      "domain": "project task/run canonical storage if selected later",
+      "gate": "explicit writer cutover of all lifecycle/recovery callers; until then YAML remains canonical, no dual authority"
+    },
+    {
+      "order": 5,
+      "domain": "chat/telemetry metadata if justified",
+      "gate": "body retention and privacy decided separately; no new permanent per-subsystem DB"
+    }
+  ],
+  "suggested_implementation_ownership": [
+    {
+      "owner": "W1",
+      "new_files": [
+        "src/processforge_core/executions/model.py",
+        "src/processforge_core/executions/ports.py",
+        "docs/ru/concepts/execution-storage.md"
+      ],
+      "existing_files": [],
+      "remit": "Freeze domain types, identity and repository protocols with W2/W3; document authority. Proposed paths, not current product files."
+    },
+    {
+      "owner": "W2",
+      "new_files": [
+        "src/processforge_core/storage/__init__.py",
+        "src/processforge_core/storage/api.py",
+        "src/processforge_core/storage/sqlite_driver.py",
+        "src/processforge_core/storage/schema.py",
+        "src/processforge_core/storage/composition.py"
+      ],
+      "existing_files": [
+        "src/processforge_core/sqlite_storage.py",
+        "src/processforge_core/accounting/storage.py",
+        "src/processforge_core/accounting/composition.py",
+        "src/processforge_core/configuration/models.py",
+        "src/processforge_core/configuration/service.py"
+      ],
+      "remit": "Shared SQL API, first SQLite driver, domain schema versioning and composition. Touch existing files only if required by frozen contract."
+    },
+    {
+      "owner": "W3",
+      "new_files": [
+        "src/processforge_core/executions/__init__.py",
+        "src/processforge_core/executions/service.py",
+        "src/processforge_core/executions/sqlite_repository.py"
+      ],
+      "existing_files": [
+        "tools/processforge.py",
+        "src/processforge_core/composition.py",
+        "src/processforge_core/runtime/metrics.py",
+        "src/processforge_core/runtime/observation_inputs.py",
+        "src/processforge_core/runtime/command.py",
+        "tools/pf_runtime/service.py",
+        "tools/pf_runtime/host.py",
+        "tools/codex_exec_worker.py",
+        "tools/prepared_executor.py"
+      ],
+      "remit": "Single owner for shared integration files; attempt lifecycle, receipts, guard/counter and launch fence. All CLI registration changes from W2/W4 go through W3 serially."
+    },
+    {
+      "owner": "W4",
+      "new_files": [
+        "src/processforge_core/maintenance/execution_migration.py",
+        "tools/migrate-execution-storage.py"
+      ],
+      "existing_files": [
+        "src/processforge_core/maintenance/journals.py",
+        "src/processforge_core/maintenance/backup.py",
+        "src/processforge_core/maintenance/update.py",
+        "src/processforge_core/maintenance/transfer.py"
+      ],
+      "remit": "Reuse maintenance/update ownership; plan/import/checkpoint/quarantine/rollback and portable project export. No live migration in design assignment."
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "W2",
+      "to": "W1/W3/W4",
+      "api": "SQL transaction/read-only connection contract, domain schema version/readiness, configured project/workplace locations; SQLite-specific errors translated safely"
+    },
+    {
+      "from": "W1",
+      "to": "W3",
+      "api": "ExecutionAttempt/ExecutionObservation, scoped ExecutionRepository reserve/mark_running/apply_receipt/finish/current/history_page; exact method signatures to freeze jointly"
+    },
+    {
+      "from": "W3",
+      "to": "W4",
+      "api": "Attempt-bound receipts, reservation/start fence, writer epoch and recoverable in-flight protocol"
+    },
+    {
+      "from": "W4",
+      "to": "W3",
+      "api": "Migration readiness and explicit authority marker; no fallback to legacy writer after SQL cutover"
+    },
+    {
+      "from": "all",
+      "to": "orchestrator",
+      "api": "Freeze precise file ownership and locking contract before scoped implementation Work; this map grants no implementation permissions"
+    }
+  ],
+  "regression_evidence": {
+    "execution": "not_run_design_only",
+    "existing_candidates": [
+      "tools/smoke_runtime_metrics.py",
+      "tools/smoke_worker_run_shell.py",
+      "tools/smoke_codex_exec_worker.py",
+      "tools/smoke_core_work_state.py",
+      "tools/smoke_work_capsule_contract_parity.py",
+      "tools/smoke_garage_no_hooks_sessionless.py",
+      "tools/smoke_garage_cross_project_security.py",
+      "tools/smoke_work_completion_recovery.py",
+      "tools/smoke_process_supervisor_tick.py",
+      "tools/smoke_agent_ledger.py"
+    ],
+    "required_scenarios": [
+      "400000 completed attempts with 0, 1 and multiple current executions; query plan and read counts independent of history",
+      "start-vs-stop across CLI and Runtime; crash before/after spawn and terminal transaction; PID reuse and stale heartbeat",
+      "old attempt receipt after retry; conflict/idempotency; process exit distinct from output acceptance",
+      "migration interruption/resume/rollback/quarantine; explicit old-writer fence; backup integrity",
+      "same project copied to new root; unchanged project/run/task/attempt IDs and relative artifacts; workplace mappings rebuilt explicitly",
+      "same public CLI/MCP parameters, payloads, errors, report files and file-only flow; missing DB read does not create storage",
+      "logging disabled retains operational admissions/current execution; stale/missing summary never becomes exact zero"
+    ],
+    "qa": "pytest/Ruff/format/mypy not applicable to artifact-only design; implementation checks require new scoped grants and actual commands/results"
+  },
+  "limitations": [
+    "No Serena/IDE navigation tool was available; bounded shell fallback used.",
+    "No runtime/history data, live databases or workplace bodies were opened; inventory describes source code and local docs.",
+    "Some temporary test directories denied access during filename inventory; no override attempted.",
+    "READ_ACK, heartbeat and RESULT_READY were not sent: prepared scope grants only read/write_artifact in W1-owned paths and no Ledger/chat mutation grant.",
+    "No new Work, context rebuild, lifecycle transition, product edits, new tests, commits, push or infrastructure operations.",
+    "Current source hashes are observation evidence, not a frozen accepted candidate; reread before implementation."
+  ],
+  "safe_markdown_projection_rules": [
+    "Только явно generated task-index/status/technical views можно перестраивать из canonical source; ручная правка представления не меняет lifecycle.",
+    "Содержательные отчёты, решения, approved evidence и handoff bytes остаются артефактами; запрещён общий rebuild, переписывающий их.",
+    "Проекция содержит источник, ревизию и свежесть; после ошибки публикации canonical transaction остаётся истиной, projection получает stale и может быть повторена.",
+    "Никакого импорта стадий или разрешений из произвольного Markdown; текущие scope/capsule/selector checks сохраняются."
+  ],
+  "schema_merge_risk": "sqlite_storage.database and SQLiteAccountingRepository verify database-wide application_id/user_version. A shared main database needs one physical identity plus domain-specific schema versions and namespaced metadata. Redirecting all old repositories to the same file is not a migration.",
+  "source_evidence": [
+    {
+      "path": "src/processforge_core/work/records.py",
+      "sha256": "sha256:9be3a9d137a46c123f8c27c149540a904bfd77b84447831bff62b52902940400"
+    },
+    {
+      "path": "src/processforge_core/work/paths.py",
+      "sha256": "sha256:9d9e6e3c59203a155feb89c55ee764f1bda2d9af6cbfbe87854b49980191d9d7"
+    },
+    {
+      "path": "src/processforge_core/work/transition_commit.py",
+      "sha256": "sha256:1d0b593ff0e8e9ac9b016ac2d54e033de03dc003fe1f6df2d1aec2b57f1c452f"
+    },
+    {
+      "path": "src/processforge_core/runtime/metrics.py",
+      "sha256": "sha256:56b5a3b6ba385785eda9def911050ada78a06602e903e26d1c495f251e961032"
+    },
+    {
+      "path": "tools/processforge.py",
+      "sha256": "sha256:2fe02928a2ce7bda63e999b0a00914dfb6eb561d6056811f2d65899de25d8e81"
+    },
+    {
+      "path": "tools/pf_runtime/service.py",
+      "sha256": "sha256:4aae1914382ab05758ec37375f25237394ad9237faef5e72fee40705c10bfc06"
+    },
+    {
+      "path": "tools/pf_runtime/host.py",
+      "sha256": "sha256:be7d29c1f96efbc4494e551ec40c0f496bd5c27ee01ddc1d4c12b9a64a761b4e"
+    },
+    {
+      "path": "tools/codex_exec_worker.py",
+      "sha256": "sha256:592d474bacdb6855e456842439fadb2cd1cff35df777ee4cbc6669387cf1379a"
+    },
+    {
+      "path": "tools/prepared_executor.py",
+      "sha256": "sha256:3199a39bb072f45558bd54b86c56e6d1dcea373e06ff3ed8a82a1c6f74ea20b5"
+    },
+    {
+      "path": "src/processforge_core/accounting/storage.py",
+      "sha256": "sha256:13296d07d2418257f23a50e483f48f33b8f338482a59ca7098b66342505c197d"
+    },
+    {
+      "path": "src/processforge_core/accounting/composition.py",
+      "sha256": "sha256:08ec66c8db93467e815ff82e7dee606662d2a7a26cfd4c20c011793fb60b3c16"
+    },
+    {
+      "path": "src/processforge_core/sqlite_storage.py",
+      "sha256": "sha256:74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572"
+    },
+    {
+      "path": "src/processforge_core/process_event_journal.py",
+      "sha256": "sha256:441fc2a8edbb9b181f7dccdd75c14d5d8e6294b4b5abb02fac947eb2ac8b1be1"
+    },
+    {
+      "path": "src/processforge_core/raw_hook_journal.py",
+      "sha256": "sha256:3b0261da4d2801079f6db6a00dfa8bb681be315cd08af036c3851c1148e4e827"
+    },
+    {
+      "path": "src/processforge_core/project/metadata.py",
+      "sha256": "sha256:dfcbcf18d1aa9b065f619d5018ba1ecbb83a101f75a576ac49fbdf5ddf34c23e"
+    }
+  ]
+}
