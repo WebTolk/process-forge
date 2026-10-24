@@ -8,16 +8,22 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
-    from .common.properties import CoreProperties
     from .agents.process_events import ProcessEventRecorder
-    from .presentation.work_summaries import WorkSummaryRenderer
+    from .common.properties import CoreProperties
+    from .configuration import ConfigurationProvider, ProjectPFConfig
     from .diagnostics import Logger
-    from .work.records import CurrentWorkService
-    from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
+    from .ports import (
+        ProcessDefinitionReadPort,
+        ProjectSnapshotReadPort,
+        WorkContextReadPort,
+        WorkRecordReadPort,
+    )
+    from .presentation.work_summaries import WorkSummaryRenderer
     from .process_execution import ProcessExecutionService
+    from .work.records import CurrentWorkService
 
 LEGACY_CORE_MODULE_NAME = "processforge_core._legacy_processforge"
 LEGACY_PUBLIC_MODULE_NAME = "processforge"
@@ -30,8 +36,26 @@ class RuntimeBootstrap:
     host: ModuleType
     service: ModuleType
     # Instance composition preserves the original dataclass field contract.
-    _process_events = None  # type: ProcessEventRecorder | None
-    _work_summaries = None  # type: WorkSummaryRenderer | None
+    _process_events: ClassVar[ProcessEventRecorder | None] = None
+    _work_summaries: ClassVar[WorkSummaryRenderer | None] = None
+
+    def configuration_provider(
+        self,
+        *,
+        device_config_path: Path | None = None,
+        workplace_root: Path | None = None,
+        project_root: Path | None = None,
+        context_overrides: ProjectPFConfig | None = None,
+    ) -> ConfigurationProvider:
+        """Use the same cold builder without starting Runtime services."""
+        from .composition import build_configuration_provider
+
+        return build_configuration_provider(
+            device_config_path=device_config_path,
+            workplace_root=workplace_root,
+            project_root=project_root,
+            context_overrides=context_overrides,
+        )
 
     @property
     def properties(self) -> CoreProperties:
@@ -46,7 +70,11 @@ class RuntimeBootstrap:
         return build_current_work_service(project_root)
 
     def process_execution_service(
-        self, project_root: Path, workplace_root: Path | None, *, observer: Logger | None = None,
+        self,
+        project_root: Path,
+        workplace_root: Path | None,
+        *,
+        observer: Logger | None = None,
         records: WorkRecordReadPort | None = None,
         context: WorkContextReadPort | None = None,
         definitions: ProcessDefinitionReadPort | None = None,
@@ -54,7 +82,18 @@ class RuntimeBootstrap:
     ) -> ProcessExecutionService:
         from .composition import build_process_execution_service
 
-        return build_process_execution_service(project_root, workplace_root, self.core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots, events=self._process_events, summaries=self._work_summaries)
+        return build_process_execution_service(
+            project_root,
+            workplace_root,
+            self.core,
+            observer=observer,
+            records=records,
+            context=context,
+            definitions=definitions,
+            snapshots=snapshots,
+            events=self._process_events,
+            summaries=self._work_summaries,
+        )
 
 
 def _repo_root_from(caller_file: str | Path) -> Path:
@@ -74,7 +113,10 @@ def _ensure_sys_path(path: Path) -> None:
 def _cached_legacy_core(script_path: Path) -> ModuleType | None:
     for name in (LEGACY_CORE_MODULE_NAME, LEGACY_PUBLIC_MODULE_NAME):
         module = sys.modules.get(name)
-        if isinstance(module, ModuleType) and Path(getattr(module, "__file__", "")).resolve() == script_path:
+        if (
+            isinstance(module, ModuleType)
+            and Path(getattr(module, "__file__", "")).resolve() == script_path
+        ):
             sys.modules[LEGACY_CORE_MODULE_NAME] = module
             sys.modules[LEGACY_PUBLIC_MODULE_NAME] = module
             return module

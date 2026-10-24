@@ -18,6 +18,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
+from processforge_core.configuration import ConfigurationProvider
+from processforge_core.database import DatabaseFactory, SQLiteDriver
+
 
 class RawIngressError(ValueError):
     """An envelope or durable raw ingress operation is invalid."""
@@ -59,7 +62,11 @@ def canonical_json(value: Any) -> bytes:
     """Return deterministic UTF-8 JSON with NFC strings and sorted keys."""
 
     return json.dumps(
-        _normalise_json(value), ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+        _normalise_json(value),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
     ).encode("utf-8")
 
 
@@ -79,12 +86,18 @@ def stable_native_identity_key(event: NativeAgentEvent) -> str | None:
 
     if not _uses_stable_native_id(event):
         return None
-    digest = hashlib.sha256(canonical_json(_identity_document(event, include_payload_hash=False))).hexdigest()
+    digest = hashlib.sha256(
+        canonical_json(_identity_document(event, include_payload_hash=False))
+    ).hexdigest()
     return "native_" + digest
 
 
 def deterministic_derived_key(
-    raw_id: str, derived_kind: str, processor_id: str, processor_version: str, semantic_target: Any
+    raw_id: str,
+    derived_kind: str,
+    processor_id: str,
+    processor_version: str,
+    semantic_target: Any,
 ) -> str:
     """Return a deterministic idempotency key for a derived sink effect."""
 
@@ -138,7 +151,9 @@ def atomic_write_json(path: Path, data: Mapping[str, Any], root: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary: Path | None = None
     try:
-        with tempfile.NamedTemporaryFile("wb", dir=target.parent, prefix=f".{target.name}.", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            "wb", dir=target.parent, prefix=f".{target.name}.", delete=False
+        ) as handle:
             temporary = Path(handle.name)
             handle.write(canonical_json(data) + b"\n")
             handle.flush()
@@ -164,11 +179,22 @@ class _ExclusiveFileLock:
         while True:
             try:
                 self._fd = os.open(str(self.path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-                os.write(self._fd, json.dumps({"pid": os.getpid(), "host": socket.gethostname(), "created_at": time.time()}).encode("utf-8"))
+                os.write(
+                    self._fd,
+                    json.dumps(
+                        {
+                            "pid": os.getpid(),
+                            "host": socket.gethostname(),
+                            "created_at": time.time(),
+                        }
+                    ).encode("utf-8"),
+                )
                 return self
             except FileExistsError:
                 if time.monotonic() >= deadline:
-                    raise RawIngressError(f"timed out waiting for raw ingress lock: {self.path.name}")
+                    raise RawIngressError(
+                        f"timed out waiting for raw ingress lock: {self.path.name}"
+                    )
                 time.sleep(0.05)
 
     def __exit__(self, *_: object) -> None:
@@ -177,7 +203,9 @@ class _ExclusiveFileLock:
         self.path.unlink(missing_ok=True)
 
 
-def recover_stale_lock(path: Path, *, stale_seconds: float, force: bool = False) -> bool:
+def recover_stale_lock(
+    path: Path, *, stale_seconds: float, force: bool = False
+) -> bool:
     """Explicitly reap a dead local lock; callers must audit forced recovery.
 
     No live lock is removed automatically.  This function reaps only a lock
@@ -194,7 +222,9 @@ def recover_stale_lock(path: Path, *, stale_seconds: float, force: bool = False)
         pid = int(owner["pid"])
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
         if not force:
-            raise RawIngressError(f"lock metadata is unreadable; explicit force required: {path.name}")
+            raise RawIngressError(
+                f"lock metadata is unreadable; explicit force required: {path.name}"
+            )
         path.unlink(missing_ok=True)
         return True
     if age < stale_seconds:
@@ -210,50 +240,104 @@ class RawIngressKernel:
     """Durably admit native events into an explicitly selected SQL journal."""
 
     def __init__(
-        self, workplace_root: Path | str, *, max_payload_bytes: int = 1_048_576,
-        flow_root: Path | None = None, record_raw: bool = True,
+        self,
+        workplace_root: Path | str,
+        *,
+        max_payload_bytes: int = 1_048_576,
+        flow_root: Path | None = None,
+        record_raw: bool | None = None,
+        configuration: ConfigurationProvider | None = None,
+        driver: SQLiteDriver | None = None,
     ) -> None:
         from processforge_core.raw_hook_journal import RawHookJournal
 
         self.workplace_root = Path(workplace_root).resolve(strict=False)
-        self.root = (contained_path(flow_root, "runtime", "agent-events") if flow_root is not None
-                     else contained_path(self.workplace_root, "runtime", "agent-events"))
+        self.root = (
+            contained_path(flow_root, "runtime", "agent-events")
+            if flow_root is not None
+            else contained_path(self.workplace_root, "runtime", "agent-events")
+        )
         self.database = contained_path(self.root, "hooks.sqlite3")
         if max_payload_bytes <= 0:
             raise RawIngressError("max_payload_bytes must be positive")
-        if type(record_raw) is not bool:
+        if record_raw is not None and type(record_raw) is not bool:
             raise RawIngressError("record_raw must be boolean")
         self.max_payload_bytes = max_payload_bytes
         self.record_raw = record_raw
-        self.storage = RawHookJournal()
+        self.configuration = configuration
+        self.storage = RawHookJournal(driver=driver)
 
-    def ingest(self, event: NativeAgentEvent, received_at: datetime | None = None) -> RawReceipt:
+    def _operation(self):
+        """Consume the host snapshot without discovering project configuration."""
+        from processforge_core.raw_hook_journal import RawHookJournal
+
+        storage = self.storage
+        retain_raw = self.record_raw
+        if self.configuration is not None:
+            config = self.configuration.current()
+            if storage.driver is None:
+                storage = RawHookJournal(
+                    driver=DatabaseFactory.resolve_driver(config.database)
+                )
+            if retain_raw is None:
+                retain_raw = config.logging.raw_hooks
+        return storage, True if retain_raw is None else retain_raw
+
+    def ingest(
+        self, event: NativeAgentEvent, received_at: datetime | None = None
+    ) -> RawReceipt:
         from processforge_core.sqlite_storage import JournalMigrationRequired
 
         _validate(event, self.max_payload_bytes)
         if not self.database.is_file():
-            legacy_roots = {self.root / "raw/v1", self.workplace_root / "runtime/agent-events/raw/v1"}
+            legacy_roots = {
+                self.root / "raw/v1",
+                self.workplace_root / "runtime/agent-events/raw/v1",
+            }
             if any(any(root.rglob("*.ndjson")) for root in legacy_roots):
-                raise JournalMigrationRequired("raw_journal_migration_required: run tools/migrate-hook-journals.py")
+                raise JournalMigrationRequired(
+                    "raw_journal_migration_required: run tools/migrate-hook-journals.py"
+                )
         moment = (received_at or datetime.now(timezone.utc)).astimezone(timezone.utc)
         event_id = raw_event_id(event)
-        record = self._raw_record(event, event_id, raw_payload_hash(event.raw_payload),
-                                  stable_native_identity_key(event), moment)
-        result = self.storage.accept(self.database, record, retain_raw=self.record_raw)
-        return RawReceipt(event_id, result["accepted"], result["deduplicated"], result["raw_location"],
-                          result["routing_status"], diagnostics=result["diagnostics"])
+        record = self._raw_record(
+            event,
+            event_id,
+            raw_payload_hash(event.raw_payload),
+            stable_native_identity_key(event),
+            moment,
+        )
+        storage, retain_raw = self._operation()
+        result = storage.accept(self.database, record, retain_raw=retain_raw)
+        return RawReceipt(
+            event_id,
+            result["accepted"],
+            result["deduplicated"],
+            result["raw_location"],
+            result["routing_status"],
+            diagnostics=result["diagnostics"],
+        )
 
     def finish(self, event_id: str, response: dict[str, Any]) -> None:
-        self.storage.finish(self.database, event_id, response)
+        storage, _retain_raw = self._operation()
+        storage.finish(self.database, event_id, response)
 
     def result(self, event_id: str) -> dict[str, Any] | None:
-        return self.storage.result(self.database, event_id)
+        storage, _retain_raw = self._operation()
+        return storage.result(self.database, event_id)
 
     def records(self, **filters):
-        return self.storage.records(self.database, **filters)
+        storage, _retain_raw = self._operation()
+        return storage.records(self.database, **filters)
 
-    def _raw_record(self, event: NativeAgentEvent, event_id: str, payload_hash: str,
-                    native_key: str | None, moment: datetime) -> dict[str, Any]:
+    def _raw_record(
+        self,
+        event: NativeAgentEvent,
+        event_id: str,
+        payload_hash: str,
+        native_key: str | None,
+        moment: datetime,
+    ) -> dict[str, Any]:
         return {
             "schema_version": 1,
             "raw_event_id": event_id,
@@ -266,7 +350,9 @@ class RawIngressKernel:
             "source_session_id": event.source_session_id,
             "source_project_ref": event.source_project_ref,
             "payload_version": event.payload_version,
-            "received_at": moment.isoformat(timespec="microseconds").replace("+00:00", "Z"),
+            "received_at": moment.isoformat(timespec="microseconds").replace(
+                "+00:00", "Z"
+            ),
             "raw_payload": event.raw_payload,
             "raw_payload_hash": payload_hash,
             "native_identity_key": native_key,
@@ -274,17 +360,25 @@ class RawIngressKernel:
         }
 
 
-def _identity_document(event: NativeAgentEvent, include_payload_hash: bool) -> dict[str, Any]:
+def _identity_document(
+    event: NativeAgentEvent, include_payload_hash: bool
+) -> dict[str, Any]:
     stable = _uses_stable_native_id(event)
     document: dict[str, Any] = {
-        "contract": "processforge.raw-identity.v1" if include_payload_hash else "processforge.native-identity.v1",
+        "contract": "processforge.raw-identity.v1"
+        if include_payload_hash
+        else "processforge.native-identity.v1",
         "provider": _text(event.provider, "provider"),
         "adapter": _text(event.adapter, "adapter"),
         "native_event_type": _text(event.native_event_type, "native_event_type"),
         "native_id_scope": event.native_id_scope,
         "native_event_id": _optional(event.native_event_id) if stable else None,
-        "source_session_id": _optional(event.source_session_id) if not stable or event.native_id_scope == "session" else None,
-        "source_project_ref": _optional(event.source_project_ref) if not stable or event.native_id_scope == "project" else None,
+        "source_session_id": _optional(event.source_session_id)
+        if not stable or event.native_id_scope == "session"
+        else None,
+        "source_project_ref": _optional(event.source_project_ref)
+        if not stable or event.native_id_scope == "project"
+        else None,
         "payload_version": _text(event.payload_version, "payload_version"),
     }
     if include_payload_hash:
@@ -297,7 +391,9 @@ def _uses_stable_native_id(event: NativeAgentEvent) -> bool:
 
 
 def _validate(event: NativeAgentEvent, max_payload_bytes: int) -> None:
-    if not isinstance(event, NativeAgentEvent) or not isinstance(event.raw_payload, Mapping):
+    if not isinstance(event, NativeAgentEvent) or not isinstance(
+        event.raw_payload, Mapping
+    ):
         raise RawIngressError("event must be NativeAgentEvent with object raw_payload")
     if event.native_id_scope not in {"provider", "adapter", "session", "project"}:
         raise RawIngressError("unsupported native_id_scope")
@@ -333,7 +429,11 @@ def _text(value: str, name: str) -> str:
 
 
 def _optional(value: str | None) -> str | None:
-    return unicodedata.normalize("NFC", value).strip() or None if isinstance(value, str) else None
+    return (
+        unicodedata.normalize("NFC", value).strip() or None
+        if isinstance(value, str)
+        else None
+    )
 
 
 def _pid_alive(pid: int) -> bool:

@@ -1,12 +1,13 @@
 """Project-local raw receipts, optional payload history and pending recovery."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any, Iterator
 
+from .database import SQLiteDriver
 from .sqlite_storage import JournalError, database, metadata, set_metadata, transaction
-
 
 APPLICATION_ID = 0x50465257
 SCHEMA = (
@@ -22,30 +23,73 @@ SCHEMA = (
 
 
 def _encode(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
 
 
 class RawHookJournal:
+    def __init__(self, *, driver: SQLiteDriver | None = None) -> None:
+        self.driver = driver
+
     @staticmethod
-    def connection(path: Path, *, writable: bool = False, migrating: bool = False):
-        return database(path, application_id=APPLICATION_ID, schema=SCHEMA, writable=writable, migrating=migrating)
+    def connection(
+        path: Path,
+        *,
+        writable: bool = False,
+        migrating: bool = False,
+        driver: SQLiteDriver | None = None,
+    ):
+        return database(
+            path,
+            application_id=APPLICATION_ID,
+            schema=SCHEMA,
+            writable=writable,
+            migrating=migrating,
+            driver=driver,
+        )
 
     def accept(
-        self, path: Path, record: dict[str, Any], *, retain_raw: bool = True,
-        migrating: bool = False, legacy_location: str | None = None,
+        self,
+        path: Path,
+        record: dict[str, Any],
+        *,
+        retain_raw: bool = True,
+        migrating: bool = False,
+        legacy_location: str | None = None,
     ) -> dict[str, Any]:
-        with self.connection(path, writable=True, migrating=migrating) as connection:
+        with self.connection(
+            path, writable=True, migrating=migrating, driver=self.driver
+        ) as connection:
             with transaction(connection):
-                return self._accept(connection, path, record, retain_raw=retain_raw,
-                                    legacy_location=legacy_location)
+                return self._accept(
+                    connection,
+                    path,
+                    record,
+                    retain_raw=retain_raw,
+                    legacy_location=legacy_location,
+                )
 
     @staticmethod
     def _accept(connection, path, record, *, retain_raw, legacy_location=None):
         raw_id, digest = record["raw_event_id"], record["raw_payload_hash"]
         native_key = record.get("native_identity_key")
-        existing = connection.execute("SELECT seq, raw_event_id, raw_payload_hash FROM receipts WHERE raw_event_id = ?", (raw_id,)).fetchone()
-        native = (connection.execute("SELECT seq, raw_event_id, raw_payload_hash FROM receipts WHERE native_identity_key = ?", (native_key,)).fetchone()
-                  if native_key else None)
+        existing = connection.execute(
+            "SELECT seq, raw_event_id, raw_payload_hash FROM receipts WHERE raw_event_id = ?",
+            (raw_id,),
+        ).fetchone()
+        native = (
+            connection.execute(
+                "SELECT seq, raw_event_id, raw_payload_hash FROM receipts WHERE native_identity_key = ?",
+                (native_key,),
+            ).fetchone()
+            if native_key
+            else None
+        )
         code = None
         if native is not None and native["raw_payload_hash"] != digest:
             code, prior = "native_id_payload_conflict", native
@@ -55,55 +99,102 @@ class RawHookJournal:
             connection.execute(
                 "INSERT INTO quarantine(code, raw_event_id, raw_payload_hash, existing_raw_event_id, record) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (code, raw_id, digest, prior["raw_event_id"], _encode(record) if retain_raw else None),
+                (
+                    code,
+                    raw_id,
+                    digest,
+                    prior["raw_event_id"],
+                    _encode(record) if retain_raw else None,
+                ),
             )
-            return {"accepted": False, "deduplicated": False, "raw_location": None,
-                    "routing_status": "quarantined", "diagnostics": {"code": code}}
+            return {
+                "accepted": False,
+                "deduplicated": False,
+                "raw_location": None,
+                "routing_status": "quarantined",
+                "diagnostics": {"code": code},
+            }
         if existing is None:
             cursor = connection.execute(
                 "INSERT INTO receipts(raw_event_id, native_identity_key, raw_payload_hash, provider, adapter, "
                 "session_id, project_ref, received_at, pending_record) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (raw_id, native_key, digest, record["provider"], record["adapter"],
-                 str(record.get("source_session_id") or ""), str(record.get("source_project_ref") or ""),
-                 record["received_at"], None if retain_raw else _encode(record)),
+                (
+                    raw_id,
+                    native_key,
+                    digest,
+                    record["provider"],
+                    record["adapter"],
+                    str(record.get("source_session_id") or ""),
+                    str(record.get("source_project_ref") or ""),
+                    record["received_at"],
+                    None if retain_raw else _encode(record),
+                ),
             )
             sequence = cursor.lastrowid
         else:
             sequence = existing["seq"]
         if retain_raw:
             cursor = connection.execute(
-                "INSERT INTO raw_events VALUES (?, ?) ON CONFLICT(raw_event_id) DO NOTHING", (raw_id, _encode(record)),
+                "INSERT INTO raw_events VALUES (?, ?) ON CONFLICT(raw_event_id) DO NOTHING",
+                (raw_id, _encode(record)),
             )
             if cursor.rowcount:
-                connection.execute("UPDATE journal_metadata SET value = CAST(value AS INTEGER) + 1 WHERE key = 'history_count'")
+                connection.execute(
+                    "UPDATE journal_metadata SET value = CAST(value AS INTEGER) + 1 WHERE key = 'history_count'"
+                )
         if legacy_location is not None:
-            connection.execute("INSERT INTO legacy_locations VALUES (?, ?) ON CONFLICT(location) DO NOTHING",
-                               (legacy_location, raw_id))
-        return {"accepted": True, "deduplicated": existing is not None,
-                "raw_location": f"{path.name}:{sequence}",
-                "routing_status": "duplicate_raw" if existing is not None else "raw_accepted", "diagnostics": {}}
+            connection.execute(
+                "INSERT INTO legacy_locations VALUES (?, ?) ON CONFLICT(location) DO NOTHING",
+                (legacy_location, raw_id),
+            )
+        return {
+            "accepted": True,
+            "deduplicated": existing is not None,
+            "raw_location": f"{path.name}:{sequence}",
+            "routing_status": "duplicate_raw"
+            if existing is not None
+            else "raw_accepted",
+            "diagnostics": {},
+        }
 
     def finish(self, path: Path, raw_event_id: str, response: dict[str, Any]) -> None:
-        with self.connection(path, writable=True) as connection:
+        with self.connection(path, writable=True, driver=self.driver) as connection:
             with transaction(connection):
-                connection.execute("UPDATE receipts SET pending_record = NULL, response = ? WHERE raw_event_id = ?",
-                                   (_encode(response), raw_event_id))
+                connection.execute(
+                    "UPDATE receipts SET pending_record = NULL, response = ? WHERE raw_event_id = ?",
+                    (_encode(response), raw_event_id),
+                )
 
     def result(self, path: Path, raw_event_id: str) -> dict[str, Any] | None:
         try:
-            with self.connection(path) as connection:
-                row = connection.execute("SELECT response FROM receipts WHERE raw_event_id = ?", (raw_event_id,)).fetchone()
-                return json.loads(row[0]) if row is not None and row[0] is not None else None
+            with self.connection(path, driver=self.driver) as connection:
+                row = connection.execute(
+                    "SELECT response FROM receipts WHERE raw_event_id = ?",
+                    (raw_event_id,),
+                ).fetchone()
+                return (
+                    json.loads(row[0])
+                    if row is not None and row[0] is not None
+                    else None
+                )
         except FileNotFoundError:
             return None
 
     def records(
-        self, path: Path, *, session_id: str | None = None,
-        provider: str | None = None, adapter: str | None = None,
+        self,
+        path: Path,
+        *,
+        session_id: str | None = None,
+        provider: str | None = None,
+        adapter: str | None = None,
     ) -> Iterator[dict[str, Any]]:
         after = 0
         clauses, values = [], []
-        for column, value in (("session_id", session_id), ("provider", provider), ("adapter", adapter)):
+        for column, value in (
+            ("session_id", session_id),
+            ("provider", provider),
+            ("adapter", adapter),
+        ):
             if value is not None:
                 clauses.append("r." + column + " = ?")
                 values.append(value)
@@ -112,11 +203,13 @@ class RawHookJournal:
             where += " AND "
         while True:
             try:
-                with self.connection(path) as connection:
+                with self.connection(path, driver=self.driver) as connection:
                     rows = connection.execute(
                         "SELECT r.seq, COALESCE(h.record, r.pending_record) AS record FROM receipts r "
-                        "LEFT JOIN raw_events h ON h.raw_event_id = r.raw_event_id WHERE " + where +
-                        "r.seq > ? ORDER BY r.seq LIMIT 1000", (*values, after),
+                        "LEFT JOIN raw_events h ON h.raw_event_id = r.raw_event_id WHERE "
+                        + where
+                        + "r.seq > ? ORDER BY r.seq LIMIT 1000",
+                        (*values, after),
                     ).fetchall()
             except FileNotFoundError:
                 return
@@ -135,13 +228,15 @@ class RawHookJournal:
 
     def count(self, path: Path) -> int:
         try:
-            with self.connection(path) as connection:
+            with self.connection(path, driver=self.driver) as connection:
                 return int(metadata(connection, "history_count") or 0)
         except FileNotFoundError:
             return 0
 
     def finish_migration(self, path: Path) -> None:
-        with self.connection(path, writable=True, migrating=True) as connection:
+        with self.connection(
+            path, writable=True, migrating=True, driver=self.driver
+        ) as connection:
             if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise JournalError("journal_integrity_check_failed")
             with transaction(connection):

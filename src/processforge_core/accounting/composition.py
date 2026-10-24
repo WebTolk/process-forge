@@ -17,6 +17,8 @@ from processforge_core.accounting.storage import (
     AccountingStorageError,
     SQLiteAccountingRepository,
 )
+from processforge_core.configuration import ConfigurationProvider
+from processforge_core.database import DatabaseFactory, SQLiteDriver
 from processforge_core.project.metadata import ProjectMetadataReader
 
 
@@ -35,7 +37,8 @@ def read_json(path: Path) -> dict[str, Any]:
 class _ReadOnlyRepository(SQLiteAccountingRepository):
     """Use Core's read snapshots without its creating/migrating constructor."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, driver: SQLiteDriver | None = None) -> None:
+        self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
         self.path = path
         self.busy_timeout_ms = 1000
 
@@ -50,10 +53,15 @@ class WorkplaceAccounting:
     workplace: Path
     project_root: Path
     project_id: str
+    configuration: ConfigurationProvider | None = None
 
     @classmethod
     def discover(
-        cls, project_root: Path, workplace: Path | None = None
+        cls,
+        project_root: Path,
+        workplace: Path | None = None,
+        *,
+        configuration: ConfigurationProvider | None = None,
     ) -> WorkplaceAccounting:
         """Use the existing narrow reader and require the actual PF project id."""
         project_root = project_root.resolve()
@@ -78,7 +86,10 @@ class WorkplaceAccounting:
         if workplace == project_root or workplace.is_relative_to(project_root):
             raise ValueError("accounting_workplace_must_be_outside_checkout")
         return cls(
-            workplace=workplace, project_root=project_root, project_id=project_id
+            workplace=workplace,
+            project_root=project_root,
+            project_id=project_id,
+            configuration=configuration,
         )
 
     @property
@@ -179,12 +190,23 @@ class WorkplaceAccounting:
 
     def service(self, *, create: bool = False) -> AccountingService | None:
         """Compose Core queries read-only; explicit collection may create storage."""
+        from processforge_core.composition import build_configuration_provider
+
+        provider = (
+            self.configuration
+            if self.configuration is not None
+            else build_configuration_provider(
+                project_root=self.project_root,
+                workplace_root=self.workplace,
+            )
+        )
+        driver = DatabaseFactory.resolve_driver(provider.current().database)
         self._safe_paths()
         if create:
             self.ensure_identity()
-            repository = SQLiteAccountingRepository(self.database)
+            repository = SQLiteAccountingRepository(self.database, driver=driver)
         elif self.database.is_file():
-            repository = _ReadOnlyRepository(self.database)
+            repository = _ReadOnlyRepository(self.database, driver=driver)
         else:
             return None
         return AccountingService(repository)

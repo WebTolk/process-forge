@@ -13,6 +13,8 @@ import sqlite3
 from pathlib import Path
 from uuid import uuid4
 
+from processforge_core.configuration import ConfigurationProvider
+from processforge_core.database import DatabaseFactory, SQLiteDriver
 from processforge_core.maintenance.contracts import (
     BackupPort,
     JournalRow,
@@ -125,6 +127,9 @@ class JournalMaintenanceService:
         self,
         backup: BackupPort | None = None,
         scan: JournalScanPort | None = None,
+        *,
+        configuration: ConfigurationProvider | None = None,
+        driver: SQLiteDriver | None = None,
     ) -> None:
         """Bind operation ports without reading files or opening databases.
 
@@ -140,6 +145,8 @@ class JournalMaintenanceService:
             from processforge_core.maintenance.journal_scan import JournalScanService
 
             scan = JournalScanService()
+        self.configuration = configuration
+        self.driver = driver
         self._backup = backup
         self._scan = scan
 
@@ -178,6 +185,21 @@ class JournalMaintenanceService:
         _safe_path(project)
         _safe_path(workplace)
         project, workplace = project.resolve(), workplace.resolve()
+        from processforge_core.composition import build_configuration_provider
+
+        provider = (
+            self.configuration
+            if self.configuration is not None
+            else build_configuration_provider(
+                project_root=project,
+                workplace_root=workplace,
+            )
+        )
+        driver = (
+            self.driver
+            if self.driver is not None
+            else DatabaseFactory.resolve_driver(provider.current().database)
+        )
         flow, sources = self._scan.discover(project, workplace)
         _safe_path(flow)
         event_path = flow / "runtime/events/events.sqlite3"
@@ -209,7 +231,7 @@ class JournalMaintenanceService:
         barriers: list[
             tuple[ProcessEventJournal | RawHookJournal, Path, tuple[int, int] | None]
         ] = []
-        events, raw = ProcessEventJournal(), RawHookJournal()
+        events, raw = ProcessEventJournal(driver=driver), RawHookJournal(driver=driver)
         scan_evidence = operation / "quarantine" if operation else evidence_dir
         preflight_complete = False
         try:
@@ -242,7 +264,7 @@ class JournalMaintenanceService:
                 # Initialization may commit a barrier before context exit fails.
                 barriers.append((owner, path, destinations[path]))
                 with owner.connection(
-                    path, writable=True, migrating=True
+                    path, writable=True, migrating=True, driver=owner.driver
                 ) as connection:
                     destinations[path] = _database_identity(path)
                     barriers[-1] = (owner, path, destinations[path])
@@ -271,8 +293,12 @@ class JournalMaintenanceService:
             self._unchanged(project, workplace, flow, sources, report)
 
             replay = _scan_report()
-            with events.connection(event_path, migrating=True) as event_connection:
-                with raw.connection(raw_path, migrating=True) as raw_connection:
+            with events.connection(
+                event_path, migrating=True, driver=events.driver
+            ) as event_connection:
+                with raw.connection(
+                    raw_path, migrating=True, driver=raw.driver
+                ) as raw_connection:
                     for kind, record, _location in self._scan.rows(
                         sources,
                         project,
@@ -296,7 +322,7 @@ class JournalMaintenanceService:
             self._unchanged(project, workplace, flow, sources, report)
             for owner, path in ((events, event_path), (raw, raw_path)):
                 with owner.connection(
-                    path, writable=True, migrating=True
+                    path, writable=True, migrating=True, driver=owner.driver
                 ) as connection:
                     with transaction(connection):
                         set_metadata(
@@ -323,7 +349,7 @@ class JournalMaintenanceService:
             events.finish_migration(event_path)
             raw.finish_migration(raw_path)
             for owner, path in ((events, event_path), (raw, raw_path)):
-                with owner.connection(path) as connection:
+                with owner.connection(path, driver=owner.driver) as connection:
                     if (
                         metadata(connection, "migration_state") != "ready"
                         or metadata(connection, "legacy_imported") != "1"
@@ -354,7 +380,7 @@ class JournalMaintenanceService:
                     if identity is None or current != identity:
                         raise MaintenanceError("migration_destination_changed")
                     with owner.connection(
-                        path, writable=True, migrating=True
+                        path, writable=True, migrating=True, driver=owner.driver
                     ) as connection:
                         with transaction(connection):
                             set_metadata(connection, "migration_state", "importing")
@@ -517,7 +543,9 @@ class JournalMaintenanceService:
             if not items:
                 continue
             inserted = 0
-            with owner.connection(path, writable=True, migrating=True) as connection:
+            with owner.connection(
+                path, writable=True, migrating=True, driver=owner.driver
+            ) as connection:
                 with transaction(connection):
                     for record, location in items:
                         if kind == "events":
@@ -534,7 +562,7 @@ class JournalMaintenanceService:
                                 (record["raw_event_id"],),
                             ).fetchone()
                             # The existing journal owner has an untyped batch admission.
-                            result = raw._accept(  # type: ignore[no-untyped-call]
+                            result = raw._accept(
                                 connection,
                                 path,
                                 record,
@@ -611,7 +639,9 @@ class JournalMaintenanceService:
                 "SELECT COUNT(*), COUNT(DISTINCT raw_event_id) FROM raw_events",
             ),
         ):
-            with owner.connection(path, migrating=True) as connection:
+            with owner.connection(
+                path, migrating=True, driver=owner.driver
+            ) as connection:
                 integrity = [
                     row[0] for row in connection.execute("PRAGMA integrity_check")
                 ]

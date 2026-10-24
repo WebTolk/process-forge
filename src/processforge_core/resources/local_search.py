@@ -18,6 +18,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, cast
 
+from ..configuration import ConfigurationProvider
+from ..database import DatabaseFactory, SQLiteDriver
+
 MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
@@ -80,6 +83,26 @@ class ResourceSearchIndex:
     project_root: Path
     snapshot: dict[str, Any] | None = None
     workplace_root: Path | None = None
+    configuration: ConfigurationProvider | None = None
+    driver: SQLiteDriver | None = None
+
+    def _operation_driver(self) -> SQLiteDriver:
+        if self.driver is not None:
+            return self.driver
+        from ..composition import build_configuration_provider
+
+        provider = (
+            self.configuration
+            if self.configuration is not None
+            else build_configuration_provider(
+                project_root=None
+                if self.snapshot is not None
+                and self.snapshot.get("search_index_scope") == "workplace"
+                else self.project_root,
+                workplace_root=self.workplace_root,
+            )
+        )
+        return DatabaseFactory.resolve_driver(provider.current().database)
 
     def status(self, *, verify_files: bool = False) -> dict[str, Any]:
         return index_status(
@@ -87,20 +110,27 @@ class ResourceSearchIndex:
             self.snapshot,
             workplace_root=self.workplace_root,
             verify_files=verify_files,
+            driver=self._operation_driver(),
         )
 
     def refresh(self) -> dict[str, Any]:
         if self.snapshot is None:
             raise LocalSearchError("snapshot_required")
         return build_index(
-            self.project_root, self.snapshot, workplace_root=self.workplace_root
+            self.project_root,
+            self.snapshot,
+            workplace_root=self.workplace_root,
+            driver=self._operation_driver(),
         )
 
     def rebuild(self) -> dict[str, Any]:
         if self.snapshot is None:
             raise LocalSearchError("snapshot_required")
         return rebuild_index(
-            self.project_root, self.snapshot, workplace_root=self.workplace_root
+            self.project_root,
+            self.snapshot,
+            workplace_root=self.workplace_root,
+            driver=self._operation_driver(),
         )
 
     def mark_dirty(self, *, reason: str = "dirty") -> dict[str, Any]:
@@ -109,6 +139,7 @@ class ResourceSearchIndex:
             self.snapshot,
             workplace_root=self.workplace_root,
             reason=reason,
+            driver=self._operation_driver(),
         )
 
     def maintenance_tick(self, *, verify_files: bool = True) -> dict[str, Any]:
@@ -119,6 +150,7 @@ class ResourceSearchIndex:
             self.snapshot,
             workplace_root=self.workplace_root,
             verify_files=verify_files,
+            driver=self._operation_driver(),
         )
 
     def search(
@@ -139,6 +171,7 @@ class ResourceSearchIndex:
             limitstart=limitstart,
             offset=offset,
             workplace_root=self.workplace_root,
+            driver=self._operation_driver(),
         )
 
 
@@ -149,9 +182,12 @@ def search_material(
     start: int,
     *,
     error: Callable[[], Callable[[str], Exception]],
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     try:
-        db = sqlite3.connect(":memory:")
+        db = (
+            driver if driver is not None else DatabaseFactory.resolve_driver()
+        )._connect(":memory:")
         try:
             db.execute("CREATE VIRTUAL TABLE material USING fts5(title, content)")
             db.executemany(
@@ -833,7 +869,11 @@ def index_path(project_root: Path, workplace_root: Path | None = None) -> Path:
 
 
 def authorized_coverage(
-    project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None
+    project_root: Path,
+    snapshot: dict[str, Any],
+    *,
+    workplace_root: Path | None = None,
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     """Describe physical index coverage, without equating it with material proof."""
     identifiers = authorized_resource_ids(snapshot)
@@ -849,9 +889,9 @@ def authorized_coverage(
         return result
     counts: dict[str, int] = {}
     try:
-        db = sqlite3.connect(
-            path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0
-        )
+        db = (
+            driver if driver is not None else DatabaseFactory.resolve_driver()
+        )._connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0)
         try:
             for start in range(0, len(identifiers), 128):
                 page = identifiers[start : start + 128]
@@ -876,10 +916,12 @@ def authorized_coverage(
     }
 
 
-def sqlite_fts5_capability() -> dict[str, Any]:
+def sqlite_fts5_capability(*, driver: SQLiteDriver | None = None) -> dict[str, Any]:
     version = sqlite3.sqlite_version
     try:
-        db = sqlite3.connect(":memory:")
+        db = (
+            driver if driver is not None else DatabaseFactory.resolve_driver()
+        )._connect(":memory:")
     except sqlite3.Error as exc:
         return {
             "sqlite_version": version,
@@ -1139,6 +1181,7 @@ def build_index(
     workplace_root: Path | None = None,
     full_reconciliation: bool = False,
     _prepared: tuple[list[AuthorizedResource], list[dict[str, Any]]] | None = None,
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     if _prepared is None:
         resources = authorized_roots(
@@ -1160,7 +1203,9 @@ def build_index(
         for item in documents
     }
     generation = _scope_generation(snapshot, resource_ids, fingerprints)
-    db = sqlite3.connect(path)
+    db = (driver if driver is not None else DatabaseFactory.resolve_driver())._connect(
+        path
+    )
     try:
         _ensure_schema(db)
         # A Workplace refresh is an authoritative reconciliation of its
@@ -1263,7 +1308,11 @@ def build_index(
 
 
 def rebuild_index(
-    project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None
+    project_root: Path,
+    snapshot: dict[str, Any],
+    *,
+    workplace_root: Path | None = None,
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     resources = authorized_roots(
         project_root, snapshot, strict=True, workplace_root=workplace_root
@@ -1277,6 +1326,7 @@ def rebuild_index(
         workplace_root=workplace_root,
         full_reconciliation=True,
         _prepared=(resources, documents),
+        driver=driver,
     )
 
 
@@ -1286,8 +1336,9 @@ def index_status(
     *,
     workplace_root: Path | None = None,
     verify_files: bool = False,
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
-    capability = sqlite_fts5_capability()
+    capability = sqlite_fts5_capability(driver=driver)
     path = index_path(project_root, workplace_root)
     payload: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -1310,9 +1361,9 @@ def index_status(
     if not path.is_file():
         return payload
     try:
-        db = sqlite3.connect(
-            path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0
-        )
+        db = (
+            driver if driver is not None else DatabaseFactory.resolve_driver()
+        )._connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0)
         try:
             _check_schema(db)
             scope_key = _scope_key(snapshot) if snapshot is not None else None
@@ -1435,6 +1486,7 @@ def mark_index_dirty(
     *,
     workplace_root: Path | None = None,
     reason: str = "dirty",
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     path = index_path(project_root, workplace_root)
     payload = {
@@ -1447,7 +1499,9 @@ def mark_index_dirty(
     }
     if not path.is_file():
         return payload
-    db = sqlite3.connect(path, timeout=0.0)
+    db = (driver if driver is not None else DatabaseFactory.resolve_driver())._connect(
+        path, timeout=0.0
+    )
     try:
         _check_schema(db)
         scope_key = (
@@ -1479,9 +1533,14 @@ def maintenance_tick(
     *,
     workplace_root: Path | None = None,
     verify_files: bool = True,
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     before = index_status(
-        project_root, snapshot, workplace_root=workplace_root, verify_files=verify_files
+        project_root,
+        snapshot,
+        workplace_root=workplace_root,
+        verify_files=verify_files,
+        driver=driver,
     )
     action = "none"
     result: dict[str, Any] | None = None
@@ -1497,11 +1556,13 @@ def maintenance_tick(
         }
     try:
         if before.get("status") in {"missing", "stale"}:
-            result = build_index(project_root, snapshot, workplace_root=workplace_root)
+            result = build_index(
+                project_root, snapshot, workplace_root=workplace_root, driver=driver
+            )
             action = "refresh"
         elif before.get("status") == "degraded" and error != "fts5_unavailable":
             result = rebuild_index(
-                project_root, snapshot, workplace_root=workplace_root
+                project_root, snapshot, workplace_root=workplace_root, driver=driver
             )
             action = "rebuild"
     except (OSError, sqlite3.Error, LocalSearchError) as exc:
@@ -1509,7 +1570,11 @@ def maintenance_tick(
             "rebuild" if before.get("status") == "degraded" else "refresh"
         )
         after_failure = index_status(
-            project_root, snapshot, workplace_root=workplace_root, verify_files=False
+            project_root,
+            snapshot,
+            workplace_root=workplace_root,
+            verify_files=False,
+            driver=driver,
         )
         after_failure["status"] = "degraded"
         after_failure["error"] = _error_code(exc)
@@ -1522,7 +1587,11 @@ def maintenance_tick(
             "result": result,
         }
     after = index_status(
-        project_root, snapshot, workplace_root=workplace_root, verify_files=False
+        project_root,
+        snapshot,
+        workplace_root=workplace_root,
+        verify_files=False,
+        driver=driver,
     )
     return {
         "schema_version": 1,
@@ -1578,6 +1647,7 @@ def search(
     limitstart: Any = None,
     offset: Any = None,
     workplace_root: Path | None = None,
+    driver: SQLiteDriver | None = None,
 ) -> dict[str, Any]:
     if not isinstance(query, str) or not query.strip():
         raise LocalSearchError("invalid_query")
@@ -1594,6 +1664,7 @@ def search(
         None if workplace_root is not None else snapshot,
         workplace_root=workplace_root,
         verify_files=False,
+        driver=driver,
     )
     if state.get("status") != "fresh":
         return _empty_search_result(query, page_limit, start, state)
@@ -1619,9 +1690,9 @@ def search(
             },
         }
     try:
-        db = sqlite3.connect(
-            path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0
-        )
+        db = (
+            driver if driver is not None else DatabaseFactory.resolve_driver()
+        )._connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.0)
     except (OSError, sqlite3.Error) as exc:
         if isinstance(exc, sqlite3.Error) and _sqlite_busy(exc):
             return _empty_search_result(

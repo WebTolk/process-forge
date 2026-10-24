@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
+from processforge_core.composition import build_configuration_provider
+from processforge_core.configuration import ConfigurationProvider
 from processforge_core.maintenance.contracts import JsonObject
 from processforge_core.maintenance.journals import JournalMaintenanceService
 from processforge_core.sqlite_storage import JournalError
@@ -32,9 +34,22 @@ def migrate(
     apply: bool = False,
     skip_invalid: bool = False,
     evidence_dir: Path | None = None,
+    configuration: ConfigurationProvider | None = None,
+    device_config_path: Path | None = None,
 ) -> JsonObject:
     """Delegate explicit migration to its owning Core service."""
-    return JournalMaintenanceService().migrate(
+    provider = (
+        configuration
+        if configuration is not None
+        else build_configuration_provider(
+            project_root=project_root.resolve(),
+            workplace_root=workplace.resolve(),
+            device_config_path=device_config_path,
+        )
+    )
+    snapshot = provider.snapshot()
+    pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+    return JournalMaintenanceService(configuration=pinned).migrate(
         project_root,
         workplace,
         apply=apply,
@@ -48,6 +63,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, required=True)
     parser.add_argument("--workplace", type=Path, required=True)
+    parser.add_argument("--device-config", type=Path)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument(
         "--skip-invalid",
@@ -63,6 +79,7 @@ def main() -> int:
             apply=args.apply,
             skip_invalid=args.skip_invalid,
             evidence_dir=args.evidence_dir,
+            device_config_path=args.device_config,
         )
     except (JournalError, OSError, ValueError, sqlite3.Error) as exc:
         print(json.dumps({"status": "failed", "error": str(exc)}, ensure_ascii=True))

@@ -22,6 +22,7 @@ from processforge_core.accounting.model import (
     TokenCounts,
     UsageRecord,
 )
+from processforge_core.database import DatabaseFactory, SQLiteDriver
 from processforge_core.sqlite_storage import transaction
 
 Fact = UsageRecord | ActivityInterval
@@ -143,8 +144,15 @@ def decode_fact(kind: Kind, payload: str) -> Fact:
 class SQLiteAccountingRepository:
     """Own a caller-selected database; each operation closes its own connection."""
 
-    def __init__(self, path: Path, *, busy_timeout_ms: int = 1000) -> None:
+    def __init__(
+        self,
+        path: Path,
+        *,
+        busy_timeout_ms: int = 1000,
+        driver: SQLiteDriver | None = None,
+    ) -> None:
         """Initialize only an empty database; reject foreign or unsupported schemas."""
+        self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
         self.path = Path(path)
         if not self.path.is_absolute():
             raise ValueError("accounting database path must be absolute")
@@ -189,13 +197,13 @@ class SQLiteAccountingRepository:
         try:
             if writable:
                 self.path.parent.mkdir(parents=True, exist_ok=True)
-                connection = sqlite3.connect(
+                connection = self.driver._connect(
                     self.path,
                     timeout=self.busy_timeout_ms / 1000,
                     isolation_level=None,
                 )
             else:
-                connection = sqlite3.connect(
+                connection = self.driver._connect(
                     self.path.as_uri() + "?mode=ro",
                     uri=True,
                     timeout=self.busy_timeout_ms / 1000,
@@ -399,7 +407,7 @@ class SQLiteAccountingRepository:
             pass
         try:
             with self.snapshot() as source:
-                target = sqlite3.connect(destination)
+                target = self.driver._connect(destination)
                 try:
                     source.backup(target)
                 finally:
