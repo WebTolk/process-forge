@@ -201,16 +201,20 @@ def execution_snapshots(
             status_path = task / "status.json"
             _check_links(status_path, "migration_source_symlink")
             if not status_path.exists():
-                # Directory-only preparations are not fabricated as attempts.
-                # Frozen repository floors require an observable imported head.
-                # Without one, cutover could reuse an already prepared directory.
+                # Missing status proves nothing about activity. The independent
+                # host proof still gates planning/freeze/cutover. Names reserve
+                # allocation only; they never reconstruct missing executions.
+                missing: JsonObject = {
+                    "missing_status": status_path.relative_to(project).as_posix()
+                }
                 if floor > 1:
-                    raise MaintenanceError("execution_snapshot_required")
-                yield (
-                    {"missing_status": status_path.relative_to(project).as_posix()},
-                    None,
-                    None,
-                )
+                    ExecutionKey(project_id, run.name, task.name, floor)
+                    missing["allocation_floor"] = {
+                        "run_id": run.name,
+                        "task_id": task.name,
+                        "next_attempt": floor,
+                    }
+                yield missing, None, None
                 continue
             raw = execution_bytes(status_path)
             payload = execution_json(raw)
@@ -278,6 +282,11 @@ def execution_snapshots(
                 + hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest(),
                 next_attempt=snapshot.next_attempt,
                 skipped=invalid,
+                allocation_floor={
+                    "run_id": run.name,
+                    "task_id": task.name,
+                    "next_attempt": snapshot.next_attempt,
+                },
             )
             yield item, snapshot, raw
 

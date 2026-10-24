@@ -418,6 +418,11 @@ def _descriptor(*, verify_transforms: bool = True) -> JsonObject:
         "src/processforge_core/maintenance/contracts.py",
         "src/processforge_core/maintenance/storage_migration.py",
         "src/processforge_core/maintenance/backup.py",
+        "src/processforge_core/maintenance/execution_migration.py",
+        "src/processforge_core/maintenance/journal_scan.py",
+        "src/processforge_core/executions/schema.py",
+        "src/processforge_core/executions/sqlite_repository.py",
+        "schemas/execution-migration-v1.json",
     )
     files = (
         [

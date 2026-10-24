@@ -151,6 +151,7 @@ def test_closing_after_captured_corruption_retains_incomplete_provenance(
         quarantine_dir=tmp_path / "evidence",
     )
     next(iterator)
+    assert isinstance(iterator, Generator)
     iterator.close()
     assert _assert_incomplete(report, damage)["scan_failure"] == "scan_interrupted"
 
@@ -631,16 +632,26 @@ def test_nonregular_and_missing_sources_are_not_empty_success(tmp_path: Path) ->
 def test_duplicate_index_is_temporary_disk_backed_and_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    connect = journal_scan.sqlite3.connect
+    connect = journal_scan.SQLiteDriver._connect
     connections: list[sqlite3.Connection] = []
 
-    def capture(database: str) -> sqlite3.Connection:
+    def capture(
+        self: journal_scan.SQLiteDriver,
+        database: str | Path,
+        *,
+        timeout: float = 5.0,
+        isolation_level: str | None = "",
+        uri: bool = False,
+    ) -> sqlite3.Connection:
         assert database == ""
-        connection = connect(database)
+        assert (timeout, isolation_level, uri) == (5.0, "", False)
+        connection = connect(
+            self, database, timeout=timeout, isolation_level=isolation_level, uri=uri
+        )
         connections.append(connection)
         return connection
 
-    monkeypatch.setattr(journal_scan.sqlite3, "connect", capture)
+    monkeypatch.setattr(journal_scan.SQLiteDriver, "_connect", capture)
     path = _source(tmp_path, _line(_event()) * 3000)
     _rows, report = _scan(path)
     assert report["unique_events"] == 1
@@ -653,15 +664,25 @@ def test_duplicate_index_is_temporary_disk_backed_and_closed(
 def test_closing_partial_iterator_releases_index_without_certifying_scan(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    connect = journal_scan.sqlite3.connect
+    connect = journal_scan.SQLiteDriver._connect
     connections: list[sqlite3.Connection] = []
 
-    def capture(database: str) -> sqlite3.Connection:
-        connection = connect(database)
+    def capture(
+        self: journal_scan.SQLiteDriver,
+        database: str | Path,
+        *,
+        timeout: float = 5.0,
+        isolation_level: str | None = "",
+        uri: bool = False,
+    ) -> sqlite3.Connection:
+        assert (timeout, isolation_level, uri) == (5.0, "", False)
+        connection = connect(
+            self, database, timeout=timeout, isolation_level=isolation_level, uri=uri
+        )
         connections.append(connection)
         return connection
 
-    monkeypatch.setattr(journal_scan.sqlite3, "connect", capture)
+    monkeypatch.setattr(journal_scan.SQLiteDriver, "_connect", capture)
     path = _source(tmp_path, _line(_event("a")) + _line(_event("b")))
     report: JsonObject = {}
     iterator = JournalScanService().rows([("events", path)], tmp_path, report)

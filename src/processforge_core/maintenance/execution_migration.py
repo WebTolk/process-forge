@@ -174,12 +174,15 @@ class ExecutionMigrationService:
             "to_schema_version": 1,
             "min_reader_capability": "execution-storage-v1",
             "min_writer_capability": "execution-storage-v1",
+            "target_schema_checksum": EXECUTION_SCHEMA.checksum,
         }
         files = descriptor.get("transform_files")
         paths = (
             "src/processforge_core/maintenance/contracts.py",
             "src/processforge_core/maintenance/execution_migration.py",
             "src/processforge_core/maintenance/journal_scan.py",
+            "src/processforge_core/executions/schema.py",
+            "src/processforge_core/executions/sqlite_repository.py",
         )
         actual = [
             {"relative_path": path, "sha256": _digest((root / path).read_bytes())}
@@ -264,6 +267,8 @@ class ExecutionMigrationService:
             "skipped": 0,
             "inventory": 0,
             "directories": 0,
+            "floor_only": 0,
+            "import_units": 0,
         }
         temporary: Path | None = None
         handle = None
@@ -285,6 +290,10 @@ class ExecutionMigrationService:
                     counts[
                         "skipped" if snapshot.invalid_historical else "imported"
                     ] += 1
+                if "allocation_floor" in fact:
+                    counts["import_units"] += 1
+                    if snapshot is None or snapshot.invalid_historical:
+                        counts["floor_only"] += 1
                 if handle is not None:
                     assert evidence is not None
                     handle.write(encoded)
@@ -814,6 +823,9 @@ class ExecutionMigrationService:
             tuple[tuple[str, str, int], ...],
         ]
     ]:
+        # Each unit has exactly one allocation fact and zero or one snapshot.
+        # Thus both lists and the combined unit count stay <=256, including a
+        # batch containing no ExecutionRecord at all.
         records: list[ExecutionRecord] = []
         facts: list[tuple[str, str, str]] = []
         floors: list[tuple[str, str, int]] = []
@@ -823,44 +835,68 @@ class ExecutionMigrationService:
                 if len(line) > 65536:
                     raise MaintenanceError("execution_manifest_invalid")
                 item = execution_json(line)
-                if "relative_path" not in item:
+                raw = None
+                if "relative_path" in item:
+                    raw = execution_bytes(
+                        evidence / "sources" / str(item["sha256"])[7:]
+                    )
+                    if _digest(raw) != item["sha256"] or len(raw) != item["size"]:
+                        raise MaintenanceError("execution_source_changed")
+                floor = item.get("allocation_floor")
+                if floor is None:
                     continue
-                raw = execution_bytes(evidence / "sources" / str(item["sha256"])[7:])
-                if _digest(raw) != item["sha256"] or len(raw) != item["size"]:
-                    raise MaintenanceError("execution_source_changed")
-                if "semantic_checksum" not in item:
-                    continue
-                payload = execution_json(raw)
-                if _hash(payload) != item["semantic_checksum"]:
-                    raise MaintenanceError("execution_source_changed")
-                if item["skipped"]:
-                    continue
+                if not isinstance(floor, dict):
+                    raise MaintenanceError("execution_manifest_invalid")
                 key = ExecutionKey(
                     str(plan["project_id"]),
-                    payload["run_id"],
-                    payload["task_id"],
-                    payload["attempt"],
+                    floor["run_id"],
+                    floor["task_id"],
+                    floor["next_attempt"],
                 )
-                snapshot = ExecutionSnapshot(
-                    str(item["relative_path"]),
-                    raw,
-                    payload,
-                    key,
-                    item["next_attempt"],
-                    False,
-                )
-                records.append(
-                    snapshot.record(int(cast(int, plan["target_generation"])))
-                )
-                facts.append(
-                    (snapshot.relative_path, item["sha256"], item["semantic_checksum"])
-                )
-                floors.append((key.run_id, key.task_id, snapshot.next_attempt))
+                if "semantic_checksum" in item:
+                    if raw is None:
+                        raise MaintenanceError("execution_manifest_invalid")
+                    payload = execution_json(raw)
+                    if _hash(payload) != item["semantic_checksum"]:
+                        raise MaintenanceError("execution_source_changed")
+                    snapshot_key = ExecutionKey(
+                        str(plan["project_id"]),
+                        payload["run_id"],
+                        payload["task_id"],
+                        payload["attempt"],
+                    )
+                    if (
+                        key.run_id != snapshot_key.run_id
+                        or key.task_id != snapshot_key.task_id
+                        or key.attempt != item["next_attempt"]
+                        or key.attempt <= snapshot_key.attempt
+                    ):
+                        raise MaintenanceError("execution_manifest_invalid")
+                    if not item["skipped"]:
+                        snapshot = ExecutionSnapshot(
+                            str(item["relative_path"]),
+                            raw,
+                            payload,
+                            snapshot_key,
+                            key.attempt,
+                            False,
+                        )
+                        records.append(
+                            snapshot.record(int(cast(int, plan["target_generation"])))
+                        )
+                        facts.append(
+                            (
+                                snapshot.relative_path,
+                                item["sha256"],
+                                item["semantic_checksum"],
+                            )
+                        )
+                floors.append((key.run_id, key.task_id, key.attempt))
                 position += 1
-                if len(records) == 256:
+                if len(floors) == 256:
                     yield position, tuple(records), tuple(facts), tuple(floors)
                     records, facts, floors = [], [], []
-        if records:
+        if floors:
             yield position, tuple(records), tuple(facts), tuple(floors)
 
     def _import(self, plan: Mapping[str, object], evidence: Path) -> None:
@@ -876,12 +912,12 @@ class ExecutionMigrationService:
                 checkpoint = int(marker["checkpoint"])
                 if position <= checkpoint:
                     continue
-                if position - len(records) != checkpoint:
+                if position - len(floors) != checkpoint:
                     raise MaintenanceError("execution_checkpoint_conflict")
                 self.repository.import_legacy(
                     session, records, source_facts=facts, next_attempt_floors=floors
                 )
-                session.execute(
+                changed = session.execute(
                     SqlStatement(
                         "UPDATE execution_migrations SET checkpoint=?,state='importing' WHERE migration_id=? AND checkpoint=? AND plan_checksum=?",
                         (
@@ -892,6 +928,8 @@ class ExecutionMigrationService:
                         ),
                     )
                 )
+                if changed.affected_rows != 1:
+                    raise MaintenanceError("execution_checkpoint_conflict")
 
     def _verify(self, plan: Mapping[str, object], evidence: Path) -> None:
         if (
@@ -901,17 +939,38 @@ class ExecutionMigrationService:
             != "ready"
         ):
             raise MaintenanceError("execution_schema_invalid")
-        total = 0
-        for _, records, facts, floors in self._batches(plan, evidence):
-            # Replay proves exact payload/source/process/history parity with no-op.
+        total = units = 0
+        for position, records, facts, floors in self._batches(plan, evidence):
+            # Check before replay: a missing/lowered floor must fail rather than
+            # be silently repaired by monotonic UPSERT during verification.
             with self.database.transaction() as session:
+                for run_id, task_id, floor in floors:
+                    params = (str(plan["project_id"]), run_id, task_id)
+                    head = session.fetch_one(
+                        SqlStatement(
+                            "SELECT next_attempt FROM execution_heads WHERE project_id=? AND run_id=? AND task_id=?",
+                            params,
+                        )
+                    )
+                    saved = session.fetch_one(
+                        SqlStatement(
+                            "SELECT next_attempt FROM execution_allocation_floors WHERE project_id=? AND run_id=? AND task_id=?",
+                            params,
+                        )
+                    )
+                    if (
+                        head is not None and (head[0] != floor or saved is not None)
+                    ) or (head is None and (saved is None or saved[0] != floor)):
+                        raise MaintenanceError("execution_floor_verification_failed")
                 inserted, replayed = self.repository.import_legacy(
                     session, records, source_facts=facts, next_attempt_floors=floors
                 )
                 if inserted != 0 or replayed != len(records):
                     raise MaintenanceError("execution_replay_failed")
                 total += replayed
-        expected = cast(Mapping[str, int], plan["counts"])["imported"]
+                units = position
+        counts = cast(Mapping[str, int], plan["counts"])
+        expected = counts["imported"]
         with self.database.transaction() as session:
             for statement in (
                 *EXECUTION_SCHEMA.statements,
@@ -940,6 +999,9 @@ class ExecutionMigrationService:
             heads = session.fetch_one(
                 SqlStatement("SELECT count(*) FROM execution_heads")
             )
+            floor_count = session.fetch_one(
+                SqlStatement("SELECT count(*) FROM execution_allocation_floors")
+            )
             receipts = session.fetch_one(
                 SqlStatement("SELECT 1 FROM execution_receipt_admissions LIMIT 1")
             )
@@ -951,7 +1013,10 @@ class ExecutionMigrationService:
                 or count[0] != expected
                 or total != expected
                 or marker is None
-                or marker["checkpoint"] != expected
+                or marker["checkpoint"] != counts["import_units"]
+                or units != counts["import_units"]
+                or floor_count is None
+                or floor_count[0] != counts["floor_only"]
                 or heads is None
                 or heads[0] != expected
                 or receipts is not None
@@ -1011,7 +1076,7 @@ class ExecutionMigrationService:
                 or marker["state"] != "verified"
                 or marker["plan_checksum"] != plan["plan_checksum"]
                 or marker["checkpoint"]
-                != cast(Mapping[str, int], plan["counts"])["imported"]
+                != cast(Mapping[str, int], plan["counts"])["import_units"]
             ):
                 raise MaintenanceError("execution_checkpoint_conflict")
             if (
@@ -1086,7 +1151,7 @@ class ExecutionMigrationService:
             "migration_id": MIGRATION_ID,
             "plan_checksum": plan["plan_checksum"],
             "phase": "ready",
-            "checkpoint": cast(Mapping[str, int], plan["counts"])["imported"],
+            "checkpoint": cast(Mapping[str, int], plan["counts"])["import_units"],
             "authority": "sql",
             "active_coverage": "complete",
             "history_complete": False,

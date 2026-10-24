@@ -17,12 +17,21 @@
     },
     {
       "relative_path": "src/processforge_core/maintenance/execution_migration.py",
-      "sha256": "sha256:d993e863957401945e2fbaffe5af32e1a0403e22c389c6168e8e63713a5190b4"
+      "sha256": "sha256:7d850cd0f0c58347ab18ab5baf0435117d5ec506a5c8a2a163305e558302b2d5"
     },
     {
       "relative_path": "src/processforge_core/maintenance/journal_scan.py",
-      "sha256": "sha256:cae7489b6cd0e1f95ae7e400769614f7e6756bb8d9e9ea18063eb6d9af4a77d7"
+      "sha256": "sha256:4446386ced81fb9c4fdfcccd08303cef42413175b9b7027108f2a476f18f7b29"
+    },
+    {
+      "relative_path": "src/processforge_core/executions/schema.py",
+      "sha256": "sha256:b72959727e7ac19cb2d6aba03f81409ae8cf065c127c5ac0035bf5229dd6172c"
+    },
+    {
+      "relative_path": "src/processforge_core/executions/sqlite_repository.py",
+      "sha256": "sha256:c4184d87f270e3fe518da5be24046164b1f6d6b224e4a221126f7609e6c55f34"
     }
   ],
-  "transform_checksum": "sha256:531a820f726b4ceb6ea711f9af1f1e2c4648861696e95a441397dfcdb123c212"
+  "transform_checksum": "sha256:e15d15be6d4f5a5d33fd0d18d67ea1a9ba6e932df68339286049ea158338728e",
+  "target_schema_checksum": "sha256:dba29eddb7d30ade33e114a118a2e2dbe2cc71e4910ac9d0693ef92be244939f"
 }

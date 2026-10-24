@@ -16,6 +16,7 @@ from uuid import uuid4
 import pytest
 
 from processforge_core.configuration import ConfigurationProvider, PFConfig
+from processforge_core.executions.projection import canonical_json
 from processforge_core.maintenance import storage_migration as migration
 from processforge_core.maintenance.contracts import (
     MigrationSafety,
@@ -23,7 +24,7 @@ from processforge_core.maintenance.contracts import (
     StoreTarget,
 )
 
-from .test_migration import Harness
+from .test_migration import Harness, payload
 from .test_storage_uuid import StorageHarness
 
 _ROOT = Path(__file__).absolute().parents[2]
@@ -202,10 +203,13 @@ def test_evidence_escape_refused_before_mutation(storage: StorageHarness) -> Non
     assert not storage.slot
 
 
-def test_outer_coordinator_calls_actual_execution_engine() -> None:
+@pytest.mark.parametrize("floor_only", [False, True])
+def test_outer_coordinator_calls_actual_execution_engine(floor_only: bool) -> None:
     harness = Harness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)
-    source = harness.status("task", attempt=3)
-    original = source.read_bytes()
+    source = None if floor_only else harness.status("task", attempt=3)
+    original = None if source is None else source.read_bytes()
+    if floor_only:
+        (harness.flow / "runtime/agent-runs/run/task/attempts/7").mkdir(parents=True)
     target = StoreTarget(
         "main",
         harness.database.target.path,
@@ -234,8 +238,20 @@ def test_outer_coordinator_calls_actual_execution_engine() -> None:
     assert report["status"] == "ready", report
     assert harness.repository.readiness().authority == "sql"
     record = harness.repository.load_latest("run", "task")
-    assert record is not None and record.key.attempt == 3
-    assert source.read_bytes() == original
+    if floor_only:
+        assert record is None
+        assert harness.scalar("SELECT count(*) FROM execution_attempts") == 0
+        assert harness.repository.page_history().records == ()
+        allocated = harness.repository.allocate_attempt(
+            "run",
+            "task",
+            canonical_json(payload("task", status="ready")),
+            generation=1,
+        )
+        assert allocated.key.attempt == 8
+    else:
+        assert record is not None and record.key.attempt == 3
+        assert source is not None and source.read_bytes() == original
     assert service.resume(context)["status"] == "ready"
 
 

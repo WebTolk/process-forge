@@ -229,11 +229,38 @@ def test_directory_floor_no_guessed_history(harness: Harness) -> None:
 
 def test_directory_only_does_not_create_attempt(harness: Harness) -> None:
     (harness.flow / "runtime/agent-runs/run/task/attempts/7").mkdir(parents=True)
-    assert (
-        harness.service.plan(harness.project)["error"]["code"]
-        == "execution_snapshot_required"
-    )
+    plan = harness.service.plan(harness.project)
+    assert plan["status"] == "planned", plan
+    assert plan["counts"]["imported"] == 0
+    assert plan["counts"]["floor_only"] == plan["counts"]["import_units"] == 1
     assert not harness.database.target.path.exists()
+    assert not harness.evidence.exists()
+    result = harness.apply(plan)
+    assert result["status"] == "ready" and result["checkpoint"] == 1, result
+    for table in (
+        "execution_attempts",
+        "execution_heads",
+        "execution_current",
+        "execution_receipt_admissions",
+    ):
+        assert harness.scalar("SELECT count(*) FROM " + table) == 0
+    assert harness.repository.current().complete
+    assert harness.repository.current().records == ()
+    assert harness.repository.page_history().records == ()
+    assert harness.scalar("SELECT next_history_seq FROM execution_state") == 1
+    assert harness.scalar("SELECT next_attempt FROM execution_allocation_floors") == 8
+    assert harness.resume(plan)["status"] == "ready"
+    record = harness.repository.allocate_attempt(
+        "run",
+        "task",
+        canonical_json(payload("task", status="ready")),
+        generation=1,
+    )
+    assert record.key.attempt == json.loads(record.payload_json)["attempt"] == 8
+    assert harness.scalar("SELECT count(*) FROM execution_allocation_floors") == 0
+    assert harness.scalar("SELECT next_attempt FROM execution_heads") == 9
+    assert harness.repository.page_history().records == ()
+    assert harness.repository.current().records == ()
 
 
 @pytest.mark.parametrize("name", ["01", "٠١", "0", "-1", "+1", "9223372036854775807"])
@@ -548,9 +575,17 @@ def test_project_move_preserves_relative_binding_and_identity(harness: Harness) 
     assert harness.repository.readiness().store_id == "a" * 32
 
 
-def test_manifest_memory_and_result_size_are_bounded(harness: Harness) -> None:
+@pytest.mark.parametrize("floor_only", [False, True])
+def test_manifest_memory_and_result_size_are_bounded(
+    harness: Harness, floor_only: bool
+) -> None:
     for i in range(513):
-        harness.status(f"task-{i:04}")
+        if floor_only:
+            (harness.flow / f"runtime/agent-runs/run/task-{i:04}/attempts/7").mkdir(
+                parents=True
+            )
+        else:
+            harness.status(f"task-{i:04}")
     tracemalloc.start()
     started = time.monotonic()
     try:
@@ -561,12 +596,15 @@ def test_manifest_memory_and_result_size_are_bounded(harness: Harness) -> None:
     assert plan["status"] == "planned", plan
     assert peak < 8 * 1024 * 1024
     assert len(canonical_json(plan).encode("utf-8")) < 4096
-    assert plan["counts"]["snapshots"] == 513
+    assert plan["counts"]["snapshots"] == (0 if floor_only else 513)
+    assert plan["counts"]["floor_only"] == (513 if floor_only else 0)
+    assert plan["counts"]["import_units"] == 513
     assert not harness.evidence.exists()
     (harness.project.parent / "memory-evidence.json").write_text(
         json.dumps(
             {
-                "snapshots": 513,
+                "snapshots": plan["counts"]["snapshots"],
+                "floor_only": plan["counts"]["floor_only"],
                 "peak_traced_bytes": peak,
                 "seconds": time.monotonic() - started,
                 "plan_bytes": len(canonical_json(plan).encode("utf-8")),
@@ -606,3 +644,263 @@ def test_committed_resume_verifies_retained_integrity_snapshot(
     (harness.evidence / "verification/database.sqlite3").write_bytes(b"tampered")
     assert harness.resume(plan)["blocked"]
     assert harness.repository.readiness().ready
+
+
+@pytest.mark.parametrize("snapshots", [0, 129])
+def test_mixed_floor_batches_are_bounded_and_replay_exact(
+    harness: Harness,
+    snapshots: int,
+) -> None:
+    for i in range(257):
+        task = f"task-{i:04}"
+        if i < snapshots:
+            source = harness.status(task, attempt=3)
+            root = source.parent
+        else:
+            root = harness.flow / "runtime/agent-runs/run" / task
+        (root / "attempts/7").mkdir(parents=True)
+    plan = harness.service.plan(harness.project)
+    assert plan["status"] == "planned", plan
+    assert plan["counts"]["import_units"] == 257
+    assert plan["counts"]["floor_only"] == 257 - snapshots
+    original = harness.repository.import_legacy
+    batches = []
+
+    def observed(
+        session: SqlSession,
+        records: tuple[ExecutionRecord, ...],
+        *,
+        source_facts: tuple[tuple[str, str, str], ...],
+        next_attempt_floors: tuple[tuple[str, str, int], ...],
+    ) -> tuple[int, int]:
+        assert len(records) == len(source_facts) <= len(next_attempt_floors) <= 256
+        before = harness.service._marker(session)
+        result = original(
+            session,
+            records,
+            source_facts=source_facts,
+            next_attempt_floors=next_attempt_floors,
+        )
+        assert before is not None
+        batches.append((len(records), len(next_attempt_floors), result))
+        return result
+
+    with patch.object(harness.repository, "import_legacy", side_effect=observed):
+        result = harness.apply(plan)
+    assert result["status"] == "ready" and result["checkpoint"] == 257, result
+    assert [size for _, size, _ in batches] == [256, 1, 256, 1]
+    assert sum(result[0] for _, _, result in batches) == snapshots
+    assert harness.scalar("SELECT count(*) FROM execution_attempts") == snapshots
+    assert harness.scalar("SELECT count(*) FROM execution_heads") == snapshots
+    assert (
+        harness.scalar("SELECT count(*) FROM execution_allocation_floors")
+        == 257 - snapshots
+    )
+    assert (
+        harness.scalar(
+            "SELECT count(*) FROM execution_allocation_floors WHERE next_attempt<>8"
+        )
+        == 0
+    )
+    assert (
+        harness.scalar("SELECT count(*) FROM execution_heads WHERE next_attempt<>8")
+        == 0
+    )
+    assert harness.scalar("SELECT count(*) FROM execution_current") == 0
+    assert len(harness.repository.page_history(limit=1000).records) == snapshots
+    revision = harness.scalar("SELECT revision FROM execution_state")
+    assert harness.resume(plan)["status"] == "ready"
+    assert harness.scalar("SELECT revision FROM execution_state") == revision
+
+
+def test_empty_record_batch_floor_and_checkpoint_rollback_together(
+    harness: Harness,
+) -> None:
+    for i in range(257):
+        (harness.flow / f"runtime/agent-runs/run/task-{i:04}/attempts/7").mkdir(
+            parents=True
+        )
+    plan = harness.service.plan(harness.project)
+    original = harness.repository.import_legacy
+    calls = 0
+
+    def fail_second(
+        session: SqlSession,
+        records: tuple[ExecutionRecord, ...],
+        *,
+        source_facts: tuple[tuple[str, str, str], ...],
+        next_attempt_floors: tuple[tuple[str, str, int], ...],
+    ) -> tuple[int, int]:
+        nonlocal calls
+        calls += 1
+        assert records == source_facts == ()
+        result = original(
+            session,
+            records,
+            source_facts=source_facts,
+            next_attempt_floors=next_attempt_floors,
+        )
+        assert result == (0, 0)
+        if calls == 2:
+            raise MaintenanceError("fixture_floor_interruption")
+        return result
+
+    with patch.object(harness.repository, "import_legacy", side_effect=fail_second):
+        assert harness.apply(plan)["error"]["code"] == "fixture_floor_interruption"
+    assert harness.scalar("SELECT checkpoint FROM execution_migrations") == 256
+    assert harness.scalar("SELECT count(*) FROM execution_allocation_floors") == 256
+    assert harness.scalar("SELECT count(*) FROM execution_attempts") == 0
+    assert harness.scalar("SELECT next_history_seq FROM execution_state") == 1
+    assert harness.resume(plan)["status"] == "ready"
+    assert harness.scalar("SELECT checkpoint FROM execution_migrations") == 257
+    assert harness.scalar("SELECT count(*) FROM execution_allocation_floors") == 257
+
+
+@pytest.mark.parametrize(
+    "stage", ["_backup", "_initialize", "_import", "_verify", "_cutover", "_publish"]
+)
+def test_floor_only_crash_resume(harness: Harness, stage: str) -> None:
+    (harness.flow / "runtime/agent-runs/run/task/attempts/7").mkdir(parents=True)
+    plan = harness.service.plan(harness.project)
+    with patch.object(harness.service, stage, side_effect=InterruptedError("fixture")):
+        assert harness.apply(plan)["blocked"]
+    assert harness.resume(plan)["status"] == "ready"
+    assert harness.scalar("SELECT count(*) FROM execution_attempts") == 0
+    assert harness.scalar("SELECT next_attempt FROM execution_allocation_floors") == 8
+    assert (
+        harness.repository.current().records
+        == harness.repository.page_history().records
+        == ()
+    )
+
+
+@pytest.mark.parametrize("change", ["add-lower", "remove", "rename"])
+@pytest.mark.parametrize("resuming", [False, True])
+def test_floor_directory_names_are_frozen_even_when_max_unchanged(
+    harness: Harness,
+    change: str,
+    resuming: bool,
+) -> None:
+    root = harness.flow / "runtime/agent-runs/run/task/attempts"
+    (root / "7").mkdir(parents=True)
+    (root / "3").mkdir()
+    plan = harness.service.plan(harness.project)
+    if resuming:
+        with patch.object(
+            harness.service, "_cutover", side_effect=InterruptedError("fixture")
+        ):
+            assert harness.apply(plan)["blocked"]
+    if change == "add-lower":
+        (root / "2").mkdir()
+    elif change == "remove":
+        (root / "3").rmdir()
+    else:
+        (root / "3").rename(root / "4")
+    result = harness.resume(plan) if resuming else harness.apply(plan)
+    assert result["error"]["code"] == "execution_manifest_changed"
+    if resuming:
+        assert not harness.repository.readiness().ready
+    else:
+        assert not harness.database.target.path.exists()
+
+
+@pytest.mark.parametrize("verdict", ["active", "unknown"])
+def test_missing_status_is_not_quiescence_proof(
+    harness: Harness, verdict: Literal["active", "unknown"]
+) -> None:
+    (harness.flow / "runtime/agent-runs/run/task/attempts/7").mkdir(parents=True)
+    plan = harness.service.plan(harness.project)
+    harness.verdict = verdict
+    assert (
+        harness.service.plan(harness.project)["error"]["code"]
+        == "execution_activity_unknown"
+    )
+    result = harness.apply(plan)
+    assert result["error"]["code"] == "execution_activity_unknown"
+    assert not harness.database.target.path.exists()
+    assert not (harness.flow / "data/execution-storage.json").exists()
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "DELETE FROM execution_allocation_floors",
+        "UPDATE execution_allocation_floors SET next_attempt=7",
+        "UPDATE execution_allocation_floors SET next_attempt=9",
+    ],
+)
+def test_verification_refuses_floor_drift_before_replay(
+    harness: Harness, mutation: str
+) -> None:
+    (harness.flow / "runtime/agent-runs/run/task/attempts/7").mkdir(parents=True)
+    plan = harness.service.plan(harness.project)
+    verify = harness.service._verify
+
+    def corrupt(plan: JsonObject, evidence: Path) -> None:
+        with harness.database.transaction() as session:
+            session.execute(SqlStatement(mutation))
+        verify(plan, evidence)
+
+    with patch.object(harness.service, "_verify", side_effect=corrupt):
+        result = harness.apply(plan)
+    assert result["error"]["code"] == "execution_floor_verification_failed"
+    assert not harness.repository.readiness().ready
+
+
+def test_floor_only_manifest_never_opens_missing_history_bodies(
+    harness: Harness,
+) -> None:
+    root = harness.flow / "runtime/agent-runs/run/é/attempts/7"
+    root.mkdir(parents=True)
+    names = {
+        "prepared-input.json",
+        "report.md",
+        "status.json",
+        "stdout.log",
+        "stderr.log",
+    }
+    for name in names:
+        (root / name).write_bytes(b"PRIVATE UNREADABLE HISTORY")
+    opened = Path.open
+
+    def guarded(
+        path: Path,
+        mode: str = "r",
+        buffering: int = -1,
+        encoding: str | None = None,
+        errors: str | None = None,
+        newline: str | None = None,
+    ) -> IO[str] | IO[bytes]:
+        if path.parent == root and path.name in names:
+            pytest.fail("directory-only body reconstruction")
+        return opened(path, mode, buffering, encoding, errors, newline)
+
+    with patch.object(Path, "open", guarded):
+        plan = harness.service.plan(harness.project)
+        assert harness.apply(plan)["status"] == "ready"
+    assert harness.repository.load_latest("run", "é") is None
+    facts = [
+        json.loads(line)
+        for line in (harness.evidence / "manifest.ndjson")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert facts[-1]["allocation_floor"] == {
+        "run_id": "run",
+        "task_id": "é",
+        "next_attempt": 8,
+    }
+
+
+def test_quarantined_snapshot_retains_its_allocation_floor(harness: Harness) -> None:
+    source = harness.status("task", attempt=9)
+    body = json.loads(source.read_bytes())
+    del body["driver_id"]
+    source.write_text(json.dumps(body), encoding="utf-8")
+    original = source.read_bytes()
+    plan = harness.service.plan(harness.project, skip_terminal_invalid=True)
+    assert plan["counts"]["skipped"] == plan["counts"]["floor_only"] == 1
+    assert harness.apply(plan)["status"] == "ready"
+    assert source.read_bytes() == original
+    assert harness.scalar("SELECT count(*) FROM execution_attempts") == 0
+    assert harness.scalar("SELECT next_attempt FROM execution_allocation_floors") == 10

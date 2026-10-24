@@ -147,9 +147,14 @@ The execution engine imports observable latest `status.json` snapshots into the
 project main store. It preserves explicit project/run/task/attempt identity,
 unknown compatibility fields and exact original bytes. Numeric attempt directory
 names set allocation floors; their bodies are never used to invent history.
-Directory-only attempts without an observable head refuse cutover, preventing
-reuse of a previously prepared attempt number. Historical completeness is not
-claimed. Unknown/current activity, ambiguous names, source drift, foreign schemas
+After independently proven quiescence, directory-only attempts are retained in
+`execution_allocation_floors` without creating execution/head/current/history rows.
+For example, `attempts/7` with no status imports zero executions and reserves 8 for
+the first real allocation. Missing status never proves idle. Frozen provenance
+includes every validated directory name, not just the maximum, so adding,
+removing or renaming a lower directory also invalidates the plan. Skipped proved
+historical snapshots retain their allocation floor. Historical completeness is
+not claimed. Unknown/current activity, ambiguous names, source drift, foreign schemas
 or an absent explicit manifest `project.id` refuse migration.
 
 `ExecutionMigrationService` takes the frozen database/repository/admission/backup
@@ -172,8 +177,12 @@ be skipped; exact bytes, hashes and provenance remain in evidence.
 
 Apply publishes a pending `data/execution-storage.json` binding under admission
 before database mutation. An existing store receives one verified WAL-aware
-recovery backup. Import plus its checkpoint commits in batches of at most 256.
-Schema/source/count/FK/replay checks precede cutover. A separate, deterministic
+recovery backup. A source unit is one snapshot with its floor, or one floor-only
+fact. At most 256 units are buffered per batch; import and checkpoint commit in
+the same transaction even when the batch has zero ExecutionRecords. Checkpoint
+counts all units (`counts.import_units`), while `counts.imported` counts snapshots
+and `counts.floor_only` counts floor-only facts. Schema/source/count/FK checks,
+exact floor parity before replay and no-op snapshot replay precede cutover. A separate, deterministic
 `verification/` bundle reuses BackupPort to check SQLite integrity without
 bypassing the public SQL session's prohibition on administrative PRAGMAs. Resume
 verifies and reuses both evidence bundles; the verification snapshot never

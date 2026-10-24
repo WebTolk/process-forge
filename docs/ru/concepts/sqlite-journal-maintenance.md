@@ -147,8 +147,13 @@ shell passthrough нет.
 main store проекта. Сохраняются явные project/run/task/attempt IDs, неизвестные
 поля compatibility DTO и точные исходные bytes. Имена числовых attempt-каталогов
 задают allocation floor; их тела не читаются для выдуманного восстановления
-истории. Каталоги без наблюдаемого head блокируют cutover, чтобы не переиспользовать
-подготовленный номер. Полнота истории не заявляется. Unknown/current activity,
+истории. При независимо доказанном quiescence directory-only факты сохраняются в
+`execution_allocation_floors` без execution/head/current/history rows. Например,
+`attempts/7` без status импортирует ноль executions и резервирует 8 для первой
+реальной allocation. Отсутствие status не доказывает idle. Manifest закрепляет
+каждое валидное имя каталога: добавление, удаление или переименование даже меньшего
+номера меняет plan. Пропущенные доказанно исторические snapshots также сохраняют
+floor. Полнота истории не заявляется. Unknown/current activity,
 неоднозначные имена, drift/foreign schema и отсутствие явного `project.id`
 блокируют перенос.
 
@@ -171,8 +176,12 @@ checksum и provenance остаются в evidence.
 
 Apply под admission публикует pending `data/execution-storage.json` до mutation.
 Для существующей БД создаётся одна проверенная WAL-aware recovery backup. Batch
-до 256 записей и checkpoint коммитятся в одной транзакции. Перед cutover проверяются
-schema/source/count/FK/replay. Отдельный deterministic `verification/` bundle через
+содержит до 256 source units: snapshot вместе с floor либо отдельный floor-only
+факт. Import и checkpoint коммитятся в одной транзакции даже при пустом наборе
+ExecutionRecords. Checkpoint считает все units (`counts.import_units`),
+`counts.imported` — snapshots, `counts.floor_only` — отдельные floors. Перед cutover
+проверяются schema/source/count/FK, точное floor parity до replay и no-op replay
+snapshots. Отдельный deterministic `verification/` bundle через
 BackupPort проверяет SQLite integrity, сохраняя запрет административных PRAGMA в
 публичном SqlSession. Resume сверяет и переиспользует оба bundle; verification
 не заменяет исходную recovery backup. Единственная CAS-транзакция одновременно

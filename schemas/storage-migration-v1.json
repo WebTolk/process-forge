@@ -34,12 +34,32 @@
     },
     {
       "relative_path": "src/processforge_core/maintenance/storage_migration.py",
-      "sha256": "sha256:78609bab580d9788d68a642703f0a14f2ae449a9bb56ff7f15df9b10c43fd9e2"
+      "sha256": "sha256:cf0d3782cadd8a53600c681e6d9eb7f51911d477c89087ff656ff647b875eb63"
     },
     {
       "relative_path": "src/processforge_core/maintenance/backup.py",
       "sha256": "sha256:2f959c47d8870ea2d858c90dfd97d5c91beaf6817c1534405933dfb24b199925"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/execution_migration.py",
+      "sha256": "sha256:7d850cd0f0c58347ab18ab5baf0435117d5ec506a5c8a2a163305e558302b2d5"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/journal_scan.py",
+      "sha256": "sha256:4446386ced81fb9c4fdfcccd08303cef42413175b9b7027108f2a476f18f7b29"
+    },
+    {
+      "relative_path": "src/processforge_core/executions/schema.py",
+      "sha256": "sha256:b72959727e7ac19cb2d6aba03f81409ae8cf065c127c5ac0035bf5229dd6172c"
+    },
+    {
+      "relative_path": "src/processforge_core/executions/sqlite_repository.py",
+      "sha256": "sha256:c4184d87f270e3fe518da5be24046164b1f6d6b224e4a221126f7609e6c55f34"
+    },
+    {
+      "relative_path": "schemas/execution-migration-v1.json",
+      "sha256": "sha256:460f72f7dab6d650ab5679ddb1ec7df72a93a57ea6205f2cda3a426c42d00d91"
     }
   ],
-  "transform_checksum": "sha256:445bbed3e337f0bca1f87dc64f941e9ba7da6827563cab6fd081ca187d46518e"
+  "transform_checksum": "sha256:0f66eee3c5396b39fab6bcc270d651d20b49ba82ceb98648df224d28005f9d32"
 }
