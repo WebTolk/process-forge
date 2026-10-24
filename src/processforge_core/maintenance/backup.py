@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
 
+from processforge_core.database import DatabaseFactory, SQLiteDriver
 from processforge_core.maintenance.contracts import JsonObject, MaintenanceError
 
 _DATABASE = "database.sqlite3"
@@ -177,12 +178,15 @@ def _connect(
     *,
     writable: bool = False,
     immutable: bool = False,
+    driver: SQLiteDriver | None = None,
 ) -> sqlite3.Connection:
     deadline.check()
     query = "?mode=rw" if writable else "?mode=ro"
     if immutable:
         query += "&immutable=1"
-    connection = sqlite3.connect(path.as_uri() + query, uri=True, timeout=0.05)
+    connection = (
+        driver if driver is not None else DatabaseFactory.resolve_driver()
+    )._connect(path.as_uri() + query, uri=True, timeout=0.05)
     try:
         connection.execute("PRAGMA trusted_schema = OFF")
         if not writable:
@@ -196,8 +200,16 @@ def _connect(
     return connection
 
 
-def _integrity(path: Path, deadline: _Deadline) -> JsonObject:
-    with closing(_connect(path, deadline, immutable=True)) as connection:
+def _integrity(
+    path: Path, deadline: _Deadline, driver: SQLiteDriver | None = None
+) -> JsonObject:
+    with closing(
+        (
+            _connect(path, deadline, immutable=True)
+            if driver is None
+            else _connect(path, deadline, immutable=True, driver=driver)
+        )
+    ) as connection:
         rows = connection.execute("PRAGMA integrity_check").fetchmany(2)
         deadline.check()
         if rows != [("ok",)]:
@@ -208,13 +220,27 @@ def _integrity(path: Path, deadline: _Deadline) -> JsonObject:
         }
 
 
-def _backup(source: Path, target: Path, deadline: _Deadline) -> None:
-    with closing(_connect(source, deadline)) as reader:
+def _backup(
+    source: Path, target: Path, deadline: _Deadline, driver: SQLiteDriver | None = None
+) -> None:
+    with closing(
+        (
+            _connect(source, deadline)
+            if driver is None
+            else _connect(source, deadline, driver=driver)
+        )
+    ) as reader:
         # Pin a read transaction so continuous WAL writers cannot restart the
         # backup forever. Later commits belong to the next snapshot.
         reader.execute("BEGIN")
         reader.execute("SELECT name FROM sqlite_schema LIMIT 1").fetchone()
-        with closing(_connect(target, deadline, writable=True)) as writer:
+        with closing(
+            (
+                _connect(target, deadline, writable=True)
+                if driver is None
+                else _connect(target, deadline, writable=True, driver=driver)
+            )
+        ) as writer:
             writer.execute("PRAGMA journal_mode = DELETE")
 
             def progress(status: int, remaining: int, total: int) -> None:
@@ -337,7 +363,9 @@ class _Verified:
 
 
 @contextmanager
-def _verified(bundle: Path, deadline: _Deadline) -> Iterator[_Verified]:
+def _verified(
+    bundle: Path, deadline: _Deadline, driver: SQLiteDriver | None = None
+) -> Iterator[_Verified]:
     bundle = _safe_path(bundle)
     identity = _directory(bundle)
     _members(bundle, identity, deadline)
@@ -353,7 +381,11 @@ def _verified(bundle: Path, deadline: _Deadline) -> Iterator[_Verified]:
                 or database_digest.size != document["database"]["size"]
             ):
                 raise MaintenanceError("backup_hash_mismatch")
-            facts = _integrity(database.path, deadline)
+            facts = (
+                _integrity(database.path, deadline)
+                if driver is None
+                else _integrity(database.path, deadline, driver)
+            )
             if facts != document["sqlite"]:
                 raise MaintenanceError("backup_metadata_mismatch")
             verified = _Verified(
@@ -389,11 +421,14 @@ class SQLiteBackupService:
     SQLite may create these sidecars even though database contents are read-only.
     """
 
-    def __init__(self, *, timeout: float = 10.0) -> None:
+    def __init__(
+        self, *, timeout: float = 10.0, driver: SQLiteDriver | None = None
+    ) -> None:
         """Set a positive finite per-operation timeout in seconds."""
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("backup_timeout_invalid")
         self._timeout = timeout
+        self._driver = driver
 
     def create(self, source: Path, bundle: Path) -> JsonObject:
         """Create a new bundle with a consistent read-only SQLite snapshot.
@@ -425,11 +460,19 @@ class SQLiteBackupService:
                 directory_identity = _directory(bundle)
                 with _open_file(bundle / _DATABASE, create=True) as database:
                     created.append((database.path, database.identity))
-                    _backup(source, database.path, deadline)
+                    (
+                        _backup(source, database.path, deadline)
+                        if self._driver is None
+                        else _backup(source, database.path, deadline, self._driver)
+                    )
                     original.check()
                     _sidecars(source)
                     _check_directory(bundle, directory_identity)
-                    facts = _integrity(database.path, deadline)
+                    facts = (
+                        _integrity(database.path, deadline)
+                        if self._driver is None
+                        else _integrity(database.path, deadline, self._driver)
+                    )
                     digest = _digest(database, deadline)
                     document: JsonObject = {
                         "schema_version": 1,
@@ -453,7 +496,11 @@ class SQLiteBackupService:
                         manifest.stream.flush()
                         os.fsync(manifest.stream.fileno())
                     os.fsync(database.stream.fileno())
-                with _verified(bundle, deadline) as verified:
+                with (
+                    _verified(bundle, deadline)
+                    if self._driver is None
+                    else _verified(bundle, deadline, self._driver)
+                ) as verified:
                     return verified.report("backup")
         except BaseException as exc:
             if directory_identity is not None:
@@ -481,7 +528,11 @@ class SQLiteBackupService:
         """
         deadline = _Deadline(time.monotonic() + self._timeout)
         try:
-            with _verified(bundle, deadline) as verified:
+            with (
+                _verified(bundle, deadline)
+                if self._driver is None
+                else _verified(bundle, deadline, self._driver)
+            ) as verified:
                 return verified.report("verify")
         except (OSError, sqlite3.Error) as exc:
             self._raise_failure(exc, deadline)
@@ -503,7 +554,11 @@ class SQLiteBackupService:
         deadline = _Deadline(time.monotonic() + self._timeout)
         created: tuple[Path, tuple[int, int]] | None = None
         try:
-            with _verified(bundle, deadline) as verified:
+            with (
+                _verified(bundle, deadline)
+                if self._driver is None
+                else _verified(bundle, deadline, self._driver)
+            ) as verified:
                 destination = _safe_path(destination)
                 parent_identity = _directory(destination.parent)
                 if destination.is_relative_to(verified.bundle):
@@ -526,7 +581,11 @@ class SQLiteBackupService:
                         or digest.size != verified.database_digest.size
                     ):
                         raise MaintenanceError("backup_hash_mismatch")
-                    if _integrity(target.path, deadline) != verified.facts:
+                    if (
+                        _integrity(target.path, deadline)
+                        if self._driver is None
+                        else _integrity(target.path, deadline, self._driver)
+                    ) != verified.facts:
                         raise MaintenanceError("backup_metadata_mismatch")
                     if _digest(target, deadline) != digest:
                         raise MaintenanceError("backup_changed")

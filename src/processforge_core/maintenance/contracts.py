@@ -14,6 +14,27 @@ JournalRow = tuple[SourceKind, JsonObject, str]
 
 
 @dataclass(frozen=True)
+class StoreTarget:
+    """Host-authorized physical target; paths and identities confer no access."""
+
+    kind: Literal["events", "raw", "accounting", "search", "main"]
+    target: Path
+    target_relative_path: str
+    scope: Literal["project", "workplace"]
+    owner_id: str
+
+
+@dataclass(frozen=True)
+class StorageMigrationContext:
+    """Exact selected roots and targets, never discovered by scanning a device."""
+
+    project_root: Path | None
+    workplace_root: Path | None
+    device_config_path: Path
+    targets: tuple[StoreTarget, ...]
+
+
+@dataclass(frozen=True)
 class MigrationSafety:
     """Trusted host verdict, never inferred from an operator confirmation flag.
 

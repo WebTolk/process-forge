@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
+from ..database import DatabaseFactory, SQLiteDriver
 from ..executions.model import ExecutionKey, ExecutionRecord
 from ..executions.projection import canonical_json, compatibility_payload
 from .contracts import (
@@ -633,8 +634,14 @@ class JournalScanService:
     scan state belongs to an individual exhausted ``rows`` or ``preflight`` call.
     """
 
-    def __init__(self, raw_validator: _RawValidator | None = None) -> None:
+    def __init__(
+        self,
+        raw_validator: _RawValidator | None = None,
+        *,
+        driver: SQLiteDriver | None = None,
+    ) -> None:
         """Keep a narrow raw identity validator without opening any resources."""
+        self._driver = driver
         self._raw_validator = (
             _validate_native_record if raw_validator is None else raw_validator
         )
@@ -737,7 +744,13 @@ class JournalScanService:
         # Empty filename creates a disk-backed temporary SQLite index removed
         # on close. Neither identities nor native keys grow an in-memory set.
         try:
-            with closing(sqlite3.connect("")) as index:
+            with closing(
+                (
+                    self._driver
+                    if self._driver is not None
+                    else DatabaseFactory.resolve_driver()
+                )._connect("")
+            ) as index:
                 index.execute("PRAGMA cache_size=-2048")
                 index.execute(
                     "CREATE TABLE identities(kind TEXT, id TEXT, digest TEXT, "

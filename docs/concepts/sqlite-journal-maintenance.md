@@ -194,8 +194,72 @@ default) and `execution-resume`. Apply needs `--apply --offline-confirmed` and
 They emit one JSON object, with exit 0 for plan/ready, 1 for refusal and argparse 2
 for invalid syntax. Without host composition/verifier they fail closed.
 
-The native UUID coordinator/script, automatic update/first-safe-write triggers,
-full PFConfig provider and shared CLI/Runtime composition belong to later source
-phases. This engine alone does not establish their integration or require users
-to migrate data manually. Real host proof, installed entrypoints and integrated
-assurance remain pending. No live developer storage is migrated by this slice.
+## Native UUID coordinator and automatic hooks
+
+`StorageMigrationService` is the common native update/first-write/resume service.
+`tools/migrate-storage.py` takes explicit `--project-root` and/or
+`--workplace-root`, optional `--device-config`, and mutually exclusive `--inspect`
+(default), `--apply`, `--resume`. `--json` retains exactly one JSON result;
+exit codes are 0 for planned/ready, 1 for deferred/refused/failed, argparse 2.
+There is no CLI safety override. The host supplies an operation-pinned full
+`ConfigurationProvider` and exact authorized targets; one snapshot is passed to
+all dependencies without another merge. No agent, LLM, network or daemon is used.
+
+The host calls `ensure_ready(context, trigger='update'|'first_write')` before a
+mutating operation, and after terminal reconciliation/collection only after task,
+target and SQL locks are released. Active/unknown before any pending pin returns
+`legacy_allowed=true` for that target without minting a UUID or creating migration
+files. Pending always requires exact recovery, never legacy/JSON fallback. A
+changed/unavailable safety generation refuses. Pure reads, configuration, doctor
+and the 500 ms guard never call the coordinator.
+
+Recognized existing events/raw/accounting/search stores receive only
+`pf_store_meta`, `pf_schema_versions` and `store_identity@1`. Their original
+application IDs, versions, domain SQL/constraints/indexes/FTS shadow objects,
+rows/IDs/blobs and paths remain unchanged. Exact qualified schema fingerprints
+are in `schemas/storage-migration-v1.json`; extra/foreign/future/drifting objects
+refuse. The search baseline is meta version 6, application_id/user_version 0/0.
+This is qualification of specific schemas, not all historical releases.
+
+Project owners require explicit manifest project.id. Accounting checks its
+existing `data/accounting/identity.json` origin_id. Other workplace targets require
+a stable identity from a qualified host metadata source; a directory name or new
+ID is insufficient. Main keeps the strict W2 envelope and only its execution
+binding; no second legacy identity pin is created for main.
+
+Each owner has `data/storage-identities.json`, with slots pinning kind, relative
+target, scope/owner, UUID, state and plan checksum. An exact target selector first
+persists its UUID in `data/storage-migrations/r02-storage-v1/targets/`; its immutable
+plan and journal live under the checksum directory. No newest/first journal
+selection or UUID remint is permitted. Pending publication precedes mutation.
+A verified WAL backup is related to the source logical/schema fingerprint and
+plan before metadata commits. Streaming typed row digests, counts, integrity and
+FK checks prove parity; metadata is excluded from domain digests. Resume verifies
+the same backup and source facts, including after a metadata commit with a stale
+file journal. Each target commits independently; an already-ready target is not
+rolled back when a later target fails. Original backup bytes are retained.
+
+`storage_identity_access` holds the owner identity gate from before adapter open
+through connection close. Ready verifies pinned UUID/owner/domain schema; pending
+refuses, and unpinned metadata never remints. Internal backup uses the raw injected
+driver without recursively entering migration. `new_store_identity` fences an
+explicit writable initializer and publishes pending before file creation;
+`add_store_identity` adds metadata inside its domain initialization transaction.
+A failed initializer retains pending; retry uses the same UUID. Inventory never
+creates absent unused stores. Rebuild must preserve UUID or use controlled rebind;
+backup/restore preserve it.
+
+The coordinator delegates execution snapshots, checkpointed import and the sole
+SQL authority CAS to the frozen `ExecutionMigrationService`. It does not invent
+history or duplicate that engine. Main resume uses a durable exact plan selector;
+after cutover SQL stays authoritative and projection repair belongs to its owner.
+
+The script consumes `composition.build_configuration_provider` and
+`composition.build_storage_migration_host`. The latter must pin enrollment,
+installed code/capabilities, instance/routing, old writer exclusion, pre-spawn
+publication gaps and complete trees, then inject both storage and execution
+verifiers. Its absence is a bounded `storage_host_factory_unavailable` refusal.
+Script/automatic policy tests with injected fixture proof do not establish real
+host exclusion. Actual W3 composition, installed update/first-write qualification
+and integrated assurance are separate gates; this source slice performs no live
+migration or infrastructure actions.

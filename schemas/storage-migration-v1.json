@@ -1,0 +1,45 @@
+{
+  "migration_id": "r02-storage-v1",
+  "descriptor_version": 1,
+  "min_reader_capability": "storage-identity-v1",
+  "min_writer_capability": "storage-identity-v1",
+  "legacy_formats": {
+    "events": {
+      "application_id": 1346782550,
+      "user_version": 1,
+      "schema_checksum": "sha256:124170bec72902db2696cfe3a59ed56725b983cf67e0d468b62b4db8b9376436"
+    },
+    "raw": {
+      "application_id": 1346785879,
+      "user_version": 1,
+      "schema_checksum": "sha256:56c1cef04ae9e61826b97003b98c5de7dcaa7745674603555509034cd0678cfb"
+    },
+    "accounting": {
+      "application_id": 1346781507,
+      "user_version": 1,
+      "schema_checksum": "sha256:fdca3ec275b2734995bdd18779bc3d16848962933aba4f5be24214b80c85d9f0"
+    },
+    "search": {
+      "application_id": 0,
+      "user_version": 0,
+      "schema_checksum": "sha256:67d1d0d7c30f15257a52756dc9140ebe5016eb4894af06af475eec73b7bd7991"
+    }
+  },
+  "metadata_schema_checksum": "sha256:29e6dbbaf360e2443352ad9f502581c1fe04ad63786e7a6a5ca99e2381a3604f",
+  "identity_schema_checksum": "sha256:6ba86a7d656f42a728281b417ed9507201a384e6eea6a0f0adb1d63a5c3281f0",
+  "transform_files": [
+    {
+      "relative_path": "src/processforge_core/maintenance/contracts.py",
+      "sha256": "sha256:d6bedd5e162551d5736787e855decef6cc087430fb9cbbe3cebb49db6b6b3719"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/storage_migration.py",
+      "sha256": "sha256:78609bab580d9788d68a642703f0a14f2ae449a9bb56ff7f15df9b10c43fd9e2"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/backup.py",
+      "sha256": "sha256:2f959c47d8870ea2d858c90dfd97d5c91beaf6817c1534405933dfb24b199925"
+    }
+  ],
+  "transform_checksum": "sha256:445bbed3e337f0bca1f87dc64f941e9ba7da6827563cab6fd081ca187d46518e"
+}

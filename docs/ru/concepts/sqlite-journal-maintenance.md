@@ -192,9 +192,65 @@ resume также требует точных migration/checksum selectors. Вы
 exit 0 для plan/ready, 1 для отказа и argparse 2 для неверного синтаксиса.
 Без host composition/verifier новые операции fail-closed.
 
-Native UUID coordinator/script, automatic update/first-safe-write triggers,
-полный PFConfig provider и shared CLI/Runtime composition относятся к следующим
-исходным фазам. Этот engine сам по себе не доказывает интеграцию и не вводит
-требование ручного переноса данных пользователем. Real host proof, installed
-entrypoints и integrated assurance ещё предстоят. Живые данные разработчика
-этой фазой не мигрируются.
+## Native UUID coordinator и автоматические hooks
+
+`StorageMigrationService` объединяет update, first-write и exact resume.
+`tools/migrate-storage.py` принимает явно выбранные `--project-root` и/или
+`--workplace-root`, необязательный `--device-config`, один из `--inspect`
+(по умолчанию), `--apply`, `--resume`. stdout содержит ровно один JSON;
+коды выхода: 0 planned/ready, 1 deferred/refused/failed, argparse 2.
+CLI-флага для подмены safety proof нет. Host снимает один полный PFConfig snapshot
+через общий ConfigurationProvider и передаёт pinned provider всем зависимостям.
+Нет ручного merge у consumers, agent/LLM/network/daemon dependency.
+
+Host вызывает ensure_ready перед записью и при следующем mutating use после
+terminal reconcile/collection, только после освобождения task/target/SQL locks.
+Active/unknown до pending даёт диагностированный deferred с legacy_allowed=true
+для этого target, без mint UUID и maintenance files. После pending — exact resume,
+без JSON/legacy fallback. Pure reads/config/doctor/500 ms guard не мигрируют.
+Новый capability/version, пустой registry, terminal string, PID/TTL и CLI boolean
+не заменяют реальное доказательство исключения старых writers и owned trees.
+
+Для распознанных events/raw/accounting/search добавляются только pf_store_meta,
+pf_schema_versions и store_identity@1. Пути, domain application IDs/versions,
+DDL/constraints/indexes/FTS shadow objects, строки/ID/blob не меняются.
+Exact fingerprints закреплены в storage-migration-v1.json; unknown extra,
+foreign/future/corrupt/drift отказывают. Search baseline: meta.schema_version=6,
+application_id/user_version=0/0. Это квалификация конкретных схем, не всех старых
+релизов. Project owner берётся из explicit manifest project.id; accounting — из
+existing origin_id в data/accounting/identity.json. Другие workplace targets
+требуют квалифицированного стабильного host owner source; новое ID не mint.
+Main сохраняет строгий W2 envelope и только execution-storage binding.
+
+Owner-local data/storage-identities.json закрепляет relative target/UUID/owner,
+pending/ready и plan checksum. Exact selector в
+data/storage-migrations/r02-storage-v1/targets/ сохраняет planned UUID до pending;
+immutable plan и journal находятся в checksum directory. UUID не remint, first/
+newest journal не выбирается. До metadata transaction нужен проверенный WAL-aware
+backup, связанный с source schema/logical fingerprint и планом. Streaming typed
+row digests/counts, integrity/FK проверяют parity без новых metadata.
+Resume проверяет тот же backup/source и восстанавливает сбой между metadata commit
+и ready pin. Per-target commits и file journal не являются общей транзакцией;
+предыдущие ready targets не откатываются при сбое следующего.
+
+storage_identity_access удерживает owner identity gate до закрытия connection;
+ready проверяет UUID/owner/schema, pending отказывает, metadata без pin не remint.
+Internal backup использует raw injected driver без recursive migration.
+new_store_identity публикует pending до explicit writable domain initialization;
+add_store_identity добавляет metadata в его транзакции. При сбое повторный explicit
+initializer использует тот же UUID. Unused absent stores не создаются. Rebuild
+сохраняет UUID либо требует controlled rebind; backup/restore UUID сохраняют.
+
+Execution import, source originals, batches<=256/checkpoint и единственный SQL CAS
+остаются у исходного ExecutionMigrationService. Coordinator вызывает его через
+exact durable selector; история не выдумывается, main не получает второй pin.
+После cutover SQL остаётся authority; projection repair выполняет его владелец.
+
+Script использует composition.build_configuration_provider и
+composition.build_storage_migration_host. Host factory закрепляет enrollment,
+installed capability/code, instance/routing, old-writer exclusion, pre-spawn gaps
+и полные process trees и внедряет оба verifier. При отсутствии factory — bounded
+storage_host_factory_unavailable. Fixture proof tests подтверждают policy,
+не реальную host safety. W3 production composition, installed automatic hooks и
+integrated QA остаются отдельными gates. Этот source slice не мигрирует live data
+и не запускает инфраструктуру.

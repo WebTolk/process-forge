@@ -13,7 +13,7 @@
   "transform_files": [
     {
       "relative_path": "src/processforge_core/maintenance/contracts.py",
-      "sha256": "sha256:dba46b19b1706be33d0870aaf95f09d5b8d474598d5c6ae7700928bc5f4185d2"
+      "sha256": "sha256:d6bedd5e162551d5736787e855decef6cc087430fb9cbbe3cebb49db6b6b3719"
     },
     {
       "relative_path": "src/processforge_core/maintenance/execution_migration.py",
@@ -21,8 +21,8 @@
     },
     {
       "relative_path": "src/processforge_core/maintenance/journal_scan.py",
-      "sha256": "sha256:b44bf09e2cfbcd58afb7c57c490a7b38df7495d860db454bea2e1a34588587ed"
+      "sha256": "sha256:cae7489b6cd0e1f95ae7e400769614f7e6756bb8d9e9ea18063eb6d9af4a77d7"
     }
   ],
-  "transform_checksum": "sha256:3e0494cfff5fe2602ef0b3d0ea82032095f04addfd6896cdafece1af78cee378"
+  "transform_checksum": "sha256:531a820f726b4ceb6ea711f9af1f1e2c4648861696e95a441397dfcdb123c212"
 }
