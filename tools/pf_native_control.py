@@ -6,19 +6,29 @@ Windows jobs prohibit breakaway and travel with an inherited kernel handle.
 
 from __future__ import annotations
 
+import ast
 import ctypes
+import hashlib
+import io
 import json
 import os
+import re
+import stat
 import subprocess
 import sys
 import time
-from collections.abc import Iterator
-from contextlib import AbstractContextManager
+import unicodedata
+from collections.abc import Iterator, Mapping
+from contextlib import AbstractContextManager, ExitStack, contextmanager
 from contextvars import ContextVar
 from ctypes import wintypes
+from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 from uuid import uuid4
+
+_PHYSICAL_OPEN = io.open
 
 
 class NativeControlError(OSError):
@@ -481,6 +491,15 @@ class NativeImage:
         except (TypeError, ValueError):
             return None
 
+    @classmethod
+    def from_publication(cls, root: Path, publication: Publication) -> NativeImage:
+        """Use the exact verified capture; never reopen code after acceptance."""
+        image = cls.__new__(cls)
+        image.root = root.resolve(strict=True)
+        image.files = MappingProxyType(dict(publication.payload))
+        image._active = False
+        return image
+
     def read(self, relative: str) -> bytes:
         try:
             return self.files[relative]
@@ -750,3 +769,455 @@ class NativeControl:
 _CONTROL_LEASE: ContextVar[NativeControl | None] = ContextVar(
     "pf_native_control_lease", default=None
 )
+
+
+# PF:PUBLICATION:BEGIN
+_PUBLICATION_SEAL = None
+# PF:PUBLICATION:END
+
+LEAF = "tools/pf_native_control.py"
+MANIFEST = "processforge-core.manifest.json"
+INVENTORY = "checksums/processforge.sha256"
+SEAL_KIND = "pf.publication.v1"
+BEGIN = b"# PF:PUBLICATION:BEGIN\n"
+END = b"# PF:PUBLICATION:END\n"
+MAX_MANIFEST = 8 * 1024 * 1024
+MAX_FILE = 128 * 1024 * 1024
+MAX_TOTAL = 512 * 1024 * 1024
+HEX = re.compile(r"[0-9a-f]{64}\Z")
+
+
+class Refusal(ValueError):
+    """Signal private refusal; callers map this to existing envelopes."""
+
+
+def digest(raw: bytes) -> str:
+    """Hash exact bytes."""
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_release_bytes(raw: bytes) -> bytes:
+    """Match the observed release_file_content transform before freezing."""
+    return raw if b"\0" in raw else raw.replace(b"\r\n", b"\n")
+
+
+def canonical_json(value: Any) -> bytes:
+    """Produce the versioned ASCII JSON projection encoding."""
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("ascii")
+
+
+def safe_path(value: Any) -> str:
+    """Reject ambiguous POSIX/Windows paths before mapping or opening."""
+    if not isinstance(value, str) or not value or value.startswith("/"):
+        raise Refusal("unsafe_path")
+    if unicodedata.normalize("NFC", value) != value:
+        raise Refusal("noncanonical_path")
+    if any(ord(c) < 32 or ord(c) == 127 or c in '\\:<>"|?*' for c in value):
+        raise Refusal("unsafe_path")
+    reserved = {"con", "prn", "aux", "nul", "conin$", "conout$"}
+    reserved.update(f"{p}{i}" for p in ("com", "lpt") for i in range(1, 10))
+    for part in value.split("/"):
+        if (
+            part in {"", ".", ".."}
+            or part.endswith((".", " "))
+            or part.split(".")[0].casefold() in reserved
+        ):
+            raise Refusal("unsafe_path")
+    return value
+
+
+def _unique_paths(paths: list[str]) -> None:
+    folded: set[str] = set()
+    for path in paths:
+        safe_path(path)
+        key = path.casefold()
+        if key in folded:
+            raise Refusal("duplicate_path")
+        folded.add(key)
+    for path in folded:
+        parts = path.split("/")
+        if any("/".join(parts[:i]) in folded for i in range(1, len(parts))):
+            raise Refusal("file_directory_collision")
+
+
+def _pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise Refusal("duplicate_json_key")
+        result[key] = value
+    return result
+
+
+def _no_number(value: str) -> Any:
+    raise Refusal("unsupported_json_number")
+
+
+def parse_manifest(raw: bytes) -> dict[str, Any]:
+    """Strictly parse the actual Core v1 shape, before any dict overwrite."""
+    if len(raw) > MAX_MANIFEST:
+        raise Refusal("manifest_limit")
+    try:
+        data = json.loads(
+            raw.decode("utf-8"),
+            object_pairs_hook=_pairs,
+            parse_float=_no_number,
+            parse_constant=_no_number,
+        )
+    except (UnicodeError, ValueError, RecursionError) as exc:
+        raise Refusal("manifest_json") from exc
+    keys = {"schema_version", "kind", "version", "source", "generated_at", "files"}
+    if not isinstance(data, dict) or set(data) != keys:
+        raise Refusal("manifest_shape")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+        raise Refusal("manifest_schema")
+    if data["kind"] != "processforge.core_manifest":
+        raise Refusal("manifest_kind")
+    if not isinstance(data["source"], dict):
+        raise Refusal("manifest_source")
+    for key in ("version", "generated_at"):
+        if not isinstance(data[key], str) or not data[key]:
+            raise Refusal("manifest_metadata")
+    rows = data["files"]
+    if not isinstance(rows, list) or not rows:
+        raise Refusal("manifest_files")
+    paths: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"relative_path", "size", "sha256"}:
+            raise Refusal("manifest_entry")
+        path = safe_path(row["relative_path"])
+        if path == MANIFEST or path.lower().endswith((".pyc", ".pyo")):
+            raise Refusal("excluded_or_bytecode_entry")
+        if type(row["size"]) is not int or not 0 <= row["size"] <= MAX_FILE:
+            raise Refusal("manifest_size")
+        if not isinstance(row["sha256"], str) or not HEX.fullmatch(row["sha256"]):
+            raise Refusal("manifest_digest")
+        paths.append(path)
+    _unique_paths(paths)
+    if (
+        not {LEAF, INVENTORY}.issubset(paths)
+        or sum(row["size"] for row in rows) > MAX_TOTAL
+    ):
+        raise Refusal("leaf_missing_or_total_limit")
+    return data
+
+
+def projection(raw_manifest: bytes) -> bytes:
+    """Exclude leaf and derived inventory; both are checked separately.
+
+    The observed inventory hashes the leaf. Including its row here would
+    restore a transitive seal -> leaf -> inventory -> seal hash cycle.
+    """
+    data = parse_manifest(raw_manifest)
+    data["files"] = sorted(
+        (row for row in data["files"] if row["relative_path"] not in {LEAF, INVENTORY}),
+        key=lambda row: row["relative_path"],
+    )
+    return canonical_json({"projection_schema": 1, "manifest": data})
+
+
+def _block(source: bytes) -> tuple[bytes, bytes, bytes] | None:
+    if BEGIN not in source and END not in source:
+        return None
+    if source.count(BEGIN) != 1 or source.count(END) != 1:
+        raise Refusal("seal_markers")
+    before, rest = source.split(BEGIN)
+    if END not in rest:
+        raise Refusal("seal_marker_order")
+    body, after = rest.split(END)
+    return before, body, after
+
+
+def leaf_seal(trusted_leaf: bytes) -> tuple[str, str] | None:
+    """Read literal data from already trusted source; never execute a loader."""
+    parts = _block(trusted_leaf)
+    if parts is None:
+        return None
+    try:
+        tree = ast.parse(parts[1].decode("ascii"))
+        if len(tree.body) != 1 or not isinstance(tree.body[0], ast.Assign):
+            raise Refusal("seal_assignment")
+        node = tree.body[0]
+        if (
+            len(node.targets) != 1
+            or not isinstance(node.targets[0], ast.Name)
+            or node.targets[0].id != "_PUBLICATION_SEAL"
+        ):
+            raise Refusal("seal_assignment")
+        value = ast.literal_eval(node.value)
+    except (UnicodeError, SyntaxError, ValueError) as exc:
+        raise Refusal("seal_literal") from exc
+    if value is None:
+        return None
+    if not isinstance(value, tuple) or len(value) != 2:
+        raise Refusal("seal_shape")
+    kind, pin = value
+    if not isinstance(kind, str) or not isinstance(pin, str):
+        raise Refusal("seal_shape")
+    if kind != SEAL_KIND:
+        return None
+    if not HEX.fullmatch(pin):
+        raise Refusal("seal_digest")
+    return kind, pin
+
+
+def _sealed_leaf(source: bytes, pin: str) -> bytes:
+    parts = _block(source)
+    if parts is None:
+        raise Refusal("build_requires_seal_slot")
+    leaf_seal(source)
+    body = f'_PUBLICATION_SEAL = ("{SEAL_KIND}", "{pin}")\n'.encode("ascii")
+    result = parts[0] + BEGIN + body + END + parts[2]
+    compile(result, LEAF, "exec", dont_inherit=True)
+    return result
+
+
+def _manifest(
+    payload: Mapping[str, bytes],
+    *,
+    version: str,
+    source: Mapping[str, Any],
+    generated_at: str,
+) -> bytes:
+    data = {
+        "schema_version": 1,
+        "kind": "processforge.core_manifest",
+        "version": version,
+        "generated_at": generated_at,
+        "source": dict(source),
+        "files": [
+            {"relative_path": path, "size": len(raw), "sha256": digest(raw)}
+            for path, raw in sorted(payload.items())
+        ],
+    }
+    raw = (json.dumps(data, indent=2, sort_keys=True, allow_nan=False) + "\n").encode()
+    parse_manifest(raw)
+    return raw
+
+
+def inventory_bytes(payload: Mapping[str, bytes]) -> bytes:
+    """Match shipped checksum lines; leaf is fully hashed, inventory excluded.
+
+    Integration must retain the observed public_file_entries/release selection
+    parity check. No Core manifest is an inventory entry in the current code.
+    """
+    return "".join(
+        f"{digest(raw)}  {path}\n"
+        for path, raw in sorted(payload.items())
+        if path not in {INVENTORY, MANIFEST}
+    ).encode("utf-8")
+
+
+@dataclass(frozen=True)
+class Build:
+    """Hold exactly the immutable entries to write to a future ZIP."""
+
+    payload: Mapping[str, bytes]
+    manifest: bytes
+    projection_sha256: str
+
+
+def build_publication(
+    payload: Mapping[str, bytes],
+    *,
+    version: str,
+    source: Mapping[str, Any],
+    generated_at: str,
+) -> Build:
+    """Seal a frozen canonical byte staging; never write source or an archive."""
+    frozen = dict(payload)
+    _unique_paths(list(frozen))
+    if LEAF not in frozen or MANIFEST in frozen:
+        raise Refusal("build_payload")
+    if any(not isinstance(raw, bytes) for raw in frozen.values()):
+        raise Refusal("build_requires_bytes")
+    if INVENTORY not in frozen:
+        raise Refusal("build_requires_inventory")
+    provisional = _manifest(
+        frozen, version=version, source=source, generated_at=generated_at
+    )
+    pin = digest(projection(provisional))
+    frozen[LEAF] = _sealed_leaf(frozen[LEAF], pin)
+    frozen[INVENTORY] = inventory_bytes(frozen)
+    final = _manifest(frozen, version=version, source=source, generated_at=generated_at)
+    if digest(projection(final)) != pin:
+        raise Refusal("cyclic_build")
+    return Build(MappingProxyType(frozen), final, pin)
+
+
+def _read_regular(root: Path, relative: str, limit: int) -> bytes:
+    path = root
+    for part in ("", *relative.split("/")):
+        if part:
+            path = path / part
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise Refusal("link_or_reparse_point")
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise Refusal("not_regular")
+    with _PHYSICAL_OPEN(path, "rb") as stream:
+        raw = stream.read(limit + 1)
+    if len(raw) > limit:
+        raise Refusal("read_limit")
+    return raw
+
+
+@dataclass(frozen=True)
+class Publication:
+    """Accepted immutable image inputs; full manifest digest is only metadata."""
+
+    payload: Mapping[str, bytes]
+    projection_sha256: str
+    manifest_sha256: str
+
+
+def accept_publication(root: Path, *, trusted_leaf: bytes) -> Publication | None:
+    """Verify before Core, outside guard; None keeps recognized legacy mode.
+
+    No guard/epoch/runtime directory is created. Caller holds actual deployment
+    exclusion, validates the root's ancestors, supplies the source bytes it
+    compiled as the trusted leaf, and retains the returned bytes for all loads.
+    A caller-supplied current-file pin is not a trust source for this function.
+    """
+    seal = leaf_seal(trusted_leaf)
+    if seal is None:
+        return None
+    try:
+        raw = _read_regular(root, MANIFEST, MAX_MANIFEST)
+        data = parse_manifest(raw)
+        if digest(projection(raw)) != seal[1]:
+            raise Refusal("publication_drift")
+        captured: dict[str, bytes] = {}
+        for row in data["files"]:
+            path = row["relative_path"]
+            content = (
+                trusted_leaf if path == LEAF else _read_regular(root, path, row["size"])
+            )
+            if len(content) != row["size"] or digest(content) != row["sha256"]:
+                raise Refusal("payload_drift")
+            captured[path] = content
+        if captured.get(INVENTORY) != inventory_bytes(captured):
+            raise Refusal("derived_inventory_drift")
+        return Publication(MappingProxyType(captured), seal[1], digest(raw))
+    except OSError as exc:
+        raise Refusal("publication_unreadable") from exc
+
+
+@dataclass(frozen=True)
+class NativeEntry:
+    """Captured publication for one interpreter; leases last only per operation."""
+
+    root: Path
+    publication: Publication | None
+    image: NativeImage | None
+    control: NativeControl | None
+
+    def operation(
+        self, *, deadline: float | None = None
+    ) -> AbstractContextManager[NativeEntry]:
+        """Use existing controls without creating installation state on reads."""
+        from contextlib import contextmanager
+
+        @contextmanager
+        def held() -> Iterator[NativeEntry]:
+            if self.control is None:
+                # No authority to migrate follows from an unadopted publication.
+                yield self
+            elif _CONTROL_LEASE.get() is self.control:
+                yield self
+            else:
+                with self.control.operation(deadline=deadline):
+                    yield self
+
+        return held()
+
+
+_ENTRY: NativeEntry | None = None
+
+
+def bootstrap_entry(root: Path, *, trusted_leaf: bytes) -> NativeEntry:
+    """Accept captured native source before Core; never use a bytecode loader.
+
+    The trusted entry/interpreter and qualified deployment remain the TCB.
+    Publication capture does not attest legacy writer/tree quiescence.
+    """
+    global _ENTRY
+    root = root.absolute()
+    if _ENTRY is not None:
+        if _ENTRY.root != root:
+            raise NativeControlError()
+        return _ENTRY
+    seal = leaf_seal(trusted_leaf)
+    if seal is None:
+        return NativeEntry(root, None, None, None)
+    for path in (root, *root.parents):
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise NativeControlError()
+    guard = root / "runtime/native-control/installation.guard"
+    epoch = root / "runtime/native-control/epoch"
+    if guard.exists() != epoch.exists():
+        raise NativeControlError()
+    control = NativeControl(guard, epoch, seal[1]) if guard.exists() else None
+    from contextlib import ExitStack
+
+    with ExitStack() as leases:
+        if control is not None:
+            leases.enter_context(control.operation())
+        else:
+            leases.enter_context(_publication_read_exclusion(root))
+        if _read_regular(root, LEAF, MAX_FILE) != trusted_leaf:
+            raise NativeControlError()
+        publication = accept_publication(root, trusted_leaf=trusted_leaf)
+        if publication is None:
+            raise NativeControlError()
+        image = NativeImage.from_publication(root, publication)
+    image.activate()
+    _ENTRY = NativeEntry(root, publication, image, control)
+    return _ENTRY
+
+
+def current_entry() -> NativeEntry | None:
+    """Return the already accepted native entry without discovery or I/O."""
+    return _ENTRY
+
+
+@contextmanager
+def _publication_read_exclusion(root: Path) -> Iterator[None]:
+    """Retain read handles for a noncreating, coherent Windows payload capture.
+
+    Denying write/delete sharing also excludes an earlier updater which knows
+    nothing about native-control. This does not attest process/store quiescence.
+    POSIX qualification requires the existing installation control instead.
+    """
+    if os.name != "nt":
+        raise NativeControlError()
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = (
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    )
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+    kernel.CloseHandle.restype = wintypes.BOOL
+    with ExitStack() as handles:
+
+        def retain(relative: str) -> None:
+            path = root / safe_path(relative)
+            handle = kernel.CreateFileW(str(path), 0x80000000, 1, None, 3, 0x80, None)
+            if handle == ctypes.c_void_p(-1).value:
+                raise NativeControlError()
+            handles.callback(kernel.CloseHandle, handle)
+
+        retain(MANIFEST)
+        manifest = parse_manifest(_read_regular(root, MANIFEST, MAX_MANIFEST))
+        for row in manifest["files"]:
+            retain(row["relative_path"])
+        yield

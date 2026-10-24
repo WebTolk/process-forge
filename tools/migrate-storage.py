@@ -8,17 +8,41 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+# Capture the stdlib-only native leaf before any Core/adapter import. Python's
+# -B flag does not prevent execution of an existing unchecked bytecode cache.
+_native_root = Path(__file__).absolute().parents[1]
+_native_module = sys.modules.get("pf_native_control")
+if _native_module is None:
+    _native_path = _native_root / "tools/pf_native_control.py"
+    _native_source = _native_path.read_bytes()
+    _native_module = type(sys)("pf_native_control")
+    _native_module.__file__ = str(_native_path)
+    setattr(_native_module, "_captured_source", _native_source)
+    sys.modules["pf_native_control"] = _native_module
+    exec(
+        compile(_native_source, str(_native_path), "exec", dont_inherit=True),
+        _native_module.__dict__,
+    )
+_captured_native_source = getattr(_native_module, "_captured_source", None)
+if not isinstance(_captured_native_source, bytes):
+    # A previously imported unsealed library is a supported source-mode caller.
+    # It cannot promote itself to a sealed publication via its current-file hash.
+    if getattr(_native_module, "_PUBLICATION_SEAL", None) is not None:
+        raise getattr(_native_module, "NativeControlError")()
+    _native_entry = None
+else:
+    _native_entry = getattr(_native_module, "bootstrap_entry")(
+        _native_root, trusted_leaf=_captured_native_source
+    )
+
 
 sys.path.insert(0, str(Path(__file__).absolute().parents[1] / "src"))
 
-from processforge_core.configuration import ConfigurationProvider
-from processforge_core.maintenance.contracts import MaintenanceError
-from processforge_core.maintenance.storage_migration import (
-    StorageMigrationHost,
-    StorageMigrationService,
-    run_storage_migration,
-)
+if TYPE_CHECKING:
+    from processforge_core.configuration import ConfigurationProvider
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
 
 
 def _absolute(value: str) -> Path:
@@ -40,6 +64,14 @@ def main(
     obtains both cold builders from Core composition, never imports old tools
     or starts Runtime/MCP. A missing factory is a truthful bounded refusal.
     """
+    from processforge_core.configuration import ConfigurationProvider
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.maintenance.storage_migration import (
+        StorageMigrationHost,
+        StorageMigrationService,
+        run_storage_migration,
+    )
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=_absolute)
     parser.add_argument("--workplace-root", type=_absolute)

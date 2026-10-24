@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import marshal
 import os
+import struct
 import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
+import pf_native_control as p
 import pytest
 from pf_native_control import NativeControlError, reopen_job, spawn_owned
 
@@ -400,3 +405,515 @@ def test_actual_codex_cmd_wrapper_contains_live_native_grandchild(
         job.stop(deadline=time.monotonic() + 5)
         process.wait(timeout=5)
         job.close()
+
+
+LEAF_SOURCE = (
+    b'"""Trusted fixture leaf; not the production control leaf."""\n'
+    + p.BEGIN
+    + b"_PUBLICATION_SEAL = None\n"
+    + p.END
+    + b"VALUE = 'source'\n"
+)
+
+
+def build(payload: dict[str, bytes] | None = None) -> Any:
+    """Create a deterministic in-memory publication."""
+    return p.build_publication(
+        payload
+        or {
+            p.LEAF: LEAF_SOURCE,
+            p.INVENTORY: b"source inventory placeholder\n",
+            "src/fixture_core.py": b"VALUE = 'accepted source'\n",
+            "VERSION": b"1.3.0-alpha6\n",
+            "resources/data.txt": b"resource\n",
+        },
+        version="1.3.0-alpha6",
+        source={"vcs": "git", "commit": "a" * 40, "dirty": False},
+        generated_at="2026-10-24T00:00:00Z",
+    )
+
+
+def fixture_root(candidate: Any) -> Path:
+    """Write only an explicitly owned fixture, without OS tempfile/ACL setup."""
+    root = Path(os.environ["W3_FIXTURE_ROOT"]) / "publication" / uuid4().hex
+    root.mkdir(parents=True)
+    for path, raw in candidate.payload.items():
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+    (root / p.MANIFEST).write_bytes(candidate.manifest)
+    return root
+
+
+def encode(data: dict[str, Any]) -> bytes:
+    """Change JSON formatting without changing semantic projection."""
+    return json.dumps(data, separators=(",", ":")).encode()
+
+
+def test_sealing_is_acyclic_and_second_build_idempotent() -> None:
+    candidate = build()
+    repeated = build(dict(candidate.payload))
+    assert dict(repeated.payload) == dict(candidate.payload)
+    assert repeated.manifest == candidate.manifest
+    changed = dict(candidate.payload)
+    changed[p.LEAF] = p._sealed_leaf(changed[p.LEAF], "b" * 64)
+    changed[p.INVENTORY] = p.inventory_bytes(changed)
+    final = p._manifest(
+        changed,
+        version="1.3.0-alpha6",
+        source={"vcs": "git", "commit": "a" * 40, "dirty": False},
+        generated_at="2026-10-24T00:00:00Z",
+    )
+    assert p.digest(final) != p.digest(candidate.manifest)
+    assert p.projection(final) == p.projection(candidate.manifest)
+    assert changed[p.INVENTORY] != candidate.payload[p.INVENTORY]
+    with pytest.raises(TypeError):
+        candidate.payload["new"] = b"bad"
+
+
+def test_original_single_exclusion_has_transitive_inventory_cycle() -> None:
+    candidate = build()
+    data = p.parse_manifest(candidate.manifest)
+    data["files"] = [r for r in data["files"] if r["relative_path"] != p.LEAF]
+    naive_pin = p.digest(p.canonical_json(data))
+    payload = dict(candidate.payload)
+    payload[p.LEAF] = p._sealed_leaf(payload[p.LEAF], naive_pin)
+    payload[p.INVENTORY] = p.inventory_bytes(payload)
+    row = next(r for r in data["files"] if r["relative_path"] == p.INVENTORY)
+    row.update(size=len(payload[p.INVENTORY]), sha256=p.digest(payload[p.INVENTORY]))
+    assert p.digest(p.canonical_json(data)) != naive_pin
+
+
+def test_old_copy_and_manifest_reserialization_accepts_without_new_script() -> None:
+    candidate = build()
+    root = fixture_root(candidate)
+    data = p.parse_manifest(candidate.manifest)
+    data["files"].reverse()
+    (root / p.MANIFEST).write_bytes(encode(data))
+    accepted = p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+    assert accepted is not None
+    assert dict(accepted.payload) == dict(candidate.payload)
+    assert accepted.projection_sha256 == candidate.projection_sha256
+    assert not (root / "runtime").exists()
+    assert not (root / "guard").exists()
+
+
+def test_payload_tamper_refuses_and_captured_bytes_survive_drift() -> None:
+    candidate = build()
+    root = fixture_root(candidate)
+    accepted = p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+    assert accepted is not None
+    (root / "src/fixture_core.py").write_bytes(b"tampered\n")
+    assert (
+        accepted.payload["src/fixture_core.py"]
+        == candidate.payload["src/fixture_core.py"]
+    )
+    with pytest.raises(p.Refusal, match="payload_drift|read_limit"):
+        p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+
+
+@pytest.mark.parametrize("field", ["version", "source", "generated_at", "files"])
+def test_manifest_repin_from_current_files_cannot_create_authority(field: str) -> None:
+    candidate = build()
+    root = fixture_root(candidate)
+    data = p.parse_manifest(candidate.manifest)
+    if field == "files":
+        data[field] = [r for r in data[field] if r["relative_path"] != "VERSION"]
+    elif field == "source":
+        data[field] = {"commit": "b" * 40}
+    else:
+        data[field] = "changed"
+    (root / p.MANIFEST).write_bytes(encode(data))
+    with pytest.raises(p.Refusal, match="publication_drift"):
+        p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+
+
+def test_derived_inventory_is_not_an_unchecked_exemption() -> None:
+    candidate = build()
+    root = fixture_root(candidate)
+    malicious = b"forged inventory\n"
+    data = p.parse_manifest(candidate.manifest)
+    row = next(r for r in data["files"] if r["relative_path"] == p.INVENTORY)
+    row.update(size=len(malicious), sha256=p.digest(malicious))
+    raw = encode(data)
+    assert p.projection(raw) == p.projection(candidate.manifest)
+    (root / p.MANIFEST).write_bytes(raw)
+    (root / p.INVENTORY).write_bytes(malicious)
+    with pytest.raises(p.Refusal, match="derived_inventory_drift"):
+        p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+
+
+def test_trusted_leaf_entry_still_compares_exact_captured_source() -> None:
+    candidate = build()
+    root = fixture_root(candidate)
+    data = p.parse_manifest(candidate.manifest)
+    row = next(r for r in data["files"] if r["relative_path"] == p.LEAF)
+    row["sha256"] = "a" * 64
+    (root / p.MANIFEST).write_bytes(encode(data))
+    with pytest.raises(p.Refusal, match="payload_drift"):
+        p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+
+
+def test_duplicate_keys_rows_and_aliases_refuse_before_overwrite() -> None:
+    candidate = build()
+    with pytest.raises(p.Refusal):
+        p.parse_manifest(
+            candidate.manifest.replace(
+                b'"schema_version": 1', b'"schema_version": 1, "schema_version": 1'
+            )
+        )
+    for alias in ("VERSION", "version"):
+        data = p.parse_manifest(candidate.manifest)
+        data["files"].append({"relative_path": alias, "size": 0, "sha256": "a" * 64})
+        with pytest.raises(p.Refusal, match="duplicate_path"):
+            p.projection(encode(data))
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "../x",
+        "/x",
+        "C:/x",
+        "x\\y",
+        "x//y",
+        "x/./y",
+        "x:ads",
+        "nul.txt",
+        "x. ",
+        "x\0y",
+        "e\u0301.txt",
+    ],
+)
+def test_unsafe_paths_refuse(path: str) -> None:
+    with pytest.raises(p.Refusal):
+        p.safe_path(path)
+
+
+def test_file_directory_collision_and_bytecode_rows_refuse() -> None:
+    candidate = build()
+    data = p.parse_manifest(candidate.manifest)
+    data["files"].append({"relative_path": "src", "size": 0, "sha256": "a" * 64})
+    with pytest.raises(p.Refusal, match="file_directory_collision"):
+        p.projection(encode(data))
+    for path in (p.MANIFEST, "src/module.pyc", "src/module.pyo"):
+        data = p.parse_manifest(candidate.manifest)
+        data["files"].append({"relative_path": path, "size": 0, "sha256": "a" * 64})
+        with pytest.raises(p.Refusal, match="excluded_or_bytecode_entry"):
+            p.projection(encode(data))
+
+
+def test_unsealed_unsupported_reads_do_not_touch_or_create_root() -> None:
+    root = Path(os.environ["W3_FIXTURE_ROOT"]) / "publication" / uuid4().hex
+    unknown = LEAF_SOURCE.replace(b"None", b"('pf.publication.v999', 'unsupported')")
+    for leaf in (b"VALUE = 'legacy'\n", LEAF_SOURCE, unknown):
+        assert p.accept_publication(root, trusted_leaf=leaf) is None
+        assert not root.exists()
+    with pytest.raises(p.Refusal):
+        p.accept_publication(
+            root,
+            trusted_leaf=LEAF_SOURCE.replace(b"None", b"('pf.publication.v1', 'bad')"),
+        )
+    with pytest.raises(p.Refusal):
+        p.accept_publication(root, trusted_leaf=build().payload[p.LEAF])
+    assert not root.exists()
+
+
+@pytest.mark.parametrize("relative", ["src/fixture_core.py", p.LEAF])
+def test_source_compile_ignores_actual_unchecked_pyc(relative: str) -> None:
+    candidate = build()
+    root = fixture_root(candidate)
+    source = root / relative
+    cache = Path(importlib.util.cache_from_source(str(source)))
+    cache.parent.mkdir(parents=True)
+    poison = compile("VALUE = 'unchecked pyc'", str(source), "exec")
+    cache.write_bytes(
+        importlib.util.MAGIC_NUMBER
+        + struct.pack("<I", 1)
+        + b"\0" * 8
+        + marshal.dumps(poison)
+    )
+    spec = importlib.util.spec_from_file_location("fixture_untrusted_loader", source)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.VALUE == "unchecked pyc"  # -B does not disable pyc reads.
+    accepted = p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+    assert accepted is not None
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(
+            accepted.payload[relative],
+            str(source),
+            "exec",
+            dont_inherit=True,
+        ),
+        namespace,
+    )
+    assert namespace["VALUE"] == ("source" if relative == p.LEAF else "accepted source")
+    leaf_namespace: dict[str, Any] = {}
+    exec(
+        compile(candidate.payload[p.LEAF], p.LEAF, "exec", dont_inherit=True),
+        leaf_namespace,
+    )
+    assert leaf_namespace["_PUBLICATION_SEAL"] == (
+        p.SEAL_KIND,
+        candidate.projection_sha256,
+    )
+
+
+def test_canonicalization_precedes_freeze_and_source_is_unchanged() -> None:
+    candidate = build()
+    source = dict(candidate.payload)
+    source[p.LEAF] = LEAF_SOURCE.replace(b"\n", b"\r\n")
+    source["resources/data.txt"] = b"a\r\nb\r\n"
+    original = dict(source)
+    staged = {path: p.canonical_release_bytes(raw) for path, raw in source.items()}
+    sealed = build(staged)
+    assert source == original
+    assert b"\r\n" not in sealed.payload[p.LEAF]
+    assert sealed.payload["resources/data.txt"] == b"a\nb\n"
+    assert p.canonical_release_bytes(b"binary\0\r\n") == b"binary\0\r\n"
+
+
+def test_real_packager_freezes_before_zip_and_freshness_replays(
+    native_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import hashlib
+    import zipfile
+
+    import processforge as cli
+
+    payload = {
+        p.LEAF: LEAF_SOURCE,
+        p.INVENTORY: b"unsealed inventory\n",
+        "VERSION": b"1.3.0-alpha6\r\n",
+        "docs/example.txt": b"before\r\n",
+    }
+    selected = []
+    for name, content in payload.items():
+        target = native_root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        selected.append((name, target))
+    source = {"commit": "a" * 40, "dirty": False}
+    generated_at = "2026-10-24T00:00:00Z"
+    frozen, core_manifest = cli._sealed_release_payload(
+        selected, version="1.3.0-alpha6", source=source, generated_at=generated_at
+    )
+    assert (native_root / p.LEAF).read_bytes() == LEAF_SOURCE
+    assert frozen["docs/example.txt"] == b"before\n"
+    (native_root / "docs/example.txt").write_bytes(b"after freeze")
+    archive = native_root / "fixture.zip"
+    rows = cli.write_release_zip(
+        archive,
+        [],
+        1761264000,
+        extra_entries=[
+            *frozen.items(),
+            (
+                p.MANIFEST,
+                (json.dumps(core_manifest, indent=2, sort_keys=True) + "\n").encode(),
+            ),
+        ],
+    )
+    with zipfile.ZipFile(archive) as opened:
+        assert opened.read("docs/example.txt") == b"before\n"
+        for row in rows:
+            assert row["sha256"] == hashlib.sha256(opened.read(row["path"])).hexdigest()
+    # Freshness is a deterministic rebuild, including both generated entries.
+    (native_root / "docs/example.txt").write_bytes(frozen["docs/example.txt"])
+    monkeypatch.setattr(cli, "expected_release_files_from_root", lambda root: selected)
+    sidecar = {
+        "version": "1.3.0-alpha6",
+        "source": source,
+        "build": {"generated_at": generated_at},
+    }
+    expected = cli.expected_release_manifest_from_root(native_root, sidecar)
+    assert expected == {row["path"]: row["sha256"] for row in rows}
+    for name, raw in frozen.items():
+        (native_root / name).write_bytes(raw)
+    assert cli.expected_release_manifest_from_root(native_root, sidecar) == expected
+    (native_root / "docs/example.txt").write_bytes(b"drift")
+    assert cli.expected_release_manifest_from_root(native_root, sidecar) != expected
+
+
+def test_real_packager_rejects_duplicates_before_mapping(native_root: Path) -> None:
+    import processforge as cli
+
+    target = native_root / "x"
+    target.write_bytes(b"x")
+    with pytest.raises(p.Refusal, match="duplicate_path"):
+        cli._sealed_release_payload(
+            [("VERSION", target), ("version", target)],
+            version="fixture",
+            source={},
+            generated_at="fixture",
+        )
+
+
+def test_actual_trusted_entry_captures_leaf_core_aliases_and_resources(
+    native_root: Path,
+) -> None:
+    import processforge as cli
+
+    assert p.__file__ is not None
+    candidate = build(
+        {
+            p.LEAF: Path(p.__file__).read_bytes(),
+            p.INVENTORY: b"source inventory\n",
+            "src/fixture_core.py": b"VALUE = 'accepted'\n",
+            "docs/data.txt": b"accepted resource\n",
+            "VERSION": b"1.3.0-alpha6\n",
+        }
+    )
+    for name, raw in candidate.payload.items():
+        path = native_root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+    (native_root / p.MANIFEST).write_bytes(candidate.manifest)
+    for name in (p.LEAF, "src/fixture_core.py"):
+        source = native_root / name
+        cache = Path(importlib.util.cache_from_source(str(source)))
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_bytes(
+            importlib.util.MAGIC_NUMBER
+            + struct.pack("<I", 1)
+            + b"\0" * 8
+            + marshal.dumps(
+                compile(
+                    "raise RuntimeError('unchecked cache executed')",
+                    str(source),
+                    "exec",
+                )
+            )
+        )
+    assert cli.__file__ is not None
+    preamble = (
+        Path(cli.__file__).read_text(encoding="utf-8").split("if TYPE_CHECKING:", 1)[0]
+    )
+    entry = native_root / "tools/fixture-entry.py"
+    entry.write_text(
+        preamble
+        + """
+sys.path.insert(0, str(_native_root / "src"))
+import fixture_core
+with _native_module._PHYSICAL_OPEN(_native_root / "src/fixture_core.py", "wb") as target:
+    target.write(b"raise RuntimeError('drift executed')")
+spec = importlib.util.spec_from_file_location("captured_direct_alias", _native_root / "src/fixture_core.py")
+alias = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(alias)
+print(json.dumps({"normal": fixture_core.VALUE, "alias": alias.VALUE,
+    "resource": (_native_root / "docs/data.txt").read_text(),
+    "publication": _native_entry.publication.projection_sha256}))
+""",
+        encoding="utf-8",
+    )
+    completed = subprocess.run(
+        [sys.executable, "-B", str(entry)],
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    assert completed.returncode == 0, completed.stderr
+    result = json.loads(completed.stdout)
+    assert result == {
+        "normal": "accepted",
+        "alias": "accepted",
+        "resource": "accepted resource\n",
+        "publication": candidate.projection_sha256,
+    }
+    assert not (native_root / "runtime").exists()
+
+
+def test_publication_read_exclusion_blocks_an_old_uncooperative_writer(
+    native_root: Path,
+) -> None:
+    candidate = build()
+    for name, raw in candidate.payload.items():
+        path = native_root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+    (native_root / p.MANIFEST).write_bytes(candidate.manifest)
+    with p._publication_read_exclusion(native_root):
+        with pytest.raises(PermissionError):
+            (native_root / "src/fixture_core.py").write_bytes(b"overwrite")
+    (native_root / "src/fixture_core.py").write_bytes(b"after capture")
+
+
+def test_fixture_archive_passes_unchanged_validator_and_real_root_freshness(
+    native_root: Path,
+) -> None:
+    import zipfile
+
+    import processforge as cli
+
+    assert cli.__file__ is not None
+    product = Path(cli.__file__).parent
+    source = native_root / "source"
+    source.mkdir()
+    payload = {
+        p.LEAF: LEAF_SOURCE,
+        p.INVENTORY: b"old inventory\n",
+        "VERSION": b"1.3.0-alpha6\n",
+        "docs/example.txt": b"fixture\n",
+        "tools/validate-process-forge-checksums.py": (
+            product / "validate-process-forge-checksums.py"
+        ).read_bytes(),
+    }
+    files = []
+    for name, raw in payload.items():
+        path = source / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        files.append((name, path))
+    provenance = {"commit": "b" * 40, "dirty": False}
+    generated = "2026-10-24T00:00:00Z"
+    frozen, manifest = cli._sealed_release_payload(
+        files,
+        version="1.3.0-alpha6",
+        source=provenance,
+        generated_at=generated,
+    )
+    archive = native_root / "fixture.zip"
+    rows = cli.write_release_zip(
+        archive,
+        [],
+        1761264000,
+        extra_entries=[
+            *frozen.items(),
+            (
+                p.MANIFEST,
+                (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode(),
+            ),
+        ],
+    )
+    extracted = native_root / "extracted"
+    with zipfile.ZipFile(archive) as opened:
+        opened.extractall(extracted)
+    checked = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(extracted / "tools/validate-process-forge-checksums.py"),
+            "--root",
+            str(extracted),
+            "--check",
+        ],
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+    accepted = p.accept_publication(extracted, trusted_leaf=frozen[p.LEAF])
+    assert accepted is not None and dict(accepted.payload) == frozen
+    sidecar = {
+        "version": "1.3.0-alpha6",
+        "source": provenance,
+        "build": {"generated_at": generated},
+    }
+    assert cli.expected_release_manifest_from_root(extracted, sidecar) == {
+        row["path"]: row["sha256"] for row in rows
+    }

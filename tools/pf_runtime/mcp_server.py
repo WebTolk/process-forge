@@ -9,16 +9,69 @@ import json
 import math
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+# Capture the stdlib-only native leaf before any Core/adapter import. Python's
+# -B flag does not prevent execution of an existing unchecked bytecode cache.
+_native_root = Path(__file__).absolute().parents[2]
+_native_module = sys.modules.get("pf_native_control")
+if _native_module is None:
+    _native_path = _native_root / "tools/pf_native_control.py"
+    _native_source = _native_path.read_bytes()
+    _native_module = type(sys)("pf_native_control")
+    _native_module.__file__ = str(_native_path)
+    setattr(_native_module, "_captured_source", _native_source)
+    sys.modules["pf_native_control"] = _native_module
+    exec(
+        compile(_native_source, str(_native_path), "exec", dont_inherit=True),
+        _native_module.__dict__,
+    )
+_captured_native_source = getattr(_native_module, "_captured_source", None)
+if not isinstance(_captured_native_source, bytes):
+    # A previously imported unsealed library is a supported source-mode caller.
+    # It cannot promote itself to a sealed publication via its current-file hash.
+    if getattr(_native_module, "_PUBLICATION_SEAL", None) is not None:
+        raise getattr(_native_module, "NativeControlError")()
+    _native_entry = None
+else:
+    _native_entry = getattr(_native_module, "bootstrap_entry")(
+        _native_root, trusted_leaf=_captured_native_source
+    )
+
 
 if not __package__:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from pf_runtime.action_tools import (
-    ActionToolDependencies, ActionToolError, ActionToolService, MUTATING_TOOL_NAMES,
-    TOOL_DESCRIPTIONS, action_tool_schema,
-)
+if TYPE_CHECKING:
+    from pf_runtime.action_tools import (
+        ActionToolDependencies as _ActionToolDependencies,
+    )
+    from pf_runtime.action_tools import ActionToolError as _ActionToolError
+    from pf_runtime.action_tools import ActionToolService as _ActionToolService
+
+
+def _load_action_tool_api() -> tuple[
+    type[_ActionToolDependencies], type[_ActionToolError], type[_ActionToolService],
+    set[str], dict[str, str], Callable[[str], dict[str, Any]],
+]:
+    """Load the native adapter only after the trusted source image is active."""
+    from pf_runtime.action_tools import (
+        MUTATING_TOOL_NAMES,
+        TOOL_DESCRIPTIONS,
+        ActionToolDependencies,
+        ActionToolError,
+        ActionToolService,
+        action_tool_schema,
+    )
+
+    return (ActionToolDependencies, ActionToolError, ActionToolService,
+            MUTATING_TOOL_NAMES, TOOL_DESCRIPTIONS, action_tool_schema)
+
+
+(ActionToolDependencies, ActionToolError, ActionToolService,
+ MUTATING_TOOL_NAMES, TOOL_DESCRIPTIONS, action_tool_schema) = _load_action_tool_api()
 
 _RUNTIME_BOOTSTRAP: Any | None = None
 

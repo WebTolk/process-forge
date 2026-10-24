@@ -33,6 +33,34 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 from urllib.parse import urlparse
 from urllib.request import url2pathname, urlopen
 
+# Capture the stdlib-only native leaf before any Core/adapter import. Python's
+# -B flag does not prevent execution of an existing unchecked bytecode cache.
+_native_root = Path(__file__).absolute().parents[1]
+_native_module = sys.modules.get("pf_native_control")
+if _native_module is None:
+    _native_path = _native_root / "tools/pf_native_control.py"
+    _native_source = _native_path.read_bytes()
+    _native_module = type(sys)("pf_native_control")
+    _native_module.__file__ = str(_native_path)
+    setattr(_native_module, "_captured_source", _native_source)
+    sys.modules["pf_native_control"] = _native_module
+    exec(
+        compile(_native_source, str(_native_path), "exec", dont_inherit=True),
+        _native_module.__dict__,
+    )
+_captured_native_source = getattr(_native_module, "_captured_source", None)
+if not isinstance(_captured_native_source, bytes):
+    # A previously imported unsealed library is a supported source-mode caller.
+    # It cannot promote itself to a sealed publication via its current-file hash.
+    if getattr(_native_module, "_PUBLICATION_SEAL", None) is not None:
+        raise getattr(_native_module, "NativeControlError")()
+    _native_entry = None
+else:
+    _native_entry = getattr(_native_module, "bootstrap_entry")(
+        _native_root, trusted_leaf=_captured_native_source
+    )
+
+
 if TYPE_CHECKING:
     from processforge_core.configuration import ConfigService, ConfigurationProvider
     from processforge_core.executions.composition import ExecutionStorage
@@ -3660,6 +3688,44 @@ def release_file_content(source_path: Path) -> bytes:
     return content if b"\0" in content else content.replace(b"\r\n", b"\n")
 
 
+def _sealed_release_payload(
+    files: list[tuple[str, Path]],
+    *,
+    version: str,
+    source: dict[str, Any] | None,
+    generated_at: str,
+) -> tuple[dict[str, bytes], dict[str, Any]]:
+    """Freeze once, seal in memory, then derive the complete Core manifest."""
+    import pf_native_control as native
+
+    # Validate before dict construction so aliases/duplicates cannot disappear.
+    native._unique_paths([name for name, _ in files])
+    payload = {}
+    for name, path in files:
+        if name == native.MANIFEST or name.lower().endswith((".pyc", ".pyo")):
+            raise native.Refusal("excluded_or_bytecode_entry")
+        info = path.lstat()
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_nlink != 1
+            or info.st_size > native.MAX_FILE
+        ):
+            raise native.Refusal("not_regular")
+        for parent in path.parents:
+            details = parent.lstat()
+            if parent.is_symlink() or getattr(details, "st_file_attributes", 0) & 0x400:
+                raise native.Refusal("link_or_reparse_point")
+        payload[name] = release_file_content(path)
+    built = native.build_publication(
+        payload,
+        version=version,
+        source=source or {},
+        generated_at=generated_at,
+    )
+    return dict(built.payload), native.parse_manifest(built.manifest)
+
+
+
 def release_core_manifest(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
     from processforge_core.maintenance.update import CORE_MANIFEST_NAME, make_core_manifest
 
@@ -3701,8 +3767,33 @@ def release_manifest_payload(
     output: Path,
     manifest_files: list[dict[str, Any]],
     provenance: dict[str, Any],
+    *,
+    frozen_payload: dict[str, bytes] | None = None,
+    properties: CoreProperties | None = None,
 ) -> dict[str, Any]:
-    properties = CoreProperties.from_distribution(root)
+    properties = properties or CoreProperties.from_distribution(root)
+    if frozen_payload is None:
+        official_packs = official_release_pack_entries(root)
+    else:
+        official_packs = []
+        for name, raw in sorted(frozen_payload.items()):
+            if (
+                not name.startswith("packs/official/")
+                or name.count("/") != 3
+                or not name.endswith("/package.yaml")
+            ):
+                continue
+            data = load_yaml_document_from_text(raw.decode("utf-8"))
+            if data.get("origin") == "official":
+                official_packs.append(
+                    {
+                        "id": str(data.get("id") or ""),
+                        "version": str(data.get("version") or ""),
+                        "manifest_path": name,
+                        "manifest_sha256": hashlib.sha256(raw).hexdigest(),
+                    }
+                )
+        official_packs.sort(key=lambda item: item["id"])
     return {
         "schema_version": 1,
         "name": _core_common_release_identity.RELEASE_NAME,
@@ -3722,7 +3813,7 @@ def release_manifest_payload(
             "sha256": sha256_file(output),
             "entry_count": len(manifest_files),
         },
-        "official_packs": official_release_pack_entries(root),
+        "official_packs": official_packs,
         "files": manifest_files,
     }
 
@@ -3783,7 +3874,21 @@ def command_release_pack(args: argparse.Namespace) -> int:
     provenance = _release_git_provenance.release_git_provenance(root)
     from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 
-    core_manifest = release_core_manifest(
+    # Selection must equal the existing public checksum surface. The validator
+    # remains unchanged and the sealed inventory covers every final payload byte.
+    validator_spec = importlib.util.spec_from_file_location(
+        "_release_checksum_inventory",
+        root / "tools/validate-process-forge-checksums.py",
+    )
+    if validator_spec is None or validator_spec.loader is None:
+        raise SystemExit("FAIL: release checksum surface unavailable")
+    validator = importlib.util.module_from_spec(validator_spec)
+    validator_spec.loader.exec_module(validator)
+    if {name for name, _ in files} != {
+        name for name, _ in validator.public_file_entries(root)
+    } | {"checksums/processforge.sha256"}:
+        raise SystemExit("FAIL: release/checksum selection mismatch")
+    payload, core_manifest = _sealed_release_payload(
         files,
         version=properties.loaded.version,
         source=provenance["source"],
@@ -3792,11 +3897,21 @@ def command_release_pack(args: argparse.Namespace) -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest_files = write_release_zip(
         output,
-        files,
+        [],
         int(provenance["source_date_epoch"]),
-        extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(core_manifest))],
+        extra_entries=[
+            *payload.items(),
+            (CORE_MANIFEST_NAME, manifest_bytes(core_manifest)),
+        ],
     )
-    manifest = release_manifest_payload(root, output, manifest_files, provenance)
+    manifest = release_manifest_payload(
+        root,
+        output,
+        manifest_files,
+        provenance,
+        frozen_payload=payload,
+        properties=properties,
+    )
     manifest_path.write_text(
         ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)),
         encoding="utf-8",
@@ -3869,38 +3984,31 @@ def expected_release_manifest_from_root(
     root: Path, manifest_data: dict[str, Any] | None = None
 ) -> dict[str, str]:
     expected_files = expected_release_files_from_root(root)
-    expected = {
-        archive_path: hashlib.sha256(release_file_content(source_path)).hexdigest()
-        for archive_path, source_path in expected_files
-    }
-    if manifest_data:
-        from processforge_core.maintenance.update import (
-            CORE_MANIFEST_NAME,
-            manifest_bytes,
-        )
+    if not manifest_data:
+        return {
+            name: hashlib.sha256(release_file_content(path)).hexdigest()
+            for name, path in expected_files
+        }
+    from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 
-        build = (
-            manifest_data.get("build")
-            if isinstance(manifest_data.get("build"), dict)
-            else {}
-        )
-        source = (
-            manifest_data.get("source")
-            if isinstance(manifest_data.get("source"), dict)
-            else None
-        )
-        core_manifest = release_core_manifest(
-            expected_files,
-            version=str(
-                manifest_data.get("version")
-                or CoreProperties.from_distribution(root).loaded.version
-            ),
-            source=source,
-            generated_at=str(build.get("generated_at") or ""),
-        )
-        expected[CORE_MANIFEST_NAME] = hashlib.sha256(
-            manifest_bytes(core_manifest)
-        ).hexdigest()
+    build = manifest_data.get("build")
+    build = build if isinstance(build, dict) else {}
+    source = manifest_data.get("source")
+    payload, core_manifest = _sealed_release_payload(
+        expected_files,
+        version=str(
+            manifest_data.get("version")
+            or CoreProperties.from_distribution(root).loaded.version
+        ),
+        source=source if isinstance(source, dict) else None,
+        generated_at=str(build.get("generated_at") or ""),
+    )
+    expected = {
+        name: hashlib.sha256(content).hexdigest() for name, content in payload.items()
+    }
+    expected[CORE_MANIFEST_NAME] = hashlib.sha256(
+        manifest_bytes(core_manifest)
+    ).hexdigest()
     return expected
 
 
