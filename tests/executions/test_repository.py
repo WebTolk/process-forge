@@ -239,7 +239,177 @@ def harness(isolated_path: Path) -> Harness:
 def test_schema_is_exact_and_cold() -> None:
     assert EXECUTION_SCHEMA.namespace == "execution"
     assert EXECUTION_SCHEMA.version == 1
-    assert len(EXECUTION_SCHEMA.statements) == 7
+    assert len(EXECUTION_SCHEMA.statements) == 8
+
+
+def test_directory_only_floor_replay_has_no_execution_and_allocates_eight(
+    isolated_path: Path,
+) -> None:
+    h = make_harness(isolated_path, importing=True)
+    for _ in range(2):
+        with h.database.transaction() as session:
+            assert h.repo.import_legacy(
+                session, (), source_facts=(), next_attempt_floors=(("run", "task", 8),)
+            ) == (0, 0)
+            for table in (
+                "execution_attempts",
+                "execution_heads",
+                "execution_current",
+                "execution_receipt_admissions",
+            ):
+                assert (
+                    session.fetch_one(SqlStatement(f"SELECT 1 FROM {table} LIMIT 1"))
+                    is None
+                )
+            assert (
+                session.fetch_one(
+                    SqlStatement(
+                        "SELECT next_history_seq FROM execution_state WHERE singleton=1"
+                    )
+                )[0]
+                == 1
+            )
+    with h.database.transaction() as session:
+        session.execute(
+            SqlStatement(
+                "UPDATE execution_state SET generation=1,authority='sql',readiness='ready' WHERE singleton=1"
+            )
+        )
+    assert h.repo.current().complete and h.repo.current().records == ()
+    assert h.repo.page_history().records == ()
+    assert h.repo.load_latest("run", "task") is None
+    assert h.prepare().key.attempt == 8
+    assert h.prepare().key.attempt == 9
+    with h.database.read() as session:
+        assert (
+            session.fetch_one(SqlStatement("SELECT 1 FROM execution_allocation_floors"))
+            is None
+        )
+
+
+def test_floor_checkpoint_rollback_and_resume_are_one_transaction(
+    isolated_path: Path,
+) -> None:
+    h = make_harness(isolated_path, importing=True)
+    with pytest.raises(RuntimeError, match="crash"):
+        with h.database.transaction() as session:
+            h.repo.import_legacy(
+                session, (), source_facts=(), next_attempt_floors=(("run", "task", 8),)
+            )
+            session.execute(
+                SqlStatement(
+                    "UPDATE execution_state SET plan_checksum='checkpoint' WHERE singleton=1"
+                )
+            )
+            raise RuntimeError("crash")
+    with h.database.read() as session:
+        assert (
+            session.fetch_one(SqlStatement("SELECT 1 FROM execution_allocation_floors"))
+            is None
+        )
+        assert (
+            session.fetch_one(
+                SqlStatement(
+                    "SELECT plan_checksum FROM execution_state WHERE singleton=1"
+                )
+            )[0]
+            is None
+        )
+    with h.database.transaction() as session:
+        assert h.repo.import_legacy(
+            session, (), source_facts=(), next_attempt_floors=(("run", "task", 8),)
+        ) == (0, 0)
+        session.execute(
+            SqlStatement(
+                "UPDATE execution_state SET plan_checksum='checkpoint' WHERE singleton=1"
+            )
+        )
+    with h.database.read() as session:
+        assert (
+            session.fetch_one(
+                SqlStatement("SELECT next_attempt FROM execution_allocation_floors")
+            )[0]
+            == 8
+        )
+        assert (
+            session.fetch_one(
+                SqlStatement(
+                    "SELECT plan_checksum FROM execution_state WHERE singleton=1"
+                )
+            )[0]
+            == "checkpoint"
+        )
+
+
+def test_floor_only_import_bounds_and_owner_are_checked(isolated_path: Path) -> None:
+    h = make_harness(isolated_path, importing=True)
+    floors = tuple(("run", f"task{n}", n + 1) for n in range(256))
+    with h.database.transaction() as session:
+        assert h.repo.import_legacy(
+            session, (), source_facts=(), next_attempt_floors=floors
+        ) == (0, 0)
+    with pytest.raises(ValueError, match="batch"):
+        with h.database.transaction() as session:
+            h.repo.import_legacy(
+                session,
+                (),
+                source_facts=(),
+                next_attempt_floors=(*floors, ("run", "extra", 8)),
+            )
+    with pytest.raises(ExecutionError, match="identity"):
+        with h.database.transaction() as session:
+            session.execute(
+                SqlStatement(
+                    "UPDATE execution_state SET project_id='foreign' WHERE singleton=1"
+                )
+            )
+            h.repo.import_legacy(
+                session, (), source_facts=(), next_attempt_floors=(("run", "task", 8),)
+            )
+    with h.database.read() as session:
+        assert (
+            session.fetch_one(SqlStatement("SELECT 1 FROM execution_attempts")) is None
+        )
+
+
+def test_import_snapshot_absorbs_previously_saved_floor(isolated_path: Path) -> None:
+    h = make_harness(isolated_path, importing=True)
+    with h.database.transaction() as session:
+        h.repo.import_legacy(
+            session, (), source_facts=(), next_attempt_floors=(("run", "task", 8),)
+        )
+    record = ExecutionRecord(
+        ExecutionKey("project", "run", "task", 3),
+        None,
+        1,
+        1,
+        "prepared",
+        None,
+        "pending",
+        None,
+        None,
+        payload(attempt=3),
+        0,
+    )
+    with h.database.transaction() as session:
+        assert h.repo.import_legacy(
+            session,
+            (record,),
+            source_facts=(
+                ("legacy/status.json", "sha256:" + "a" * 64, "sha256:" + "b" * 64),
+            ),
+            next_attempt_floors=(),
+        ) == (1, 0)
+        assert (
+            session.fetch_one(SqlStatement("SELECT next_attempt FROM execution_heads"))[
+                0
+            ]
+            == 8
+        )
+        assert (
+            session.fetch_one(SqlStatement("SELECT 1 FROM execution_allocation_floors"))
+            is None
+        )
 
 
 def test_construction_is_cold_and_matches_domain_port(isolated_path: Path) -> None:

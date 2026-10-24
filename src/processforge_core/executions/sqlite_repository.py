@@ -363,7 +363,16 @@ class SQLiteExecutionRepository:
                     task,
                 )
             )
-            attempt = 1 if head is None else _integer(head[0])
+            floor = session.fetch_one(
+                SqlStatement(
+                    "SELECT next_attempt FROM execution_allocation_floors WHERE project_id=? AND run_id=? AND task_id=?",
+                    task,
+                )
+            )
+            attempt = max(
+                1 if head is None else _integer(head[0]),
+                1 if floor is None else _integer(floor[0]),
+            )
             key = ExecutionKey(self.project_id, run_id, task_id, attempt)
             payload["attempt"] = attempt
             record = with_projection(
@@ -395,6 +404,12 @@ class SQLiteExecutionRepository:
                 SqlStatement(
                     "INSERT INTO execution_heads(project_id,run_id,task_id,latest_attempt,next_attempt,projection_dirty) VALUES(?,?,?,?,?,1) ON CONFLICT(project_id,run_id,task_id) DO UPDATE SET latest_attempt=excluded.latest_attempt,next_attempt=excluded.next_attempt,projection_dirty=1",
                     (*task, attempt, attempt + 1),
+                )
+            )
+            session.execute(
+                SqlStatement(
+                    "DELETE FROM execution_allocation_floors WHERE project_id=? AND run_id=? AND task_id=?",
+                    task,
                 )
             )
             session.execute(
@@ -696,6 +711,9 @@ class SQLiteExecutionRepository:
         exact. Records carry the next (cutover) generation while state remains
         importing/legacy in the source generation; W4 must CAS that state to the
         same target generation before any ordinary repository access.
+        Floor-only facts may be imported with empty records/source_facts. They
+        create only allocation floors; return counters count snapshots only.
+        The caller's checkpoint must include floor facts in this same session.
         """
         if (
             not isinstance(records, tuple)
@@ -778,6 +796,25 @@ class SQLiteExecutionRepository:
                     (*task, record.key.attempt, record.key.attempt + 1),
                 )
             )
+            saved_floor = session.fetch_one(
+                SqlStatement(
+                    "SELECT next_attempt FROM execution_allocation_floors WHERE project_id=? AND run_id=? AND task_id=?",
+                    task,
+                )
+            )
+            if saved_floor is not None:
+                session.execute(
+                    SqlStatement(
+                        "UPDATE execution_heads SET next_attempt=MAX(next_attempt,?) WHERE project_id=? AND run_id=? AND task_id=?",
+                        (_integer(saved_floor[0]), *task),
+                    )
+                )
+                session.execute(
+                    SqlStatement(
+                        "DELETE FROM execution_allocation_floors WHERE project_id=? AND run_id=? AND task_id=?",
+                        task,
+                    )
+                )
             if record.phase in _CURRENT_PHASES:
                 session.execute(
                     SqlStatement(
@@ -788,8 +825,6 @@ class SQLiteExecutionRepository:
             inserted += 1
         for run_id, task_id, floor in next_attempt_floors:
             ExecutionKey(self.project_id, run_id, task_id, floor)
-            if floor < 2:
-                raise ValueError("invalid attempt floor")
             head = session.fetch_one(
                 SqlStatement(
                     "SELECT latest_attempt FROM execution_heads WHERE project_id=? AND run_id=? AND task_id=?",
@@ -797,7 +832,13 @@ class SQLiteExecutionRepository:
                 )
             )
             if head is None:
-                raise ExecutionError("execution_identity_conflict")
+                session.execute(
+                    SqlStatement(
+                        "INSERT INTO execution_allocation_floors(project_id,run_id,task_id,next_attempt) VALUES(?,?,?,?) ON CONFLICT(project_id,run_id,task_id) DO UPDATE SET next_attempt=MAX(next_attempt,excluded.next_attempt)",
+                        (self.project_id, run_id, task_id, floor),
+                    )
+                )
+                continue
             if floor <= _integer(head[0]):
                 raise ValueError("invalid attempt floor")
             session.execute(

@@ -2,17 +2,161 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import hashlib
+import json
+import re
+import stat
 import sys
+from pathlib import Path
 from typing import Any
 
 from processforge_core.common.ids import safe_id
 from processforge_core.common.paths import rel
+from processforge_core.configuration import ConfigurationProvider, PFConfig
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from processforge_core.runtime.environment import WorkerEnvironmentPolicy
 from processforge_core.work.context_documents import ContextContractInputs
 from processforge_core.work.outputs import WorkOutputPolicy
 from processforge_core.work.paths import WorkPaths
+
+CONFIGURATION_SNAPSHOT_LIMIT = 65536
+
+
+def configuration_snapshot_bytes(
+    configuration: ConfigurationProvider, identity: dict[str, Any]
+) -> bytes:
+    """Encode one operation snapshot without consulting live config again."""
+    snapshot = configuration.snapshot()
+    if (
+        set(identity) != {"project_id", "run_id", "task_id", "attempt"}
+        or type(identity["attempt"]) is not int
+        or identity["attempt"] < 1
+        or any(
+            not isinstance(identity[key], str) or not identity[key]
+            for key in ("project_id", "run_id", "task_id")
+        )
+    ):
+        raise ValueError("configuration_snapshot_identity_invalid")
+    raw = json.dumps(
+        {
+            "schema_version": 1,
+            **identity,
+            "configuration": snapshot.config.to_dict(),
+            "errors": list(snapshot.errors),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    if len(raw) > CONFIGURATION_SNAPSHOT_LIMIT:
+        raise ValueError("configuration_snapshot_too_large")
+    return raw
+
+
+def load_configuration_snapshot(
+    document: dict[str, Any], prepared_path: Path, environ: dict[str, str]
+) -> ConfigurationProvider | None:
+    """Read only a body explicitly granted to the native launch adapter.
+
+    A pointer or a metadata-only reference does not authorize this read. Old
+    immutable prepared documents without this native contract stay on their
+    existing path and do not discover application configuration in a wrapper.
+    """
+    pointer = environ.get("PF_CONFIGURATION_SNAPSHOT_PATH", "")
+    digest = environ.get("PF_CONFIGURATION_SNAPSHOT_SHA256", "")
+    native = document.get("native_launch")
+    if native is None:
+        if pointer or digest:
+            raise ValueError("configuration_snapshot_grant_required")
+        return None
+    grant = native.get("configuration") if isinstance(native, dict) else None
+    if (
+        not isinstance(grant, dict)
+        or set(grant) != {"reader", "access", "path", "sha256", "size"}
+        or grant["reader"] != "native"
+        or grant["access"] != "body"
+        or grant["sha256"] != digest
+        or not isinstance(digest, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None
+        or type(grant["size"]) is not int
+        or not 1 <= grant["size"] <= CONFIGURATION_SNAPSHOT_LIMIT
+    ):
+        raise ValueError("configuration_snapshot_grant_invalid")
+    root = Path(document["project_root"])
+    expected = prepared_path.parent / "configuration.snapshot.json"
+    if (
+        not root.is_absolute()
+        or not expected.is_absolute()
+        or not pointer
+        or Path(pointer) != expected
+        or grant["path"] != expected.relative_to(root).as_posix()
+    ):
+        raise ValueError("configuration_snapshot_path_mismatch")
+    for path in (expected, *expected.parents):
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise ValueError("configuration_snapshot_path_invalid")
+        if path == expected and not stat.S_ISREG(info.st_mode):
+            raise ValueError("configuration_snapshot_path_invalid")
+        if path == root:
+            break
+    else:
+        raise ValueError("configuration_snapshot_path_invalid")
+    with expected.open("rb") as stream:
+        import os
+
+        opened = os.fstat(stream.fileno())
+        before = expected.lstat()
+        if (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
+            raise ValueError("configuration_snapshot_path_invalid")
+        raw = stream.read(CONFIGURATION_SNAPSHOT_LIMIT + 1)
+    if (
+        len(raw) != grant["size"]
+        or "sha256:" + hashlib.sha256(raw).hexdigest() != digest
+    ):
+        raise ValueError("configuration_snapshot_digest_mismatch")
+
+    def pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("configuration_snapshot_invalid")
+            result[key] = value
+        return result
+
+    payload = json.loads(raw, object_pairs_hook=pairs)
+    identity = document["identity"]
+    if (
+        not isinstance(payload, dict)
+        or set(payload)
+        != {
+            "schema_version",
+            "project_id",
+            "run_id",
+            "task_id",
+            "attempt",
+            "configuration",
+            "errors",
+        }
+        or type(payload["schema_version"]) is not int
+        or payload["schema_version"] != 1
+        or type(payload["attempt"]) is not int
+        or payload["attempt"] < 1
+        or payload["attempt"] != identity["attempt"]
+        or payload["project_id"] != identity["project_id"]
+        or payload["run_id"] != identity["run_id"]
+        or payload["task_id"] != identity["assignment_id"]
+        or not isinstance(payload["errors"], list)
+        or any(
+            not isinstance(code, str) or re.fullmatch(r"[a-z][a-z0-9_]*", code) is None
+            for code in payload["errors"]
+        )
+    ):
+        raise ValueError("configuration_snapshot_identity_mismatch")
+    return ConfigurationProvider.pinned(
+        PFConfig.from_dict(payload["configuration"]), errors=tuple(payload["errors"])
+    )
 
 
 class WorkerCommandBuilder:

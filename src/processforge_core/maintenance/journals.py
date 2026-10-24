@@ -137,14 +137,6 @@ class JournalMaintenanceService:
             backup: Verified SQLite backup owner; defaults to SQLiteBackupService.
             scan: Legacy scan/quarantine owner; defaults to JournalScanService.
         """
-        if backup is None:
-            from processforge_core.maintenance.backup import SQLiteBackupService
-
-            backup = SQLiteBackupService()
-        if scan is None:
-            from processforge_core.maintenance.journal_scan import JournalScanService
-
-            scan = JournalScanService()
         self.configuration = configuration
         self.driver = driver
         self._backup = backup
@@ -195,11 +187,36 @@ class JournalMaintenanceService:
                 workplace_root=workplace,
             )
         )
+        snapshot = provider.snapshot()
+        provider = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
         driver = (
             self.driver
             if self.driver is not None
             else DatabaseFactory.resolve_driver(provider.current().database)
         )
+        if self._backup is None or self._scan is None:
+            from processforge_core.maintenance.backup import SQLiteBackupService
+            from processforge_core.maintenance.journal_scan import JournalScanService
+
+            # Bind default ports to this operation's driver without mutating a
+            # reusable service or rereading configuration in downstream ports.
+            operation_service = JournalMaintenanceService(
+                backup=self._backup
+                if self._backup is not None
+                else SQLiteBackupService(driver=driver),
+                scan=self._scan
+                if self._scan is not None
+                else JournalScanService(driver=driver),
+                configuration=provider,
+                driver=driver,
+            )
+            return operation_service.migrate(
+                project_root,
+                workplace,
+                apply=apply,
+                skip_invalid=skip_invalid,
+                evidence_dir=evidence_dir,
+            )
         flow, sources = self._scan.discover(project, workplace)
         _safe_path(flow)
         event_path = flow / "runtime/events/events.sqlite3"
@@ -419,6 +436,7 @@ class JournalMaintenanceService:
         operation: Path | None,
         report: JsonObject,
     ) -> dict[Path, tuple[int, int] | None]:
+        assert self._backup is not None
         if operation is None:
             raise MaintenanceError("migration_evidence_required")
         (operation / "backups").mkdir()
@@ -468,6 +486,7 @@ class JournalMaintenanceService:
         sources: list[JournalSource],
         report: JsonObject,
     ) -> None:
+        assert self._scan is not None
         actual_flow, actual_sources = self._scan.discover(project, workplace)
         if actual_flow != flow or actual_sources != sources:
             raise MaintenanceError("migration_source_changed")

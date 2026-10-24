@@ -382,25 +382,34 @@ def release_singleton(workplace_root: Path, instance_id: str, core: Any | None =
 
 
 class RuntimeProcess:
-    def __init__(self, workplace_root: Path, core: Any, *, interval: float, configuration=None) -> None:
-        from processforge_core.configuration import ConfigService
-        from processforge_core.configuration.yaml_store import YamlConfigStore
+    def __init__(
+        self, workplace_root: Path, core: Any, *, interval: float, configuration=None
+    ) -> None:
+        from processforge_core import build_configuration_provider
 
         self.workplace_root = workplace_root
         self.core = core
-        from processforge_core.project.configuration_inputs import project_configuration_reader
+        from processforge_core.project.configuration_inputs import (
+            project_configuration_reader,
+        )
 
         self._project_configuration = project_configuration_reader.project_configuration
         self.interval = max(0.25, float(interval))
-        self.config_service = configuration if configuration is not None else ConfigService(YamlConfigStore(workplace_root / "configuration.yaml"))
+        self.config_service = (
+            configuration
+            if configuration is not None
+            else build_configuration_provider(workplace_root=workplace_root)
+        )
         # Validate before token/state creation. Core models/services have no host discovery.
-        self.configuration = self.config_service.read()
+        self.configuration = self._configuration_snapshot()
         self.token = load_token(workplace_root)
         self.stop_event = threading.Event()
         self.httpd: ThreadingHTTPServer | None = None
         self.scheduler_thread: threading.Thread | None = None
         self.instance_id = uuid.uuid4().hex
-        self.state: dict[str, Any] = base_state(workplace_root, core, status="starting", instance_id=self.instance_id)
+        self.state: dict[str, Any] = base_state(
+            workplace_root, core, status="starting", instance_id=self.instance_id
+        )
         self.state_lock = threading.RLock()
         self._project_errors: dict[str, str] = {}
         self._temporary_files_last_run: dict[Path, float] = {}
@@ -415,12 +424,22 @@ class RuntimeProcess:
     def metrics_interval(self) -> float:
         return self.configuration.config.runtime.metrics.interval_seconds
 
+    def _configuration_snapshot(self):
+        from processforge_core.configuration import ConfigurationProvider
+
+        if isinstance(self.config_service, ConfigurationProvider):
+            return self.config_service.snapshot()
+        return self.config_service.read()
+
     def reload_configuration(self) -> None:
         from processforge_core.configuration import ConfigurationError
 
         error = None
         try:
-            self.configuration = self.config_service.read()
+            self.configuration = self._configuration_snapshot()
+            errors = getattr(self.configuration, "errors", ())
+            if errors:
+                error = errors[0]
         except ConfigurationError as exc:
             error = exc.code  # Keep last valid snapshot; never publish raw YAML or paths.
         with self.state_lock:
@@ -545,20 +564,17 @@ class RuntimeProcess:
             payload["last_scheduler_error"] = current_scheduler_error
         return add_runtime_truth(payload, self.core, running=True)
 
-    def active_worker_count(self, roots: list[Path]) -> int:
-        count = 0
-        for project_root in roots:
-            try:
-                agent_runs = self.core.locate_flow_root(project_root) / "runtime" / "agent-runs"
-                for status_path in agent_runs.glob("*/*/status.json") if agent_runs.is_dir() else []:
-                    self.core
-                    from processforge_core.common.json_io import json_read
-                    state = json_read(status_path)
-                    if str(state.get("status") or "") == "running":
-                        count += 1
-            except Exception as exc:  # noqa: BLE001 - status must survive one project.
-                self._project_errors[str(project_root)] = str(exc)
-        return count
+    def active_worker_count(self, roots: list[Path]) -> int | None:
+        workers = metrics_core().observe(
+            "workers",
+            self.workplace_root,
+            roots,
+            self.core,
+            now=time.time(),
+            coverage=not self._project_errors,
+            budget=metrics_core().Budget(seconds=0.5),
+        )
+        return workers["counts"]["running"]
 
     def last_event(self, roots: list[Path]) -> dict[str, Any] | None:
         latest: dict[str, Any] | None = None

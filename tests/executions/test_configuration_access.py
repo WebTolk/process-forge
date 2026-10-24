@@ -40,6 +40,342 @@ from processforge_core.work.automation_readiness import AutomationReadinessServi
 from processforge_core.work.consistency import RunTaskConsistencyService
 
 
+def _native_snapshot(root, configuration=None):
+    from hashlib import sha256
+
+    from processforge_core.runtime.command import configuration_snapshot_bytes
+
+    prepared = root / ".pf/runtime/agent-runs/run/task/attempts/1/prepared-input.json"
+    prepared.parent.mkdir(parents=True)
+    identity = {
+        "project_id": "project",
+        "run_id": "run",
+        "task_id": "task",
+        "attempt": 1,
+    }
+    raw = configuration_snapshot_bytes(configuration or _pinned(), identity)
+    path = prepared.with_name("configuration.snapshot.json")
+    path.write_bytes(raw)
+    digest = "sha256:" + sha256(raw).hexdigest()
+    document = {
+        "project_root": str(root),
+        "identity": {
+            "project_id": "project",
+            "run_id": "run",
+            "assignment_id": "task",
+            "attempt": 1,
+        },
+        "native_launch": {
+            "configuration": {
+                "reader": "native",
+                "access": "body",
+                "path": path.relative_to(root).as_posix(),
+                "sha256": digest,
+                "size": len(raw),
+            }
+        },
+    }
+    environ = {
+        "PF_CONFIGURATION_SNAPSHOT_PATH": str(path),
+        "PF_CONFIGURATION_SNAPSHOT_SHA256": digest,
+    }
+    return prepared, path, document, environ
+
+
+def test_native_snapshot_uses_exact_full_pinned_value_without_yaml_reads(
+    workspace, monkeypatch
+):
+    from processforge_core.runtime.command import load_configuration_snapshot
+
+    prepared, _path, document, environ = _native_snapshot(workspace)
+    monkeypatch.setattr(
+        YamlConfigStore, "read", lambda self: pytest.fail("live YAML read")
+    )
+    provider = load_configuration_snapshot(document, prepared, environ)
+    assert provider is not None
+    assert provider.get("runtime.metrics.interval_seconds") == 17
+    assert provider.get("logging.raw_hooks") is False
+    assert provider.snapshot(refresh=True) is provider.snapshot()
+
+
+@pytest.mark.parametrize(
+    "change", ["hash", "path", "identity", "metadata", "size", "unknown_config"]
+)
+def test_native_snapshot_rejects_corrupt_or_ungranted_body(workspace, change):
+    from hashlib import sha256
+
+    from processforge_core.runtime.command import load_configuration_snapshot
+
+    prepared, path, document, environ = _native_snapshot(workspace)
+    grant = document["native_launch"]["configuration"]
+    if change == "hash":
+        path.write_bytes(path.read_bytes() + b" ")
+    elif change == "path":
+        environ["PF_CONFIGURATION_SNAPSHOT_PATH"] = str(path.with_name("other.json"))
+    elif change == "metadata":
+        grant["access"] = "metadata"
+    elif change == "size":
+        grant["size"] = 65537
+    else:
+        payload = json.loads(path.read_bytes())
+        if change == "identity":
+            payload["attempt"] = 2
+        else:
+            payload["configuration"]["unexpected"] = True
+        raw = json.dumps(payload).encode()
+        path.write_bytes(raw)
+        grant.update(sha256="sha256:" + sha256(raw).hexdigest(), size=len(raw))
+        environ["PF_CONFIGURATION_SNAPSHOT_SHA256"] = grant["sha256"]
+    with pytest.raises(ValueError):
+        load_configuration_snapshot(document, prepared, environ)
+
+
+def test_old_prepared_snapshot_does_not_gain_body_read(workspace, monkeypatch):
+    from processforge_core.runtime.command import load_configuration_snapshot
+
+    prepared, _path, document, environ = _native_snapshot(workspace)
+    del document["native_launch"]
+    monkeypatch.setattr(Path, "open", lambda *args, **kwargs: pytest.fail("body read"))
+    assert load_configuration_snapshot(document, prepared, {}) is None
+    with pytest.raises(ValueError, match="grant_required"):
+        load_configuration_snapshot(document, prepared, environ)
+
+
+def _sql_project(root, current_count=0):
+    from processforge_core.database import (
+        Database,
+        DatabaseIdentity,
+        DatabaseTarget,
+        SchemaManager,
+        SqlStatement,
+    )
+    from processforge_core.executions.schema import EXECUTION_SCHEMA
+    from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
+    from tests.executions.test_repository import payload
+
+    flow = root / ".pf"
+    _write(flow / "process-forge.yaml", "project:\n  id: project\n")
+    store_id = uuid4().hex
+    database = Database(
+        SQLiteDriver(),
+        DatabaseTarget(
+            flow / "data/pf.sqlite3", DatabaseIdentity(store_id, "project", "project")
+        ),
+    )
+    SchemaManager().initialize(database, (EXECUTION_SCHEMA,))
+    with database.transaction() as session:
+        session.execute(
+            SqlStatement(
+                "INSERT INTO execution_state(singleton,project_id,generation,authority,readiness,active_coverage,revision,next_history_seq) VALUES(1,'project',1,'sql','ready','complete',0,1)"
+            )
+        )
+    _write(
+        flow / "data/execution-storage.json",
+        json.dumps(
+            {
+                "schema_version": 1,
+                "project_id": "project",
+                "store_id": store_id,
+                "profile_id": "project_main",
+                "target_relative_path": "data/pf.sqlite3",
+            }
+        ),
+    )
+    repo = SQLiteExecutionRepository(database, "project")
+    for index in range(current_count):
+        record = repo.allocate_attempt(
+            "run", f"task{index}", payload(f"task{index}"), generation=1
+        )
+        repo.reserve_start(
+            record.key,
+            expected_revision=record.revision,
+            generation=1,
+            launch_token=uuid4().hex,
+        )
+    return repo
+
+
+@pytest.mark.parametrize("current_count", [0, 1, 3, 129])
+def test_actual_runtime_count_and_shutdown_share_active_only_route(
+    workspace, monkeypatch, current_count
+):
+    import time
+    from types import SimpleNamespace
+
+    from pf_runtime.service import RuntimeProcess
+
+    from processforge_core.runtime import metrics
+
+    root, workplace = workspace / "project", workspace / "workplace"
+    _sql_project(root, current_count)
+    _write(
+        workplace / "runtime/pf-runtime-host/state.json",
+        json.dumps({"projects": [{"project_root": str(root)}], "sessions": {}}),
+    )
+    original_open = Path.open
+
+    def checked_open(path, *args, **kwargs):
+        assert path.name != "status.json", "terminal/status projection read"
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", checked_open)
+    monkeypatch.setattr(
+        Path, "glob", lambda *args, **kwargs: pytest.fail("status/history glob")
+    )
+    runtime = object.__new__(RuntimeProcess)
+    runtime.workplace_root, runtime.core, runtime._project_errors = (
+        workplace,
+        SimpleNamespace(),
+        {},
+    )
+    result = metrics.shutdown_workers(workplace, runtime.core)
+    expected = current_count if current_count <= 128 else None
+    assert result["counts"]["running"] == expected
+    assert runtime.active_worker_count([root]) == expected
+    assert time.monotonic() > 0
+
+
+def test_bound_storage_never_falls_back_to_projection(workspace):
+    import time
+    from types import SimpleNamespace
+
+    from processforge_core.executions.composition import select_execution_storage
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.runtime import metrics
+
+    root = workspace / "project"
+    repo = _sql_project(root)
+    repo.database.target.path.unlink()
+    result = metrics.observe(
+        "workers", workspace, [root], SimpleNamespace(), now=time.time()
+    )
+    assert result["counts"]["running"] is None
+    with pytest.raises(ExecutionError):
+        select_execution_storage(
+            root, configuration=ConfigurationProvider.pinned(PFConfig())
+        )
+
+
+def test_unbound_existing_execution_namespace_refuses(workspace):
+    from processforge_core.executions.composition import select_execution_storage
+    from processforge_core.executions.model import ExecutionError
+
+    root = workspace / "project"
+    _sql_project(root)
+    (root / ".pf/data/execution-storage.json").unlink()
+    with pytest.raises(ExecutionError):
+        select_execution_storage(
+            root, configuration=ConfigurationProvider.pinned(PFConfig())
+        )
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_real_native_wrapper_new_and_old_prepared_transport(workspace, legacy):
+    import hashlib
+    import sys
+
+    import prepared_executor
+
+    prepared, _path, document, environ = _native_snapshot(workspace)
+    document.update(schema_version=1, kind="pf.prepared-input", input={})
+    document["identity"]["context_id"] = "context"
+    if legacy:
+        del document["native_launch"]
+        environ.clear()
+    raw = json.dumps(document).encode()
+    prepared.write_bytes(raw)
+    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+    environ.update(
+        PF_PREPARED_INPUT_FILE=str(prepared),
+        PF_PREPARED_INPUT_SHA256=digest,
+        PF_WORKER_RUN_ID="run",
+        PF_WORKER_TASK_ID="task",
+        PF_WORKER_ATTEMPT="1",
+        PF_PROJECT_ROOT=str(workspace),
+    )
+    options = argparse.Namespace(
+        prepared_input=str(prepared),
+        prepared_sha256=digest,
+        heartbeat=str(prepared.parent / "heartbeat.json"),
+        exit_path=str(prepared.parent / "exit.json"),
+    )
+    result = prepared_executor.run_target(
+        options, [sys.executable, "-B", "-c", "import sys; sys.exit(0)"], environ
+    )
+    assert result == 0
+    assert json.loads(Path(options.exit_path).read_bytes())["exit_code"] == 0
+    assert "configuration" not in json.loads(Path(options.heartbeat).read_bytes())
+
+
+def test_public_facade_reads_bound_sql_and_refuses_json_lifecycle_writes(
+    workspace, monkeypatch
+):
+    import processforge as core
+
+    root = workspace / "project"
+    _sql_project(root, 1)
+    original_open = Path.open
+
+    def checked_open(path, *args, **kwargs):
+        assert path.name != "status.json", "SQL route opened stale projection"
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", checked_open)
+    assert core.load_agent_run_state(root, "run", "task0")["status"] == "starting"
+    with pytest.raises(SystemExit, match="execution_storage_not_ready"):
+        core.write_agent_run_state(root, {"id": "task0", "run_id": "run"}, {}, "ready")
+
+
+def test_wrapper_rejects_corrupt_snapshot_before_target_popen(workspace, monkeypatch):
+    import hashlib
+
+    import prepared_executor
+
+    prepared, path, document, environ = _native_snapshot(workspace)
+    document.update(schema_version=1, kind="pf.prepared-input", input={})
+    document["identity"]["context_id"] = "context"
+    raw = json.dumps(document).encode()
+    prepared.write_bytes(raw)
+    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+    environ.update(
+        PF_PREPARED_INPUT_FILE=str(prepared),
+        PF_PREPARED_INPUT_SHA256=digest,
+        PF_WORKER_RUN_ID="run",
+        PF_WORKER_TASK_ID="task",
+        PF_WORKER_ATTEMPT="1",
+    )
+    path.write_bytes(b"{}")
+    options = argparse.Namespace(
+        prepared_input=str(prepared),
+        prepared_sha256=digest,
+        heartbeat=str(prepared.parent / "heartbeat.json"),
+        exit_path=str(prepared.parent / "exit.json"),
+    )
+    monkeypatch.setattr(
+        prepared_executor.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("spawned before validation"),
+    )
+    assert prepared_executor.run_target(options, ["unused"], environ) == 125
+
+
+def test_runtime_retains_pinned_reload_diagnostics_without_live_config_reads():
+    import threading
+
+    from pf_runtime.service import RuntimeProcess
+
+    runtime = object.__new__(RuntimeProcess)
+    runtime.config_service = ConfigurationProvider.pinned(
+        _pinned().current(), errors=("configuration_invalid",)
+    )
+    runtime.state_lock = threading.RLock()
+    runtime.state = {}
+    runtime.reload_configuration()
+    assert runtime.metrics_interval == 17
+    assert runtime.state["configuration"]["status"] == "invalid"
+    assert runtime.state["configuration"]["error"] == "configuration_invalid"
+
+
 @pytest.fixture
 def workspace(request, monkeypatch):
     """Use only the explicit QA evidence root with inherited workspace access."""
@@ -615,7 +951,12 @@ def test_maintenance_uses_pinned_config_and_legacy_transport(workspace, monkeypa
     assert not result["blocked"] and result["applied"]
     assert legacy.read_bytes() == source
     assert selected == [pinned.current().database] * 2
-    assert driver.calls and all(call[1:3] == (10.0, None) for call in driver.calls)
+    assert driver.calls
+    assert any(call[0] == "" for call in driver.calls)
+    assert all(
+        call[1:] == (5.0, "", False) if call[0] == "" else call[1:3] == (10.0, None)
+        for call in driver.calls
+    )
     assert ProcessEventJournal(driver=driver).get(
         legacy.with_suffix(".sqlite3"), "legacy"
     )["unknown"] == {"kept": True}

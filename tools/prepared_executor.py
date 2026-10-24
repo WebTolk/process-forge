@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Lifecycle wrapper for a ProcessForge prepared-input worker invocation.
 
 The wrapper validates the private prepared-input pointer and digest, then runs
@@ -171,22 +171,47 @@ def _terminate_and_wait(process: subprocess.Popen[Any]) -> None:
             process.wait()
 
 
-def run_target(options: argparse.Namespace, target: list[str], environ: dict[str, str] | None = None) -> int:
+def run_target(
+    options: argparse.Namespace,
+    target: list[str],
+    environ: dict[str, str] | None = None,
+) -> int:
     current_env = dict(os.environ if environ is None else environ)
     heartbeat = Path(options.heartbeat).expanduser()
     exit_path = Path(options.exit_path).expanduser()
     output_paths = (heartbeat, exit_path)
     try:
-        load_and_validate_manifest(options, current_env)
-    except ExecutorError as exc:
-        _write_failure(output_paths, 125, exc.code)
-        print(f"FAIL: {exc.code}", file=sys.stderr)
+        document = load_and_validate_manifest(options, current_env)
+        src = str(Path(__file__).resolve().parents[1] / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from processforge_core.runtime.command import load_configuration_snapshot
+
+        load_configuration_snapshot(document, Path(options.prepared_input), current_env)
+    except (ExecutorError, OSError, ValueError) as exc:
+        reason = (
+            exc.code
+            if isinstance(exc, ExecutorError)
+            else "configuration_snapshot_invalid"
+        )
+        _write_failure(output_paths, 125, reason)
+        print(f"FAIL: {reason}", file=sys.stderr)
         return 125
 
     started_at = _utc_now()
     try:
-        write_heartbeat(heartbeat, "starting", sequence=0, extra={"started_at": started_at})
-        process = subprocess.Popen(target, shell=False, stdin=None, stdout=None, stderr=None, cwd=None, env=current_env)
+        write_heartbeat(
+            heartbeat, "starting", sequence=0, extra={"started_at": started_at}
+        )
+        process = subprocess.Popen(
+            target,
+            shell=False,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            cwd=None,
+            env=current_env,
+        )
     except Exception:
         _write_failure(output_paths, 127, "target_launch_failed")
         print("FAIL: target_launch_failed", file=sys.stderr)
@@ -200,12 +225,27 @@ def run_target(options: argparse.Namespace, target: list[str], environ: dict[str
                 time.sleep(min(remaining, HEARTBEAT_INTERVAL_SECONDS))
             if time.monotonic() >= next_heartbeat and process.poll() is None:
                 sequence += 1
-                write_heartbeat(heartbeat, "running", sequence=sequence, extra={"pid": process.pid, "started_at": started_at})
+                write_heartbeat(
+                    heartbeat,
+                    "running",
+                    sequence=sequence,
+                    extra={"pid": process.pid, "started_at": started_at},
+                )
                 next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
         exit_code = int(process.wait())
         status = "completed" if exit_code == 0 else "failed"
         write_exit_contract(exit_path, exit_code)
-        write_heartbeat(heartbeat, status, sequence=sequence + 1, extra={"pid": process.pid, "exit_code": exit_code, "started_at": started_at, "finished_at": _utc_now()})
+        write_heartbeat(
+            heartbeat,
+            status,
+            sequence=sequence + 1,
+            extra={
+                "pid": process.pid,
+                "exit_code": exit_code,
+                "started_at": started_at,
+                "finished_at": _utc_now(),
+            },
+        )
         return exit_code
     except KeyboardInterrupt:
         _terminate_and_wait(process)

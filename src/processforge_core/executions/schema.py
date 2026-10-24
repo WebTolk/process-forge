@@ -13,6 +13,7 @@ _DDL = (
     "CREATE TABLE execution_receipt_admissions(project_id TEXT NOT NULL,run_id TEXT NOT NULL,task_id TEXT NOT NULL,attempt INTEGER NOT NULL,launch_token TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('process','heartbeat','exit','absence','spawn_failed')),sequence INTEGER NOT NULL CHECK(sequence>=0),checksum TEXT NOT NULL,PRIMARY KEY(project_id,run_id,task_id,attempt,launch_token,kind),FOREIGN KEY(project_id,run_id,task_id,attempt) REFERENCES execution_attempts(project_id,run_id,task_id,attempt))",
     "CREATE INDEX execution_history ON execution_attempts(project_id,history_seq) WHERE history_seq IS NOT NULL",
     "CREATE INDEX execution_projection_dirty ON execution_heads(project_id,run_id,task_id) WHERE projection_dirty=1",
+    "CREATE TABLE execution_allocation_floors(project_id TEXT NOT NULL,run_id TEXT NOT NULL,task_id TEXT NOT NULL,next_attempt INTEGER NOT NULL CHECK(next_attempt>=1),PRIMARY KEY(project_id,run_id,task_id))",
 )
 
 EXECUTION_SCHEMA = SchemaDefinition(

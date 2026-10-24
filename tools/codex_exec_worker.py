@@ -313,10 +313,13 @@ def write_exit_contract(path: Path | None, returncode: int) -> None:
 class ManagedUsageCapture:
     """Persist attempt receipts even if optional accounting storage is unavailable."""
 
-    def __init__(self, project_root: Path, output: Path, model: str) -> None:
+    def __init__(
+        self, project_root: Path, output: Path, model: str, *, configuration: Any = None
+    ) -> None:
         self.project_root = project_root
         self.output = output
         self.model = model
+        self.configuration = configuration
         self.receipt: Any = None
         self.directory: Path | None = None
         self.started = datetime.now(timezone.utc)
@@ -409,7 +412,9 @@ class ManagedUsageCapture:
             from processforge_core.accounting.composition import WorkplaceAccounting
             from processforge_core.accounting.model import Attribution
 
-            self.composition = WorkplaceAccounting.discover(self.project_root)
+            self.composition = WorkplaceAccounting.discover(
+                self.project_root, configuration=self.configuration
+            )
             origin_id = self.composition.ensure_identity()
             attr = Attribution(
                 project_id=self.composition.project_id,
@@ -530,6 +535,7 @@ def main() -> int:
         raise SystemExit("FAIL: PF_CODEX_MEMORIES must be true or false")
     project_root = os.environ.get("PF_PROJECT_ROOT") or str(Path.cwd())
     prepared = None
+    configuration = None
     prepared_path = os.environ.get("PF_PREPARED_INPUT_FILE")
     if prepared_path:
         from prepared_executor import ExecutorError, load_and_validate_manifest
@@ -541,6 +547,14 @@ def main() -> int:
                     prepared_sha256=os.environ.get("PF_PREPARED_INPUT_SHA256", ""),
                 ),
                 dict(os.environ),
+            )
+            src = str(Path(__file__).resolve().parents[1] / "src")
+            if src not in sys.path:
+                sys.path.insert(0, src)
+            from processforge_core.runtime.command import load_configuration_snapshot
+
+            configuration = load_configuration_snapshot(
+                prepared, Path(prepared_path), dict(os.environ)
             )
             if (
                 Path(project_root) / prepared["input"]["capsule"]["path"]
@@ -607,7 +621,9 @@ def main() -> int:
         attempt=os.environ.get("PF_WORKER_ATTEMPT"),
         build=diagnostics.identity_for(logger, __file__),
     ):
-        usage_capture = ManagedUsageCapture(project_path, output, model)
+        usage_capture = ManagedUsageCapture(
+            project_path, output, model, configuration=configuration
+        )
         receipt = usage_capture.begin()
         usage_capture.start_execution()
         try:

@@ -37,16 +37,47 @@ class ContinuationRecordReader:
         return data
 
     def writer_check(self, binding: dict) -> None:
-        status_path = self.path_resolver()(f".pf/runtime/agent-runs/{binding['run_id']}/{binding['assignment_id']}/status.json")
-        if status_path.exists():
+        from ..database import DatabaseError
+        from ..executions.composition import select_execution_storage
+        from ..executions.model import ExecutionError
+
+        project_root = self.path_resolver()(".pf/process-forge.yaml").parent.parent
+        try:
+            route = select_execution_storage(project_root, self.workplace())
+            record = (
+                route.repository.load_latest(
+                    binding["run_id"], binding["assignment_id"]
+                )
+                if route.repository is not None
+                else None
+            )
+        except (OSError, ValueError, DatabaseError, ExecutionError):
+            raise self.error()("worker_not_quiescent") from None
+        if record is not None and record.phase != "absent":
+            raise self.error()("worker_not_quiescent")
+        status_path = self.path_resolver()(
+            f".pf/runtime/agent-runs/{binding['run_id']}/{binding['assignment_id']}/status.json"
+        )
+        if route.repository is None and status_path.exists():
             status = self.control_loader()(status_path)
-            if status.get("status") not in {"completed", "failed", "timed_out", "cancelled", "collected"}:
+            if status.get("status") not in {
+                "completed",
+                "failed",
+                "timed_out",
+                "cancelled",
+                "collected",
+            }:
                 raise self.error()("worker_not_quiescent")
         if self.workplace():
             for path in self.leases_directory()(self.workplace()).glob("*.yaml"):
                 lease = self.control_loader()(path)
                 scope = lease.get("scope") or {}
-                if lease.get("status") == "active" and all(not scope.get(k) or scope[k] == binding[v] for k, v in
-                        (("project_id", "project_id"), ("run_id", "run_id"), ("task_id", "assignment_id"))):
+                if lease.get("status") == "active" and all(
+                    not scope.get(k) or scope[k] == binding[v]
+                    for k, v in (
+                        ("project_id", "project_id"),
+                        ("run_id", "run_id"),
+                        ("task_id", "assignment_id"),
+                    )
+                ):
                     raise self.error()("active_lease")
-

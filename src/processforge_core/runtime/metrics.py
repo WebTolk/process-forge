@@ -154,7 +154,23 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
             def project_paths():
                 for project in roots[:128]:
                     budget.check()
+                    pattern: tuple[str, ...]
                     if name == "workers":
+                        from ..executions.composition import select_execution_storage
+
+                        route = select_execution_storage(
+                            project, workplace, deadline=budget.deadline
+                        )
+                        budget.check()
+                        if route.repository is not None:
+                            current = route.repository.current(
+                                limit=128, deadline=budget.deadline
+                            )
+                            budget.check()
+                            counts["running"] += len(current.records)
+                            if not current.complete:
+                                budget.issues.add("coverage")
+                            continue
                         folder, pattern = project / ".pf/runtime/agent-runs", ("*", "*", "status.json")
                     else:
                         folder, pattern = project / ".pf/runs", ("*", "run.yaml")
@@ -212,6 +228,13 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
         budget.issues.add("budget")
     except (OSError, ValueError, TypeError):
         budget.issues.add("unreadable")
+    except Exception as exc:
+        from ..database import DatabaseError
+        from ..executions.model import ExecutionError
+
+        if not isinstance(exc, (DatabaseError, ExecutionError)):
+            raise
+        budget.issues.add("coverage")
     return group(name, counts, budget.issues)
 
 
