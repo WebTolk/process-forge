@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T04:48:28.838967+00:00",
+  "status": "not_ready_for_backend_switching",
+  "layer": "workspace source symbols and committed origin/dev Core blobs; no live backend-switch qualification",
+  "dev_commit": "e406a2d474ebd83ad5bb88dd7ee700f3919daa4d",
+  "implemented_sql_backends": [
+    "SQLite-specific implementations"
+  ],
+  "generic_sql_adapter_layer_ready": false,
+  "mariadb_adapter_implemented_in_core": false,
+  "postgresql_adapter_implemented_in_core": false,
+  "sql_driver_selection_via_configuration_ready": false,
+  "cross_backend_data_migration_ready": false,
+  "existing_boundaries": {
+    "AccountingService": "constructor typed to SQLiteAccountingRepository",
+    "WorkplaceAccounting.service": "direct SQLite repository construction",
+    "sqlite_storage": "SQLite-only transaction/metadata/database helpers",
+    "ResourceIndexBackend": "search maintenance protocol, not generic SQL driver"
+  },
+  "source_search_scope": "src/processforge_core; case-insensitive MariaDB/PostgreSQL/MySQL/SQLAlchemy/PyDAL and generic DB adapter names",
+  "source_search_result": "no alternate SQL backend implementation found",
+  "source_files": [
+    {
+      "path": "src/processforge_core/accounting/composition.py",
+      "workspace_sha256": "08ec66c8db93467e815ff82e7dee606662d2a7a26cfd4c20c011793fb60b3c16",
+      "committed_dev_sha256": "08ec66c8db93467e815ff82e7dee606662d2a7a26cfd4c20c011793fb60b3c16",
+      "byte_equal": true,
+      "lf_equal": true
+    },
+    {
+      "path": "src/processforge_core/accounting/service.py",
+      "workspace_sha256": "c7fb17758da30706f163a2a0bb1dbeaac415e598d569bb39ee908be42563ca20",
+      "committed_dev_sha256": "c7fb17758da30706f163a2a0bb1dbeaac415e598d569bb39ee908be42563ca20",
+      "byte_equal": true,
+      "lf_equal": true
+    },
+    {
+      "path": "src/processforge_core/sqlite_storage.py",
+      "workspace_sha256": "74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572",
+      "committed_dev_sha256": "74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572",
+      "byte_equal": true,
+      "lf_equal": true
+    },
+    {
+      "path": "src/processforge_core/resources/index_backend.py",
+      "workspace_sha256": "9dc6dedae6df7215820d8c3570b853e44724f816fbb78e6be4a53d8cba143384",
+      "committed_dev_sha256": "9dc6dedae6df7215820d8c3570b853e44724f816fbb78e6be4a53d8cba143384",
+      "byte_equal": true,
+      "lf_equal": true
+    }
+  ],
+  "product_changes": false,
+  "backend_switch_tests": "not_run: alternate SQL implementations are absent; planning-only scope"
+}

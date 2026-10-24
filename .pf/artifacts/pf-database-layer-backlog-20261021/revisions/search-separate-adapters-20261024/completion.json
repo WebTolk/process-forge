@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "base_task": "pf-database-layer-and-journals-20261021",
+  "successor": {
+    "run_id": "garage-db-separate-search-decision-and-adapter-readiness-20261024-record",
+    "assignment_id": "db-separate-search-decision-and-adapter-readiness-20261024-record-operat",
+    "action": "run_completed",
+    "status": "completed",
+    "capsule_checksum": "sha256:075ead9b3bbba74a0eaf2db93d6aeb99b13e6851155e13a3c37f46dfa7327b5f",
+    "completion": {
+      "requirements": [],
+      "status": "complete"
+    }
+  },
+  "completed_stages": [
+    "orchestration",
+    "intake-scope",
+    "investigation",
+    "domain-modeling",
+    "architecture-plan",
+    "implementation",
+    "code-assurance",
+    "release-delivery",
+    "evolve"
+  ],
+  "search_storage": "separate_database; operator requirement approved",
+  "generic_sql_backend_switching_ready": false,
+  "original_db_implementation": "open and unstarted by this clarification",
+  "product_or_database_changes": false
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T04:49:15.171303+00:00",
+  "status": "pass",
+  "command": "python -B -X utf8 .pf/tmp/db-search-adapters-20261024/validate_documents.py",
+  "exit_code": 0,
+  "json_reference_digest_and_decision_flags": "pass",
+  "markdown_links_and_whitespace": "pass",
+  "source_readiness_evidence": "workspace/dev LF comparisons agree for all four inspected files",
+  "original_source_inputs_capsule_and_index_preserved": true,
+  "protected_hashes": {
+    ".git/index": "774704dec052293631b296f434f401ca328d6da8b70cecb27e4bee1ddbf11588",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/spec.md": "6a3a0ca4c430e503af1a4f65bc8126d7cd5f875120d99a8fe3882029020af5cb",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/requirements.md": "3a3a35762e2e52da968897a75dc18d1261d95dc2783938712a29b33054c13716",
+    ".pf/assignments/pf-database-layer-and-journals-20261021.yaml": "e5945a6a2c9306912acb74d30d9e9dccd71c802d4fe2ab65f8a45415355102cb",
+    ".pf/contexts/project-context.snapshot.yaml": "c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+    ".pf/contexts/assignment-capsules/db-separate-search-decision-and-adapter-readiness-20261024-record-operat.capsule.yaml": "075ead9b3bbba74a0eaf2db93d6aeb99b13e6851155e13a3c37f46dfa7327b5f",
+    "src/processforge_core/accounting/composition.py": "08ec66c8db93467e815ff82e7dee606662d2a7a26cfd4c20c011793fb60b3c16",
+    "src/processforge_core/accounting/service.py": "c7fb17758da30706f163a2a0bb1dbeaac415e598d569bb39ee908be42563ca20",
+    "src/processforge_core/sqlite_storage.py": "74bacb4c68fe9db06f2277c442f7da98fe2f25dcc79e7043790d295a60280572",
+    "src/processforge_core/resources/index_backend.py": "9dc6dedae6df7215820d8c3570b853e44724f816fbb78e6be4a53d8cba143384"
+  },
+  "search_storage": "separate_database",
+  "sql_backend_switching_ready": false,
+  "product_pytest_ruff_mypy_browser": "not_applicable: document-only planning revision, no executable product changes",
+  "database_switch_test": "not_run; no alternate implementation and no implementation authority"
+}

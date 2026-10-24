@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "files": [
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/search-separate-adapters-20261024/requirements.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/search-separate-adapters-20261024/report.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/search-separate-adapters-20261024/adapter-readiness.json",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/search-separate-adapters-20261024/validation.json",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/search-separate-adapters-20261024/changed-files.json",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/current-requirements.json",
+    ".pf/logs/db-search-adapters-20261024-primary.md"
+  ],
+  "product_code_changed": false,
+  "database_operations": false,
+  "original_approved_revisions_and_inputs": "preserved"
+}

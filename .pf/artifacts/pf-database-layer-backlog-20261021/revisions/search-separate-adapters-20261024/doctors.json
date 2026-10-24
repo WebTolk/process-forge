@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T04:50:07.720778+00:00",
+  "status": "pass",
+  "doctors": {
+    "run": {
+      "exit_code": 0,
+      "pass_lines": 21,
+      "fail_lines": 0
+    },
+    "capsule": {
+      "exit_code": 0,
+      "pass_lines": 12,
+      "fail_lines": 0
+    }
+  },
+  "original_inputs_and_index_preserved": true,
+  "implementation_started": false,
+  "search_storage": "separate_database",
+  "native_lifecycle": "run_completed"
+}
