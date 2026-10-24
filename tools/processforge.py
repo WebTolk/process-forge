@@ -4522,6 +4522,8 @@ def _project_context_check_result(project_root: Path, *, explicit_workplace: str
 
 
 def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7, explicit_workplace: str | None = None) -> dict[str, Any]:
+    from typing import cast
+
     from processforge_core.prepared.registry_resources import tool_snapshot_record
     from processforge_core.prepared.resources import REVOKED_STATUSES
 
@@ -4567,7 +4569,11 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     providers = _CapabilityRegistryReader(project_root).read(workplace_manifest_path)
     required_records, optional_records = _ProjectContextReadinessPolicy().capabilities(required, optional, providers)
     classification = _project_discovery_reader.classify_project(project_root, workplace_manifest_path)
-    manifest_platform_contracts = manifest_data.get("platform_contracts") if isinstance(manifest_data.get("platform_contracts"), list) else []
+    manifest_platform_contracts = (
+        cast(list[Any], manifest_data.get("platform_contracts"))
+        if isinstance(manifest_data.get("platform_contracts"), list)
+        else []
+    )
     manifest_platform_ids = [
         str(item.get("platform") or str(item.get("id", "")).removeprefix("platform."))
         for item in manifest_platform_contracts
@@ -4589,9 +4595,17 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         platform_selection = {"status": "not_selected", "reason": "No platform contracts were selected for this project."}
     package_index_ids = set(_project_package_catalog_reader.index(project_root, distribution_root, workplace_manifest_path))
     required_resource_missing, recommended_resource_missing = _project_platform_selection_service.resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
-    process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
+    process_refs = (
+        cast(list[Any], manifest_data.get("processes"))
+        if isinstance(manifest_data.get("processes"), list)
+        else []
+    )
     process_selection = project_process_selection(manifest_data)
-    package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
+    package_refs = (
+        cast(list[Any], manifest_data.get("packages"))
+        if isinstance(manifest_data.get("packages"), list)
+        else []
+    )
     # An implicit task-batch fallback is a work-start default, not a project
     # resource-profile selection. Preserve the legacy generic-project snapshot
     # until a project explicitly declares a process or multi-process mapping.
@@ -4732,7 +4746,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     )
     resource_readiness = readiness_policy.resources(
         platform_resolution=platform_resolution,
-        required_resource_missing=required_resource_missing,
+        required_resource_missing=[str(item) for item in required_resource_missing],
         specialization_conflicts=specialization_context["conflicts"],
         parameter_conflicts=parameter_resolution["conflicts"],
     )
