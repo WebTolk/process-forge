@@ -1,0 +1,43 @@
+{
+  "kind": "pf.connected_mcp_acceptance",
+  "status": "pass",
+  "at": "2026-10-23T21:01:46.559328+00:00",
+  "installed_version": "1.3.0-alpha4",
+  "source_commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f",
+  "archive_sha256": "52474515eb6cbf59c7a307481a16ab717391c1616a6c924fd6d9156e8ee1aaf2",
+  "managed_files": 1497,
+  "all_managed_hashes_match": true,
+  "actual_process_entrypoint": "tools/pf_runtime/mcp_server.py",
+  "actual_process_uses_installed_distribution": true,
+  "actual_process_started_after_apply": true,
+  "actual_connected_host_not_fixture_stdio": true,
+  "session_hook_online": true,
+  "snapshot_id": "ctx-20261021-162229-c46ea2",
+  "snapshot_sha256": "sha256:c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+  "mcp_context_status": "fresh",
+  "cli_context_status": "fresh",
+  "policy_action": "continue",
+  "exact_work_validation": "valid",
+  "exact_work_execution_readiness": "ready",
+  "work_search": {
+    "status": "ready",
+    "total": 79,
+    "coverage": {
+      "authorized_resources": 7,
+      "documents": 80,
+      "source": "verified_work_material",
+      "status": "complete",
+      "verified_resources": 7
+    }
+  },
+  "python_resolve": "ready",
+  "global_project_search": {
+    "status": "stale",
+    "reason": "allowed_resources_changed",
+    "missing_project_derived_resources": 2,
+    "existing_boundary_preserved": true
+  },
+  "initial_parallel_queries": "three60s timeout receipts retained; sequential native MCP context/search/resolve succeeded",
+  "known_version_literal_defect": "alpha4 facade and monitor still contain1.2.0; separate alpha5 R03 task fixes this; not evidence of an old MCP binary",
+  "new_apply_or_restart": false
+}
