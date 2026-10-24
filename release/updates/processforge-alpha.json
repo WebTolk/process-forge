@@ -4,10 +4,10 @@
     "id": "processforge",
     "name": "ProcessForge"
   },
-  "generated_at": "2026-10-23T14:55:45Z",
+  "generated_at": "2026-10-24T01:19:07Z",
   "channels": {
     "alpha": {
-      "latest": "1.3.0-alpha4"
+      "latest": "1.3.0-alpha5"
     }
   },
   "subjects": [
@@ -16,6 +16,65 @@
       "id": "processforge",
       "name": "ProcessForge",
       "versions": [
+        {
+          "version": "1.3.0-alpha5",
+          "channels": [
+            "alpha"
+          ],
+          "stability": "alpha",
+          "prerelease": true,
+          "released_at": "2026-10-24",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.3.0-alpha5",
+            "commit": "af68fecfc539959d2b732e45016f5d09a700ec3d"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha5"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha5/processforge-1.3.0-alpha5.zip",
+              "size": 2938278,
+              "sha256": "5bba94c513b5bbf3261f1c64ca8a8f537b2d8e4aac47d89597a70ba230eb79d3",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha5/processforge-1.3.0-alpha5.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "core",
+              "summary": "Canonical owning-distribution CoreProperties with frozen loaded and live installed metadata"
+            },
+            {
+              "area": "runtime",
+              "summary": "Versioned build-aware state and doctor diagnose same-label replacement without changing guards"
+            },
+            {
+              "area": "mcp",
+              "summary": "Actual serving-process provenance reports build identity and reconnect requirement"
+            },
+            {
+              "area": "monitor",
+              "summary": "Monitor and console receive their Core version from the shared object owner"
+            },
+            {
+              "area": "maintenance",
+              "summary": "Cumulative explicit shared search-index and verified SQLite maintenance from earlier alphas"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0-alpha5/release/1.3.0-alpha5/notes.md"
+          }
+        },
         {
           "version": "1.3.0-alpha4",
           "channels": [
