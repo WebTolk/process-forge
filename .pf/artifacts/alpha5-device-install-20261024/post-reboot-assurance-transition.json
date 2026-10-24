@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "action": "stage_transitioned",
+  "previous_stage_id": "code-assurance",
+  "stage": {
+    "id": "release-delivery",
+    "status": "in_progress",
+    "title": "Release Delivery"
+  },
+  "run": {
+    "id": "garage-alpha5-dev-device-delivery-20261024-install-and-use-the-exact-ind",
+    "status": "in_progress"
+  },
+  "assignment": {
+    "id": "alpha5-dev-device-delivery-20261024-install-and-use-the-exact-independen",
+    "status": "in_progress"
+  },
+  "context": {
+    "id": "alpha5-dev-device-delivery-20261024-install-and-use-the-exact-independen-capsule",
+    "checksum": "sha256:3c923cfd8deb7069258a1224106a35ac73b9e738d4d42e7f24bd8d8fad2ee7a2",
+    "validation": "valid"
+  },
+  "recorded_evidence": [
+    {
+      "artifact_id": "test-report",
+      "authoring_review": {
+        "advisory": true,
+        "coverage": "text_and_simple_inline_links",
+        "findings": [],
+        "limits_reached": [],
+        "producer": "pf.artifact-authoring",
+        "reviewed_sha256": "sha256:6d8e731a898ddd9fef9d1cc5e9979d2ec34da6ec8643c3f5d6748ecdad75b495",
+        "schema_version": 1,
+        "status": "reviewed"
+      },
+      "kind": "artifact",
+      "path": ".pf/artifacts/alpha5-device-install-20261024/post-reboot-test-report.md",
+      "recorded_at": "2026-10-24T03:31:10Z",
+      "sha256": "sha256:6d8e731a898ddd9fef9d1cc5e9979d2ec34da6ec8643c3f5d6748ecdad75b495",
+      "status": "ready"
+    },
+    {
+      "artifact_id": "code-quality-report",
+      "authoring_review": {
+        "advisory": true,
+        "coverage": "text_and_simple_inline_links",
+        "findings": [],
+        "limits_reached": [],
+        "producer": "pf.artifact-authoring",
+        "reviewed_sha256": "sha256:af522c6bba2bd91854e7d5e515bb7cf29255e255e5a468701d678085f92d1dfb",
+        "schema_version": 1,
+        "status": "reviewed"
+      },
+      "kind": "artifact",
+      "path": ".pf/artifacts/alpha5-device-install-20261024/post-reboot-code-quality-report.md",
+      "recorded_at": "2026-10-24T03:31:10Z",
+      "sha256": "sha256:af522c6bba2bd91854e7d5e515bb7cf29255e255e5a468701d678085f92d1dfb",
+      "status": "ready"
+    }
+  ],
+  "assurance_gate": {
+    "authoring_review": {
+      "advisory": true,
+      "coverage": "not_inspected",
+      "findings": [],
+      "limits_reached": [],
+      "producer": "pf.artifact-authoring",
+      "reason": "unsupported_format",
+      "schema_version": 1,
+      "status": "skipped"
+    },
+    "gate_id": "assurance-complete",
+    "kind": "gate",
+    "path": ".pf/artifacts/alpha5-device-install-20261024/post-reboot-device-acceptance-decision.json",
+    "recorded_at": "2026-10-24T03:31:10Z",
+    "sha256": "sha256:1466ca95af27adb4f3171e6a04294e848293fd9f799a349743dc5a2a17c1d448",
+    "status": "approved"
+  }
+}

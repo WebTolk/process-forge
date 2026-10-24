@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T03:33:45.841284+00:00",
+  "action": "run_completed",
+  "run_id": "garage-alpha5-dev-device-delivery-20261024-install-and-use-the-exact-ind",
+  "assignment_id": "alpha5-dev-device-delivery-20261024-install-and-use-the-exact-independen",
+  "doctors": {
+    "run": {
+      "exit_code": 0,
+      "pass_lines": 21,
+      "fail_lines": 0
+    },
+    "capsule": {
+      "exit_code": 0,
+      "pass_lines": 12,
+      "fail_lines": 0
+    }
+  },
+  "snapshot_sha256": "c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+  "capsule_sha256": "3c923cfd8deb7069258a1224106a35ac73b9e738d4d42e7f24bd8d8fad2ee7a2",
+  "unknown_core_files_preserved": true,
+  "unknown_core_file_count": 77,
+  "source_preservation": {
+    "foreign_files_and_main_index_preserved": true,
+    "hash_checks": 8
+  },
+  "private_verification_helpers_retained_as_evidence": true
+}

@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "kind": "pf.device_acceptance_decision",
+  "at": "2026-10-24T03:30:51.723622+00:00",
+  "version": "1.3.0-alpha5",
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "archive_sha256": "5bba94c513b5bbf3261f1c64ca8a8f537b2d8e4aac47d89597a70ba230eb79d3",
+  "installed_payload": "pass",
+  "installed_managed_hashes_verified": 1500,
+  "installed_manifest_sha256": "2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+  "physical_cli": "pass",
+  "physical_library": "pass",
+  "product_checks": "pass",
+  "known_product_defects": [],
+  "known_product_defects_scope": "Delivered R03 delta and installed acceptance; existing source lint/type debt is disclosed separately",
+  "installed_copy_pytest": {
+    "exit_code": 0,
+    "summary": "858 passed, 7 skipped, 383 subtests passed in 387.88s (0:06:27)"
+  },
+  "installed_copy_native_smokes": {
+    "checks": 8,
+    "passed": 8
+  },
+  "physical_context_and_work_search": "pass",
+  "configuration_unknown_files_and_search_index_preserved": true,
+  "actual_runtime": "pass",
+  "actual_connected_mcp": "pass",
+  "overall_device_acceptance": "pass",
+  "pending_gates": [],
+  "guard_bypassed": false,
+  "repeat_apply_or_host_restart": false,
+  "public_alpha_product_qualification": "pass; actual external process gates are explicitly separate",
+  "source_preservation": {
+    "foreign_files_and_main_index_preserved": true,
+    "hash_checks": 8
+  },
+  "supersedes": "device-acceptance-decision.json (checkpoint retained byte-identically)",
+  "build_id": "manifest:sha256:2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+  "qualification": "Exact installed alpha5 device and actual post-reboot processes; broader OOP and global index maintenance remain outside this Work",
+  "actual_runtime_evidence": {
+    "state_schema_version": 2,
+    "core_identity": {
+      "schema_version": 1,
+      "loaded": {
+        "version": "1.3.0-alpha5",
+        "build_id": "manifest:sha256:2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+        "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+        "source_kind": "manifest",
+        "status": "ready",
+        "reason": ""
+      },
+      "installed": {
+        "version": "1.3.0-alpha5",
+        "build_id": "manifest:sha256:2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+        "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+        "source_kind": "manifest",
+        "status": "ready",
+        "reason": ""
+      },
+      "status": "current",
+      "reason": "",
+      "reload_required": false,
+      "required_action": "none"
+    },
+    "health": "ready",
+    "scheduler_alive": true,
+    "owner_lock_readyz_and_process": "pass",
+    "doctor_exit_code": 0
+  },
+  "actual_connected_mcp_evidence": {
+    "contract_version": 2,
+    "core_identity": {
+      "installed": {
+        "build_id": "manifest:sha256:2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+        "reason": "",
+        "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+        "source_kind": "manifest",
+        "status": "ready",
+        "version": "1.3.0-alpha5"
+      },
+      "loaded": {
+        "build_id": "manifest:sha256:2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+        "reason": "",
+        "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+        "source_kind": "manifest",
+        "status": "ready",
+        "version": "1.3.0-alpha5"
+      },
+      "reason": "",
+      "reload_required": false,
+      "required_action": "none",
+      "schema_version": 1,
+      "status": "current"
+    },
+    "connected_host_build": "manifest:sha256:2df87b89853b2df2000e8da85d05fcc8c226b9c24ac92dd86e85af74c89365ee",
+    "process_after_apply": true,
+    "registered_installed_distribution": true,
+    "context": {
+      "policy_action": "continue",
+      "recommended_action": "continue",
+      "snapshot_id": "ctx-20261021-162229-c46ea2",
+      "status": "fresh"
+    },
+    "work_search": {
+      "status": "ready",
+      "coverage": {
+        "authorized_resources": 7,
+        "documents": 80,
+        "source": "verified_work_material",
+        "status": "complete",
+        "verified_resources": 7
+      },
+      "total": 79
+    },
+    "positive_python_resolve": "pass: exact Work verified docs.python:root",
+    "negative_resource_resolve": "resource_not_in_work"
+  },
+  "historical_guard_refusal_retained": true,
+  "operator_reboot_resolved_process_boundary": true,
+  "agent_restarts_or_repeated_apply": false,
+  "initial_degraded_observation_retained": true,
+  "last_authenticated_observation": "ready; scheduler_alive=true; no last_status_error or last_scheduler_error; native timeout unchanged",
+  "residual_limits": [
+    "Derived project-context search stale: allowed_resources_changed, five of seven resources indexed; exact Work material complete seven of seven",
+    "Runtime session/work/worker counts remain partial with explicit unknown totals",
+    "One initial degraded Runtime observation followed by a successful native authenticated ready observation; cause not established"
+  ]
+}

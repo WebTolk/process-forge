@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "pf.delivery_review_findings",
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "product_code_changed": false,
+  "independent_source_review": "review-v2 GO/pass on same installed managed bytes",
+  "additional_independent_delivery_review": "not_applicable: release_delivery requires_review=false; only observation/evidence changes",
+  "reviewer_impersonated": false,
+  "open_blocking_findings": [],
+  "pending_acceptance": [],
+  "assurance_complete": true,
+  "retained_observations": [
+    "Derived project-context search stale: allowed_resources_changed, five of seven resources indexed; exact Work material complete seven of seven",
+    "Runtime session/work/worker counts remain partial with explicit unknown totals",
+    "One initial degraded Runtime observation followed by a successful native authenticated ready observation; cause not established"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "action": "run_completed",
+  "run": {
+    "id": "garage-alpha5-dev-device-delivery-20261024-install-and-use-the-exact-ind",
+    "status": "completed"
+  },
+  "assignment": {
+    "id": "alpha5-dev-device-delivery-20261024-install-and-use-the-exact-independen",
+    "status": "done"
+  },
+  "stage": {
+    "id": "evolve",
+    "status": "completed",
+    "title": "Evolve"
+  },
+  "completion": {
+    "requirements": [],
+    "status": "complete"
+  },
+  "context_id": "alpha5-dev-device-delivery-20261024-install-and-use-the-exact-independen-capsule",
+  "capsule_checksum": "sha256:3c923cfd8deb7069258a1224106a35ac73b9e738d4d42e7f24bd8d8fad2ee7a2",
+  "blocking_findings": [],
+  "completed_stages": [
+    "code-assurance",
+    "release-delivery",
+    "evolve"
+  ],
+  "summary": "Actual alpha5 device and post-reboot Runtime/MCP accepted; current result post-reboot-device-acceptance-decision.json; preserved original checkpoint and residual limits."
+}
