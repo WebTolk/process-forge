@@ -1,0 +1,715 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-24",
+  "status": "ready_for_review",
+  "approved": false,
+  "kind": "implementation_contract",
+  "identity": {
+    "project_id": "process-forge",
+    "run_id": "pf-r02-contract-20261024",
+    "assignment_id": "pf-r02-w1-contract-20261024",
+    "context_id": "pf-r02-w1-contract-20261024-capsule",
+    "attempt": 1
+  },
+  "basis": {
+    "input_fingerprint": "sha256:ebeaafe5f05bf3978339339fc6657b7a70368be05b3d63406c6453cd55b6fc81",
+    "capsule_checksum": "sha256:cfb884ea176a7a3826fd9df6a9d5294c1339022fd0341875d7e3d2eb99de1f23",
+    "capsule_verified": true,
+    "design_attempt": 2,
+    "inputs": [
+      "orchestration/contract-brief.md",
+      "orchestration/plan.md",
+      "w1-domain/report.md",
+      "w1-domain/implementation-map.json",
+      "w2-driver/report.md",
+      "w2-driver/implementation-map.json",
+      "w3-runtime/report.md",
+      "w3-runtime/implementation-map.json",
+      "w4-migration/report.md",
+      "w4-migration/implementation-map.json"
+    ],
+    "inputs_base": ".pf/artifacts/pf-r02-storage-foundation-20261024/",
+    "implementation_authorized_by_this_artifact": false
+  },
+  "scope": {
+    "include": [
+      "Public synchronous PF SQL API with SQLite backend",
+      "Project-owned worker attempts, current physical executions, indexed heads and bounded history",
+      "Existing CLI/MCP and service-independent file-only composition",
+      "Explicit deterministic worker snapshot migration and recoverable projection"
+    ],
+    "defer": [
+      "Migration/refactoring of accounting, events, hooks, Ledger, chat and canonical Work YAML",
+      "Activation/creation of workplace main database",
+      "Server drivers, ORM, SQL builder, dynamic driver registry, async/pools, RAG, scheduler, global updater",
+      "Lossless reverse SQL-to-legacy export"
+    ],
+    "authority": [
+      "Run/assignment stages remain YAML-owned; task_id is the existing assignment id, not a new entity",
+      "Capsules/prepared inputs and substantive artifacts remain immutable files",
+      "Project SQL owns interpreted execution facts after cutover; status.json is generated",
+      "Receipts are evidence, not independent lifecycle writers; Ledger session ownership is unchanged",
+      "This is transitional topology, not completed consolidation"
+    ],
+    "no_live_migration": true
+  },
+  "topology": {
+    "package": "processforge_core.database",
+    "execution_package": "processforge_core.executions",
+    "project_main": "ProjectMetadataReader(project_root).flow_root() / 'data' / 'pf.sqlite3'",
+    "project_profile_path_base": "actual flow root; default path is data/pf.sqlite3, never .pf/data relative to flow root",
+    "workplace_future": "data/pf.sqlite3 relative to explicitly selected workplace; not activated by this slice",
+    "search": "Existing separate derived search database",
+    "legacy": "Events/hooks/accounting retain current files, IDs and application_id; do not redirect legacy factories to PF main",
+    "identity": "Migration and fresh SQL initialization require explicit nonempty manifest project.id. Reject root-name fallback as unstable; never silently mint/change existing IDs."
+  },
+  "database": {
+    "modules": {
+      "database/contracts.py": [
+        "SqlValue",
+        "SqlStatement",
+        "SqlRow",
+        "WriteResult",
+        "DatabaseIdentity",
+        "DatabaseTarget",
+        "DatabaseCapabilities",
+        "SqlSession",
+        "DatabaseDriver",
+        "Database"
+      ],
+      "database/errors.py": [
+        "DatabaseError"
+      ],
+      "database/sqlite.py": [
+        "SQLiteDriver"
+      ],
+      "database/schema.py": [
+        "SchemaDefinition",
+        "SchemaStatus",
+        "SchemaManager"
+      ],
+      "database/composition.py": [
+        "DatabaseFactory"
+      ],
+      "configuration/database.py": [
+        "DatabaseProfile",
+        "DatabaseConfig"
+      ]
+    },
+    "dto": {
+      "SqlValue": "None | int | float | str | bytes; reject bool, out-of-int64 and nonfinite floats",
+      "SqlStatement": "frozen dataclass(text: str, params: tuple[SqlValue, ...] = (), dialect: Literal['sqlite'] = 'sqlite')",
+      "SqlRow": "frozen dataclass(columns: tuple[str,...], values: tuple[SqlValue,...]); __getitem__(key: int | str) -> SqlValue; duplicate column names rejected",
+      "WriteResult": "frozen dataclass(affected_rows: int | None, last_insert_id: int | None)",
+      "DatabaseIdentity": "frozen dataclass(store_id: str | None, scope: Literal['project','workplace'], owner_id: str); persisted/normal-operation store_id is UUID hex. None is permitted only as an expected-identity wildcard for noncreating SchemaManager.inspect discovery; actual SchemaStatus identity is concrete.",
+      "DatabaseTarget": "frozen dataclass(path: Path, identity: DatabaseIdentity); host supplies validated authorized target",
+      "DatabaseCapabilities": "frozen dataclass(transactions: bool, read_snapshots: bool, foreign_keys: bool, transactional_ddl: bool, online_backup: bool)",
+      "SchemaDefinition": "frozen dataclass(namespace: str, version: int, statements: tuple[str,...], checksum: str); checksum SHA256 of canonical JSON {namespace,version,statements}",
+      "SchemaStatus": "frozen dataclass(identity: DatabaseIdentity | None, state: Literal['missing','ready','migration_required','unsupported'], versions: tuple[tuple[str,int,str],...]); foreign/corrupt errors raise DatabaseError"
+    },
+    "signatures": [
+      "DatabaseFactory.from_profile(config: DatabaseConfig | None, profile_id: str, authorized_target: DatabaseTarget) -> Database",
+      "Database.__init__(driver: DatabaseDriver, target: DatabaseTarget, *, timeout_ms: int = 100)",
+      "Database.read(*, deadline: float | None = None) -> AbstractContextManager[SqlSession]",
+      "Database.transaction(*, deadline: float | None = None) -> AbstractContextManager[SqlSession]",
+      "DatabaseDriver.open(target: DatabaseTarget, *, mode: Literal['ro','rw','create'], timeout_ms: int, deadline: float | None = None) -> AbstractContextManager[SqlSession]",
+      "SqlSession.fetch_one(statement: SqlStatement) -> SqlRow | None",
+      "SqlSession.stream(statement: SqlStatement, *, batch_size: int = 256) -> AbstractContextManager[Iterator[SqlRow]]",
+      "SqlSession.execute(statement: SqlStatement) -> WriteResult",
+      "SqlSession.execute_many(statement: SqlStatement, rows: Sequence[tuple[SqlValue,...]]) -> WriteResult",
+      "SchemaManager.inspect(database: Database, requirements: tuple[SchemaDefinition,...]) -> SchemaStatus",
+      "SchemaManager.initialize(database: Database, schemas: tuple[SchemaDefinition,...]) -> SchemaStatus",
+      "SchemaManager.apply(database: Database, schemas: tuple[SchemaDefinition,...]) -> SchemaStatus"
+    ],
+    "semantics": [
+      "Construct/import/factory is cold: no connect, mkdir, bootstrap or singleton. Closed mapping sqlite -> SQLiteDriver; only required capabilities listed above are mandatory for execution repository.",
+      "SQL dialect is SQLite with ? bound values. No portability claim for SQL text; future backend replaces repository adapter, not domain ports.",
+      "Database.read uses ro/noncreation, BEGIN snapshot, rollback/close on exit. transaction uses existing rw only, BEGIN IMMEDIATE, commit on success, rollback on BaseException; no implicit create, nested transaction or retry.",
+      "Only SchemaManager uses create/admin DDL/PRAGMA. initialize rejects existing/nonempty/foreign stores; apply can add an absent known namespace to a valid envelope but cannot upgrade an existing namespace in R02. Same version/checksum is no-op; drift/future version refuses.",
+      "WAL is set/verified during initialize/apply; FULL and FK=ON are verified for writes. No weakening durability. No connection/cursor escapes; ro is enforced, not inferred from SQL verb.",
+      "Driver admin channel is private to SchemaManager. Public SqlSession is for parameterized repository DML/queries, not an arbitrary untrusted SQL sandbox; no home-grown SQL parser/security promise.",
+      "stream batch_size 1..1000; execute_many <=10000 rows and statement.params must be empty; close cursor on early exit; sessions are operation/thread-bound.",
+      "deadline is absolute time.monotonic; SQLite busy timeout is min(profile timeout, remaining budget), progress handler checks query deadline. A 100 ms DB default does not enlarge the 500 ms guard deadline.",
+      "No DB transaction across Popen/wait, signals, output reads, backup, full scan or projection I/O.",
+      "DatabaseError(code: str, retryable: bool = False) contains no raw exception/SQL/params/private target. Existing public adapters retain their payloads and exit/error mapping.",
+      "Database.read/transaction and factory normal use require concrete store_id. Only SchemaManager.inspect may use DatabaseTarget.identity.store_id=None to discover an existing main envelope while still checking scope/owner/application_id; discovery does not bind a project or authorize data reads. Missing returns missing, never creates."
+    ],
+    "errors": [
+      "database_profile_invalid",
+      "database_driver_unsupported",
+      "database_dialect_unsupported",
+      "database_missing",
+      "database_busy",
+      "database_deadline_exceeded",
+      "database_io_failed",
+      "database_constraint_failed",
+      "database_corrupt",
+      "database_foreign",
+      "database_schema_unsupported",
+      "database_migration_required",
+      "database_capability_unsupported"
+    ],
+    "profiles": {
+      "shape": "optional database: {profiles: {<id>: {scope, driver, path, timeout_ms}}, defaults: {project_main?: <id>, workplace_main?: <id>}}",
+      "type": "DatabaseProfile(scope: Literal['project','workplace'], driver: Literal['sqlite'], path: str, timeout_ms: int = 100); DatabaseConfig(profiles: immutable mapping[str,DatabaseProfile], defaults: immutable mapping[str,str])",
+      "validation": "Unknown keys/options rejected; profile IDs [a-z][a-z0-9_-]{0,63}; relative contained paths only, no CWD/env expansion, '..', symlink/reparse escape; timeout_ms exact int 0..30000. First slice has no application scope, driver_options, codecs or registry.",
+      "inheritance": "Project config permits only project profiles and project_main. Reject name collisions and workplace overrides. Absent database stays absent in to_dict/get/update/reset and old payloads; preserve old parsing and unknown-key errors.",
+      "binding": "Profile grants no access. Factory requires resolved host-authorized target and matching profile scope/path. Construct only; SchemaManager checks physical identity. Binding pins store_id/path; config reload must not switch existing execution target. Changed path/identity requires explicit maintenance.",
+      "defaults": "Without section use nonpersisted project profile data/pf.sqlite3; do not initialize workplace storage. Do not serialize profiles just to use defaults."
+    }
+  },
+  "envelope": {
+    "application_id": "0x50464D31",
+    "user_version": 1,
+    "owner": "W2",
+    "namespace_rules": "Physical envelope version only; domain schemas use pf_schema_versions. Namespace constants execution@1 (W3), execution_migration@1 (W4). No accounting/events/hooks namespaces registered in R02.",
+    "ddl": [
+      "CREATE TABLE pf_store_meta(singleton INTEGER PRIMARY KEY CHECK(singleton=1),store_id TEXT NOT NULL UNIQUE,scope TEXT NOT NULL CHECK(scope IN ('project','workplace')),owner_id TEXT NOT NULL,format_version INTEGER NOT NULL CHECK(format_version=1))",
+      "CREATE TABLE pf_schema_versions(namespace TEXT PRIMARY KEY,version INTEGER NOT NULL CHECK(version>=1),checksum TEXT NOT NULL)"
+    ],
+    "rule": "Verify application_id/user_version/store_id/scope/owner before domain access. Namespace DDL+checksum registration is atomic. All statements/checksums are code-owned; no arbitrary namespace/SQL from user config."
+  },
+  "execution": {
+    "identity": "ExecutionKey(project_id, run_id, task_id, attempt); task_id == assignment_id. All identifiers preserved exactly after validation; no second normalization or path-based identity.",
+    "modules": {
+      "model": "executions/model.py",
+      "ports": "executions/ports.py",
+      "schema": "executions/schema.py",
+      "repository": "executions/sqlite_repository.py",
+      "service": "executions/service.py",
+      "projection": "executions/projection.py",
+      "composition": "executions/composition.py"
+    },
+    "dto": {
+      "ExecutionKey": "frozen dataclass(project_id: str, run_id: str, task_id: str, attempt: int); attempt>=1, bool rejected",
+      "ProcessIdentity": "frozen dataclass(host_id: str, boot_id: str | None, pid: int, birth_id: str, tree_id: str | None); opaque OS-derived birth/tree identity, never PID alone",
+      "StorageReadiness": "frozen dataclass(authority: Literal['legacy','sql'], ready: bool, active_coverage: Literal['complete','unknown'], generation: int, store_id: str | None, reason: str | None)",
+      "ExecutionRecord": "frozen dataclass(key: ExecutionKey, launch_token: str | None, revision: int, generation: int, phase: Literal['prepared','starting','running','stopping','unresolved','absent'], outcome: str | None, collection: Literal['pending','collected','failed','refused'], process: ProcessIdentity | None, history_seq: int | None, payload_json: str, projected_revision: int)",
+      "CurrentSnapshot": "frozen dataclass(readiness: StorageReadiness, records: tuple[ExecutionRecord,...], complete: bool, revision: int); records contain current executions only",
+      "HistoryPage": "frozen dataclass(records: tuple[ExecutionRecord,...], after: int | None, high_water: int)",
+      "ExecutionObservation": "frozen dataclass(key: ExecutionKey, launch_token: str, receipt_kind: Literal['process','heartbeat','exit','absence','spawn_failed'], sequence: int, checksum: str, process: ProcessIdentity | None, observed_at: str, status: str | None = None, exit_code: int | None = None, tree_absent: bool = False); validated evidence only, checksum of canonical receipt",
+      "ExecutionError": "Exception(code: str); stale_revision, stale_generation, receipt_conflict, execution_identity_conflict, execution_activity_unknown, execution_storage_not_ready"
+    },
+    "ports": [
+      "ExecutionRepository.readiness(*, deadline: float | None = None) -> StorageReadiness",
+      "ExecutionRepository.load_latest(run_id: str, task_id: str) -> ExecutionRecord | None",
+      "ExecutionRepository.load(key: ExecutionKey) -> ExecutionRecord | None",
+      "ExecutionRepository.allocate_attempt(run_id: str, task_id: str, payload_json: str, *, generation: int) -> ExecutionRecord",
+      "ExecutionRepository.reserve_start(key: ExecutionKey, *, expected_revision: int, generation: int, launch_token: str) -> ExecutionRecord",
+      "ExecutionRepository.apply_observation(observation: ExecutionObservation, *, expected_revision: int, generation: int) -> ExecutionRecord",
+      "ExecutionRepository.request_stop(key: ExecutionKey, *, launch_token: str, expected_revision: int, generation: int) -> ExecutionRecord",
+      "ExecutionRepository.record_collection(key: ExecutionKey, collection: Literal['collected','failed','refused'], payload_json: str, *, expected_revision: int, generation: int) -> ExecutionRecord",
+      "ExecutionRepository.current(*, limit: int = 128, deadline: float | None = None) -> CurrentSnapshot",
+      "ExecutionRepository.page_history(*, after: int = 0, high_water: int | None = None, limit: int = 256) -> HistoryPage",
+      "ExecutionRepository.ack_projection(key: ExecutionKey, *, revision: int, generation: int) -> bool",
+      "SQLiteExecutionRepository.__init__(database: Database, project_id: str)",
+      "ExecutionService.__init__(repository: ExecutionRepository); lifecycle policy and projection DTO production only; OS/CLI composition remains W3"
+    ],
+    "table_columns": {
+      "execution_state": "singleton INTEGER PK CHECK=1; project_id TEXT NOT NULL; generation INTEGER NOT NULL; authority TEXT NOT NULL [legacy|sql]; readiness TEXT NOT NULL [importing|ready]; active_coverage TEXT NOT NULL [complete|unknown]; revision INTEGER NOT NULL; next_history_seq INTEGER NOT NULL; migration_id TEXT NULL; plan_checksum TEXT NULL",
+      "execution_attempts": "project_id TEXT; run_id TEXT; task_id TEXT; attempt INTEGER; launch_token TEXT NULL; revision INTEGER NOT NULL; generation INTEGER NOT NULL; phase TEXT NOT NULL; outcome TEXT NULL; collection TEXT NOT NULL; process_json TEXT NULL; history_seq INTEGER NULL UNIQUE; payload_json TEXT NOT NULL; projected_revision INTEGER NOT NULL DEFAULT 0; source_path TEXT NULL; source_checksum TEXT NULL; semantic_checksum TEXT NULL; PK(project_id,run_id,task_id,attempt)",
+      "execution_heads": "project_id TEXT; run_id TEXT; task_id TEXT; latest_attempt INTEGER NOT NULL; next_attempt INTEGER NOT NULL; projection_dirty INTEGER NOT NULL CHECK IN (0,1); PK(project_id,run_id,task_id); latest key FK execution_attempts",
+      "execution_current": "project_id TEXT; run_id TEXT; task_id TEXT; attempt INTEGER; PK(project_id,run_id,task_id,attempt); FK execution_attempts; UNIQUE(project_id,run_id,task_id)",
+      "execution_receipt_admissions": "project_id TEXT; run_id TEXT; task_id TEXT; attempt INTEGER; launch_token TEXT; kind TEXT; sequence INTEGER NOT NULL; checksum TEXT NOT NULL; PK(project_id,run_id,task_id,attempt,launch_token,kind); FK execution_attempts"
+    },
+    "constraints": [
+      "All key columns NOT NULL; attempts/revisions>=1, generations>=0, next_attempt>latest_attempt, next_history_seq>=1. JSON is validated canonical text by adapters, not by new SQLite JSON extension requirement.",
+      "phase/outcome/collection CHECK enums fixed by DTO; outcome is NULL or completed/failed/timed_out/cancelled/unknown_exit/lost/blocked. Status payload schema_version remains 1.",
+      "execution_state singleton belongs to this project; physical envelope owner and all row project_id must match. Scoped repo never queries another project.",
+      "execution_current contains exactly starting/running/stopping/unresolved, no prepared/absent. Enforce in repository transaction plus invariant tests; absence outcome update and current deletion commit together.",
+      "Index execution_history(project_id,history_seq) WHERE history_seq IS NOT NULL; unique nonnull launch_token; index execution_projection_dirty(project_id,run_id,task_id) WHERE projection_dirty=1.",
+      "Heads allocate next attempt inside BEGIN IMMEDIATE; allocation does not enumerate attempt directories. Refuse next allocation while current ownership exists. A prepared/manual attempt without launch has no current row.",
+      "First proven physical absence allocates monotonic history_seq once; later collection/receipt updates never reorder history. high_water is captured from next_history_seq-1 in first page snapshot; limits 1..1000.",
+      "All writes compare generation and expected revision, increment record revision and execution_state revision. Identical admitted receipt is a no-op even after revision advanced; same sequence/different hash is conflict, lower sequence is stale no-op.",
+      "Admission table stores only latest accepted sequence/hash per kind per launch, not every periodic heartbeat. Process identity immutable after attachment; exit payload cannot turn different PID birth into same process.",
+      "ack_projection changes only projected_revision and heads dirty when latest key/revision still match; it does not increment lifecycle revision. Older attempt cannot overwrite latest projection."
+    ],
+    "current_query": "SELECT selected non-history columns FROM execution_current c JOIN execution_attempts a USING(project_id,run_id,task_id,attempt) WHERE c.project_id=? ORDER BY c.run_id,c.task_id,c.attempt LIMIT ?; fetch limit+1; indexed point reads only of current attempts",
+    "current_semantics": "Read state and rows in one snapshot. More than limit, unknown coverage, unsupported/missing DB or deadline -> incomplete/unknown, never truncation presented as exact zero. Guard does not reconcile, scan history, read completed receipts or send signals.",
+    "lifecycle": [
+      "allocate -> prepared; reserve_start CAS -> starting + current, commit before any Popen",
+      "Popen succeeded -> exact process receipt attachment -> running; failure proven before child creation -> absent/failed + history",
+      "Controller death before attachment retains starting/unresolved and current; no TTL auto-reclaim",
+      "request_stop sets stopping; signal success alone never removes current. Observe wrapper and owned descendants; unresolved observation remains active.",
+      "Terminal exit code and full tree absence -> absent + outcome + atomic current removal. If absence proven but no trustworthy exit -> absent/unknown_exit; do not invent exit success.",
+      "Collection retains existing receipt/capsule/output/semantic-refusal checks; collection failure does not revive a process. Completed/uncollected is physically inactive.",
+      "Late exact-old-attempt evidence may update that old record only; never use load_latest as mutation target."
+    ],
+    "receipts": {
+      "transport": "Retain compatible heartbeat.json/exit.json top-level fields; add private launch identity to producer evidence only, not public status payload. New SQL-managed launches require capable existing wrappers; legacy route accepts old receipts as before.",
+      "environment": [
+        "PF_EXECUTION_PROJECT_ID",
+        "PF_EXECUTION_RUN_ID",
+        "PF_EXECUTION_TASK_ID",
+        "PF_EXECUTION_ATTEMPT",
+        "PF_EXECUTION_LAUNCH_TOKEN"
+      ],
+      "fields": "schema_version=1 plus project_id/run_id/task_id/attempt/launch_token, receipt_kind, sequence, observed_at, process identity where applicable; canonical content checksum excludes its checksum field",
+      "publication": "Write attempt-specific process/heartbeat/exit receipts atomically at existing captured attempt paths, not shared-latest filenames for identity. Controller may retain legacy latest projections. Wrapper publishes its process identity before launching target; target/tree ownership is observed separately.",
+      "security": "Token is random uuid4 hex per physical launch, not a permission. Receipt paths, prepared input and scope checks remain enforced. Imported receipts missing launch identity cannot authorize a new SQL launch.",
+      "os": "W3 owns Windows process creation time and Linux boot_id+/proc start ticks adapters. Unsupported/denied/changed process or unprovable descendants -> unknown. No new psutil dependency or PID-only success. Prove tree absence with existing handle/owned process group/verified tree; if unavailable retain unresolved."
+    },
+    "projection": {
+      "fields": [
+        "schema_version",
+        "run_id",
+        "task_id",
+        "driver_id",
+        "agent_model",
+        "status",
+        "pid",
+        "started_at",
+        "finished_at",
+        "exit_code",
+        "timeout_seconds",
+        "attempt",
+        "max_retries",
+        "capsule_path",
+        "worker_prompt_path",
+        "expected_report_path",
+        "stdout_path",
+        "stderr_path",
+        "heartbeat_path",
+        "last_heartbeat_at",
+        "failure_reason"
+      ],
+      "optional": [
+        "prepared_input",
+        "lost_observed_at"
+      ],
+      "rule": "payload_json is the validated compatibility DTO in the same canonical transaction, not a second editable owner; preserve imported unknown fields as provenance and projection extensions where already present. No launch_token/generation/revision added to public status.",
+      "mapping": "prepared retains planned/ready/manual_required/blocked; starting -> starting; running -> running; stopping -> cancelled with existing stop-request failure_reason while SQL current remains; unresolved -> running with uncertainty reason (or retained cancelled after stop); absent uses outcome. Collected retains completed; failed collection projects failed; semantic refusal retains existing completed/refusal flow, never marks accepted.",
+      "publication": "Under existing task lifecycle lock read authoritative latest DTO, atomic replace status.json, then ack CAS. Failure leaves heads.projection_dirty=1; retry only indexed dirty heads or exact task, no full history rebuild. CLI/MCP/continuation consume SQL after cutover even if projection stale.",
+      "timestamp": "last_heartbeat_at derives from accepted timestamp/fresh evidence, never mere file existence or observation wall-clock."
+    },
+    "ddl": [
+      "CREATE TABLE execution_state(singleton INTEGER PRIMARY KEY CHECK(singleton=1),project_id TEXT NOT NULL,generation INTEGER NOT NULL CHECK(generation>=0),authority TEXT NOT NULL CHECK(authority IN ('legacy','sql')),readiness TEXT NOT NULL CHECK(readiness IN ('importing','ready')),active_coverage TEXT NOT NULL CHECK(active_coverage IN ('complete','unknown')),revision INTEGER NOT NULL CHECK(revision>=0),next_history_seq INTEGER NOT NULL CHECK(next_history_seq>=1),migration_id TEXT,plan_checksum TEXT)",
+      "CREATE TABLE execution_attempts(project_id TEXT NOT NULL,run_id TEXT NOT NULL,task_id TEXT NOT NULL,attempt INTEGER NOT NULL CHECK(attempt>=1),launch_token TEXT UNIQUE,revision INTEGER NOT NULL CHECK(revision>=1),generation INTEGER NOT NULL CHECK(generation>=0),phase TEXT NOT NULL CHECK(phase IN ('prepared','starting','running','stopping','unresolved','absent')),outcome TEXT CHECK(outcome IN ('completed','failed','timed_out','cancelled','unknown_exit','lost','blocked')),collection TEXT NOT NULL CHECK(collection IN ('pending','collected','failed','refused')),process_json TEXT,history_seq INTEGER UNIQUE CHECK(history_seq>=1),payload_json TEXT NOT NULL,projected_revision INTEGER NOT NULL DEFAULT 0 CHECK(projected_revision>=0 AND projected_revision<=revision),source_path TEXT,source_checksum TEXT,semantic_checksum TEXT,PRIMARY KEY(project_id,run_id,task_id,attempt))",
+      "CREATE TABLE execution_heads(project_id TEXT NOT NULL,run_id TEXT NOT NULL,task_id TEXT NOT NULL,latest_attempt INTEGER NOT NULL CHECK(latest_attempt>=1),next_attempt INTEGER NOT NULL CHECK(next_attempt>latest_attempt),projection_dirty INTEGER NOT NULL CHECK(projection_dirty IN (0,1)),PRIMARY KEY(project_id,run_id,task_id),FOREIGN KEY(project_id,run_id,task_id,latest_attempt) REFERENCES execution_attempts(project_id,run_id,task_id,attempt))",
+      "CREATE TABLE execution_current(project_id TEXT NOT NULL,run_id TEXT NOT NULL,task_id TEXT NOT NULL,attempt INTEGER NOT NULL,PRIMARY KEY(project_id,run_id,task_id,attempt),UNIQUE(project_id,run_id,task_id),FOREIGN KEY(project_id,run_id,task_id,attempt) REFERENCES execution_attempts(project_id,run_id,task_id,attempt))",
+      "CREATE TABLE execution_receipt_admissions(project_id TEXT NOT NULL,run_id TEXT NOT NULL,task_id TEXT NOT NULL,attempt INTEGER NOT NULL,launch_token TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('process','heartbeat','exit','absence','spawn_failed')),sequence INTEGER NOT NULL CHECK(sequence>=0),checksum TEXT NOT NULL,PRIMARY KEY(project_id,run_id,task_id,attempt,launch_token,kind),FOREIGN KEY(project_id,run_id,task_id,attempt) REFERENCES execution_attempts(project_id,run_id,task_id,attempt))",
+      "CREATE INDEX execution_history ON execution_attempts(project_id,history_seq) WHERE history_seq IS NOT NULL",
+      "CREATE INDEX execution_projection_dirty ON execution_heads(project_id,run_id,task_id) WHERE projection_dirty=1"
+    ],
+    "schema_authority": "ddl is normative; table_columns is explanatory. EXECUTION_SCHEMA is a SchemaDefinition(namespace='execution',version=1,statements=tuple(ddl),checksum=canonical schema digest). W3 owns it; W4 consumes exact exported constant."
+  },
+  "admission": {
+    "owner": "W3",
+    "signatures": [
+      "ExecutionAdmission.__init__(registry_lock: Callable[..., AbstractContextManager[object]])",
+      "ExecutionAdmission.start(project_root: Path, workplace_root: Path | None, *, deadline: float | None = None) -> AbstractContextManager[None]",
+      "ExecutionAdmission.shutdown(workplace_root: Path, *, expected_instance_id: str, deadline: float) -> AbstractContextManager[None]",
+      "ExecutionAdmission.maintenance(project_root: Path, workplace_root: Path | None) -> AbstractContextManager[None]"
+    ],
+    "locks": {
+      "workplace": "workplace/runtime/pf-runtime/execution-admission",
+      "project": "flow_root/runtime/execution-admission",
+      "task": "existing worker_run_lifecycle_lock flow_root/runtime/agent-runs/<run>/<task>/lifecycle"
+    },
+    "reuse": "Inject existing registry_file_lock; preserve its permanent OS guard and dead-owner-only reclamation. Do not import tools/processforge.py into Core. No coordinator service or additional database.",
+    "order": "workplace admission (when enrolled) -> project admission -> existing task lifecycle lock -> SQL transaction. If singleton lifecycle guard needed, acquire after workplace admission and before project. Never hold runtime.state_lock/host.state_lock while acquiring an interprocess gate; short memory locks only inside already-acquired gate.",
+    "start": "Every CLI/MCP/Inspector/scheduler/supervisor spawn path acquires admission; verify binding/readiness/generation and Runtime instance state, commit reservation before releasing admission. Popen occurs after committed reservation, outside SQL transaction; task lock serializes attach/reconcile.",
+    "shutdown": "Set in-process shutdown_check briefly, release memory lock, acquire workplace admission within existing 500 ms budget, verify instance and registered routing, acquire project admissions sorted by stable project_id then routing path. Read complete current snapshots; legacy projects retain old bounded file observer. Under admission publish stopping durably before gate release. A reservation is visible before guard, or start sees stopping and refuses.",
+    "registration": "Enroll/unregister/route/cache changes use same workplace admission then project gate; import any already-current standalone executions into routing coverage before publishing enrollment. An enrolled project cannot claim standalone to bypass an unavailable workplace gate. Unregister refuses unresolved physical ownership.",
+    "stopping_recovery": "Use existing Runtime instance/service state as stopping fence, no new persistent coordinator. Starts are refused while matching owner is alive/stopping. Clear/recover only after exact instance death/normal completion under same admission and existing singleton protocol; elapsed TTL alone is not proof. No daemon is needed for file-only CLI when no active owner exists.",
+    "unknown": "Any gate timeout, unreadable routing, missing identity, unknown old writer, unknown current/tree state, incomplete migration or stale registration makes guard running=null and preserves runtime_busy_or_activity_unknown. Existing owner_changed is retained. No silent fallback after SQL binding.",
+    "limitation": "Old binaries do not acquire new admission. Online mixed-version writer safety cannot be guaranteed: explicit maintenance exclusion of those binaries is a prerequisite, otherwise cutover is blocked."
+  },
+  "routing": {
+    "binding": "flow_root/data/execution-storage.json",
+    "fields": "{schema_version:1,project_id,store_id,profile_id,target_relative_path}; project-relative/flow-relative target only, immutable after successful binding unless explicit maintenance",
+    "owner": "W4 writes migration binding; W3 writes fresh binding through explicit new-project initialization and reads it in composition. SQL transaction alone decides readiness/authority; binding routes and pins expected identity only.",
+    "legacy_selection": "No binding and no execution namespace at resolved default/configured main target -> legacy, with existing behavior. If target exists, inspect without DDL. Corrupt/foreign/unknown target or execution namespace without binding -> blocked, not legacy.",
+    "sql_selection": "Binding exists -> require exact matching DB/envelope/namespace/project/store_id and ready SQL authority; missing/partial target blocks. Never recover from status.json when binding exists. Before SQL cutover a pending binding intentionally blocks ordinary execution until resume/explicit abort.",
+    "fresh": "Only successful explicit init_project apply creating a new flow root may initialize empty store, binding and ready SQL generation=1 with complete active coverage. Use initialization transaction/repair path; existing root including --force is never classified fresh from empty history. Reads/status/doctor/config/imports create nothing.",
+    "failure": "Fresh DB/binding publication is recoverable, not filesystem+SQL atomic: publish binding first, then initialize; crash leaves blocked pending binding until explicit repair. Pre-cutover abort validates no SQL authority/new commits before removing only owned binding.",
+    "profile_change": "Binding pins target/store. Config reload mismatch fails without reconnecting a new empty target. Project move preserves project.id/store_id and relative target; reject identity collisions and active/unknown old ownership.",
+    "missing_identity": "If manifest lacks explicit project.id, migration returns project_identity_required; operator must persist the existing intended identity through normal project configuration before planning, not accept a new root-derived ID."
+  },
+  "migration": {
+    "module": "maintenance/execution_migration.py",
+    "class": "ExecutionMigrationService",
+    "signatures": [
+      "ExecutionMigrationService.__init__(*, database: Database, repository: SQLiteExecutionRepository, admission: ExecutionAdmission, backup: BackupPort)",
+      "ExecutionMigrationService.inspect(project_root: Path, *, evidence_dir: Path | None = None) -> dict[str, object]",
+      "ExecutionMigrationService.plan(project_root: Path, *, skip_terminal_invalid: bool = False, evidence_dir: Path | None = None) -> dict[str, object]",
+      "ExecutionMigrationService.apply(project_root: Path, plan: Mapping[str, object], *, evidence_dir: Path, offline_confirmed: bool = False) -> dict[str, object]",
+      "ExecutionMigrationService.resume(project_root: Path, *, migration_id: str, plan_checksum: str, evidence_dir: Path, offline_confirmed: bool = False) -> dict[str, object]",
+      "SQLiteExecutionRepository.import_legacy(session: SqlSession, records: tuple[ExecutionRecord,...], *, source_facts: tuple[tuple[str,str,str],...], next_attempt_floors: tuple[tuple[str,str,int],...]) -> tuple[int,int]"
+    ],
+    "shared_import": "W3 import_legacy runs only in caller-owned W2 write session and execution_state importing/legacy. It does not commit, connect, publish or enable authority. Each source_fact is (project-relative path, byte checksum, semantic checksum), aligned with records. W4 writes checkpoint in the SAME session; batch <=256. Normal domain ports never accept SqlSession.",
+    "migration_id": "r02-worker-executions-v1",
+    "schema_namespace": "execution_migration@1",
+    "ddl": [
+      "CREATE TABLE execution_migrations(migration_id TEXT PRIMARY KEY,descriptor_checksum TEXT NOT NULL,plan_checksum TEXT NOT NULL,store_id TEXT NOT NULL,source_generation INTEGER NOT NULL CHECK(source_generation>=0),target_generation INTEGER NOT NULL CHECK(target_generation>source_generation),state TEXT NOT NULL CHECK(state IN ('planned','backed_up','importing','verified','ready')),checkpoint INTEGER NOT NULL CHECK(checkpoint>=0),manifest_checksum TEXT NOT NULL,evidence_relative_path TEXT NOT NULL,backup_manifest_checksum TEXT,last_error_code TEXT)"
+    ],
+    "descriptor_file": "schemas/execution-migration-v1.json",
+    "descriptor": "migration_id; descriptor_version=1; source_format=worker-status-json; source_schema_versions=[1]; target_namespace=execution; from_schema_version=0; to_schema_version=1; min_reader_capability=execution-storage-v1; min_writer_capability=execution-storage-v1; transform_files[{relative_path,sha256}]; transform_checksum. Pin final transform bytes at implementation, never fabricate a release version/hash.",
+    "checksums": "Canonical JSON everywhere: UTF-8, sorted object keys, compact separators, ensure_ascii=False, allow_nan=False, no trailing newline in digest input. SHA256 prefixed sha256:. Descriptor checksum hashes full descriptor; transform checksum hashes canonical ordered transform_files. Plan checksum hashes descriptor_checksum + explicit project_id + ordered relative source path/size/hash manifest + store_id + target schema checksum + source/target generation + skip policy. Exclude operation UUID/time/evidence absolute paths.",
+    "scanner": "Only explicit inspect/plan/apply/resume inventories legacy status.json, attempt DIRECTORY NAMES and direct bounded process/heartbeat/exit evidence needed for quiescence. Do not read stdout/stderr, report or prepared-input bodies to reconstruct missing history. Preserve source JSON unknown fields/original bytes. Reject duplicate keys, nonfinite numbers, NUL, unknown schema and identity mismatch.",
+    "attempt_policy": "Absent/invalid attempt is blocked, not guessed as 1. Import observable latest snapshots only, no invented overwritten attempts. Heads floor = max(imported attempt, valid existing numeric attempt directory names)+1; names are allocation evidence, not reconstructed history. Ambiguous names/identity conflicts block.",
+    "sort": "Source relative paths ordered by raw UTF-8 byte order, no locale/casefold/NFC normalization. Stable sequence is import order, not asserted chronology. External spool/manifest, batches <=256, no all-history envelopes/IDs in RAM.",
+    "states": [
+      "planned",
+      "backed_up",
+      "importing",
+      "verified",
+      "ready"
+    ],
+    "protocol": [
+      "inspect/plan read only, except explicit evidence_dir may retain declared scan evidence; no destination DDL or binding writes. Return blocked when old writers/quiescence cannot be proved. Apply revalidates all facts even if plan said safe.",
+      "Operator stops/disables all old writer entrypoints and confirms offline maintenance. This is a prerequisite, not a remotely enforceable flag. Acquire admission, publish project pending binding/freeze, release long-held admission for scan/backup/import. New capable writers see pending and refuse; old binaries must remain excluded.",
+      "Require zero proven current physical executions, no unresolved pre-spawn publication gap, stable source inventory and no legacy writer. A terminal status string or process PID probe alone is insufficient. Unknown legacy activity blocks; operator must establish quiescence, not use --skip-invalid.",
+      "Frozen exact sources+SHA256 manifest are retained exclusively under maintenance evidence; after restart recheck live sources against frozen manifest. Existing target: BackupPort.create+verify before first target DB mutation. Absent target is recorded. Backup bytes are WAL-aware via existing SQLiteBackupService; no new backup engine.",
+      "Initialize new main envelope or add missing execution namespaces to existing valid envelope explicitly using SchemaManager. Register execution_state importing/legacy generation=0 (or expected prior generation); do not enable new writers.",
+      "For each <=256 batch, import_legacy and checkpoint in same transaction. Same key+semantic/source hash -> no-op; different payload same key -> execution_identity_conflict and stop. Checkpoint never advances on failed batch.",
+      "Verify schema/checksum, integrity, FK, receipt/hash parity, import counts and replay=no-op; full manifest hash and live inventory unchanged; no unresolved current ownership. Historical completeness may be partial but active_coverage must be complete.",
+      "Reacquire workplace/project admission, verify pinned instance/routing/generation and source stability; CAS execution_state to authority=sql, readiness=ready, generation=target_generation, active_coverage=complete, plan_checksum; set execution_migrations ready in same SQL transaction. This commit is the only cutover point.",
+      "Publication of report/projections after commit may fail; readiness from SQL remains true. resume recognizes committed marker and repairs only owned derived output, never reimports JSON as new truth."
+    ],
+    "readiness": "History gaps do not mean current activity. First cutover requires quiescent current set=empty and complete coverage. No active-process takeover in R02; 400k fixtures with active executions test post-cutover operation, not live migration.",
+    "backup_resume": "Before reusing backup verify its manifest/hash, pinned store identity and relation to this plan/checkpoint. Do not overwrite/create a second arbitrary backup on resume. Drift refuses; successful import commits are recovered from checkpoint, not rolled back implicitly.",
+    "quarantine": "Exact frozen bytes/provenance/hash retained; conflicts always block. skip_terminal_invalid is only explicit, positively proved historical records; invalid state preventing exclusion of active work blocks even with flag.",
+    "rollback": "Before SQL cutover: explicit abort under admission with disabled new writers, verified no ready authority/new SQL commits, unchanged sources; preserve shared DB, remove only owned pending binding/namespace state if safe. After cutover: roll forward/resume; restore backup to NEW target via BackupPort and controlled binding switch with all writers stopped. No old-Core rollback after new SQL commits without separately qualified reverse export.",
+    "client_matrix": [
+      {
+        "client": "Legacy binary, unbound/unmigrated project",
+        "read": "supported existing path",
+        "write": "supported existing path",
+        "condition": "No extended config forced; new Core also delegates legacy"
+      },
+      {
+        "client": "Capable Core execution-storage-v1, unbound project",
+        "read": "legacy path, no initialization",
+        "write": "legacy path until explicit migration; new-project explicit init is separate"
+      },
+      {
+        "client": "Any writer during importing/pending binding",
+        "read": "maintenance inspect only; normal execution blocked for capable clients",
+        "write": "blocked; legacy binaries excluded procedurally"
+      },
+      {
+        "client": "Capable Core execution-storage-v1, SQL-ready project",
+        "read": "SQL; legacy-shaped status projection available",
+        "write": "single SQL owner"
+      },
+      {
+        "client": "Legacy binary, SQL-ready project",
+        "read": "No authoritative lifecycle/status guarantee; file projection only for passive external consumers",
+        "write": "unsupported, prohibited; no technical old-binary fencing claim"
+      },
+      {
+        "client": "Future/foreign/corrupt schema or missing bound DB",
+        "read": "bounded refusal, guard unknown",
+        "write": "refuse, no fallback/DDL"
+      }
+    ],
+    "cli": {
+      "adapter_owner": "W4 for journal_maintenance command/parser; W3 alone registers/composes it in tools/processforge.py",
+      "commands": [
+        "journal-maintenance execution-inspect --project-root ROOT [--evidence-dir DIR] [--json]",
+        "journal-maintenance execution-import --project-root ROOT [--evidence-dir DIR] [--skip-terminal-invalid] [--apply --offline-confirmed] [--json]",
+        "journal-maintenance execution-resume --project-root ROOT --migration-id ID --plan-checksum SHA --evidence-dir DIR --apply --offline-confirmed [--json]"
+      ],
+      "behavior": "execution-import defaults to plan; apply requires evidence-dir and offline-confirmed. Workplace resolved from declared project enrollment, never needed for standalone project. New maintenance operations do not change existing flags. stdout exactly one JSON, exit 0 success/plan, 1 refusal, argparse 2; no raw private error text.",
+      "report_fields": "schema_version, operation, status(planned|ready|failed), blocked, migration_id, plan_checksum, phase, checkpoint, authority, active_coverage, history_complete, counts, error, evidence (project-relative references only); plan also contains descriptor/target/manifest facts required by apply",
+      "update": "Existing Core updater/assessment may report requires_migration; it must not invoke apply or auto-migrate developer project. Core installation success does not equal project readiness."
+    },
+    "schema_authority": "EXECUTION_MIGRATION_SCHEMA in maintenance/execution_migration.py is SchemaDefinition(namespace='execution_migration',version=1,statements=tuple(ddl),checksum=canonical schema digest). W3 may import this cold constant only during explicit initialization/apply; imports have no I/O."
+  },
+  "ownership": [
+    {
+      "owner": "W1",
+      "responsibility": "Domain DTO/ports and authority documentation",
+      "requires": [],
+      "files": [
+        "src/processforge_core/executions/__init__.py",
+        "src/processforge_core/executions/model.py",
+        "src/processforge_core/executions/ports.py",
+        "tests/executions/__init__.py",
+        "tests/executions/test_model.py",
+        "docs/concepts/execution-storage.md",
+        "docs/ru/concepts/execution-storage.md"
+      ]
+    },
+    {
+      "owner": "W2",
+      "responsibility": "Cold public SQL API, SQLite/envelope, optional configuration; no legacy consumer refactoring",
+      "requires": [],
+      "files": [
+        "src/processforge_core/database/__init__.py",
+        "src/processforge_core/database/contracts.py",
+        "src/processforge_core/database/errors.py",
+        "src/processforge_core/database/sqlite.py",
+        "src/processforge_core/database/schema.py",
+        "src/processforge_core/database/composition.py",
+        "src/processforge_core/configuration/database.py",
+        "src/processforge_core/configuration/models.py",
+        "src/processforge_core/configuration/__init__.py",
+        "schemas/workplace-configuration.schema.json",
+        "schemas/project-configuration.schema.json",
+        "tests/database/__init__.py",
+        "tests/database/test_contract.py",
+        "tests/database/test_sqlite.py",
+        "tests/database/test_schema.py",
+        "tests/database/test_profiles.py",
+        "docs/concepts/database-api.md",
+        "docs/ru/concepts/database-api.md"
+      ]
+    },
+    {
+      "owner": "W3",
+      "responsibility": "Execution schema/repository/service/projection, admission, OS adapters and ALL shared integration",
+      "requires": [
+        "W1 model/ports frozen",
+        "W2 public API/envelope frozen",
+        "W4 binding/readiness/maintenance signatures frozen before composition"
+      ],
+      "files": [
+        "src/processforge_core/executions/schema.py",
+        "src/processforge_core/executions/sqlite_repository.py",
+        "src/processforge_core/executions/service.py",
+        "src/processforge_core/executions/projection.py",
+        "src/processforge_core/executions/composition.py",
+        "src/processforge_core/runtime/execution_admission.py",
+        "src/processforge_core/runtime/process_identity.py",
+        "src/processforge_core/runtime/metrics.py",
+        "src/processforge_core/runtime/observation_inputs.py",
+        "src/processforge_core/runtime/command.py",
+        "src/processforge_core/work/continuation_read.py",
+        "src/processforge_core/composition.py",
+        "src/processforge_core/bootstrap.py",
+        "src/processforge_core/__init__.py",
+        "src/processforge_core/project/initialization.py",
+        "tools/processforge.py",
+        "tools/pf_runtime/service.py",
+        "tools/pf_runtime/host.py",
+        "tools/pf_runtime/action_tools.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/prepared_executor.py",
+        "tools/codex_exec_worker.py",
+        "tests/executions/test_repository.py",
+        "tests/executions/test_lifecycle.py",
+        "tests/executions/test_admission.py",
+        "tests/executions/test_projection.py",
+        "tools/smoke_worker_storage_scale.py",
+        "tools/smoke_worker_run_shell.py",
+        "tools/smoke_runtime_metrics.py",
+        "tools/smoke_server_operator.py",
+        "tools/smoke_long_lived_runtime.py",
+        "docs/ru/concepts/runtime-model.md",
+        "docs/ru/concepts/prepared-input.md"
+      ]
+    },
+    {
+      "owner": "W4",
+      "responsibility": "Migration descriptor/scanner/import/checkpoint/binding/maintenance, reuse backup; no shared composition writes",
+      "requires": [
+        "W1 identity/state contract",
+        "W2 SchemaManager/Database",
+        "W3 schema/import_legacy/admission contract"
+      ],
+      "files": [
+        "src/processforge_core/maintenance/execution_migration.py",
+        "src/processforge_core/maintenance/journal_scan.py",
+        "src/processforge_core/maintenance/contracts.py",
+        "schemas/execution-migration-v1.json",
+        "tools/pf_cli/commands/journal_maintenance.py",
+        "tools/pf_cli/parsers/journal_maintenance.py",
+        "tests/execution_migration/__init__.py",
+        "tests/execution_migration/test_migration.py",
+        "tests/execution_migration/test_compatibility.py",
+        "docs/concepts/sqlite-journal-maintenance.md",
+        "docs/ru/concepts/sqlite-journal-maintenance.md"
+      ]
+    }
+  ],
+  "ownership_policy": "Exact files only, no directory-wide grants inferred. Parent __init__.py not listed remains unchanged. Listed existing files change only when necessary; no shared writers. New needed file or signature requires governed handoff before edit, not silent expansion. All implementation logs/evidence use each next assignment's own declared artifact scope.",
+  "reuse_unchanged": [
+    "src/processforge_core/sqlite_storage.py",
+    "src/processforge_core/accounting/storage.py",
+    "src/processforge_core/accounting/service.py",
+    "src/processforge_core/accounting/composition.py",
+    "src/processforge_core/process_event_journal.py",
+    "src/processforge_core/raw_hook_journal.py",
+    "src/processforge_core/maintenance/backup.py",
+    "src/processforge_core/maintenance/journals.py",
+    "src/processforge_core/maintenance/update.py",
+    "src/processforge_core/maintenance/transfer.py",
+    "src/processforge_core/configuration/service.py",
+    "src/processforge_core/configuration/resolution.py",
+    "tools/migrate-hook-journals.py"
+  ],
+  "dependency_order": [
+    {
+      "wave": 1,
+      "owners": [
+        "W1",
+        "W2"
+      ],
+      "deliver": "DTO/ports and SQL/schema/config implementation in disjoint files; freeze importable symbols before consumers"
+    },
+    {
+      "wave": 2,
+      "owners": [
+        "W3"
+      ],
+      "deliver": "Repository/schema/current-query/admission/import_legacy; no Runtime cutover or live data migration"
+    },
+    {
+      "wave": 3,
+      "owners": [
+        "W4"
+      ],
+      "deliver": "Migration/binding/recovery code against frozen W3/W2; maintain existing journal adapter behavior"
+    },
+    {
+      "wave": 4,
+      "owners": [
+        "W3"
+      ],
+      "deliver": "Sole integration owner composes W4/W2, routes all readers/writers/wrappers, preserves public facade and explicit fresh init"
+    },
+    {
+      "wave": 5,
+      "owners": [
+        "each implementation owner"
+      ],
+      "deliver": "Relevant isolated QA and acceptance evidence for final same bytes; no overlapping test fixture/live runtime writers"
+    },
+    {
+      "wave": 6,
+      "owners": [
+        "independent reviewer after code complete"
+      ],
+      "deliver": "Review candidate and evidence; acceptance/delivery remains separate authorization"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "A1",
+      "owner": "W2",
+      "cases": "Cold import/construction; missing ro/rw noncreation; values/binding/redaction; snapshot, rollback and commit failure; early stream close; bounded busy/deadline; concurrent writes; FK/WAL/FULL; schema checksum/foreign/future/owner mismatch",
+      "pass": "No implicit I/O/DDL/retry, cursor/connection leak or raw private error; atomic envelope/domain registration"
+    },
+    {
+      "id": "A2",
+      "owner": "W2",
+      "cases": "Old PFConfig/ProjectPFConfig absent-section serialization/get/update/reset/strict errors, new profiles roundtrip/invalid/inheritance/reload",
+      "pass": "No new section on read, no target hot switch or workplace access escalation"
+    },
+    {
+      "id": "A3",
+      "owner": "W3",
+      "cases": "0,510,400000 terminal attempts x 0,1,3 current executions, plus current count over limit; concurrent archived writer",
+      "pass": "Both shutdown_workers and active_worker_count use same active-only reader. Trace SQL+EXPLAIN: execution_current scan/index plus PK lookup of its attempts; zero terminal-row visits, zero history counts/iteration, zero terminal file reads. Deny/instrument old status glob and terminal-file opens to prove absence; instrument row reads. 0 current reads no attempt payload. Record current rows, SQL operations, memory and latency; cost independent of history, 500 ms guard deadline -> unknown if exceeded"
+    },
+    {
+      "id": "A4",
+      "owner": "W3",
+      "cases": "Barrier-controlled independent CLI start vs Runtime shutdown/registration; crash before reservation, after reservation, after Popen before attach, before/after terminal commit, after JSON publish before ack",
+      "pass": "Reservation observed or start refused; no untracked success-zero; stale reservation never expires to idle; durable stopping fence; projection repairs from SQL and older attempts never overwrite heads"
+    },
+    {
+      "id": "A5",
+      "owner": "W3",
+      "cases": "PID reuse, stale heartbeat, denied OS inspection, wrapper exit with live child, signal failure, old attempt/token/generation receipt, duplicate/conflicting receipt; collection failure/refusal/replay",
+      "pass": "Unknown remains active; tree absence distinct from exit/collection; CAS and dedup prevent cross-attempt mutation; legacy-shaped DTOs preserved"
+    },
+    {
+      "id": "A6",
+      "owner": "W4",
+      "cases": "Inspect/plan nonmutation; empty/latest snapshot import; missing attempt; directory floor; duplicate identity and checksum drift; corrupt historical vs unknown current; Unicode/relative path containment; interruption at backup/batch/verification/CAS/report and resume",
+      "pass": "No guessed history, bounded memory, exact bytes/quarantine, same-batch checkpoint, verified backup reuse, exactly one cutover, no false ready/JSON fallback"
+    },
+    {
+      "id": "A7",
+      "owner": "W4",
+      "cases": "Old project before opt-in, old/capable clients matrix, pending/ready/missing/foreign DB, pre-cutover abort and post-cutover forward recovery, project move with stable ID",
+      "pass": "Old path stays old until explicit apply; mixed old writes rejected as unsupported prerequisite; no live developer migration; no old-Core rollback claim after SQL writes"
+    },
+    {
+      "id": "A8",
+      "owner": "W3",
+      "cases": "Existing CLI/MCP worker-run/status/stop/collect/continuation, wrappers and maintenance operations; file-only with Runtime/MCP/network/LLM off; init apply new flow vs existing --force, read/config/doctor",
+      "pass": "Flags/aliases/payload schema/status/error/exit contracts unchanged for existing cases. New maintenance stdout one JSON. No DB creation on reads, no daemon bootstrap. Legacy projects retain bounded historical guard semantics; 400k guarantee only SQL-ready"
+    },
+    {
+      "id": "A9",
+      "owner": "all",
+      "cases": "Relevant registered pytest, Ruff lint, Ruff format check, mypy for changed typed area; named runtime/prepared/continuation and maintenance regressions",
+      "pass": "Actual commands/tool versions/exit codes/candidate hashes and limitations recorded; checks execute on final bytes. Reviewer only after implementation. Product QA not executed in this design assignment"
+    }
+  ],
+  "release_gates": [
+    "This contract is ready_for_review, never approved by its author; scoped implementation assignments must pin accepted bytes and exact nonoverlapping ownership.",
+    "Old release numbers cannot be inferred from design reports. Qualify concrete baseline/target bytes against capability matrix before rollout; no claim of support for every historic release.",
+    "Unavailable process-tree identity/old-writer exclusion or stable project.id is a concrete per-project cutover blocker, not reason to weaken readiness.",
+    "400000 history acceptance requires evidence of zero terminal reads, not timing alone.",
+    "No package/install/migration/Core apply/restart/commit/push authorized by this assignment."
+  ],
+  "design_validation": {
+    "source_hashes_checked": 6,
+    "source_hash_mismatches": 0,
+    "source_hash_check_exit_code": 0,
+    "product_tests": "not_run; forbidden by architecture brief",
+    "tools": "bounded source reads via shell; prepared mcp grants empty, Serena/IDE not used",
+    "source_check": "Targeted seams re-read: task lifecycle/registry locks, status DTO/collection, launch/stop, Runtime shutdown/routing, metadata identity/init, maintenance adapter/backup signatures",
+    "coordination": {
+      "read_ack": "msg_50e5b8e9212a4448bf73a6d80d0ecfdf",
+      "heartbeat": "success exit 0",
+      "result_ready": "msg_2b840638391f427fb965925aaebdb798; accepted, exit 0"
+    }
+  },
+  "dependencies": [
+    {
+      "provider": "W1",
+      "consumer": "W3/W4",
+      "exports": [
+        "executions.model DTOs",
+        "executions.ports.ExecutionRepository",
+        "task_id == assignment_id",
+        "phase/outcome/collection rules"
+      ]
+    },
+    {
+      "provider": "W2",
+      "consumer": "W3/W4",
+      "exports": [
+        "Database/SqlSession",
+        "SchemaDefinition/SchemaManager",
+        "DatabaseProfile/DatabaseConfig",
+        "one physical envelope identity and deadline semantics"
+      ]
+    },
+    {
+      "provider": "W3",
+      "consumer": "W4",
+      "exports": [
+        "EXECUTION_SCHEMA",
+        "SQLiteExecutionRepository.import_legacy",
+        "ExecutionAdmission.maintenance",
+        "binding reader and marker semantics"
+      ]
+    },
+    {
+      "provider": "W4",
+      "consumer": "W3",
+      "exports": [
+        "EXECUTION_MIGRATION_SCHEMA",
+        "ExecutionMigrationService",
+        "descriptor and binding writer",
+        "offline maintenance/checkpoint/cutover report"
+      ],
+      "integration": "after W3 lower-level API; no circular module import: W4 imports repository/admission, execution composition lazily imports W4; repository/admission never import maintenance"
+    },
+    {
+      "provider": "W2/W4",
+      "consumer": "W3",
+      "exports": [
+        "cold factories for single composition owner"
+      ],
+      "restriction": "W2/W4 do not edit tools/processforge.py or shared integration"
+    }
+  ]
+}
