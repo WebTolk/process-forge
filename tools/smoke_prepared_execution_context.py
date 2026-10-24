@@ -13,8 +13,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str((ROOT := Path(__file__).resolve().parents[1]) / "tools"))
 
 import processforge as core
 from garage_search_smoke_support import (

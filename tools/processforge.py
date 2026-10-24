@@ -4552,7 +4552,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     valid_until = (datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=max_age_days)).isoformat().replace("+00:00", "Z")
     project = manifest_data.get("project", {}) if isinstance(manifest_data.get("project"), dict) else {}
     process_forge_data = manifest_data.get("process_forge", {}) if isinstance(manifest_data.get("process_forge"), dict) else {}
-    detected_data = manifest_data.get("detected", {}) if isinstance(manifest_data.get("detected"), dict) else {}
+    manifest_data.get("detected", {}) if isinstance(manifest_data.get("detected"), dict) else {}
     workplace_manifest_path: Path | None = None
     distribution_root: Path | None = None
     local_config = flow_root / "process-forge.local.yaml"
