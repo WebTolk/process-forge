@@ -1,0 +1,28 @@
+{
+  "migration_id": "r02-worker-executions-v1",
+  "descriptor_version": 1,
+  "source_format": "worker-status-json",
+  "source_schema_versions": [
+    1
+  ],
+  "target_namespace": "execution",
+  "from_schema_version": 0,
+  "to_schema_version": 1,
+  "min_reader_capability": "execution-storage-v1",
+  "min_writer_capability": "execution-storage-v1",
+  "transform_files": [
+    {
+      "relative_path": "src/processforge_core/maintenance/contracts.py",
+      "sha256": "sha256:dba46b19b1706be33d0870aaf95f09d5b8d474598d5c6ae7700928bc5f4185d2"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/execution_migration.py",
+      "sha256": "sha256:d993e863957401945e2fbaffe5af32e1a0403e22c389c6168e8e63713a5190b4"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/journal_scan.py",
+      "sha256": "sha256:b44bf09e2cfbcd58afb7c57c490a7b38df7495d860db454bea2e1a34588587ed"
+    }
+  ],
+  "transform_checksum": "sha256:3e0494cfff5fe2602ef0b3d0ea82032095f04addfd6896cdafece1af78cee378"
+}

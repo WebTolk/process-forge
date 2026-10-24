@@ -140,3 +140,61 @@ shell passthrough нет.
 тонкий адаптер той же службы; дополнительный `--evidence-dir` выбирает хранение
 доказательств. Контекст владения журналами и переключения описан в
 [Журналы проекта в SQLite](hook-journal-sqlite.md).
+
+## Engine execution storage: исходная фаза R02
+
+`ExecutionMigrationService` переносит только наблюдаемые latest `status.json` в
+main store проекта. Сохраняются явные project/run/task/attempt IDs, неизвестные
+поля compatibility DTO и точные исходные bytes. Имена числовых attempt-каталогов
+задают allocation floor; их тела не читаются для выдуманного восстановления
+истории. Каталоги без наблюдаемого head блокируют cutover, чтобы не переиспользовать
+подготовленный номер. Полнота истории не заявляется. Unknown/current activity,
+неоднозначные имена, drift/foreign schema и отсутствие явного `project.id`
+блокируют перенос.
+
+К замороженным Database/repository/admission/BackupPort добавлен приватный typed
+`safety` verifier. `ExecutionMigrationContext` закрепляет authorized project и
+workplace routing, project/store/target, поколения, plan и checksum всего inventory.
+Host доказывает исключение старых writers, отсутствие pre-spawn gap и всех owned
+process trees, сверяет Runtime instance/routing/capabilities. Freeze, resume и
+проверка перед cutover происходят под admission. Missing/stale/exception/active/
+unknown proof дают отказ; `offline_confirmed` означает только намерение оператора.
+Техническое fencing произвольных старых binaries не заявляется.
+
+Inspect/plan не создают БД или binding. Явный evidence ограничен `maintenance/`
+actual flow root. Manifest потоковый, порядок relative paths — raw UTF-8;
+буфер содержит до 256 имён каталогов или записей import. При большом fanout
+read-only сортировка повторяет проходы каталога. Тела ограничены 64 KiB;
+stdout/stderr, report и prepared-input не читаются. Skip допускает только
+положительно исторический invalid snapshot при полном host proof; точные bytes,
+checksum и provenance остаются в evidence.
+
+Apply под admission публикует pending `data/execution-storage.json` до mutation.
+Для существующей БД создаётся одна проверенная WAL-aware recovery backup. Batch
+до 256 записей и checkpoint коммитятся в одной транзакции. Перед cutover проверяются
+schema/source/count/FK/replay. Отдельный deterministic `verification/` bundle через
+BackupPort проверяет SQLite integrity, сохраняя запрет административных PRAGMA в
+публичном SqlSession. Resume сверяет и переиспользует оба bundle; verification
+не заменяет исходную recovery backup. Единственная CAS-транзакция одновременно
+делает `execution_state` SQL-ready и переводит migration marker в ready.
+
+Resume выбирается точными migration_id/plan_checksum/evidence. Pending binding
+блокирует capable execution clients без fallback к JSON. После cutover resume
+чинит только derived report; dirty heads остаются владельцу indexed projection.
+Изменённый позднее status.json не импортируется как truth. Явный `abort` удаляет
+только собственный pending binding до любых target/schema mutations. После
+schema/import commits нужен roll-forward; restore требует нового target и
+контролируемого offline переключения binding.
+
+Command/parser добавляют execution-inspect, execution-import (по умолчанию plan),
+execution-resume. Для apply нужны --apply --offline-confirmed и --evidence-dir;
+resume также требует точных migration/checksum selectors. Вывод — один JSON,
+exit 0 для plan/ready, 1 для отказа и argparse 2 для неверного синтаксиса.
+Без host composition/verifier новые операции fail-closed.
+
+Native UUID coordinator/script, automatic update/first-safe-write triggers,
+полный PFConfig provider и shared CLI/Runtime composition относятся к следующим
+исходным фазам. Этот engine сам по себе не доказывает интеграцию и не вводит
+требование ручного переноса данных пользователем. Real host proof, installed
+entrypoints и integrated assurance ещё предстоят. Живые данные разработчика
+этой фазой не мигрируются.

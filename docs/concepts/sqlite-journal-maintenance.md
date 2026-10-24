@@ -140,3 +140,62 @@ entrypoint as a thin delegate to the same maintenance service; its optional
 `--evidence-dir` selects evidence storage. See
 [Project journals in SQLite](hook-journal-sqlite.md) for journal ownership and
 cutover context.
+
+## Execution storage engine (R02 source slice)
+
+The execution engine imports observable latest `status.json` snapshots into the
+project main store. It preserves explicit project/run/task/attempt identity,
+unknown compatibility fields and exact original bytes. Numeric attempt directory
+names set allocation floors; their bodies are never used to invent history.
+Directory-only attempts without an observable head refuse cutover, preventing
+reuse of a previously prepared attempt number. Historical completeness is not
+claimed. Unknown/current activity, ambiguous names, source drift, foreign schemas
+or an absent explicit manifest `project.id` refuse migration.
+
+`ExecutionMigrationService` takes the frozen database/repository/admission/backup
+dependencies and the private typed `safety` verifier. Its
+`ExecutionMigrationContext` pins authorized project/workplace routing, project and
+store identity, target, generations, plan and whole-inventory checksum. The host
+must exclude old writers, pre-spawn gaps and all owned process trees, and verify
+the exact Runtime instance/routing/capabilities. Freeze, resume and pre-cutover
+proof checks run under admission; stale/missing/exception/active/unknown proof
+fails closed. `offline_confirmed` records operator intent only. No technical
+fencing of arbitrary old binaries is claimed.
+
+Inspect/plan do not create a database or binding. Explicit evidence is contained
+under the selected flow root's `maintenance/` directory. The manifest is streamed
+in raw UTF-8 relative-path order; only 256 directory names or import records are
+buffered. Read-only sorting may repeat directory passes for large fanout. Bodies
+are bounded to 64 KiB; stdout/stderr, reports and prepared inputs are never read.
+Only positively historical invalid snapshots with full host quiescence proof may
+be skipped; exact bytes, hashes and provenance remain in evidence.
+
+Apply publishes a pending `data/execution-storage.json` binding under admission
+before database mutation. An existing store receives one verified WAL-aware
+recovery backup. Import plus its checkpoint commits in batches of at most 256.
+Schema/source/count/FK/replay checks precede cutover. A separate, deterministic
+`verification/` bundle reuses BackupPort to check SQLite integrity without
+bypassing the public SQL session's prohibition on administrative PRAGMAs. Resume
+verifies and reuses both evidence bundles; the verification snapshot never
+replaces the pre-mutation recovery backup. SQL `execution_state` and the migration
+ready marker change together in the sole CAS authority cutover.
+
+Exact `migration_id`, `plan_checksum` and evidence select resume. Pending binding
+blocks capable execution clients; there is no JSON fallback. After committed
+cutover, resume repairs only the derived report and leaves indexed dirty heads
+for the existing projection owner. Later status.json changes are never imported
+as truth. Explicit `abort` removes only this engine's pending binding before any
+target/schema mutation. Once import/schema commits exist, recovery rolls forward;
+restore requires a new target and a controlled offline binding switch.
+
+The command/parser adapters add `execution-inspect`, `execution-import` (plan by
+default) and `execution-resume`. Apply needs `--apply --offline-confirmed` and
+`--evidence-dir`; resume additionally requires exact migration/checksum selectors.
+They emit one JSON object, with exit 0 for plan/ready, 1 for refusal and argparse 2
+for invalid syntax. Without host composition/verifier they fail closed.
+
+The native UUID coordinator/script, automatic update/first-safe-write triggers,
+full PFConfig provider and shared CLI/Runtime composition belong to later source
+phases. This engine alone does not establish their integration or require users
+to migrate data manually. Real host proof, installed entrypoints and integrated
+assurance remain pending. No live developer storage is migrated by this slice.

@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import hashlib
+import heapq
 import json
 import os
 import sqlite3
 import stat
 from collections.abc import Callable, Iterator
 from contextlib import closing
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
+from ..executions.model import ExecutionKey, ExecutionRecord
+from ..executions.projection import canonical_json, compatibility_payload
 from .contracts import (
     JournalRow,
     JournalSource,
@@ -19,6 +23,263 @@ from .contracts import (
     MaintenanceError,
     SourceKind,
 )
+
+
+@dataclass(frozen=True)
+class ExecutionSnapshot:
+    """One bounded legacy latest snapshot; original bytes are never rewritten."""
+
+    relative_path: str
+    raw: bytes
+    payload: JsonObject
+    key: ExecutionKey
+    next_attempt: int
+    invalid_historical: bool
+
+    def record(self, generation: int) -> ExecutionRecord:
+        """Map only observable latest state, with no invented overwritten history."""
+        status = self.payload["status"]
+        prepared = status in {"planned", "ready", "manual_required", "blocked"}
+        return ExecutionRecord(
+            self.key,
+            None,
+            1,
+            generation,
+            "prepared" if prepared else "absent",
+            None if prepared else status,
+            "pending",
+            None,
+            None if prepared else 1,
+            canonical_json(self.payload),
+            0,
+        )
+
+
+def execution_ordered(directory: Path, *, subtree: bool = False) -> Iterator[Path]:
+    """Visit raw UTF-8 names in chunks of 256 without an all-history path list.
+
+    Repeated directory passes trade CPU for bounded memory on read-only plans.
+    Import evidence is an external NDJSON spool, not an in-memory envelope.
+    """
+    _check_links(directory, "migration_source_symlink")
+    if not directory.exists():
+        return
+    last: bytes | None = None
+    suffix = "/" if subtree else ""
+    while True:
+        with os.scandir(directory) as entries:
+            names = heapq.nsmallest(
+                256,
+                (
+                    (entry.name + suffix).encode("utf-8")
+                    for entry in entries
+                    if last is None or (entry.name + suffix).encode("utf-8") > last
+                ),
+            )
+        if not names:
+            return
+        for name in names:
+            path = directory / (
+                name.decode("utf-8")[:-1] if subtree else name.decode("utf-8")
+            )
+            _check_links(path, "migration_source_symlink")
+            yield path
+        last = names[-1]
+
+
+def execution_bytes(path: Path) -> bytes:
+    """Read one regular, stable, bounded status or direct receipt body only."""
+    before = _signature(path)
+    if before[2] > 65536:
+        raise MaintenanceError("execution_source_too_large")
+    with path.open("rb") as handle:
+        raw = handle.read(65537)
+        if _stat_signature(os.fstat(handle.fileno()))[:4] != before[:4]:
+            raise MaintenanceError("migration_source_changed")
+    if len(raw) > 65536 or _signature(path) != before:
+        raise MaintenanceError("migration_source_changed")
+    return raw
+
+
+def execution_json(raw: bytes) -> JsonObject:
+    """Decode exact schema input, rejecting duplicates, NUL and nonfinite data."""
+    try:
+        value = _decode(raw)
+
+        # Compatibility DTO validation recursively rejects NUL/invalid Unicode.
+        def walk(item: object) -> None:
+            if isinstance(item, str):
+                if "\x00" in item:
+                    raise ValueError("json_nul")
+                item.encode("utf-8")
+            elif isinstance(item, dict):
+                for key, child in item.items():
+                    walk(key)
+                    walk(child)
+            elif isinstance(item, list):
+                for child in item:
+                    walk(child)
+
+        walk(value)
+        canonical_json(value)
+        return value
+    except (ValueError, UnicodeError, RecursionError):
+        raise MaintenanceError("execution_source_invalid") from None
+
+
+def execution_snapshots(
+    project: Path, flow: Path, project_id: str, *, skip_terminal_invalid: bool
+) -> Iterator[tuple[JsonObject, ExecutionSnapshot | None, bytes | None]]:
+    """Stream inventory facts and latest snapshots, never output/report inputs.
+
+    Directory names are allocation evidence only. Direct bounded receipts enter
+    the manifest for host quiescence verification, never recreate missing history.
+    Unknown/active statuses and ambiguous attempt names always block.
+    """
+    import re
+
+    def fact(path: Path, raw: bytes) -> JsonObject:
+        return {
+            "relative_path": path.relative_to(project).as_posix(),
+            "size": len(raw),
+            "sha256": "sha256:" + hashlib.sha256(raw).hexdigest(),
+        }
+
+    def receipt_bytes(path: Path, expected_attempt: int | None = None) -> bytes:
+        raw = execution_bytes(path)
+        body = execution_json(raw)
+        if type(body.get("schema_version")) is not int or body["schema_version"] != 1:
+            raise MaintenanceError("execution_source_invalid")
+        expected: dict[str, object] = {
+            "project_id": project_id,
+            "run_id": run.name,
+            "task_id": task.name,
+        }
+        if expected_attempt is not None:
+            expected["attempt"] = expected_attempt
+        if any(
+            key in body and (type(body[key]) is not type(value) or body[key] != value)
+            for key, value in expected.items()
+        ):
+            raise MaintenanceError("execution_identity_conflict")
+        return raw
+
+    root = flow / "runtime/agent-runs"
+    for run in execution_ordered(root, subtree=True):
+        if not run.is_dir():
+            raise MaintenanceError("execution_inventory_invalid")
+        for task in execution_ordered(run, subtree=True):
+            if not task.is_dir():
+                raise MaintenanceError("execution_inventory_invalid")
+            floor = 1
+            for attempt in execution_ordered(task / "attempts"):
+                if (
+                    not attempt.is_dir()
+                    or re.fullmatch(r"[1-9][0-9]{0,18}", attempt.name) is None
+                    or int(attempt.name) >= 9223372036854775807
+                ):
+                    raise MaintenanceError("execution_attempt_directory_invalid")
+                floor = max(floor, int(attempt.name) + 1)
+                yield (
+                    {"directory": attempt.relative_to(project).as_posix()},
+                    None,
+                    None,
+                )
+                for name in ("exit.json", "heartbeat.json", "process.json"):
+                    receipt = attempt / name
+                    _check_links(receipt, "migration_source_symlink")
+                    if receipt.exists():
+                        raw = receipt_bytes(receipt, int(attempt.name))
+                        yield fact(receipt, raw), None, raw
+            for name in ("exit.json", "heartbeat.json", "process.json"):
+                receipt = task / name
+                _check_links(receipt, "migration_source_symlink")
+                if receipt.exists():
+                    raw = receipt_bytes(receipt)
+                    yield fact(receipt, raw), None, raw
+            status_path = task / "status.json"
+            _check_links(status_path, "migration_source_symlink")
+            if not status_path.exists():
+                # Directory-only preparations are not fabricated as attempts.
+                # Frozen repository floors require an observable imported head.
+                # Without one, cutover could reuse an already prepared directory.
+                if floor > 1:
+                    raise MaintenanceError("execution_snapshot_required")
+                yield (
+                    {"missing_status": status_path.relative_to(project).as_posix()},
+                    None,
+                    None,
+                )
+                continue
+            raw = execution_bytes(status_path)
+            payload = execution_json(raw)
+            number = payload.get("attempt")
+            if type(number) is not int or not 1 <= number < 9223372036854775807:
+                raise MaintenanceError("execution_attempt_required")
+            key = ExecutionKey(project_id, run.name, task.name, number)
+            if (
+                type(payload.get("schema_version")) is not int
+                or payload["schema_version"] != 1
+                or payload.get("run_id") != run.name
+                or payload.get("task_id") != task.name
+                or payload.get("project_id", project_id) != project_id
+            ):
+                raise MaintenanceError("execution_identity_conflict")
+            if payload.get("status") not in {
+                "planned",
+                "ready",
+                "manual_required",
+                "blocked",
+                "completed",
+                "failed",
+                "timed_out",
+                "cancelled",
+                "unknown_exit",
+                "lost",
+            }:
+                raise MaintenanceError("execution_activity_unknown")
+            invalid = False
+            try:
+                compatibility_payload(canonical_json(payload), key)
+            except ValueError:
+                if not skip_terminal_invalid or payload["status"] not in {
+                    "completed",
+                    "failed",
+                    "timed_out",
+                    "cancelled",
+                    "unknown_exit",
+                    "lost",
+                }:
+                    raise MaintenanceError("execution_source_invalid") from None
+                # Historical classification additionally requires the exact whole
+                # inventory host proof at freeze/cutover. Raw bytes are quarantined.
+                invalid = True
+            if payload["status"] in {
+                "planned",
+                "ready",
+                "manual_required",
+                "blocked",
+            } and (
+                payload.get("pid") is not None or payload.get("started_at") is not None
+            ):
+                raise MaintenanceError("execution_activity_unknown")
+            snapshot = ExecutionSnapshot(
+                status_path.relative_to(project).as_posix(),
+                raw,
+                cast(JsonObject, payload),
+                key,
+                max(floor, number + 1),
+                invalid,
+            )
+            item = fact(status_path, raw)
+            item.update(
+                semantic_checksum="sha256:"
+                + hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest(),
+                next_attempt=snapshot.next_attempt,
+                skipped=invalid,
+            )
+            yield item, snapshot, raw
+
 
 _Signature = tuple[int, int, int, int, int]
 _RawValidator = Callable[[JsonObject], None]

@@ -9,6 +9,8 @@ import sqlite3
 from collections.abc import Callable
 from pathlib import Path
 
+from processforge_core.database.errors import DatabaseError
+from processforge_core.executions.model import ExecutionError
 from processforge_core.maintenance.backup import SQLiteBackupService
 from processforge_core.maintenance.contracts import (
     BackupPort,
@@ -16,6 +18,7 @@ from processforge_core.maintenance.contracts import (
     JsonObject,
     MaintenanceError,
 )
+from processforge_core.maintenance.execution_migration import ExecutionMigrationService
 from processforge_core.maintenance.journal_scan import JournalScanService
 from processforge_core.maintenance.journals import JournalMaintenanceService
 from processforge_core.sqlite_storage import JournalError
@@ -32,11 +35,13 @@ class JournalMaintenanceCommand:
         maintenance_factory: Callable[
             [], JournalMaintenanceService
         ] = JournalMaintenanceService,
+        execution_factory: Callable[[Path], ExecutionMigrationService] | None = None,
     ) -> None:
         """Save narrow cold factories without constructing services or doing I/O."""
         self._backup_factory = backup_factory
         self._scan_factory = scan_factory
         self._maintenance_factory = maintenance_factory
+        self._execution_factory = execution_factory
 
     def execute(self, args: argparse.Namespace) -> int:
         """Print one JSON report and return 0 for success/plan or 1 for refusal.
@@ -48,7 +53,7 @@ class JournalMaintenanceCommand:
         operation = args.maintenance_command
         try:
             report = self._run(args)
-        except MaintenanceError as error:
+        except (MaintenanceError, DatabaseError, ExecutionError) as error:
             report = self._failure(operation, error.code)
         except JournalError as error:
             code = str(error).partition(":")[0]
@@ -86,6 +91,42 @@ class JournalMaintenanceCommand:
 
     def _run(self, args: argparse.Namespace) -> JsonObject:
         operation = args.maintenance_command
+        if operation in {"execution-inspect", "execution-import", "execution-resume"}:
+            if self._execution_factory is None:
+                raise MaintenanceError("execution_safety_unavailable")
+            project = Path(args.maintenance_project_root)
+            service = self._execution_factory(project)
+            if operation == "execution-inspect":
+                return service.inspect(project, evidence_dir=args.evidence_dir)
+            if operation == "execution-resume":
+                if (
+                    not args.apply
+                    or not args.offline_confirmed
+                    or args.evidence_dir is None
+                ):
+                    raise MaintenanceError("execution_apply_arguments_required")
+                return service.resume(
+                    project,
+                    migration_id=args.migration_id,
+                    plan_checksum=args.plan_checksum,
+                    evidence_dir=args.evidence_dir,
+                    offline_confirmed=args.offline_confirmed,
+                )
+            if args.apply and (args.evidence_dir is None or not args.offline_confirmed):
+                raise MaintenanceError("execution_apply_arguments_required")
+            plan = service.plan(
+                project,
+                skip_terminal_invalid=args.skip_terminal_invalid,
+                evidence_dir=args.evidence_dir if not args.apply else None,
+            )
+            if not args.apply or plan.get("blocked"):
+                return plan
+            return service.apply(
+                project,
+                plan,
+                evidence_dir=args.evidence_dir,
+                offline_confirmed=args.offline_confirmed,
+            )
         if operation == "backup":
             return self._backup_factory().create(Path(args.database), Path(args.output))
         if operation == "verify":
@@ -112,4 +153,6 @@ class JournalMaintenanceCommand:
 
     @staticmethod
     def _failure(operation: str, code: str) -> JsonObject:
+        if operation in {"execution-inspect", "execution-import", "execution-resume"}:
+            return ExecutionMigrationService._failure(operation, code)
         return {"status": "failed", "operation": operation, "error": code}

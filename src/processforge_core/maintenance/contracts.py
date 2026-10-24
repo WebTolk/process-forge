@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
@@ -10,6 +11,56 @@ JsonObject = dict[str, Any]
 SourceKind = Literal["events", "raw"]
 JournalSource = tuple[SourceKind, Path]
 JournalRow = tuple[SourceKind, JsonObject, str]
+
+
+@dataclass(frozen=True)
+class MigrationSafety:
+    """Trusted host verdict, never inferred from an operator confirmation flag.
+
+    Generation pins the host ownership/routing/capability evidence. Proven means
+    old writers, publication gaps and all owned physical trees were excluded for
+    the exact supplied context. Evidence references are private, not report text.
+    """
+
+    state: Literal["proven", "active", "unknown"]
+    generation: str
+    evidence: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ExecutionMigrationContext:
+    """Exact host-authorized pins to revalidate under admission.
+
+    A verifier must resolve enrollment and compare workplace_root, inspect the
+    matching Runtime instance/routing, capability and old-writer exclusion,
+    pre-spawn gaps and complete process trees. None means verified standalone,
+    not a fallback when an enrolled workplace is inaccessible.
+    """
+
+    project_root: Path
+    workplace_root: Path | None
+    project_id: str
+    store_id: str
+    target_relative_path: str
+    source_generation: int
+    target_generation: int
+    plan_checksum: str
+    manifest_checksum: str
+    phase: Literal["inspect", "freeze", "resume", "cutover"]
+
+
+class ExecutionMigrationVerifier(Protocol):
+    """Recheck actual host evidence; return unknown on any unavailable proof.
+
+    Engine invokes freeze/resume/cutover while holding real admission gates.
+    A missing verifier or changed generation refuses migration. Implementations
+    must not treat terminal text, empty registry, TTL, PID-only or CLI flags as
+    proof. They must keep excluded legacy entrypoints disabled through resume.
+    """
+
+    def __call__(self, context: ExecutionMigrationContext) -> MigrationSafety:
+        """Verify the complete context and return its current evidence epoch."""
+        ...
 
 
 class MaintenanceError(ValueError):

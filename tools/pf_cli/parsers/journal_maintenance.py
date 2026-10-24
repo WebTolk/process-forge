@@ -30,6 +30,32 @@ def register_journal_maintenance(
         allow_abbrev=False,
     )
     operations = parser.add_subparsers(dest="maintenance_command", required=True)
+    for name in ("execution-inspect", "execution-import", "execution-resume"):
+        command = operations.add_parser(
+            name,
+            allow_abbrev=False,
+            help="Inspect/repair worker execution migration; host safety proof required.",
+        )
+        command.add_argument(
+            "--project-root", dest="maintenance_project_root", type=Path, required=True
+        )
+        command.add_argument("--evidence-dir", type=Path)
+        command.add_argument("--json", action="store_true")
+        if name != "execution-inspect":
+            command.add_argument(
+                "--apply", action="store_true", required=name == "execution-resume"
+            )
+            command.add_argument(
+                "--offline-confirmed",
+                action="store_true",
+                required=name == "execution-resume",
+            )
+        if name == "execution-import":
+            command.add_argument("--skip-terminal-invalid", action="store_true")
+        if name == "execution-resume":
+            command.add_argument("--migration-id", required=True)
+            command.add_argument("--plan-checksum", required=True)
+        command.set_defaults(func=execute)
     descriptions = {
         "backup": "Create and verify a new backup bundle immediately (writes files).",
         "verify": "Verify an existing backup bundle without restoring it.",
