@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "registration": {
+    "run_id": "garage-pf-chat-journal-gap-registration-20261024-register-the-operator-r",
+    "assignment_id": "pf-chat-journal-gap-registration-20261024-register-the-operator-requeste",
+    "context_id": "pf-chat-journal-gap-registration-20261024-register-the-operator-requeste-capsule",
+    "action": "run_completed",
+    "run": {
+      "id": "garage-pf-chat-journal-gap-registration-20261024-register-the-operator-r",
+      "status": "completed"
+    },
+    "assignment": {
+      "id": "pf-chat-journal-gap-registration-20261024-register-the-operator-requeste",
+      "status": "done"
+    }
+  },
+  "future_task": "pf-chat-journal-completeness-20261024",
+  "future_run": "pf-chat-journal-completeness-backlog-20261024",
+  "implementation_started": false
+}

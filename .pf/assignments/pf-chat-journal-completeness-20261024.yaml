@@ -1,0 +1,63 @@
+schema_version: 1
+id: pf-chat-journal-completeness-20261024
+title: Исправить пропуски завершённых ответов в журнале разговора PF
+run_id: pf-chat-journal-completeness-backlog-20261024
+process: software-feature-development
+status: open
+created_at: '2026-10-24T05:29:28Z'
+updated_at: '2026-10-24T05:29:28Z'
+objective: 'Устранить подтверждённые пропуски final answers в приватном журнале PF, определить полноту и границы capture, сохранить идемпотентность и проверить реальный маршрут хоста. Spec: .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/spec.md. Будущая задача; реализация не начата.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: intake-scope
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/spec.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/evidence.json
+    role: input
+    required: true
+    mutable_by_worker: false
+required_sources:
+  - .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/spec.md
+  - .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/evidence.json
+allowed_read_files:
+  - .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/spec.md
+  - .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/evidence.json
+ownership:
+  owner_id: backlog-chat-journal-completeness
+  owner_label: worker-backlog-chat-journal-completeness
+  role: planner
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-chat-journal-completeness-backlog-20261024/future-fix-report.md
+  format: concise_markdown
+  include:
+    []

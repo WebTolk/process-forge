@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T05:29:35.522776+00:00",
+  "future_run": "pf-chat-journal-completeness-backlog-20261024",
+  "future_assignment": "pf-chat-journal-completeness-20261024",
+  "registration_work": {
+    "project_root": ".",
+    "run_id": "garage-pf-chat-journal-gap-registration-20261024-register-the-operator-r",
+    "assignment_id": "pf-chat-journal-gap-registration-20261024-register-the-operator-requeste",
+    "context_id": "pf-chat-journal-gap-registration-20261024-register-the-operator-requeste-capsule"
+  },
+  "native_commands": [
+    {
+      "command": "run-create",
+      "exit_code": 0
+    },
+    {
+      "command": "task-create",
+      "exit_code": 0
+    }
+  ],
+  "implementation_started": false
+}

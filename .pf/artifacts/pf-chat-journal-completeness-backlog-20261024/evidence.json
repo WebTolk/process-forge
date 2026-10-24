@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-24T05:28:47.545091+00:00",
+  "method": "Exact-session comparison of completed provider assistant messages with PF transcript; UTF-8 text with newline/edge-whitespace normalization.",
+  "case": "SQL adapter design discussion on 2026-10-21",
+  "pf_transcript_record_count_for_session": 35,
+  "missing_completed_assistant_messages": 4,
+  "comparisons": [
+    {
+      "source_timestamp": "2026-10-21T03:40:44.914Z",
+      "source_line": 3977,
+      "role": "assistant",
+      "phase": "final_answer",
+      "content_sha256": "694d6b3749b72c348f5e2048bbeba53ffaa2a6f15c6fb49594e0be247627c19d",
+      "present_in_pf_transcript": false
+    },
+    {
+      "source_timestamp": "2026-10-21T03:51:10.712Z",
+      "source_line": 4105,
+      "role": "assistant",
+      "phase": "final_answer",
+      "content_sha256": "aa7151f491f36b604cf199d77abc3a8492ffbe590c5f334dfaa1eb134a640299",
+      "present_in_pf_transcript": false
+    },
+    {
+      "source_timestamp": "2026-10-21T04:16:07.058Z",
+      "source_line": 4235,
+      "role": "assistant",
+      "phase": "final_answer",
+      "content_sha256": "fc57c8a82483e2b205d5ef3276d86f541abb2cd13f442f264eabd27b03177cc9",
+      "present_in_pf_transcript": false
+    },
+    {
+      "source_timestamp": "2026-10-21T04:44:29.253Z",
+      "source_line": 4349,
+      "role": "assistant",
+      "phase": "final_answer",
+      "content_sha256": "bf3c64f4d592e527b4a06fa2daa5421595129f7a00ffb8eed2826788ffc9ea0d",
+      "present_in_pf_transcript": false
+    }
+  ],
+  "pf_user_prompts_present": true,
+  "root_cause": "not_established",
+  "capture_configuration_at_event_time": "not_verified",
+  "current_mcp_chat": "missing_session; local transcript read succeeded",
+  "current_mcp_error_explains_historical_gap": false,
+  "private_locator": ".pf/tmp/chat-journal-completeness-20261024/evidence-locator.private.json",
+  "historical_capture_fixes_inspected": [
+    "central-ingress-conversation-completeness-implementation-20260820",
+    "codex-capture-remediation-no-turn-fix-20260822"
+  ],
+  "product_or_transcript_mutation": false
+}

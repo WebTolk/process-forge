@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T05:32:47.684689+00:00",
+  "status": "pass",
+  "doctors": {
+    "registration-run": {
+      "exit_code": 0,
+      "pass_lines": 21,
+      "fail_lines": 0,
+      "warn_lines": 0
+    },
+    "registration-capsule": {
+      "exit_code": 0,
+      "pass_lines": 12,
+      "fail_lines": 0,
+      "warn_lines": 0
+    }
+  },
+  "protected_inputs_and_index_preserved": true,
+  "registration_work": "run_completed",
+  "future_implementation_started": false
+}

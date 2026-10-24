@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T05:31:23.345473+00:00",
+  "status": "pass",
+  "checks": [
+    "exact native task/run identity",
+    "open planning_only writer=false task in draft run",
+    "no product grants, execution capsule or worker",
+    "required sources present",
+    "four missing assistant messages verified",
+    "historical PF transcript preserved",
+    "source extract preserved",
+    "JSON/YAML parsing",
+    "relative Markdown links",
+    "no private absolute paths in selected public outputs",
+    "trailing whitespace",
+    "protected source inputs and main index preserved"
+  ],
+  "protected_files": 12,
+  "native_doctors": {
+    "future-run": {
+      "exit_code": 0,
+      "pass_lines": 18,
+      "fail_lines": 0,
+      "warn_lines": 0
+    },
+    "future-task": {
+      "exit_code": 0,
+      "pass_lines": 12,
+      "fail_lines": 0,
+      "warn_lines": 1
+    }
+  },
+  "implementation_started": false,
+  "python_product_checks": {
+    "status": "not_applicable",
+    "reason": "No executable product source changed; only native backlog registration and documents."
+  },
+  "browser_review_release": {
+    "status": "not_applicable",
+    "reason": "No UI, code, archive or installed/Core change. Independent code review belongs to future implementation."
+  }
+}

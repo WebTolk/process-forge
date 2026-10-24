@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "paths": [
+    ".pf/artifacts/pf-chat-journal-completeness-backlog-20261024/registration-report.md",
+    ".pf/artifacts/pf-chat-journal-completeness-backlog-20261024/spec.md",
+    ".pf/artifacts/pf-chat-journal-completeness-backlog-20261024/evidence.json",
+    ".pf/artifacts/pf-chat-journal-completeness-backlog-20261024/registration.json",
+    ".pf/assignments/pf-chat-journal-completeness-20261024.yaml",
+    ".pf/runs/pf-chat-journal-completeness-backlog-20261024/run.yaml",
+    ".pf/runs/pf-chat-journal-completeness-backlog-20261024/plan.md",
+    ".pf/runs/pf-chat-journal-completeness-backlog-20261024/task-index.md",
+    ".pf/logs/chat-journal-completeness-20261024-primary.md",
+    ".pf/artifacts/pf-chat-journal-completeness-backlog-20261024/validation.json",
+    ".pf/artifacts/pf-chat-journal-completeness-backlog-20261024/changed-files.json"
+  ],
+  "product_changes": false,
+  "scope": "Future backlog registration and evidence only; native registration lifecycle records remain governed by PF."
+}
