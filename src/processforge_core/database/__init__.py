@@ -14,10 +14,11 @@ from .contracts import (
     WriteResult,
 )
 from .errors import DatabaseError
-from .schema import SchemaDefinition, SchemaManager, SchemaStatus
+from .schema import STORE_ENVELOPE_DDL, SchemaDefinition, SchemaManager, SchemaStatus
 from .sqlite import SQLiteDriver
 
 __all__ = [
+    "STORE_ENVELOPE_DDL",
     "Database",
     "DatabaseCapabilities",
     "DatabaseDriver",

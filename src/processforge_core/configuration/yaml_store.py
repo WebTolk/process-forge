@@ -1,20 +1,28 @@
 """Explicit-path YAML adapter with bounded reads, OS locking and atomic writes."""
+
 from __future__ import annotations
 
-from contextlib import contextmanager
 import hashlib
 import os
-from pathlib import Path
 import stat
+import sys
 import tempfile
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, TypeVar, cast
 
 import yaml
 
-from .errors import ConfigurationConflict, ConfigurationStorageError, InvalidConfiguration
+from .errors import (
+    ConfigurationConflict,
+    ConfigurationStorageError,
+    InvalidConfiguration,
+)
 from .models import PFConfig, ProjectPFConfig
 from .storage import ConfigSnapshot
 
 MAX_BYTES = 65536
+_Config = TypeVar("_Config", bound=PFConfig | ProjectPFConfig)
 
 
 class _Loader(yaml.SafeLoader):
@@ -28,10 +36,26 @@ class _Loader(yaml.SafeLoader):
         return result
 
 
+def _presence(value: dict[str, Any], prefix: str = "") -> frozenset[str]:
+    """Collect leaves from the same validated mapping; profiles are atomic."""
+    keys: set[str] = set()
+    for key, item in value.items():
+        dotted = prefix + key
+        if dotted == "schema_version":
+            continue
+        if prefix == "database.profiles." or not isinstance(item, dict):
+            keys.add(dotted)
+        else:
+            keys.update(_presence(item, dotted + "."))
+    return frozenset(keys)
+
+
 class YamlConfigStore:
     """No workplace discovery or directory creation; caller supplies the target."""
 
-    def __init__(self, path: Path, *, model: type[PFConfig] | type[ProjectPFConfig] = PFConfig):
+    def __init__(
+        self, path: Path, *, model: type[PFConfig] | type[ProjectPFConfig] = PFConfig
+    ):
         self.path = Path(path)
         if model not in (PFConfig, ProjectPFConfig):
             raise InvalidConfiguration("configuration_model_required")
@@ -50,8 +74,11 @@ class YamlConfigStore:
             info = path.lstat()
         except FileNotFoundError:
             return
-        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
-                or getattr(info, "st_file_attributes", 0) & 0x400):
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_nlink != 1
+            or getattr(info, "st_file_attributes", 0) & 0x400
+        ):
             raise ConfigurationStorageError("configuration_unsafe_path")
 
     def _raw(self) -> bytes | None:
@@ -70,21 +97,33 @@ class YamlConfigStore:
         return YamlConfigStore._decode_model(raw, PFConfig)
 
     @staticmethod
-    def _decode_model(raw: bytes | None, model):
+    def _decode_model(raw: bytes | None, model: type[_Config]) -> _Config:
+        return YamlConfigStore._decoded(raw, model)[0]
+
+    @staticmethod
+    def _decoded(
+        raw: bytes | None, model: type[_Config]
+    ) -> tuple[_Config, frozenset[str]]:
         if raw is None:
-            return model()
+            return model(), frozenset()
         try:
             text = raw.decode("utf-8-sig")
-            if any(isinstance(token, (yaml.tokens.AliasToken, yaml.tokens.AnchorToken)) for token in yaml.scan(text)):
+            if any(
+                isinstance(token, (yaml.tokens.AliasToken, yaml.tokens.AnchorToken))
+                for token in yaml.scan(text)
+            ):
                 raise InvalidConfiguration("configuration_alias_forbidden")
-            return model.from_dict(yaml.load(text, Loader=_Loader))
+            value = yaml.load(text, Loader=_Loader)
+            config = cast(_Config, model.from_dict(value))
+            return config, _presence(value)
         except (UnicodeError, yaml.YAMLError, RecursionError) as exc:
             raise InvalidConfiguration("configuration_yaml_invalid") from exc
 
     def read(self) -> ConfigSnapshot:
         try:
             raw = self._raw()
-            return ConfigSnapshot(self._decode_model(raw, self.model), self._revision(raw))
+            config, explicit_keys = self._decoded(raw, self.model)
+            return ConfigSnapshot(config, self._revision(raw), explicit_keys)
         except OSError as exc:
             raise ConfigurationStorageError("configuration_read_failed") from exc
 
@@ -99,11 +138,13 @@ class YamlConfigStore:
                 stream.flush()
             stream.seek(0)
             try:
-                if os.name == "nt":
+                if sys.platform == "win32":
                     import msvcrt
+
                     msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
                 else:
                     import fcntl
+
                     fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             except OSError as exc:
                 raise ConfigurationConflict("configuration_writer_busy") from exc
@@ -111,7 +152,7 @@ class YamlConfigStore:
                 yield
             finally:
                 stream.seek(0)
-                if os.name == "nt":
+                if sys.platform == "win32":
                     msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
                 else:
                     fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
@@ -121,26 +162,39 @@ class YamlConfigStore:
             raise ConfigurationConflict("configuration_revision_conflict")
 
     def _sync_directory(self) -> None:
-        if os.name != "nt":
+        if sys.platform != "win32":
             fd = os.open(self.path.parent, os.O_RDONLY | os.O_DIRECTORY)
             try:
                 os.fsync(fd)
             finally:
                 os.close(fd)
 
-    def write(self, config: PFConfig | ProjectPFConfig, *, expected_revision: str | None) -> ConfigSnapshot:
+    def write(
+        self, config: PFConfig | ProjectPFConfig, *, expected_revision: str | None
+    ) -> ConfigSnapshot:
         if type(config) is not self.model:
             raise InvalidConfiguration("configuration_model_required")
-        raw = yaml.safe_dump(config.to_dict(), sort_keys=False, allow_unicode=True).encode("utf-8")
+        raw = yaml.safe_dump(
+            config.to_dict(), sort_keys=False, allow_unicode=True
+        ).encode("utf-8")
         staged = None
         try:
             with self._lock():
                 self._compare(expected_revision)
-                mode = stat.S_IMODE(self.path.stat().st_mode) if self.path.exists() else 0o600
+                mode = (
+                    stat.S_IMODE(self.path.stat().st_mode)
+                    if self.path.exists()
+                    else 0o600
+                )
                 from processforge_platforms.file_security import native_file_security
+
                 security = native_file_security()
-                descriptor = security.descriptor(self.path) if self.path.exists() else None
-                fd, name = tempfile.mkstemp(prefix=".configuration-", suffix=".tmp", dir=self.path.parent)
+                descriptor = (
+                    security.descriptor(self.path) if self.path.exists() else None
+                )
+                fd, name = tempfile.mkstemp(
+                    prefix=".configuration-", suffix=".tmp", dir=self.path.parent
+                )
                 staged = Path(name)
                 with os.fdopen(fd, "wb") as stream:
                     stream.write(raw)
@@ -156,7 +210,8 @@ class YamlConfigStore:
                 else:
                     security.replace(self.path, staged, mode)
                 self._sync_directory()
-                return ConfigSnapshot(config, self._revision(raw))
+                validated, explicit_keys = self._decoded(raw, self.model)
+                return ConfigSnapshot(validated, self._revision(raw), explicit_keys)
         except OSError as exc:
             raise ConfigurationStorageError("configuration_write_failed") from exc
         finally:

@@ -8,7 +8,8 @@ import threading
 import time
 from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
-from typing import Literal
+from pathlib import Path
+from typing import Literal, cast
 
 from .contracts import (
     DatabaseCapabilities,
@@ -249,6 +250,24 @@ class SQLiteDriver:
 
     capabilities = DatabaseCapabilities(True, True, True, True, True)
 
+    def _connect(
+        self,
+        database: str | Path,
+        *,
+        timeout: float = 5.0,
+        isolation_level: str | None = "",
+        uri: bool = False,
+    ) -> sqlite3.Connection:
+        """Native transport only; the caller owns policy, errors and lifetime."""
+        # Typeshed narrows this argument, omitting native's valid empty string.
+        # Keep native validation and exact caller bytes (including case).
+        level = cast(
+            Literal["DEFERRED", "EXCLUSIVE", "IMMEDIATE"] | None, isolation_level
+        )
+        return sqlite3.connect(
+            database, timeout=timeout, isolation_level=level, uri=uri
+        )
+
     @contextmanager
     def _admin(
         self,
@@ -270,7 +289,7 @@ class SQLiteDriver:
         )
         connection: sqlite3.Connection | None = None
         try:
-            connection = sqlite3.connect(
+            connection = self._connect(
                 target.path.as_uri() + "?mode=" + mode,
                 uri=True,
                 timeout=budget / 1000,

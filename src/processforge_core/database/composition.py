@@ -11,12 +11,22 @@ class DatabaseFactory:
     """Construct bindings from host-authorized targets without filesystem I/O."""
 
     @staticmethod
+    def resolve_driver(config: DatabaseConfig | None = None) -> SQLiteDriver:
+        """Return a cold native driver from the effective configuration."""
+        if config is not None and type(config) is not DatabaseConfig:
+            raise DatabaseError("database_profile_invalid")
+        if config is not None and config.driver not in (None, "sqlite"):
+            raise DatabaseError("database_driver_unsupported")
+        return SQLiteDriver()
+
+    @staticmethod
     def from_profile(
         config: DatabaseConfig | None,
         profile_id: str,
         authorized_target: DatabaseTarget,
     ) -> Database:
-        if config is None:
+        driver = DatabaseFactory.resolve_driver(config)
+        if config is None or (not config.profiles and not config.defaults):
             if profile_id != "project_main":
                 raise DatabaseError("database_profile_invalid")
             profile = DatabaseProfile("project", "sqlite", "data/pf.sqlite3")
@@ -33,6 +43,4 @@ class DatabaseFactory:
         ):
             raise DatabaseError("database_profile_invalid")
         # Containment and relative-path binding require a base and belong to host composition.
-        return Database(
-            SQLiteDriver(), authorized_target, timeout_ms=profile.timeout_ms
-        )
+        return Database(driver, authorized_target, timeout_ms=profile.timeout_ms)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import PurePosixPath, PureWindowsPath
 from types import MappingProxyType
 from typing import Any, Literal
@@ -60,10 +60,15 @@ class DatabaseProfile:
 class DatabaseConfig:
     """Defensively copied immutable profile/default maps."""
 
-    profiles: Mapping[str, DatabaseProfile]
-    defaults: Mapping[str, str]
+    profiles: Mapping[str, DatabaseProfile] = field(default_factory=dict)
+    defaults: Mapping[str, str] = field(default_factory=dict)
+    driver: Literal["sqlite"] | None = None
 
     def __post_init__(self) -> None:
+        if self.driver is not None and (
+            type(self.driver) is not str or self.driver != "sqlite"
+        ):
+            raise _invalid()
         if not isinstance(self.profiles, Mapping) or not isinstance(
             self.defaults, Mapping
         ):
@@ -88,7 +93,11 @@ class DatabaseConfig:
 
     @classmethod
     def from_dict(cls, value: Any, *, project: bool = False) -> DatabaseConfig:
-        if not isinstance(value, dict) or set(value) - {"profiles", "defaults"}:
+        if not isinstance(value, dict) or set(value) - {
+            "profiles",
+            "defaults",
+            "driver",
+        }:
             raise _invalid()
         profiles = value.get("profiles", {})
         defaults = value.get("defaults", {})
@@ -103,7 +112,7 @@ class DatabaseConfig:
             ):
                 raise _invalid()
             parsed[key] = DatabaseProfile(**profile)
-        result = cls(parsed, defaults)
+        result = cls(parsed, defaults, value.get("driver"))
         if project:
             result.require_project()
         return result
@@ -116,12 +125,15 @@ class DatabaseConfig:
             raise _invalid()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        value: dict[str, Any] = {
             "profiles": {
                 key: profile.to_dict() for key, profile in self.profiles.items()
             },
             "defaults": dict(self.defaults),
         }
+        if self.driver is not None:
+            value["driver"] = self.driver
+        return value
 
     def for_project(self, overrides: DatabaseConfig | None) -> DatabaseConfig:
         if overrides is None:
@@ -132,4 +144,5 @@ class DatabaseConfig:
         return DatabaseConfig(
             dict(self.profiles) | dict(overrides.profiles),
             dict(self.defaults) | dict(overrides.defaults),
+            self.driver if overrides.driver is None else overrides.driver,
         )

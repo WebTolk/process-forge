@@ -63,3 +63,61 @@ SessionStart не сообщает агенту о привязанной сес
 Смена параметра автоматически не удаляет исторический буфер сообщений.
 При разрешённом оператором обслуживании устаревшие сессии нужно отличать
 от текущей работы и сохранять необходимую историю проектов.
+
+
+## Полная эффективная конфигурация приложения
+
+`ConfigurationProvider` возвращает полный неизменяемый `PFConfig`: metrics,
+logging, temporary files, Garage hooks и database. Provider закрепляет явно
+разрешённые device/workplace/project paths и уже авторизованный typed
+`ProjectPFConfig` context. Он не обнаруживает enrollment и не интерпретирует
+Work permissions. Routing выбирает host; Runtime, daemon и сеть не требуются.
+
+Порядок: builtin → device → явно записанные workplace leaves → project →
+authorized context. Отсутствующие workplace поля наследуют device. Явные false
+и значения, равные defaults, перекрывают базу. Project/context null наследует;
+прежний allowlist запрещает metrics overrides. Forge policy, capsule scope и
+resource grants проверяются независимо и не расширяются настройками приложения.
+
+Host вызывает `live.snapshot()` один раз на операцию и передаёт downstream
+`ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)` либо
+его `current()`. `get(key)` читает полное effective значение. Consumers не читают
+и не мержат YAML сами. Native worker transport, host builder и CLI routing
+подключаются integration owner; snapshot не выдаёт body-read или policy grants
+и не должен попадать в model prompt либо public status.
+
+Default device file — Windows `LOCALAPPDATA/ProcessForge/configuration.yaml`
+(fallback home/AppData/Local); POSIX absolute
+`XDG_CONFIG_HOME/processforge/configuration.yaml` (fallback home/.config).
+Relative env roots запрещены. Импорт/конструктор не выполняют stat/read/mkdir,
+connect, scan или startup; первый snapshot — явное чтение. Missing files дают
+typed defaults и не создаются чтением.
+
+`ConfigSnapshot.explicit_keys` — внутренние dotted keys из тех же bounded,
+validated YAML bytes, что дали model и revision. `schema_version` не override;
+`database.profiles.<id>` атомарен, `database.defaults.<slot>` — leaf. Метаданные
+не сериализуются в YAML. Device/workplace profile IDs должны быть disjoint,
+даже при одинаковых definitions. Project/context разрешают только project scope
+и не могут менять workplace_main. References/scope валидируются. Profile path
+относится к authorized owner flow/workplace, не к каталогу device config; сам
+профиль не предоставляет доступ к target.
+
+`snapshot(refresh=True)` перечитывает только выбранные layers. Обычный snapshot
+проверяет replacement signatures через bounded cache под lock. First invalid,
+unsafe read выбрасывает прежний `ConfigurationError`; later invalid оставляет
+last-valid model/presence/revision вместе и сообщает code в `ResolvedConfig.errors`.
+Merge/policy errors не подавляются. Pinned refresh возвращает тот же snapshot
+без I/O; CRUD и другие запросы не меняют уже начатую операцию. Mutable global
+current-project отсутствует; requests/contexts/threads изолированы.
+
+Прежний `resolve(base_path, project_path)` сохраняет двухслойный смысл positional
+аргументов; `resolve(None, project_path)` использует builtins. Отсутствующий
+project path создаёт только in-memory empty override. Workplace выбирается явно.
+
+`database.driver` — необязательный sqlite/null selector без обязательных profiles.
+`PFConfig.get('database.driver')` даёт sqlite при отсутствии; ProjectPFConfig —
+override или None. `with_changes` и `ConfigService.reset` удаляют selector через
+None, сохраняя profiles/defaults. Отсутствующая database не добавляется в старые
+payloads. Прежний CRUD сохраняет материализацию старых полей; реально записанные
+default-valued поля становятся explicit workplace overrides. Refresh не меняет
+закреплённый store UUID/path: это отдельная maintenance обязанность host.

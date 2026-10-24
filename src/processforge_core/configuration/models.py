@@ -126,12 +126,34 @@ def _get(value: dict, key: str) -> Any:
     return value
 
 
+def _driver_change(value: dict, changes: dict[str, Any]) -> dict:
+    if "database.driver" not in changes:
+        return value
+    database = dict(value.get("database", {}))
+    selector = changes["database.driver"]
+    if selector is None:
+        database.pop("driver", None)
+    else:
+        database["driver"] = selector
+    if database.get("profiles") or database.get("defaults") or "driver" in database:
+        value["database"] = database
+    else:
+        value.pop("database", None)
+    return value
+
+
 def _with_changes(value: dict, changes: dict[str, Any], allowed: set[str]) -> dict:
     if not isinstance(changes, dict) or not changes:
         raise InvalidConfiguration("configuration_changes_empty")
-    for key, replacement in changes.items():
+    if "database" in changes and "database.driver" in changes:
+        raise InvalidConfiguration("configuration_changes_invalid")
+    for key in changes:
         if not isinstance(key, str) or key not in allowed:
             raise InvalidConfiguration("configuration_key_unknown")
+    value = _driver_change(value, changes)
+    for key, replacement in changes.items():
+        if key == "database.driver":
+            continue
         target = value
         parts = key.split(".")
         for part in parts[:-1]:
@@ -192,6 +214,10 @@ class PFConfig:
         return value
 
     def get(self, key: str) -> Any:
+        if key == "database.driver":
+            return (
+                self.database.driver if self.database is not None else None
+            ) or "sqlite"
         return _get(self.to_dict(), key)
 
     def with_changes(self, changes: dict[str, Any]) -> PFConfig:
@@ -207,9 +233,47 @@ class PFConfig:
                     "runtime.temporary_files.mode",
                     "runtime.temporary_files.max_age_hours",
                     "database",
+                    "database.driver",
                 },
             )
         )
+
+    def overlay(self, layer: PFConfig, *, explicit_keys: frozenset[str]) -> PFConfig:
+        """Overlay only validated, explicitly present workplace leaves."""
+        if type(layer) is not PFConfig or type(explicit_keys) is not frozenset:
+            raise InvalidConfiguration("configuration_model_required")
+        scalar_keys = {
+            "runtime.metrics.interval_seconds",
+            "runtime.garage_hooks",
+            "runtime.temporary_files.mode",
+            "runtime.temporary_files.max_age_hours",
+            "logging.raw_hooks",
+            "logging.events",
+        }
+        changes = {key: layer.get(key) for key in scalar_keys & explicit_keys}
+        result = self.with_changes(changes) if changes else self
+        source = layer.database
+        if source is None:
+            return result
+        base = self.database or DatabaseConfig()
+        profiles = dict(base.profiles)
+        defaults = dict(base.defaults)
+        for key, profile in source.profiles.items():
+            if "database.profiles." + key in explicit_keys:
+                if key in profiles:
+                    raise InvalidConfiguration("database_profile_invalid")
+                profiles[key] = profile
+        for key, selected in source.defaults.items():
+            if "database.defaults." + key in explicit_keys:
+                defaults[key] = selected
+        driver = base.driver
+        if "database.driver" in explicit_keys and source.driver is not None:
+            driver = source.driver
+        if profiles or defaults or driver is not None or self.database is not None:
+            result = replace(
+                result, database=DatabaseConfig(profiles, defaults, driver)
+            )
+        return result
 
     def for_project(self, overrides: ProjectPFConfig) -> PFConfig:
         if type(overrides) is not ProjectPFConfig:
@@ -290,6 +354,8 @@ class ProjectPFConfig:
         return value
 
     def get(self, key: str) -> Any:
+        if key == "database.driver":
+            return self.database.driver if self.database is not None else None
         return _get(self.to_dict(), key)
 
     def with_changes(self, changes: dict[str, Any]) -> ProjectPFConfig:
@@ -304,6 +370,7 @@ class ProjectPFConfig:
                     "runtime.temporary_files.mode",
                     "runtime.temporary_files.max_age_hours",
                     "database",
+                    "database.driver",
                 },
             )
         )

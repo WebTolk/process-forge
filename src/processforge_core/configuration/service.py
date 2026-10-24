@@ -1,4 +1,5 @@
 """Configuration use cases independent of storage and application interface."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,15 +10,21 @@ from .storage import ConfigSnapshot, ConfigStore
 
 
 class ConfigService:
-    def __init__(self, store: ConfigStore, *, defaults: PFConfig | ProjectPFConfig | None = None):
+    def __init__(
+        self, store: ConfigStore, *, defaults: PFConfig | ProjectPFConfig | None = None
+    ):
         self._store = store
         self._defaults = defaults if defaults is not None else PFConfig()
 
     def read(self) -> ConfigSnapshot:
         return self._store.read()
 
-    def create(self, config: PFConfig | ProjectPFConfig | None = None) -> ConfigSnapshot:
-        return self._store.write(config if config is not None else self._defaults, expected_revision=None)
+    def create(
+        self, config: PFConfig | ProjectPFConfig | None = None
+    ) -> ConfigSnapshot:
+        return self._store.write(
+            config if config is not None else self._defaults, expected_revision=None
+        )
 
     def _existing(self, expected_revision: str | None) -> ConfigSnapshot:
         current = self.read()
@@ -27,13 +34,23 @@ class ConfigService:
             raise ConfigurationConflict("configuration_revision_conflict")
         return current
 
-    def update(self, changes: dict[str, Any], *, expected_revision: str | None = None) -> ConfigSnapshot:
+    def update(
+        self, changes: dict[str, Any], *, expected_revision: str | None = None
+    ) -> ConfigSnapshot:
         current = self._existing(expected_revision)
-        return self._store.write(current.config.with_changes(changes), expected_revision=current.revision)
+        return self._store.write(
+            current.config.with_changes(changes), expected_revision=current.revision
+        )
 
-    def reset(self, key: str, *, expected_revision: str | None = None) -> ConfigSnapshot:
-        return self.update({key: self._defaults.get(key)}, expected_revision=expected_revision)
+    def reset(
+        self, key: str, *, expected_revision: str | None = None
+    ) -> ConfigSnapshot:
+        return self.update(
+            {key: None if key == "database.driver" else self._defaults.get(key)},
+            expected_revision=expected_revision,
+        )
 
     def delete(self, *, expected_revision: str | None = None) -> ConfigSnapshot:
         current = self._existing(expected_revision)
+        assert current.revision is not None
         return self._store.delete(expected_revision=current.revision)

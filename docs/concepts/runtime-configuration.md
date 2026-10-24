@@ -62,3 +62,77 @@ idempotent, including delayed SessionStart delivery.
 Historical deferred payloads are not automatically discarded by changing this
 setting. Operator-authorized maintenance must distinguish obsolete queued
 sessions from current work and preserve required project history.
+
+
+## Effective application configuration
+
+`ConfigurationProvider` supplies the full immutable `PFConfig`, including metrics,
+logging, temporary files, Garage hooks and database settings. It binds explicit
+device/workplace/project paths and an already authorized typed `ProjectPFConfig`
+context. It does not discover workplace enrollment or interpret Work permissions.
+The host resolves routing before constructing it; no service or Runtime is needed.
+
+Precedence is builtin → device → explicit selected workplace leaves → project →
+authorized context. A workplace's missing fields inherit the device values.
+Explicit false and explicit default-valued scalars override them. Project/context
+null values inherit; their existing allowlist excludes metrics. Forge policy,
+capsule scope and resource grants remain enforced independently of these settings.
+
+```python
+from processforge_core.configuration import ConfigurationProvider
+
+# Paths below are absolute, authorized host inputs; construction performs no I/O.
+live = ConfigurationProvider(
+    device_path=device_path,
+    workplace_path=selected_workplace_configuration,
+    project_path=project_configuration,
+    context_overrides=authorized_overrides,
+)
+snapshot = live.snapshot()  # one explicit application read per operation
+configuration = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+interval = configuration.get("runtime.metrics.interval_seconds")
+driver = configuration.get("database.driver")
+```
+
+Consumers receive this pinned provider or its `current()` value; they do not read
+or merge YAML themselves. Native worker snapshot transport, host builders, CLI
+selection and other entrypoint composition belong to host integration. A worker's
+application snapshot never grants policy or body-read access. No model prompt or
+public lifecycle payload should receive private native snapshot metadata.
+
+The provider selects the full device file when no device path is passed:
+Windows `LOCALAPPDATA/ProcessForge/configuration.yaml` (home/AppData/Local fallback),
+POSIX absolute `XDG_CONFIG_HOME/processforge/configuration.yaml` (home/.config
+fallback). Relative environment roots are rejected. No directory scan, CWD-based
+discovery, file creation, database open or daemon startup occurs on construction.
+Missing selected files yield typed defaults; they stay absent on read.
+
+`YamlConfigStore` obtains model, SHA256 revision and `ConfigSnapshot.explicit_keys`
+from the same bounded validated bytes. Dotted scalar keys are leaves; each
+`database.profiles.<id>` is atomic and each `database.defaults.<slot>` is a leaf.
+Presence is internal metadata, never YAML. Device/workplace profiles must have
+disjoint IDs, including identical duplicate definitions; project/context profiles
+must be project scoped and cannot set workplace_main. Profile/default references
+and scopes are validated. Paths remain relative to the authorized owner, never
+the device-file directory. Profiles grant no filesystem or SQL access.
+
+`snapshot(refresh=True)` rereads only the bound sources; normal snapshots check
+file replacement signatures in the bounded synchronized resolver cache. First
+invalid/unsafe reads raise the existing `ConfigurationError`. A later failed read
+retains the last valid source together with its presence/revision and reports a
+code in `ResolvedConfig.errors`. Merge/policy validation errors still raise.
+Pinned refresh is a no-op returning the same snapshot; existing operations never
+change after CRUD or another request. There is no mutable current-project global.
+
+The old `resolve(base_path, project_path)` keeps its positional base/project
+meaning. Low-level `resolve(None, project_path)` uses builtins. `project_path=None`
+creates only an in-memory empty project snapshot; workplace selection is explicit.
+
+`database.driver` accepts only sqlite or null/inherit and works without profiles.
+`PFConfig.get("database.driver")` returns the operational sqlite default;
+`ProjectPFConfig.get` returns an explicit selector or None. `with_changes` and
+`ConfigService.reset` remove an explicit selector with None, preserving other
+profiles/defaults. Absent database stays absent in serialized defaults and old
+payloads. Existing CRUD still materializes the original fields as before; those
+actually saved bytes count as explicit workplace overrides. Refresh cannot switch
+an existing bound store UUID/path; that is a separate host maintenance decision.

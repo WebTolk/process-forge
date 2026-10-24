@@ -51,3 +51,26 @@ Each profile has `scope`, `driver: sqlite`, relative `path`, and optional exact-
 unsafe/expanding paths and invalid defaults refuse. Maps are immutable. Project
 overrides permit project profiles/project_main only and cannot collide with inherited
 names. An absent section remains absent in old serialization and config operations.
+
+
+## Native transport and application selection
+
+`DatabaseFactory.resolve_driver(config=None)` is a cold closed sqlite mapping.
+`SQLiteDriver._connect(database, *, timeout=5.0, isolation_level='', uri=False)`
+is the internal native transport seam: it forwards caller options unchanged,
+returns a native connection and leaves native exceptions/lifetime to the adapter.
+It performs no PRAGMA, BEGIN, mkdir, identity adoption or migration. Main `_admin`
+uses this seam while retaining its stronger envelope/error/deadline checks.
+Legacy adapters use it through their own injected driver; their domains and paths
+stay separate from main. Cross-owner adapters are integrated separately.
+
+`STORE_ENVELOPE_DDL` exports the two existing code-owned statements unchanged for
+recognized-store additive identity migration. Main UUID/scope/owner/application ID
+and namespace checks are unchanged; normal access never accepts legacy as main.
+Only SchemaManager.inspect permits a noncreating expected UUID wildcard.
+
+`DatabaseConfig.driver` selects sqlite independently of profiles; absent/null uses
+the builtin. Get full effective settings through ConfigurationProvider, then
+resolve_driver(snapshot.config.database); never rediscover configuration in a
+transport adapter. A driver/profile grants no target permission. Binding and
+containment remain host responsibilities; refresh cannot hot-switch a pinned DB.

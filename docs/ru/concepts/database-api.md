@@ -47,3 +47,25 @@ ID соответствует `[a-z][a-z0-9_-]{0,63}`. Неизвестные п
 разрешают только project profiles/project_main, без коллизий имён и изменения
 workplace-профилей. При отсутствии секции старые сериализация/get/update/reset
 сохраняют отсутствие database. Legacy accounting/events/hooks не перенаправляются.
+
+
+## Native transport и выбор настроек
+
+`DatabaseFactory.resolve_driver(config=None)` — cold closed mapping sqlite.
+`SQLiteDriver._connect(database, *, timeout=5.0, isolation_level='', uri=False)`
+передаёт прежние native options без изменений. Connection lifetime/errors
+принадлежат адаптеру; seam не выполняет mkdir, PRAGMA, BEGIN или migration.
+Main `_admin` использует его с прежними строгими envelope/deadline/error checks.
+Legacy domains сохраняют пути/schema/application IDs; DI adapters подключает
+их владелец отдельно.
+
+`STORE_ENVELOPE_DDL` экспортирует ровно две прежние statements без изменения
+bytes для additive UUID migration распознанных stores. Main UUID/owner/scope,
+application ID и namespace checks не ослаблены; legacy не принимается как main.
+Wildcard UUID доступен только noncreating SchemaManager.inspect.
+
+`DatabaseConfig.driver` независим от profiles: absent/null означает sqlite.
+Host получает полный snapshot через ConfigurationProvider и передаёт
+resolve_driver(snapshot.config.database). Transport не читает config сам.
+Profile не выдаёт permissions; containment/binding проверяет host. Refresh не
+переключает уже закреплённый UUID/path без maintenance.

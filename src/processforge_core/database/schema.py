@@ -13,7 +13,7 @@ from .contracts import Database, DatabaseIdentity
 from .errors import DatabaseError
 from .sqlite import _APPLICATION_ID, _FORMAT_VERSION, SQLiteDriver, _identity, _one
 
-_ENVELOPE = (
+STORE_ENVELOPE_DDL = (
     "CREATE TABLE pf_store_meta(singleton INTEGER PRIMARY KEY CHECK(singleton=1),store_id TEXT NOT NULL UNIQUE,scope TEXT NOT NULL CHECK(scope IN ('project','workplace')),owner_id TEXT NOT NULL,format_version INTEGER NOT NULL CHECK(format_version=1))",
     "CREATE TABLE pf_schema_versions(namespace TEXT PRIMARY KEY,version INTEGER NOT NULL CHECK(version>=1),checksum TEXT NOT NULL)",
 )
@@ -164,7 +164,7 @@ class SchemaManager:
             try:
                 connection.execute(f"PRAGMA application_id={_APPLICATION_ID}").close()
                 connection.execute(f"PRAGMA user_version={_FORMAT_VERSION}").close()
-                for text in _ENVELOPE:
+                for text in STORE_ENVELOPE_DDL:
                     connection.execute(text).close()
                 identity = database.target.identity
                 connection.execute(
