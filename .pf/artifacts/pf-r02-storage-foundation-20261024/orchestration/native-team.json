@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "workers": [
+    {
+      "role": "w1-domain",
+      "run_id": "pf-r02-design-20261024",
+      "assignment_id": "pf-r02-w1-domain-design-20261024",
+      "context_id": "pf-r02-w1-domain-design-20261024-capsule",
+      "agent_id": "pf-r02-w1-domain-20261024",
+      "session_id": "pf-r02-w1-domain-20261024",
+      "report": ".pf/artifacts/pf-r02-storage-foundation-20261024/w1-domain/report.md"
+    },
+    {
+      "role": "w2-driver",
+      "run_id": "pf-r02-design-20261024",
+      "assignment_id": "pf-r02-w2-driver-design-20261024",
+      "context_id": "pf-r02-w2-driver-design-20261024-capsule",
+      "agent_id": "pf-r02-w2-driver-20261024",
+      "session_id": "pf-r02-w2-driver-20261024",
+      "report": ".pf/artifacts/pf-r02-storage-foundation-20261024/w2-driver/report.md"
+    },
+    {
+      "role": "w3-runtime",
+      "run_id": "pf-r02-design-20261024",
+      "assignment_id": "pf-r02-w3-runtime-design-20261024",
+      "context_id": "pf-r02-w3-runtime-design-20261024-capsule",
+      "agent_id": "pf-r02-w3-runtime-20261024",
+      "session_id": "pf-r02-w3-runtime-20261024",
+      "report": ".pf/artifacts/pf-r02-storage-foundation-20261024/w3-runtime/report.md"
+    },
+    {
+      "role": "w4-migration",
+      "run_id": "pf-r02-design-20261024",
+      "assignment_id": "pf-r02-w4-migration-design-20261024",
+      "context_id": "pf-r02-w4-migration-design-20261024-capsule",
+      "agent_id": "pf-r02-w4-migration-20261024",
+      "session_id": "pf-r02-w4-migration-20261024",
+      "report": ".pf/artifacts/pf-r02-storage-foundation-20261024/w4-migration/report.md"
+    }
+  ]
+}
