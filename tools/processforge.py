@@ -4522,7 +4522,7 @@ def _project_context_check_result(project_root: Path, *, explicit_workplace: str
 
 
 def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7, explicit_workplace: str | None = None) -> dict[str, Any]:
-    from processforge_core.prepared.registry_resources import tool_definition, tool_definition_fingerprint
+    from processforge_core.prepared.registry_resources import tool_snapshot_record
     from processforge_core.prepared.resources import REVOKED_STATUSES
 
     flow_root = locate_flow_root(project_root)
@@ -4672,17 +4672,10 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         for item in resolved_knowledge_resources
         if str(item.get("id") or "")
     ]
-    resolved_tools: list[dict[str, Any]] = []
-    for tool_id in specialization_context["activated_tools"]:
-        row: dict[str, Any] = {"id": tool_id, "status": "activated", "path_ref": {"registry": "tools", "id": tool_id}}
-        try:
-            definition = tool_definition(workplace_manifest_path, tool_id)
-            row["definition_fingerprint"] = tool_definition_fingerprint(definition)
-            if str(definition.get("status") or "available").lower() in REVOKED_STATUSES:
-                row["status"] = "unavailable"
-        except (OSError, TypeError, ValueError, RuntimeError, SystemExit, AttributeError):
-            row["status"] = "unavailable"
-        resolved_tools.append(row)
+    resolved_tools = [
+        tool_snapshot_record(workplace_manifest_path, tool_id, REVOKED_STATUSES)
+        for tool_id in specialization_context["activated_tools"]
+    ]
     template_ids = {str(item) for item in specialization_context.get("activated_templates", []) if str(item)}
     template_ids.update(
         str(item.get("id") or "")
