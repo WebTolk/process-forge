@@ -46,7 +46,8 @@ def call(project: Path, task: str, operation: str, **options: Any) -> tuple[int,
 
 
 def create_task(project: Path, task_id: str, *, resources: list[str] | None = None,
-                sources: list[str] | None = None, process: str = "task-batch-execution") -> None:
+                sources: list[str] | None = None, tools: list[str] | None = None,
+                process: str = "task-batch-execution") -> None:
     args = [
         "task-create", "--project-root", str(project), "--run", RUN_ID,
         "--id", task_id, "--title", task_id, "--process", process,
@@ -57,6 +58,8 @@ def create_task(project: Path, task_id: str, *, resources: list[str] | None = No
     ]
     for resource in resources or []:
         args.extend(["--workspace-knowledge-resource", resource])
+    for tool in tools or []:
+        args.extend(["--workspace-tool", tool])
     for source in sources or []:
         args.extend(["--required-source", source, "--allowed-read-file", source])
     pf(*args, "--apply")
@@ -195,10 +198,212 @@ def bounded_snapshot_reads(temp_root: Path) -> None:
         denied(path)
 
 
+def explicit_tool_grants(temp_root: Path) -> None:
+    """Exercise native tool production, private delivery and live revalidation."""
+    from dataclasses import replace
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
+    from processforge_core.prepared.registry_resources import PreparedRegistryResourceReader, tool_definition_fingerprint
+    from processforge_core.prepared.resource_selection import PreparedResourceSelectionPolicy
+    from processforge_core.prepared.resources import REVOKED_STATUSES
+    from processforge_core.project.coordination_state import ProjectCoordinationStateService
+    from processforge_core.work.workspace_refs import WorkspaceAccessReferenceService
+
+    workplace, project = setup_basic_project(temp_root, "prepared-tools-project")
+    command_id, file_id = "prepared-command", "prepared-file"
+    command_marker = "PrivatePreparedToolCommandMarker"
+    definitions = [
+        {"id": command_id, "status": "configured", "command": command_marker,
+         "scope": "project", "restrictions": {"allow_network": False}},
+        {"id": file_id, "status": "available", "path": "tools/prepared-file.py"},
+    ]
+    registry_path = workplace / "registries" / "tools.yaml"
+
+    def registry(rows: list[dict[str, Any]]) -> None:
+        write_yaml_file(registry_path, {"schema_version": 1, "tools": rows})
+
+    registry(definitions)
+    tool_path = workplace / definitions[1]["path"]
+    tool_path.parent.mkdir(parents=True, exist_ok=True)
+    tool_path.write_text("# fixture tool\n", encoding="utf-8")
+    write_yaml_file(project / ".pf" / "project-overrides.yaml", {
+        "schema_version": 1, "kind": "processforge.project_overrides",
+        "overrides": {"tools": [{"target": row["id"], "mode": "extension"} for row in definitions]},
+    })
+
+    def refresh() -> None:
+        pf("project-context-refresh", "--project-root", str(project), "--workplace", str(workplace), "--apply")
+
+    refresh()
+    snapshot = core.load_yaml_document(core.project_context_snapshot_paths(project)[0])
+    projected = snapshot["resolved"]["tools"]
+    require({row["id"] for row in projected} == {command_id, file_id}, projected)
+    for row, definition in zip(sorted(projected, key=lambda row: row["id"]), definitions):
+        require(row == {"id": definition["id"], "status": "activated",
+                        "path_ref": {"registry": "tools", "id": definition["id"]},
+                        "definition_fingerprint": tool_definition_fingerprint(definition)}, row)
+    public = "\n".join(path.read_text(encoding="utf-8") for path in core.project_context_snapshot_paths(project))
+    require(command_marker not in public and str(workplace) not in public, "private tool data leaked into snapshot")
+    require(tool_definition_fingerprint(dict(reversed(list(definitions[0].items()))))
+            == tool_definition_fingerprint(definitions[0]), "definition digest depends on key order")
+
+    pf("run-create", "--project-root", str(project), "--id", RUN_ID, "--title", "Prepared tools", "--process", "task-batch-execution", "--apply")
+    driver = make_shell_driver(project)
+    for task, identifier, resolution_status in [("command-tool-task", command_id, "descriptor"),
+                                                 ("file-tool-task", file_id, "resolved")]:
+        create_task(project, task, tools=[identifier])
+        status, output = call(project, task, "prepare", driver=str(driver))
+        require(status == 0, output)
+        require(command_marker not in output and str(workplace) not in output, "private tool data leaked into prepare output")
+        capsule_path = core.assignment_capsule_path(project, task)
+        capsule_bytes = capsule_path.read_bytes()
+        require(command_marker.encode("utf-8") not in capsule_bytes, "private command leaked into capsule")
+        prompt = project / ".pf" / "runs" / RUN_ID / "worker-prompts" / f"{task}.md"
+        if prompt.is_file():
+            require(command_marker not in prompt.read_text(encoding="utf-8"), "private command leaked into prompt")
+        _, _, document = prepared_paths(project, task)
+        schema_check(document)
+        grants = document["input"]["resources"]["grants"]["tools"]
+        require(len(grants) == 1 and grants[0]["id"] == identifier
+                and grants[0]["resolution"]["status"] == resolution_status, grants)
+        if resolution_status == "descriptor":
+            grant = grants[0]
+            require(grant["resolution"]["entry"] == definitions[0] and "path" not in grant["resolution"], grant)
+            schema = read_json(SCHEMA_PATH)
+            checker = UpdateSchemaChecks(ROOT)
+            for group in ("templates", "mcp"):
+                invalid = copy.deepcopy(document)
+                invalid["input"]["resources"]["grants"][group] = [grant]
+                require(bool(checker.validate(invalid, schema, schema, "$")), "descriptor admitted for " + group)
+            for invalid_grant in [dict(grant, path_ref={"registry": "mcp", "id": identifier}),
+                                  dict(grant, resolution={"status": "descriptor", "entry": {"id": identifier}}),
+                                  dict(grant, resolution=dict(grant["resolution"], path=str(workplace)))]:
+                invalid = copy.deepcopy(document)
+                invalid["input"]["resources"]["grants"]["tools"] = [invalid_grant]
+                require(bool(checker.validate(invalid, schema, schema, "$")), "invalid descriptor schema admitted")
+        status, output = call(project, task, "start")
+        require(status == 0 and "COMPLETED" in output, output)
+        paths, state, _ = prepared_paths(project, task)
+        require(state["status"] == "completed" and state["exit_code"] == 0, state)
+        require(capsule_path.read_bytes() == capsule_bytes, "immutable tool capsule changed")
+        require(command_marker not in (project / ".pf" / "artifacts" / f"{task}.md").read_text(encoding="utf-8"),
+                "private command leaked into report")
+        require(read_json(paths["heartbeat"])["status"] == "completed", "tool execution heartbeat incomplete")
+
+    def fail(reason: str) -> None:
+        raise ValueError(reason)
+
+    reader = PreparedRegistryResourceReader(
+        selection=lambda: PreparedResourceSelectionPolicy(
+            matcher=lambda: WorkspaceAccessReferenceService().workspace_ref_matches_resource,
+            fail=lambda: fail, revoked_statuses=lambda: REVOKED_STATUSES),
+        workplace_manifest=lambda: ProjectCoordinationStateService().resolve_project_workplace_manifest,
+        path_resolver=lambda: core.resolve_workspace_path_ref,
+        revoked_statuses=lambda: REVOKED_STATUSES, fail=lambda: fail,
+    )
+
+    def denied(reason: str, *, request: Any = command_id, pinned: dict[str, Any] | None = None,
+               current: dict[str, Any] | None = None, selected_reader: Any = reader, group: str = "tools") -> None:
+        try:
+            selected_reader.read(project, [request], pinned if pinned is not None else snapshot,
+                                 current if current is not None else snapshot, group)
+        except ValueError as exc:
+            require(str(exc) == reason, {"expected": reason, "actual": str(exc)})
+        else:
+            raise AssertionError("tool grant did not fail: " + reason)
+
+    denied("resource_not_in_snapshot", request="unselected-tool")
+    denied("resource_access_revoked", current={"resolved": {"tools": []}})
+    changed_snapshot = copy.deepcopy(snapshot)
+    changed_snapshot["resolved"]["tools"][0]["definition_fingerprint"] = "sha256:" + "0" * 64
+    denied("resource_generation_changed", current=changed_snapshot)
+    denied("resource_reference_mismatch", request={"id": "wrong-id", "path_ref": {"registry": "tools", "id": command_id}})
+    denied("resource_not_in_snapshot", request={"id": command_id, "path_ref": {"registry": "tools", "id": file_id}})
+    denied("resource_reference_mismatch", request={"id": command_id, "path_ref": {"registry": "mcp", "id": command_id}})
+    for field in ("path_ref", "definition_fingerprint"):
+        invalid = copy.deepcopy(snapshot)
+        next(row for row in invalid["resolved"]["tools"] if row["id"] == command_id).pop(field)
+        denied("resource_reference_unverifiable", pinned=invalid, current=invalid)
+    for reference in [{"registry": "mcp", "id": command_id}, {"registry": "tools", "id": file_id},
+                      {"registry": "tools", "id": command_id, "relative_path": ".."}]:
+        invalid = copy.deepcopy(snapshot)
+        next(row for row in invalid["resolved"]["tools"] if row["id"] == command_id)["path_ref"] = reference
+        denied("resource_reference_mismatch", pinned=invalid, current=invalid)
+    ambiguous = copy.deepcopy(snapshot)
+    ambiguous["resolved"]["tools"].append(copy.deepcopy(projected[0]))
+    denied("resource_not_in_snapshot", pinned=ambiguous)
+    require(reader.read(project, [], {}, {}, "tools") == [], "empty tools no longer work")
+
+    for changes, reason in [({"command": command_marker + " changed"}, "resource_generation_changed"),
+                            ({"restrictions": {"allow_network": True}}, "resource_generation_changed"),
+                            ({"status": "disabled"}, "resource_access_revoked"),
+                            ({"status": "revoked"}, "resource_access_revoked"),
+                            ({"id": "changed-id"}, "resource_access_revoked")]:
+        changed = copy.deepcopy(definitions)
+        changed[0].update(changes)
+        registry(changed)
+        denied(reason)
+    registry(definitions + [copy.deepcopy(definitions[0])])
+    denied("resource_scope_invalid")
+    registry(definitions)
+    tampered = replace(reader, path_resolver=lambda: lambda *args, **kwargs: {
+        "status": "descriptor", "entry": dict(definitions[0], command="substituted-command")})
+    denied("resource_material_unavailable", selected_reader=tampered)
+    file_substitution = replace(reader, path_resolver=lambda: lambda *args, **kwargs: {
+        "status": "resolved", "path": str(workplace)})
+    denied("resource_material_unavailable", selected_reader=file_substitution)
+    for group in ("templates", "mcp"):
+        alternate = {"resolved": {group: [copy.deepcopy(projected[0])]}}
+        denied("resource_material_unavailable", pinned=alternate, current=alternate, group=group)
+    for command in ("", "   ", ["invalid-command-type"]):
+        changed = copy.deepcopy(definitions)
+        changed[0]["command"] = command
+        registry(changed)
+        produced = core.build_project_context_snapshot(project, explicit_workplace=str(workplace))
+        denied("resource_material_unavailable", pinned=produced, current=produced)
+    registry(definitions)
+    tool_path.unlink()
+    denied("resource_material_unavailable", request=file_id)
+    tool_path.write_text("# restored fixture\n", encoding="utf-8")
+    changed = copy.deepcopy(definitions)
+    changed[1]["path"] = "../outside-tool.py"
+    (workplace.parent / "outside-tool.py").write_text("# outside\n", encoding="utf-8")
+    registry(changed)
+    produced = core.build_project_context_snapshot(project, explicit_workplace=str(workplace))
+    denied("resource_material_unavailable", request=file_id, pinned=produced, current=produced)
+    registry(definitions)
+    refresh()
+
+    create_task(project, "tool-drift-task", tools=[command_id])
+    for changes, refreshed in [({"command": command_marker + " drift"}, False),
+                               ({"command": command_marker + " drift"}, True),
+                               ({"status": "disabled"}, False), ({"status": "disabled"}, True),
+                               ({"status": "revoked"}, False), ({"status": "revoked"}, True)]:
+        status, output = call(project, "tool-drift-task", "prepare", driver=str(driver))
+        require(status == 0, output)
+        changed = copy.deepcopy(definitions)
+        changed[0].update(changes)
+        registry(changed)
+        if refreshed:
+            refresh()
+        status, output = call(project, "tool-drift-task", "start")
+        reasons = ("snapshot_not_fresh", "resource_generation_changed", "resource_access_revoked")
+        require(status != 0 and any(reason in output for reason in reasons), output)
+        _, state, _ = prepared_paths(project, "tool-drift-task")
+        require(state["status"] == "blocked" and not (project / ".pf/artifacts/tool-drift-task.md").exists(), state)
+        status, output = call(project, "tool-drift-task", "prepare", driver=str(driver))
+        require(status != 0 and any(reason in output for reason in reasons), output)
+        registry(definitions)
+        refresh()
+    print("PASS: native tool producer/capsule/prepare/schema/start/collection, private descriptors, file tools, empty tools, command/status/reference/identity/registry drift denials with and without refresh")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-prepared-context-") as raw_root:
         temp_root = Path(raw_root)
         bounded_snapshot_reads(temp_root)
+        explicit_tool_grants(temp_root)
         workplace, project = setup_basic_project(temp_root, "prepared-project")
 
         full_package, meta_package = "prepared-full", "prepared-meta"

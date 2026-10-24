@@ -20,6 +20,24 @@ T02 resource-material verification retains its own fixed ceilings: 64 resources,
 
 A knowledge grant marked `metadata_only` contains navigation metadata and no resolved body path. It does not authorize reading the resource body or its containing root. Full-text knowledge is checked against the pinned binding, current project authorization and stage subset; the private manifest records portable references, provenance and bounded file hashes. Templates, tools and MCP grants are also matched to pinned/current selections and resolved before launch. A registry entry by itself grants nothing.
 
+Explicit tool grants use the selected registry ID. The public snapshot keeps
+only its portable `path_ref` (`registry: tools`, `id`) and a
+`definition_fingerprint`: SHA-256 of the complete authoritative definition,
+serialized as UTF-8 JSON with sorted keys, compact separators, Unicode preserved
+and non-finite numbers rejected. Commands, private paths, status and restrictions
+are covered by the digest; commands and private paths are not copied into the
+snapshot. Prepare and start check pinned/current selections and reread the unique
+current registry record, including revocation and drift without a refresh.
+
+A file-backed tool retains the existing path containment and existence checks.
+A command-only tool may instead receive `resolution.status: descriptor` with its
+verified `entry`, including a nonempty command, only in the private prepared
+input. This descriptor grants no directory or file-body access and adds no broad
+Codex directory grant. Templates and MCP keep their existing file-backed form.
+Missing references/digests, ambiguous or changed identities, changed definitions
+and revoked records fail closed. Existing immutable snapshots/capsules are not
+upgraded in place: new tool grants require a fresh governed context.
+
 ## Driver handoff and execution
 
 Every prepared driver receives the reserved `PF_PREPARED_INPUT_FILE` and `PF_PREPARED_INPUT_SHA256` environment pointers together with `PF_WORKER_ATTEMPT`. Runtime drivers may not set these variables themselves. `runtime-driver.schema.json` describes the optional `prepared_lifecycle_wrapper` boolean and reserves these names. A driver opts into wrapper behavior through trusted driver configuration, not event data.

@@ -212,7 +212,7 @@
       "properties": {
         "knowledge_resources": { "type": "array", "items": { "$ref": "#/$defs/knowledge_grant" } },
         "templates": { "type": "array", "items": { "$ref": "#/$defs/registry_grant" } },
-        "tools": { "type": "array", "items": { "$ref": "#/$defs/registry_grant" } },
+        "tools": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/registry_grant" }, { "$ref": "#/$defs/tool_descriptor_grant" }] } },
         "mcp": { "type": "array", "items": { "$ref": "#/$defs/registry_grant" } }
       },
       "additionalProperties": false
@@ -239,6 +239,35 @@
         "id": { "type": "string", "minLength": 1 },
         "path_ref": { "type": "object" },
         "resolution": { "type": "object", "required": ["status", "path"], "properties": { "status": { "const": "resolved" }, "path": { "type": "string", "minLength": 1 } }, "additionalProperties": true }
+      },
+      "additionalProperties": false
+    },
+    "tool_descriptor_grant": {
+      "type": "object",
+      "required": ["id", "path_ref", "resolution"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path_ref": {
+          "type": "object",
+          "required": ["registry", "id"],
+          "properties": { "registry": { "const": "tools" }, "id": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        },
+        "resolution": {
+          "type": "object",
+          "required": ["status", "entry"],
+          "properties": {
+            "status": { "const": "descriptor" },
+            "entry": {
+              "type": "object",
+              "required": ["id", "command"],
+              "properties": { "id": { "type": "string", "minLength": 1 }, "command": { "type": "string", "minLength": 1 } },
+              "not": { "required": ["path"] },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
