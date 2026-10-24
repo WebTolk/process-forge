@@ -7,6 +7,7 @@ import os
 import socket
 from dataclasses import replace
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -246,7 +247,7 @@ def test_private_prepared_finalization_and_stale_cas(harness: Harness) -> None:
 
 @pytest.mark.parametrize("collection", ["collected", "failed", "refused"])
 def test_private_manual_collection_never_invents_execution(
-    harness: Harness, collection: str
+    harness: Harness, collection: Literal["collected", "failed", "refused"]
 ) -> None:
     from processforge_core.executions.projection import (
         canonical_json,
@@ -423,15 +424,18 @@ def test_native_wrapper_authenticated_tree_receipts(
         prepared.key, expected_revision=1, generation=1, launch_token=token
     )
     attached = core._sql_receipt(root, attempt / "process.json", reserved, "process")
+    assert attached is not None and attached.process is not None
     # Windows venv launchers may delegate to a different native Python PID.
     assert attached.process.pid > 0 and attached.process.birth_id
     record = harness.repo.apply_observation(attached, expected_revision=2, generation=1)
     exit_receipt = core._sql_receipt(root, attempt / "exit.json", record, "exit")
+    assert exit_receipt is not None
     assert exit_receipt.exit_code == 0
     record = harness.repo.apply_observation(
         exit_receipt, expected_revision=record.revision, generation=1
     )
     assert record.phase == "unresolved" and harness.repo.current().records
+    assert record.process is not None
     deadline = time.monotonic() + 5
     while (
         time.monotonic() < deadline
