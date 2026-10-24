@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T04:36:09.994271+00:00",
+  "status": "pass",
+  "command": "python -B -X utf8 .pf/tmp/db-storage-topology-20261024/validate_documents.py",
+  "exit_code": 0,
+  "json_and_revision_digest": "pass",
+  "markdown_relative_links_and_whitespace": "pass",
+  "sql_topology": "one primary workplace database and one per project in .pf",
+  "search_storage": "undecided; neither merge nor separate physical database approved",
+  "original_inputs_and_main_index_preserved": true,
+  "protected_hashes": {
+    ".git/index": "774704dec052293631b296f434f401ca328d6da8b70cecb27e4bee1ddbf11588",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/spec.md": "6a3a0ca4c430e503af1a4f65bc8126d7cd5f875120d99a8fe3882029020af5cb",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/research/journal-storage-requirements.md": "f64015ece405409ed9992a2667f06571e6e608f788fe87c364cc26f650db4c66",
+    ".pf/assignments/pf-database-layer-and-journals-20261021.yaml": "e5945a6a2c9306912acb74d30d9e9dccd71c802d4fe2ab65f8a45415355102cb",
+    ".pf/contexts/project-context.snapshot.yaml": "c2d764afd8ab677c3765acf75d8b15d6b031f77d572b5a3fb1aa55ec1b11b5be",
+    ".pf/contexts/assignment-capsules/db-sql-and-search-clarification-20261024-requirements-only-successor-for.capsule.yaml": "711e48a5ffef2617a2cb42c11e6f588ab82a47c483a77e756c21c0e5d7487db7"
+  },
+  "product_changes": false,
+  "database_operations": false,
+  "product_pytest_ruff_mypy": "not_applicable: requirements/research documents only; no product Python changes",
+  "benchmark": "not_run; separate authorization and criteria required",
+  "review": "primary document checks only; no independent reviewer impersonated",
+  "artifacts": {
+    "requirements.md": "3a3a35762e2e52da968897a75dc18d1261d95dc2783938712a29b33054c13716",
+    "research.md": "ff5b9b7944c8c553f61ae1a84f5a0e8b4f37bfac865f3867449bd5bbc8f053e2",
+    "report.md": "5a3c7bf8421f227184654a813ab10f01e27cbe3cabb276f5dd4b44f7052a641f",
+    "scope-change-handoff.md": "08986bec4577f68296494cb4a63f31c6a02a9503720297d4d8fa38eb7bd7851d"
+  }
+}

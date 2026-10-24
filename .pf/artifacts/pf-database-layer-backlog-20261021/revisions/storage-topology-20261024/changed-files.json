@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "kind": "pf.planning_document_changes",
+  "product_code_changed": false,
+  "database_migration": false,
+  "base_task": "pf-database-layer-and-journals-20261021",
+  "files": [
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/scope-change-handoff.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/requirements.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/research.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/report.md",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/validation.json",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/changed-files.json",
+    ".pf/artifacts/pf-database-layer-backlog-20261021/current-requirements.json",
+    ".pf/logs/db-storage-topology-20261024-primary.md"
+  ],
+  "old_spec_research_card_and_capsules": "preserved"
+}

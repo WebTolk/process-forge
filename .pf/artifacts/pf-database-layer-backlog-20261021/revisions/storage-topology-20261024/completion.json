@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "kind": "pf.requirements_capture_completion",
+  "base_task": "pf-database-layer-and-journals-20261021",
+  "base_task_implementation_status": "open; not started by this clarification",
+  "cancelled_initial_scope": {
+    "run_id": "garage-db-storage-topology-clarification-20261024-capture-the-operator-c",
+    "assignment_id": "db-storage-topology-clarification-20261024-capture-the-operator-confirme",
+    "status": "cancelled",
+    "reason": "mandatory inclusion of search index was an assistant assumption withdrawn after operator clarification"
+  },
+  "successor": {
+    "run_id": "garage-db-sql-and-search-clarification-20261024-requirements-only-succes",
+    "assignment_id": "db-sql-and-search-clarification-20261024-requirements-only-successor-for",
+    "action": "run_completed",
+    "status": "completed",
+    "capsule_checksum": "sha256:711e48a5ffef2617a2cb42c11e6f588ab82a47c483a77e756c21c0e5d7487db7",
+    "completion": {
+      "requirements": [],
+      "status": "complete"
+    }
+  },
+  "completed_stages": [
+    "orchestration",
+    "intake-scope",
+    "investigation",
+    "domain-modeling",
+    "architecture-plan",
+    "implementation",
+    "code-assurance",
+    "release-delivery",
+    "evolve"
+  ],
+  "sql_topology": "one primary SQLite workplace database and one per project inside .pf; no per-module primary database",
+  "search_storage": "undecided; neither forced merge nor separate physical backend approved",
+  "rag": "future, not implemented or registered here",
+  "product_or_database_changes": false
+}

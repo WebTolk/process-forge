@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "task_id": "pf-database-layer-and-journals-20261021",
+  "status": "requirements_recorded_implementation_not_started",
+  "base_spec": ".pf/artifacts/pf-database-layer-backlog-20261021/spec.md",
+  "base_spec_sha256": "6a3a0ca4c430e503af1a4f65bc8126d7cd5f875120d99a8fe3882029020af5cb",
+  "latest_revision": ".pf/artifacts/pf-database-layer-backlog-20261021/revisions/storage-topology-20261024/requirements.md",
+  "latest_revision_sha256": "3a3a35762e2e52da968897a75dc18d1261d95dc2783938712a29b33054c13716",
+  "sqlite_primary_databases": {
+    "per_workplace": 1,
+    "per_project": 1,
+    "project_location": "inside .pf"
+  },
+  "accounting_storage": "SQL; SQLite now, optional future SQL adapters including MariaDB",
+  "search_storage_topology": "undecided",
+  "search_merge_into_primary_sql_approved": false,
+  "separate_search_database_approved": false,
+  "knowledge_rag": "future; implementation not authorized",
+  "subsystem_database_per_module": false,
+  "source_requirement_precedence": "2026-10-24 operator clarification overrides earlier optional physical-placement wording; unchanged requirements remain in base_spec",
+  "implementation_authorized": false
+}
