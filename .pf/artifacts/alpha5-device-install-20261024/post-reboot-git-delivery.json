@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T03:35:55.477571+00:00",
+  "kind": "pf.evidence_delivery",
+  "acceptance_commit": "53b34be853037b838406892b012ed257cbaecd0e",
+  "parent": "2e478acc4e1f7089c71e3a8b974692e5d564b01d",
+  "remotes": {
+    "origin": {
+      "commit": "53b34be853037b838406892b012ed257cbaecd0e",
+      "matches": true,
+      "gitverse_token_helper": false
+    },
+    "gitverse": {
+      "commit": "53b34be853037b838406892b012ed257cbaecd0e",
+      "matches": true,
+      "gitverse_token_helper": true
+    }
+  },
+  "both_dev_readbacks_match": true,
+  "source_commit": "af68fecfc539959d2b732e45016f5d09a700ec3d",
+  "product_code_changed": false,
+  "force_push": false,
+  "main_head_and_index_preserved": true,
+  "gitverse_authentication": "existing TOKEN askpass helper; credential.helper disabled; GCM noninteractive",
+  "followup_accounting_commit": "Contains this prior delivery receipt and append-only log; exact final readbacks retained privately and in operator response"
+}

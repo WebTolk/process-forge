@@ -67,3 +67,5 @@ Decision: 'working scheduler' meant only the existing Runtime service thread. No
 Status: device acceptance already run_completed; evidence delivery only remains. No change to product, pinned evidence or infrastructure.
 
 2026-10-24T03:35:46.645102+00:00 | primary | Evidence publication preflight: both live dev heads match; accepted source is their ancestor. Build evidence-only successor through an isolated Git index; original HEAD/index and foreign files remain unchanged. GitVerse uses the existing TOKEN askpass helper, disabled credential.helper and no interactive GCM. Generic agent scheduling remains unassigned and unchanged.
+
+2026-10-24T03:35:55.478471+00:00 | primary | Accepted alpha5 evidence commit 53b34be853037b838406892b012ed257cbaecd0e pushed in parallel and read back exactly from both origin/dev and gitverse/dev (GitVerse TOKEN). Native run completed, doctors21/12 PASS, device/actual Runtime/MCP acceptance complete. Final accounting records this receipt/log only; product and original HEAD/index preserved.
