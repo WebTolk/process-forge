@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-24T05:33:59.099407+00:00",
+  "registration_commit": "9b028215df13389d63ec9d7af6d65f253d363080",
+  "parent": "21a3fdcf77581023772c97fff89742713b44cc35",
+  "remotes": {
+    "origin": {
+      "sha": "9b028215df13389d63ec9d7af6d65f253d363080",
+      "matches": true
+    },
+    "gitverse": {
+      "sha": "9b028215df13389d63ec9d7af6d65f253d363080",
+      "matches": true
+    }
+  },
+  "both_dev_readbacks_match": true,
+  "future_task": "pf-chat-journal-completeness-20261024",
+  "future_task_mode": "planning_only",
+  "implementation_started": false,
+  "protected_inputs_and_main_index_preserved": true,
+  "gitverse_authentication": "existing TOKEN askpass helper; credential.helper disabled; noninteractive GCM",
+  "followup_accounting_commit": "Records this prior delivery receipt and append-only log; final exact readbacks retained privately and reported."
+}

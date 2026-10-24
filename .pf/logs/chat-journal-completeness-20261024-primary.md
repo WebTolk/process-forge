@@ -7,3 +7,5 @@
 2026-10-24T05:33:18.116608+00:00 | primary/planner | Registration Work completed; native doctors21/12 PASS. Future run doctor18 PASS; future task doctor12 PASS with expected absent future-fix-report warning. Public receipt path sanitization rechecked. Historical transcript, source evidence, code and main Git index preserved. Publishing this future-task registration through an isolated index; both remote dev parents match.
 
 2026-10-24T05:33:38.868177+00:00 | primary/planner | Registration Work completed; native doctors21/12 PASS. Future run doctor18 PASS; future task doctor12 PASS with expected absent future-fix-report warning. Public receipt path sanitization rechecked. Historical transcript, source evidence, code and main Git index preserved. Publishing this future-task registration through an isolated index; both remote dev parents match.
+
+2026-10-24T05:33:59.100151+00:00 | primary/planner | Registration commit 9b028215df13389d63ec9d7af6d65f253d363080 pushed in parallel and read back at the exact SHA from both origin/dev and gitverse/dev. This follow-up records delivery only. Future fix remains unstarted.
