@@ -4,6 +4,7 @@
 The wrapper validates the private prepared-input pointer and digest, then runs
 an explicit argv target with inherited stdio/cwd and no shell or PF bootstrap.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,18 +32,30 @@ class ExecutorError(Exception):
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    )
 
 
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
     os.replace(temporary, path)
 
 
-def write_heartbeat(path: Path, status: str, *, sequence: int, extra: dict[str, Any] | None = None) -> None:
-    payload: dict[str, Any] = {"schema_version": 1, "status": status, "sequence": sequence, "updated_at": _utc_now()}
+def write_heartbeat(
+    path: Path, status: str, *, sequence: int, extra: dict[str, Any] | None = None
+) -> None:
+    payload: dict[str, Any] = {
+        "schema_version": 1,
+        "status": status,
+        "sequence": sequence,
+        "updated_at": _utc_now(),
+    }
     if extra:
         payload.update(extra)
     _write_json_atomic(path, payload)
@@ -51,13 +64,17 @@ def write_heartbeat(path: Path, status: str, *, sequence: int, extra: dict[str, 
 def write_exit_contract(path: Path, exit_code: int) -> None:
     # Match codex_exec_worker.write_exit_contract's durable compatibility shape.
     status = "completed" if exit_code == 0 else "failed"
-    _write_json_atomic(path, {"schema_version": 1, "exit_code": int(exit_code), "status": status})
-
+    _write_json_atomic(
+        path, {"schema_version": 1, "exit_code": int(exit_code), "status": status}
+    )
 
 
 _LAUNCH_ENV = (
-    "PF_EXECUTION_PROJECT_ID", "PF_EXECUTION_RUN_ID", "PF_EXECUTION_TASK_ID",
-    "PF_EXECUTION_ATTEMPT", "PF_EXECUTION_LAUNCH_TOKEN",
+    "PF_EXECUTION_PROJECT_ID",
+    "PF_EXECUTION_RUN_ID",
+    "PF_EXECUTION_TASK_ID",
+    "PF_EXECUTION_ATTEMPT",
+    "PF_EXECUTION_LAUNCH_TOKEN",
 )
 
 
@@ -189,7 +206,8 @@ def owned_tree_absent(process: ProcessIdentity) -> bool | None:
             os.killpg(process.pid, 0)
             return False
         except ProcessLookupError:
-            return root == "absent"
+            # Escaped descendants are not covered by process-group disappearance.
+            return None
         except PermissionError:
             return None
     return None
@@ -273,8 +291,16 @@ class ExecutionReceipts:
         )
         self.identity["attempt"] = int(values[3])
         if os.name == "nt":
+            from pf_native_control import inherited_job
+
             name = "Local\\pf-execution-" + values[4]
-            self.job = _create_job(name)
+            inherited = inherited_job(environment)
+            if inherited is not None:
+                if inherited.name != name:
+                    raise ExecutorError("execution_identity_conflict")
+                self.job = inherited.handle
+            else:
+                self.job = _create_job(name)
             tree_id = "windows-job:" + name
         elif sys.platform.startswith("linux") and os.getpgrp() == os.getpid():
             tree_id = f"linux-pgid:{os.getpid()}"
@@ -330,7 +356,11 @@ class ExecutionReceipts:
 
 
 def _canonical_digest(value: Any) -> bool:
-    if not isinstance(value, str) or len(value) != 71 or not value.startswith("sha256:"):
+    if (
+        not isinstance(value, str)
+        or len(value) != 71
+        or not value.startswith("sha256:")
+    ):
         return False
     return all(char in "0123456789abcdef" for char in value[7:])
 
@@ -342,7 +372,9 @@ def _same_path(left: str, right: str) -> bool:
         return False
 
 
-def load_and_validate_manifest(args: argparse.Namespace, environ: dict[str, str]) -> dict[str, Any]:
+def load_and_validate_manifest(
+    args: argparse.Namespace, environ: dict[str, str]
+) -> dict[str, Any]:
     supplied_path = str(args.prepared_input)
     env_path = environ.get("PF_PREPARED_INPUT_FILE", "")
     if not env_path or not _same_path(supplied_path, env_path):
@@ -368,23 +400,40 @@ def load_and_validate_manifest(args: argparse.Namespace, environ: dict[str, str]
         document = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ExecutorError("prepared_input_invalid_json") from exc
-    if (not isinstance(document, dict) or type(document.get("schema_version")) is not int
-            or document.get("schema_version") != 1 or document.get("kind") != "pf.prepared-input"):
+    if (
+        not isinstance(document, dict)
+        or type(document.get("schema_version")) is not int
+        or document.get("schema_version") != 1
+        or document.get("kind") != "pf.prepared-input"
+    ):
         raise ExecutorError("prepared_input_schema_invalid")
     semantic = document.get("input") or {}
-    if (document.get("egress") or isinstance(semantic, dict) and
-            (semantic.get("egress") or semantic.get("contract_version") == 2
-             or (semantic.get("execution_contract") or {}).get("contract_version") == 2)):
+    if (
+        document.get("egress")
+        or isinstance(semantic, dict)
+        and (
+            semantic.get("egress")
+            or semantic.get("contract_version") == 2
+            or (semantic.get("execution_contract") or {}).get("contract_version") == 2
+        )
+    ):
         raise ExecutorError("enforcement_unavailable")
 
     identity = document.get("identity")
     if not isinstance(identity, dict):
         raise ExecutorError("prepared_input_identity_invalid")
     required_identity = ("project_id", "run_id", "assignment_id", "context_id")
-    if any(not isinstance(identity.get(key), str) or not identity[key].strip() for key in required_identity):
+    if any(
+        not isinstance(identity.get(key), str) or not identity[key].strip()
+        for key in required_identity
+    ):
         raise ExecutorError("prepared_input_identity_invalid")
     attempt_value = identity.get("attempt")
-    if isinstance(attempt_value, bool) or not isinstance(attempt_value, (str, int)) or str(attempt_value).strip() == "":
+    if (
+        isinstance(attempt_value, bool)
+        or not isinstance(attempt_value, (str, int))
+        or str(attempt_value).strip() == ""
+    ):
         raise ExecutorError("prepared_input_identity_invalid")
     expected_environment = {
         "run_id": "PF_WORKER_RUN_ID",
@@ -440,13 +489,14 @@ def _write_failure(paths: tuple[Path, Path] | None, code: int, reason: str) -> N
 
 
 def _terminate_and_wait(process: subprocess.Popen[Any]) -> None:
-    if process.poll() is None:
-        process.terminate()
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait()
+    """Terminate the exact contained target and wait for the whole native set."""
+    from pf_native_control import NativeControlError
+
+    job = getattr(process, "native_job", None)
+    if job is None or not job.stop(deadline=time.monotonic() + 5):
+        raise NativeControlError()
+    process.wait(timeout=5)
+    job.close()
 
 
 def run_target(
@@ -496,7 +546,9 @@ def run_target(
             )
         else:
             receipts.heartbeat_receipt("starting")
-        process = subprocess.Popen(
+        from pf_native_control import spawn_owned
+
+        process = spawn_owned(
             target,
             shell=False,
             stdin=None,
@@ -532,6 +584,12 @@ def run_target(
                     receipts.heartbeat_receipt("running")
                 next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
         exit_code = int(process.wait())
+        job = getattr(process, "native_job", None)
+        if job is not None:
+            # The target may have returned while its descendants still run.
+            while job.active():
+                time.sleep(0.05)
+            job.close()
         status = "completed" if exit_code == 0 else "failed"
         if receipts is None:
             write_exit_contract(exit_path, exit_code)

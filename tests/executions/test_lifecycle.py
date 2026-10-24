@@ -373,7 +373,7 @@ def test_native_wrapper_authenticated_tree_receipts(
     )
     script = "import time; time.sleep(0.2)"
     if descendant:
-        script = "import subprocess,sys; subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)'])"
+        script = "import subprocess,sys; subprocess.Popen([sys.executable, '-B', '-c', 'import time; time.sleep(5)'])"
     wrapper = Path(prepared_executor.__file__)
     argv = [
         sys.executable,
@@ -405,6 +405,10 @@ def test_native_wrapper_authenticated_tree_receipts(
             start_new_session=(os.name != "nt"),
         )
         try:
+            if descendant:
+                time.sleep(2.5)
+                assert child.poll() is None
+                assert not (attempt / "exit.json").exists()
             assert child.wait(timeout=12) == 0, (attempt / "wrapper.stderr").read_text()
         finally:
             if child.poll() is None:
@@ -806,3 +810,179 @@ def test_native_stop_never_signals_a_foreign_host(
                 tree_id="windows-job:Local\\pf-execution-" + "a" * 32,
             )
         )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")
+@pytest.mark.parametrize("detached", [False, True])
+def test_real_legacy_cli_timeout_cleans_owned_grandchild(
+    sql_cli_fixture, monkeypatch, detached
+):
+    import time
+
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.executions.composition import ExecutionStorage
+
+    root, _repository, args, driver_path = sql_cli_fixture
+    monkeypatch.setattr(
+        core, "_execution_storage", lambda *a, **k: ExecutionStorage("legacy")
+    )
+    # M1 isolates process lifecycle from the separately pending host factory.
+    monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
+    driver = core.load_yaml_document(driver_path)
+    driver["command"]["args"] = [
+        "-c",
+        "import subprocess,sys,time; subprocess.Popen(['cmd.exe','/d','/c',sys.executable,'-B','-c','import time;time.sleep(60)']);time.sleep(60)",
+    ]
+    driver["limits"]["timeout_seconds"] = 1
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    args.detach = detached
+    try:
+        assert core.command_worker_run_start(args) == (0 if detached else 1)
+        if detached:
+            time.sleep(1.2)
+            assert core.command_worker_run_status(args) == 0
+        state = core.load_agent_run_state(root, "run", "task")
+        assert state["status"] == "timed_out"
+        assert core._legacy_tree_probe(root, "run", "task", state) is True
+        assert core.command_worker_run_stop(args) == 0
+    finally:
+        # Exact receipt-bound cleanup only, even if an assertion failed.
+        state = core.load_agent_run_state(root, "run", "task")
+        if state.get("pid") is not None:
+            core._legacy_tree_probe(root, "run", "task", state, stop=True)
+
+
+@pytest.mark.parametrize("terminal_status", ["timed_out", "completed"])
+def test_legacy_terminal_unknown_ownership_does_not_signal(
+    sql_cli_fixture, monkeypatch, terminal_status
+):
+    import processforge as core
+
+    from processforge_core.executions.composition import ExecutionStorage
+
+    root, _repository, args, _driver = sql_cli_fixture
+    monkeypatch.setattr(
+        core, "_execution_storage", lambda *a, **k: ExecutionStorage("legacy")
+    )
+    # M1 isolates process lifecycle from the separately pending host factory.
+    monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
+    assert core.command_worker_run_prepare(args) == 0
+    paths = core._work_paths.worker_run(root, "run", "task")
+    state = core.load_agent_run_state(root, "run", "task")
+    state.update(status=terminal_status, pid=os.getpid(), failure_reason="timeout")
+    core._core_common_json_io.json_write(paths["status"], state)
+    task = core._worker_assignment_service.load(root, "task")
+    assert core.existing_running_worker_run(root, task) is not None
+    assert core.command_worker_run_stop(args) == 1
+    assert core.load_agent_run_state(root, "run", "task")["status"] == "running"
+
+
+def test_legacy_ambiguous_spawn_never_releases_ownership(sql_cli_fixture, monkeypatch):
+    import pf_native_control
+    import processforge as core
+
+    from processforge_core.executions.composition import ExecutionStorage
+
+    root, _repository, args, _driver = sql_cli_fixture
+    monkeypatch.setattr(
+        core, "_execution_storage", lambda *a, **k: ExecutionStorage("legacy")
+    )
+    monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
+    assert core.command_worker_run_prepare(args) == 0
+
+    def ambiguous(*args, **kwargs):
+        raise OSError("fixture ambiguity")
+
+    monkeypatch.setattr(pf_native_control, "spawn_owned", ambiguous)
+    assert core.command_worker_run_start(args) == 1
+    state = core.load_agent_run_state(root, "run", "task")
+    assert state["status"] == "running" and state["pid"] is None
+    assert state["failure_reason"] == "execution activity unknown"
+    assert core.command_worker_run_prepare(args) == 0  # skipped, not reallocated
+    assert core.load_agent_run_state(root, "run", "task")["attempt"] == state["attempt"]
+    assert core.command_worker_run_stop(args) == 1
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")
+def test_legacy_controller_crash_after_native_receipt_is_recoverable(
+    sql_cli_fixture, monkeypatch
+):
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.executions.composition import ExecutionStorage
+
+    root, _repository, args, driver_path = sql_cli_fixture
+    monkeypatch.setattr(
+        core, "_execution_storage", lambda *a, **k: ExecutionStorage("legacy")
+    )
+    monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
+    driver = core.load_yaml_document(driver_path)
+    driver["command"]["args"] = ["-c", "import time;time.sleep(60)"]
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    original = core.write_agent_run_state
+
+    def interrupted(project, task, driver, status, **kwargs):
+        if status == "running":
+            raise RuntimeError("fixture controller publication crash")
+        return original(project, task, driver, status, **kwargs)
+
+    monkeypatch.setattr(core, "write_agent_run_state", interrupted)
+    try:
+        with pytest.raises(RuntimeError, match="fixture controller"):
+            core.command_worker_run_start(args)
+        monkeypatch.setattr(core, "write_agent_run_state", original)
+        state = core.load_agent_run_state(root, "run", "task")
+        assert state["status"] == "starting" and state["pid"] is None
+        assert core.command_worker_run_status(args) == 0
+        state = core.load_agent_run_state(root, "run", "task")
+        assert state["status"] == "running" and type(state["pid"]) is int
+        assert core.command_worker_run_stop(args) == 0
+        assert core._legacy_tree_probe(root, "run", "task", state) is True
+    finally:
+        monkeypatch.setattr(core, "write_agent_run_state", original)
+        core._legacy_tree_probe(
+            root,
+            "run",
+            "task",
+            core.load_agent_run_state(root, "run", "task"),
+            stop=True,
+        )
+
+
+def test_legacy_guard_refuses_terminal_wrapper_without_tree_proof(
+    sql_cli_fixture, monkeypatch
+):
+    import processforge as core
+
+    from processforge_core.executions import composition
+    from processforge_core.executions.composition import ExecutionStorage
+    from processforge_core.runtime import metrics
+
+    root, _repository, args, _driver = sql_cli_fixture
+    monkeypatch.setattr(
+        composition,
+        "select_execution_storage",
+        lambda *a, **k: ExecutionStorage("legacy"),
+    )
+    monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
+    assert core.command_worker_run_prepare(args) == 0
+    paths = core._work_paths.worker_run(root, "run", "task")
+    state = core.load_agent_run_state(root, "run", "task")
+    state.update(status="timed_out", pid=os.getpid(), failure_reason="timeout")
+    core._core_common_json_io.json_write(paths["status"], state)
+    result = metrics.observe(
+        "workers",
+        root / "workplace",
+        [root],
+        core,
+        now=__import__("time").time(),
+        coverage=True,
+        budget=metrics.Budget(seconds=0.5),
+    )
+    assert result["counts"]["running"] is None
+    assert result["coverage"] == "partial"

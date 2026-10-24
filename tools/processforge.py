@@ -532,7 +532,7 @@ GLOBAL_AGENT_SECTION = f"""{GLOBAL_AGENT_SECTION_START}
 
 Apply this section when:
 - the user mentions ProcessForge;
-- the user says "по флоу";
+- the user says "Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В РІР‚В Р В Р’В Р Р†Р вЂљРЎв„ўР В Р вЂ Р В РІР‚С™Р РЋРЎС™Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В РІР‚В Р В Р’В Р Р†Р вЂљРЎв„ўР В Р Р‹Р РЋРІР‚С” Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћвЂ“Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р РЋРІвЂћСћР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р РЋРІР‚СњР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р Р†РІР‚С›РЎС›Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В РІР‚В Р В Р’В Р Р†Р вЂљРЎв„ўР В Р Р‹Р РЋРІР‚С”Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћвЂ“Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В РІР‚В Р В Р’В Р Р†Р вЂљРЎв„ўР В Р Р‹Р РЋРІвЂћСћ";
 - the user points to a `.pf/` directory;
 - the project contains `.pf/process-forge.yaml`;
 - an assignment references ProcessForge.
@@ -8831,7 +8831,12 @@ def existing_running_worker_run(
             project_root, task, state, fallback_driver_ref
         )
         return state, driver, paths
-    if str(state.get("status") or "") != "running":
+    if (
+        str(state.get("status") or "") != "running"
+        and not _worker_observation_inputs.worker_run_state_requires_reconciliation(
+            project_root, run_id, task_id, state
+        )
+    ):
         return None
     driver = _runtime_driver_selection_service.for_worker_state(
         project_root, task, state, fallback_driver_ref
@@ -8998,13 +9003,133 @@ def load_agent_run_state(project_root: Path, run_id: str, task_id: str) -> dict[
 
 
 def terminate_worker_pid(pid: int) -> None:
-    if os.name == "nt":
-        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    else:
+    # Kept as a compatibility symbol. A PID alone never authorizes a signal.
+    from processforge_core.executions.model import ExecutionError
+
+    raise ExecutionError("execution_activity_unknown")
+
+
+def _legacy_tree_facts(
+    project_root: Path,
+    run_id: str,
+    task_id: str,
+    state: dict[str, Any],
+    *,
+    deadline: float | None = None,
+) -> dict[str, Any] | None:
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
+    if deadline is not None and time.monotonic() >= deadline:
+        return None
+    reference = state.get("prepared_input")
+    attempt = state.get("attempt")
+    if (
+        not isinstance(reference, dict)
+        or not isinstance(reference.get("path"), str)
+        or type(attempt) is not int
+        or attempt < 1
+    ):
+        return None
+    try:
+        target = (
+            project_root / reference["path"]
+        ).resolve().parent / "native-tree.json"
+        target.relative_to(paths["root"].resolve())
+        with target.open("rb") as stream:
+            raw = stream.read(4097)
+        if len(raw) > 4096 or (deadline is not None and time.monotonic() >= deadline):
+            return None
+
+        def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+            result: dict[str, Any] = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError("duplicate native ownership fact")
+                result[key] = value
+            return result
+
+        facts = json.loads(raw, object_pairs_hook=unique)
+        if (
+            not isinstance(facts, dict)
+            or set(facts)
+            != {"schema_version", "pid", "birth_id", "job_name", "identity"}
+            or type(facts["schema_version"]) is not int
+            or facts["schema_version"] != 1
+        ):
+            return None
+        if facts["identity"] != {
+            "run_id": run_id,
+            "task_id": task_id,
+            "attempt": attempt,
+        }:
+            return None
+        return facts
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _legacy_tree_probe(
+    project_root: Path,
+    run_id: str,
+    task_id: str,
+    state: dict[str, Any],
+    *,
+    stop: bool = False,
+    deadline: float | None = None,
+) -> bool | None:
+    """Require attempt-bound Job ownership, including after wrapper exit."""
+    from pf_native_control import NativeControlError, reopen_job
+
+    facts = _legacy_tree_facts(project_root, run_id, task_id, state, deadline=deadline)
+    if facts is None:
+        return None
+    try:
+        job = reopen_job(
+            facts,
+            pid=state.get("pid") or facts["pid"],
+            identity={
+                "run_id": run_id,
+                "task_id": task_id,
+                "attempt": state["attempt"],
+            },
+        )
+        if deadline is not None and time.monotonic() >= deadline:
+            if job is not None:
+                job.close()
+            return None
+        if job is None:
+            return True
         try:
-            os.kill(int(pid), signal.SIGTERM)
-        except ProcessLookupError:
-            return
+            return (
+                job.stop(deadline=time.monotonic() + 5) if stop else job.active() == 0
+            )
+        finally:
+            job.close()
+    except (OSError, ValueError, KeyError, TypeError, NativeControlError):
+        return None
+
+
+def _legacy_activity_unknown(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any],
+    state: dict[str, Any],
+    paths: dict[str, Path],
+) -> dict[str, Any]:
+    facts = _legacy_tree_facts(
+        project_root, str(state.get("run_id")), str(state.get("task_id")), state
+    )
+    pid = state.get("pid") or (facts or {}).get("pid")
+    return write_agent_run_state(
+        project_root,
+        task,
+        driver,
+        "running",
+        pid=pid,
+        started_at=state.get("started_at"),
+        failure_reason="execution activity unknown",
+        command=json_read(paths["command"]),
+        paths=paths,
+    )
 
 
 def observe_worker_run(
@@ -9031,21 +9156,33 @@ def observe_worker_run(
         )
     paths = _work_paths.worker_run(project_root, run_id, task_id)
     status = str(state.get("status") or "")
-    if status != "running":
-        return state
-    pid = state.get("pid")
-    if not isinstance(pid, int):
-        return write_agent_run_state(
-            project_root,
-            task,
-            driver,
-            "failed",
-            failure_reason="running state missing pid",
-            paths=paths,
+    retained = _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(
+        _core_runtime_observation_inputs.worker_process_key(
+            project_root, run_id, task_id
         )
+    )
+    if status != "running":
+        if (
+            retained is None
+            and not _worker_observation_inputs.worker_run_state_requires_reconciliation(
+                project_root, run_id, task_id, state
+            )
+        ):
+            return state
+        if _legacy_tree_probe(project_root, run_id, task_id, state) is True:
+            return state
+        return _legacy_activity_unknown(project_root, task, driver, state, paths)
+    pid = state.get("pid")
+    if type(pid) is not int:
+        return _legacy_activity_unknown(project_root, task, driver, state, paths)
     command = json_read(paths["command"])
     started_at = str(state.get("started_at") or _core_common_clock.now_utc())
     exit_marker = json_read(paths["exit"])
+    if (
+        exit_marker
+        and _legacy_tree_probe(project_root, run_id, task_id, state) is not True
+    ):
+        return _legacy_activity_unknown(project_root, task, driver, state, paths)
     if exit_marker:
         marker_status = str(exit_marker.get("status") or "")
         marker_exit_code = exit_marker.get("exit_code")
@@ -9117,10 +9254,13 @@ def observe_worker_run(
     )
     exit_code = proc.poll() if proc else None
     if timed_out and exit_code is None:
-        if proc and proc.poll() is None:
-            proc.kill()
-        else:
-            terminate_worker_pid(pid)
+        if (
+            _legacy_tree_probe(project_root, run_id, task_id, state, stop=True)
+            is not True
+        ):
+            return _legacy_activity_unknown(project_root, task, driver, state, paths)
+        if proc is not None:
+            proc.wait(timeout=5)
         finished_at = _core_common_clock.now_utc()
         state = write_agent_run_state(
             project_root,
@@ -9168,6 +9308,10 @@ def observe_worker_run(
                 return state
             if datetime.now(timezone.utc) < lost_observed_at + timedelta(seconds=0.25):
                 return state
+            if _legacy_tree_probe(project_root, run_id, task_id, state) is not True:
+                return _legacy_activity_unknown(
+                    project_root, task, driver, state, paths
+                )
             finished_at = _core_common_clock.now_utc()
             failure_reason = "process exited without durable exit contract"
             state = write_agent_run_state(
@@ -9223,6 +9367,8 @@ def observe_worker_run(
                 command=command,
                 paths=paths,
             )
+    if _legacy_tree_probe(project_root, run_id, task_id, state) is not True:
+        return _legacy_activity_unknown(project_root, task, driver, state, paths)
     finished_at = _core_common_clock.now_utc()
     final_status = "completed" if exit_code == 0 else "failed"
     state = write_agent_run_state(
@@ -10131,8 +10277,10 @@ def _sql_worker_run_start(
                 launch_token=token,
             )
             try:
-                process = subprocess.Popen(
-                    [str(item) for item in argv],
+                from pf_native_control import spawn_owned
+
+                process = spawn_owned(
+                    [str(item) for item in argv], token=token,
                     cwd=spec.get("working_directory") or str(project_root),
                     env=environment,
                     stdout=stdout,
@@ -10335,31 +10483,45 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
         paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
         paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
         started_at = _core_common_clock.now_utc()
+        write_agent_run_state(
+            project_root,
+            task,
+            driver,
+            "starting",
+            started_at=started_at,
+            command=command,
+            paths=paths,
+        )
         with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
             try:
-                proc = subprocess.Popen(
+                from pf_native_control import spawn_owned
+
+                attempt_root = (
+                    (project_root / command["prepared_input"]["path"]).resolve().parent
+                )
+                attempt_root.relative_to(paths["root"].resolve())
+                native_receipt = attempt_root / "native-tree.json"
+                prepared_input.private_file(
+                    project_root, rel(native_receipt, project_root)
+                )
+                proc = spawn_owned(
                     [str(item) for item in argv],
+                    receipt_path=native_receipt,
+                    identity={
+                        "run_id": run_id,
+                        "task_id": task_id,
+                        "attempt": int(command["attempt"]),
+                    },
                     cwd=str(cwd),
                     env=env,
                     stdout=stdout,
                     stderr=stderr,
                     shell=False,
                 )
-            except OSError as exc:
-                finished_at = _core_common_clock.now_utc()
-                write_agent_run_state(
-                    project_root,
-                    task,
-                    driver,
-                    "failed",
-                    started_at=started_at,
-                    finished_at=finished_at,
-                    exit_code=None,
-                    failure_reason=str(exc),
-                    command=command,
-                    paths=paths,
-                )
-                print(f"FAIL: start failed for {task_id}: {exc}")
+            except OSError:
+                current = load_agent_run_state(project_root, run_id, task_id)
+                _legacy_activity_unknown(project_root, task, driver, current, paths)
+                print(f"FAIL: start failed for {task_id}")
                 return 1
         write_agent_run_state(
             project_root,
@@ -10406,58 +10568,65 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
             print(f"RUNNING: {task_id} pid={proc.pid}")
             return 0
     assert proc is not None
+    timed_out = False
+    exit_code: int | None
     try:
         exit_code = proc.wait(timeout=timeout_seconds)
-        finished_at = _core_common_clock.now_utc()
-        final_status = "completed" if exit_code == 0 else "failed"
-        write_agent_run_state(
-            project_root,
-            task,
-            driver,
-            final_status,
-            pid=proc.pid,
-            started_at=started_at,
-            finished_at=finished_at,
-            exit_code=exit_code,
-            command=command,
-            paths=paths,
-        )
-        _core_common_json_io.json_write(
-            paths["exit"],
-            {
-                "schema_version": 1,
-                "exit_code": exit_code,
-                "finished_at": finished_at,
-                "status": final_status,
-            },
-        )
     except subprocess.TimeoutExpired:
-        proc.kill()
+        timed_out = True
         exit_code = -1
-        final_status = "timed_out"
-        finished_at = _core_common_clock.now_utc()
-        write_agent_run_state(
-            project_root,
-            task,
-            driver,
-            final_status,
-            pid=proc.pid,
-            started_at=started_at,
-            finished_at=finished_at,
-            exit_code=exit_code,
-            failure_reason="timeout",
-            command=command,
-            paths=paths,
-        )
-        _core_common_json_io.json_write(
-            paths["exit"],
-            {
-                "schema_version": 1,
-                "exit_code": exit_code,
-                "finished_at": finished_at,
-                "status": final_status,
-            },
-        )
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        current = load_agent_run_state(project_root, run_id, task_id)
+        if (
+            current.get("attempt") != int(command["attempt"])
+            or current.get("pid") != proc.pid
+        ):
+            print("FAIL: execution_identity_conflict")
+            return 1
+        if (
+            _legacy_tree_probe(project_root, run_id, task_id, current, stop=timed_out)
+            is not True
+        ):
+            _legacy_activity_unknown(project_root, task, driver, current, paths)
+            print("FAIL: execution_activity_unknown")
+            return 1
+        proc.wait(timeout=5)
+        # A concurrent exact stop already published its compatibility outcome.
+        if current.get("status") == "cancelled":
+            final_status = "cancelled"
+            exit_code = current.get("exit_code")
+        else:
+            final_status = (
+                "timed_out"
+                if timed_out
+                else ("completed" if exit_code == 0 else "failed")
+            )
+            finished_at = _core_common_clock.now_utc()
+            write_agent_run_state(
+                project_root,
+                task,
+                driver,
+                final_status,
+                pid=proc.pid,
+                started_at=started_at,
+                finished_at=finished_at,
+                exit_code=exit_code,
+                failure_reason="timeout" if timed_out else None,
+                command=command,
+                paths=paths,
+            )
+            _core_common_json_io.json_write(
+                paths["exit"],
+                {
+                    "schema_version": 1,
+                    "exit_code": exit_code,
+                    "finished_at": finished_at,
+                    "status": final_status,
+                },
+            )
+        native_job = getattr(proc, "native_job", None)
+        if native_job is not None:
+            native_job.close()
     _process_event_recorder.emit_process_event(
         project_root,
         "worker.run.finished",
@@ -10554,46 +10723,46 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             _publish_sql_locked(project_root, repository, run_id, task_id)
         print(f"STOPPED: {task_id}")
         return 0
-    state = load_agent_run_state(project_root, run_id, task_id)
-    if not state:
-        print(f"STATUS: not-prepared {task_id}")
-        return 1
-    pid = state.get("pid")
-    if pid and state.get("status") == "running":
-        if os.name == "nt":
-            subprocess.run(
-                ["taskkill", "/PID", str(pid), "/T", "/F"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        else:
-            os.kill(int(pid), signal.SIGTERM)
-    driver = _runtime_driver_selection_service.for_worker_state(
-        project_root, task, state
-    )
-    paths = _work_paths.worker_run(project_root, run_id, task_id)
-    if state.get("status") in {
-        "completed",
-        "failed",
-        "timed_out",
-        "unknown_exit",
-        "lost",
-        "cancelled",
-    }:
-        print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        state = load_agent_run_state(project_root, run_id, task_id)
+        if not state:
+            print(f"STATUS: not-prepared {task_id}")
+            return 1
+        driver = _runtime_driver_selection_service.for_worker_state(
+            project_root, task, state
+        )
+        paths = _work_paths.worker_run(project_root, run_id, task_id)
+        pid = state.get("pid")
+        if (
+            pid is not None or state.get("status") in {"starting", "running"}
+        ) and _legacy_tree_probe(
+            project_root, run_id, task_id, state, stop=True
+        ) is not True:
+            _legacy_activity_unknown(project_root, task, driver, state, paths)
+            print("FAIL: execution_activity_unknown")
+            return 1
+        if state.get("status") in {
+            "completed",
+            "failed",
+            "timed_out",
+            "unknown_exit",
+            "lost",
+            "cancelled",
+        }:
+            print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
+            return 0
+        write_agent_run_state(
+            project_root,
+            task,
+            driver,
+            "cancelled",
+            pid=pid,
+            finished_at=_core_common_clock.now_utc(),
+            failure_reason="stop requested",
+            paths=paths,
+        )
+        print(f"STOPPED: {task_id}")
         return 0
-    write_agent_run_state(
-        project_root,
-        task,
-        driver,
-        "cancelled",
-        pid=pid if isinstance(pid, int) else None,
-        finished_at=_core_common_clock.now_utc(),
-        failure_reason="stop requested",
-        paths=paths,
-    )
-    print(f"STOPPED: {task_id}")
-    return 0
 
 
 @_worker_storage_errors

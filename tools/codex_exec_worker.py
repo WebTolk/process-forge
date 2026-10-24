@@ -639,17 +639,35 @@ def main() -> int:
         receipt = usage_capture.begin()
         usage_capture.start_execution()
         try:
-            result = subprocess.run(
+            from pf_native_control import spawn_owned
+            from prepared_executor import _terminate_and_wait
+
+            native = spawn_owned(
                 command,
-                input=payload_text.encode("utf-8"),
-                check=False,
+                stdin=subprocess.PIPE,
                 stdout=receipt,
                 env={
                     key: value
                     for key, value in os.environ.items()
-                    if not key.startswith("PF_EXECUTION_")
+                    if not key.startswith(("PF_EXECUTION_", "PF_NATIVE_JOB_"))
                 },
             )
+            try:
+                native.communicate(payload_text.encode("utf-8"))
+                job = getattr(native, "native_job", None)
+                if job is not None:
+                    import time
+
+                    while job.active():
+                        time.sleep(0.05)
+                    job.close()
+                assert native.returncode is not None
+                result: subprocess.CompletedProcess[bytes] = (
+                    subprocess.CompletedProcess(command, native.returncode)
+                )
+            except BaseException:
+                _terminate_and_wait(native)
+                raise
         finally:
             usage_capture.finish()
         diagnostics.emit(

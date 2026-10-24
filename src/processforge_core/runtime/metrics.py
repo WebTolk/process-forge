@@ -200,6 +200,12 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
                         raise ValueError
                     if status in {"starting", "unknown_exit", "lost"}:
                         budget.issues.add("coverage")
+                    if status in {"completed", "failed", "timed_out", "cancelled"} and item.get("pid") is not None:
+                        probe = getattr(core, "_legacy_tree_probe", None)
+                        budget.check()
+                        if probe is None or probe(base, item.get("run_id"), item.get("task_id"), item, deadline=budget.deadline) is not True:
+                            budget.issues.add("coverage")
+                        budget.check()
                     counts["running"] += status == "running"
                 elif name == "work":
                     if status not in {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}:
