@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_review",
+  "kind": "design_only",
+  "identity": {
+    "project_id": "process-forge",
+    "run_id": "pf-r02-design-20261024",
+    "assignment_id": "pf-r02-w3-runtime-design-20261024",
+    "context_id": "pf-r02-w3-runtime-design-20261024-capsule",
+    "attempt": 2
+  },
+  "capsule_sha256": "ba02e71c179f5e351684762f68a34b1e0e4dca7baf1f05e7c5fb9947578a5ea6",
+  "implemented": false,
+  "tests_executed": false,
+  "observed_owners": [
+    {"path": "tools/processforge.py", "symbols": ["worker_run_lifecycle_lock", "prepare_worker_run", "write_agent_run_state", "load_agent_run_state", "command_worker_run_start", "command_worker_run_status", "command_worker_run_stop", "observe_worker_run", "_collect_worker_run_locked", "supervisor_tick_result", "supervisor_pending_drain_task_ids"], "finding": "JSON latest-state owner; per-task start/prepare/collect lock, unlocked stop and supervisor observation; Popen precedes durable running state; preparation enumerates attempt directories."},
+    {"path": "src/processforge_core/runtime/metrics.py", "symbols": ["Budget", "group", "observe", "shutdown_workers"], "finding": "Worker observation walks all run/task status files. Shutdown budget is 0.5 seconds, default limits 512 entries, 128 files, 4 MiB. Any issue makes counts null."},
+    {"path": "tools/pf_runtime/service.py", "symbols": ["RuntimeProcess.active_worker_count", "RuntimeProcess.make_handler", "command_stop"], "finding": "Separate unbounded status-file glob; guarded server shutdown uses fresh metrics and refuses nonzero or null running count. In-process request/scheduler lock does not fence independent CLI starts."},
+    {"path": "src/processforge_core/runtime/observation_inputs.py", "symbols": ["WorkerObservationInputService", "DETACHED_WORKER_PROCESSES"], "finding": "In-memory process handles and PID-only OS probes; no process birth identity. Record writer sets heartbeat observation time from file existence."},
+    {"path": "tools/prepared_executor.py", "symbols": ["run_target", "write_heartbeat", "write_exit_contract"], "finding": "Existing generic-shell lifecycle wrapper; periodic heartbeat, atomic exit marker; current marker has no attempt or launch token."},
+    {"path": "tools/codex_exec_worker.py", "symbols": ["write_heartbeat", "write_exit_contract", "ManagedUsageCapture"], "finding": "Existing Codex wrapper; exit publication and optional accounting receipts are distinct contracts."},
+    {"path": "src/processforge_core/work/continuation_read.py", "symbols": ["ContinuationRecordReader.writer_check"], "finding": "Direct latest status.json read must follow the selected authoritative storage owner after cutover."},
+    {"path": "src/processforge_core/prepared/collection.py", "symbols": ["CapturedAttemptReader", "CollectionRecoveryStore"], "finding": "Existing bounded capture and semantic-refusal evidence must remain separate from process liveness."},
+    {"path": "tools/pf_runtime/action_tools.py", "symbols": ["ActionToolService.execute"], "finding": "MCP delegates worker operations to existing native worker-run commands; preserve this facade."}
+  ],
+  "proposed_model": {
+    "authority": "Project main SQL database owns worker attempt state; workplace stores summaries and references. Search database is excluded.",
+    "tables": [
+      {"name": "worker_attempts", "purpose": "Stable project/run/task/attempt identity, execution lifecycle and terminal facts; separate collection outcome; retained history."},
+      {"name": "worker_heads", "purpose": "Indexed latest-attempt lookup and next-attempt allocation; never enumerate old attempt directories on ordinary prepare."},
+      {"name": "worker_active", "purpose": "Only reserved/starting/running/stopping/unresolved process ownership; delete only after proven absence, independently of result collection."}
+    ],
+    "identity": ["project_id", "run_id", "task_id", "attempt", "launch_token", "revision"],
+    "process_identity": ["host_identity", "boot_identity_if_available", "pid", "process_birth_identity", "launch_token"],
+    "collection": "Existing prepared input, receipt, completion and semantic-refusal proofs retain authority; completed but uncollected attempts do not imply running processes.",
+    "indexes": ["unique(project_id, run_id, task_id, attempt)", "unique(project_id, run_id, task_id) on worker_heads", "primary key on worker_active attempt identity", "history keyset index(project_id, terminal_sequence, attempt_id)"],
+    "history_pagination": "Bounded keyset pages, deterministic terminal sequence, optional snapshot high-water mark; no OFFSET or COUNT history in guard."
+  },
+  "required_apis_from_others": [
+    {"owner": "W1", "contract": "Freeze task versus worker ownership, legacy status projection including collect failure, process-absence evidence and project scoping."},
+    {"owner": "W2", "contract": "Own PF SQL connection/transaction interface, shared project/workplace database resolution, schema version registration, parameter binding, bounded timeouts, typed storage errors and read-only noncreation."},
+    {"owner": "W4", "contract": "Explicit import/cutover generation, active-coverage proof, resumable idempotent checkpoints, preserved bytes/quarantine, projection publication/recovery and safe rollback fence."}
+  ],
+  "proposed_runtime_api": ["load_latest", "allocate_attempt", "reserve_start", "attach_process", "record_observation", "request_stop", "confirm_process_absent", "record_collection", "list_active", "page_history"],
+  "transaction_rules": [
+    "Commit starting reservation before Popen; no DB transaction spans OS execution, process wait, output reads or history import.",
+    "Use per-task lifecycle serialization for all start/status/stop/reconciliation writers and revision plus launch-token compare-and-set for late observations.",
+    "An owner crash between reservation and PID attachment leaves unresolved active state; no expiry alone may reclaim it.",
+    "Terminal execution update and removal from active set commit together only after proof of process absence; collection is an independent transition.",
+    "SQL is sole owner after cutover; status.json is a legacy-shaped derived projection published with recoverable dirty revision. Projection failure never removes active ownership.",
+    "Guard uses authoritative active rows and coverage generation, never unverified workplace summaries or historical file scans."
+  ],
+  "start_stop_fence": {
+    "requirement": "Every independent CLI/MCP/Inspector start and guarded Runtime shutdown shares admission serialization, including project registration changes.",
+    "proposal": "Short workplace admission critical section plus instance-bound stopping fence; standalone projects use project-local admission. Gate precedes task lock and short storage transaction.",
+    "linearization": "A start commits its active reservation before releasing admission; shutdown retains admission through complete active observation and stopping-fence publication. A competing start either precedes the observation or is refused/retried with existing failure semantics.",
+    "recovery": "Fence clearing requires verified owner completion/death; a timeout is not proof. No forever-disabled standalone CLI after Runtime stop.",
+    "unavailable_workplace": "Do not silently bypass an enrolled workplace gate. Pure file/artifact operations remain service-independent."
+  },
+  "suggested_file_ownership": [
+    {"owner": "W3-runtime", "existing": ["tools/processforge.py", "tools/pf_runtime/service.py", "src/processforge_core/runtime/metrics.py", "src/processforge_core/runtime/observation_inputs.py", "src/processforge_core/work/continuation_read.py", "tools/prepared_executor.py", "tools/codex_exec_worker.py", "docs/ru/concepts/runtime-model.md", "docs/ru/concepts/prepared-input.md", "tools/smoke_worker_run_shell.py", "tools/smoke_runtime_metrics.py", "tools/smoke_server_operator.py", "tools/smoke_long_lived_runtime.py"], "proposed_new": ["src/processforge_core/runtime/worker_state.py", "src/processforge_core/runtime/worker_store.py", "src/processforge_core/runtime/process_identity.py", "tools/smoke_worker_storage_scale.py"], "condition": "Suggestion for next scoped Work only; one writer owns whole tools/processforge.py. W2/W4 supply integration contracts, not concurrent edits."},
+    {"owner": "W2-driver", "existing": ["src/processforge_core/sqlite_storage.py"], "proposed_new": [], "condition": "Shared SQL layer/schema registry paths must be frozen by W2; W3 must not invent or duplicate its connection factory."},
+    {"owner": "W4-migration", "existing": [], "proposed_new": ["src/processforge_core/runtime/worker_migration.py", "tools/migrate-worker-history.py"], "condition": "Migration-only paths are proposed; updates to shared updater/composition/CLI require separately serialized ownership."},
+    {"owner": "integration-writer", "existing": ["src/processforge_core/composition.py", "src/processforge_core/bootstrap.py"], "proposed_new": [], "condition": "Only if required after design reconciliation; serialized integration by designated native worker, never simultaneous writers."}
+  ],
+  "regression_plan": {
+    "existing": ["tools/smoke_worker_run_shell.py", "tools/smoke_runtime_metrics.py", "tools/smoke_server_operator.py", "tools/smoke_long_lived_runtime.py", "tools/smoke_runtime_status_timeout.py", "tools/smoke_prepared_execution_context.py", "tools/smoke_prepared_execution_recovery.py", "tools/smoke_codex_exec_worker.py", "tools/smoke_mcp_action_tools.py", "tools/smoke_continuation_work.py", "tools/smoke_runtime_scheduler_failure_isolation.py"],
+    "new_behavior_cases": ["0/510/400000 terminal attempts crossed with 0/1/several active attempts", "zero history row/file reads by guard", "EXPLAIN plan and bounded active rows/memory/page size", "independent CLI start versus guarded shutdown barriers", "crash before/after reservation, Popen, PID attachment, terminal commit and JSON projection", "PID reuse, stale heartbeat, denied process inspection and restart", "old attempt heartbeat/exit rejected by identity and revision", "stop signal failure or still-live descendant retains active ownership", "capture/collect replay and stable refusal remain separate from liveness", "explicit migration interrupted/repeated, corrupt data classification, mixed-version writers rejected", "file-only CLI without Runtime/MCP/network and no implicit DB creation by ordinary reads", "archive write contention within bounded guard timeout"],
+    "measurements": "Future isolated fixture only: exact candidate/environment, query plans, rows and files read, allocations, latency distribution and exit codes; no claims of measured performance in this design.",
+    "quality": "After implementation: relevant pytest/smokes, Ruff lint/format check, mypy using PF-approved tools. Not run or required as execution in this design-only scope."
+  },
+  "source_sha256": {
+    "tools/processforge.py": "2fe02928a2ce7bda63e999b0a00914dfb6eb561d6056811f2d65899de25d8e81",
+    "tools/pf_runtime/service.py": "4aae1914382ab05758ec37375f25237394ad9237faef5e72fee40705c10bfc06",
+    "src/processforge_core/runtime/metrics.py": "56b5a3b6ba385785eda9def911050ada78a06602e903e26d1c495f251e961032",
+    "src/processforge_core/runtime/observation_inputs.py": "4e1c82a676243aacb36619924b826da22665c6b8ce373d98f4ba8adb9cb9a84b",
+    "tools/prepared_executor.py": "3199a39bb072f45558bd54b86c56e6d1dcea373e06ff3ed8a82a1c6f74ea20b5",
+    "tools/codex_exec_worker.py": "592d474bacdb6855e456842439fadb2cd1cff35df777ee4cbc6669387cf1379a"
+  },
+  "limitations": [
+    "No product edits, test/benchmark execution, live process operations, migration, infrastructure changes, commits or pushes.",
+    "Serena was available and used; exact shell reads filled an empty symbol search for the monolithic CLI.",
+    "Broad test search encountered inaccessible temporary fixtures and nonexistent guessed directories; evidence is restricted to named source smoke files subsequently inspected.",
+    "READ_ACK, RESULT_READY and heartbeat were not written: prepared scope permits artifact writes, not Agent Ledger/chat mutations. No PF connection was required or used.",
+    "Design requires W1/W2/W4 reconciliation and a new scoped implementation assignment; it does not authorize implementation or parent lifecycle completion."
+  ]
+}
