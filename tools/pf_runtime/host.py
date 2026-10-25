@@ -712,9 +712,8 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
         raise SystemExit("FAIL: runtime event requires --project-root or project_root/cwd in input")
     project_root = resolve_project(str(project_ref), core)
     workplace_root = workplace_root or core.resolve_workplace_root(None, project_root=project_root)
-    with registration_admission(workplace_root, [project_root]), state_lock():
+    with registration_admission(workplace_root, [project_root]):
         handle = route_project(str(project_root), workplace_root, core)
-        state = load_state(workplace_root)
         source = raw.get("source") if isinstance(raw.get("source"), dict) else {}
         session_id = str(source.get("session_id") or raw.get("session_id") or "")
         event_type = str(raw.get("event_type") or raw.get("type") or "")
@@ -726,7 +725,6 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
                     raise PermissionError("session is not authorized for requested project_root")
             elif event_type not in {"agent.session.started", "agent.session.resumed"}:
                 raise PermissionError(f"runtime session is not routed: {session_id}")
-        remember_project(state, handle)
         event = normalize_event(raw, project_root, core)
         from processforge_core.agents.hook_policy import HookDispatchPolicy
         from processforge_core.work.consistency import RunTaskInputReader
@@ -740,8 +738,11 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
                 raise PermissionError("runtime session registration failed")
         from processforge_core.agents.process_events import ProcessEventRecorder
         duplicate = not ProcessEventRecorder().admit_process_event(project_root, event, workplace_root=workplace_root)
-        remember_session(state, session_id, handle, str(source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""), core)
-        save_state(workplace_root, state, core)
+        with state_lock():
+            state = load_state(workplace_root)
+            remember_project(state, handle)
+            remember_session(state, session_id, handle, str(source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""), core)
+            save_state(workplace_root, state, core)
         projection = projection_path(project_root, core)
         stage_projection = stage_obligations_path(project_root, core)
         payload = {"event_id": HookDispatchPolicy().event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
@@ -1172,6 +1173,25 @@ def _conversation_messages(
 
 
 def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None, registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> dict[str, Any]:
+    from contextlib import ExitStack
+    from pf_native_control import current_entry
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    with ExitStack() as operation:
+        entry = current_entry()
+        if entry is not None:
+            operation.enter_context(entry.operation())
+        envelope, _malformed = _ingress_envelope(raw, project_ref)
+        source = str(envelope.get("source_project_ref") or project_ref or "")
+        project = resolve_project(source, core) if source else None
+        selected_workplace = workplace_root
+        if project is not None:
+            selected_workplace = selected_workplace or core.resolve_workplace_root(None, project_root=project)
+            operation.enter_context(configuration_operation(project, selected_workplace))
+        return _ingest_event_operation(raw, selected_workplace, core, project_ref=project_ref, registry=registry)
+
+
+def _ingest_event_operation(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None, registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> dict[str, Any]:
     from processforge_core import diagnostics
     envelope, _malformed = _ingress_envelope(raw, project_ref)
     source = str(envelope.get("source_project_ref") or project_ref or "")
@@ -1570,35 +1590,50 @@ def tick_payload(
     wait_ttl: int = 3600,
     lease_ttl: int = 3600,
 ) -> tuple[dict[str, Any], int]:
-    with registration_admission(workplace_root, project_roots), state_lock():
-        state = load_state(workplace_root)
+    from contextlib import ExitStack
+    from pf_native_control import current_entry
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    with ExitStack() as operation:
+        entry = current_entry()
+        if entry is not None:
+            operation.enter_context(entry.operation())
+        operation.enter_context(registration_admission(workplace_root, project_roots))
         core.update_stale_agent_presence(workplace_root)
         results: list[dict[str, Any]] = []
+        handles: list[dict[str, Any]] = []
         status = 0
         scheduler_status = 0
         for project_root in project_roots:
             handle = route_project(str(project_root), workplace_root, core)
-            remember_project(state, handle)
-            item: dict[str, Any] = {"project_id": handle["project_id"], "effective_mode": handle["effective_mode"], "director": "skipped", "inspector": "skipped"}
-            if director:
-                if handle["effective_mode"] == "organized":
-                    rc = call_quiet(core.command_agent_director_tick, argparse.Namespace(workplace=str(workplace_root), project_root=str(project_root), project_id=handle["project_id"], wait_ttl=wait_ttl, lease_ttl=lease_ttl))
-                    item["director"] = "tick"
-                    status = status or rc
-                    scheduler_status = scheduler_status or rc
-                else:
-                    item["director"] = "skipped_simple"
-            if inspector:
-                with contextlib.redirect_stdout(io.StringIO()):
-                    observation = core.supervisor_tick_result(argparse.Namespace(project_root=str(project_root), run=run, profile=profile, driver=driver, start_allowed=False))
-                item["inspector"] = "tick"
-                item["inspector_result"] = observation
-                status = status or (1 if observation["failed"] else 0)
-            core.flush_pending_event_dispatches(project_root)
-            stage_projection = refresh_stage_obligations(project_root, core)
-            item["projection"] = core.rel(stage_projection, project_root)
-            results.append(item)
-        save_state(workplace_root, state, core)
+            handles.append(handle)
+            with configuration_operation(project_root, workplace_root):
+                item: dict[str, Any] = {"project_id": handle["project_id"], "effective_mode": handle["effective_mode"], "director": "skipped", "inspector": "skipped"}
+                if director:
+                    if handle["effective_mode"] == "organized":
+                        rc = call_quiet(core.command_agent_director_tick, argparse.Namespace(workplace=str(workplace_root), project_root=str(project_root), project_id=handle["project_id"], wait_ttl=wait_ttl, lease_ttl=lease_ttl))
+                        item["director"] = "tick"
+                        status = status or rc
+                        scheduler_status = scheduler_status or rc
+                    else:
+                        item["director"] = "skipped_simple"
+                if inspector:
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        observation = core.supervisor_tick_result(argparse.Namespace(project_root=str(project_root), run=run, profile=profile, driver=driver, start_allowed=False))
+                    item["inspector"] = "tick"
+                    item["inspector_result"] = observation
+                    status = status or (1 if observation["failed"] else 0)
+                core.flush_pending_event_dispatches(project_root)
+                stage_projection = refresh_stage_obligations(project_root, core)
+                item["projection"] = core.rel(stage_projection, project_root)
+                results.append(item)
+        # Refresh and merge only the routing delta under the short memory lock.
+        # No interprocess/native/target gate is acquired while it is held.
+        with state_lock():
+            state = load_state(workplace_root)
+            for handle in handles:
+                remember_project(state, handle)
+            save_state(workplace_root, state, core)
         payload = {"status": "ok" if status == 0 else "failed", "scheduler_status": "ok" if scheduler_status == 0 else "failed", "projects": results}
         return payload, status
 

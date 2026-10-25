@@ -416,6 +416,36 @@ LEAF_SOURCE = (
 )
 
 
+def test_mcp_request_holds_real_lease_and_idle_releases(
+    native_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from pf_runtime import mcp_server
+
+    guard, epoch = native_root / "guard", native_root / "epoch"
+    guard.write_bytes(b"0")
+    epoch.write_bytes(b"accepted")
+    control = p.NativeControl(guard, epoch, "accepted")
+    entry = p.NativeEntry(native_root, None, None, control)
+    monkeypatch.setattr(p, "_ENTRY", entry)
+    calls = []
+
+    def handler(*args: Any) -> dict[str, Any]:
+        assert p._CONTROL_LEASE.get() is control
+        calls.append("request")
+        return {"accepted": True}
+
+    monkeypatch.setattr(mcp_server, "_respond_in_operation", handler)
+    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call"}
+    assert mcp_server.respond(request, native_root, "", None) == {"accepted": True}
+    # A process-lifetime MCP object owns no lease between requests.
+    with control.exclusive(deadline=time.monotonic() + 0.1):
+        epoch.write_bytes(b"replaced")
+    refused = mcp_server.respond(request, native_root, "", None)
+    assert refused is not None and refused["result"]["isError"] is True
+    assert "execution_activity_unknown" in refused["result"]["content"][0]["text"]
+    assert calls == ["request"]
+
+
 def build(payload: dict[str, bytes] | None = None) -> Any:
     """Create a deterministic in-memory publication."""
     return p.build_publication(
@@ -431,6 +461,25 @@ def build(payload: dict[str, bytes] | None = None) -> Any:
         source={"vcs": "git", "commit": "a" * 40, "dirty": False},
         generated_at="2026-10-24T00:00:00Z",
     )
+
+
+def test_qualified_publication_probes_actual_owned_backend_without_files(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate = build(
+        {
+            p.LEAF: Path(p.__file__).read_bytes(),
+            p.INVENTORY: b"source\n",
+            "VERSION": b"1.3.0-alpha6\n",
+        }
+    )
+    root = fixture_root(candidate)
+    publication = p.accept_publication(root, trusted_leaf=candidate.payload[p.LEAF])
+    assert publication is not None
+    monkeypatch.setattr(p, "_ENTRY", p.NativeEntry(root, publication, None, None))
+    before = set(root.rglob("*"))
+    assert p.supports_owned_execution() is True
+    assert set(root.rglob("*")) == before
 
 
 def fixture_root(candidate: Any) -> Path:

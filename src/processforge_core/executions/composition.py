@@ -204,7 +204,9 @@ def _initialize_fresh_execution_storage(
     project_id = owner.get("id") if isinstance(owner, dict) else None
     if not isinstance(project_id, str) or not project_id.strip():
         raise ExecutionError("project_identity_required")
-    profile_id, relative, _timeout = _execution_profile(configuration.current().database)
+    profile_id, relative, _timeout = _execution_profile(
+        configuration.current().database
+    )
     target = _contained(flow, relative)
     binding_path = _contained(flow, "data/execution-storage.json")
     if binding_path.exists() or target.exists():
@@ -213,21 +215,148 @@ def _initialize_fresh_execution_storage(
     if attempts.exists() and next(attempts.iterdir(), None) is not None:
         raise ExecutionError("execution_activity_unknown")
     identity = DatabaseIdentity(uuid4().hex, "project", project_id)
-    database = DatabaseFactory.from_profile(configuration.current().database, profile_id,
-        DatabaseTarget(target, identity))
-    binding = {"schema_version": 1, "project_id": project_id,
-        "store_id": identity.store_id, "profile_id": profile_id,
-        "target_relative_path": relative}
+    database = DatabaseFactory.from_profile(
+        configuration.current().database, profile_id, DatabaseTarget(target, identity)
+    )
+    binding = {
+        "schema_version": 1,
+        "project_id": project_id,
+        "store_id": identity.store_id,
+        "profile_id": profile_id,
+        "target_relative_path": relative,
+    }
     binding_path.parent.mkdir(parents=True, exist_ok=True)
     marker = _contained(flow, "maintenance/execution-initialization.json")
     marker.parent.mkdir(parents=True, exist_ok=True)
-    _exclusive_bytes(marker, (json.dumps({"schema_version": 1, "state": "pending",
-        "binding": binding}, sort_keys=True) + "\n").encode())
-    _exclusive_bytes(binding_path, (json.dumps(binding, sort_keys=True) + "\n").encode())
+    _exclusive_bytes(
+        marker,
+        (
+            json.dumps(
+                {"schema_version": 1, "state": "pending", "binding": binding},
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode(),
+    )
+    _exclusive_bytes(
+        binding_path, (json.dumps(binding, sort_keys=True) + "\n").encode()
+    )
     SchemaManager().initialize(database, (EXECUTION_SCHEMA, EXECUTION_MIGRATION_SCHEMA))
     with database.transaction() as session:
-        session.execute(SqlStatement(
-            "INSERT INTO execution_state(singleton,project_id,generation,authority,readiness,"
-            "active_coverage,revision,next_history_seq,migration_id,plan_checksum) "
-            "VALUES(1,?,1,'sql','ready','complete',0,1,NULL,NULL)", (project_id,)))
+        session.execute(
+            SqlStatement(
+                "INSERT INTO execution_state(singleton,project_id,generation,authority,readiness,"
+                "active_coverage,revision,next_history_seq,migration_id,plan_checksum) "
+                "VALUES(1,?,1,'sql','ready','complete',0,1,NULL,NULL)",
+                (project_id,),
+            )
+        )
     _atomic(marker, {"schema_version": 1, "state": "ready", "binding": binding})
+
+
+def _repair_fresh_execution_storage(
+    project_root: Path,
+    workplace_root: Path | None,
+    *,
+    configuration: ConfigurationProvider,
+) -> bool:
+    """Repair only the exact durable fresh initializer, never reclassify a root."""
+    from ..database import SqlStatement
+    from ..maintenance.execution_migration import (
+        EXECUTION_MIGRATION_SCHEMA,
+        _atomic,
+        _read,
+    )
+    from ..runtime.execution_admission import ExecutionAdmission
+
+    flow = ProjectMetadataReader(project_root).flow_root()
+    marker = _contained(flow, "maintenance/execution-initialization.json")
+    if not marker.exists():
+        return False
+    with ExecutionAdmission().maintenance(project_root, workplace_root):
+        document = _read(marker)
+        if (
+            set(document) != {"schema_version", "state", "binding"}
+            or document["schema_version"] != 1
+            or document["state"] not in {"pending", "ready"}
+        ):
+            raise ExecutionError("execution_storage_not_ready")
+        binding = document["binding"]
+        profile_id, relative, _timeout = _execution_profile(
+            configuration.current().database
+        )
+        owner = ProjectMetadataReader(project_root).manifest().get("project")
+        project_id = owner.get("id") if isinstance(owner, dict) else None
+        if (
+            not isinstance(binding, dict)
+            or set(binding)
+            != {
+                "schema_version",
+                "project_id",
+                "store_id",
+                "profile_id",
+                "target_relative_path",
+            }
+            or (
+                binding.get("schema_version"),
+                binding.get("project_id"),
+                binding.get("profile_id"),
+                binding.get("target_relative_path"),
+            )
+            != (1, project_id, profile_id, relative)
+        ):
+            raise ExecutionError("execution_storage_not_ready")
+        path = _contained(flow, "data/execution-storage.json")
+        if not path.exists():
+            from ..maintenance.journal_scan import _exclusive_bytes
+
+            _exclusive_bytes(
+                path, (json.dumps(binding, sort_keys=True) + "\n").encode()
+            )
+        if _read(path) != binding:
+            raise ExecutionError("execution_storage_not_ready")
+        database = DatabaseFactory.from_profile(
+            configuration.current().database,
+            profile_id,
+            DatabaseTarget(
+                _contained(flow, relative),
+                DatabaseIdentity(binding["store_id"], "project", binding["project_id"]),
+            ),
+        )
+        schemas = (EXECUTION_SCHEMA, EXECUTION_MIGRATION_SCHEMA)
+        status = SchemaManager().inspect(database, schemas)
+        if status.state == "missing":
+            SchemaManager().initialize(database, schemas)
+        elif status.state != "ready":
+            raise ExecutionError("execution_storage_not_ready")
+        repository = SQLiteExecutionRepository(database, binding["project_id"])
+        with database.transaction() as session:
+            state = session.fetch_one(
+                SqlStatement(
+                    "SELECT authority,readiness,active_coverage,generation FROM execution_state WHERE singleton=1"
+                )
+            )
+            if state is None:
+                if (
+                    session.fetch_one(
+                        SqlStatement("SELECT 1 FROM execution_attempts LIMIT 1")
+                    )
+                    is not None
+                ):
+                    raise ExecutionError("execution_activity_unknown")
+                session.execute(
+                    SqlStatement(
+                        "INSERT INTO execution_state VALUES(1,?,1,'sql','ready','complete',0,1,NULL,NULL)",
+                        (binding["project_id"],),
+                    )
+                )
+            elif (state["authority"], state["readiness"], state["active_coverage"]) != (
+                "sql",
+                "ready",
+                "complete",
+            ):
+                raise ExecutionError("execution_storage_not_ready")
+        if not repository.readiness().ready:
+            raise ExecutionError("execution_storage_not_ready")
+        _atomic(marker, {"schema_version": 1, "state": "ready", "binding": binding})
+        return True

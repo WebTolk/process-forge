@@ -158,9 +158,123 @@ def test_host_refuses_enrollment_mismatch_without_fallback(
         _ = host.context
 
 
+def test_fresh_initialization_uses_alias_and_repairs_same_pending_uuid(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.configuration.database import DatabaseConfig, DatabaseProfile
+    from processforge_core.database import SchemaManager
+    from processforge_core.executions.composition import (
+        _initialize_fresh_execution_storage,
+        _repair_fresh_execution_storage,
+        select_execution_storage,
+    )
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    provider = ConfigurationProvider.pinned(
+        PFConfig(
+            database=DatabaseConfig(
+                {"selected": DatabaseProfile("project", "sqlite", "state/main.sqlite")},
+                {"project_main": "selected"},
+            )
+        )
+    )
+    with ExecutionAdmission().maintenance(storage.project, None):
+        with patch.object(
+            SchemaManager,
+            "initialize",
+            side_effect=MaintenanceError("fixture_crash_before_create"),
+        ):
+            with pytest.raises(MaintenanceError, match="fixture_crash_before_create"):
+                _initialize_fresh_execution_storage(
+                    storage.project, None, configuration=provider
+                )
+    binding = json.loads((storage.flow / "data/execution-storage.json").read_bytes())
+    assert binding["profile_id"] == "selected"
+    assert not (storage.flow / "state/main.sqlite").exists()
+    assert _repair_fresh_execution_storage(
+        storage.project, None, configuration=provider
+    )
+    assert (
+        json.loads((storage.flow / "data/execution-storage.json").read_bytes())
+        == binding
+    )
+    route = select_execution_storage(storage.project, configuration=provider)
+    assert route.repository is not None and route.repository.readiness().ready
+    assert route.repository.readiness().generation == 1
+    assert _repair_fresh_execution_storage(
+        storage.project, None, configuration=provider
+    )
+
+
+def test_nested_operation_inherits_selected_device_without_source_reread(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.composition import build_configuration_provider
+    from processforge_core.configuration.yaml_store import YamlConfigStore
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    device = storage.root / "selected-device.yaml"
+    device.write_text(
+        "schema_version: 1\nlogging:\n  events: false\n", encoding="utf-8"
+    )
+    with configuration_operation(
+        storage.project, None, device_config_path=device
+    ) as pinned:
+        with patch.object(
+            YamlConfigStore, "read", side_effect=AssertionError("nested source reread")
+        ):
+            assert build_configuration_provider(project_root=storage.project) is pinned
+            with configuration_operation(storage.project, None) as nested:
+                assert nested is pinned
+                assert nested.current().logging.events is False
+
+
 @pytest.fixture
 def storage() -> StorageHarness:
     return StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)
+
+
+def test_actual_script_without_injected_factory_is_cold_and_legacy_safe(
+    storage: StorageHarness,
+) -> None:
+    environment = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    command = [
+        sys.executable,
+        "-B",
+        str(_ROOT / "tools/migrate-storage.py"),
+        "--project-root",
+        str(storage.project),
+        "--device-config",
+        str(storage.context.device_config_path),
+        "--json",
+    ]
+    before = set(storage.project.rglob("*"))
+    inspected = subprocess.run(
+        command,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert inspected.returncode == 0, inspected.stderr
+    assert len(inspected.stdout.splitlines()) == 1
+    assert json.loads(inspected.stdout)["blocked"] is False
+    assert set(storage.project.rglob("*")) == before
+    applied = subprocess.run(
+        [*command, "--apply"],
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert applied.returncode == 1, applied.stderr
+    report = json.loads(applied.stdout)
+    main = next(item for item in report["targets"] if item["kind"] == "main")
+    assert main["state"] == "deferred" and main["legacy_allowed"] is True
+    assert not (storage.flow / "data").exists()
 
 
 def test_cold_coordinator_has_no_io_or_uuid(storage: StorageHarness) -> None:

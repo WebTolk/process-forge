@@ -85,8 +85,10 @@ class ProcessEventRecorder:
                 pinned = ConfigurationProvider.pinned(config)
                 host = build_storage_migration_host(
                     project_root=project_root,
-                    workplace_root=workplace_root or (declared.parent if declared else None),
-                    device_config_path=None, configuration=pinned,
+                    workplace_root=workplace_root
+                    or (declared.parent if declared else None),
+                    device_config_path=None,
+                    configuration=pinned,
                 )
                 journal = ProcessEventJournal(driver=journal.driver, storage_host=host)
         if type(journal) is ProcessEventJournal and journal.driver is None:

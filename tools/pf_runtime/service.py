@@ -601,11 +601,17 @@ class RuntimeProcess:
         budget.deadline = deadline
         admission = ExecutionAdmission()
         try:
-            with admission.shutdown(
+            with contextlib.ExitStack() as native_scope:
+                from pf_native_control import current_entry
+
+                entry = current_entry()
+                if entry is not None:
+                    native_scope.enter_context(entry.operation(deadline=deadline))
+                native_scope.enter_context(admission.shutdown(
                 self.workplace_root,
                 expected_instance_id=self.instance_id,
                 deadline=deadline,
-            ):
+                ))
                 # The durable singleton can have changed during admission wait.
                 lock = budget.read(
                     lock_path(self.workplace_root), self.workplace_root, maximum=65536
@@ -900,7 +906,20 @@ class RuntimeProcess:
                     if counted:
                         runtime.active_requests += 1
                 try:
-                    self.handle_post()
+                    if self.path == "/shutdown":
+                        self.handle_post()
+                    else:
+                        from pf_native_control import current_entry
+
+                        entry = current_entry()
+                        with contextlib.ExitStack() as native_scope:
+                            if entry is not None:
+                                native_scope.enter_context(entry.operation())
+                            self.handle_post()
+                except OSError:
+                    # Epoch/lease refusal is an existing IPC busy envelope;
+                    # stale loaded handlers must not write diagnostics.
+                    self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
                 finally:
                     if counted:
                         with runtime.state_lock:

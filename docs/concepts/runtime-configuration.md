@@ -1,5 +1,11 @@
 # Hook collection and session lifecycle
 
+Native CLI/MCP operations pin the full merged configuration for their selected
+project/workplace. Nested calls that omit a device selector inherit that same
+operation snapshot; they do not reopen the default device YAML. Context-local
+storage routing supplies only matching authorized targets to legacy adapters.
+Leaving an operation restores the previous selection, including on exceptions.
+
 For project scratch and configurable old-file reminders, see
 [temporary files](../temporary-files.md). These notifications do not delete files.
 

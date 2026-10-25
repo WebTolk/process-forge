@@ -272,3 +272,11 @@ Script/automatic policy tests with injected fixture proof do not establish real
 host exclusion. Actual W3 composition, installed update/first-write qualification
 and integrated assurance are separate gates; this source slice performs no live
 migration or infrastructure actions.
+
+The cold host factory is implemented. Automatic adapter writes run the coordinator
+before their identity gate and SQL session. A supported unqualified legacy target
+can retain its original route before pending; unknown safety never creates UUID
+metadata. An absent legacy initializer also remains usable without UUID adoption.
+Pure reads validate existing pins without creating a missing identity guard.
+Installed managed-owner enrollment/exclusion and fresh updater-child qualification
+remain separate requirements; factory availability is not evidence of that proof.

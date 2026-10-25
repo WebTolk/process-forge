@@ -268,7 +268,11 @@ def build_storage_migration_host(
                 if isinstance(workplace_id, str) and workplace_id.strip():
                     targets.append(
                         StoreTarget(
-                            workplace_kind, workplace / path, path, "workplace", workplace_id
+                            workplace_kind,
+                            workplace / path,
+                            path,
+                            "workplace",
+                            workplace_id,
                         )
                     )
                 else:
@@ -437,7 +441,9 @@ def build_storage_migration_host(
         service.backup = SQLiteBackupService(driver=service.driver)
         return context
 
-    return StorageMigrationHost(None, service, _context_factory=bind_context, _automatic=True)
+    return StorageMigrationHost(
+        None, service, _context_factory=bind_context, _automatic=True
+    )
 
 
 def build_core_properties() -> CoreProperties:

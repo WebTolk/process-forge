@@ -133,8 +133,35 @@ def runtime_bootstrap() -> Any:
 
 def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any]:
     from processforge_core.common.request_scope import scoped_request
+    from processforge_core.project.configuration_inputs import configuration_operation
+    from contextlib import ExitStack
+    from pf_native_control import current_entry
+    from pf_runtime import session_read
 
-    return scoped_request(_tool_result)(name, arguments, workplace, session_id, runtime)
+    def execute() -> dict[str, Any]:
+        with ExitStack() as operation:
+            entry = current_entry()
+            if entry is not None:
+                operation.enter_context(entry.operation())
+            configured = str(session_id or "")
+            requested = str(arguments.get("session_id") or "")
+            if configured and requested and configured != requested:
+                raise session_read.SessionReadError("session_mismatch")
+            session = configured or requested
+            selected = None
+            if arguments.get("project_root"):
+                selected = runtime.host.resolve_project(str(arguments["project_root"]), runtime.core)
+            if session:
+                bound = runtime.host.project_for_session(argparse.Namespace(session=session, project_root=None), workplace, runtime.core)
+                if selected is not None and (selected.resolve() != bound.resolve()
+                    or runtime.core.project_id(selected) != runtime.core.project_id(bound)):
+                    raise session_read.SessionReadError("session_project_mismatch")
+                selected = bound
+            if selected is not None:
+                operation.enter_context(configuration_operation(selected, workplace))
+            return _tool_result(name, arguments, workplace, session_id, runtime)
+
+    return scoped_request(execute)()
 
 
 def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any]:
@@ -593,6 +620,26 @@ def rpc_error(request_id: Any, code: int, message: str) -> dict[str, Any]:
 
 
 def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+    """Hold a lease only while processing this request, never during stdio idle."""
+    from contextlib import ExitStack
+    from pf_native_control import NativeControlError, current_entry
+
+    try:
+        with ExitStack() as operation:
+            entry = current_entry()
+            if entry is not None:
+                operation.enter_context(entry.operation())
+            return _respond_in_operation(request, workplace, session_id, runtime)
+    except NativeControlError as error:
+        if not isinstance(request, dict) or "id" not in request:
+            return None
+        if request.get("method") == "tools/call":
+            return {"jsonrpc": "2.0", "id": request["id"], "result": {
+                "content": [{"type": "text", "text": safe_tool_error(error)}], "isError": True}}
+        return rpc_error(request["id"], -32603, "internal error")
+
+
+def _respond_in_operation(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
     if isinstance(request, dict):
         params = request.get("params")
         method = request.get("method")

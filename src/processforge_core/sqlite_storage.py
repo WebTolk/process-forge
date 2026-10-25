@@ -177,9 +177,7 @@ def adapter_identity_access(
         # adapter still refuses any already-adopted envelope without its host.
         yield None
         return
-    targets = [
-        target for target in selected_context.targets if target.target == path
-    ]
+    targets = [target for target in selected_context.targets if target.target == path]
     if not targets and any(
         selected == path for _kind, selected in storage_host.context.unqualified_targets
     ):
@@ -234,13 +232,21 @@ def adapter_identity_access(
             # An unadopted read must not create the identity guard. The domain
             # adapter still rejects unexpected metadata; migration always
             # creates the permanent guard before publishing pending state.
-            from .maintenance.storage_migration import _descriptor, _inspect_target, _slot
+            from .maintenance.storage_migration import (
+                _descriptor,
+                _inspect_target,
+                _slot,
+            )
 
             slot = _slot(root, target)
             if slot is not None:
                 if slot["state"] != "ready":
                     raise MaintenanceError("storage_resume_required")
-                facts = _inspect_target(target, _descriptor(verify_transforms=False), storage_host.service.driver)
+                facts = _inspect_target(
+                    target,
+                    _descriptor(verify_transforms=False),
+                    storage_host.service.driver,
+                )
                 if facts.get("store_id") != slot["store_id"]:
                     raise MaintenanceError("storage_identity_conflict")
             yield None if slot is None else (target, str(slot["store_id"]))

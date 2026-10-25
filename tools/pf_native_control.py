@@ -35,6 +35,7 @@ class NativeControlError(OSError):
     """Refuse an operation whose exact native ownership cannot be established."""
 
     def __init__(self) -> None:
+        self.code = "execution_activity_unknown"
         super().__init__("execution_activity_unknown")
 
 
@@ -1187,18 +1188,27 @@ def current_entry() -> NativeEntry | None:
 def supports_owned_execution() -> bool:
     """Probe the actual retained whole-tree backend, independently of SQLite.
 
-    This creates only a short-lived empty kernel Job. It creates no guard,
+    Explicit initialization probes real suspended creation/Job attachment. It creates no guard,
     database, UUID metadata or maintenance evidence on an unsupported host.
     """
     if os.name != "nt" or _ENTRY is None or _ENTRY.publication is None:
         return False
     try:
-        job = OwnedJob.create()
+        process = spawn_owned(
+            [sys.executable, "-B", "-c", "pass"],
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        job = getattr(process, "native_job")
         try:
-            return job.active() == 0
+            return process.wait(timeout=5) == 0 and job.active() == 0
         finally:
+            if process.poll() is None:
+                job.stop(deadline=time.monotonic() + 5)
+                process.wait(timeout=5)
             job.close()
-    except (OSError, AttributeError, ValueError):
+    except (OSError, AttributeError, ValueError, subprocess.SubprocessError):
         return False
 
 

@@ -233,3 +233,17 @@ Only successful explicit initialization creating a new flow root may choose the
 fresh SQL route. Existing roots, including forced initialization, are not fresh
 by inference. Fresh binding/DB publication is recoverable rather than atomic
 across files and SQL; a pending publication failure requires explicit repair.
+
+The host now composes `build_storage_migration_host` without reading configuration,
+connecting, taking gates or minting UUIDs. Its first operation resolves the exact
+selected roots, stable owner IDs and main profile alias. An unqualified legacy
+target defers before constructing its execution engine; a pending/bound target
+cannot use that legacy route. Workplace stores without a stable owner produce
+an explicit per-target diagnostic rather than a directory-derived identity.
+
+Fresh initialization probes real suspended process creation and retained Windows
+Job attachment from a qualified captured publication. SQLite configuration alone
+does not select SQL execution. New-flow creation and initialization hold admission;
+the exact binding precedes DDL. The private initialization marker permits explicit
+repair with the same UUID/profile after interruption. Existing roots and forced
+initialization do not acquire fresh authority.

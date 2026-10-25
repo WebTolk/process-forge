@@ -202,7 +202,8 @@ class WorkplaceAccounting:
     def service(self, *, create: bool = False) -> AccountingService | None:
         """Compose Core queries read-only; explicit collection may create storage."""
         from processforge_core.composition import (
-            build_configuration_provider, build_storage_migration_host,
+            build_configuration_provider,
+            build_storage_migration_host,
         )
 
         provider = (
@@ -220,8 +221,10 @@ class WorkplaceAccounting:
         if create:
             self.ensure_identity()
         host = self.storage_host or build_storage_migration_host(
-            project_root=self.project_root, workplace_root=self.workplace,
-            device_config_path=provider.device_path, configuration=pinned,
+            project_root=self.project_root,
+            workplace_root=self.workplace,
+            device_config_path=provider.device_path,
+            configuration=pinned,
         )
         if create:
             repository = SQLiteAccountingRepository(

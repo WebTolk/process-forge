@@ -121,3 +121,14 @@ None, сохраняя profiles/defaults. Отсутствующая database н
 payloads. Прежний CRUD сохраняет материализацию старых полей; реально записанные
 default-valued поля становятся explicit workplace overrides. Refresh не меняет
 закреплённый store UUID/path: это отдельная maintenance обязанность host.
+# Operation-local storage host
+
+Полный merged PFConfig закрепляется на время выбранной native operation.
+Вложенный вызов без device selector использует тот же snapshot и не перечитывает
+default YAML. Storage host передаёт адаптерам только соответствующие выбранным
+roots targets; выход из operation восстанавливает прежний context.
+
+Cold factory не открывает БД, не создаёт guard или UUID. Неизвестная безопасность
+до pending сохраняет поддержанный legacy route; после pending/binding требуется
+точное восстановление либо отказ. Наличие factory не доказывает исключение старых
+managed owners и не означает готовность installed automatic migration.

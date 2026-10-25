@@ -2793,7 +2793,15 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     project = request["project_root"]
     flow = project / PROJECT_FLOW_ROOT
     if flow.exists() or not supports_owned_execution():
-        return _execute_project_initialization(request, files)
+        result = _execute_project_initialization(request, files)
+        if flow.exists() and (flow / "maintenance/execution-initialization.json").is_file():
+            from processforge_core.executions.composition import _repair_fresh_execution_storage
+
+            selected = request.get("workplace")
+            workplace = Path(selected).parent if selected is not None else None
+            _repair_fresh_execution_storage(project, workplace,
+                configuration=build_configuration_provider(project_root=project, workplace_root=workplace))
+        return result
     # An existing root, including --force, never takes this branch. Create it
     # exclusively before publishing a manifest and take admission before writes.
     try:
