@@ -155,3 +155,11 @@ assignment, Inspector worker state и required-output fingerprints. View мож�
 быть `current`, `stale`, `missing` или `invalid`. Его можно пересобрать через
 `runtime-host rebuild-projections` и проверить без daemon через
 `runtime-host projection-doctor`.
+
+Native image сохраняется на время процесса, а installation lease удерживается
+только во время startup, запроса, scheduler/metrics cycle и finalization. Idle
+listener и ожидание следующего cycle не удерживают lease. При смене epoch старый
+Runtime отказывает через существующие busy/stale поверхности и не пишет даже
+диагностику или final save. Worker, native maintenance script и hook удерживают
+lease до завершения собственных side effects; guard использует прежний общий
+deadline 500 ms без migration, history scan и capability probe внутри него.

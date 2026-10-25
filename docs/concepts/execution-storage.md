@@ -247,3 +247,10 @@ does not select SQL execution. New-flow creation and initialization hold admissi
 the exact binding precedes DDL. The private initialization marker permits explicit
 repair with the same UUID/profile after interruption. Existing roots and forced
 initialization do not acquire fresh authority.
+
+The durable fresh-initialization marker closes legacy routing as soon as its
+pending state is published, including interruption before the binding exists.
+Reads report the pending route without repairing it. A safe ordinary mutation
+or native resume can repair only the marker's exact owner, UUID and profile under
+admission, qualified native capability and stable safety generation. Ready
+publication revalidates safety; no alternate target or UUID is selected.

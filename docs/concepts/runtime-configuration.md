@@ -142,3 +142,10 @@ profiles/defaults. Absent database stays absent in serialized defaults and old
 payloads. Existing CRUD still materializes the original fields as before; those
 actually saved bytes count as explicit workplace overrides. Refresh cannot switch
 an existing bound store UUID/path; that is a separate host maintenance decision.
+
+An operation retains the selected device path separately from the pinned value.
+Nested event, accounting and first-write hosts reuse the exact operation host or
+its selector; a value-only pinned provider does not trigger device rediscovery.
+The host revalidates actual project ownership, flow root, enrollment and target
+routing at each migration safety boundary. These checks do not refresh or replace
+the operation's PFConfig snapshot and grant no additional file access.

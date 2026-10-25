@@ -314,6 +314,10 @@ def build_storage_migration_host(
         return context
 
     def safety(context: StorageMigrationContext) -> MigrationSafety:
+        # The frozen value stays pinned, but owner/flow/enrollment facts must
+        # still name the same physical targets at every mutation boundary.
+        if resolve_context() != context:
+            raise MaintenanceError("storage_enrollment_conflict")
         # Native leaf was captured before Core. Importing/reloading tools here
         # would invent authority from current-file bytes, so use only that entry.
         module = sys.modules.get("pf_native_control")
@@ -332,6 +336,40 @@ def build_storage_migration_host(
     ) -> ExecutionMigrationService:
         if context.project_root is None:
             raise MaintenanceError("storage_execution_host_required")
+        from .executions.composition import (
+            _fresh_initialization,
+            _repair_fresh_execution_storage,
+        )
+
+        flow = ProjectMetadataReader(context.project_root).flow_root()
+        initializer = _fresh_initialization(flow)
+        if initializer is not None and initializer["state"] == "pending":
+            module = sys.modules.get("pf_native_control")
+            capable = getattr(module, "supports_owned_execution", None)
+            if not callable(capable) or not capable():
+                raise MaintenanceError("execution_storage_not_ready")
+            with admission.maintenance(context.project_root, context.workplace_root):
+                proof = safety(context)
+                if proof.state != "proven":
+                    raise MaintenanceError("storage_safety_changed")
+
+                def verify_fresh() -> None:
+                    current = safety(context)
+                    if (
+                        current.state != "proven"
+                        or current.generation != proof.generation
+                    ):
+                        raise MaintenanceError("storage_safety_changed")
+
+                _repair_fresh_execution_storage(
+                    context.project_root,
+                    context.workplace_root,
+                    configuration=configuration,
+                    _verify=verify_fresh,
+                )
+                after = safety(context)
+                if after.state != "proven" or after.generation != proof.generation:
+                    raise MaintenanceError("storage_safety_changed")
         config = configuration.current()
         profile_id, relative, timeout = _execution_profile(config.database)
         if target.target_relative_path != relative:

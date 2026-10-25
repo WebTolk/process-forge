@@ -47,7 +47,12 @@ else:
 _RUNTIME_BOOTSTRAP: Any | None = None
 
 EVENTS = {
-    "SessionStart": {"startup": "agent.session.started", "resume": "agent.session.resumed", "clear": "agent.session.started", "compact": "agent.session.compacted"},
+    "SessionStart": {
+        "startup": "agent.session.started",
+        "resume": "agent.session.resumed",
+        "clear": "agent.session.started",
+        "compact": "agent.session.compacted",
+    },
     "SessionEnd": {"default": "agent.session.ended"},
     "PreCompact": {"default": "agent.session.compaction.started"},
     "PostCompact": {"default": "agent.session.compacted"},
@@ -85,7 +90,18 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
     if not event_type or not cwd or not session_id:
         return None
     tool_name = str(payload.get("tool_name") or "")
-    data = {key: payload[key] for key in ("turn_id", "tool_name", "tool_use_id", "model", "permission_mode", "reason") if payload.get(key) not in (None, "")}
+    data = {
+        key: payload[key]
+        for key in (
+            "turn_id",
+            "tool_name",
+            "tool_use_id",
+            "model",
+            "permission_mode",
+            "reason",
+        )
+        if payload.get(key) not in (None, "")
+    }
     if hook == "PostToolUse" and tool_name and tool_name != "Bash":
         event_type = "agent.tool.completed"
     event_id = f"codex:{hook}:{session_id}:{payload.get('turn_id', '')}:{payload.get('tool_use_id', '')}"
@@ -101,7 +117,11 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
         "project_root": cwd,
         "session_id": session_id,
         "agent_id": "codex",
-        "source": {"adapter": "codex-hooks", "agent": "codex", "session_id": session_id},
+        "source": {
+            "adapter": "codex-hooks",
+            "agent": "codex",
+            "session_id": session_id,
+        },
         "payload": data,
     }
 
@@ -113,7 +133,7 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
     hook = str(payload.get("hook_event_name") or "Unknown")
     if not cwd:
         return None
-    envelope = {
+    envelope: dict[str, Any] = {
         "provider": "codex",
         "adapter": "codex-hooks",
         "native_event_type": hook,
@@ -130,7 +150,12 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
         "derived_event": normalized_event(payload),
     }
     prompt = payload.get("prompt")
-    if hook == "UserPromptSubmit" and isinstance(prompt, str) and prompt.strip() and envelope["source_session_id"]:
+    if (
+        hook == "UserPromptSubmit"
+        and isinstance(prompt, str)
+        and prompt.strip()
+        and envelope["source_session_id"]
+    ):
         envelope["derived_conversation_messages"] = [
             {
                 "message_role": "user",
@@ -149,14 +174,27 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
             }
         ]
     assistant_message = payload.get("last_assistant_message")
-    if hook in {"Stop", "SubagentStop", "SessionEnd"} and isinstance(assistant_message, str) and assistant_message.strip() and envelope["source_session_id"]:
+    if (
+        hook in {"Stop", "SubagentStop", "SessionEnd"}
+        and isinstance(assistant_message, str)
+        and assistant_message.strip()
+        and envelope["source_session_id"]
+    ):
         is_subagent = hook == "SubagentStop"
         agent_id = str(payload.get("agent_id") or "")
-        participant_id = f"subagent:{agent_id}" if is_subagent and agent_id else ("subagent" if is_subagent else "codex")
+        participant_id = (
+            f"subagent:{agent_id}"
+            if is_subagent and agent_id
+            else ("subagent" if is_subagent else "codex")
+        )
         envelope.setdefault("derived_conversation_messages", []).append(
             {
                 "message_role": "assistant",
-                "participant": {"id": participant_id, "type": "subagent" if is_subagent else "agent", "role": "subagent" if is_subagent else "assistant"},
+                "participant": {
+                    "id": participant_id,
+                    "type": "subagent" if is_subagent else "agent",
+                    "role": "subagent" if is_subagent else "assistant",
+                },
                 "session_id": envelope["source_session_id"],
                 "turn_id": str(payload.get("turn_id") or "") or None,
                 "content": assistant_message,
@@ -174,95 +212,181 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
-    project_ref = str(payload.get("cwd") or "")
-    if not project_ref:
-        return {"status": "ignored"}
-    runtime = runtime_bootstrap()
-    core = runtime.core
-    host = runtime.host
-    service = runtime.service
-    project_root = Path(project_ref).expanduser()
-    try:
-        from processforge_core.work.consistency import RunTaskInputReader
+    from pf_native_control import operation_lease
 
-        RunTaskInputReader().require_flow_root(project_root)
-    except SystemExit:
-        return {"status": "ignored", "reason": "not_processforge_project"}
+    with operation_lease():
+        project_ref = str(payload.get("cwd") or "")
+        if not project_ref:
+            return {"status": "ignored"}
+        runtime = runtime_bootstrap()
+        core = runtime.core
+        host = runtime.host
+        service = runtime.service
+        project_root = Path(project_ref).expanduser()
+        try:
+            from processforge_core.work.consistency import RunTaskInputReader
 
-    # Prefer the active Runtime so hook delivery shares its authenticated IPC,
-    # lifecycle record and operator journal.  A hook must remain advisory: an
-    # unavailable daemon must not fail or delay the Codex turn, so fall back to
-    # the durable Host/Core path that was used before the daemon was started.
-    workplace_root = core.resolve_workplace_root(None, project_root=project_root)
-    _configuration, collect = host.hook_configuration(project_root, workplace_root, core)
-    if not collect:
-        return host.ignored_hook()
-    envelope = native_envelope(payload)
-    if not envelope:
-        return {"status": "ignored"}
-    try:
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            exit_code = service.runtime_request(
-                argparse.Namespace(workplace=str(workplace_root), json=True),
-                core,
-                "/event",
-                envelope,
-            )
-        if exit_code == 0:
-            body = json.loads(output.getvalue()) if output.getvalue().strip() else {}
-            if isinstance(body, dict) and body.get("routing_status") in {"ignored", "denied"}:
-                return {**body, "status": "ignored", "transport": "runtime"}
-            return {"status": "delivered", "transport": "runtime"}
-    except (OSError, SystemExit, ValueError):
-        pass
+            RunTaskInputReader().require_flow_root(project_root)
+        except SystemExit:
+            return {"status": "ignored", "reason": "not_processforge_project"}
 
-    with contextlib.redirect_stdout(io.StringIO()):
-        result = host.ingest_event(envelope, None, core)
-    if result.get("routing_status") in {"ignored", "denied"}:
-        return {**result, "status": "ignored", "transport": "ledger-fallback"}
-    return {"status": "delivered", "transport": "ledger-fallback", **result}
+        # Prefer the active Runtime so hook delivery shares its authenticated IPC,
+        # lifecycle record and operator journal.  A hook must remain advisory: an
+        # unavailable daemon must not fail or delay the Codex turn, so fall back to
+        # the durable Host/Core path that was used before the daemon was started.
+        workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+        _configuration, collect = host.hook_configuration(
+            project_root, workplace_root, core
+        )
+        if not collect:
+            return host.ignored_hook()
+        envelope = native_envelope(payload)
+        if not envelope:
+            return {"status": "ignored"}
+        try:
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                exit_code = service.runtime_request(
+                    argparse.Namespace(workplace=str(workplace_root), json=True),
+                    core,
+                    "/event",
+                    envelope,
+                )
+            if exit_code == 0:
+                body = (
+                    json.loads(output.getvalue()) if output.getvalue().strip() else {}
+                )
+                if isinstance(body, dict) and body.get("routing_status") in {
+                    "ignored",
+                    "denied",
+                }:
+                    return {**body, "status": "ignored", "transport": "runtime"}
+                return {"status": "delivered", "transport": "runtime"}
+        except (OSError, SystemExit, ValueError):
+            pass
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = host.ingest_event(envelope, None, core)
+        if result.get("routing_status") in {"ignored", "denied"}:
+            return {**result, "status": "ignored", "transport": "ledger-fallback"}
+        return {"status": "delivered", "transport": "ledger-fallback", **result}
 
 
 def main() -> int:
-    src_root = str(Path(__file__).resolve().parents[2] / "src")
-    if src_root not in sys.path:
-        sys.path.insert(0, src_root)
-    from processforge_core import diagnostics
-    hook = ""
-    debug = os.environ.get("PF_CODEX_HOOK_DEBUG") == "1"
-    options = diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
-    logger = diagnostics.for_project(Path.cwd(), invocation=options)
-    if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
-        logger = diagnostics.for_stderr(options)
+    from pf_native_control import NativeControlError, operation_lease
+
     try:
         payload = json.load(sys.stdin)
-        hook = str(payload.get("hook_event_name") or "") if isinstance(payload, dict) else ""
-        if isinstance(payload, dict) and isinstance(payload.get("cwd"), str):
-            logger = diagnostics.for_project(Path(payload["cwd"]), session_id=payload.get("session_id"), invocation=options)
-            if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
-                logger = diagnostics.for_stderr(options)
-        with diagnostics.operation(logger, "hooks", "hook.dispatch", session_id=payload.get("session_id") if isinstance(payload, dict) else None, build=diagnostics.identity_for(logger, __file__)):
-            result = dispatch(payload if isinstance(payload, dict) else {})
-        # Stop and SubagentStop require a JSON result on stdout.  An empty
-        # object is a neutral protocol response: this observer never blocks,
-        # rewrites, or continues a Codex session.
-        hook = str(payload.get("hook_event_name") or "") if isinstance(payload, dict) else ""
+    except (Exception, SystemExit):
+        return 0
+    try:
+        with operation_lease():
+            return _main_in_operation(payload)
+    except NativeControlError:
+        hook = (
+            str(payload.get("hook_event_name") or "")
+            if isinstance(payload, dict)
+            else ""
+        )
         if hook in {"Stop", "SubagentStop"}:
             print("{}")
-        elif hook == "SessionStart" and result.get("status") == "delivered":
-            session_id = str(payload.get("session_id") or "")
-            # This is a non-controlling handoff of the already Ledger-bound
-            # identifier.  It lets the current Codex turn call session MCP
-            # tools without searching private PF state or guessing a path.
-            print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project."}}, ensure_ascii=False))
-        logger.debug("hook.result", {"status": result.get("status"), "transport": result.get("transport"), "reason": result.get("reason"),
-                                     "normalized_event_count": len(result.get("normalized_event_ids") or [])}, component="hooks", code="hook.result")
-    except Exception as exc:  # hooks are observation, never a Codex failure point
-        if hook in {"Stop", "SubagentStop"}:
-            print("{}")
-        logger.error("hook.ignored", {"exception": exc}, component="hooks", code="hook.ignored")
-    return 0
+        return 0
+
+
+def _main_in_operation(payload: Any) -> int:
+    from pf_native_control import operation_lease
+
+    with operation_lease():
+        src_root = str(Path(__file__).resolve().parents[2] / "src")
+        if src_root not in sys.path:
+            sys.path.insert(0, src_root)
+        from processforge_core import diagnostics
+
+        hook = ""
+        debug = os.environ.get("PF_CODEX_HOOK_DEBUG") == "1"
+        options = (
+            diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
+        )
+        logger = diagnostics.for_project(Path.cwd(), invocation=options)
+        if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+            logger = diagnostics.for_stderr(options)
+        try:
+            hook = (
+                str(payload.get("hook_event_name") or "")
+                if isinstance(payload, dict)
+                else ""
+            )
+            if isinstance(payload, dict) and isinstance(payload.get("cwd"), str):
+                logger = diagnostics.for_project(
+                    Path(payload["cwd"]),
+                    session_id=payload.get("session_id"),
+                    invocation=options,
+                )
+                if logger is diagnostics.NULL and (
+                    debug or os.environ.get("PF_DIAGNOSTICS")
+                ):
+                    logger = diagnostics.for_stderr(options)
+            with diagnostics.operation(
+                logger,
+                "hooks",
+                "hook.dispatch",
+                session_id=payload.get("session_id")
+                if isinstance(payload, dict)
+                else None,
+                build=diagnostics.identity_for(logger, __file__),
+            ):
+                result = dispatch(payload if isinstance(payload, dict) else {})
+            # Stop and SubagentStop require a JSON result on stdout.  An empty
+            # object is a neutral protocol response: this observer never blocks,
+            # rewrites, or continues a Codex session.
+            hook = (
+                str(payload.get("hook_event_name") or "")
+                if isinstance(payload, dict)
+                else ""
+            )
+            if hook in {"Stop", "SubagentStop"}:
+                print("{}")
+            elif hook == "SessionStart" and result.get("status") == "delivered":
+                session_id = str(payload.get("session_id") or "")
+                # This is a non-controlling handoff of the already Ledger-bound
+                # identifier.  It lets the current Codex turn call session MCP
+                # tools without searching private PF state or guessing a path.
+                print(
+                    json.dumps(
+                        {
+                            "hookSpecificOutput": {
+                                "hookEventName": "SessionStart",
+                                "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project.",
+                            }
+                        },
+                        ensure_ascii=False,
+                    )
+                )
+            logger.log(
+                "debug",
+                "hook.result",
+                {
+                    "status": result.get("status"),
+                    "transport": result.get("transport"),
+                    "reason": result.get("reason"),
+                    "normalized_event_count": len(
+                        result.get("normalized_event_ids") or []
+                    ),
+                },
+                component="hooks",
+                code="hook.result",
+            )
+        except Exception as exc:  # hooks are observation, never a Codex failure point
+            if hook in {"Stop", "SubagentStop"}:
+                print("{}")
+            logger.log(
+                "error",
+                "hook.ignored",
+                {"exception": exc},
+                component="hooks",
+                code="hook.ignored",
+            )
+        return 0
 
 
 if __name__ == "__main__":

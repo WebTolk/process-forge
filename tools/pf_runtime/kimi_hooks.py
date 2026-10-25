@@ -261,132 +261,156 @@ def _delivery_result(body: Any, transport: str) -> dict[str, Any]:
 
 
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
-    project_ref = _project_ref(payload)
-    if not project_ref:
-        return {"status": "ignored"}
-    runtime = runtime_bootstrap()
-    core = runtime.core
-    host = runtime.host
-    service = runtime.service
-    project_root = Path(project_ref).expanduser()
-    try:
-        from processforge_core.work.consistency import RunTaskInputReader
+    from pf_native_control import operation_lease
 
-        RunTaskInputReader().require_flow_root(project_root)
-    except SystemExit:
-        return {"status": "ignored", "reason": "not_processforge_project"}
-
-    workplace_root = core.resolve_workplace_root(None, project_root=project_root)
-    _configuration, collect = host.hook_configuration(
-        project_root, workplace_root, core
-    )
-    if not collect:
-        return host.ignored_hook()
-    envelope = native_envelope(payload)
-    if not envelope:
-        return {"status": "ignored"}
-    try:
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            exit_code = service.runtime_request(
-                argparse.Namespace(workplace=str(workplace_root), json=True),
-                core,
-                "/event",
-                envelope,
-            )
-    except (OSError, SystemExit):
-        pass
-    else:
-        # A running Runtime's HTTP rejection is terminal even when its CLI
-        # wrapper returns nonzero. Only unavailable transport permits fallback.
+    with operation_lease():
+        project_ref = _project_ref(payload)
+        if not project_ref:
+            return {"status": "ignored"}
+        runtime = runtime_bootstrap()
+        core = runtime.core
+        host = runtime.host
+        service = runtime.service
+        project_root = Path(project_ref).expanduser()
         try:
-            body = json.loads(output.getvalue())
-            if exit_code != 0:
+            from processforge_core.work.consistency import RunTaskInputReader
+
+            RunTaskInputReader().require_flow_root(project_root)
+        except SystemExit:
+            return {"status": "ignored", "reason": "not_processforge_project"}
+
+        workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+        _configuration, collect = host.hook_configuration(
+            project_root, workplace_root, core
+        )
+        if not collect:
+            return host.ignored_hook()
+        envelope = native_envelope(payload)
+        if not envelope:
+            return {"status": "ignored"}
+        try:
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                exit_code = service.runtime_request(
+                    argparse.Namespace(workplace=str(workplace_root), json=True),
+                    core,
+                    "/event",
+                    envelope,
+                )
+        except (OSError, SystemExit):
+            pass
+        else:
+            # A running Runtime's HTTP rejection is terminal even when its CLI
+            # wrapper returns nonzero. Only unavailable transport permits fallback.
+            try:
+                body = json.loads(output.getvalue())
+                if exit_code != 0:
+                    return {
+                        **(body if isinstance(body, dict) else {}),
+                        "status": "denied",
+                        "transport": "runtime",
+                        "reason": "runtime_request_rejected",
+                    }
+                return _delivery_result(body, "runtime")
+            except ValueError:
                 return {
-                    **(body if isinstance(body, dict) else {}),
                     "status": "denied",
                     "transport": "runtime",
-                    "reason": "runtime_request_rejected",
+                    "reason": "runtime_invalid_receipt",
                 }
-            return _delivery_result(body, "runtime")
-        except ValueError:
-            return {
-                "status": "denied",
-                "transport": "runtime",
-                "reason": "runtime_invalid_receipt",
-            }
 
-    with contextlib.redirect_stdout(io.StringIO()):
-        result = host.ingest_event(envelope, None, core)
-    return _delivery_result(result, "ledger-fallback")
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = host.ingest_event(envelope, None, core)
+        return _delivery_result(result, "ledger-fallback")
 
 
 def main() -> int:
-    src_root = str(Path(__file__).resolve().parents[2] / "src")
-    if src_root not in sys.path:
-        sys.path.insert(0, src_root)
-    from processforge_core import diagnostics
+    from pf_native_control import NativeControlError, operation_lease
 
-    hook = ""
-    debug = os.environ.get("PF_KIMI_HOOK_DEBUG") == "1"
-    options = (
-        diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
-    )
-    logger = diagnostics.for_project(Path.cwd(), invocation=options)
-    if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
-        logger = diagnostics.for_stderr(options)
     try:
         payload = json.load(sys.stdin)
+    except (Exception, SystemExit):
+        return 0
+    try:
+        with operation_lease():
+            return _main_in_operation(payload)
+    except NativeControlError:
         hook = _event_name(payload) if isinstance(payload, dict) else ""
-        if (
-            isinstance(payload, dict)
-            and isinstance(_project_ref(payload), str)
-            and _project_ref(payload)
-        ):
-            logger = diagnostics.for_project(
-                Path(_project_ref(payload)),
-                session_id=_session_id(payload),
-                invocation=options,
-            )
-            if logger is diagnostics.NULL and (
-                debug or os.environ.get("PF_DIAGNOSTICS")
+        if hook in {"Stop", "SubagentStop"}:
+            print("{}")
+        return 0
+
+
+def _main_in_operation(payload: Any) -> int:
+    from pf_native_control import operation_lease
+
+    with operation_lease():
+        src_root = str(Path(__file__).resolve().parents[2] / "src")
+        if src_root not in sys.path:
+            sys.path.insert(0, src_root)
+        from processforge_core import diagnostics
+
+        hook = ""
+        debug = os.environ.get("PF_KIMI_HOOK_DEBUG") == "1"
+        options = (
+            diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
+        )
+        logger = diagnostics.for_project(Path.cwd(), invocation=options)
+        if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+            logger = diagnostics.for_stderr(options)
+        try:
+            hook = _event_name(payload) if isinstance(payload, dict) else ""
+            if (
+                isinstance(payload, dict)
+                and isinstance(_project_ref(payload), str)
+                and _project_ref(payload)
             ):
-                logger = diagnostics.for_stderr(options)
-        with diagnostics.operation(
-            logger,
-            "hooks",
-            "hook.dispatch",
-            session_id=_session_id(payload) if isinstance(payload, dict) else None,
-            build=diagnostics.identity_for(logger, __file__),
-        ):
-            result = dispatch(payload if isinstance(payload, dict) else {})
-        hook = _event_name(payload) if isinstance(payload, dict) else ""
-        if hook in {"Stop", "SubagentStop"}:
-            print("{}")
-        logger.log(
-            "warning" if result.get("status") == "denied" else "debug",
-            "hook.result",
-            {
-                "status": result.get("status"),
-                "transport": result.get("transport"),
-                "reason": result.get("reason"),
-                "normalized_event_count": len(result.get("normalized_event_ids") or []),
-                "diagnostics": result.get("diagnostics"),
-            },
-            component="hooks",
-            code="hook.result",
-        )
-    except (Exception, SystemExit) as exc:
-        if hook in {"Stop", "SubagentStop"}:
-            print("{}")
-        logger.log(
-            "error",
-            "hook.ignored",
-            {"exception": exc},
-            component="hooks",
-            code="hook.ignored",
-        )
-    return 0
+                logger = diagnostics.for_project(
+                    Path(_project_ref(payload)),
+                    session_id=_session_id(payload),
+                    invocation=options,
+                )
+                if logger is diagnostics.NULL and (
+                    debug or os.environ.get("PF_DIAGNOSTICS")
+                ):
+                    logger = diagnostics.for_stderr(options)
+            with diagnostics.operation(
+                logger,
+                "hooks",
+                "hook.dispatch",
+                session_id=_session_id(payload) if isinstance(payload, dict) else None,
+                build=diagnostics.identity_for(logger, __file__),
+            ):
+                result = dispatch(payload if isinstance(payload, dict) else {})
+            hook = _event_name(payload) if isinstance(payload, dict) else ""
+            if hook in {"Stop", "SubagentStop"}:
+                print("{}")
+            logger.log(
+                "warning" if result.get("status") == "denied" else "debug",
+                "hook.result",
+                {
+                    "status": result.get("status"),
+                    "transport": result.get("transport"),
+                    "reason": result.get("reason"),
+                    "normalized_event_count": len(
+                        result.get("normalized_event_ids") or []
+                    ),
+                    "diagnostics": result.get("diagnostics"),
+                },
+                component="hooks",
+                code="hook.result",
+            )
+        except (Exception, SystemExit) as exc:
+            if hook in {"Stop", "SubagentStop"}:
+                print("{}")
+            logger.log(
+                "error",
+                "hook.ignored",
+                {"exception": exc},
+                component="hooks",
+                code="hook.ignored",
+            )
+        return 0
 
 
 if __name__ == "__main__":

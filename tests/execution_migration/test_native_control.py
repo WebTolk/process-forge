@@ -36,6 +36,289 @@ def _wait_file(path: Path) -> None:
         time.sleep(0.01)
 
 
+def test_runtime_idle_releases_lease_and_stale_finalizer_writes_nothing() -> None:
+    import threading
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from unittest.mock import patch
+
+    from pf_runtime import service
+
+    held = 0
+    stale = False
+    writes: list[str] = []
+
+    @contextmanager
+    def operation(**kwargs):
+        nonlocal held
+        if stale:
+            raise NativeControlError()
+        held += 1
+        try:
+            yield
+        finally:
+            held -= 1
+
+    def write(*args, **kwargs):
+        assert held == 1
+        writes.append("write")
+
+    def idle(**kwargs):
+        nonlocal stale
+        assert held == 0
+        stale = True
+
+    runtime = object.__new__(service.RuntimeProcess)
+    runtime.workplace_root = Path("unused-runtime-fixture")
+    runtime.core = SimpleNamespace()
+    runtime.instance_id = "fixture-instance"
+    runtime.token = "fixture-token"
+    runtime.stop_event = threading.Event()
+    runtime.state_lock = threading.RLock()
+    runtime.save = write
+    server = SimpleNamespace(server_address=("127.0.0.1", 0), serve_forever=idle)
+    with (
+        patch.object(
+            p, "current_entry", return_value=SimpleNamespace(operation=operation)
+        ),
+        patch.object(service, "acquire_singleton", side_effect=write),
+        patch.object(
+            service, "release_singleton", side_effect=AssertionError("stale cleanup")
+        ),
+        patch.object(service, "base_state", return_value={}),
+        patch.object(service, "append_operator_log", side_effect=write),
+        patch.object(service, "ThreadingHTTPServer", return_value=server),
+        patch.object(threading.Thread, "start"),
+    ):
+        with pytest.raises(NativeControlError):
+            runtime.serve(0)
+    assert held == 0
+    assert len(writes) == 4  # singleton, two saves, startup log; no terminal writes.
+    assert runtime.stop_event.is_set()
+
+
+def test_runtime_metrics_error_persistence_stays_within_live_cycle() -> None:
+    import threading
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from unittest.mock import patch
+
+    from pf_runtime import service
+
+    held = 0
+    persisted: list[int] = []
+
+    @contextmanager
+    def operation(**kwargs):
+        nonlocal held
+        held += 1
+        try:
+            yield
+        finally:
+            held -= 1
+
+    def fail(*args, **kwargs):
+        assert held == 1
+        raise OSError("unrelated_metrics_storage_fault")
+
+    def save():
+        assert held == 1
+        persisted.append(held)
+
+    def wait(delay):
+        assert held == 0
+        return True
+
+    runtime = object.__new__(service.RuntimeProcess)
+    runtime.workplace_root = Path("unused-runtime-fixture")
+    runtime.state_lock = threading.RLock()
+    runtime.state = {"scheduler": {"jobs": {}}}
+    runtime.configuration = SimpleNamespace(
+        config=SimpleNamespace(
+            runtime=SimpleNamespace(metrics=SimpleNamespace(interval_seconds=1.0))
+        )
+    )
+    runtime.stop_event = SimpleNamespace(is_set=lambda: False, wait=wait)
+    runtime.reload_configuration = lambda: None
+    runtime.save = save
+    with (
+        patch.object(
+            p, "current_entry", return_value=SimpleNamespace(operation=operation)
+        ),
+        patch.object(
+            service,
+            "metrics_core",
+            return_value=SimpleNamespace(registered_projects=fail),
+        ),
+    ):
+        runtime.metrics_loop()
+    assert persisted == [1]
+    assert runtime.state["scheduler"]["jobs"]["metrics"]["last_result"] == "failed"
+
+
+def test_native_acquire_refusal_does_not_relabel_body_oserror(
+    native_root: Path,
+) -> None:
+    guard, epoch = native_root / "guard", native_root / "epoch"
+    guard.write_bytes(b"0")
+    epoch.write_bytes(b"accepted")
+    control = p.NativeControl(guard, epoch, "accepted")
+    failure = OSError("unrelated_domain_fault")
+    with pytest.raises(OSError) as caught:
+        with control.operation():
+            raise failure
+    assert caught.value is failure
+    epoch.write_bytes(b"\xff")
+    with pytest.raises(NativeControlError):
+        with control.operation():
+            pytest.fail("invalid epoch admitted")
+    epoch.unlink()
+    with pytest.raises(NativeControlError):
+        with control.operation():
+            pytest.fail("missing epoch admitted")
+
+
+def test_stale_runtime_closes_idle_transport_without_core_writes() -> None:
+    import threading
+    from types import SimpleNamespace
+
+    from pf_runtime import service
+
+    runtime = object.__new__(service.RuntimeProcess)
+    runtime.stop_event = threading.Event()
+    closed = threading.Event()
+    runtime.httpd = SimpleNamespace(shutdown=closed.set)
+    runtime._stop_stale()
+    assert runtime.stop_event.is_set()
+    assert closed.wait(1)
+
+
+def test_copied_context_cannot_reuse_released_or_foreign_thread_lease(
+    native_root: Path,
+) -> None:
+    import threading
+    from contextvars import copy_context
+
+    guard, epoch = native_root / "guard", native_root / "epoch"
+    guard.write_bytes(b"0")
+    epoch.write_bytes(b"accepted")
+    entry = p.NativeEntry(
+        native_root, None, None, p.NativeControl(guard, epoch, "accepted")
+    )
+    refused: list[bool] = []
+
+    def use():
+        with pytest.raises(NativeControlError):
+            with entry.operation():
+                pytest.fail("copied lifetime admitted")
+        refused.append(True)
+
+    with entry.operation():
+        copied = copy_context()
+        other = copied.copy()
+        thread = threading.Thread(target=lambda: other.run(use))
+        thread.start()
+        thread.join(1)
+        assert not thread.is_alive() and refused == [True]
+    copied.run(use)
+    assert refused == [True, True]
+
+
+def test_raw_iterator_retains_lease_until_close() -> None:
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from unittest.mock import patch
+
+    from pf_runtime.raw_ingress_kernel import RawIngressKernel
+
+    held = 0
+
+    @contextmanager
+    def operation(**kwargs):
+        nonlocal held
+        held += 1
+        try:
+            yield
+        finally:
+            held -= 1
+
+    def records(*args, **kwargs):
+        assert held == 1
+        yield {"event_id": "one"}
+        assert held == 1
+
+    kernel = object.__new__(RawIngressKernel)
+    kernel.database = Path("unused-fixture.sqlite")
+    kernel._operation = lambda: (SimpleNamespace(records=records), True)
+    with patch.object(
+        p, "current_entry", return_value=SimpleNamespace(operation=operation)
+    ):
+        iterator = kernel.records()
+        assert held == 0
+        assert next(iterator) == {"event_id": "one"}
+        assert held == 1
+        iterator.close()
+        assert held == 0
+
+
+@pytest.mark.parametrize("adapter", ["codex_hooks", "kimi_hooks"])
+def test_stale_hook_returns_neutral_without_diagnostics(adapter, capsys) -> None:
+    import importlib
+    import io
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from unittest.mock import patch
+
+    from processforge_core import diagnostics
+
+    module = importlib.import_module("pf_runtime." + adapter)
+
+    @contextmanager
+    def refuse(**kwargs):
+        raise NativeControlError()
+        yield
+
+    with (
+        patch.object(
+            p, "current_entry", return_value=SimpleNamespace(operation=refuse)
+        ),
+        patch.object(sys, "stdin", io.StringIO('{"hook_event_name":"Stop"}')),
+        patch.object(
+            diagnostics, "for_project", side_effect=AssertionError("stale diagnostics")
+        ),
+    ):
+        assert module.main() == 0
+    assert capsys.readouterr().out == "{}\n"
+
+
+def test_stale_executor_and_storage_script_keep_existing_failure_shapes(capsys) -> None:
+    import argparse
+    import runpy
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from unittest.mock import patch
+
+    from prepared_executor import run_target
+
+    @contextmanager
+    def refuse(**kwargs):
+        raise NativeControlError()
+        yield
+
+    with patch.object(
+        p, "current_entry", return_value=SimpleNamespace(operation=refuse)
+    ):
+        assert run_target(argparse.Namespace(), []) == 125
+        main = runpy.run_path(
+            str(Path(__file__).absolute().parents[2] / "tools/migrate-storage.py")
+        )["main"]
+        assert main(["--inspect", "--project-root", str(Path.cwd())]) == 1
+    captured = capsys.readouterr()
+    assert captured.err == "FAIL: execution_activity_unknown\n"
+    assert len(captured.out.splitlines()) == 1
+    assert json.loads(captured.out)["blocked"] is True
+
+
 def _chain(root: Path, *, root_exits: bool = False) -> list[str]:
     child = root / "child.py"
     child.write_text(

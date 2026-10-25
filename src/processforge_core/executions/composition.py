@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import stat
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
@@ -91,6 +92,31 @@ def _execution_profile(config: DatabaseConfig | None) -> tuple[str, str, int]:
     return profile_id, relative, timeout
 
 
+def _fresh_initialization(flow: Path) -> dict[str, object] | None:
+    """Read a bounded durable initializer fence, without creating anything."""
+    marker = _contained(flow, "maintenance/execution-initialization.json")
+    try:
+        with marker.open("rb") as stream:
+            raw = stream.read(65537)
+    except FileNotFoundError:
+        return None
+    try:
+        document = json.loads(raw, object_pairs_hook=_pairs)
+        if (
+            len(raw) > 65536
+            or not isinstance(document, dict)
+            or set(document) != {"schema_version", "state", "binding"}
+            or type(document["schema_version"]) is not int
+            or document["schema_version"] != 1
+            or document["state"] not in {"pending", "ready"}
+            or not isinstance(document["binding"], dict)
+        ):
+            raise ValueError("invalid initializer")
+        return document
+    except (ValueError, TypeError):
+        raise ExecutionError("execution_storage_not_ready") from None
+
+
 def select_execution_storage(
     project_root: Path,
     workplace_root: Path | None = None,
@@ -114,6 +140,9 @@ def select_execution_storage(
     profile_id, relative, timeout = _execution_profile(database_config)
     target = _contained(flow, relative)
     binding_path = _contained(flow, "data/execution-storage.json")
+    initializer = _fresh_initialization(flow)
+    if initializer is not None and initializer["state"] == "pending":
+        raise ExecutionError("execution_storage_not_ready")
     try:
         with binding_path.open("rb") as stream:
             raw = stream.read(65537)
@@ -142,6 +171,8 @@ def select_execution_storage(
                 raise ValueError("invalid binding")
         except (ValueError, TypeError):
             raise ExecutionError("execution_storage_not_ready") from None
+    if initializer is not None and initializer["binding"] != binding:
+        raise ExecutionError("execution_storage_not_ready")
     if binding is None and not target.exists():
         return ExecutionStorage("legacy")
     manifest = metadata.manifest()
@@ -259,6 +290,7 @@ def _repair_fresh_execution_storage(
     workplace_root: Path | None,
     *,
     configuration: ConfigurationProvider,
+    _verify: Callable[[], None] | None = None,
 ) -> bool:
     """Repair only the exact durable fresh initializer, never reclassify a root."""
     from ..database import SqlStatement
@@ -274,6 +306,8 @@ def _repair_fresh_execution_storage(
     if not marker.exists():
         return False
     with ExecutionAdmission().maintenance(project_root, workplace_root):
+        if _verify is not None:
+            _verify()
         document = _read(marker)
         if (
             set(document) != {"schema_version", "state", "binding"}
@@ -358,5 +392,7 @@ def _repair_fresh_execution_storage(
                 raise ExecutionError("execution_storage_not_ready")
         if not repository.readiness().ready:
             raise ExecutionError("execution_storage_not_ready")
+        if _verify is not None:
+            _verify()
         _atomic(marker, {"schema_version": 1, "state": "ready", "binding": binding})
         return True

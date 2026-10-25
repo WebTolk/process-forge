@@ -66,24 +66,27 @@ def migrate(
     device_config_path: Path | None = None,
 ) -> JsonObject:
     """Delegate explicit migration to its owning Core service."""
-    provider = (
-        configuration
-        if configuration is not None
-        else build_configuration_provider(
-            project_root=project_root.resolve(),
-            workplace_root=workplace.resolve(),
-            device_config_path=device_config_path,
+    from pf_native_control import operation_lease
+
+    with operation_lease():
+        provider = (
+            configuration
+            if configuration is not None
+            else build_configuration_provider(
+                project_root=project_root.resolve(),
+                workplace_root=workplace.resolve(),
+                device_config_path=device_config_path,
+            )
         )
-    )
-    snapshot = provider.snapshot()
-    pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
-    return JournalMaintenanceService(configuration=pinned).migrate(
-        project_root,
-        workplace,
-        apply=apply,
-        skip_invalid=skip_invalid,
-        evidence_dir=evidence_dir,
-    )
+        snapshot = provider.snapshot()
+        pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+        return JournalMaintenanceService(configuration=pinned).migrate(
+            project_root,
+            workplace,
+            apply=apply,
+            skip_invalid=skip_invalid,
+            evidence_dir=evidence_dir,
+        )
 
 
 def main() -> int:

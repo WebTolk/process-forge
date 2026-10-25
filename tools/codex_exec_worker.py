@@ -44,7 +44,6 @@ else:
     )
 
 
-
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
 
@@ -532,191 +531,214 @@ class ManagedUsageCapture:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--worker-prompt", required=True)
-    parser.add_argument("--capsule", required=True)
-    parser.add_argument("--workspace-access", required=True)
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--heartbeat")
-    args = parser.parse_args()
+    from pf_native_control import NativeControlError
 
-    worker_prompt = Path(args.worker_prompt).expanduser().resolve()
-    capsule = Path(args.capsule).expanduser().resolve()
-    workspace_access = Path(args.workspace_access).expanduser().resolve()
-    output = Path(args.output).expanduser().resolve()
-    heartbeat = Path(args.heartbeat).expanduser().resolve() if args.heartbeat else None
-    exit_contract = (
-        Path(os.environ["PF_AGENT_EXIT_PATH"]).expanduser().resolve()
-        if os.environ.get("PF_AGENT_EXIT_PATH")
-        else None
-    )
+    try:
+        return _main_in_operation()
+    except NativeControlError:
+        print("FAIL: execution_activity_unknown", file=sys.stderr)
+        return 125
 
-    model = os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or ""
-    if not model:
-        raise SystemExit(
-            "FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL"
+
+def _main_in_operation() -> int:
+    from pf_native_control import operation_lease
+
+    with operation_lease():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--worker-prompt", required=True)
+        parser.add_argument("--capsule", required=True)
+        parser.add_argument("--workspace-access", required=True)
+        parser.add_argument("--output", required=True)
+        parser.add_argument("--heartbeat")
+        args = parser.parse_args()
+
+        worker_prompt = Path(args.worker_prompt).expanduser().resolve()
+        capsule = Path(args.capsule).expanduser().resolve()
+        workspace_access = Path(args.workspace_access).expanduser().resolve()
+        output = Path(args.output).expanduser().resolve()
+        heartbeat = (
+            Path(args.heartbeat).expanduser().resolve() if args.heartbeat else None
         )
-    effort = os.environ.get("PF_CODEX_REASONING_EFFORT") or ""
-    sandbox = os.environ.get("PF_CODEX_SANDBOX") or "read-only"
-    memories = (os.environ.get("PF_CODEX_MEMORIES") or "false").strip().lower()
-    if memories not in {"true", "false"}:
-        raise SystemExit("FAIL: PF_CODEX_MEMORIES must be true or false")
-    project_root = os.environ.get("PF_PROJECT_ROOT") or str(Path.cwd())
-    prepared = None
-    configuration = None
-    prepared_path = os.environ.get("PF_PREPARED_INPUT_FILE")
-    if prepared_path:
-        from prepared_executor import ExecutorError, load_and_validate_manifest
+        exit_contract = (
+            Path(os.environ["PF_AGENT_EXIT_PATH"]).expanduser().resolve()
+            if os.environ.get("PF_AGENT_EXIT_PATH")
+            else None
+        )
 
-        try:
-            prepared = load_and_validate_manifest(
-                argparse.Namespace(
-                    prepared_input=prepared_path,
-                    prepared_sha256=os.environ.get("PF_PREPARED_INPUT_SHA256", ""),
-                ),
-                dict(os.environ),
+        model = (
+            os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or ""
+        )
+        if not model:
+            raise SystemExit(
+                "FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL"
             )
-            src = str(Path(__file__).resolve().parents[1] / "src")
-            if src not in sys.path:
-                sys.path.insert(0, src)
-            from processforge_core.runtime.command import load_configuration_snapshot
+        effort = os.environ.get("PF_CODEX_REASONING_EFFORT") or ""
+        sandbox = os.environ.get("PF_CODEX_SANDBOX") or "read-only"
+        memories = (os.environ.get("PF_CODEX_MEMORIES") or "false").strip().lower()
+        if memories not in {"true", "false"}:
+            raise SystemExit("FAIL: PF_CODEX_MEMORIES must be true or false")
+        project_root = os.environ.get("PF_PROJECT_ROOT") or str(Path.cwd())
+        prepared = None
+        configuration = None
+        prepared_path = os.environ.get("PF_PREPARED_INPUT_FILE")
+        if prepared_path:
+            from prepared_executor import ExecutorError, load_and_validate_manifest
 
-            configuration = load_configuration_snapshot(
-                prepared, Path(prepared_path), dict(os.environ)
-            )
-            if (
-                Path(project_root) / prepared["input"]["capsule"]["path"]
-            ).resolve() != capsule:
-                raise ValueError("prepared_capsule_pointer_mismatch")
-            report = prepared["input"]["outputs"]["expected_report"]["artifact"]
-            if (Path(project_root) / report).resolve() != output:
-                raise ValueError("prepared_report_pointer_mismatch")
-        except (ExecutorError, KeyError, TypeError, ValueError) as exc:
-            raise SystemExit("FAIL: prepared input invalid: " + str(exc)) from exc
-    elif os.environ.get("PF_AGENT_RUN_DIR"):
-        raise SystemExit("FAIL: prepared_input_required")
-    execution_receipts = None
-    if any(name.startswith("PF_EXECUTION_") for name in os.environ):
-        if prepared is None or heartbeat is None or exit_contract is None:
-            raise SystemExit("FAIL: execution_identity_conflict")
-        from prepared_executor import ExecutionReceipts
-
-        execution_receipts = ExecutionReceipts(
-            dict(os.environ), prepared, heartbeat, exit_contract
-        )
-    # Prepared references authorize exact material, never a whole external
-    # directory. Native readers can consume the declared references directly.
-    add_dirs = [] if prepared else resolved_workspace_dirs(workspace_access)
-    extra_read_dir = os.environ.get("PF_CODEX_EXTRA_READ_DIR")
-    if extra_read_dir and not prepared:
-        extra = Path(extra_read_dir).expanduser()
-        if extra.exists():
-            add_dirs.append(extra)
-
-    project_path = Path(project_root).expanduser().resolve()
-    command = [codex_executable(), *managed_hook_trust_args(project_path), "exec"]
-    command.extend(
-        [
-            "-m",
-            model,
-            "--sandbox",
-            sandbox,
-            "--cd",
-            project_root,
-        ]
-    )
-    config_args = codex_config_args(effort=effort, memories=memories)
-    command.extend(config_args)
-    for path in add_dirs:
-        command.extend(["--add-dir", str(path)])
-    command.extend(["--json", "-o", str(output), "-"])
-
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if execution_receipts is not None:
-        execution_receipts.heartbeat_receipt("starting")
-    else:
-        write_heartbeat(
-            heartbeat,
-            "starting",
-            {"model": model, "workspace_dirs": [str(path) for path in add_dirs]},
-        )
-    # Codex CLI reads its stdin as UTF-8.  ``text=True`` would encode this
-    # payload with the Windows console/code-page default, corrupting a valid
-    # non-ASCII assignment (for example a Russian project path) before the
-    # CLI receives it.  Supply explicit UTF-8 bytes instead.
-    payload_text = prompt_payload(worker_prompt, capsule, workspace_access, prepared)
-    capture_worker_input(payload_text, output)
-    src_root = str(Path(__file__).resolve().parents[1] / "src")
-    if src_root not in sys.path:
-        sys.path.insert(0, src_root)
-    from processforge_core import diagnostics
-
-    logger = diagnostics.for_project(project_path, run_id=os.environ.get("PF_RUN_ID"))
-    with diagnostics.operation(
-        logger,
-        "worker",
-        "worker.subprocess",
-        run_id=os.environ.get("PF_RUN_ID"),
-        assignment_id=os.environ.get("PF_TASK_ID"),
-        attempt=os.environ.get("PF_WORKER_ATTEMPT"),
-        build=diagnostics.identity_for(logger, __file__),
-    ):
-        usage_capture = ManagedUsageCapture(
-            project_path, output, model, configuration=configuration
-        )
-        receipt = usage_capture.begin()
-        usage_capture.start_execution()
-        try:
-            from pf_native_control import spawn_owned
-            from prepared_executor import _terminate_and_wait
-
-            native = spawn_owned(
-                command,
-                stdin=subprocess.PIPE,
-                stdout=receipt,
-                env={
-                    key: value
-                    for key, value in os.environ.items()
-                    if not key.startswith(("PF_EXECUTION_", "PF_NATIVE_JOB_"))
-                },
-            )
             try:
-                native.communicate(payload_text.encode("utf-8"))
-                job = getattr(native, "native_job", None)
-                if job is not None:
-                    import time
-
-                    while job.active():
-                        time.sleep(0.05)
-                    job.close()
-                assert native.returncode is not None
-                result: subprocess.CompletedProcess[bytes] = (
-                    subprocess.CompletedProcess(command, native.returncode)
+                prepared = load_and_validate_manifest(
+                    argparse.Namespace(
+                        prepared_input=prepared_path,
+                        prepared_sha256=os.environ.get("PF_PREPARED_INPUT_SHA256", ""),
+                    ),
+                    dict(os.environ),
                 )
-            except BaseException:
-                _terminate_and_wait(native)
-                raise
-        finally:
-            usage_capture.finish()
-        diagnostics.emit(
-            "error" if result.returncode else "info",
-            "worker.exit",
-            {"exit_code": result.returncode},
-            component="worker",
+                src = str(Path(__file__).resolve().parents[1] / "src")
+                if src not in sys.path:
+                    sys.path.insert(0, src)
+                from processforge_core.runtime.command import (
+                    load_configuration_snapshot,
+                )
+
+                configuration = load_configuration_snapshot(
+                    prepared, Path(prepared_path), dict(os.environ)
+                )
+                if (
+                    Path(project_root) / prepared["input"]["capsule"]["path"]
+                ).resolve() != capsule:
+                    raise ValueError("prepared_capsule_pointer_mismatch")
+                report = prepared["input"]["outputs"]["expected_report"]["artifact"]
+                if (Path(project_root) / report).resolve() != output:
+                    raise ValueError("prepared_report_pointer_mismatch")
+            except (ExecutorError, KeyError, TypeError, ValueError) as exc:
+                raise SystemExit("FAIL: prepared input invalid: " + str(exc)) from exc
+        elif os.environ.get("PF_AGENT_RUN_DIR"):
+            raise SystemExit("FAIL: prepared_input_required")
+        execution_receipts = None
+        if any(name.startswith("PF_EXECUTION_") for name in os.environ):
+            if prepared is None or heartbeat is None or exit_contract is None:
+                raise SystemExit("FAIL: execution_identity_conflict")
+            from prepared_executor import ExecutionReceipts
+
+            execution_receipts = ExecutionReceipts(
+                dict(os.environ), prepared, heartbeat, exit_contract
+            )
+        # Prepared references authorize exact material, never a whole external
+        # directory. Native readers can consume the declared references directly.
+        add_dirs = [] if prepared else resolved_workspace_dirs(workspace_access)
+        extra_read_dir = os.environ.get("PF_CODEX_EXTRA_READ_DIR")
+        if extra_read_dir and not prepared:
+            extra = Path(extra_read_dir).expanduser()
+            if extra.exists():
+                add_dirs.append(extra)
+
+        project_path = Path(project_root).expanduser().resolve()
+        command = [codex_executable(), *managed_hook_trust_args(project_path), "exec"]
+        command.extend(
+            [
+                "-m",
+                model,
+                "--sandbox",
+                sandbox,
+                "--cd",
+                project_root,
+            ]
         )
-    if execution_receipts is not None:
-        execution_receipts.exit_receipt(int(result.returncode))
-        execution_receipts.heartbeat_receipt(
-            "completed" if result.returncode == 0 else "failed"
+        config_args = codex_config_args(effort=effort, memories=memories)
+        command.extend(config_args)
+        for path in add_dirs:
+            command.extend(["--add-dir", str(path)])
+        command.extend(["--json", "-o", str(output), "-"])
+
+        output.parent.mkdir(parents=True, exist_ok=True)
+        if execution_receipts is not None:
+            execution_receipts.heartbeat_receipt("starting")
+        else:
+            write_heartbeat(
+                heartbeat,
+                "starting",
+                {"model": model, "workspace_dirs": [str(path) for path in add_dirs]},
+            )
+        # Codex CLI reads its stdin as UTF-8.  ``text=True`` would encode this
+        # payload with the Windows console/code-page default, corrupting a valid
+        # non-ASCII assignment (for example a Russian project path) before the
+        # CLI receives it.  Supply explicit UTF-8 bytes instead.
+        payload_text = prompt_payload(
+            worker_prompt, capsule, workspace_access, prepared
         )
-    else:
-        write_exit_contract(exit_contract, int(result.returncode))
-        write_heartbeat(
-            heartbeat,
-            "completed" if result.returncode == 0 else "failed",
-            {"exit_code": result.returncode},
+        capture_worker_input(payload_text, output)
+        src_root = str(Path(__file__).resolve().parents[1] / "src")
+        if src_root not in sys.path:
+            sys.path.insert(0, src_root)
+        from processforge_core import diagnostics
+
+        logger = diagnostics.for_project(
+            project_path, run_id=os.environ.get("PF_RUN_ID")
         )
-    return int(result.returncode)
+        with diagnostics.operation(
+            logger,
+            "worker",
+            "worker.subprocess",
+            run_id=os.environ.get("PF_RUN_ID"),
+            assignment_id=os.environ.get("PF_TASK_ID"),
+            attempt=os.environ.get("PF_WORKER_ATTEMPT"),
+            build=diagnostics.identity_for(logger, __file__),
+        ):
+            usage_capture = ManagedUsageCapture(
+                project_path, output, model, configuration=configuration
+            )
+            receipt = usage_capture.begin()
+            usage_capture.start_execution()
+            try:
+                from pf_native_control import spawn_owned
+                from prepared_executor import _terminate_and_wait
+
+                native = spawn_owned(
+                    command,
+                    stdin=subprocess.PIPE,
+                    stdout=receipt,
+                    env={
+                        key: value
+                        for key, value in os.environ.items()
+                        if not key.startswith(("PF_EXECUTION_", "PF_NATIVE_JOB_"))
+                    },
+                )
+                try:
+                    native.communicate(payload_text.encode("utf-8"))
+                    job = getattr(native, "native_job", None)
+                    if job is not None:
+                        import time
+
+                        while job.active():
+                            time.sleep(0.05)
+                        job.close()
+                    assert native.returncode is not None
+                    result: subprocess.CompletedProcess[bytes] = (
+                        subprocess.CompletedProcess(command, native.returncode)
+                    )
+                except BaseException:
+                    _terminate_and_wait(native)
+                    raise
+            finally:
+                usage_capture.finish()
+            diagnostics.emit(
+                "error" if result.returncode else "info",
+                "worker.exit",
+                {"exit_code": result.returncode},
+                component="worker",
+            )
+        if execution_receipts is not None:
+            execution_receipts.exit_receipt(int(result.returncode))
+            execution_receipts.heartbeat_receipt(
+                "completed" if result.returncode == 0 else "failed"
+            )
+        else:
+            write_exit_contract(exit_contract, int(result.returncode))
+            write_heartbeat(
+                heartbeat,
+                "completed" if result.returncode == 0 else "failed",
+                {"exit_code": result.returncode},
+            )
+        return int(result.returncode)
 
 
 if __name__ == "__main__":

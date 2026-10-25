@@ -50,6 +50,16 @@ def operation_configuration(
     )
 
 
+def operation_device_path(
+    project: Path | None, workplace: Path | None, fallback: Path | None = None
+) -> Path | None:
+    """Carry selectors separately from the immutable value; never rediscover."""
+    current = _OPERATION.get()
+    if current is not None and current[0][:2] == (project, workplace):
+        return current[0][2]
+    return fallback
+
+
 def operation_storage_host(path: Path) -> StorageMigrationHost | None:
     """Route a selected adapter within this operation; no process-global cache."""
     from ..maintenance.contracts import MaintenanceError
@@ -96,20 +106,28 @@ def configuration_operation(
     )
     snapshot = provider.snapshot()
     pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+    from ..configuration import DeviceConfigurationSource
+
+    selected_device = device_config_path or provider.device_path
+    if selected_device is None:
+        selected_device = DeviceConfigurationSource.default_path()
+    key = (project_root, workplace_root, selected_device, context_overrides)
     token = _OPERATION.set((key, pinned))
     from ..composition import build_storage_migration_host
 
-    host = build_storage_migration_host(
-        project_root=project_root,
-        workplace_root=workplace_root,
-        device_config_path=device_config_path,
-        configuration=pinned,
-    )
-    storage_token = _STORAGE_OPERATION.set(host)
     try:
-        yield pinned
+        host = build_storage_migration_host(
+            project_root=project_root,
+            workplace_root=workplace_root,
+            device_config_path=selected_device,
+            configuration=pinned,
+        )
+        storage_token = _STORAGE_OPERATION.set(host)
+        try:
+            yield pinned
+        finally:
+            _STORAGE_OPERATION.reset(storage_token)
     finally:
-        _STORAGE_OPERATION.reset(storage_token)
         _OPERATION.reset(token)
 
 

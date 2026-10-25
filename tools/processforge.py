@@ -2785,23 +2785,26 @@ diagnostic output.
     write_file(report, content, force=True)
 
 
-def execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
+def execute_project_initialization(
+    request: dict[str, Any], files: dict[Path, str]
+) -> dict[str, Any]:
     """Qualify actual new roots before the existing acknowledged writer runs."""
     from pf_native_control import supports_owned_execution
+
     from processforge_core.runtime.execution_admission import ExecutionAdmission
 
     project = request["project_root"]
     flow = project / PROJECT_FLOW_ROOT
     if flow.exists() or not supports_owned_execution():
-        result = _execute_project_initialization(request, files)
-        if flow.exists() and (flow / "maintenance/execution-initialization.json").is_file():
-            from processforge_core.executions.composition import _repair_fresh_execution_storage
-
-            selected = request.get("workplace")
-            workplace = Path(selected).parent if selected is not None else None
-            _repair_fresh_execution_storage(project, workplace,
-                configuration=build_configuration_provider(project_root=project, workplace_root=workplace))
-        return result
+        if (
+            flow.exists()
+            and (flow / "maintenance/execution-initialization.json").is_file()
+        ):
+            # Repair before any ordinary authoring writes, through the same
+            # qualified coordinator as first-write/resume. Capability alone
+            # does not establish the historical owner/exclusion proof.
+            _storage_first_write(project)
+        return _execute_project_initialization(request, files)
     # An existing root, including --force, never takes this branch. Create it
     # exclusively before publishing a manifest and take admission before writes.
     try:
@@ -2812,20 +2815,36 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     workplace = Path(selected).parent if selected is not None else None
     with ExecutionAdmission().maintenance(project, workplace):
         result = _execute_project_initialization(request, files)
-        if result.get("status") == "complete" and result.get("doctor", {}).get("status") == "pass":
+        if (
+            result.get("status") == "complete"
+            and result.get("doctor", {}).get("status") == "pass"
+        ):
             from processforge_core.configuration import ConfigurationProvider
-            from processforge_core.executions.composition import _initialize_fresh_execution_storage
+            from processforge_core.executions.composition import (
+                _initialize_fresh_execution_storage,
+            )
 
-            provider = build_configuration_provider(project_root=project, workplace_root=workplace)
+            provider = build_configuration_provider(
+                project_root=project, workplace_root=workplace
+            )
             snapshot = provider.snapshot()
             if snapshot.errors:
-                raise project_initialization.ProjectInitializationError("storage_configuration_invalid")
-            _initialize_fresh_execution_storage(project, workplace,
-                configuration=ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors))
+                raise project_initialization.ProjectInitializationError(
+                    "storage_configuration_invalid"
+                )
+            _initialize_fresh_execution_storage(
+                project,
+                workplace,
+                configuration=ConfigurationProvider.pinned(
+                    snapshot.config, errors=snapshot.errors
+                ),
+            )
         return result
 
 
-def _execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
+def _execute_project_initialization(
+    request: dict[str, Any], files: dict[Path, str]
+) -> dict[str, Any]:
     """CLI writer adapter used only by project_initialization.initialize_project()."""
     from processforge_core.agent_entry.migration import TARGETS as entry_targets
 
@@ -9693,6 +9712,7 @@ def prepare_worker_run(
         )
         # Only newly prepared attempts receive this native body grant. Existing
         # capsules and prepared documents are never reauthored at start/update.
+        from processforge_core.project.configuration_inputs import operation_device_path
         from processforge_core.runtime.command import configuration_snapshot_bytes
 
         selected_workplace = _ProjectMetadataReader(project_root).workplace_manifest()
@@ -9709,6 +9729,11 @@ def prepare_worker_run(
                 "task_id": identity["assignment_id"],
                 "attempt": attempt,
             },
+            device_config_path=operation_device_path(
+                project_root,
+                selected_workplace.parent if selected_workplace else None,
+                configuration.device_path,
+            ),
         )
         snapshot_path = prepared_path.with_name("configuration.snapshot.json")
         snapshot_relative = rel(snapshot_path, project_root)
@@ -9934,10 +9959,20 @@ def _storage_first_write(
     factory = getattr(composition, "build_storage_migration_host", None)
     if factory is None:
         raise MaintenanceError("storage_host_factory_unavailable")
-    host = factory(
+    from processforge_core.project.configuration_inputs import (
+        operation_device_path,
+        operation_storage_host,
+    )
+
+    host = operation_storage_host(
+        _ProjectMetadataReader(project_root).flow_root()
+        / "runtime/events/events.sqlite3"
+    ) or factory(
         project_root=project_root,
         workplace_root=workplace,
-        device_config_path=provider.device_path,
+        device_config_path=operation_device_path(
+            project_root, workplace, provider.device_path
+        ),
         configuration=pinned,
     )
     if not isinstance(host, StorageMigrationHost):
@@ -16467,6 +16502,12 @@ def main(argv: list[str] | None = None) -> int:
         ).run(argv)
     except IndexMaintenanceError as error:
         print(f"FAIL: {error.code}")
+        return 1
+    except OSError as error:
+        native_error = getattr(_native_module, "NativeControlError", None)
+        if native_error is None or not isinstance(error, native_error):
+            raise
+        print("FAIL: execution_activity_unknown")
         return 1
 
 

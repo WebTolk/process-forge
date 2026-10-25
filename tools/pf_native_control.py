@@ -16,6 +16,7 @@ import re
 import stat
 import subprocess
 import sys
+import threading
 import time
 import unicodedata
 from collections.abc import Iterator, Mapping
@@ -678,9 +679,14 @@ class NativeControl:
             stop = deadline if deadline is not None else time.monotonic() + 30
             if time.monotonic() >= stop:
                 raise NativeControlError()
-            stream = self.guard.open("r+b", buffering=0)
+            try:
+                stream = self.guard.open("r+b", buffering=0)
+            except OSError:
+                raise NativeControlError() from None
             locked = False
             token = None
+            life = None
+            life_token = None
             try:
                 if sys.platform == "win32":
                     import msvcrt
@@ -753,8 +759,18 @@ class NativeControl:
                 ):
                     raise NativeControlError()
                 token = _CONTROL_LEASE.set(self)
+                life = _OperationLifetime(os.getpid(), threading.get_ident())
+                life_token = _OPERATION_LIFETIME.set(life)
                 yield self
+            except (OSError, UnicodeError):
+                if token is None:
+                    raise NativeControlError() from None
+                raise
             finally:
+                if life is not None:
+                    life.active = False
+                if life_token is not None:
+                    _OPERATION_LIFETIME.reset(life_token)
                 if token is not None:
                     _CONTROL_LEASE.reset(token)
                 if locked:
@@ -769,6 +785,18 @@ class NativeControl:
 
 _CONTROL_LEASE: ContextVar[NativeControl | None] = ContextVar(
     "pf_native_control_lease", default=None
+)
+
+
+@dataclass
+class _OperationLifetime:
+    pid: int
+    thread_id: int
+    active: bool = True
+
+
+_OPERATION_LIFETIME: ContextVar[_OperationLifetime | None] = ContextVar(
+    "pf_native_operation_lifetime", default=None
 )
 
 
@@ -1127,6 +1155,14 @@ class NativeEntry:
                 # No authority to migrate follows from an unadopted publication.
                 yield self
             elif _CONTROL_LEASE.get() is self.control:
+                life = _OPERATION_LIFETIME.get()
+                if (
+                    life is None
+                    or not life.active
+                    or life.pid != os.getpid()
+                    or life.thread_id != threading.get_ident()
+                ):
+                    raise NativeControlError()
                 yield self
             else:
                 with self.control.operation(deadline=deadline):
@@ -1178,6 +1214,17 @@ def bootstrap_entry(root: Path, *, trusted_leaf: bytes) -> NativeEntry:
     image.activate()
     _ENTRY = NativeEntry(root, publication, image, control)
     return _ENTRY
+
+
+@contextmanager
+def operation_lease(*, deadline: float | None = None) -> Iterator[None]:
+    """Retain only a live operation, using the already captured native image."""
+    entry = current_entry()
+    if entry is None:
+        yield
+    else:
+        with entry.operation(deadline=deadline):
+            yield
 
 
 def current_entry() -> NativeEntry | None:

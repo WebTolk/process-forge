@@ -220,10 +220,18 @@ class WorkplaceAccounting:
         self._safe_paths()
         if create:
             self.ensure_identity()
-        host = self.storage_host or build_storage_migration_host(
+        from processforge_core.project.configuration_inputs import (
+            operation_device_path,
+            operation_storage_host,
+        )
+
+        host = self.storage_host or operation_storage_host(self.database)
+        host = host or build_storage_migration_host(
             project_root=self.project_root,
             workplace_root=self.workplace,
-            device_config_path=provider.device_path,
+            device_config_path=operation_device_path(
+                self.project_root, self.workplace, provider.device_path
+            ),
             configuration=pinned,
         )
         if create:

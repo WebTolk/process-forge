@@ -30,7 +30,11 @@ class CliApplication:
         args = parser.parse_args(argv)
         # Installation replacement must run after invocation/diagnostic scopes
         # have unwound. It owns its explicit updater boundary separately.
-        if args.command == "core-update-apply":
+        if args.command == "core-update-apply" or (
+            args.command in {"runtime", "server"}
+            and getattr(args, "runtime_command", "") in {"serve", "run"}
+        ):
+            # Long-lived dispatch owns short startup/request/cycle/final scopes.
             return args.func(args)
         with ExitStack() as operation:
             from pf_native_control import current_entry

@@ -23,7 +23,10 @@ CONFIGURATION_SNAPSHOT_LIMIT = 65536
 
 
 def configuration_snapshot_bytes(
-    configuration: ConfigurationProvider, identity: dict[str, Any]
+    configuration: ConfigurationProvider,
+    identity: dict[str, Any],
+    *,
+    device_config_path: Path | None = None,
 ) -> bytes:
     """Encode one operation snapshot without consulting live config again."""
     snapshot = configuration.snapshot()
@@ -37,13 +40,18 @@ def configuration_snapshot_bytes(
         )
     ):
         raise ValueError("configuration_snapshot_identity_invalid")
+    payload = {
+        "schema_version": 1,
+        **identity,
+        "configuration": snapshot.config.to_dict(),
+        "errors": list(snapshot.errors),
+    }
+    if device_config_path is not None:
+        if not device_config_path.is_absolute() or ".." in device_config_path.parts:
+            raise ValueError("configuration_snapshot_identity_invalid")
+        payload["native_selection"] = {"device_config_path": str(device_config_path)}
     raw = json.dumps(
-        {
-            "schema_version": 1,
-            **identity,
-            "configuration": snapshot.config.to_dict(),
-            "errors": list(snapshot.errors),
-        },
+        payload,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
@@ -130,15 +138,27 @@ def load_configuration_snapshot(
     if (
         not isinstance(payload, dict)
         or set(payload)
-        != {
-            "schema_version",
-            "project_id",
-            "run_id",
-            "task_id",
-            "attempt",
-            "configuration",
-            "errors",
-        }
+        not in (
+            {
+                "schema_version",
+                "project_id",
+                "run_id",
+                "task_id",
+                "attempt",
+                "configuration",
+                "errors",
+            },
+            {
+                "schema_version",
+                "project_id",
+                "run_id",
+                "task_id",
+                "attempt",
+                "configuration",
+                "errors",
+                "native_selection",
+            },
+        )
         or type(payload["schema_version"]) is not int
         or payload["schema_version"] != 1
         or type(payload["attempt"]) is not int
@@ -154,9 +174,25 @@ def load_configuration_snapshot(
         )
     ):
         raise ValueError("configuration_snapshot_identity_mismatch")
-    return ConfigurationProvider.pinned(
+    selected_device = None
+    if "native_selection" in payload:
+        selection = payload["native_selection"]
+        if (
+            not isinstance(selection, dict)
+            or set(selection) != {"device_config_path"}
+            or not isinstance(selection["device_config_path"], str)
+        ):
+            raise ValueError("configuration_snapshot_identity_mismatch")
+        selected_device = Path(selection["device_config_path"])
+        if not selected_device.is_absolute() or ".." in selected_device.parts:
+            raise ValueError("configuration_snapshot_identity_mismatch")
+    pinned = ConfigurationProvider.pinned(
         PFConfig.from_dict(payload["configuration"]), errors=tuple(payload["errors"])
     )
+    # Native provenance, authenticated by the exact body grant/hash above.
+    # The provider remains value-pinned: this path is never a new read grant.
+    object.__setattr__(pinned, "device_path", selected_device)
+    return pinned
 
 
 class WorkerCommandBuilder:
@@ -171,8 +207,10 @@ class WorkerCommandBuilder:
         self.drivers = RuntimeDriverDefinitionPolicy()
 
     def sandbox(self, task: dict[str, Any]) -> str:
-        execution = task.get("execution_mode") if isinstance(task.get("execution_mode"), dict) else {}
-        ownership = task.get("ownership") if isinstance(task.get("ownership"), dict) else {}
+        execution_value = task.get("execution_mode")
+        execution = execution_value if isinstance(execution_value, dict) else {}
+        ownership_value = task.get("ownership")
+        ownership = ownership_value if isinstance(ownership_value, dict) else {}
         writable = ownership.get("writer") is True and (
             execution.get("code_changes_allowed") is True
             or execution.get("artifact_changes_allowed") is True
@@ -192,11 +230,20 @@ class WorkerCommandBuilder:
         task_id = safe_id(str(task.get("id") or "task"), "task")
         run_id = safe_id(str(task.get("run_id") or "run"), "run")
         paths = self.paths.worker_run(project_root, run_id, task_id)
-        capsule_path = self.inputs.locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
+        capsule_path = (
+            self.inputs.locate_flow_root(project_root)
+            / "contexts"
+            / "assignment-capsules"
+            / f"{task_id}.capsule.yaml"
+        )
         prompt_path = self.paths.worker_prompt(project_root, run_id, task_id)
         try:
-            report_path = self.outputs.path(project_root, self.outputs.expected_report(task))
-            for output in self.inputs.normalize_required_outputs(task.get("required_outputs")):
+            report_path = self.outputs.path(
+                project_root, self.outputs.expected_report(task)
+            )
+            for output in self.inputs.normalize_required_outputs(
+                task.get("required_outputs")
+            ):
                 if output.get("path"):
                     self.outputs.path(project_root, str(output["path"]))
         except (OSError, ValueError) as exc:
@@ -212,8 +259,12 @@ class WorkerCommandBuilder:
             "capsule_path": str(capsule_path),
             "worker_prompt_path": str(prompt_path),
             "workspace_access_path": str(paths["workspace_access"]),
-            "prepared_input_path": str(project_root / prepared_input["path"]) if prepared_input else "",
-            "prepared_input_checksum": prepared_input["checksum"] if prepared_input else "",
+            "prepared_input_path": str(project_root / prepared_input["path"])
+            if prepared_input
+            else "",
+            "prepared_input_checksum": prepared_input["checksum"]
+            if prepared_input
+            else "",
             "expected_report_path": str(report_path),
             "python_executable": sys.executable,
             "executable": executable_override or "",
@@ -221,21 +272,46 @@ class WorkerCommandBuilder:
             "stderr_path": str(paths["stderr"]),
             "heartbeat_path": str(paths["heartbeat"]),
             "exit_path": str(paths["exit"]),
-            "agent_model": self.inputs.normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
-            "agent_reasoning_effort": self.inputs.normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
+            "agent_model": self.inputs.normalize_agent_model(
+                task.get("agent_model") or task.get("model") or ""
+            ),
+            "agent_reasoning_effort": self.inputs.normalize_agent_reasoning_effort(
+                task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""
+            ),
             "agent_sandbox": self.sandbox(task),
         }
-        io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
-        stdout_path = Path(str(self.environment.expand(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
-        stderr_path = Path(str(self.environment.expand(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
+        io_value = driver.get("io")
+        io = io_value if isinstance(io_value, dict) else {}
+        stdout_path = Path(
+            str(
+                self.environment.expand(
+                    io.get("stdout") or rel(paths["stdout"], project_root), variables
+                )
+            )
+        )
+        stderr_path = Path(
+            str(
+                self.environment.expand(
+                    io.get("stderr") or rel(paths["stderr"], project_root), variables
+                )
+            )
+        )
         if not stdout_path.is_absolute():
             stdout_path = (project_root / stdout_path).resolve()
         if not stderr_path.is_absolute():
             stderr_path = (project_root / stderr_path).resolve()
         paths["stdout"] = stdout_path
         paths["stderr"] = stderr_path
-        heartbeat = driver.get("heartbeat") if isinstance(driver.get("heartbeat"), dict) else {}
-        heartbeat_path = Path(str(self.environment.expand(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
+        heartbeat_value = driver.get("heartbeat")
+        heartbeat = heartbeat_value if isinstance(heartbeat_value, dict) else {}
+        heartbeat_path = Path(
+            str(
+                self.environment.expand(
+                    heartbeat.get("path") or rel(paths["heartbeat"], project_root),
+                    variables,
+                )
+            )
+        )
         if not heartbeat_path.is_absolute():
             heartbeat_path = (project_root / heartbeat_path).resolve()
         paths["heartbeat"] = heartbeat_path
@@ -247,23 +323,52 @@ class WorkerCommandBuilder:
                 "exit_path": str(paths["exit"]),
             }
         )
-        command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
-        executable = executable_override or str(self.environment.expand(command_spec.get("executable") or "", variables))
-        args = self.environment.expand(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
+        command_value = driver.get("command")
+        command_spec = command_value if isinstance(command_value, dict) else {}
+        executable = executable_override or str(
+            self.environment.expand(command_spec.get("executable") or "", variables)
+        )
+        args = self.environment.expand(
+            command_spec.get("args")
+            if isinstance(command_spec.get("args"), list)
+            else [],
+            variables,
+        )
         if variables["agent_model"]:
-            model_args_raw = command_spec.get("model_args") if "model_args" in command_spec else ["--model", "{agent_model}"]
+            model_args_raw = (
+                command_spec.get("model_args")
+                if "model_args" in command_spec
+                else ["--model", "{agent_model}"]
+            )
             if not isinstance(model_args_raw, list):
-                raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
+                raise SystemExit(
+                    "FAIL: runtime driver command.model_args must be a list when model is set"
+                )
             args.extend(self.environment.expand(model_args_raw, variables))
         env, inherit_env = self.environment.build(driver, variables)
         if driver.get("prepared_lifecycle_wrapper") is True and executable:
             if not prepared_input:
                 raise SystemExit("FAIL: prepared_input_required")
-            args = [str(self.distribution_root / "tools" / "prepared_executor.py"), "--prepared-input", variables["prepared_input_path"],
-                    "--prepared-sha256", variables["prepared_input_checksum"], "--heartbeat", str(paths["heartbeat"]),
-                    "--exit-path", str(paths["exit"]), "--", executable, *args]
+            args = [
+                str(self.distribution_root / "tools" / "prepared_executor.py"),
+                "--prepared-input",
+                variables["prepared_input_path"],
+                "--prepared-sha256",
+                variables["prepared_input_checksum"],
+                "--heartbeat",
+                str(paths["heartbeat"]),
+                "--exit-path",
+                str(paths["exit"]),
+                "--",
+                executable,
+                *args,
+            ]
             executable = sys.executable
-        working_directory = str(self.environment.expand(driver.get("working_directory") or "{project_root}", variables))
+        working_directory = str(
+            self.environment.expand(
+                driver.get("working_directory") or "{project_root}", variables
+            )
+        )
         command = {
             "schema_version": 1,
             "run_id": run_id,
@@ -284,7 +389,11 @@ class WorkerCommandBuilder:
                 "environment_inherit": inherit_env,
                 "shell": False,
             },
-            "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
+            "paths": {
+                key: rel(path, project_root)
+                for key, path in paths.items()
+                if key != "root"
+            },
             "limits": self.drivers.parse_limits(driver)[0],
         }
         driver_ref = driver.get("_driver_ref")

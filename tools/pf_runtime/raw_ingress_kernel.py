@@ -278,7 +278,11 @@ class RawIngressKernel:
 
         storage = self.storage
         retain_raw = self.record_raw
-        from processforge_core.project.configuration_inputs import operation_configuration
+        from processforge_core.project.configuration_inputs import (
+            operation_configuration,
+            operation_device_path,
+            operation_storage_host,
+        )
 
         configuration = self.configuration or operation_configuration(
             self.project_root, self.workplace_root
@@ -288,10 +292,17 @@ class RawIngressKernel:
             if storage.storage_host is None:
                 from processforge_core.composition import build_storage_migration_host
 
-                host = build_storage_migration_host(
+                host = operation_storage_host(
+                    self.database
+                ) or build_storage_migration_host(
                     project_root=self.project_root,
                     workplace_root=self.workplace_root,
-                    device_config_path=None, configuration=configuration,
+                    device_config_path=operation_device_path(
+                        self.project_root,
+                        self.workplace_root,
+                        configuration.device_path,
+                    ),
+                    configuration=configuration,
                 )
                 storage = RawHookJournal(driver=storage.driver, storage_host=host)
             if storage.driver is None:
@@ -306,49 +317,63 @@ class RawIngressKernel:
     def ingest(
         self, event: NativeAgentEvent, received_at: datetime | None = None
     ) -> RawReceipt:
-        from processforge_core.sqlite_storage import JournalMigrationRequired
+        from pf_native_control import operation_lease
 
-        _validate(event, self.max_payload_bytes)
-        if not self.database.is_file():
-            legacy_roots = {
-                self.root / "raw/v1",
-                self.workplace_root / "runtime/agent-events/raw/v1",
-            }
-            if any(any(root.rglob("*.ndjson")) for root in legacy_roots):
-                raise JournalMigrationRequired(
-                    "raw_journal_migration_required: run tools/migrate-hook-journals.py"
-                )
-        moment = (received_at or datetime.now(timezone.utc)).astimezone(timezone.utc)
-        event_id = raw_event_id(event)
-        record = self._raw_record(
-            event,
-            event_id,
-            raw_payload_hash(event.raw_payload),
-            stable_native_identity_key(event),
-            moment,
-        )
-        storage, retain_raw = self._operation()
-        result = storage.accept(self.database, record, retain_raw=retain_raw)
-        return RawReceipt(
-            event_id,
-            result["accepted"],
-            result["deduplicated"],
-            result["raw_location"],
-            result["routing_status"],
-            diagnostics=result["diagnostics"],
-        )
+        with operation_lease():
+            from processforge_core.sqlite_storage import JournalMigrationRequired
+
+            _validate(event, self.max_payload_bytes)
+            if not self.database.is_file():
+                legacy_roots = {
+                    self.root / "raw/v1",
+                    self.workplace_root / "runtime/agent-events/raw/v1",
+                }
+                if any(any(root.rglob("*.ndjson")) for root in legacy_roots):
+                    raise JournalMigrationRequired(
+                        "raw_journal_migration_required: run tools/migrate-hook-journals.py"
+                    )
+            moment = (received_at or datetime.now(timezone.utc)).astimezone(
+                timezone.utc
+            )
+            event_id = raw_event_id(event)
+            record = self._raw_record(
+                event,
+                event_id,
+                raw_payload_hash(event.raw_payload),
+                stable_native_identity_key(event),
+                moment,
+            )
+            storage, retain_raw = self._operation()
+            result = storage.accept(self.database, record, retain_raw=retain_raw)
+            return RawReceipt(
+                event_id,
+                result["accepted"],
+                result["deduplicated"],
+                result["raw_location"],
+                result["routing_status"],
+                diagnostics=result["diagnostics"],
+            )
 
     def finish(self, event_id: str, response: dict[str, Any]) -> None:
-        storage, _retain_raw = self._operation()
-        storage.finish(self.database, event_id, response)
+        from pf_native_control import operation_lease
+
+        with operation_lease():
+            storage, _retain_raw = self._operation()
+            storage.finish(self.database, event_id, response)
 
     def result(self, event_id: str) -> dict[str, Any] | None:
-        storage, _retain_raw = self._operation()
-        return storage.result(self.database, event_id)
+        from pf_native_control import operation_lease
+
+        with operation_lease():
+            storage, _retain_raw = self._operation()
+            return storage.result(self.database, event_id)
 
     def records(self, **filters):
-        storage, _retain_raw = self._operation()
-        return storage.records(self.database, **filters)
+        from pf_native_control import operation_lease
+
+        with operation_lease():
+            storage, _retain_raw = self._operation()
+            yield from storage.records(self.database, **filters)
 
     def _raw_record(
         self,

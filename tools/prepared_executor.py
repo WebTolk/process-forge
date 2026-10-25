@@ -532,125 +532,146 @@ def run_target(
     target: list[str],
     environ: dict[str, str] | None = None,
 ) -> int:
-    current_env = dict(os.environ if environ is None else environ)
-    heartbeat = Path(options.heartbeat).expanduser()
-    exit_path = Path(options.exit_path).expanduser()
-    output_paths = (heartbeat, exit_path)
-    try:
-        document = load_and_validate_manifest(options, current_env)
-        src = str(Path(__file__).resolve().parents[1] / "src")
-        if src not in sys.path:
-            sys.path.insert(0, src)
-        from processforge_core.runtime.command import load_configuration_snapshot
+    from pf_native_control import NativeControlError
 
-        load_configuration_snapshot(document, Path(options.prepared_input), current_env)
-    except (ExecutorError, OSError, ValueError) as exc:
-        reason = (
-            exc.code
-            if isinstance(exc, ExecutorError)
-            else "configuration_snapshot_invalid"
-        )
-        _write_failure(output_paths, 125, reason)
-        print(f"FAIL: {reason}", file=sys.stderr)
+    try:
+        return _run_target_in_operation(options, target, environ=environ)
+    except NativeControlError:
+        print("FAIL: execution_activity_unknown", file=sys.stderr)
         return 125
 
-    receipts = None
-    if any(name in current_env for name in _LAUNCH_ENV):
+
+def _run_target_in_operation(
+    options: argparse.Namespace,
+    target: list[str],
+    environ: dict[str, str] | None = None,
+) -> int:
+    from pf_native_control import operation_lease
+
+    with operation_lease():
+        current_env = dict(os.environ if environ is None else environ)
+        heartbeat = Path(options.heartbeat).expanduser()
+        exit_path = Path(options.exit_path).expanduser()
+        output_paths = (heartbeat, exit_path)
         try:
-            receipts = ExecutionReceipts(current_env, document, heartbeat, exit_path)
-        except (ExecutorError, OSError, ValueError):
-            print("FAIL: execution_activity_unknown", file=sys.stderr)
-            return 125
-    child_environment = dict(current_env)
-    if receipts is not None:
-        # A nested Codex wrapper is part of this owned tree, not another writer.
-        for name in _LAUNCH_ENV:
-            child_environment.pop(name, None)
-    started_at = _utc_now()
-    try:
-        if receipts is None:
-            write_heartbeat(
-                heartbeat, "starting", sequence=0, extra={"started_at": started_at}
-            )
-        else:
-            receipts.heartbeat_receipt("starting")
-        from pf_native_control import spawn_owned
+            document = load_and_validate_manifest(options, current_env)
+            src = str(Path(__file__).resolve().parents[1] / "src")
+            if src not in sys.path:
+                sys.path.insert(0, src)
+            from processforge_core.runtime.command import load_configuration_snapshot
 
-        process = spawn_owned(
-            target,
-            shell=False,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            cwd=None,
-            env=child_environment,
-        )
-    except Exception:
-        if receipts is None:
-            _write_failure(output_paths, 127, "target_launch_failed")
-        else:
-            receipts.exit_receipt(127)
-        print("FAIL: target_launch_failed", file=sys.stderr)
-        return 127
-    sequence = 0
-    next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
-    try:
-        while process.poll() is None:
-            remaining = next_heartbeat - time.monotonic()
-            if remaining > 0:
-                time.sleep(min(remaining, HEARTBEAT_INTERVAL_SECONDS))
-            if time.monotonic() >= next_heartbeat and process.poll() is None:
-                sequence += 1
-                if receipts is None:
-                    write_heartbeat(
-                        heartbeat,
-                        "running",
-                        sequence=sequence,
-                        extra={"pid": process.pid, "started_at": started_at},
-                    )
-                else:
-                    receipts.heartbeat_receipt("running")
-                next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
-        exit_code = int(process.wait())
-        job = getattr(process, "native_job", None)
-        if job is not None:
-            # The target may have returned while its descendants still run.
-            while job.active():
-                time.sleep(0.05)
-            job.close()
-        status = "completed" if exit_code == 0 else "failed"
-        if receipts is None:
-            write_exit_contract(exit_path, exit_code)
-            write_heartbeat(
-                heartbeat,
-                status,
-                sequence=sequence + 1,
-                extra={
-                    "pid": process.pid,
-                    "exit_code": exit_code,
-                    "started_at": started_at,
-                    "finished_at": _utc_now(),
-                },
+            load_configuration_snapshot(
+                document, Path(options.prepared_input), current_env
             )
-        else:
-            receipts.exit_receipt(exit_code)
-            receipts.heartbeat_receipt(status)
-        return exit_code
-    except KeyboardInterrupt:
-        _terminate_and_wait(process)
-        if receipts is None:
-            _write_failure(output_paths, 130, "target_interrupted")
-        else:
-            receipts.exit_receipt(130)
-        return 130
-    except Exception:
-        _terminate_and_wait(process)
-        if receipts is None:
-            _write_failure(output_paths, 125, "executor_lifecycle_failed")
-        else:
-            receipts.exit_receipt(125)
-        print("FAIL: executor_lifecycle_failed", file=sys.stderr)
-        return 125
+        except (ExecutorError, OSError, ValueError) as exc:
+            reason = (
+                exc.code
+                if isinstance(exc, ExecutorError)
+                else "configuration_snapshot_invalid"
+            )
+            _write_failure(output_paths, 125, reason)
+            print(f"FAIL: {reason}", file=sys.stderr)
+            return 125
+
+        receipts = None
+        if any(name in current_env for name in _LAUNCH_ENV):
+            try:
+                receipts = ExecutionReceipts(
+                    current_env, document, heartbeat, exit_path
+                )
+            except (ExecutorError, OSError, ValueError):
+                print("FAIL: execution_activity_unknown", file=sys.stderr)
+                return 125
+        child_environment = dict(current_env)
+        if receipts is not None:
+            # A nested Codex wrapper is part of this owned tree, not another writer.
+            for name in _LAUNCH_ENV:
+                child_environment.pop(name, None)
+        started_at = _utc_now()
+        try:
+            if receipts is None:
+                write_heartbeat(
+                    heartbeat, "starting", sequence=0, extra={"started_at": started_at}
+                )
+            else:
+                receipts.heartbeat_receipt("starting")
+            from pf_native_control import spawn_owned
+
+            process = spawn_owned(
+                target,
+                shell=False,
+                stdin=None,
+                stdout=None,
+                stderr=None,
+                cwd=None,
+                env=child_environment,
+            )
+        except Exception:
+            if receipts is None:
+                _write_failure(output_paths, 127, "target_launch_failed")
+            else:
+                receipts.exit_receipt(127)
+            print("FAIL: target_launch_failed", file=sys.stderr)
+            return 127
+        sequence = 0
+        next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
+        try:
+            while process.poll() is None:
+                remaining = next_heartbeat - time.monotonic()
+                if remaining > 0:
+                    time.sleep(min(remaining, HEARTBEAT_INTERVAL_SECONDS))
+                if time.monotonic() >= next_heartbeat and process.poll() is None:
+                    sequence += 1
+                    if receipts is None:
+                        write_heartbeat(
+                            heartbeat,
+                            "running",
+                            sequence=sequence,
+                            extra={"pid": process.pid, "started_at": started_at},
+                        )
+                    else:
+                        receipts.heartbeat_receipt("running")
+                    next_heartbeat = time.monotonic() + HEARTBEAT_INTERVAL_SECONDS
+            exit_code = int(process.wait())
+            job = getattr(process, "native_job", None)
+            if job is not None:
+                # The target may have returned while its descendants still run.
+                while job.active():
+                    time.sleep(0.05)
+                job.close()
+            status = "completed" if exit_code == 0 else "failed"
+            if receipts is None:
+                write_exit_contract(exit_path, exit_code)
+                write_heartbeat(
+                    heartbeat,
+                    status,
+                    sequence=sequence + 1,
+                    extra={
+                        "pid": process.pid,
+                        "exit_code": exit_code,
+                        "started_at": started_at,
+                        "finished_at": _utc_now(),
+                    },
+                )
+            else:
+                receipts.exit_receipt(exit_code)
+                receipts.heartbeat_receipt(status)
+            return exit_code
+        except KeyboardInterrupt:
+            _terminate_and_wait(process)
+            if receipts is None:
+                _write_failure(output_paths, 130, "target_interrupted")
+            else:
+                receipts.exit_receipt(130)
+            return 130
+        except Exception:
+            _terminate_and_wait(process)
+            if receipts is None:
+                _write_failure(output_paths, 125, "executor_lifecycle_failed")
+            else:
+                receipts.exit_receipt(125)
+            print("FAIL: executor_lifecycle_failed", file=sys.stderr)
+            return 125
 
 
 def main(argv: Sequence[str] | None = None) -> int:

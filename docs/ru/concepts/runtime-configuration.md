@@ -132,3 +132,9 @@ Cold factory не открывает БД, не создаёт guard или UUID
 до pending сохраняет поддержанный legacy route; после pending/binding требуется
 точное восстановление либо отказ. Наличие factory не доказывает исключение старых
 managed owners и не означает готовность installed automatic migration.
+
+Выбранный device path сохраняется отдельно от полного pinned PFConfig. Вложенные
+event/accounting/first-write hosts используют host текущей операции либо её
+точный selector. На границах migration safety повторно проверяются фактические
+owner, flow root, enrollment и targets. Это не перечитывает конфигурацию операции
+и не расширяет права доступа.

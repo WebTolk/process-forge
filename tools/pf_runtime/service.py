@@ -26,13 +26,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from . import RUNTIME_PROTOCOL_VERSION
-from . import host
+from pf_native_control import NativeControlError, operation_lease
+
+from . import RUNTIME_PROTOCOL_VERSION, host
 
 
 def metrics_core():
     # The host may be imported before the Core bootstrap by standalone callers.
     import processforge_core.runtime.metrics as runtime_metrics
+
     return runtime_metrics
 
 
@@ -105,7 +107,9 @@ def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     RuntimeServiceStateWriter().write(path, payload)
 
 
-def append_operator_log(workplace_root: Path, core: Any, event: str, **payload: Any) -> None:
+def append_operator_log(
+    workplace_root: Path, core: Any, event: str, **payload: Any
+) -> None:
     path = operator_log_path(workplace_root)
     path.parent.mkdir(parents=True, exist_ok=True)
     import processforge_core.common.clock as _core_common_clock
@@ -132,13 +136,25 @@ def token_hash(token: str) -> str:
     return "sha256:" + hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = "", pid: int | None = None, instance_id: str = "") -> dict[str, Any]:
+def base_state(
+    workplace_root: Path,
+    core: Any,
+    *,
+    status: str,
+    endpoint: str = "",
+    pid: int | None = None,
+    instance_id: str = "",
+) -> dict[str, Any]:
     import processforge_core.common.clock as _core_common_clock
     from processforge_core.composition import build_core_properties
 
     properties = build_core_properties()
     identity: dict[str, Any] = dict(properties.report())
-    identity["required_action"] = "restart" if identity["reload_required"] else ("unknown" if identity["reload_required"] is None else "none")
+    identity["required_action"] = (
+        "restart"
+        if identity["reload_required"]
+        else ("unknown" if identity["reload_required"] is None else "none")
+    )
     return {
         "schema_version": 2,
         "runtime_version": RUNTIME_VERSION,
@@ -174,8 +190,18 @@ def save_service_state(workplace_root: Path, core: Any, state: dict[str, Any]) -
     write_json_atomic(service_path(workplace_root), state)
 
 
-def http_json(method: str, url: str, token: str | None = None, payload: dict[str, Any] | None = None, timeout: float = 5.0) -> tuple[int, dict[str, Any]]:
-    data = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
+def http_json(
+    method: str,
+    url: str,
+    token: str | None = None,
+    payload: dict[str, Any] | None = None,
+    timeout: float = 5.0,
+) -> tuple[int, dict[str, Any]]:
+    data = (
+        None
+        if payload is None
+        else json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    )
     request = urllib.request.Request(url, data=data, method=method)
     request.add_header("Accept", "application/json")
     if data is not None:
@@ -197,16 +223,29 @@ def http_json(method: str, url: str, token: str | None = None, payload: dict[str
         return 0, {"error": str(exc)}
 
 
-def classify_lifecycle(state: dict[str, Any], lock: dict[str, Any], *, lock_exists: bool,
-                       pid_running: bool, state_pid_running: bool, ready: bool) -> str:
+def classify_lifecycle(
+    state: dict[str, Any],
+    lock: dict[str, Any],
+    *,
+    lock_exists: bool,
+    pid_running: bool,
+    state_pid_running: bool,
+    ready: bool,
+) -> str:
     """Pure shared interpretation; callers own observation and its uncertainty."""
     pid = lock.get("pid")
     instance_id = str(lock.get("instance_id") or "")
     state_instance_id = str(state.get("instance_id") or "")
-    matching = bool(instance_id and instance_id == state_instance_id and pid == state.get("pid"))
+    matching = bool(
+        instance_id and instance_id == state_instance_id and pid == state.get("pid")
+    )
     status = str(state.get("status") or "")
     if matching and pid_running:
-        kind = "ready" if ready else (status if status in {"starting", "stopping", "failed"} else "failed")
+        kind = (
+            "ready"
+            if ready
+            else (status if status in {"starting", "stopping", "failed"} else "failed")
+        )
     elif state_instance_id and state_pid_running:
         # The daemon may have lost its lock file while its service record and
         # endpoint remain live.  This is not stale: starting another daemon
@@ -236,20 +275,44 @@ def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
     lock_exists = lock_path(workplace_root).exists()
     pid = lock.get("pid")
     instance_id = str(lock.get("instance_id") or "")
-    matching = bool(instance_id and instance_id == str(state.get("instance_id") or "") and pid == state.get("pid"))
-    from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+    matching = bool(
+        instance_id
+        and instance_id == str(state.get("instance_id") or "")
+        and pid == state.get("pid")
+    )
+    from processforge_core.runtime.observation_inputs import (
+        WorkerObservationInputService,
+    )
 
-    pid_running = isinstance(pid, int) and WorkerObservationInputService().process_pid_running(pid)
+    pid_running = isinstance(
+        pid, int
+    ) and WorkerObservationInputService().process_pid_running(pid)
     state_pid = state.get("pid")
-    state_pid_running = isinstance(state_pid, int) and WorkerObservationInputService().process_pid_running(state_pid)
+    state_pid_running = isinstance(
+        state_pid, int
+    ) and WorkerObservationInputService().process_pid_running(state_pid)
     endpoint = str(state.get("endpoint") or "")
     ready = False
     if matching and pid_running and endpoint:
         code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0)
         ready = code == 200 and bool(body.get("ready"))
-    kind = classify_lifecycle(state, lock, lock_exists=lock_exists, pid_running=pid_running,
-                              state_pid_running=state_pid_running, ready=ready)
-    return {"kind": kind, "state": state, "lock": lock, "pid": pid, "instance_id": instance_id, "matching": matching, "pid_running": pid_running}
+    kind = classify_lifecycle(
+        state,
+        lock,
+        lock_exists=lock_exists,
+        pid_running=pid_running,
+        state_pid_running=state_pid_running,
+        ready=ready,
+    )
+    return {
+        "kind": kind,
+        "state": state,
+        "lock": lock,
+        "pid": pid,
+        "instance_id": instance_id,
+        "matching": matching,
+        "pid_running": pid_running,
+    }
 
 
 def active_service(workplace_root: Path, core: Any) -> tuple[bool, dict[str, Any]]:
@@ -257,7 +320,9 @@ def active_service(workplace_root: Path, core: Any) -> tuple[bool, dict[str, Any
     return inspection["kind"] == "ready", inspection["state"]
 
 
-def wait_for_ready_service(workplace_root: Path, core: Any, timeout: float) -> tuple[bool, dict[str, Any]]:
+def wait_for_ready_service(
+    workplace_root: Path, core: Any, timeout: float
+) -> tuple[bool, dict[str, Any]]:
     deadline = time.monotonic() + max(0.0, timeout)
     while True:
         inspection = inspect_lifecycle(workplace_root, core)
@@ -271,7 +336,15 @@ def wait_for_ready_service(workplace_root: Path, core: Any, timeout: float) -> t
 def cleanup_stale_runtime(workplace_root: Path, core: Any) -> None:
     with singleton_critical_section(workplace_root, core):
         inspection = inspect_lifecycle(workplace_root, core)
-        if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned", "stopped", "not_running"}:
+        if inspection["kind"] in {
+            "ready",
+            "starting",
+            "stopping",
+            "failed",
+            "orphaned",
+            "stopped",
+            "not_running",
+        }:
             return
         lock_path(workplace_root).unlink(missing_ok=True)
         state = inspection["state"]
@@ -287,15 +360,25 @@ def cleanup_stale_runtime(workplace_root: Path, core: Any) -> None:
 def terminate_owned_process(pid: int, core: Any, timeout: float) -> bool:
     try:
         if os.name == "nt":
-            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
         else:
             os.kill(pid, signal.SIGTERM)
     except OSError:
         pass
     deadline = time.monotonic() + max(0.0, timeout)
-    from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+    from processforge_core.runtime.observation_inputs import (
+        WorkerObservationInputService,
+    )
 
-    while WorkerObservationInputService().process_pid_running(pid) and time.monotonic() < deadline:
+    while (
+        WorkerObservationInputService().process_pid_running(pid)
+        and time.monotonic() < deadline
+    ):
         time.sleep(0.05)
     return not WorkerObservationInputService().process_pid_running(pid)
 
@@ -305,7 +388,9 @@ def singleton_critical_section(workplace_root: Path, core: Any | None = None) ->
     """Serialize Runtime lock inspect/reap/create/release per workplace."""
     registry_lock = getattr(core, "registry_file_lock", None)
     if callable(registry_lock):
-        with registry_lock(lock_path(workplace_root), timeout_seconds=10.0, stale_after_seconds=10.0):
+        with registry_lock(
+            lock_path(workplace_root), timeout_seconds=10.0, stale_after_seconds=10.0
+        ):
             yield
         return
 
@@ -316,7 +401,7 @@ def singleton_critical_section(workplace_root: Path, core: Any | None = None) ->
     guard_path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(str(guard_path), os.O_CREAT | os.O_RDWR)
     try:
-        if os.name == "nt":
+        if sys.platform == "win32":
             import msvcrt
 
             os.lseek(fd, 0, os.SEEK_SET)
@@ -351,8 +436,16 @@ def acquire_singleton(workplace_root: Path, core: Any, instance_id: str) -> int:
     path = lock_path(workplace_root)
     with singleton_critical_section(workplace_root, core):
         inspection = inspect_lifecycle(workplace_root, core)
-        if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned"}:
-            raise SystemExit(f"FAIL: PF Runtime already owns workplace: state={inspection['kind']} pid={inspection['pid']}")
+        if inspection["kind"] in {
+            "ready",
+            "starting",
+            "stopping",
+            "failed",
+            "orphaned",
+        }:
+            raise SystemExit(
+                f"FAIL: PF Runtime already owns workplace: state={inspection['kind']} pid={inspection['pid']}"
+            )
         if inspection["kind"] == "stale":
             path.unlink(missing_ok=True)
         try:
@@ -362,8 +455,16 @@ def acquire_singleton(workplace_root: Path, core: Any, instance_id: str) -> int:
             # critical section before any stale cleanup.  Never unlink an
             # owner that appeared after the first inspection.
             inspection = inspect_lifecycle(workplace_root, core)
-            if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned"}:
-                raise SystemExit(f"FAIL: PF Runtime already owns workplace: state={inspection['kind']} pid={inspection['pid']}")
+            if inspection["kind"] in {
+                "ready",
+                "starting",
+                "stopping",
+                "failed",
+                "orphaned",
+            }:
+                raise SystemExit(
+                    f"FAIL: PF Runtime already owns workplace: state={inspection['kind']} pid={inspection['pid']}"
+                )
             if inspection["kind"] != "stale":
                 raise SystemExit("FAIL: PF Runtime singleton lock requires recovery")
             path.unlink(missing_ok=True)
@@ -371,13 +472,28 @@ def acquire_singleton(workplace_root: Path, core: Any, instance_id: str) -> int:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             import processforge_core.common.clock as _core_common_clock
 
-            handle.write(json.dumps({"instance_id": instance_id, "pid": os.getpid(), "created_at": _core_common_clock.now_utc()}, sort_keys=True) + "\n")
+            handle.write(
+                json.dumps(
+                    {
+                        "instance_id": instance_id,
+                        "pid": os.getpid(),
+                        "created_at": _core_common_clock.now_utc(),
+                    },
+                    sort_keys=True,
+                )
+                + "\n"
+            )
     return os.getpid()
 
 
-def release_singleton(workplace_root: Path, instance_id: str, core: Any | None = None) -> None:
+def release_singleton(
+    workplace_root: Path, instance_id: str, core: Any | None = None
+) -> None:
     with singleton_critical_section(workplace_root, core):
-        if str(read_json(lock_path(workplace_root)).get("instance_id") or "") == instance_id:
+        if (
+            str(read_json(lock_path(workplace_root)).get("instance_id") or "")
+            == instance_id
+        ):
             lock_path(workplace_root).unlink(missing_ok=True)
 
 
@@ -385,40 +501,45 @@ class RuntimeProcess:
     def __init__(
         self, workplace_root: Path, core: Any, *, interval: float, configuration=None
     ) -> None:
-        from processforge_core import build_configuration_provider
+        from pf_native_control import operation_lease
 
-        self.workplace_root = workplace_root
-        self.core = core
-        from processforge_core.project.configuration_inputs import (
-            project_configuration_reader,
-        )
+        with operation_lease():
+            from processforge_core import build_configuration_provider
 
-        self._project_configuration = project_configuration_reader.project_configuration
-        self.interval = max(0.25, float(interval))
-        self.config_service = (
-            configuration
-            if configuration is not None
-            else build_configuration_provider(workplace_root=workplace_root)
-        )
-        # Validate before token/state creation. Core models/services have no host discovery.
-        self.configuration = self._configuration_snapshot()
-        self.token = load_token(workplace_root)
-        self.stop_event = threading.Event()
-        self.httpd: ThreadingHTTPServer | None = None
-        self.scheduler_thread: threading.Thread | None = None
-        self.instance_id = uuid.uuid4().hex
-        self.state: dict[str, Any] = base_state(
-            workplace_root, core, status="starting", instance_id=self.instance_id
-        )
-        self.state_lock = threading.RLock()
-        self._project_errors: dict[str, str] = {}
-        self._temporary_files_last_run: dict[Path, float] = {}
-        self._temporary_files_results: dict[Path, dict[str, Any]] = {}
-        self._registrations = metrics_core().registrations({})
-        self.active_requests = 0
-        self.scheduler_active = False
-        self.shutdown_check = False
-        self.reload_configuration()
+            self.workplace_root = workplace_root
+            self.core = core
+            from processforge_core.project.configuration_inputs import (
+                project_configuration_reader,
+            )
+
+            self._project_configuration = (
+                project_configuration_reader.project_configuration
+            )
+            self.interval = max(0.25, float(interval))
+            self.config_service = (
+                configuration
+                if configuration is not None
+                else build_configuration_provider(workplace_root=workplace_root)
+            )
+            # Validate before token/state creation. Core models/services have no host discovery.
+            self.configuration = self._configuration_snapshot()
+            self.token = load_token(workplace_root)
+            self.stop_event = threading.Event()
+            self.httpd: ThreadingHTTPServer | None = None
+            self.scheduler_thread: threading.Thread | None = None
+            self.instance_id = uuid.uuid4().hex
+            self.state: dict[str, Any] = base_state(
+                workplace_root, core, status="starting", instance_id=self.instance_id
+            )
+            self.state_lock = threading.RLock()
+            self._project_errors: dict[str, str] = {}
+            self._temporary_files_last_run: dict[Path, float] = {}
+            self._temporary_files_results: dict[Path, dict[str, Any]] = {}
+            self._registrations = metrics_core().registrations({})
+            self.active_requests = 0
+            self.scheduler_active = False
+            self.shutdown_check = False
+            self.reload_configuration()
 
     @property
     def metrics_interval(self) -> float:
@@ -441,17 +562,31 @@ class RuntimeProcess:
             if errors:
                 error = errors[0]
         except ConfigurationError as exc:
-            error = exc.code  # Keep last valid snapshot; never publish raw YAML or paths.
+            error = (
+                exc.code
+            )  # Keep last valid snapshot; never publish raw YAML or paths.
         with self.state_lock:
             self.state["configuration"] = {
-                "status": "invalid" if error else "valid", "error": error,
+                "status": "invalid" if error else "valid",
+                "error": error,
                 "metrics_interval_seconds": self.metrics_interval,
                 "logging": self.configuration.config.to_dict()["logging"],
             }
 
     def save(self) -> None:
-        with self.state_lock:
-            save_service_state(self.workplace_root, self.core, self.state)
+        from pf_native_control import operation_lease
+
+        with operation_lease():
+            with self.state_lock:
+                save_service_state(self.workplace_root, self.core, self.state)
+
+    def _stop_stale(self) -> None:
+        """Stop only in-memory scheduling/transport; retired Core writes nothing."""
+        self.stop_event.set()
+        server = getattr(self, "httpd", None)
+        if server is not None:
+            # shutdown must run outside the serve_forever thread.
+            threading.Thread(target=server.shutdown, daemon=True).start()
 
     def known_project_roots(self) -> list[Path]:
         errors: dict[str, str] = {}
@@ -476,7 +611,9 @@ class RuntimeProcess:
                 try:
                     roots.append(host.resolve_project(project_ref, self.core))
                 except SystemExit as exc:
-                    errors[project_ref] = str(exc) or "project routing rejected the cached project"
+                    errors[project_ref] = (
+                        str(exc) or "project routing rejected the cached project"
+                    )
                 except Exception as exc:  # noqa: BLE001 - isolate one bad project.
                     errors[project_ref] = str(exc)
             elif item:
@@ -490,41 +627,66 @@ class RuntimeProcess:
                 self.state.pop("project_errors", None)
         return list(dict.fromkeys(roots))
 
-    def publish_metrics(self, roots: list[Path], *, registration=None, coverage=None) -> None:
-        snapshot = metrics_core().collect(self.workplace_root, roots, self.core, self.instance_id,
-                                           self._registrations if registration is None else registration,
-                                           coverage=not self._project_errors if coverage is None else coverage,
-                                           interval_seconds=self.metrics_interval)
+    def publish_metrics(
+        self, roots: list[Path], *, registration=None, coverage=None
+    ) -> None:
+        snapshot = metrics_core().collect(
+            self.workplace_root,
+            roots,
+            self.core,
+            self.instance_id,
+            self._registrations if registration is None else registration,
+            coverage=not self._project_errors if coverage is None else coverage,
+            interval_seconds=self.metrics_interval,
+        )
         with self.state_lock:
             self.state["metrics"] = snapshot
             self.state["scheduler"]["jobs"]["metrics"] = {
-                "period_seconds": self.metrics_interval, "last_run": snapshot["observed_at"],
-                "last_result": "ok"}
+                "period_seconds": self.metrics_interval,
+                "last_run": snapshot["observed_at"],
+                "last_result": "ok",
+            }
 
     def metrics_loop(self) -> None:
         # Observation must not wait for project routing, event replay or tick.
         # Domain readers remain in Core; this thread only schedules/publishes.
         while not self.stop_event.is_set():
-            self.reload_configuration()
             started = time.monotonic()
             try:
-                roots, registration, coverage = metrics_core().registered_projects(self.workplace_root)
-                self.publish_metrics(roots, registration=registration, coverage=coverage)
-                self.save()
-            except (Exception, SystemExit):
-                with self.state_lock:
-                    self.state.pop("metrics", None)
-                    import processforge_core.common.clock as _core_common_clock
+                with operation_lease():
+                    self.reload_configuration()
+                    try:
+                        roots, registration, coverage = (
+                            metrics_core().registered_projects(self.workplace_root)
+                        )
+                        self.publish_metrics(
+                            roots, registration=registration, coverage=coverage
+                        )
+                        self.save()
+                    except (Exception, SystemExit):
+                        with self.state_lock:
+                            self.state.pop("metrics", None)
+                            import processforge_core.common.clock as _core_common_clock
 
-                    self.state["scheduler"]["jobs"]["metrics"] = {
-                        "period_seconds": self.metrics_interval, "last_run": _core_common_clock.now_utc(), "last_result": "failed"}
-                try:
-                    self.save()
-                except (Exception, SystemExit):
-                    pass  # Existing sample expires even when persistence fails.
+                            self.state["scheduler"]["jobs"]["metrics"] = {
+                                "period_seconds": self.metrics_interval,
+                                "last_run": _core_common_clock.now_utc(),
+                                "last_result": "failed",
+                            }
+                        try:
+                            self.save()
+                        except (Exception, SystemExit):
+                            pass  # Existing sample expires even when persistence fails.
+            except NativeControlError:
+                self._stop_stale()
+                break
             elapsed = time.monotonic() - started
             # One observer only; an overrun skips missed ticks rather than catching up.
-            delay = self.metrics_interval - elapsed if elapsed < self.metrics_interval else self.metrics_interval
+            delay = (
+                self.metrics_interval - elapsed
+                if elapsed < self.metrics_interval
+                else self.metrics_interval
+            )
             if self.stop_event.wait(delay):
                 break
 
@@ -540,17 +702,29 @@ class RuntimeProcess:
                 self.state["health"] = "degraded"
         with self.state_lock:
             payload = dict(self.state)
-        has_errors = bool(payload.get("project_errors") or payload.get("last_scheduler_error"))
-        payload["health"] = "degraded" if has_errors else payload.get("health", payload.get("status"))
+        has_errors = bool(
+            payload.get("project_errors") or payload.get("last_scheduler_error")
+        )
+        payload["health"] = (
+            "degraded" if has_errors else payload.get("health", payload.get("status"))
+        )
         scheduler_thread = getattr(self, "scheduler_thread", None)
-        payload["scheduler_alive"] = scheduler_thread.is_alive() if scheduler_thread is not None else False
-        if scheduler_thread is not None and not scheduler_thread.is_alive() and payload.get("status") == "ready":
+        payload["scheduler_alive"] = (
+            scheduler_thread.is_alive() if scheduler_thread is not None else False
+        )
+        if (
+            scheduler_thread is not None
+            and not scheduler_thread.is_alive()
+            and payload.get("status") == "ready"
+        ):
             payload["health"] = "degraded"
             payload["last_scheduler_error"] = "scheduler thread is not running"
         payload["known_projects"] = runtime_host.get("projects", [])
         from processforge_core.agents.presence import AgentPresenceReader
 
-        payload["active_agent_sessions"] = len(AgentPresenceReader(self.workplace_root).records())
+        payload["active_agent_sessions"] = len(
+            AgentPresenceReader(self.workplace_root).records()
+        )
         payload["active_workers"] = self.active_worker_count(roots)
         payload["pending_runtime_jobs"] = 0
         payload["last_event"] = self.last_event(roots)
@@ -607,11 +781,13 @@ class RuntimeProcess:
                 entry = current_entry()
                 if entry is not None:
                     native_scope.enter_context(entry.operation(deadline=deadline))
-                native_scope.enter_context(admission.shutdown(
-                self.workplace_root,
-                expected_instance_id=self.instance_id,
-                deadline=deadline,
-                ))
+                native_scope.enter_context(
+                    admission.shutdown(
+                        self.workplace_root,
+                        expected_instance_id=self.instance_id,
+                        deadline=deadline,
+                    )
+                )
                 # The durable singleton can have changed during admission wait.
                 lock = budget.read(
                     lock_path(self.workplace_root), self.workplace_root, maximum=65536
@@ -676,12 +852,19 @@ class RuntimeProcess:
             try:
                 from processforge_core.work.consistency import RunTaskInputReader
 
-                events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
+                events_path, _outbox = RunTaskInputReader().event_runtime_paths(
+                    project_root
+                )
                 if not events_path.is_file():
                     continue
                 item = host.event_journal().latest(events_path)
                 if item is not None:
-                    latest = {"project_id": self.core.project_id(project_root), "event_id": item.get("event_id"), "event_type": item.get("event_type"), "time": item.get("time")}
+                    latest = {
+                        "project_id": self.core.project_id(project_root),
+                        "event_id": item.get("event_id"),
+                        "event_type": item.get("event_type"),
+                        "time": item.get("time"),
+                    }
             except Exception as exc:  # noqa: BLE001 - status must survive one project.
                 self._project_errors[str(project_root)] = str(exc)
         return latest
@@ -691,18 +874,34 @@ class RuntimeProcess:
         project_ref = payload.get("project_root")
         if not session_id or not project_ref:
             return
-        session_project = host.project_for_session(argparse.Namespace(session=session_id, project_root=None), self.workplace_root, self.core)
+        session_project = host.project_for_session(
+            argparse.Namespace(session=session_id, project_root=None),
+            self.workplace_root,
+            self.core,
+        )
         requested_project = host.resolve_project(str(project_ref), self.core)
-        if self.core.project_id(session_project) != self.core.project_id(requested_project):
-            raise PermissionError("session is not authorized for requested project_root")
+        if self.core.project_id(session_project) != self.core.project_id(
+            requested_project
+        ):
+            raise PermissionError(
+                "session is not authorized for requested project_root"
+            )
 
     def observe_temporary_files(self, roots: list[Path]) -> dict[str, str]:
         from processforge_core.configuration import ConfigurationError
         from processforge_core.maintenance import temporary_files
 
         known = set(roots)
-        self._temporary_files_last_run = {root: stamp for root, stamp in self._temporary_files_last_run.items() if root in known}
-        self._temporary_files_results = {root: result for root, result in self._temporary_files_results.items() if root in known}
+        self._temporary_files_last_run = {
+            root: stamp
+            for root, stamp in self._temporary_files_last_run.items()
+            if root in known
+        }
+        self._temporary_files_results = {
+            root: result
+            for root, result in self._temporary_files_results.items()
+            if root in known
+        }
         now = time.monotonic()
         for project_root in roots:
             previous = self._temporary_files_last_run.get(project_root)
@@ -711,16 +910,25 @@ class RuntimeProcess:
             self._temporary_files_last_run[project_root] = now
             import processforge_core.common.clock as _core_common_clock
 
-            result: dict[str, Any] = {"last_run": _core_common_clock.now_utc(), "last_result": "failed"}
+            result: dict[str, Any] = {
+                "last_run": _core_common_clock.now_utc(),
+                "last_result": "failed",
+            }
             self._temporary_files_results[project_root] = result
             try:
-                resolved = self._project_configuration(project_root, self.workplace_root)
+                resolved = self._project_configuration(
+                    project_root, self.workplace_root
+                )
                 if resolved.errors:
                     result["error"] = "temporary_files_configuration_invalid"
                     continue
                 config = resolved.config.runtime.temporary_files
             except (Exception, SystemExit) as exc:
-                result["error"] = exc.code if isinstance(exc, ConfigurationError) else "temporary_files_configuration_failed"
+                result["error"] = (
+                    exc.code
+                    if isinstance(exc, ConfigurationError)
+                    else "temporary_files_configuration_failed"
+                )
                 continue
             # A restart must not repeat a recent observation, even after a config change.
             if previous is None:
@@ -734,7 +942,9 @@ class RuntimeProcess:
             except (Exception, SystemExit):
                 report = temporary_files.failed_observation(config)
             try:
-                temporary_files.write_report(project_root, report, atomic_writer=write_json_atomic)
+                temporary_files.write_report(
+                    project_root, report, atomic_writer=write_json_atomic
+                )
             except (Exception, SystemExit):
                 result["error"] = "temporary_files_report_write_failed"
                 continue
@@ -742,88 +952,148 @@ class RuntimeProcess:
             if report["state"] == "error":
                 result["error"] = "temporary_files_observation_failed"
         with self.state_lock:
-            self.state.setdefault("scheduler", {}).setdefault("jobs", {})["temporary_files"] = {
+            self.state.setdefault("scheduler", {}).setdefault("jobs", {})[
+                "temporary_files"
+            ] = {
                 "period_seconds": temporary_files.PERIOD_SECONDS,
-                "projects": {str(root): dict(result) for root, result in self._temporary_files_results.items()},
+                "projects": {
+                    str(root): dict(result)
+                    for root, result in self._temporary_files_results.items()
+                },
             }
-        return {f"temporary_files:{root}": result["error"]
-                for root, result in self._temporary_files_results.items() if "error" in result}
+        return {
+            f"temporary_files:{root}": result["error"]
+            for root, result in self._temporary_files_results.items()
+            if "error" in result
+        }
 
     def scheduler_loop(self) -> None:
         self.scheduler_thread = threading.current_thread()
         while not self.stop_event.wait(self.interval):
-            with self.state_lock:
-                if self.state.get("status") == "stopping":
-                    break
-                if self.shutdown_check:
-                    continue
-                self.scheduler_active = True
             try:
-                roots = self.known_project_roots()
-                project_errors = dict(self._project_errors)
-                self.core.update_stale_agent_presence(self.workplace_root)
-                projects: list[dict[str, Any]] = []
-                status = 0
-                for project_root in roots:
+                with operation_lease():
+                    with self.state_lock:
+                        if self.state.get("status") == "stopping":
+                            break
+                        if self.shutdown_check:
+                            continue
+                        self.scheduler_active = True
                     try:
-                        item_payload, item_status = host.tick_payload(self.workplace_root, [project_root], self.core, director=True, inspector=True)
-                        projects.extend(item_payload.get("projects", []))
-                        # A successful Inspector pass can report failed workers or
-                        # collection recovery. Unclassified nonzero results still fail.
-                        operational = item_payload.get("scheduler_status")
-                        operational_status = 0 if operational == "ok" else (item_status or (1 if operational == "failed" else 0))
-                        status = status or operational_status
-                        if operational_status:
-                            project_errors[str(project_root)] = f"project scheduler pass failed with status {operational_status}"
-                    except SystemExit as exc:
-                        project_errors[str(project_root)] = str(exc) or "project scheduler pass rejected the project"
-                        status = 1
-                    except Exception as exc:  # noqa: BLE001 - isolate one bad project.
-                        project_errors[str(project_root)] = str(exc)
-                        status = 1
-                # Maintenance faults have their own keys and cannot replace a tick fault.
-                project_errors.update(self.observe_temporary_files(roots))
-                payload = {"status": "ok" if status == 0 and not project_errors else "failed", "projects": projects}
-                with self.state_lock:
-                    self._project_errors = project_errors
-                    jobs = self.state.setdefault("scheduler", {}).setdefault("jobs", {})
-                    import processforge_core.common.clock as _core_common_clock
+                        roots = self.known_project_roots()
+                        project_errors = dict(self._project_errors)
+                        self.core.update_stale_agent_presence(self.workplace_root)
+                        projects: list[dict[str, Any]] = []
+                        status = 0
+                        for project_root in roots:
+                            try:
+                                item_payload, item_status = host.tick_payload(
+                                    self.workplace_root,
+                                    [project_root],
+                                    self.core,
+                                    director=True,
+                                    inspector=True,
+                                )
+                                projects.extend(item_payload.get("projects", []))
+                                # A successful Inspector pass can report failed workers or
+                                # collection recovery. Unclassified nonzero results still fail.
+                                operational = item_payload.get("scheduler_status")
+                                operational_status = (
+                                    0
+                                    if operational == "ok"
+                                    else (
+                                        item_status
+                                        or (1 if operational == "failed" else 0)
+                                    )
+                                )
+                                status = status or operational_status
+                                if operational_status:
+                                    project_errors[str(project_root)] = (
+                                        f"project scheduler pass failed with status {operational_status}"
+                                    )
+                            except SystemExit as exc:
+                                project_errors[str(project_root)] = (
+                                    str(exc)
+                                    or "project scheduler pass rejected the project"
+                                )
+                                status = 1
+                            except Exception as exc:  # noqa: BLE001 - isolate one bad project.
+                                project_errors[str(project_root)] = str(exc)
+                                status = 1
+                        # Maintenance faults have their own keys and cannot replace a tick fault.
+                        project_errors.update(self.observe_temporary_files(roots))
+                        payload = {
+                            "status": "ok"
+                            if status == 0 and not project_errors
+                            else "failed",
+                            "projects": projects,
+                        }
+                        with self.state_lock:
+                            self._project_errors = project_errors
+                            jobs = self.state.setdefault("scheduler", {}).setdefault(
+                                "jobs", {}
+                            )
+                            import processforge_core.common.clock as _core_common_clock
 
-                    now = _core_common_clock.now_utc()
-                    jobs.setdefault("ledger", {})["last_run"] = now
-                    jobs["ledger"]["last_result"] = "ok"
-                    jobs.setdefault("director", {})["last_run"] = now
-                    jobs["director"]["last_result"] = "ok" if status == 0 else "failed"
-                    jobs.setdefault("inspector", {})["last_run"] = now
-                    jobs["inspector"]["last_result"] = "ok" if status == 0 else "failed"
-                    jobs.setdefault("projection", {})["last_run"] = now
-                    jobs["projection"]["last_result"] = "ok" if status == 0 else "failed"
-                    self.state["last_scheduler_result"] = payload
-                    if self._project_errors:
-                        self.state["health"] = "degraded"
-                        self.state["project_errors"] = dict(self._project_errors)
-                        self.state["last_scheduler_error"] = "; ".join(f"{key}: {value}" for key, value in self._project_errors.items())
-                    else:
-                        self.state.pop("last_scheduler_error", None)
-                        self.state.pop("project_errors", None)
-                        self.state["health"] = "ready" if self.state.get("status") == "ready" else self.state.get("health", self.state.get("status"))
-            except (Exception, SystemExit) as exc:  # noqa: BLE001 - runtime must degrade, not crash on one bad project.
-                with self.state_lock:
-                    self.state["health"] = "degraded"
-                    self.state["last_scheduler_error"] = str(exc)
-                try:
-                    append_operator_log(self.workplace_root, self.core, "scheduler.error", error=str(exc))
-                except OSError:
-                    pass  # Preserve the in-memory fault when storage is unavailable.
-            finally:
-                with self.state_lock:
-                    self.scheduler_active = False
-            try:
-                self.save()
-            except (Exception, SystemExit) as exc:  # noqa: BLE001 - retry persistence on the next pass.
-                with self.state_lock:
-                    self.state["health"] = "degraded"
-                    self.state["last_scheduler_error"] = str(exc)
+                            now = _core_common_clock.now_utc()
+                            jobs.setdefault("ledger", {})["last_run"] = now
+                            jobs["ledger"]["last_result"] = "ok"
+                            jobs.setdefault("director", {})["last_run"] = now
+                            jobs["director"]["last_result"] = (
+                                "ok" if status == 0 else "failed"
+                            )
+                            jobs.setdefault("inspector", {})["last_run"] = now
+                            jobs["inspector"]["last_result"] = (
+                                "ok" if status == 0 else "failed"
+                            )
+                            jobs.setdefault("projection", {})["last_run"] = now
+                            jobs["projection"]["last_result"] = (
+                                "ok" if status == 0 else "failed"
+                            )
+                            self.state["last_scheduler_result"] = payload
+                            if self._project_errors:
+                                self.state["health"] = "degraded"
+                                self.state["project_errors"] = dict(
+                                    self._project_errors
+                                )
+                                self.state["last_scheduler_error"] = "; ".join(
+                                    f"{key}: {value}"
+                                    for key, value in self._project_errors.items()
+                                )
+                            else:
+                                self.state.pop("last_scheduler_error", None)
+                                self.state.pop("project_errors", None)
+                                self.state["health"] = (
+                                    "ready"
+                                    if self.state.get("status") == "ready"
+                                    else self.state.get(
+                                        "health", self.state.get("status")
+                                    )
+                                )
+                    except (Exception, SystemExit) as exc:  # noqa: BLE001 - runtime must degrade, not crash on one bad project.
+                        with self.state_lock:
+                            self.state["health"] = "degraded"
+                            self.state["last_scheduler_error"] = str(exc)
+                        try:
+                            append_operator_log(
+                                self.workplace_root,
+                                self.core,
+                                "scheduler.error",
+                                error=str(exc),
+                            )
+                        except OSError:
+                            pass  # Preserve the in-memory fault when storage is unavailable.
+                    finally:
+                        with self.state_lock:
+                            self.scheduler_active = False
+                    try:
+                        self.save()
+                    except (Exception, SystemExit) as exc:  # noqa: BLE001 - retry persistence on the next pass.
+                        with self.state_lock:
+                            self.state["health"] = "degraded"
+                            self.state["last_scheduler_error"] = str(exc)
+            except NativeControlError:
+                self._stop_stale()
+                break
 
     def make_handler(self) -> type[BaseHTTPRequestHandler]:
         runtime = self
@@ -832,10 +1102,21 @@ class RuntimeProcess:
             server_version = "ProcessForgeRuntime/1.0"
 
             def log_message(self, fmt: str, *args: Any) -> None:
-                append_operator_log(runtime.workplace_root, runtime.core, "http.request", message=fmt % args)
+                try:
+                    with operation_lease():
+                        append_operator_log(
+                            runtime.workplace_root,
+                            runtime.core,
+                            "http.request",
+                            message=fmt % args,
+                        )
+                except NativeControlError:
+                    pass  # A stale reply cannot produce old-Core diagnostics.
 
             def send_json(self, status: int, payload: dict[str, Any]) -> None:
-                body = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+                body = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode(
+                    "utf-8"
+                )
                 self.send_response(status)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
@@ -851,7 +1132,9 @@ class RuntimeProcess:
                 header = self.headers.get("Authorization", "")
                 if hmac.compare_digest(header, f"Bearer {runtime.token}"):
                     return True
-                append_operator_log(runtime.workplace_root, runtime.core, "auth.failed", path=self.path)
+                append_operator_log(
+                    runtime.workplace_root, runtime.core, "auth.failed", path=self.path
+                )
                 self.send_json(401, {"error": "unauthorized"})
                 return False
 
@@ -885,22 +1168,35 @@ class RuntimeProcess:
                 return payload
 
             def do_GET(self) -> None:
-                if self.path == "/readyz":
-                    self.send_json(200, {"status": runtime.state.get("status"), "ready": runtime.state.get("status") == "ready"})
-                    return
-                if self.path == "/status":
-                    if not self.authorize():
-                        return
-                    self.send_json(200, runtime.status_payload())
-                    return
-                self.send_json(404, {"error": "not_found"})
+                try:
+                    with operation_lease():
+                        if self.path == "/readyz":
+                            self.send_json(
+                                200,
+                                {
+                                    "status": runtime.state.get("status"),
+                                    "ready": runtime.state.get("status") == "ready",
+                                },
+                            )
+                            return
+                        if self.path == "/status":
+                            if not self.authorize():
+                                return
+                            self.send_json(200, runtime.status_payload())
+                            return
+                        self.send_json(404, {"error": "not_found"})
+                except NativeControlError:
+                    runtime._stop_stale()
+                    self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
 
             def do_POST(self) -> None:
                 if not self.authorize():
                     return
                 counted = self.path != "/shutdown"
                 with runtime.state_lock:
-                    if runtime.state.get("status") == "stopping" or (counted and runtime.shutdown_check):
+                    if runtime.state.get("status") == "stopping" or (
+                        counted and runtime.shutdown_check
+                    ):
                         self.send_json(503, {"error": "runtime_stopping"})
                         return
                     if counted:
@@ -916,9 +1212,10 @@ class RuntimeProcess:
                             if entry is not None:
                                 native_scope.enter_context(entry.operation())
                             self.handle_post()
-                except OSError:
+                except NativeControlError:
                     # Epoch/lease refusal is an existing IPC busy envelope;
                     # stale loaded handlers must not write diagnostics.
+                    runtime._stop_stale()
                     self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
                 finally:
                     if counted:
@@ -929,38 +1226,103 @@ class RuntimeProcess:
                 try:
                     payload = self.read_body()
                     if self.path == "/event":
-                        result = host.ingest_event(payload, runtime.workplace_root, runtime.core)
+                        result = host.ingest_event(
+                            payload, runtime.workplace_root, runtime.core
+                        )
                         self.send_json(200, result)
                     elif self.path == "/session/register":
                         project_ref = payload.get("project_root") or payload.get("cwd")
                         session = str(payload.get("session_id") or "")
-                        agent = str(payload.get("agent_id") or payload.get("agent") or "")
+                        agent = str(
+                            payload.get("agent_id") or payload.get("agent") or ""
+                        )
                         if not project_ref or not session:
-                            self.send_json(400, {"error": "project_root/cwd and session_id are required"})
+                            self.send_json(
+                                400,
+                                {
+                                    "error": "project_root/cwd and session_id are required"
+                                },
+                            )
                             return
-                        handle = host.route_project(str(project_ref), runtime.workplace_root, runtime.core)
-                        registration = {"event_type": "agent.session.started", "project_root": str(project_ref), "session_id": session, "agent_id": agent, "source": {"adapter": "runtime-session-register", "session_id": session, "agent": agent}}
-                        host.ingest_event(registration, runtime.workplace_root, runtime.core)
-                        with host.registration_admission(
-                            runtime.workplace_root, [Path(handle["project_root"])],
-                        ), host.state_lock():
+                        handle = host.route_project(
+                            str(project_ref), runtime.workplace_root, runtime.core
+                        )
+                        registration = {
+                            "event_type": "agent.session.started",
+                            "project_root": str(project_ref),
+                            "session_id": session,
+                            "agent_id": agent,
+                            "source": {
+                                "adapter": "runtime-session-register",
+                                "session_id": session,
+                                "agent": agent,
+                            },
+                        }
+                        host.ingest_event(
+                            registration, runtime.workplace_root, runtime.core
+                        )
+                        with (
+                            host.registration_admission(
+                                runtime.workplace_root,
+                                [Path(handle["project_root"])],
+                            ),
+                            host.state_lock(),
+                        ):
                             state = host.load_state(runtime.workplace_root)
                             host.remember_project(state, handle)
-                            host.remember_session(state, session, handle, agent, runtime.core)
+                            host.remember_session(
+                                state, session, handle, agent, runtime.core
+                            )
                             host.save_state(runtime.workplace_root, state, runtime.core)
                         self.send_json(200, {"session_id": session, "project": handle})
                     elif self.path == "/project-state":
                         runtime.assert_session_project_scope(payload)
-                        self.send_json(200, host.project_state_payload(runtime.workplace_root, runtime.core, session=str(payload.get("session_id") or ""), project_root_ref=payload.get("project_root")))
+                        self.send_json(
+                            200,
+                            host.project_state_payload(
+                                runtime.workplace_root,
+                                runtime.core,
+                                session=str(payload.get("session_id") or ""),
+                                project_root_ref=payload.get("project_root"),
+                            ),
+                        )
                     elif self.path == "/work-state":
                         runtime.assert_session_project_scope(payload)
-                        self.send_json(200, host.work_state_payload(runtime.workplace_root, runtime.core, session=str(payload.get("session_id") or ""), project_root_ref=payload.get("project_root")))
+                        self.send_json(
+                            200,
+                            host.work_state_payload(
+                                runtime.workplace_root,
+                                runtime.core,
+                                session=str(payload.get("session_id") or ""),
+                                project_root_ref=payload.get("project_root"),
+                            ),
+                        )
                     elif self.path == "/resolve":
                         runtime.assert_session_project_scope(payload)
-                        self.send_json(200, host.resolve_payload(runtime.workplace_root, runtime.core, session=str(payload.get("session_id") or ""), project_root_ref=payload.get("project_root"), resource_id=str(payload.get("resource_id") or "") or None))
+                        self.send_json(
+                            200,
+                            host.resolve_payload(
+                                runtime.workplace_root,
+                                runtime.core,
+                                session=str(payload.get("session_id") or ""),
+                                project_root_ref=payload.get("project_root"),
+                                resource_id=str(payload.get("resource_id") or "")
+                                or None,
+                            ),
+                        )
                     elif self.path == "/tick":
-                        roots = [host.resolve_project(str(item), runtime.core) for item in payload.get("project_roots", []) if item]
-                        result, status = host.tick_payload(runtime.workplace_root, roots, runtime.core, director=bool(payload.get("director")), inspector=bool(payload.get("inspector")))
+                        roots = [
+                            host.resolve_project(str(item), runtime.core)
+                            for item in payload.get("project_roots", [])
+                            if item
+                        ]
+                        result, status = host.tick_payload(
+                            runtime.workplace_root,
+                            roots,
+                            runtime.core,
+                            director=bool(payload.get("director")),
+                            inspector=bool(payload.get("inspector")),
+                        )
                         self.send_json(200 if status == 0 else 500, result)
                     elif self.path == "/shutdown":
                         guarded = payload.get("require_idle") is True
@@ -974,52 +1336,110 @@ class RuntimeProcess:
                         self.send_json(200, {"status": "stopping"})
                         runtime.stop_event.set()
                         if runtime.httpd:
-                            threading.Thread(target=runtime.httpd.shutdown, daemon=True).start()
+                            threading.Thread(
+                                target=runtime.httpd.shutdown, daemon=True
+                            ).start()
                     else:
                         self.send_json(404, {"error": "not_found"})
+                except NativeControlError:
+                    raise
                 except Exception as exc:  # noqa: BLE001 - return structured local IPC errors.
                     if isinstance(exc, PermissionError):
-                        append_operator_log(runtime.workplace_root, runtime.core, "request.forbidden", path=self.path, error=str(exc))
+                        append_operator_log(
+                            runtime.workplace_root,
+                            runtime.core,
+                            "request.forbidden",
+                            path=self.path,
+                            error=str(exc),
+                        )
                         self.send_json(403, {"error": str(exc)})
                         return
-                    append_operator_log(runtime.workplace_root, runtime.core, "request.error", path=self.path, error=str(exc))
+                    append_operator_log(
+                        runtime.workplace_root,
+                        runtime.core,
+                        "request.error",
+                        path=self.path,
+                        error=str(exc),
+                    )
                     self.send_json(400, {"error": str(exc)})
 
         return Handler
 
     def serve(self, port: int) -> int:
-        acquire_singleton(self.workplace_root, self.core, self.instance_id)
+        acquired = False
         try:
-            self.state = base_state(self.workplace_root, self.core, status="starting", instance_id=self.instance_id)
-            self.state["token_hash"] = token_hash(self.token)
-            self.save()
-            self.httpd = ThreadingHTTPServer(("127.0.0.1", int(port)), self.make_handler())
-            host_name, bound_port = self.httpd.server_address
-            endpoint = f"http://{host_name}:{bound_port}"
-            self.state["endpoint"] = endpoint
-            self.state["status"] = "ready"
-            self.state["health"] = "ready"
-            self.save()
-            append_operator_log(self.workplace_root, self.core, "runtime.started", endpoint=endpoint, pid=os.getpid())
-            self.scheduler_thread = threading.Thread(target=self.scheduler_loop, daemon=True)
+            with operation_lease():
+                acquire_singleton(self.workplace_root, self.core, self.instance_id)
+                acquired = True
+                self.state = base_state(
+                    self.workplace_root,
+                    self.core,
+                    status="starting",
+                    instance_id=self.instance_id,
+                )
+                self.state["token_hash"] = token_hash(self.token)
+                self.save()
+                self.httpd = ThreadingHTTPServer(
+                    ("127.0.0.1", int(port)), self.make_handler()
+                )
+                address = self.httpd.server_address
+                host_name = address[0]
+                if isinstance(host_name, bytes):
+                    host_name = host_name.decode("ascii")
+                bound_port = address[1]
+                endpoint = f"http://{host_name}:{bound_port}"
+                self.state["endpoint"] = endpoint
+                self.state["status"] = "ready"
+                self.state["health"] = "ready"
+                self.save()
+                append_operator_log(
+                    self.workplace_root,
+                    self.core,
+                    "runtime.started",
+                    endpoint=endpoint,
+                    pid=os.getpid(),
+                )
+            self.scheduler_thread = threading.Thread(
+                target=self.scheduler_loop, daemon=True
+            )
             self.scheduler_thread.start()
             threading.Thread(target=self.metrics_loop, daemon=True).start()
             self.httpd.serve_forever(poll_interval=0.2)
-            self.state["status"] = "stopped"
-            self.state["health"] = "stopped"
-            self.save()
-            append_operator_log(self.workplace_root, self.core, "runtime.stopped", pid=os.getpid())
+            with operation_lease():
+                self.state["status"] = "stopped"
+                self.state["health"] = "stopped"
+                self.save()
+                append_operator_log(
+                    self.workplace_root, self.core, "runtime.stopped", pid=os.getpid()
+                )
             return 0
+        except NativeControlError:
+            self.stop_event.set()
+            raise  # No diagnostic/save after an epoch refusal.
         except BaseException as exc:
-            with self.state_lock:
-                self.state["status"] = "failed"
-                self.state["health"] = "failed"
-                self.state["last_error"] = str(exc)
-            self.save()
-            append_operator_log(self.workplace_root, self.core, "runtime.failed", pid=os.getpid(), error=str(exc))
+            with operation_lease():
+                with self.state_lock:
+                    self.state["status"] = "failed"
+                    self.state["health"] = "failed"
+                    self.state["last_error"] = str(exc)
+                self.save()
+                append_operator_log(
+                    self.workplace_root,
+                    self.core,
+                    "runtime.failed",
+                    pid=os.getpid(),
+                    error=str(exc),
+                )
             raise
         finally:
-            release_singleton(self.workplace_root, self.instance_id, self.core)
+            if acquired:
+                try:
+                    with operation_lease():
+                        release_singleton(
+                            self.workplace_root, self.instance_id, self.core
+                        )
+                except NativeControlError:
+                    self.stop_event.set()
 
 
 def command_serve(args: argparse.Namespace, core: Any) -> int:
@@ -1028,11 +1448,17 @@ def command_serve(args: argparse.Namespace, core: Any) -> int:
 
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     try:
-        runtime = RuntimeProcess(workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0))
+        runtime = RuntimeProcess(
+            workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0)
+        )
     except ConfigurationError as exc:
         raise SystemExit(f"FAIL: {exc.code}") from None
     from .console import show_server_console
-    show_server_console(build_core_properties().loaded.version, minimized=bool(getattr(args, "minimized", False)))
+
+    show_server_console(
+        build_core_properties().loaded.version,
+        minimized=bool(getattr(args, "minimized", False)),
+    )
     return runtime.serve(int(getattr(args, "port", 0) or 0))
 
 
@@ -1041,46 +1467,99 @@ def command_start(args: argparse.Namespace, core: Any) -> int:
     inspection = inspect_lifecycle(workplace_root, core)
     state = inspection["state"]
     if inspection["kind"] == "ready":
-        payload = {"status": "already_running", "pid": state.get("pid"), "endpoint": state.get("endpoint")}
-        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else f"RUNTIME: already running pid={payload['pid']} endpoint={payload['endpoint']}")
+        payload = {
+            "status": "already_running",
+            "pid": state.get("pid"),
+            "endpoint": state.get("endpoint"),
+        }
+        print(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+            if getattr(args, "json", False)
+            else f"RUNTIME: already running pid={payload['pid']} endpoint={payload['endpoint']}"
+        )
         return 0
     if inspection["kind"] == "starting":
-        ready, ready_state = wait_for_ready_service(workplace_root, core, float(getattr(args, "timeout", 10.0) or 10.0))
+        ready, ready_state = wait_for_ready_service(
+            workplace_root, core, float(getattr(args, "timeout", 10.0) or 10.0)
+        )
         if not ready:
-            raise SystemExit(f"FAIL: PF Runtime is still starting for workplace: pid={inspection['pid']}")
-        payload = {"status": "already_running", "pid": ready_state.get("pid"), "endpoint": ready_state.get("endpoint")}
-        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else f"RUNTIME: already running pid={payload['pid']} endpoint={payload['endpoint']}")
+            raise SystemExit(
+                f"FAIL: PF Runtime is still starting for workplace: pid={inspection['pid']}"
+            )
+        payload = {
+            "status": "already_running",
+            "pid": ready_state.get("pid"),
+            "endpoint": ready_state.get("endpoint"),
+        }
+        print(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+            if getattr(args, "json", False)
+            else f"RUNTIME: already running pid={payload['pid']} endpoint={payload['endpoint']}"
+        )
         return 0
     if inspection["kind"] in {"stopping", "failed", "orphaned"}:
-        raise SystemExit(f"FAIL: PF Runtime requires stop/recovery before start: state={inspection['kind']} pid={inspection['pid']}")
+        raise SystemExit(
+            f"FAIL: PF Runtime requires stop/recovery before start: state={inspection['kind']} pid={inspection['pid']}"
+        )
     cleanup_stale_runtime(workplace_root, core)
     log_dir = runtime_root(workplace_root) / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     stdout = (log_dir / "runtime.stdout.log").open("ab")
     stderr = (log_dir / "runtime.stderr.log").open("ab")
-    command = [sys.executable, str(core.ROOT / "tools" / "processforge.py"), "runtime", "serve", "--workplace", str(workplace_root), "--port", str(int(getattr(args, "port", 0) or 0)), "--interval", str(float(getattr(args, "interval", 2.0) or 2.0))]
+    command = [
+        sys.executable,
+        str(core.ROOT / "tools" / "processforge.py"),
+        "runtime",
+        "serve",
+        "--workplace",
+        str(workplace_root),
+        "--port",
+        str(int(getattr(args, "port", 0) or 0)),
+        "--interval",
+        str(float(getattr(args, "interval", 2.0) or 2.0)),
+    ]
     creationflags = 0
     kwargs: dict[str, Any] = {}
     if os.name == "nt":
-        creationflags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
+        creationflags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(
+            subprocess, "DETACHED_PROCESS", 0
+        )
         kwargs["creationflags"] = creationflags
     else:
         kwargs["start_new_session"] = True
-    proc = subprocess.Popen(command, cwd=str(core.ROOT), stdout=stdout, stderr=stderr, stdin=subprocess.DEVNULL, close_fds=True, **kwargs)
+    proc = subprocess.Popen(
+        command,
+        cwd=str(core.ROOT),
+        stdout=stdout,
+        stderr=stderr,
+        stdin=subprocess.DEVNULL,
+        close_fds=True,
+        **kwargs,
+    )
     stdout.close()
     stderr.close()
     deadline = time.monotonic() + float(getattr(args, "timeout", 10.0) or 10.0)
-    ready_state: dict[str, Any] = {}
+    ready_state = {}
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            raise SystemExit(f"FAIL: runtime exited during startup with code {proc.returncode}")
+            raise SystemExit(
+                f"FAIL: runtime exited during startup with code {proc.returncode}"
+            )
         ready_state = read_json(service_path(workplace_root))
         endpoint = str(ready_state.get("endpoint") or "")
         if endpoint and ready_state.get("status") == "ready":
             code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0)
             if code == 200 and body.get("ready"):
-                payload = {"status": "started", "pid": ready_state.get("pid"), "endpoint": endpoint}
-                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else f"RUNTIME: started pid={payload['pid']} endpoint={payload['endpoint']}")
+                payload = {
+                    "status": "started",
+                    "pid": ready_state.get("pid"),
+                    "endpoint": endpoint,
+                }
+                print(
+                    json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+                    if getattr(args, "json", False)
+                    else f"RUNTIME: started pid={payload['pid']} endpoint={payload['endpoint']}"
+                )
                 return 0
         time.sleep(0.1)
     proc.terminate()
@@ -1096,30 +1575,60 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     inspection = inspect_lifecycle(workplace_root, core)
     state = inspection["state"]
-    guarded = getattr(args, "command", "") == "server" and not getattr(args, "force", False)
+    guarded = getattr(args, "command", "") == "server" and not getattr(
+        args, "force", False
+    )
     if guarded and inspection["kind"] not in {"ready", "stopped", "not_running"}:
-        raise SystemExit("FAIL: guarded stop requires a ready verified owner; inspect state or use explicit --force")
+        raise SystemExit(
+            "FAIL: guarded stop requires a ready verified owner; inspect state or use explicit --force"
+        )
     capabilities = state.get("capabilities")
-    if guarded and inspection["kind"] == "ready" and (not isinstance(capabilities, dict) or type(capabilities.get("guarded_shutdown")) is not int or capabilities["guarded_shutdown"] != 1):
-        raise SystemExit("FAIL: server lacks guarded shutdown capability; upgrade or use explicit --force")
+    if (
+        guarded
+        and inspection["kind"] == "ready"
+        and (
+            not isinstance(capabilities, dict)
+            or type(capabilities.get("guarded_shutdown")) is not int
+            or capabilities["guarded_shutdown"] != 1
+        )
+    ):
+        raise SystemExit(
+            "FAIL: server lacks guarded shutdown capability; upgrade or use explicit --force"
+        )
     if inspection["kind"] == "orphaned":
         endpoint = str(state.get("endpoint") or "")
-        code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0) if endpoint else (0, {})
+        code, body = (
+            http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0)
+            if endpoint
+            else (0, {})
+        )
         if code != 200 or not body.get("ready"):
-            raise SystemExit(f"FAIL: orphaned PF Runtime has no verified ready endpoint: pid={inspection['pid']}")
+            raise SystemExit(
+                f"FAIL: orphaned PF Runtime has no verified ready endpoint: pid={inspection['pid']}"
+            )
         inspection["kind"] = "ready"
     if inspection["kind"] == "starting":
-        ready, state = wait_for_ready_service(workplace_root, core, min(2.0, float(getattr(args, "timeout", 10.0) or 10.0)))
+        ready, state = wait_for_ready_service(
+            workplace_root,
+            core,
+            min(2.0, float(getattr(args, "timeout", 10.0) or 10.0)),
+        )
         if not ready:
             pid = inspection["pid"]
-            if not isinstance(pid, int) or not terminate_owned_process(pid, core, float(getattr(args, "timeout", 10.0) or 10.0)):
-                raise SystemExit(f"FAIL: runtime starting process did not stop: pid={pid}")
+            if not isinstance(pid, int) or not terminate_owned_process(
+                pid, core, float(getattr(args, "timeout", 10.0) or 10.0)
+            ):
+                raise SystemExit(
+                    f"FAIL: runtime starting process did not stop: pid={pid}"
+                )
             cleanup_stale_runtime(workplace_root, core)
             print("RUNTIME: stopped")
             return 0
     elif inspection["kind"] in {"stopping", "failed"}:
         pid = inspection["pid"]
-        if not isinstance(pid, int) or not terminate_owned_process(pid, core, float(getattr(args, "timeout", 10.0) or 10.0)):
+        if not isinstance(pid, int) or not terminate_owned_process(
+            pid, core, float(getattr(args, "timeout", 10.0) or 10.0)
+        ):
             raise SystemExit(f"FAIL: runtime process did not stop: pid={pid}")
         cleanup_stale_runtime(workplace_root, core)
         print("RUNTIME: stopped")
@@ -1130,17 +1639,35 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
         return 0
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
-    payload = {"require_idle": True, "expected_instance_id": state.get("instance_id")} if guarded else {}
-    code, body = http_json("POST", endpoint.rstrip("/") + "/shutdown", token=token, payload=payload, timeout=2.0)
+    payload = (
+        {"require_idle": True, "expected_instance_id": state.get("instance_id")}
+        if guarded
+        else {}
+    )
+    code, body = http_json(
+        "POST",
+        endpoint.rstrip("/") + "/shutdown",
+        token=token,
+        payload=payload,
+        timeout=2.0,
+    )
     if code != 200:
         raise SystemExit(f"FAIL: runtime stop request failed: {code} {body}")
     pid = state.get("pid")
     deadline = time.monotonic() + float(getattr(args, "timeout", 10.0) or 10.0)
-    from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+    from processforge_core.runtime.observation_inputs import (
+        WorkerObservationInputService,
+    )
 
-    while isinstance(pid, int) and WorkerObservationInputService().process_pid_running(pid) and time.monotonic() < deadline:
+    while (
+        isinstance(pid, int)
+        and WorkerObservationInputService().process_pid_running(pid)
+        and time.monotonic() < deadline
+    ):
         time.sleep(0.1)
-    if isinstance(pid, int) and WorkerObservationInputService().process_pid_running(pid):
+    if isinstance(pid, int) and WorkerObservationInputService().process_pid_running(
+        pid
+    ):
         raise SystemExit(f"FAIL: runtime did not stop before timeout: pid={pid}")
     cleanup_stale_runtime(workplace_root, core)
     print("RUNTIME: stopped")
@@ -1150,6 +1677,7 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
 def command_restart(args: argparse.Namespace, core: Any) -> int:
     if getattr(args, "command", "") == "server" and getattr(args, "json", False):
         import io
+
         with contextlib.redirect_stdout(io.StringIO()):
             command_stop(args, core)
     else:
@@ -1157,7 +1685,9 @@ def command_restart(args: argparse.Namespace, core: Any) -> int:
     return command_start(args, core)
 
 
-def add_runtime_truth(payload: dict[str, Any], core: Any, *, running: bool) -> dict[str, Any]:
+def add_runtime_truth(
+    payload: dict[str, Any], core: Any, *, running: bool
+) -> dict[str, Any]:
     from processforge_core.composition import build_core_properties
 
     runtime_version = str(payload.get("runtime_version") or RUNTIME_VERSION)
@@ -1175,10 +1705,23 @@ def add_runtime_truth(payload: dict[str, Any], core: Any, *, running: bool) -> d
     payload["schema_version"] = 2
     payload["core_identity"] = identity
     payload["installed_pf"] = {"version": identity["installed"]["version"]}
-    payload["runtime"] = {"running": bool(running), "status": status, "health": str(payload.get("health") or status)}
+    payload["runtime"] = {
+        "running": bool(running),
+        "status": status,
+        "health": str(payload.get("health") or status),
+    }
     if runtime_version:
-        instance_status = "current" if running else ("historical" if status not in {"", "not_running"} else "not_available")
-        payload["last_runtime_instance"] = {"version": runtime_version, "status": instance_status}
+        instance_status = (
+            "current"
+            if running
+            else (
+                "historical" if status not in {"", "not_running"} else "not_available"
+            )
+        )
+        payload["last_runtime_instance"] = {
+            "version": runtime_version,
+            "status": instance_status,
+        }
     else:
         payload["last_runtime_instance"] = {"version": "", "status": "not_available"}
     return payload
@@ -1195,10 +1738,21 @@ def status_payload(workplace_root: Path, core: Any) -> dict[str, Any]:
         state["health"] = "stale"
         return add_runtime_truth(state, core, running=False)
     if not active:
-        return add_runtime_truth({"schema_version": 1, "status": "not_running", "health": "stopped", "workplace_root": str(workplace_root)}, core, running=False)
+        return add_runtime_truth(
+            {
+                "schema_version": 1,
+                "status": "not_running",
+                "health": "stopped",
+                "workplace_root": str(workplace_root),
+            },
+            core,
+            running=False,
+        )
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
-    code, body = http_json("GET", endpoint.rstrip("/") + "/status", token=token, timeout=2.0)
+    code, body = http_json(
+        "GET", endpoint.rstrip("/") + "/status", token=token, timeout=2.0
+    )
     if code == 200:
         return add_runtime_truth(body, core, running=True)
     state = dict(state)
@@ -1213,8 +1767,12 @@ def command_status(args: argparse.Namespace, core: Any) -> int:
     if getattr(args, "json", False):
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"RUNTIME: {payload.get('status')} health={payload.get('health')} pid={payload.get('pid', '')} endpoint={payload.get('endpoint', '')}")
-        print(f"PROJECTS: {len(payload.get('known_projects', [])) if isinstance(payload.get('known_projects'), list) else 0}")
+        print(
+            f"RUNTIME: {payload.get('status')} health={payload.get('health')} pid={payload.get('pid', '')} endpoint={payload.get('endpoint', '')}"
+        )
+        print(
+            f"PROJECTS: {len(payload.get('known_projects', [])) if isinstance(payload.get('known_projects'), list) else 0}"
+        )
         print(f"AGENT_SESSIONS: {payload.get('active_agent_sessions', 0)}")
         print(f"ACTIVE_WORKERS: {payload.get('active_workers', 0)}")
     return 0 if payload.get("status") not in {"failed"} else 1
@@ -1226,9 +1784,26 @@ def command_doctor(args: argparse.Namespace, core: Any) -> int:
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     active, state = active_service(workplace_root, core)
     checks: list[Any] = []
-    checks.append(core.check("PASS" if runtime_root(workplace_root).parent.is_dir() else "FAIL", "workplace runtime root exists"))
-    checks.append(core.check("PASS" if token_path(workplace_root).is_file() else "WARN", "runtime auth token exists"))
-    checks.append(core.check("PASS" if not active or state.get("protocol_version") == RUNTIME_PROTOCOL_VERSION else "FAIL", "runtime protocol version compatible"))
+    checks.append(
+        core.check(
+            "PASS" if runtime_root(workplace_root).parent.is_dir() else "FAIL",
+            "workplace runtime root exists",
+        )
+    )
+    checks.append(
+        core.check(
+            "PASS" if token_path(workplace_root).is_file() else "WARN",
+            "runtime auth token exists",
+        )
+    )
+    checks.append(
+        core.check(
+            "PASS"
+            if not active or state.get("protocol_version") == RUNTIME_PROTOCOL_VERSION
+            else "FAIL",
+            "runtime protocol version compatible",
+        )
+    )
     stored_identity = state.get("core_identity")
     loaded = (
         stored_identity.get("loaded") if isinstance(stored_identity, dict) else None
@@ -1239,7 +1814,12 @@ def command_doctor(args: argparse.Namespace, core: Any) -> int:
         installed_version != "unknown"
         and state.get("processforge_core_version") == installed_version
     )
-    checks.append(core.check("PASS" if core_version_compatible else "FAIL", "runtime core version compatible"))
+    checks.append(
+        core.check(
+            "PASS" if core_version_compatible else "FAIL",
+            "runtime core version compatible",
+        )
+    )
     if not active:
         checks.append(
             core.check("PASS", "runtime core build check not required (not running)")
@@ -1253,28 +1833,67 @@ def command_doctor(args: argparse.Namespace, core: Any) -> int:
     elif identity["status"] == "current":
         checks.append(core.check("PASS", "runtime core build current"))
     else:
-        checks.append(core.check("WARN", "runtime core build unknown; restart to capture build identity"))
-    checks.append(core.check("PASS" if active or not lock_path(workplace_root).exists() else "WARN", "singleton lock is not stale"))
+        checks.append(
+            core.check(
+                "WARN", "runtime core build unknown; restart to capture build identity"
+            )
+        )
+    checks.append(
+        core.check(
+            "PASS" if active or not lock_path(workplace_root).exists() else "WARN",
+            "singleton lock is not stale",
+        )
+    )
     host_state = host.load_state(workplace_root)
-    checks.append(core.check("PASS" if isinstance(host_state.get("projects"), list) else "FAIL", "project handle cache readable"))
+    checks.append(
+        core.check(
+            "PASS" if isinstance(host_state.get("projects"), list) else "FAIL",
+            "project handle cache readable",
+        )
+    )
     from processforge_core.agents.registry import AgentWorkplaceRegistry
 
-    checks.append(core.check("PASS" if AgentWorkplaceRegistry().workplace_agent_ledger_path(workplace_root).parent.is_dir() else "FAIL", "Agent Ledger path accessible"))
+    checks.append(
+        core.check(
+            "PASS"
+            if AgentWorkplaceRegistry()
+            .workplace_agent_ledger_path(workplace_root)
+            .parent.is_dir()
+            else "FAIL",
+            "Agent Ledger path accessible",
+        )
+    )
     payload = status_payload(workplace_root, core)
-    checks.append(core.check("PASS" if payload.get("health") in {"ready", "stopped", "stale"} else "WARN", f"runtime health is {payload.get('health')}"))
+    checks.append(
+        core.check(
+            "PASS"
+            if payload.get("health") in {"ready", "stopped", "stale"}
+            else "WARN",
+            f"runtime health is {payload.get('health')}",
+        )
+    )
     return core.print_checks(checks)
 
 
-def runtime_request(args: argparse.Namespace, core: Any, path: str, payload: dict[str, Any]) -> int:
+def runtime_request(
+    args: argparse.Namespace, core: Any, path: str, payload: dict[str, Any]
+) -> int:
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     active, state = active_service(workplace_root, core)
     if not active:
         raise SystemExit("FAIL: runtime is not running")
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
-    code, body = http_json("POST", endpoint.rstrip("/") + path, token=token, payload=payload, timeout=5.0)
+    code, body = http_json(
+        "POST", endpoint.rstrip("/") + path, token=token, payload=payload, timeout=5.0
+    )
     from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
-    print(json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else _canonical_dump_yaml(body))
+
+    print(
+        json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True)
+        if getattr(args, "json", False)
+        else _canonical_dump_yaml(body)
+    )
     return 0 if 200 <= code < 300 else 1
 
 
@@ -1286,21 +1905,54 @@ def command_event(args: argparse.Namespace, core: Any) -> int:
 
 
 def command_session_register(args: argparse.Namespace, core: Any) -> int:
-    payload = {"session_id": args.session, "agent_id": args.agent or "", "project_root": args.project_root or "", "cwd": args.cwd or ""}
+    payload = {
+        "session_id": args.session,
+        "agent_id": args.agent or "",
+        "project_root": args.project_root or "",
+        "cwd": args.cwd or "",
+    }
     return runtime_request(args, core, "/session/register", payload)
 
 
 def command_project_state(args: argparse.Namespace, core: Any) -> int:
-    return runtime_request(args, core, "/project-state", {"session_id": args.session or "", "project_root": args.project_root or ""})
+    return runtime_request(
+        args,
+        core,
+        "/project-state",
+        {"session_id": args.session or "", "project_root": args.project_root or ""},
+    )
 
 
 def command_work_state(args: argparse.Namespace, core: Any) -> int:
-    return runtime_request(args, core, "/work-state", {"session_id": args.session or "", "project_root": args.project_root or ""})
+    return runtime_request(
+        args,
+        core,
+        "/work-state",
+        {"session_id": args.session or "", "project_root": args.project_root or ""},
+    )
 
 
 def command_resolve(args: argparse.Namespace, core: Any) -> int:
-    return runtime_request(args, core, "/resolve", {"session_id": args.session or "", "project_root": args.project_root or "", "resource_id": getattr(args, "resource", "") or ""})
+    return runtime_request(
+        args,
+        core,
+        "/resolve",
+        {
+            "session_id": args.session or "",
+            "project_root": args.project_root or "",
+            "resource_id": getattr(args, "resource", "") or "",
+        },
+    )
 
 
 def command_tick(args: argparse.Namespace, core: Any) -> int:
-    return runtime_request(args, core, "/tick", {"project_roots": getattr(args, "project_root", []), "director": bool(args.director), "inspector": bool(args.inspector)})
+    return runtime_request(
+        args,
+        core,
+        "/tick",
+        {
+            "project_roots": getattr(args, "project_root", []),
+            "director": bool(args.director),
+            "inspector": bool(args.inspector),
+        },
+    )

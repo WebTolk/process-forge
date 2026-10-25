@@ -235,6 +235,179 @@ def storage() -> StorageHarness:
     return StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)
 
 
+def test_marker_before_binding_closes_legacy_and_native_factory_repairs(
+    storage: StorageHarness,
+) -> None:
+    from types import SimpleNamespace
+
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.executions.composition import (
+        _initialize_fresh_execution_storage,
+        select_execution_storage,
+    )
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.maintenance.journal_scan import _exclusive_bytes
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    provider = ConfigurationProvider.pinned(PFConfig())
+
+    def crash(path: Path, content: bytes) -> None:
+        if path.name == "execution-storage.json":
+            raise OSError("fixture_marker_before_binding")
+        _exclusive_bytes(path, content)
+
+    with ExecutionAdmission().maintenance(storage.project, None):
+        with patch(
+            "processforge_core.maintenance.journal_scan._exclusive_bytes", crash
+        ):
+            with pytest.raises(OSError, match="fixture_marker_before_binding"):
+                _initialize_fresh_execution_storage(
+                    storage.project, None, configuration=provider
+                )
+    marker = storage.flow / "maintenance/execution-initialization.json"
+    original = json.loads(marker.read_bytes())["binding"]
+    assert not (storage.flow / "data/execution-storage.json").exists()
+    with pytest.raises(ExecutionError, match="execution_storage_not_ready"):
+        select_execution_storage(storage.project, configuration=provider)
+    host = build_storage_migration_host(
+        project_root=storage.project,
+        workplace_root=None,
+        device_config_path=storage.context.device_config_path,
+        configuration=provider,
+    )
+    refused = host.service.resume(host.context)
+    assert refused["blocked"] is True
+    assert not any(item.get("legacy_allowed") for item in refused["targets"])
+    assert json.loads(marker.read_bytes())["binding"] == original
+
+    # These injected native facts qualify engine policy only, not G1 enrollment.
+    def proof(context):
+        assert ExecutionAdmission.held(context.project_root, context.workplace_root)
+        return "proven", "fixture-generation", ("fixture-native-proof",)
+
+    entry = SimpleNamespace(storage_safety=proof)
+    native = SimpleNamespace(
+        current_entry=lambda: entry, supports_owned_execution=lambda: True
+    )
+    with patch.dict(sys.modules, {"pf_native_control": native}):
+        repaired = host.service.resume(host.context)
+        assert repaired["blocked"] is False, repaired
+        assert host.service.resume(host.context)["blocked"] is False
+    assert json.loads(marker.read_bytes()) == {
+        "schema_version": 1,
+        "state": "ready",
+        "binding": original,
+    }
+    assert (
+        json.loads((storage.flow / "data/execution-storage.json").read_bytes())
+        == original
+    )
+    route = select_execution_storage(storage.project, configuration=provider)
+    assert route.repository is not None
+    assert route.repository.readiness().store_id == original["store_id"]
+    assert route.repository.readiness().generation == 1
+
+
+def test_operation_keeps_exact_selector_and_host_without_yaml_reread(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.configuration.yaml_store import YamlConfigStore
+    from processforge_core.project.configuration_inputs import (
+        configuration_operation,
+        operation_device_path,
+        operation_storage_host,
+    )
+
+    device = storage.root / "selected.yaml"
+    device.write_text(
+        "schema_version: 1\nlogging:\n  events: false\n", encoding="utf-8"
+    )
+    with configuration_operation(
+        storage.project, None, device_config_path=device
+    ) as pinned:
+        with patch.object(
+            YamlConfigStore, "read", side_effect=AssertionError("reread")
+        ):
+            assert pinned.device_path is None
+            assert operation_device_path(storage.project, None) == device
+            host = operation_storage_host(
+                storage.flow / "runtime/events/events.sqlite3"
+            )
+            assert host is not None and host.context.device_config_path == device
+            with configuration_operation(storage.project, None) as nested:
+                assert nested is pinned
+                assert (
+                    operation_storage_host(
+                        storage.flow / "runtime/events/events.sqlite3"
+                    )
+                    is host
+                )
+                assert not nested.current().logging.events
+            assert operation_device_path(storage.root / "other-project", None) is None
+
+
+def test_domain_safety_revalidates_selected_owner_before_leaf_proof(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.maintenance.contracts import MaintenanceError
+
+    host = build_storage_migration_host(
+        project_root=storage.project,
+        workplace_root=None,
+        device_config_path=storage.context.device_config_path,
+        configuration=ConfigurationProvider.pinned(PFConfig()),
+    )
+    context = host.context
+    (storage.flow / "process-forge.yaml").write_text(
+        "project:\n  id: changed-owner\n", encoding="utf-8"
+    )
+    with pytest.raises(MaintenanceError, match="storage_enrollment_conflict"):
+        host.service.safety(context)
+
+
+def test_project_init_pending_uses_coordinator_before_authoring(
+    storage: StorageHarness,
+) -> None:
+    import importlib.util
+
+    from processforge_core.executions.composition import (
+        _initialize_fresh_execution_storage,
+    )
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    with ExecutionAdmission().maintenance(storage.project, None):
+        with patch(
+            "processforge_core.database.SchemaManager.initialize",
+            side_effect=OSError("fixture_crash"),
+        ):
+            with pytest.raises(OSError):
+                _initialize_fresh_execution_storage(
+                    storage.project,
+                    None,
+                    configuration=ConfigurationProvider.pinned(PFConfig()),
+                )
+    name = "pf_w4_init_policy_fixture"
+    spec = importlib.util.spec_from_file_location(name, _ROOT / "tools/processforge.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+        with patch.object(
+            module,
+            "_execute_project_initialization",
+            side_effect=AssertionError("premature authoring"),
+        ):
+            with pytest.raises(MaintenanceError):
+                module.execute_project_initialization(
+                    {"project_root": storage.project}, {}
+                )
+    finally:
+        sys.modules.pop(name, None)
+
+
 def test_actual_script_without_injected_factory_is_cold_and_legacy_safe(
     storage: StorageHarness,
 ) -> None:

@@ -237,4 +237,9 @@ target с controlled offline binding switch; old-Core rollback после SQL wr
 Fresh SQL route разрешён только при успешной explicit initialization нового
 flow root. Существующий root, включая forced initialization, не становится fresh
 по предположению. Публикация fresh binding/DB recoverable, но не atomic между
-files и SQL; ошибка pending publication требует explicit repair.
+files и SQL. Fresh marker в состоянии pending закрывает legacy route сразу после
+публикации, даже если binding ещё отсутствует. Чтение сообщает о pending без
+ремонта. Безопасная обычная mutation или native resume восстанавливает только
+закреплённые marker owner/UUID/profile под admission, после проверки native
+capability и стабильной safety generation. Перед ready safety проверяется снова;
+выбор другого target или нового UUID запрещён.

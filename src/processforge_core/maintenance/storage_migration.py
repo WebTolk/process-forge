@@ -786,8 +786,14 @@ class StorageMigrationService:
             for target in targets:
                 root = storage_owner_root(context, target)
                 if target.kind == "main":
-                    facts = _inspect_target(target, descriptor, self.driver)
-                    state = "main" if facts["state"] == "main" else "absent"
+                    from ..executions.composition import _fresh_initialization
+
+                    initializer = _fresh_initialization(root)
+                    if initializer is not None and initializer["state"] == "pending":
+                        state = "pending"
+                    else:
+                        facts = _inspect_target(target, descriptor, self.driver)
+                        state = "main" if facts["state"] == "main" else "absent"
                 else:
                     slot = _slot(root, target)
                     if slot is not None and slot["state"] == "pending":
@@ -1288,7 +1294,14 @@ class StorageMigrationService:
         binding = _safe(root / "data/execution-storage.json")
         # A cold host needs no UUID/engine to defer an unqualified legacy target.
         # Pending/bound routes never get this escape hatch.
-        if not binding.exists():
+        from ..executions.composition import _fresh_initialization
+
+        initializer = _fresh_initialization(root)
+        if initializer is not None and initializer["state"] == "pending":
+            with self._admit(context, deadline):
+                if self._proof(context).state != "proven":
+                    raise MaintenanceError("storage_safety_changed")
+        if not binding.exists() and initializer is None:
             with self._admit(context, deadline):
                 if self._proof(context).state != "proven":
                     return {"state": "deferred", "legacy_allowed": True}

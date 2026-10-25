@@ -40,7 +40,7 @@ from processforge_core.work.automation_readiness import AutomationReadinessServi
 from processforge_core.work.consistency import RunTaskConsistencyService
 
 
-def _native_snapshot(root, configuration=None):
+def _native_snapshot(root, configuration=None, *, device_config_path=None):
     from hashlib import sha256
 
     from processforge_core.runtime.command import configuration_snapshot_bytes
@@ -53,7 +53,9 @@ def _native_snapshot(root, configuration=None):
         "task_id": "task",
         "attempt": 1,
     }
-    raw = configuration_snapshot_bytes(configuration or _pinned(), identity)
+    raw = configuration_snapshot_bytes(
+        configuration or _pinned(), identity, device_config_path=device_config_path
+    )
     path = prepared.with_name("configuration.snapshot.json")
     path.write_bytes(raw)
     digest = "sha256:" + sha256(raw).hexdigest()
@@ -139,6 +141,26 @@ def test_old_prepared_snapshot_does_not_gain_body_read(workspace, monkeypatch):
     assert load_configuration_snapshot(document, prepared, {}) is None
     with pytest.raises(ValueError, match="grant_required"):
         load_configuration_snapshot(document, prepared, environ)
+
+
+def test_native_snapshot_keeps_selected_device_as_nonreading_provenance(
+    workspace, monkeypatch
+):
+    from processforge_core.runtime.command import load_configuration_snapshot
+
+    selected = workspace / "selected-device.yaml"
+    prepared, _path, document, environ = _native_snapshot(
+        workspace, device_config_path=selected
+    )
+    with monkeypatch.context() as scoped:
+        scoped.setattr(
+            YamlConfigStore, "read", lambda *a, **k: pytest.fail("YAML reread")
+        )
+        pinned = load_configuration_snapshot(document, prepared, environ)
+        assert pinned is not None and pinned.device_path == selected
+        original = pinned.current()
+        assert pinned.snapshot(refresh=True).config is original
+        assert not selected.exists()
 
 
 def _sql_project(root, current_count=0):
