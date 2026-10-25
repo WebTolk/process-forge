@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from .documents.reader import YamlDocumentReader
     from .evidence.readiness import StageReadinessPolicy
     from .evidence.validation import EvidenceValidationService
+    from .maintenance.storage_migration import StorageMigrationHost
     from .prepared.knowledge_resources import (
         PreparedKnowledgeMaterialCapture,
         PreparedKnowledgeResourceReader,
@@ -152,6 +153,291 @@ def build_configuration_provider(
         device_config_path=device_config_path,
         context_overrides=context_overrides,
     )
+
+
+def build_storage_migration_host(
+    *,
+    project_root: Path | None,
+    workplace_root: Path | None,
+    device_config_path: Path | None,
+    configuration: ConfigurationProvider,
+    evidence_dir: Path | None = None,
+) -> StorageMigrationHost:
+    """Bind a cold host; resolve metadata and UUID only on explicit operations.
+
+    The supplied provider is the operation's full pinned value. No source is
+    discovered, read, connected, locked or initialized during construction.
+    Native publication/owner proof remains independent from SQLite selection.
+    """
+    import sys
+    from typing import Literal
+    from uuid import uuid4
+
+    from .configuration import DeviceConfigurationSource
+    from .database import (
+        Database,
+        DatabaseFactory,
+        DatabaseIdentity,
+        DatabaseTarget,
+        SchemaManager,
+        SQLiteDriver,
+    )
+    from .executions.composition import _execution_profile
+    from .executions.sqlite_repository import SQLiteExecutionRepository
+    from .maintenance.backup import SQLiteBackupService
+    from .maintenance.contracts import (
+        ExecutionMigrationContext,
+        MaintenanceError,
+        MigrationSafety,
+        StorageMigrationContext,
+        StoreTarget,
+    )
+    from .maintenance.execution_migration import ExecutionMigrationService, _read
+    from .maintenance.storage_migration import (
+        MIGRATION_ID,
+        StorageMigrationHost,
+        StorageMigrationService,
+        _safe,
+        _uuid,
+        validate_storage_context,
+    )
+    from .project.metadata import ProjectMetadataReader
+    from .runtime.execution_admission import ExecutionAdmission, registry_file_lock
+
+    def resolve_context() -> StorageMigrationContext:
+        # These are the already selected roots, never an installation/device scan.
+        device = device_config_path or DeviceConfigurationSource.default_path()
+        _safe(device)
+        snapshot = configuration.snapshot()
+        if snapshot.errors:
+            raise MaintenanceError("storage_configuration_invalid")
+        targets: list[StoreTarget] = []
+        unqualified: list[tuple[Literal["raw", "search", "accounting"], Path]] = []
+        if project_root is not None:
+            project = _safe(project_root)
+            metadata = ProjectMetadataReader(project)
+            flow = metadata.flow_root()
+            declared = metadata.workplace_manifest()
+            if declared is not None and (
+                workplace_root is None
+                or declared.absolute() != workplace_root / "workplace.yaml"
+            ):
+                raise MaintenanceError("storage_enrollment_conflict")
+            owner = metadata.manifest().get("project")
+            owner_id = owner.get("id") if isinstance(owner, dict) else None
+            if not isinstance(owner_id, str) or not owner_id.strip():
+                raise MaintenanceError("project_identity_required")
+            _profile_id, relative, _timeout = _execution_profile(
+                snapshot.config.database
+            )
+            project_targets: tuple[
+                tuple[Literal["events", "raw", "main"], str], ...
+            ] = (
+                ("events", "runtime/events/events.sqlite3"),
+                ("raw", "runtime/agent-events/hooks.sqlite3"),
+                ("main", relative),
+            )
+            for kind, path in project_targets:
+                targets.append(
+                    StoreTarget(kind, flow / path, path, "project", owner_id)
+                )
+            if workplace_root is None:
+                path = "runtime/local-resource-search/search.sqlite"
+                targets.append(
+                    StoreTarget("search", flow / path, path, "project", owner_id)
+                )
+        if workplace_root is not None:
+            workplace = _safe(workplace_root)
+            from .common.yaml_io import _parse_simple_yaml
+            from .documents.reader import YamlDocumentReader
+
+            document = YamlDocumentReader(_parse_simple_yaml).load(
+                _safe(workplace / "workplace.yaml")
+            )
+            section = document.get("workplace")
+            workplace_id = (
+                section.get("id") if isinstance(section, dict) else document.get("id")
+            )
+            # No new identity is minted to label an old workplace. An unknown
+            # owner is an explicit routing diagnostic, never a root-name ID.
+            workplace_targets: tuple[tuple[Literal["raw", "search"], str], ...] = (
+                ("raw", "runtime/agent-events/hooks.sqlite3"),
+                ("search", "runtime/search/local-resource-search.sqlite"),
+            )
+            for workplace_kind, path in workplace_targets:
+                if isinstance(workplace_id, str) and workplace_id.strip():
+                    targets.append(
+                        StoreTarget(
+                            workplace_kind, workplace / path, path, "workplace", workplace_id
+                        )
+                    )
+                else:
+                    unqualified.append((workplace_kind, workplace / path))
+            origin = _safe(workplace / "data/accounting/identity.json")
+            if origin.exists():
+                origin_id = _read(origin).get("origin_id")
+                if not isinstance(origin_id, str) or not origin_id.strip():
+                    raise MaintenanceError("owner_identity_required")
+                path = "data/accounting/accounting.sqlite3"
+                targets.append(
+                    StoreTarget(
+                        "accounting", workplace / path, path, "workplace", origin_id
+                    )
+                )
+            else:
+                unqualified.append(
+                    ("accounting", workplace / "data/accounting/accounting.sqlite3")
+                )
+        context = StorageMigrationContext(
+            project_root, workplace_root, device, tuple(targets), tuple(unqualified)
+        )
+        validate_storage_context(context)
+        if evidence_dir is not None:
+            _safe(evidence_dir)
+            roots = (
+                [ProjectMetadataReader(project_root).flow_root()]
+                if project_root
+                else []
+            )
+            if workplace_root is not None:
+                roots.append(workplace_root)
+            if not any(
+                evidence_dir.is_relative_to(root / "maintenance")
+                and evidence_dir != root / "maintenance"
+                for root in roots
+            ):
+                raise MaintenanceError("storage_evidence_unsafe")
+        return context
+
+    def safety(context: StorageMigrationContext) -> MigrationSafety:
+        # Native leaf was captured before Core. Importing/reloading tools here
+        # would invent authority from current-file bytes, so use only that entry.
+        module = sys.modules.get("pf_native_control")
+        current = getattr(module, "current_entry", None)
+        entry = current() if callable(current) else None
+        verifier = getattr(entry, "storage_safety", None)
+        if not callable(verifier):
+            return MigrationSafety("unknown", "", ("native_ownership_unqualified",))
+        state, generation, evidence = verifier(context)
+        return MigrationSafety(state, generation, evidence)
+
+    admission = ExecutionAdmission(registry_file_lock)
+
+    def engine(
+        context: StorageMigrationContext, target: StoreTarget
+    ) -> ExecutionMigrationService:
+        if context.project_root is None:
+            raise MaintenanceError("storage_execution_host_required")
+        config = configuration.current()
+        profile_id, relative, timeout = _execution_profile(config.database)
+        if target.target_relative_path != relative:
+            raise MaintenanceError("storage_execution_target_conflict")
+        driver = DatabaseFactory.resolve_driver(config.database)
+        flow = ProjectMetadataReader(context.project_root).flow_root()
+        binding = _safe(flow / "data/execution-storage.json")
+        selected = _safe(
+            flow / "maintenance/storage-migrations" / MIGRATION_ID / "execution.json"
+        )
+        if binding.exists():
+            pins = _read(binding)
+            if (
+                pins.get("project_id"),
+                pins.get("profile_id"),
+                pins.get("target_relative_path"),
+            ) != (target.owner_id, profile_id, relative):
+                raise MaintenanceError("execution_binding_conflict")
+            store_id = _uuid(pins.get("store_id"))
+        elif selected.exists():
+            checksum = _read(selected).get("plan_checksum")
+            if (
+                not isinstance(checksum, str)
+                or re.fullmatch(r"sha256:[0-9a-f]{64}", checksum) is None
+            ):
+                raise MaintenanceError("storage_plan_invalid")
+            plan = _read(selected.parent / checksum[7:] / "plan.json")
+            if (plan.get("project_id"), plan.get("target_relative_path")) != (
+                target.owner_id,
+                relative,
+            ):
+                raise MaintenanceError("storage_execution_target_conflict")
+            store_id = _uuid(plan.get("store_id"))
+        else:
+            discovery = Database(
+                driver,
+                DatabaseTarget(
+                    target.target, DatabaseIdentity(None, "project", target.owner_id)
+                ),
+                timeout_ms=timeout,
+            )
+            status = SchemaManager().inspect(discovery, ())
+            if status.state == "missing":
+                store_id = uuid4().hex  # Only reached after real admitted proof.
+            elif status.identity is not None and status.state == "ready":
+                store_id = _uuid(status.identity.store_id)
+            else:
+                raise MaintenanceError("execution_storage_not_ready")
+        database = DatabaseFactory.from_profile(
+            config.database,
+            profile_id,
+            DatabaseTarget(
+                target.target, DatabaseIdentity(store_id, "project", target.owner_id)
+            ),
+        )
+
+        def execution_safety(context: ExecutionMigrationContext) -> MigrationSafety:
+            pins = context
+            if (
+                pins.project_root,
+                pins.workplace_root,
+                pins.project_id,
+                pins.store_id,
+                pins.target_relative_path,
+            ) != (
+                selected_context.project_root,
+                selected_context.workplace_root,
+                target.owner_id,
+                store_id,
+                relative,
+            ):
+                raise MaintenanceError("execution_identity_conflict")
+            # Re-resolve routing/owners at every freeze/resume/cutover boundary.
+            if resolve_context() != selected_context:
+                raise MaintenanceError("storage_enrollment_conflict")
+            return safety(selected_context)
+
+        selected_context = context
+        return ExecutionMigrationService(
+            database=database,
+            repository=SQLiteExecutionRepository(database, target.owner_id),
+            admission=admission,
+            backup=SQLiteBackupService(driver=driver),
+            safety=execution_safety,
+            workplace_root=context.workplace_root,
+            profile_id=profile_id,
+        )
+
+    # Driver resolution also remains lazy with respect to the supplied provider.
+    # The closed default is SQLite; the resolved full snapshot is bound when
+    # context is first requested, before any service operation connects.
+    service = StorageMigrationService(
+        backup=SQLiteBackupService(driver=SQLiteDriver()),
+        admission=admission,
+        registry_lock=registry_file_lock,
+        safety=safety,
+        execution_factory=engine,
+        driver=SQLiteDriver(),
+    )
+    original_resolve = resolve_context
+
+    def bind_context() -> StorageMigrationContext:
+        context = original_resolve()
+        service.driver = DatabaseFactory.resolve_driver(
+            configuration.current().database
+        )
+        service.backup = SQLiteBackupService(driver=service.driver)
+        return context
+
+    return StorageMigrationHost(None, service, _context_factory=bind_context, _automatic=True)
 
 
 def build_core_properties() -> CoreProperties:

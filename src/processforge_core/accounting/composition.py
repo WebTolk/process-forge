@@ -201,7 +201,9 @@ class WorkplaceAccounting:
 
     def service(self, *, create: bool = False) -> AccountingService | None:
         """Compose Core queries read-only; explicit collection may create storage."""
-        from processforge_core.composition import build_configuration_provider
+        from processforge_core.composition import (
+            build_configuration_provider, build_storage_migration_host,
+        )
 
         provider = (
             self.configuration
@@ -211,16 +213,23 @@ class WorkplaceAccounting:
                 workplace_root=self.workplace,
             )
         )
-        driver = DatabaseFactory.resolve_driver(provider.current().database)
+        snapshot = provider.snapshot()
+        pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+        driver = DatabaseFactory.resolve_driver(snapshot.config.database)
         self._safe_paths()
         if create:
             self.ensure_identity()
+        host = self.storage_host or build_storage_migration_host(
+            project_root=self.project_root, workplace_root=self.workplace,
+            device_config_path=provider.device_path, configuration=pinned,
+        )
+        if create:
             repository = SQLiteAccountingRepository(
-                self.database, driver=driver, storage_host=self.storage_host
+                self.database, driver=driver, storage_host=host
             )
         elif self.database.is_file():
             repository = _ReadOnlyRepository(
-                self.database, driver=driver, storage_host=self.storage_host
+                self.database, driver=driver, storage_host=host
             )
         else:
             return None

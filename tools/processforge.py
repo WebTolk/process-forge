@@ -2786,6 +2786,38 @@ diagnostic output.
 
 
 def execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
+    """Qualify actual new roots before the existing acknowledged writer runs."""
+    from pf_native_control import supports_owned_execution
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    project = request["project_root"]
+    flow = project / PROJECT_FLOW_ROOT
+    if flow.exists() or not supports_owned_execution():
+        return _execute_project_initialization(request, files)
+    # An existing root, including --force, never takes this branch. Create it
+    # exclusively before publishing a manifest and take admission before writes.
+    try:
+        flow.mkdir()
+    except FileExistsError:
+        return _execute_project_initialization(request, files)
+    selected = request.get("workplace")
+    workplace = Path(selected).parent if selected is not None else None
+    with ExecutionAdmission().maintenance(project, workplace):
+        result = _execute_project_initialization(request, files)
+        if result.get("status") == "complete" and result.get("doctor", {}).get("status") == "pass":
+            from processforge_core.configuration import ConfigurationProvider
+            from processforge_core.executions.composition import _initialize_fresh_execution_storage
+
+            provider = build_configuration_provider(project_root=project, workplace_root=workplace)
+            snapshot = provider.snapshot()
+            if snapshot.errors:
+                raise project_initialization.ProjectInitializationError("storage_configuration_invalid")
+            _initialize_fresh_execution_storage(project, workplace,
+                configuration=ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors))
+        return result
+
+
+def _execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
     """CLI writer adapter used only by project_initialization.initialize_project()."""
     from processforge_core.agent_entry.migration import TARGETS as entry_targets
 
@@ -13986,7 +14018,17 @@ def resource_search_index(
 ) -> ResourceSearchIndex:
     from processforge_core.resources.local_search import ResourceSearchIndex
 
-    return ResourceSearchIndex(project_root, snapshot, workplace_root)
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.configuration import ConfigurationProvider
+
+    selected_project = None if snapshot.get("search_index_scope") == "workplace" else project_root
+    provider = build_configuration_provider(project_root=selected_project, workplace_root=workplace_root)
+    resolved = provider.snapshot()
+    pinned = ConfigurationProvider.pinned(resolved.config, errors=resolved.errors)
+    host = build_storage_migration_host(project_root=selected_project, workplace_root=workplace_root,
+        device_config_path=provider.device_path, configuration=pinned)
+    return ResourceSearchIndex(project_root, snapshot, workplace_root,
+        configuration=pinned, storage_host=host)
 
 
 def search_index_doctor_result(status: dict[str, Any], context: dict[str, Any]) -> int:

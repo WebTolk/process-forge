@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 from ..configuration import ConfigurationProvider
+from ..configuration.database import DatabaseConfig
 from ..database import (
     Database,
     DatabaseError,
@@ -75,6 +76,21 @@ class ExecutionStorage:
     repository: SQLiteExecutionRepository | None = None
 
 
+def _execution_profile(config: DatabaseConfig | None) -> tuple[str, str, int]:
+    """Select the exact immutable alias shared by reads, migration and init."""
+    profile_id, relative, timeout = "project_main", "data/pf.sqlite3", 100
+    if config is not None:
+        profile_id = config.defaults.get("project_main", profile_id)
+        profile = config.profiles.get(profile_id)
+        if profile is not None:
+            if profile.scope != "project":
+                raise DatabaseError("database_profile_invalid")
+            relative, timeout = profile.path, profile.timeout_ms
+        elif config.profiles or config.defaults:
+            raise DatabaseError("database_profile_invalid")
+    return profile_id, relative, timeout
+
+
 def select_execution_storage(
     project_root: Path,
     workplace_root: Path | None = None,
@@ -95,18 +111,7 @@ def select_execution_storage(
     )
     config = provider.current()
     database_config = config.database
-    profile_id = "project_main"
-    relative = "data/pf.sqlite3"
-    timeout = 100
-    if database_config is not None:
-        profile_id = database_config.defaults.get("project_main", profile_id)
-        profile = database_config.profiles.get(profile_id)
-        if profile is not None:
-            if profile.scope != "project":
-                raise DatabaseError("database_profile_invalid")
-            relative, timeout = profile.path, profile.timeout_ms
-        elif database_config.profiles or database_config.defaults:
-            raise DatabaseError("database_profile_invalid")
+    profile_id, relative, timeout = _execution_profile(database_config)
     target = _contained(flow, relative)
     binding_path = _contained(flow, "data/execution-storage.json")
     try:
@@ -170,3 +175,59 @@ def select_execution_storage(
         if not repository.readiness().ready:
             raise ExecutionError("execution_storage_not_ready")
     return ExecutionStorage("sql", repository)
+
+
+def _initialize_fresh_execution_storage(
+    project_root: Path,
+    workplace_root: Path | None,
+    *,
+    configuration: ConfigurationProvider,
+) -> None:
+    """Initialize only inside the acknowledged new-flow admission boundary.
+
+    The host establishes physical fresh-root creation and a qualified native
+    tree backend before calling. This function is never a read-path fallback.
+    Binding precedes DDL, so interruption leaves an exact blocked route.
+    """
+    from uuid import uuid4
+
+    from ..database import SqlStatement
+    from ..maintenance.execution_migration import EXECUTION_MIGRATION_SCHEMA, _atomic
+    from ..maintenance.journal_scan import _exclusive_bytes
+    from ..runtime.execution_admission import ExecutionAdmission
+
+    if not ExecutionAdmission.held(project_root, workplace_root):
+        raise ExecutionError("execution_storage_not_ready")
+    metadata = ProjectMetadataReader(project_root)
+    flow = metadata.flow_root()
+    owner = metadata.manifest().get("project")
+    project_id = owner.get("id") if isinstance(owner, dict) else None
+    if not isinstance(project_id, str) or not project_id.strip():
+        raise ExecutionError("project_identity_required")
+    profile_id, relative, _timeout = _execution_profile(configuration.current().database)
+    target = _contained(flow, relative)
+    binding_path = _contained(flow, "data/execution-storage.json")
+    if binding_path.exists() or target.exists():
+        raise ExecutionError("execution_storage_not_ready")
+    attempts = _contained(flow, "runtime/agent-runs")
+    if attempts.exists() and next(attempts.iterdir(), None) is not None:
+        raise ExecutionError("execution_activity_unknown")
+    identity = DatabaseIdentity(uuid4().hex, "project", project_id)
+    database = DatabaseFactory.from_profile(configuration.current().database, profile_id,
+        DatabaseTarget(target, identity))
+    binding = {"schema_version": 1, "project_id": project_id,
+        "store_id": identity.store_id, "profile_id": profile_id,
+        "target_relative_path": relative}
+    binding_path.parent.mkdir(parents=True, exist_ok=True)
+    marker = _contained(flow, "maintenance/execution-initialization.json")
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    _exclusive_bytes(marker, (json.dumps({"schema_version": 1, "state": "pending",
+        "binding": binding}, sort_keys=True) + "\n").encode())
+    _exclusive_bytes(binding_path, (json.dumps(binding, sort_keys=True) + "\n").encode())
+    SchemaManager().initialize(database, (EXECUTION_SCHEMA, EXECUTION_MIGRATION_SCHEMA))
+    with database.transaction() as session:
+        session.execute(SqlStatement(
+            "INSERT INTO execution_state(singleton,project_id,generation,authority,readiness,"
+            "active_coverage,revision,next_history_seq,migration_id,plan_checksum) "
+            "VALUES(1,?,1,'sql','ready','complete',0,1,NULL,NULL)", (project_id,)))
+    _atomic(marker, {"schema_version": 1, "state": "ready", "binding": binding})

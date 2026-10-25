@@ -74,6 +74,21 @@ class ProcessEventRecorder:
             ).config
         )
         journal = self.journal
+        if type(journal) is ProcessEventJournal and journal.storage_host is None:
+            from ..composition import build_storage_migration_host
+            from ..project.metadata import ProjectMetadataReader
+
+            metadata = ProjectMetadataReader(project_root)
+            declared = metadata.workplace_manifest()
+            owner = metadata.manifest().get("project")
+            if isinstance(owner, dict) and owner.get("id"):
+                pinned = ConfigurationProvider.pinned(config)
+                host = build_storage_migration_host(
+                    project_root=project_root,
+                    workplace_root=workplace_root or (declared.parent if declared else None),
+                    device_config_path=None, configuration=pinned,
+                )
+                journal = ProcessEventJournal(driver=journal.driver, storage_host=host)
         if type(journal) is ProcessEventJournal and journal.driver is None:
             journal = ProcessEventJournal(
                 driver=DatabaseFactory.resolve_driver(config.database),

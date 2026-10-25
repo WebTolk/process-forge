@@ -1184,6 +1184,24 @@ def current_entry() -> NativeEntry | None:
     return _ENTRY
 
 
+def supports_owned_execution() -> bool:
+    """Probe the actual retained whole-tree backend, independently of SQLite.
+
+    This creates only a short-lived empty kernel Job. It creates no guard,
+    database, UUID metadata or maintenance evidence on an unsupported host.
+    """
+    if os.name != "nt" or _ENTRY is None or _ENTRY.publication is None:
+        return False
+    try:
+        job = OwnedJob.create()
+        try:
+            return job.active() == 0
+        finally:
+            job.close()
+    except (OSError, AttributeError, ValueError):
+        return False
+
+
 @contextmanager
 def _publication_read_exclusion(root: Path) -> Iterator[None]:
     """Retain read handles for a noncreating, coherent Windows payload capture.

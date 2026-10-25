@@ -32,6 +32,9 @@ class StorageMigrationContext:
     workplace_root: Path | None
     device_config_path: Path
     targets: tuple[StoreTarget, ...]
+    unqualified_targets: tuple[
+        tuple[Literal["raw", "search", "accounting"], Path], ...
+    ] = ()
 
 
 @dataclass(frozen=True)

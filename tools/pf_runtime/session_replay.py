@@ -73,6 +73,13 @@ def replay_session_raw_records(
     snapshot = bound.snapshot()
     pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
     driver = DatabaseFactory.resolve_driver(snapshot.config.database)
+    if storage_host is None:
+        from processforge_core.composition import build_storage_migration_host
+
+        storage_host = build_storage_migration_host(
+            project_root=project_root, workplace_root=workplace_root,
+            device_config_path=bound.device_path, configuration=pinned,
+        )
     kernel = RawIngressKernel(
         workplace_root,
         flow_root=core.locate_flow_root(project_root),

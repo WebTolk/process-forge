@@ -159,23 +159,92 @@ def adapter_identity_access(
 ) -> Iterator[tuple[StoreTarget, str] | None]:
     """Use the actual host-selected target and W4 gate; never discover an owner."""
     if storage_host is None:
+        from .project.configuration_inputs import operation_storage_host
+
+        storage_host = operation_storage_host(path)
+    if storage_host is None:
         yield None
         return
     from .maintenance.contracts import MaintenanceError
     from .maintenance.storage_migration import storage_identity_access
 
+    try:
+        selected_context = storage_host.context
+    except MaintenanceError as error:
+        if error.code != "project_identity_required":
+            raise
+        # Missing stable identity prevents adoption, while the original
+        # adapter still refuses any already-adopted envelope without its host.
+        yield None
+        return
     targets = [
-        target for target in storage_host.context.targets if target.target == path
+        target for target in selected_context.targets if target.target == path
     ]
+    if not targets and any(
+        selected == path for _kind, selected in storage_host.context.unqualified_targets
+    ):
+        from .maintenance.storage_migration import _descriptor
+
+        # Qualified layout and no metadata/pending pin are required even when
+        # the old workplace has no stable owner ID. No owner is fabricated.
+        storage_host.service._unqualified(
+            storage_host.context, _descriptor(verify_transforms=False)
+        )
+        yield None
+        return
     if len(targets) != 1 or targets[0].kind == "main":
         raise MaintenanceError("storage_target_invalid")
     target = targets[0]
+    if writable and path.exists() and storage_host.automatic:
+        # Run adoption/recovery before any target gate or domain SQL session.
+        from dataclasses import replace
+
+        context = replace(storage_host.context, targets=(target,))
+        report = storage_host.service.ensure_ready(context, trigger="first_write")
+        if report.get("blocked") and not any(
+            item.get("target_relative_path") == target.target_relative_path
+            and item.get("state") == "deferred"
+            and item.get("legacy_allowed") is True
+            for item in report.get("targets", ())
+        ):
+            raise MaintenanceError(
+                str(
+                    (report.get("error") or {}).get("code")
+                    or "storage_activity_unknown"
+                )
+            )
     if writable and not path.exists():
         with storage_host.service.new_store_identity(
-            storage_host.context, target
+            storage_host.context, target, _allow_legacy=True
         ) as store_id:
-            yield target, store_id
+            yield None if store_id is None else (target, store_id)
     else:
+        root = (
+            storage_host.context.workplace_root
+            if target.scope == "workplace"
+            else storage_host.context.project_root / ".pf"
+            if storage_host.context.project_root is not None
+            else None
+        )
+        if (
+            not writable
+            and root is not None
+            and not (root / "runtime/.storage-identity.lock.guard").exists()
+        ):
+            # An unadopted read must not create the identity guard. The domain
+            # adapter still rejects unexpected metadata; migration always
+            # creates the permanent guard before publishing pending state.
+            from .maintenance.storage_migration import _descriptor, _inspect_target, _slot
+
+            slot = _slot(root, target)
+            if slot is not None:
+                if slot["state"] != "ready":
+                    raise MaintenanceError("storage_resume_required")
+                facts = _inspect_target(target, _descriptor(verify_transforms=False), storage_host.service.driver)
+                if facts.get("store_id") != slot["store_id"]:
+                    raise MaintenanceError("storage_identity_conflict")
+            yield None if slot is None else (target, str(slot["store_id"]))
+            return
         with storage_identity_access(
             storage_host.context,
             target,

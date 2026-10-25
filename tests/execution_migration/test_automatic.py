@@ -30,6 +30,134 @@ from .test_storage_uuid import StorageHarness
 _ROOT = Path(__file__).absolute().parents[2]
 
 
+def test_actual_host_factory_is_cold_and_defers_before_uuid(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.database import SQLiteDriver
+
+    provider = ConfigurationProvider.pinned(PFConfig())
+    with (
+        patch.object(Path, "open", side_effect=AssertionError("constructor read")),
+        patch.object(Path, "mkdir", side_effect=AssertionError("constructor mkdir")),
+        patch.object(
+            SQLiteDriver, "_connect", side_effect=AssertionError("constructor connect")
+        ),
+        patch("uuid.uuid4", side_effect=AssertionError("constructor UUID")),
+    ):
+        host = build_storage_migration_host(
+            project_root=storage.project,
+            workplace_root=None,
+            device_config_path=storage.context.device_config_path,
+            configuration=provider,
+        )
+    context = host.context
+    assert {target.kind for target in context.targets} == {
+        "main",
+        "events",
+        "raw",
+        "search",
+    }
+    with patch.object(
+        host.service, "execution_factory", side_effect=AssertionError("early engine")
+    ):
+        report = host.service.ensure_ready(context, trigger="first_write")
+    main = next(item for item in report["targets"] if item["kind"] == "main")
+    assert main["state"] == "deferred" and main["legacy_allowed"] is True
+    assert not (storage.flow / "data").exists()
+    assert not (storage.flow / "maintenance").exists()
+
+
+def test_actual_host_inspect_and_legacy_reads_create_no_guard(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.process_event_journal import ProcessEventJournal
+
+    host = build_storage_migration_host(
+        project_root=storage.project,
+        workplace_root=None,
+        device_config_path=storage.context.device_config_path,
+        configuration=ConfigurationProvider.pinned(PFConfig()),
+    )
+    before = set(storage.project.rglob("*"))
+    assert host.service.inspect(host.context)["blocked"] is False
+    event_path = storage.flow / "runtime/events/events.sqlite3"
+    journal = ProcessEventJournal(storage_host=host)
+    assert journal.count(event_path) == 0
+    assert set(storage.project.rglob("*")) == before
+
+
+def test_actual_host_selected_profile_alias_and_unknown_initializer(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.configuration.database import DatabaseConfig, DatabaseProfile
+    from processforge_core.process_event_journal import ProcessEventJournal
+
+    config = PFConfig(
+        database=DatabaseConfig(
+            {
+                "archive": DatabaseProfile(
+                    "project", "sqlite", "stores/executions.sqlite", 432
+                )
+            },
+            {"project_main": "archive"},
+        )
+    )
+    host = build_storage_migration_host(
+        project_root=storage.project,
+        workplace_root=None,
+        device_config_path=storage.context.device_config_path,
+        configuration=ConfigurationProvider.pinned(config),
+    )
+    main = next(target for target in host.context.targets if target.kind == "main")
+    assert main.target == storage.flow / "stores/executions.sqlite"
+    assert host.service.execution_factory is not None
+    engine = host.service.execution_factory(host.context, main)
+    assert engine.profile_id == "archive"
+    assert engine.database.timeout_ms == 432
+    assert (
+        engine._binding(
+            {
+                "project_id": "stable-project",
+                "store_id": "a" * 32,
+                "target_relative_path": main.target_relative_path,
+            }
+        )["profile_id"]
+        == "archive"
+    )
+    # Unsupported/unsealed hosts retain the original absent-store initializer.
+    event_path = storage.flow / "runtime/events/events.sqlite3"
+    journal = ProcessEventJournal(storage_host=host)
+    journal.append(event_path, {"event_id": "old-supported"}, record=True)
+    assert journal.count(event_path) == 1
+    assert not (storage.flow / "data/storage-identities.json").exists()
+
+
+def test_host_refuses_enrollment_mismatch_without_fallback(
+    storage: StorageHarness,
+) -> None:
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.maintenance.contracts import MaintenanceError
+
+    local = storage.flow / "process-forge.local.yaml"
+    local.write_text(
+        "workplace:\n  manifest: "
+        + (storage.workplace / "workplace.yaml").as_posix()
+        + "\n",
+        encoding="utf-8",
+    )
+    host = build_storage_migration_host(
+        project_root=storage.project,
+        workplace_root=None,
+        device_config_path=storage.context.device_config_path,
+        configuration=ConfigurationProvider.pinned(PFConfig()),
+    )
+    with pytest.raises(MaintenanceError, match="storage_enrollment_conflict"):
+        _ = host.context
+
+
 @pytest.fixture
 def storage() -> StorageHarness:
     return StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)

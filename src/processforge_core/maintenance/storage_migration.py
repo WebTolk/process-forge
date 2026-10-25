@@ -15,6 +15,7 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, closing, contextmanager
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path, PurePosixPath
 from typing import Literal
 from uuid import uuid4
@@ -117,6 +118,18 @@ def validate_storage_context(
             raise MaintenanceError("project_identity_required")
     if context.workplace_root is not None:
         _safe(context.workplace_root)
+    expected_unqualified = {
+        "raw": "runtime/agent-events/hooks.sqlite3",
+        "search": "runtime/search/local-resource-search.sqlite",
+        "accounting": "data/accounting/accounting.sqlite3",
+    }
+    for kind, path in context.unqualified_targets:
+        if (
+            context.workplace_root is None
+            or kind not in expected_unqualified
+            or _safe(path) != context.workplace_root / expected_unqualified[kind]
+        ):
+            raise MaintenanceError("storage_targets_invalid")
     if type(context.targets) is not tuple or len(context.targets) > 128:
         raise MaintenanceError("storage_targets_invalid")
     paths: set[Path] = set()
@@ -612,6 +625,11 @@ class StorageMigrationService:
         registry_lock: Callable[..., AbstractContextManager[object]],
         safety: Callable[[StorageMigrationContext], MigrationSafety],
         execution: ExecutionMigrationService | None = None,
+        driver: SQLiteDriver | None = None,
+        execution_factory: Callable[
+            [StorageMigrationContext, StoreTarget], ExecutionMigrationService
+        ]
+        | None = None,
     ) -> None:
         self.backup, self.admission, self.registry_lock = (
             backup,
@@ -619,7 +637,8 @@ class StorageMigrationService:
             registry_lock,
         )
         self.safety, self.execution = safety, execution
-        self.driver = DatabaseFactory.resolve_driver()
+        self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
+        self.execution_factory = execution_factory
 
     @contextmanager
     def _admit(
@@ -703,6 +722,36 @@ class StorageMigrationService:
             "evidence": [],
         }
 
+    def _unqualified(
+        self, context: StorageMigrationContext, descriptor: JsonObject
+    ) -> list[JsonObject]:
+        """Recognize old layouts without inventing a durable workplace owner."""
+        results: list[JsonObject] = []
+        if context.workplace_root is None:
+            return results
+        pins = _pins(context.workplace_root)
+        for kind, path in context.unqualified_targets:
+            relative = path.relative_to(context.workplace_root).as_posix()
+            if any(
+                slot.get("target_relative_path") == relative for slot in pins["slots"]
+            ):
+                raise MaintenanceError("owner_identity_required")
+            target = StoreTarget(kind, path, relative, "workplace", "unqualified")
+            facts = _inspect_target(target, descriptor, self.driver)
+            if facts.get("store_id") is not None:
+                raise MaintenanceError("owner_identity_required")
+            results.append(
+                {
+                    "kind": kind,
+                    "scope": "workplace",
+                    "target_relative_path": relative,
+                    "state": "deferred",
+                    "legacy_allowed": True,
+                    "reason": "owner_identity_required",
+                }
+            )
+        return results
+
     @staticmethod
     def _failure(report: JsonObject, error: BaseException) -> JsonObject:
         code = (
@@ -731,6 +780,9 @@ class StorageMigrationService:
         report = self._report("storage-inspect")
         try:
             targets, descriptor = validate_storage_context(context), _descriptor()
+            for result in self._unqualified(context, descriptor):
+                report["targets"].append(result)
+                report["per_target_counts"]["deferred"] += 1
             for target in targets:
                 root = storage_owner_root(context, target)
                 if target.kind == "main":
@@ -806,6 +858,15 @@ class StorageMigrationService:
         report = self._report(operation)
         try:
             targets, descriptor = validate_storage_context(context), _descriptor()
+            for result in self._unqualified(context, descriptor):
+                report["targets"].append(result)
+                report["per_target_counts"]["deferred"] += 1
+                report.update(
+                    status="failed",
+                    blocked=True,
+                    retryable=True,
+                    error={"code": "owner_identity_required"},
+                )
             for target in targets:
                 _deadline(deadline)
                 report["phase"] = target.kind
@@ -966,8 +1027,12 @@ class StorageMigrationService:
 
     @contextmanager
     def new_store_identity(
-        self, context: StorageMigrationContext, target: StoreTarget
-    ) -> Iterator[str]:
+        self,
+        context: StorageMigrationContext,
+        target: StoreTarget,
+        *,
+        _allow_legacy: bool = False,
+    ) -> Iterator[str | None]:
         """Fence an explicit domain initializer, not an unused-store inventory.
 
         Publish a durable planned UUID/pending pin before the adapter creates its
@@ -987,6 +1052,11 @@ class StorageMigrationService:
                     raise MaintenanceError("storage_existing_target")
                 proof = self._proof(context)
                 if proof.state != "proven":
+                    if _allow_legacy:
+                        # Exact absent target, no pending pin or UUID. The original
+                        # initializer remains usable on an unsupported host.
+                        yield None
+                        return
                     raise MaintenanceError("storage_activity_unknown")
                 plan = self._plan(
                     context, target, descriptor, root, proof, {"state": "absent"}
@@ -1212,9 +1282,21 @@ class StorageMigrationService:
         target: StoreTarget,
         deadline: float | None,
     ) -> JsonObject:
-        if self.execution is None or context.project_root is None:
+        if context.project_root is None:
             raise MaintenanceError("storage_execution_host_required")
+        root = storage_owner_root(context, target)
+        binding = _safe(root / "data/execution-storage.json")
+        # A cold host needs no UUID/engine to defer an unqualified legacy target.
+        # Pending/bound routes never get this escape hatch.
+        if not binding.exists():
+            with self._admit(context, deadline):
+                if self._proof(context).state != "proven":
+                    return {"state": "deferred", "legacy_allowed": True}
         engine = self.execution
+        if engine is None and self.execution_factory is not None:
+            engine = self.execution_factory(context, target)
+        if engine is None:
+            raise MaintenanceError("storage_execution_host_required")
         if (
             engine.database.target.path != target.target
             or engine.database.target.identity.owner_id != target.owner_id
@@ -1240,6 +1322,7 @@ class StorageMigrationService:
                 backup=engine.backup,
                 safety=bounded_proof,
                 workplace_root=engine.workplace_root,
+                profile_id=engine.profile_id,
             )
         root = storage_owner_root(context, target)
         binding = _safe(root / "data/execution-storage.json")
@@ -1381,12 +1464,38 @@ def add_store_identity(
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class StorageMigrationHost:
     """Exact host composition result consumed by script and automatic hooks."""
 
-    context: StorageMigrationContext
     service: StorageMigrationService
+    _context: StorageMigrationContext | None
+    _context_factory: Callable[[], StorageMigrationContext] | None
+    automatic: bool
+
+    def __init__(
+        self,
+        context: StorageMigrationContext | None,
+        service: StorageMigrationService,
+        *,
+        _context_factory: Callable[[], StorageMigrationContext] | None = None,
+        _automatic: bool = False,
+    ) -> None:
+        if (context is None) == (_context_factory is None):
+            raise MaintenanceError("storage_host_factory_invalid")
+        object.__setattr__(self, "service", service)
+        object.__setattr__(self, "_context", context)
+        object.__setattr__(self, "_context_factory", _context_factory)
+        object.__setattr__(self, "automatic", _automatic)
+
+    @cached_property
+    def context(self) -> StorageMigrationContext:
+        """Resolve selected metadata only at an explicit operation boundary."""
+        if self._context is not None:
+            return self._context
+        if self._context_factory is None:
+            raise MaintenanceError("storage_host_factory_invalid")
+        return self._context_factory()
 
 
 def run_storage_migration(

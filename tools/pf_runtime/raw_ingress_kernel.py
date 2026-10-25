@@ -269,6 +269,7 @@ class RawIngressKernel:
         self.max_payload_bytes = max_payload_bytes
         self.record_raw = record_raw
         self.configuration = configuration
+        self.project_root = flow_root.parent if flow_root is not None else None
         self.storage = RawHookJournal(driver=driver, storage_host=storage_host)
 
     def _operation(self):
@@ -277,8 +278,22 @@ class RawIngressKernel:
 
         storage = self.storage
         retain_raw = self.record_raw
-        if self.configuration is not None:
-            config = self.configuration.current()
+        from processforge_core.project.configuration_inputs import operation_configuration
+
+        configuration = self.configuration or operation_configuration(
+            self.project_root, self.workplace_root
+        )
+        if configuration is not None:
+            config = configuration.current()
+            if storage.storage_host is None:
+                from processforge_core.composition import build_storage_migration_host
+
+                host = build_storage_migration_host(
+                    project_root=self.project_root,
+                    workplace_root=self.workplace_root,
+                    device_config_path=None, configuration=configuration,
+                )
+                storage = RawHookJournal(driver=storage.driver, storage_host=host)
             if storage.driver is None:
                 storage = RawHookJournal(
                     driver=DatabaseFactory.resolve_driver(config.database),

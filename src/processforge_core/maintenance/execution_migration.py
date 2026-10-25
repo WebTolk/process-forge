@@ -117,6 +117,7 @@ class ExecutionMigrationService:
         backup: BackupPort,
         safety: ExecutionMigrationVerifier | None = None,
         workplace_root: Path | None = None,
+        profile_id: str = "project_main",
     ) -> None:
         self.database = database
         self.repository = repository
@@ -124,6 +125,7 @@ class ExecutionMigrationService:
         self.backup = backup
         self.safety = safety
         self.workplace_root = workplace_root
+        self.profile_id = profile_id
 
     def _pins(self, project_root: Path) -> tuple[Path, Path, str, str]:
         project = Path(project_root).absolute()
@@ -458,13 +460,12 @@ class ExecutionMigrationService:
         if self._file_digest(evidence / "manifest.ndjson") != plan["manifest_checksum"]:
             raise MaintenanceError("execution_manifest_changed")
 
-    @staticmethod
-    def _binding(plan: Mapping[str, object]) -> JsonObject:
+    def _binding(self, plan: Mapping[str, object]) -> JsonObject:
         return {
             "schema_version": 1,
             "project_id": plan["project_id"],
             "store_id": plan["store_id"],
-            "profile_id": "project_main",
+            "profile_id": self.profile_id,
             "target_relative_path": plan["target_relative_path"],
         }
 
