@@ -363,6 +363,8 @@ class WorkerCommandBuilder:
                 executable,
                 *args,
             ]
+            if driver.get("id") == "native-maintenance-fixed-v1":
+                args = ["-I", "-B", *args]
             executable = sys.executable
         working_directory = str(
             self.environment.expand(

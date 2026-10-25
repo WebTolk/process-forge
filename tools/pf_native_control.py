@@ -490,7 +490,7 @@ class NativeImage:
         try:
             path = Path(value).absolute()
             return path.relative_to(self.root).as_posix()
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     @classmethod
@@ -788,7 +788,7 @@ class NativeControl:
                 life = _OperationLifetime(os.getpid(), threading.get_ident())
                 life_token = _OPERATION_LIFETIME.set(life)
                 yield self
-            except (OSError, UnicodeError):
+            except OSError, UnicodeError:
                 if token is None:
                     raise NativeControlError() from None
                 raise
@@ -1285,7 +1285,7 @@ def supports_owned_execution() -> bool:
                 job.stop(deadline=time.monotonic() + 5)
                 process.wait(timeout=5)
             job.close()
-    except (OSError, AttributeError, ValueError, subprocess.SubprocessError):
+    except OSError, AttributeError, ValueError, subprocess.SubprocessError:
         return False
 
 
@@ -1581,6 +1581,155 @@ class ManagedEnrollmentProducer:
         self.legacy_boundary: LegacyManagedBoundary | None = None
 
     @classmethod
+    def from_cold_provider(
+        cls, authority: Any, entry: NativeEntry, *, selection: ManagedSelection
+    ) -> tuple[ManagedEnrollmentProducer, NativeEntry]:
+        """Consume real held provider, not a cold bool or fake original manager.
+
+        Cold controller stays held through pending, guard, epoch, bound and head.
+        Exact pending resume requires newly validated live cold authority. After
+        durable bound the inherited independent operation/short-lease protocol
+        works without the controller. Publication/full chain checks are outside
+        bounded admission. No target migration executes in this constructor.
+        """
+        from pf_cold_controller import Authority
+
+        _cold_require(isinstance(authority, Authority))
+        authority.verify()
+        controller = authority.controller
+        cold = controller.state()
+        _cold_require(cold["phase"] in {"installed", "bound"})
+        _cold_require(cold["selection"] == selection.document())
+        _cold_require(entry.root in controller.fence.roots)
+        if entry.publication is None:
+            raise NativeControlError()
+        _cold_require(
+            cold["installed"]
+            == {
+                "root": str(entry.root),
+                "archive": cold["archive"],
+                "manifest": entry.publication.manifest_sha256,
+                "publication": entry.publication.projection_sha256,
+                "leaf": digest(entry.publication.payload[LEAF]),
+            }
+        )
+        _cold_require(_CONTROL_LEASE.get() is controller.control)
+        # The external maintenance gate is a different lock namespace. Avoid
+        # erasing a live installation lease or shared->exclusive upgrade.
+        _cold_require(
+            controller.control.guard
+            != entry.root / "runtime/native-control/installation.guard"
+        )
+        producer = cls(entry.root, entry.publication.payload[LEAF])
+        # NativeControl uses one contextvar for distinct locks; caller retains
+        # real external OS lock and Authority.life while internal scopes run.
+        token = _CONTROL_LEASE.set(None)
+        try:
+            producer.directory.mkdir(parents=True, exist_ok=True)
+            guard, protocol = (
+                producer.directory / "ingress.guard",
+                producer.directory / "protocol",
+            )
+            if not guard.exists():
+                with guard.open("xb") as stream:
+                    stream.write(b"0")
+                    stream.flush()
+                    os.fsync(stream.fileno())
+            if not protocol.exists():
+                _atomic(protocol, "managed-v1")
+            with producer._ingress():
+                with _publication_read_exclusion(entry.root):
+                    publication = producer._publication(entry)
+                    control_directory = entry.root / "runtime/native-control"
+                    control_directory.mkdir(exist_ok=True)
+                    native_guard, epoch = (
+                        control_directory / "installation.guard",
+                        control_directory / "epoch",
+                    )
+                    if not native_guard.exists():
+                        with native_guard.open("xb") as stream:
+                            stream.write(b"0")
+                            stream.flush()
+                            os.fsync(stream.fileno())
+                    record = {
+                        key: cold[key]
+                        for key in (
+                            "transaction",
+                            "archive",
+                            "policy",
+                            "namespace",
+                            "retirement",
+                        )
+                    }
+                    # No installation paths/ACLs in the bounded head. Full
+                    # private fence metadata remains external recovery evidence.
+                    record["fence_commitment"] = cold["retirement_fence"]
+                    baseline = {
+                        "origin": "cold-v1",
+                        "installation": cold["transaction"],
+                        "archive": publication.projection_sha256,
+                        "selection": selection.document(),
+                        "cold": record,
+                    }
+                    generation = "sha256:" + digest(canonical_json(baseline))
+                    state = {
+                        "schema": 1,
+                        "origin": "cold-v1",
+                        "installation": cold["transaction"],
+                        "archive": publication.projection_sha256,
+                        "selection": selection.document(),
+                        "phase": "pending",
+                        "adoption": generation,
+                        "replacement": None,
+                        "retirement": {
+                            "binding": producer._binding(),
+                            "baseline": baseline,
+                            "generation": generation,
+                        },
+                        "successors": [],
+                    }
+                    if producer.state_path.exists():
+                        existing = producer._state()
+                        _cold_require(existing["phase"] in {"pending", "bound"})
+                        _cold_require(dict(existing, phase="pending") == state)
+                    else:
+                        _atomic(producer.state_path, state)
+                    expected = producer._epoch(state)
+                    if epoch.exists():
+                        _cold_require(
+                            _read_regular(control_directory, "epoch", 256)
+                            == expected.encode("ascii")
+                        )
+                    else:
+                        _atomic(epoch, expected)
+                    control = NativeControl(native_guard, epoch, expected)
+                    with control.exclusive():
+                        producer._durable(state)
+                        _cold_require(
+                            controller._authority is authority and authority.active
+                        )
+                        # New native files inherit the maintenance-only fence.
+                        # This is an actual effective-access check, not a receipt.
+                        controller.fence.verify()
+                        state["phase"] = "bound"
+                        _atomic(producer.state_path, state)
+                        producer._publish_head(state)
+                    adopted = replace(entry, control=producer._control(state))
+        finally:
+            _CONTROL_LEASE.reset(token)
+        # Native additions changed gate inventory. Refresh only under the live
+        # controller, while all target objects still deny normal tokens.
+        current = controller.state()
+        current["fence"] = controller.fence.verify()
+        from pf_cold_controller import atomic
+
+        atomic(controller.directory / "cold.json", current)
+        if adopted.control is None:
+            raise NativeControlError()
+        controller.bound(authority, adopted.control.accepted_epoch)
+        return producer, adopted
+
+    @classmethod
     def from_legacy_manager(
         cls,
         boundary: LegacyManagedBoundary,
@@ -1727,6 +1876,29 @@ class ManagedEnrollmentProducer:
 
     def _state(self) -> dict[str, Any]:
         state = _read(self.state_path)
+        if state.get("origin") != "cold-v1":
+            return self._legacy_state()
+        _cold_require(
+            set(state)
+            == {
+                "schema",
+                "installation",
+                "archive",
+                "selection",
+                "phase",
+                "adoption",
+                "replacement",
+                "retirement",
+                "successors",
+                "origin",
+            }
+        )
+        _cold_require(type(state["schema"]) is int and state["schema"] == 1)
+        _cold_require(state["phase"] in {"pending", "bound", "updating"})
+        return state
+
+    def _legacy_state(self) -> dict[str, Any]:
+        state = _read(self.state_path)
         if (
             set(state) - {"legacy_archive", "retirement", "successors"}
             != {
@@ -1752,7 +1924,7 @@ class ManagedEnrollmentProducer:
     def _publication(self, entry: NativeEntry | None = None) -> Publication:
         try:
             publication = accept_publication(self.root, trusted_leaf=self.trusted_leaf)
-        except (OSError, ValueError):
+        except OSError, ValueError:
             raise NativeControlError() from None
         if publication is None or (
             entry is not None
@@ -1809,7 +1981,7 @@ class ManagedEnrollmentProducer:
         try:
             self._durable(state)
             return "proven"
-        except (OSError, ValueError, KeyError, TypeError):
+        except OSError, ValueError, KeyError, TypeError:
             return "unknown"
 
     def inspect(self) -> str:
@@ -1817,7 +1989,7 @@ class ManagedEnrollmentProducer:
         try:
             with self._ingress():
                 return self._closure(self._state())
-        except (OSError, ValueError, KeyError, TypeError):
+        except OSError, ValueError, KeyError, TypeError:
             return "unknown"
 
     def enroll(
@@ -2141,6 +2313,8 @@ class ManagedEnrollmentProducer:
             )
 
     def _legacy_closure(self, state: dict[str, Any]) -> str:
+        if state.get("origin") == "cold-v1":
+            return "unknown"
         """Query every reserved tree; empty launch list alone grants nothing."""
         if os.name != "nt":
             return "unknown"
@@ -2179,7 +2353,7 @@ class ManagedEnrollmentProducer:
                         active |= job.active() != 0
                     finally:
                         job.close()
-            except (OSError, ValueError, KeyError, TypeError):
+            except OSError, ValueError, KeyError, TypeError:
                 unknown = True
         return "unknown" if unknown else "active" if active else "proven"
 
@@ -2244,7 +2418,12 @@ class ManagedEnrollmentProducer:
         ):
             raise NativeControlError()
         baseline = retired["baseline"]
-        keys = ("installation", "selection", "sentinel", "launches")
+        keys: tuple[str, ...]
+        if state.get("origin") == "cold-v1":
+            _validate_cold_baseline(state, baseline)
+            keys = ("installation", "selection", "origin")
+        else:
+            keys = ("installation", "selection", "sentinel", "launches")
         if any(state[key] != baseline[key] for key in keys):
             raise NativeControlError()
         if state.get("legacy_archive") != baseline.get("legacy_archive"):
@@ -2355,12 +2534,14 @@ def _managed_storage_safety(
             proof.generation,
             (
                 "native_bound_operation_held",
-                "durable_retired_legacy_set",
+                "durable_cold_retirement"
+                if state.get("origin") == "cold-v1"
+                else "durable_retired_legacy_set",
                 "accepted_archive:" + state["archive"],
                 "adoption:" + proof.generation,
             ),
         )
-    except (OSError, ValueError, KeyError, TypeError):
+    except OSError, ValueError, KeyError, TypeError:
         return "unknown", "", ("managed_revalidation_failed",)
 
 
@@ -2407,7 +2588,7 @@ def _validate_shared_head(control: NativeControl) -> None:
             or head["epoch"] != control.accepted_epoch
         ):
             raise NativeControlError()
-    except (OSError, ValueError, KeyError, TypeError):
+    except OSError, ValueError, KeyError, TypeError:
         raise NativeControlError() from None
 
 
@@ -2936,3 +3117,117 @@ def _update_doctor(data: dict[str, Any], root: Path, workplace: Path) -> dict[st
         }
         result["status"] = "fail"
     return result
+
+
+def _cold_require(condition: bool) -> None:
+    if not condition:
+        raise NativeControlError()
+
+
+def _validate_cold_baseline(state: dict[str, Any], baseline: dict[str, Any]) -> None:
+    """Pure post-bound validation: no controller import, discovery or OS scan."""
+    _cold_require(
+        set(baseline) == {"origin", "installation", "archive", "selection", "cold"}
+    )
+    _cold_require(baseline["origin"] == "cold-v1")
+    cold = baseline["cold"]
+    _cold_require(
+        set(cold)
+        == {
+            "transaction",
+            "archive",
+            "policy",
+            "namespace",
+            "retirement",
+            "fence_commitment",
+        }
+    )
+    _cold_require(cold["transaction"] == state["installation"])
+    _cold_require(bool(re.fullmatch(r"sha256:[a-f0-9]{64}", cold["archive"])))
+    _cold_require(bool(re.fullmatch(r"[a-f0-9]{64}", cold["fence_commitment"])))
+    profile = cold["policy"]
+    _cold_require(
+        set(profile) == {"maintenance", "normal", "versions", "qualification"}
+    )
+    _cold_require(
+        bool(profile["normal"])
+        and len(set(profile["normal"])) == len(profile["normal"])
+    )
+    for sid in [profile["maintenance"], *profile["normal"]]:
+        _cold_require(bool(re.fullmatch(r"S-1-(?:[0-9]+-)*[0-9]+", sid)))
+    _cold_require(profile["maintenance"] not in {*profile["normal"], "S-1-5-18"})
+    _cold_require("S-1-5-18" not in profile["normal"])
+    saved = cold["retirement"]
+    _cold_require(set(saved) == {"kind", "before", "after", "qualification"})
+    _cold_require(saved["kind"] == "qualified-native-tick-reset-v1")
+    _cold_require(saved["qualification"] == profile["qualification"])
+    _cold_require(bool(re.fullmatch(r"sha256:[a-f0-9]{64}", profile["qualification"])))
+    for sample in (saved["before"], saved["after"]):
+        _cold_require(set(sample) == {"low", "high", "checked", "version"})
+        _cold_require(sample["checked"] is False)
+        _cold_require(type(sample["low"]) is int and type(sample["high"]) is int)
+        _cold_require(0 <= sample["low"] <= sample["high"] < 2**63)
+        _cold_require(sample["version"] in profile["versions"])
+    _cold_require(saved["before"]["version"] == saved["after"]["version"])
+    _cold_require(saved["after"]["high"] + 60000 < saved["before"]["low"])
+
+
+def _run_cold_child(data: dict[str, Any]) -> None:
+    """Independently leased native-only cold finalizer; no target Core imports."""
+    import base64
+
+    leaf = getattr(sys.modules[__name__], "_captured_source")
+    _cold_require(digest(leaf) == data["leaf_sha256"])
+    root = Path(data["root"])
+    seal = leaf_seal(leaf)
+    if seal is None:
+        raise NativeControlError()
+    producer = ManagedEnrollmentProducer(root, leaf)
+    control = _durable_control(root, seal[1])
+    _cold_require(control.accepted_epoch == data["epoch"])
+    with control.operation():
+        state = producer._state()
+        _cold_require(state.get("origin") == "cold-v1" and state["phase"] == "bound")
+        _cold_require(state["installation"] == data["transaction"])
+        _cold_require(
+            state["adoption"] == data["generation"]
+            and state["selection"] == data["selection"]
+        )
+        publication = accept_publication(root, trusted_leaf=leaf)
+        if (
+            publication is None
+            or publication.manifest_sha256 != data["manifest_sha256"]
+        ):
+            raise NativeControlError()
+        _cold_require(_read_regular(root, LEAF, MAX_FILE) == leaf)
+        import zipfile
+
+        archive = base64.b64decode(data["archive_raw"], validate=True)
+        _cold_require("sha256:" + digest(archive) == data["archive"])
+        with zipfile.ZipFile(io.BytesIO(archive)) as package:
+            manifest = package.read(MANIFEST)
+        frozen = _freeze_update_archive(
+            archive, {"new_manifest": parse_manifest(manifest)}
+        )
+        _cold_require(digest(manifest) == data["manifest_sha256"])
+        _cold_require(publication.payload == frozen.payload)
+        _cold_require(
+            state["retirement"]["baseline"]["cold"]["archive"] == data["archive"]
+        )
+        result = {
+            key: data[key]
+            for key in (
+                "transaction",
+                "generation",
+                "epoch",
+                "selection",
+                "archive",
+                "token",
+            )
+        }
+        result.update(
+            manifest=data["manifest_sha256"],
+            leaf=data["leaf_sha256"],
+            result="verified",
+        )
+        print(json.dumps(result, sort_keys=True))

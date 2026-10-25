@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "native-maintenance-fixed-v1",
+  "title": "Private fixed native maintenance",
+  "kind": "shell",
+  "prepared_lifecycle_wrapper": true,
+  "command": {
+    "executable": "{python_executable}",
+    "args": [
+      "-I",
+      "-B",
+      "{processforge_root}/tools/pf_native_maintenance.py",
+      "{prepared_input_path}"
+    ],
+    "model_args": []
+  },
+  "working_directory": "{project_root}",
+  "environment": {
+    "inherit": false,
+    "variables": {}
+  },
+  "io": {
+    "stdin": "none",
+    "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+    "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log"
+  },
+  "heartbeat": {
+    "mode": "file",
+    "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+    "optional": false
+  },
+  "limits": {
+    "timeout_seconds": 120,
+    "max_retries": 0
+  },
+  "security": {
+    "allow_shell": false,
+    "require_explicit_executable": false,
+    "allow_network": false
+  }
+}

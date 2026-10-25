@@ -9751,6 +9751,10 @@ def prepare_worker_run(
                 "size": len(snapshot_raw),
             }
         }
+        if driver.get("id") == "native-maintenance-fixed-v1":
+            from pf_native_maintenance import bind_preparation
+
+            bind_preparation(document, project_root, ROOT, driver)
         reference = {
             "path": rel(prepared_path, project_root),
             "checksum": prepared_input.digest(prepared_input.encoded(document)),
@@ -9773,6 +9777,10 @@ def prepare_worker_run(
                 "PF_CONFIGURATION_SNAPSHOT_SHA256": snapshot_checksum,
             }
         )
+        if driver.get("id") == "native-maintenance-fixed-v1":
+            from pf_native_maintenance import validate_command
+
+            validate_command(document, project_root, ROOT, command)
         prepared_input.private_file(project_root, reference["path"])
         prepared_input.write_once(prepared_path, document)
     except (OSError, ValueError, RuntimeError) as exc:
@@ -10388,6 +10396,10 @@ def _sql_worker_run_start(
             load_configuration_snapshot(
                 document, project_root / command["prepared_input"]["path"], environment
             )
+            if command.get("driver_id") == "native-maintenance-fixed-v1":
+                from pf_native_maintenance import validate_command
+
+                validate_command(document, project_root, ROOT, command)
         except (OSError, ValueError, RuntimeError) as exc:
             repository._update_unlaunched(record, status="blocked", reason=str(exc))
             _publish_sql_locked(project_root, repository, run_id, task_id)
@@ -10401,7 +10413,7 @@ def _sql_worker_run_start(
         wrapper = Path(__file__).with_name("prepared_executor.py").resolve()
         codex_wrapper = Path(__file__).with_name("codex_exec_worker.py").resolve()
         if not any(
-            Path(str(item)).resolve() in {wrapper, codex_wrapper} for item in argv[1:2]
+            Path(str(item)).resolve() in {wrapper, codex_wrapper} for item in (argv[3:4] if command.get("driver_id") == "native-maintenance-fixed-v1" else argv[1:2])
         ):
             print("FAIL: execution_receipt_capability_required")
             return 1
@@ -10658,6 +10670,10 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
             load_configuration_snapshot(
                 prepared_document, project_root / command["prepared_input"]["path"], env
             )
+            if command.get("driver_id") == "native-maintenance-fixed-v1":
+                from pf_native_maintenance import validate_command
+
+                validate_command(prepared_document, project_root, ROOT, command)
         except (OSError, ValueError):
             print("FAIL: configuration_snapshot_invalid")
             return 1

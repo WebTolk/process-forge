@@ -266,3 +266,10 @@ owner/routing/instance/targets and pinned full configuration under admission.
 Native update publishes an exact pending transition before overwrite, then a
 successor epoch/head. Only a fresh independently leased child runs new Core
 maintenance; stale same-publication children cannot finalize a later update.
+
+
+### First cold transition
+
+Historical installations without their original complete ingress owner require a separately qualified one-time cold boundary. The finite native controller records persistent inhibition before retirement, copies only an accepted frozen publication with retained backups, and publishes a distinct `cold-v1` adoption. Normal post-bound operations continue with short independent native leases; the controller is not a permanent service.
+
+The private fixed native-maintenance source descriptor is an integration checkpoint. Its runtime/deployment resource-grant channel is not yet supplied by the prepared-resource adapter. It must not be treated as an executable deployment procedure until that channel, final integrated assurance and real platform/principal/boot/fault qualification are complete. No caller flag, receipt, observed interpreter hash or new empty Job establishes retirement.

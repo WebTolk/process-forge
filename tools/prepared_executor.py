@@ -396,7 +396,7 @@ def _canonical_digest(value: Any) -> bool:
 def _same_path(left: str, right: str) -> bool:
     try:
         return Path(left).expanduser().resolve() == Path(right).expanduser().resolve()
-    except (OSError, RuntimeError, ValueError):
+    except OSError, RuntimeError, ValueError:
         return False
 
 
@@ -508,11 +508,11 @@ def _write_failure(paths: tuple[Path, Path] | None, code: int, reason: str) -> N
     heartbeat, exit_path = paths
     try:
         write_heartbeat(heartbeat, "failed", sequence=0, extra={"failure_code": reason})
-    except (OSError, ValueError):
+    except OSError, ValueError:
         pass
     try:
         write_exit_contract(exit_path, code)
-    except (OSError, ValueError):
+    except OSError, ValueError:
         pass
 
 
@@ -563,6 +563,24 @@ def _run_target_in_operation(
             load_configuration_snapshot(
                 document, Path(options.prepared_input), current_env
             )
+            if document.get("native_launch", {}).get("maintenance") is not None:
+                tools_path = str(_native_root / "tools")
+                if tools_path not in sys.path:
+                    sys.path.insert(0, tools_path)
+                import pf_native_maintenance as maintenance
+
+                maintenance.validate_preparation(
+                    document, Path(document["project_root"]), _native_root
+                )
+                expected = [
+                    sys.executable,
+                    "-I",
+                    "-B",
+                    str(_native_root / "tools/pf_native_maintenance.py"),
+                    str(Path(options.prepared_input)),
+                ]
+                if target != expected:
+                    raise ExecutorError("fixed_command_mismatch")
         except (ExecutorError, OSError, ValueError) as exc:
             reason = (
                 exc.code
@@ -579,7 +597,7 @@ def _run_target_in_operation(
                 receipts = ExecutionReceipts(
                     current_env, document, heartbeat, exit_path
                 )
-            except (ExecutorError, OSError, ValueError):
+            except ExecutorError, OSError, ValueError:
                 print("FAIL: execution_activity_unknown", file=sys.stderr)
                 return 125
         child_environment = dict(current_env)
