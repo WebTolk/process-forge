@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import time
+import zipfile
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -1249,3 +1250,310 @@ def test_fixture_archive_passes_unchanged_validator_and_real_root_freshness(
     assert cli.expected_release_manifest_from_root(extracted, sidecar) == {
         row["path"]: row["sha256"] for row in rows
     }
+
+
+# Joint fixtures qualify adopted state only; they do not reconstruct FIRST history.
+assert p.__file__ is not None
+_ADOPTED_SOURCE = Path(p.__file__).absolute().parents[1]
+
+_ADOPTED_PREAMBLE = r"""
+import json,sys,types
+from pathlib import Path
+root=Path(sys.argv[1]);leaf=(root/'tools/pf_native_control.py').read_bytes()
+p=types.ModuleType('pf_native_control');p.__file__=str(root/'tools/pf_native_control.py');p._captured_source=leaf
+sys.modules[p.__name__]=p;exec(compile(leaf,p.__file__,'exec',dont_inherit=True),p.__dict__)
+sys.path[:0]=[str(root/'tools'),str(root/'src')]
+"""
+_ADOPTED_MANAGER = (
+    _ADOPTED_PREAMBLE
+    + r"""
+work=root/'runtime/fixture';work.mkdir(parents=True)
+(work/'gate').write_bytes(b'0');(work/'protocol').write_bytes(b'original')
+publication=p.accept_publication(root,trusted_leaf=leaf)
+boundary=p.LegacyManagedBoundary(root,existing_gate=p.NativeControl(work/'gate',work/'protocol','original'),accepted_archive=publication.payload)
+owner=boundary.launch([sys.executable,'-B','-c','pass'],ingress='worker');assert owner.wait(timeout=5)==0
+entry=p.NativeEntry(root,publication,p.NativeImage.from_publication(root,publication),None)
+entry.image.activate()
+from processforge_core.composition import build_configuration_provider,build_storage_migration_host
+from processforge_core.configuration import ConfigurationProvider
+project=work/'project';flow=project/'.pf';flow.mkdir(parents=True)
+(flow/'process-forge.yaml').write_text('project:\n  id: stable-project\n')
+device=work/'device.yaml';device.write_text('schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 17\n')
+provider=build_configuration_provider(project_root=project,device_config_path=device)
+config=ConfigurationProvider.pinned(provider.snapshot().config)
+host=build_storage_migration_host(project_root=project,workplace_root=None,device_config_path=device,configuration=config)
+producer,entry=p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=host.service._native_selection())
+print(json.dumps({'generation':producer._state()['adoption']}))
+"""
+)
+_ADOPTED_CHILD = (
+    _ADOPTED_PREAMBLE
+    + r"""
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+from processforge_core.composition import build_configuration_provider,build_storage_migration_host
+from processforge_core.configuration import ConfigurationProvider
+from processforge_core.project.configuration_inputs import configuration_operation
+from processforge_core.process_event_journal import ProcessEventJournal
+from processforge_core.executions.composition import select_execution_storage
+import processforge as cli
+project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
+provider=build_configuration_provider(project_root=project,device_config_path=device)
+config=ConfigurationProvider.pinned(provider.snapshot().config)
+host=build_storage_migration_host(project_root=project,workplace_root=None,device_config_path=device,configuration=config)
+with entry.operation():
+    journal=ProcessEventJournal(storage_host=host)
+    journal.append(project/'.pf/runtime/events/events.sqlite3',{'event_id':sys.argv[2]},record=True)
+    with configuration_operation(project,None,device_config_path=device,configuration=config):
+        cli._storage_first_write(project)
+    result=host.service.resume(host.context)
+    assert not result['blocked'],result
+    selected=select_execution_storage(project,None,configuration=config)
+    pins=json.loads((project/'.pf/data/storage-identities.json').read_text())
+    assert entry.storage_safety(host.context)[0]=='unknown'
+    print(json.dumps({'generation':p.ManagedEnrollmentProducer(root,leaf)._state()['adoption'],'interval':config.get('runtime.metrics.interval_seconds'),'pins':pins,'result':result,'authority':selected.repository.readiness().authority}))
+"""
+)
+
+
+def _adopted_run(code: str, root: Path, *args: object) -> dict[str, Any]:
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", code, str(root), *map(str, args)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    return json.loads(result.stdout)
+
+
+def _adopted_publication(version: str = "1.3.0-alpha6") -> p.Build:
+    payload = {}
+    for directory in ("src", "tools", "schemas"):
+        for path in (_ADOPTED_SOURCE / directory).rglob("*"):
+            if (
+                path.is_file()
+                and path.suffix in {".py", ".json", ".yaml", ".txt", ".md"}
+                and "__pycache__" not in path.parts
+            ):
+                payload[path.relative_to(_ADOPTED_SOURCE).as_posix()] = (
+                    path.read_bytes()
+                )
+    payload["VERSION"] = (version + "\n").encode()
+    payload[p.INVENTORY] = b""
+    return p.build_publication(
+        payload,
+        version=version,
+        source={"commit": "f" * 40, "dirty": False},
+        generated_at="fixture",
+    )
+
+
+def _adopted_fixture_install(root: Path) -> tuple[Path, p.Build]:
+    root.mkdir(parents=True, exist_ok=True)
+    build = _adopted_publication()
+    for name, raw in {**build.payload, p.MANIFEST: build.manifest}.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+    return root, build
+
+
+def test_real_adopted_factory_after_manager_exit(native_root: Path) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    bound = _adopted_run(_ADOPTED_MANAGER, root)
+    first = _adopted_run(_ADOPTED_CHILD, root, "one")
+    second = _adopted_run(_ADOPTED_CHILD, root, "two")
+    assert bound["generation"] == first["generation"] == second["generation"]
+    assert first["interval"] == second["interval"] == 17
+    assert first["authority"] == second["authority"] == "sql"
+    assert first["pins"] == second["pins"]
+
+
+_ADOPTED_UPDATE = (
+    _ADOPTED_PREAMBLE
+    + r"""
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+from processforge_core.maintenance.update import apply_update
+record=apply_update(root,Path(sys.argv[2]),confirm=True)
+assert record['status']=='applied',record
+print(json.dumps(record))
+"""
+)
+
+
+def test_joint_real_updater_and_independent_successor_child(native_root: Path) -> None:
+    root, old = _adopted_fixture_install(native_root)
+    _adopted_run(_ADOPTED_MANAGER, root)
+    new = _adopted_publication("1.3.0-alpha7")
+    archive = root / "runtime/fixture-release.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        for name, raw in {**new.payload, p.MANIFEST: new.manifest}.items():
+            bundle.writestr(name, raw)
+    before = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
+    record = _adopted_run(_ADOPTED_UPDATE, root, archive)
+    after = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
+    assert before["adoption"] != after["adoption"]
+    assert after["phase"] == "bound" and len(after["successors"]) == 1
+    assert (root / "VERSION").read_text().strip() == "1.3.0-alpha7"
+    assert (
+        json.loads((root / "runtime/core-update/last-apply.json").read_text()) == record
+    )
+    assert not (root / "runtime/core-update/in-progress.json").exists()
+    # Stale generation loses its epoch even if the payload is replaced again with identical bytes.
+    result = _adopted_run(_ADOPTED_CHILD, root, "after-update")
+    assert result["generation"] == after["adoption"]
+
+
+@pytest.mark.parametrize("drift", ["configuration", "owner"])
+def test_real_adopted_factory_refuses_changed_selection(
+    native_root: Path, drift: str
+) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    _adopted_run(_ADOPTED_MANAGER, root)
+    project = root / "runtime/fixture/project"
+    if drift == "configuration":
+        (root / "runtime/fixture/device.yaml").write_text(
+            "schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 18\n"
+        )
+    else:
+        (project / ".pf/process-forge.yaml").write_text(
+            "project:\n  id: another-owner\n"
+        )
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", _ADOPTED_CHILD, str(root), "refused"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0
+    assert "execution_activity_unknown" in result.stderr
+    assert not (project / ".pf/data/storage-identities.json").exists()
+    assert not (project / ".pf/runtime/events/events.sqlite3").exists()
+
+
+def test_real_updater_rejected_plan_does_not_publish_pending(native_root: Path) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    _adopted_run(_ADOPTED_MANAGER, root)
+    build = _adopted_publication("1.3.0-alpha7")
+    payload = dict(build.payload)
+    payload["docs/new-owned.txt"] = b"accepted new bytes"
+    build = p.build_publication(
+        payload, version="1.3.0-alpha7", source={}, generated_at="fixture"
+    )
+    target = root / "docs/new-owned.txt"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(b"unowned collision")
+    archive = root / "runtime/fixture-release.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        for name, raw in {**build.payload, p.MANIFEST: build.manifest}.items():
+            bundle.writestr(name, raw)
+    baseline = (root / "runtime/managed-ingress/baseline.json").read_bytes()
+    head = (root / "runtime/managed-ingress/adoption.json").read_bytes()
+    epoch = (root / "runtime/native-control/epoch").read_bytes()
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", _ADOPTED_UPDATE, str(root), str(archive)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0 and "plan_blocked" in result.stderr
+    assert (root / "runtime/managed-ingress/baseline.json").read_bytes() == baseline
+    assert (root / "runtime/managed-ingress/adoption.json").read_bytes() == head
+    assert (root / "runtime/native-control/epoch").read_bytes() == epoch
+    assert not (root / "runtime/core-update").exists()
+
+
+_ADOPTED_FRESH_CRASH = (
+    _ADOPTED_PREAMBLE
+    + r"""
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+from processforge_core.composition import build_configuration_provider,build_storage_migration_host
+from processforge_core.configuration import ConfigurationProvider
+from processforge_core.executions.composition import _initialize_fresh_execution_storage
+from processforge_core.maintenance import journal_scan
+import os
+project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
+provider=build_configuration_provider(project_root=project,device_config_path=device)
+config=ConfigurationProvider.pinned(provider.snapshot().config)
+host=build_storage_migration_host(project_root=project,workplace_root=None,device_config_path=device,configuration=config)
+write=journal_scan._exclusive_bytes
+def crash_before_binding(path,raw):
+    if path.name=='execution-storage.json': os._exit(0)
+    return write(path,raw)
+journal_scan._exclusive_bytes=crash_before_binding
+with host.service._native_operation(host.context,None):
+    with host.service.admission.maintenance(project,None):
+        assert host.service.safety(host.context).state=='proven'
+        _initialize_fresh_execution_storage(project,None,configuration=config)
+raise AssertionError('crash hook not reached')
+"""
+)
+
+
+def test_real_adopted_first_write_repairs_marker_before_binding(
+    native_root: Path,
+) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    _adopted_run(_ADOPTED_MANAGER, root)
+    crash = subprocess.run(
+        [sys.executable, "-B", "-c", _ADOPTED_FRESH_CRASH, str(root)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert crash.returncode == 0, crash.stderr
+    flow = root / "runtime/fixture/project/.pf"
+    marker = json.loads(
+        (flow / "maintenance/execution-initialization.json").read_text()
+    )
+    assert marker["state"] == "pending"
+    assert not (flow / "data/execution-storage.json").exists()
+    repaired = _adopted_run(_ADOPTED_CHILD, root, "repair")
+    assert repaired["authority"] == "sql"
+    assert (
+        json.loads((flow / "data/execution-storage.json").read_text())
+        == marker["binding"]
+    )
+    assert (
+        json.loads((flow / "maintenance/execution-initialization.json").read_text())[
+            "state"
+        ]
+        == "ready"
+    )
+
+
+_ADOPTED_COLLECT = (
+    _ADOPTED_PREAMBLE
+    + r"""
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+from processforge_core.composition import build_configuration_provider
+from processforge_core.configuration import ConfigurationProvider
+from processforge_core.project.configuration_inputs import configuration_operation
+from unittest.mock import patch
+from argparse import Namespace
+import contextlib,io
+import processforge as cli
+project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
+provider=build_configuration_provider(project_root=project,device_config_path=device)
+config=ConfigurationProvider.pinned(provider.snapshot().config)
+# Named collection-policy seam only. Proof, factory, admission and migration are real.
+with patch.object(type(cli._worker_assignment_service),'load',return_value={'id':'fixture-task','run_id':'fixture-run'}), patch.object(cli,'_collect_worker_run_locked',return_value=0):
+    with configuration_operation(project,None,device_config_path=device,configuration=config):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code=cli.command_worker_run_collect(Namespace(project_root=str(project),task='fixture-task'))
+assert code==0
+binding=json.loads((project/'.pf/data/execution-storage.json').read_text())
+print(json.dumps({'binding':binding,'generation':p.ManagedEnrollmentProducer(root,leaf)._state()['adoption']}))
+"""
+)
+
+
+def test_real_adopted_collect_callback_migrates_after_lifecycle_unlock(
+    native_root: Path,
+) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    adopted = _adopted_run(_ADOPTED_MANAGER, root)
+    first = _adopted_run(_ADOPTED_COLLECT, root)
+    repeated = _adopted_run(_ADOPTED_COLLECT, root)
+    assert first == repeated
+    assert first["generation"] == adopted["generation"]

@@ -19,11 +19,11 @@ import sys
 import threading
 import time
 import unicodedata
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from contextvars import ContextVar
 from ctypes import wintypes
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -498,7 +498,12 @@ class NativeImage:
         """Use the exact verified capture; never reopen code after acceptance."""
         image = cls.__new__(cls)
         image.root = root.resolve(strict=True)
-        image.files = MappingProxyType(dict(publication.payload))
+        resources = dict(publication.payload)
+        if publication.manifest:
+            if digest(publication.manifest) != publication.manifest_sha256:
+                raise NativeControlError()
+            resources[MANIFEST] = publication.manifest
+        image.files = MappingProxyType(resources)
         image._active = False
         return image
 
@@ -528,6 +533,19 @@ class NativeImage:
         image = self
         original_spec = importlib.util.spec_from_file_location
         original_open, original_io_open = builtins.open, io.open
+        # PEP 420 packages are part of the accepted image too. Derive their
+        # locations solely from captured source paths, never from a disk scan.
+        namespaces: dict[str, list[str]] = {}
+        for relative in image.files:
+            parts = relative.split("/")
+            if parts[0] not in {"src", "tools"} or not relative.endswith(".py"):
+                continue
+            for end in range(2, len(parts)):
+                name = ".".join(parts[1:end])
+                location = str(image.root.joinpath(*parts[:end]))
+                locations = namespaces.setdefault(name, [])
+                if location not in locations:
+                    locations.append(location)
 
         class Loader(importlib.abc.Loader):
             def __init__(self, relative: str) -> None:
@@ -555,6 +573,12 @@ class NativeImage:
                         relative = base + module + suffix
                         if relative in image.files:
                             return captured_spec(fullname, image.root / relative)
+                if fullname in namespaces:
+                    spec = importlib.machinery.ModuleSpec(
+                        fullname, None, is_package=True
+                    )
+                    spec.submodule_search_locations = list(namespaces[fullname])
+                    return spec
                 physical = importlib.machinery.PathFinder.find_spec(fullname, path)
                 if physical is not None:
                     if physical.origin and image.relative(physical.origin) is not None:
@@ -758,6 +782,8 @@ class NativeControl:
                     or time.monotonic() >= stop
                 ):
                     raise NativeControlError()
+                if not exclusive:
+                    _validate_shared_head(self)
                 token = _CONTROL_LEASE.set(self)
                 life = _OperationLifetime(os.getpid(), threading.get_ident())
                 life_token = _OPERATION_LIFETIME.set(life)
@@ -1100,6 +1126,7 @@ class Publication:
     payload: Mapping[str, bytes]
     projection_sha256: str
     manifest_sha256: str
+    manifest: bytes = b""
 
 
 def accept_publication(root: Path, *, trusted_leaf: bytes) -> Publication | None:
@@ -1129,7 +1156,7 @@ def accept_publication(root: Path, *, trusted_leaf: bytes) -> Publication | None
             captured[path] = content
         if captured.get(INVENTORY) != inventory_bytes(captured):
             raise Refusal("derived_inventory_drift")
-        return Publication(MappingProxyType(captured), seal[1], digest(raw))
+        return Publication(MappingProxyType(captured), seal[1], digest(raw), raw)
     except OSError as exc:
         raise Refusal("publication_unreadable") from exc
 
@@ -1142,6 +1169,9 @@ class NativeEntry:
     publication: Publication | None
     image: NativeImage | None
     control: NativeControl | None
+
+    def storage_safety(self, context: Any) -> tuple[str, str, tuple[str, ...]]:
+        return _managed_storage_safety(self, context)
 
     def operation(
         self, *, deadline: float | None = None
@@ -1197,7 +1227,7 @@ def bootstrap_entry(root: Path, *, trusted_leaf: bytes) -> NativeEntry:
     epoch = root / "runtime/native-control/epoch"
     if guard.exists() != epoch.exists():
         raise NativeControlError()
-    control = NativeControl(guard, epoch, seal[1]) if guard.exists() else None
+    control = _bootstrap_control(root, seal[1], guard, epoch)
     from contextlib import ExitStack
 
     with ExitStack() as leases:
@@ -1296,3 +1326,1613 @@ def _publication_read_exclusion(root: Path) -> Iterator[None]:
         for row in manifest["files"]:
             retain(row["relative_path"])
         yield
+
+
+def _read(path: Path, limit: int = 1024 * 1024) -> dict[str, Any]:
+    raw = _read_regular(path.parent, path.name, limit)
+    value = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_no_number)
+    if not isinstance(value, dict):
+        raise NativeControlError()
+    return value
+
+
+def _atomic(path: Path, value: dict[str, Any] | str) -> None:
+    """Same-directory, fsynced replacement; caller owns permanent ingress gate."""
+    raw = value.encode("ascii") if isinstance(value, str) else canonical_json(value)
+    temporary = path.with_name("." + path.name + "." + uuid4().hex)
+    try:
+        with temporary.open("xb") as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+        if os.name != "nt":
+            fd = os.open(path.parent, os.O_RDONLY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+@dataclass(frozen=True)
+class ManagedSelection:
+    """Exact owner/routing/instance/target facts resolved under existing gates.
+
+    The host resolver must read actual deployment/configuration facts; a request
+    payload must never supply this object as an assertion of safety.
+    """
+
+    project: str
+    workplace: str
+    owner: str
+    runtime_instance: str
+    routing_revision: str
+    targets: tuple[tuple[str, str, str, str], ...]
+
+    def document(self) -> dict[str, Any]:
+        return {
+            "project": self.project,
+            "workplace": self.workplace,
+            "owner": self.owner,
+            "runtime_instance": self.runtime_instance,
+            "routing_revision": self.routing_revision,
+            "targets": [list(row) for row in self.targets],
+        }
+
+
+@dataclass
+class _LeaseLife:
+    pid: int
+    thread: int
+    active: bool = True
+
+    def live(self) -> bool:
+        return (
+            self.active
+            and self.pid == os.getpid()
+            and self.thread == threading.get_ident()
+        )
+
+
+@dataclass(frozen=True)
+class _HeldProof:
+    producer: ManagedEnrollmentProducer
+    entry: NativeEntry
+    selection: ManagedSelection
+    resolver: Callable[[], ManagedSelection]
+    admission_held: Callable[[], bool]
+    generation: str
+    state: dict[str, Any]
+    life: _LeaseLife
+
+
+_HELD: ContextVar[_HeldProof | None] = ContextVar(
+    "managed_enrollment_held", default=None
+)
+_LEGACY_HELD: ContextVar[tuple[tuple[LegacyManagedBoundary, _LeaseLife], ...]] = (
+    ContextVar("managed_original_gate_held", default=())
+)
+
+
+class LegacyManagedBoundary:
+    """Version-independent facade of the EXISTING trusted managed launcher.
+
+    Existing launcher owns the permanent ingress OS gate and accepted archive
+    bytes since installation, plus every Job created under it. This object must
+    be the live manager, not a reconstructed caller list. It creates no new disk
+    registry/guard/epoch and cannot manufacture historical completeness.
+    Archive bytes come from qualified archive/installation ingress, not disk
+    self-hashes. No domain work executes in the launcher itself.
+    """
+
+    INGRESS = frozenset({"cli", "runtime", "mcp", "hook", "worker", "updater"})
+
+    def __init__(
+        self,
+        root: Path,
+        *,
+        existing_gate: NativeControl,
+        accepted_archive: Mapping[str, bytes],
+    ) -> None:
+        if not accepted_archive or os.name != "nt":
+            raise NativeControlError()
+        self.root = root.resolve(strict=True)
+        self.gate = existing_gate
+        self.archive = MappingProxyType(dict(accepted_archive))
+        self.archive_pin = digest(
+            canonical_json(
+                {path: digest(raw) for path, raw in sorted(self.archive.items())}
+            )
+        )
+        self.owners: dict[str, list[subprocess.Popen[bytes]]] = {
+            ingress: [] for ingress in self.INGRESS
+        }
+        self.anchor = OwnedJob.create()
+        self.poisoned = False
+        self.installed_verified = False
+        self.producer: ManagedEnrollmentProducer | None = None
+        with self.held():
+            # This verifies initial installed/archive identity at the trusted
+            # manager's existing deployment boundary, before any managed starts.
+            for path, expected in self.archive.items():
+                if _read_regular(self.root, safe_path(path), len(expected)) != expected:
+                    raise NativeControlError()
+            self.installed_verified = True
+
+    @contextmanager
+    def held(self) -> Iterator[None]:
+        if any(owner is self and life.live() for owner, life in _LEGACY_HELD.get()):
+            yield
+            return
+        with self.gate.exclusive():
+            token = _CONTROL_LEASE.set(None)
+            life = _LeaseLife(os.getpid(), threading.get_ident())
+            original = _LEGACY_HELD.set((*_LEGACY_HELD.get(), (self, life)))
+            try:
+                yield
+            finally:
+                life.active = False
+                _LEGACY_HELD.reset(original)
+                _CONTROL_LEASE.reset(token)
+
+    @contextmanager
+    def replacement(self, *, target_leaf: bytes) -> Iterator[LegacyManagedBoundary]:
+        """Pre-native updater boundary, BEFORE first old-install overwrite.
+
+        Existing updater copies accepted payload while this context remains held;
+        then from_legacy_manager revalidates/adopts the new entry before release.
+        No old domain/lazy writes may occur after overwrite. Old guard/epoch are
+        not required. Interrupted replacement remains existing updater recovery.
+        """
+        with self.held():
+            seal = leaf_seal(target_leaf)
+            if seal is None:
+                raise NativeControlError()
+            closure, _ = self.facts()
+            if closure != "proven" or self.producer is not None:
+                raise NativeControlError()
+            for path, expected in self.archive.items():
+                if _read_regular(self.root, safe_path(path), len(expected)) != expected:
+                    raise NativeControlError()
+            directory = self.root / "runtime/managed-ingress"
+            directory.mkdir(parents=True, exist_ok=True)
+            fence = {"legacy_archive": self.archive_pin, "destination": seal[1]}
+            fence_path = directory / "legacy-replacement.json"
+            if fence_path.exists() and _read(fence_path, 4096) != fence:
+                raise NativeControlError()
+            _atomic(fence_path, fence)
+            yield self
+            if self.producer is None or self.producer._state()["phase"] != "bound":
+                raise NativeControlError()
+
+    def launch(
+        self, argv: list[str], *, ingress: str, **options: Any
+    ) -> subprocess.Popen[bytes]:
+        """Existing controlled ingress covers capture, launch gap and child tree.
+
+        No new reservation files. The gate spans first payload read through
+        retained native owner publication. Manager death invalidates baseline;
+        receipts/empty lists cannot be used to reconstruct this authority.
+        """
+        if ingress not in self.INGRESS:
+            raise NativeControlError()
+        with self.held():
+            if (self.root / "runtime/managed-ingress/legacy-replacement.json").exists():
+                raise NativeControlError()
+            if self.producer is not None:
+                # Bound/pending enrollment permanently refuses old starts.
+                return self.producer.launch_legacy(
+                    argv, ingress=ingress, identity={}, **options
+                )
+            if self.poisoned or not self.installed_verified:
+                raise NativeControlError()
+            try:
+                process = spawn_owned(argv, **options)
+                self.owners[ingress].append(process)
+                return process
+            except BaseException:
+                self.poisoned = True
+                raise
+
+    def facts(self) -> tuple[str, list[dict[str, Any]]]:
+        """Caller holds actual existing launch gate; enumerate ALL manager owners."""
+        if (
+            not self.installed_verified
+            or self.poisoned
+            or not self.anchor.handle
+            or self.anchor.active() != 0
+            or set(self.owners) != self.INGRESS
+        ):
+            return "unknown", []
+        records = []
+        active = False
+        for ingress in sorted(self.owners):
+            for process in self.owners[ingress]:
+                job = getattr(process, "native_job", None)
+                facts = getattr(process, "native_facts", None)
+                if job is None or not job.handle or not isinstance(facts, dict):
+                    return "unknown", []
+                active |= job.active() != 0
+                records.append({"ingress": ingress, "facts": facts})
+        return "active" if active else "proven", records
+
+
+class ManagedEnrollmentProducer:
+    """Produce proof from complete managed ingress and native tree observations.
+
+    Trust root: qualified managed launcher + interpreter and accepted archive.
+    All CLI, Runtime/MCP, hooks, workers, updater and attempt trees of the declared
+    installation must enter this launcher BEFORE capturing any payload bytes.
+    A durable reservation precedes spawn; spawn_owned publishes Job facts before
+    resuming user code. Crash windows remain unknown. No terminal/PID/TTL inference.
+    """
+
+    def __init__(self, root: Path, trusted_leaf: bytes) -> None:
+        self.root = root.resolve(strict=True)
+        self.trusted_leaf = trusted_leaf
+        self.directory = self.root / "runtime/managed-ingress"
+        self.state_path = self.directory / "baseline.json"
+        self.gate = NativeControl(
+            self.directory / "ingress.guard", self.directory / "protocol", "managed-v1"
+        )
+        self._jobs: list[Any] = []
+        self.legacy_boundary: LegacyManagedBoundary | None = None
+
+    @classmethod
+    def from_legacy_manager(
+        cls,
+        boundary: LegacyManagedBoundary,
+        entry: NativeEntry,
+        *,
+        selection: ManagedSelection,
+        checkpoint: Callable[[str], None] = lambda _: None,
+    ) -> tuple[ManagedEnrollmentProducer, NativeEntry]:
+        """Adopt REAL older managed owners with no new reservation records.
+
+        Existing supervisor/gate remains held through closure, current accepted
+        image revalidation, durable import and native adoption. The old manager
+        must call this handoff itself; no user-supplied owner list or proof flag.
+        Interrupted import keeps exact old baseline and blocks both ingress paths.
+        """
+        producer = cls(
+            boundary.root,
+            entry.publication.payload[LEAF] if entry.publication else b"",
+        )
+        producer.legacy_boundary = boundary
+        with boundary.held():
+            closure, owners = boundary.facts()
+            if closure != "proven":
+                raise NativeControlError()
+            # Authenticated old archive facts were captured by the original
+            # manager; accepted current publication may now be the new release.
+            with _publication_read_exclusion(boundary.root):
+                publication = producer._publication(entry)
+                fence = producer.directory / "legacy-replacement.json"
+                if fence.exists() and _read(fence, 4096) != {
+                    "legacy_archive": boundary.archive_pin,
+                    "destination": publication.projection_sha256,
+                }:
+                    raise NativeControlError()
+                producer.directory.mkdir(parents=True, exist_ok=True)
+                guard = producer.directory / "ingress.guard"
+                protocol = producer.directory / "protocol"
+                if producer.state_path.exists():
+                    state = producer._state()
+                    recorded = [
+                        _read(producer.directory / (row["slot"] + ".json"))
+                        for row in state["launches"]
+                    ]
+                    if state.get("legacy_archive") != boundary.archive_pin or sorted(
+                        canonical_json(row) for row in recorded
+                    ) != sorted(canonical_json(row["facts"]) for row in owners):
+                        raise NativeControlError()
+                else:
+                    # This is not an empty-registry proof: original manager's
+                    # entire retained owner set was queried under its real gate.
+                    guard.touch(exist_ok=True)
+                    protocol.write_text("managed-v1", encoding="ascii")
+                    records = []
+                    for row in owners:
+                        slot = uuid4().hex
+                        facts = row["facts"]
+                        _atomic(producer.directory / (slot + ".json"), facts)
+                        records.append({"slot": slot, "identity": facts["identity"]})
+                    state = {
+                        "schema": 1,
+                        "installation": uuid4().hex,
+                        "archive": publication.projection_sha256,
+                        "selection": selection.document(),
+                        "sentinel": boundary.anchor.name,
+                        "launches": records,
+                        "phase": "legacy",
+                        "adoption": None,
+                        "replacement": None,
+                        "legacy_archive": boundary.archive_pin,
+                    }
+                    _atomic(producer.state_path, state)
+                # Connect old ingress BEFORE pending. If exact native adoption
+                # fails, both entry paths still serialize on producer ingress.
+                boundary.producer = producer
+            adopted = producer.enroll(entry, selection=selection, checkpoint=checkpoint)
+        return producer, adopted
+
+    @contextmanager
+    def _ingress(self, deadline: float | None = None) -> Iterator[None]:
+        # Reuse the real NativeControl OS lock. Its operation-local marker is
+        # separate from the installation marker, so no shared->exclusive upgrade
+        # or false nested ownership is introduced.
+        with self.gate.exclusive(deadline=deadline):
+            token = _CONTROL_LEASE.set(None)
+            try:
+                yield
+            finally:
+                _CONTROL_LEASE.reset(token)
+
+    def _publish_head(self, state: dict[str, Any]) -> None:
+        _atomic(
+            self.directory / "adoption.json",
+            {
+                "installation": state["installation"],
+                "archive": state["archive"],
+                "generation": state["adoption"],
+                "phase": state["phase"],
+                "epoch": state["replacement"]["pending_epoch"]
+                if state["phase"] == "updating"
+                else self._epoch(state),
+            },
+        )
+
+    @classmethod
+    def begin_managed_installation(
+        cls, root: Path, *, trusted_leaf: bytes, selection: ManagedSelection
+    ) -> ManagedEnrollmentProducer:
+        """Automatic trusted managed-install path, BEFORE its first legacy start.
+
+        Never call for arbitrary existing/unmanaged copies. This is not a public
+        setup flag or an operator receipt. A legacy manager already retaining all
+        old owners needs a separate exact-handle handoff, not this initializer.
+        """
+        if os.name != "nt":
+            raise NativeControlError()
+        producer = cls(root, trusted_leaf)
+        with _publication_read_exclusion(root):
+            publication = accept_publication(root, trusted_leaf=trusted_leaf)
+            if publication is None:
+                raise NativeControlError()
+            # Exclusive directory creation prevents two initializers and refuses
+            # interrupted initialization. Never turn an empty registry into proof.
+            producer.directory.mkdir(parents=True, exist_ok=False)
+            (producer.directory / "ingress.guard").write_bytes(b"0")
+            (producer.directory / "protocol").write_text("managed-v1", encoding="ascii")
+            with producer._ingress():
+                sentinel = OwnedJob.create()
+                producer._jobs.append(sentinel)
+                _atomic(
+                    producer.state_path,
+                    {
+                        "schema": 1,
+                        "installation": uuid4().hex,
+                        "archive": publication.projection_sha256,
+                        "selection": selection.document(),
+                        "sentinel": sentinel.name,
+                        "launches": [],
+                        "phase": "legacy",
+                        "adoption": None,
+                        "replacement": None,
+                    },
+                )
+        return producer
+
+    def _state(self) -> dict[str, Any]:
+        state = _read(self.state_path)
+        if (
+            set(state) - {"legacy_archive", "retirement", "successors"}
+            != {
+                "schema",
+                "installation",
+                "archive",
+                "selection",
+                "sentinel",
+                "launches",
+                "phase",
+                "adoption",
+                "replacement",
+            }
+            or state["schema"] != 1
+            or state["phase"] not in {"legacy", "pending", "bound", "updating"}
+            or not isinstance(state["launches"], list)
+            or not isinstance(state["installation"], str)
+            or len(state["installation"]) != 32
+        ):
+            raise NativeControlError()
+        return state
+
+    def _publication(self, entry: NativeEntry | None = None) -> Publication:
+        try:
+            publication = accept_publication(self.root, trusted_leaf=self.trusted_leaf)
+        except (OSError, ValueError):
+            raise NativeControlError() from None
+        if publication is None or (
+            entry is not None
+            and (entry.root != self.root or entry.publication != publication)
+        ):
+            raise NativeControlError()
+        return publication
+
+    def launch_legacy(
+        self,
+        argv: list[str],
+        *,
+        ingress: str,
+        identity: Mapping[str, Any],
+        **options: Any,
+    ) -> subprocess.Popen[bytes]:
+        """Managed owner starts, including already captured legacy code, use Job.
+
+        One reservation belongs to one exact attempt. Persisted reservations are
+        never discarded as stale and block adoption if no authenticated Job exists.
+        """
+        if ingress not in {"cli", "runtime", "mcp", "hook", "worker", "updater"}:
+            raise NativeControlError()
+        with self._ingress():
+            state = self._state()
+            if state["phase"] != "legacy":
+                raise NativeControlError()
+            publication = self._publication()
+            if state["archive"] != publication.projection_sha256:
+                raise NativeControlError()
+            slot = uuid4().hex
+            job_identity = {
+                "installation": state["installation"],
+                "ingress": ingress,
+                "slot": slot,
+                "attempt_identity": dict(identity),
+            }
+            state["launches"].append({"slot": slot, "identity": job_identity})
+            _atomic(self.state_path, state)
+            # This call writes receipt before first user instruction. If it fails,
+            # keep reservation; interrupted launch is unknown until exact recovery.
+            process = spawn_owned(
+                argv,
+                receipt_path=self.directory / (slot + ".json"),
+                identity=job_identity,
+                **options,
+            )
+            self._jobs.append(getattr(process, "native_job"))
+            return process
+
+    def _closure(self, state: dict[str, Any]) -> str:
+        if state["phase"] in {"legacy", "pending"}:
+            return self._legacy_closure(state)
+        try:
+            self._durable(state)
+            return "proven"
+        except (OSError, ValueError, KeyError, TypeError):
+            return "unknown"
+
+    def inspect(self) -> str:
+        """Noncreating closure observation. This verdict alone is not a lease."""
+        try:
+            with self._ingress():
+                return self._closure(self._state())
+        except (OSError, ValueError, KeyError, TypeError):
+            return "unknown"
+
+    def enroll(
+        self,
+        entry: NativeEntry,
+        *,
+        selection: ManagedSelection,
+        checkpoint: Callable[[str], None] = lambda _: None,
+    ) -> NativeEntry:
+        if _CONTROL_LEASE.get() is not None:
+            raise NativeControlError()
+        with self._ingress():
+            state = self._state()
+            with _publication_read_exclusion(self.root):
+                publication = self._publication(entry)
+                if (
+                    state["archive"] != publication.projection_sha256
+                    or state["selection"] != selection.document()
+                    or state["phase"] == "updating"
+                ):
+                    raise NativeControlError()
+                if state["phase"] == "bound":
+                    self._durable(state)
+                    control = self._control(state)
+                    with control.exclusive():
+                        self._publish_head(state)
+                    return replace(entry, control=control)
+                if self._legacy_closure(state) != "proven":
+                    raise NativeControlError()
+                baseline = {
+                    key: state[key]
+                    for key in (
+                        "installation",
+                        "archive",
+                        "selection",
+                        "sentinel",
+                        "launches",
+                    )
+                }
+                if "legacy_archive" in state:
+                    baseline["legacy_archive"] = state["legacy_archive"]
+                generation = "sha256:" + digest(canonical_json(baseline))
+                if state["phase"] == "pending" and state["adoption"] != generation:
+                    raise NativeControlError()
+                state["adoption"], state["phase"] = generation, "pending"
+                _atomic(self.state_path, state)
+                checkpoint("pending")
+                directory = self.root / "runtime/native-control"
+                directory.mkdir(exist_ok=True)
+                guard, epoch = directory / "installation.guard", directory / "epoch"
+                if not guard.exists():
+                    with guard.open("xb") as stream:
+                        stream.write(b"0")
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                checkpoint("guard")
+                retired = {
+                    "binding": self._binding(),
+                    "baseline": baseline,
+                    "generation": generation,
+                }
+                if state.get("retirement", retired) != retired:
+                    raise NativeControlError()
+                state["retirement"], state["successors"] = retired, []
+                _atomic(self.state_path, state)
+                expected = self._epoch(state)
+                if epoch.exists() and _read_regular(
+                    directory, "epoch", 256
+                ) != expected.encode("ascii"):
+                    raise NativeControlError()
+                if not epoch.exists():
+                    _atomic(epoch, expected)
+                checkpoint("epoch")
+                control = NativeControl(guard, epoch, expected)
+                with control.exclusive():
+                    # Original ingress + complete Jobs still held/verified here.
+                    if self._legacy_closure(state) != "proven":
+                        raise NativeControlError()
+                    state["phase"] = "bound"
+                    _atomic(self.state_path, state)
+                    checkpoint("bound_state")
+                    self._publish_head(state)
+                    checkpoint("bound")
+                return replace(entry, control=control)
+
+    @contextmanager
+    def operation(
+        self,
+        entry: NativeEntry,
+        *,
+        resolver: Callable[[], ManagedSelection],
+        admission_held: Callable[[], bool],
+        deadline: float | None = None,
+    ) -> Iterator[NativeEntry]:
+        """Retain native bound exclusion through all migration phases.
+
+        Native shared is acquired before admission and excludes replacement.
+        Bound state permanently refuses legacy starts under their ingress gate;
+        retired managers are not required. Durable validation precedes admission.
+        Resolver is rechecked inside the real gates at freeze/resume/cutover.
+        """
+        with entry.operation(deadline=deadline):
+            state = self._state()
+            if entry.control is None or state["phase"] != "bound":
+                raise NativeControlError()
+            selection = resolver()
+            if (
+                self._epoch(state) != entry.control.accepted_epoch
+                or state["selection"] != selection.document()
+                or self._closure(state) != "proven"
+            ):
+                raise NativeControlError()
+            life = _LeaseLife(os.getpid(), threading.get_ident())
+            proof = _HeldProof(
+                self,
+                entry,
+                selection,
+                resolver,
+                admission_held,
+                state["adoption"],
+                state,
+                life,
+            )
+            token = _HELD.set(proof)
+            try:
+                yield entry
+            finally:
+                life.active = False
+                _HELD.reset(token)
+
+    @contextmanager
+    def replacement(
+        self,
+        entry: NativeEntry,
+        *,
+        target_leaf: bytes,
+        checkpoint: Callable[[str], None] = lambda _: None,
+        _prepare: Callable[[], None] | None = None,
+    ) -> Iterator[Callable[[bytes], Publication]]:
+        if entry.control is None or _CONTROL_LEASE.get() is not None:
+            raise NativeControlError()
+        seal = leaf_seal(target_leaf)
+        if seal is None:
+            raise NativeControlError()
+        with self._ingress():
+            state = self._state()
+            if state["phase"] != "bound":
+                raise NativeControlError()
+            self._durable(state)
+            if entry.control.accepted_epoch != self._epoch(state):
+                raise NativeControlError()
+            with entry.control.exclusive():
+                # Revalidate accepted old bytes under exclusion BEFORE overwrite.
+                self._publication(entry)
+                if _prepare is not None:
+                    # Once-only old Core planning happens under exclusion,
+                    # before any durable fence or payload mutation.
+                    _prepare()
+                successor = {
+                    "from_archive": state["archive"],
+                    "to_archive": seal[1],
+                    "previous": state["adoption"],
+                    "generation": "sha256:"
+                    + digest(
+                        canonical_json(
+                            {"previous": state["adoption"], "archive": seal[1]}
+                        )
+                    ),
+                }
+                future = dict(
+                    state,
+                    archive=seal[1],
+                    adoption=successor["generation"],
+                    successors=[*state["successors"], successor],
+                    replacement=None,
+                    phase="bound",
+                )
+                state["phase"] = "updating"
+                state["replacement"] = {
+                    "successor": successor,
+                    "old_epoch": self._epoch(state),
+                    "new_epoch": self._epoch(future),
+                }
+                state["replacement"]["pending_epoch"] = self._pending_epoch(
+                    state["replacement"]
+                )
+                # Shared primitives consult this bounded head. Publish refusal
+                # BEFORE changing baseline, so manager death cannot expose the
+                # old epoch in the baseline-before-epoch crash window.
+                self._publish_head(state)
+                checkpoint("updating_head")
+                _atomic(self.state_path, state)
+                checkpoint("updating_state")
+                _atomic(entry.control.epoch_path, state["replacement"]["pending_epoch"])
+                self._publish_head(state)
+                checkpoint("updating")
+
+                def publish(trusted_leaf: bytes) -> Publication:
+                    if (
+                        state["phase"] != "updating"
+                        or _CONTROL_LEASE.get() is not entry.control
+                        or not _native_life_held(entry.control)
+                    ):
+                        raise NativeControlError()
+                    with _publication_read_exclusion(self.root):
+                        publication = accept_publication(
+                            self.root, trusted_leaf=trusted_leaf
+                        )
+                        if (
+                            publication is None
+                            or publication.projection_sha256 != seal[1]
+                        ):
+                            raise NativeControlError()
+                        self._finish_replacement(state, publication, checkpoint)
+                        return publication
+
+                yield publish
+                if state["phase"] != "bound":
+                    raise NativeControlError()
+
+    def _finish_replacement(
+        self,
+        state: dict[str, Any],
+        publication: Publication,
+        checkpoint: Callable[[str], None],
+    ) -> None:
+        record = state["replacement"]
+        successor = record["successor"]
+        if successor["to_archive"] != publication.projection_sha256:
+            raise NativeControlError()
+        future = dict(
+            state,
+            archive=successor["to_archive"],
+            adoption=successor["generation"],
+            successors=[*state["successors"], successor],
+            replacement=None,
+            phase="bound",
+        )
+        self._durable(future)
+        if record["new_epoch"] != self._epoch(future):
+            raise NativeControlError()
+        _atomic(self.root / "runtime/native-control/epoch", record["new_epoch"])
+        checkpoint("replacement_epoch")
+        state.clear()
+        state.update(future)
+        _atomic(self.state_path, state)
+        checkpoint("replacement_bound")
+        self._publish_head(state)
+
+    def recover_replacement(self, *, trusted_leaf: bytes) -> NativeEntry:
+        seal = leaf_seal(trusted_leaf)
+        if seal is None:
+            raise NativeControlError()
+        with self._ingress():
+            state = self._state()
+            if state["phase"] not in {"bound", "updating"}:
+                raise NativeControlError()
+            self._durable(state)
+            expected = self._epoch(state)
+            if state["phase"] == "updating":
+                record = state["replacement"]
+                if set(record) != {
+                    "successor",
+                    "old_epoch",
+                    "new_epoch",
+                    "pending_epoch",
+                } or record["pending_epoch"] != self._pending_epoch(record):
+                    raise NativeControlError()
+                head = _read(self.directory / "adoption.json", 4096)
+                if head != {
+                    "installation": state["installation"],
+                    "archive": state["archive"],
+                    "generation": state["adoption"],
+                    "phase": "updating",
+                    "epoch": record["pending_epoch"],
+                }:
+                    raise NativeControlError()
+                future = dict(
+                    state,
+                    archive=record["successor"]["to_archive"],
+                    adoption=record["successor"]["generation"],
+                    successors=[*state["successors"], record["successor"]],
+                    phase="bound",
+                    replacement=None,
+                )
+                self._durable(future)
+                if (
+                    record["old_epoch"] != expected
+                    or record["new_epoch"] != self._epoch(future)
+                    or seal[1] != future["archive"]
+                ):
+                    raise NativeControlError()
+                accepted = {expected, record["pending_epoch"], record["new_epoch"]}
+            else:
+                accepted = {expected}
+                if seal[1] != state["archive"]:
+                    raise NativeControlError()
+            directory = self.root / "runtime/native-control"
+            epoch = _read_regular(directory, "epoch", 256).decode("ascii")
+            if epoch not in accepted:
+                raise NativeControlError()
+            control = NativeControl(
+                directory / "installation.guard", directory / "epoch", epoch
+            )
+            with control.exclusive():
+                with _publication_read_exclusion(self.root):
+                    publication = accept_publication(
+                        self.root, trusted_leaf=trusted_leaf
+                    )
+                    if publication is None:
+                        raise NativeControlError()
+                    if state["phase"] == "updating":
+                        self._finish_replacement(state, publication, lambda _: None)
+                    else:
+                        self._publish_head(state)
+            return NativeEntry(
+                self.root,
+                publication,
+                NativeImage.from_publication(self.root, publication),
+                self._control(state),
+            )
+
+    def _legacy_closure(self, state: dict[str, Any]) -> str:
+        """Query every reserved tree; empty launch list alone grants nothing."""
+        if os.name != "nt":
+            return "unknown"
+        # A retained kernel sentinel proves continuity of the trusted manager.
+        # If the manager died, do not reconstruct lifetime completeness from disk.
+        kernel = _kernel()
+        handle = kernel.OpenJobObjectW(4 | 8, False, state["sentinel"])
+        if not handle:
+            return "unknown"
+        sentinel = OwnedJob(handle, state["sentinel"])
+        try:
+            if sentinel.active():
+                return "unknown"
+        finally:
+            sentinel.close()
+        slots: set[str] = set()
+        active = False
+        unknown = False
+        for row in state["launches"]:
+            try:
+                slot = row["slot"]
+                if (
+                    not isinstance(slot, str)
+                    or len(slot) != 32
+                    or any(c not in "0123456789abcdef" for c in slot)
+                    or slot in slots
+                ):
+                    raise NativeControlError()
+                slots.add(slot)
+                facts = _read(self.directory / (slot + ".json"))
+                if facts.get("identity") != row["identity"]:
+                    raise NativeControlError()
+                job = reopen_job(facts, pid=facts["pid"], identity=row["identity"])
+                if job is not None:
+                    try:
+                        active |= job.active() != 0
+                    finally:
+                        job.close()
+            except (OSError, ValueError, KeyError, TypeError):
+                unknown = True
+        return "unknown" if unknown else "active" if active else "proven"
+
+    def _binding(self) -> list[Any]:
+        result: list[Any] = [str(self.root)]
+        for ancestor in (
+            *self.root.parents,
+            self.root / "runtime",
+            self.root / "runtime/native-control",
+        ):
+            info = ancestor.lstat()
+            if (
+                stat.S_ISLNK(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & 0x400
+            ):
+                raise NativeControlError()
+        for path in (
+            self.root,
+            self.directory,
+            self.directory / "ingress.guard",
+            self.root / "runtime/native-control/installation.guard",
+        ):
+            info = path.lstat()
+            if (
+                stat.S_ISLNK(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & 0x400
+            ):
+                raise NativeControlError()
+            result.append([info.st_dev, info.st_ino])
+        return result
+
+    def _epoch(self, state: dict[str, Any]) -> str:
+        return "adopted-v2:" + digest(
+            canonical_json(
+                {
+                    "retirement": state["retirement"],
+                    "successors": state["successors"],
+                    "archive": state["archive"],
+                    "adoption": state["adoption"],
+                }
+            )
+        )
+
+    def _pending_epoch(self, record: dict[str, Any]) -> str:
+        return "replacing:" + digest(
+            canonical_json(
+                {key: record[key] for key in ("successor", "old_epoch", "new_epoch")}
+            )
+        )
+
+    def _durable(self, state: dict[str, Any]) -> None:
+        retired = state["retirement"]
+        if (
+            type(state["schema"]) is not int
+            or len(state["installation"]) != 32
+            or any(c not in "0123456789abcdef" for c in state["installation"])
+        ):
+            raise NativeControlError()
+        if (
+            set(retired) != {"binding", "baseline", "generation"}
+            or retired["binding"] != self._binding()
+        ):
+            raise NativeControlError()
+        baseline = retired["baseline"]
+        keys = ("installation", "selection", "sentinel", "launches")
+        if any(state[key] != baseline[key] for key in keys):
+            raise NativeControlError()
+        if state.get("legacy_archive") != baseline.get("legacy_archive"):
+            raise NativeControlError()
+        generation = "sha256:" + digest(canonical_json(baseline))
+        if generation != retired["generation"]:
+            raise NativeControlError()
+        archive = baseline["archive"]
+        for successor in state["successors"]:
+            if set(successor) != {
+                "from_archive",
+                "to_archive",
+                "previous",
+                "generation",
+            }:
+                raise NativeControlError()
+            expected = "sha256:" + digest(
+                canonical_json(
+                    {"previous": generation, "archive": successor["to_archive"]}
+                )
+            )
+            if (
+                successor["from_archive"] != archive
+                or successor["previous"] != generation
+                or successor["generation"] != expected
+            ):
+                raise NativeControlError()
+            archive, generation = successor["to_archive"], expected
+        if state["archive"] != archive or state["adoption"] != generation:
+            raise NativeControlError()
+        if state["phase"] == "bound" and state["replacement"] is not None:
+            raise NativeControlError()
+
+    def _control(self, state: dict[str, Any]) -> NativeControl:
+        self._durable(state)
+        directory = self.root / "runtime/native-control"
+        return NativeControl(
+            directory / "installation.guard", directory / "epoch", self._epoch(state)
+        )
+
+    def attach(self, entry: NativeEntry, *, selection: ManagedSelection) -> NativeEntry:
+        """Fresh independent entry; no creation/repair and no caller safety pins."""
+        with self._ingress():
+            state = self._state()
+            if state["phase"] != "bound" or state["selection"] != selection.document():
+                raise NativeControlError()
+            control = self._control(state)
+            with control.operation():
+                publication = self._publication(entry)
+                if publication.projection_sha256 != state["archive"]:
+                    raise NativeControlError()
+                head = _read(self.directory / "adoption.json", 4096)
+                if head != {
+                    "installation": state["installation"],
+                    "archive": state["archive"],
+                    "generation": state["adoption"],
+                    "phase": "bound",
+                    "epoch": self._epoch(state),
+                }:
+                    raise NativeControlError()
+            return replace(entry, control=control)
+
+
+def _managed_storage_safety(
+    entry: NativeEntry, context: Any
+) -> tuple[str, str, tuple[str, ...]]:
+    """Actual NativeEntry adapter; no caller-provided proven MigrationSafety."""
+    proof = _HELD.get()
+    if (
+        proof is None
+        or not proof.life.live()
+        or proof.entry is not entry
+        or not _native_life_held(entry.control)
+        or not proof.admission_held()
+    ):
+        return "unknown", "", ("managed_exclusion_not_held",)
+    try:
+        # Durable validation completed before admission. Native shared excludes
+        # replacement; bound state refuses all declared legacy launch ingresses.
+        state = proof.state
+        head = _read(proof.producer.directory / "adoption.json", 4096)
+        selected = proof.resolver()
+        if (
+            head
+            != {
+                "installation": state["installation"],
+                "archive": state["archive"],
+                "generation": state["adoption"],
+                "phase": "bound",
+                "epoch": entry.control.accepted_epoch
+                if entry.control is not None
+                else "",
+            }
+            or selected != proof.selection
+            or str(context.project_root or "") != selected.project
+            or str(context.workplace_root or "") != selected.workplace
+            or not set(
+                (t.kind, str(t.target), t.scope, t.owner_id) for t in context.targets
+            ).issubset(selected.targets)
+            or entry.control is None
+            or _CONTROL_LEASE.get() is not entry.control
+            or _read_regular(entry.control.epoch_path.parent, "epoch", 256)
+            != entry.control.accepted_epoch.encode("ascii")
+        ):
+            raise NativeControlError()
+        return (
+            "proven",
+            proof.generation,
+            (
+                "native_bound_operation_held",
+                "durable_retired_legacy_set",
+                "accepted_archive:" + state["archive"],
+                "adoption:" + proof.generation,
+            ),
+        )
+    except (OSError, ValueError, KeyError, TypeError):
+        return "unknown", "", ("managed_revalidation_failed",)
+
+
+def _durable_control(root: Path, archive: str) -> NativeControl:
+    """Pre-Core control selection. Pending/updating never expose raw old lease."""
+    producer = ManagedEnrollmentProducer(root, b"")
+    state = producer._state()
+    if state["phase"] != "bound" or state["archive"] != archive:
+        raise NativeControlError()
+    return producer._control(state)
+
+
+def _bootstrap_control(
+    root: Path, archive: str, guard: Path, epoch: Path
+) -> NativeControl | None:
+    """Pending before native guard creation is already a durable refusal."""
+    producer = ManagedEnrollmentProducer(root, b"")
+    if producer.state_path.exists():
+        state = producer._state()
+        if state["phase"] != "legacy":
+            return _durable_control(root, archive)
+        if guard.exists() or epoch.exists():
+            raise NativeControlError()
+    if guard.exists():
+        return _durable_control(root, archive)
+    return None
+
+
+def _validate_shared_head(control: NativeControl) -> None:
+    """Bounded phase check under the OS lease, including raw child leases.
+
+    Enrollment/recovery use exclusive primitives. Generic ingress gates have a
+    different guard filename. Domain execution always requires a shared lease.
+    """
+    if control.guard.name != "installation.guard":
+        return
+    try:
+        head = _read(
+            control.guard.parent.parent / "managed-ingress/adoption.json", 4096
+        )
+        if (
+            set(head) != {"installation", "archive", "generation", "phase", "epoch"}
+            or head["phase"] != "bound"
+            or head["epoch"] != control.accepted_epoch
+        ):
+            raise NativeControlError()
+    except (OSError, ValueError, KeyError, TypeError):
+        raise NativeControlError() from None
+
+
+def _native_life_held(control: NativeControl | None) -> bool:
+    life = _OPERATION_LIFETIME.get()
+    return (
+        control is not None
+        and _CONTROL_LEASE.get() is control
+        and life is not None
+        and life.active
+        and life.pid == os.getpid()
+        and life.thread_id == threading.get_ident()
+    )
+
+
+class NativeUpdateError(Exception):
+    """Carry existing updater errors without invoking retired Core handlers."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code, self.message = code, message
+        super().__init__(message)
+
+
+def _update_atomic(path: Path, raw: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".pf-update-tmp")
+    with _PHYSICAL_OPEN(temporary, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(temporary, path)
+
+
+def _update_json(path: Path, value: Mapping[str, Any]) -> None:
+    _update_atomic(path, (json.dumps(value, indent=2, sort_keys=True) + "\n").encode())
+
+
+def _update_now() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _update_target(root: Path, relative: str) -> Path:
+    target = root / safe_path(relative)
+    for part in (target, *target.parents):
+        if part == root:
+            break
+        if part.exists() or part.is_symlink():
+            info = part.lstat()
+            if (
+                stat.S_ISLNK(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & 0x400
+            ):
+                raise NativeControlError()
+    if not target.resolve().is_relative_to(root.resolve()):
+        raise NativeControlError()
+    return target
+
+
+def _freeze_update_archive(raw: bytes, plan: Mapping[str, Any]) -> Build:
+    """Freeze qualified archive bytes once; current installed files grant no pins."""
+    import zipfile
+
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        if len(archive.namelist()) != len(set(archive.namelist())):
+            raise NativeControlError()
+        manifest = archive.read(MANIFEST)
+        parsed = parse_manifest(manifest)
+        if parsed != plan["new_manifest"]:
+            raise NativeControlError()
+        payload = {
+            row["relative_path"]: archive.read(row["relative_path"])
+            for row in parsed["files"]
+        }
+    leaf = payload[LEAF]
+    seal = leaf_seal(leaf)
+    if seal is None or digest(projection(manifest)) != seal[1]:
+        raise NativeControlError()
+    for row in parsed["files"]:
+        content = payload[row["relative_path"]]
+        if len(content) != row["size"] or digest(content) != row["sha256"]:
+            raise NativeControlError()
+    if payload[INVENTORY] != inventory_bytes(payload):
+        raise NativeControlError()
+    return Build(MappingProxyType(payload), manifest, seal[1])
+
+
+def replace_core(
+    entry: NativeEntry,
+    archive_path: Path,
+    prepare: Callable[[], dict[str, Any]],
+    *,
+    workplace_root: Path | None,
+) -> dict[str, Any]:
+    """Replace exclusively, then surrender all parent writes to a fresh child.
+
+    prepare is the existing Core planner, called exactly once under exclusion,
+    before the native engine writes anything. It must return only plain data
+    after its domain/SQL/diagnostic scopes unwind. No callback runs thereafter.
+    G1 enrollment must already have qualified entry.control and its owner set.
+    """
+    import base64
+    import shutil
+    import zipfile
+
+    if entry.control is None or entry.publication is None or entry.image is None:
+        raise NativeControlError()
+    root = entry.root
+    producer = ManagedEnrollmentProducer(root, entry.publication.payload[LEAF])
+    try:
+        with _PHYSICAL_OPEN(archive_path, "rb") as stream:
+            archive_raw = stream.read(MAX_TOTAL + MAX_MANIFEST + 1)
+        if len(archive_raw) > MAX_TOTAL + MAX_MANIFEST:
+            raise NativeControlError()
+        with zipfile.ZipFile(io.BytesIO(archive_raw)) as archive:
+            selected_manifest = parse_manifest(archive.read(MANIFEST))
+        frozen = _freeze_update_archive(
+            archive_raw, {"new_manifest": selected_manifest}
+        )
+    except zipfile.BadZipFile as error:
+        raise NativeUpdateError("archive_invalid", "invalid ZIP archive") from error
+    except (Refusal, KeyError) as error:
+        raise NativeControlError() from error
+    plan: dict[str, Any] = {}
+
+    def prepare_once() -> None:
+        plan.update(prepare())
+        if plan["new_manifest"] != selected_manifest:
+            raise NativeControlError()
+
+    with producer.replacement(
+        entry, target_leaf=frozen.payload[LEAF], _prepare=prepare_once
+    ) as publish:
+        update_id = "core-update-" + _update_now().replace(":", "").replace("-", "")
+        work = root / "runtime/core-update"
+        backup = work / "backups" / update_id
+        backup.mkdir(parents=True, exist_ok=False)
+        progress_path = work / "in-progress.json"
+        restored = set(plan["restored"])
+        backup_paths = sorted(set(plan["removed"]) | set(plan["changed"]) | restored)
+        write_paths = sorted(set(plan["added"]) | set(plan["changed"]) | restored)
+        migration = plan.get("workplace_migration") or {}
+        pending = (
+            [{"op": "backup", "path": p} for p in backup_paths]
+            + [{"op": "delete", "path": p} for p in plan["removed"]]
+            + [{"op": "write", "path": p} for p in write_paths]
+            + [{"op": "write_manifest", "path": MANIFEST}]
+        )
+        migration_id = str((migration.get("migration") or {}).get("id") or "workplace")
+        if migration.get("status") == "planned" and migration.get("operations"):
+            pending.append({"op": "workplace_migration", "path": migration_id})
+        backed_up: dict[str, str | None] = {}
+        progress: dict[str, Any] = {
+            "schema_version": 1,
+            "update_id": update_id,
+            "status": "applying",
+            "started_at": _update_now(),
+            "core_root": str(root),
+            "archive": str(archive_path),
+            "backup_dir": str(backup),
+            "installed_version": plan.get("installed_version"),
+            "target_version": plan.get("available_version"),
+            "counts": plan["counts"],
+            "completed_operations": [],
+            "pending_operations": pending,
+            "backed_up": backed_up,
+        }
+
+        def complete(op: str, path: str) -> None:
+            progress["completed_operations"].append(
+                {"op": op, "path": path, "completed_at": _update_now()}
+            )
+            pending.remove({"op": op, "path": path})
+            _update_json(progress_path, progress)
+
+        try:
+            old_manifest = _read_regular(root, MANIFEST, MAX_MANIFEST)
+            _update_atomic(backup / "control/old-manifest.json", old_manifest)
+            _update_atomic(backup / "control/new-manifest.json", frozen.manifest)
+            _update_json(
+                backup / "control/plan.json",
+                {k: v for k, v in plan.items() if k != "new_manifest"},
+            )
+            _update_json(progress_path, progress)
+            for relative in backup_paths:
+                source = _update_target(root, relative)
+                target = backup / "files" / relative
+                if source.is_file():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with (
+                        _PHYSICAL_OPEN(source, "rb") as incoming,
+                        _PHYSICAL_OPEN(target, "wb") as outgoing,
+                    ):
+                        shutil.copyfileobj(incoming, outgoing)
+                        outgoing.flush()
+                        os.fsync(outgoing.fileno())
+                    shutil.copystat(source, target)
+                    backed_up[relative] = target.relative_to(backup).as_posix()
+                else:
+                    backed_up[relative] = None
+                complete("backup", relative)
+            # Durable producer pending head/epoch already excludes old readers.
+            for relative in plan["removed"]:
+                target = _update_target(root, relative)
+                target.unlink(missing_ok=True)
+                parent = target.parent
+                while parent != root:
+                    try:
+                        parent.rmdir()
+                    except OSError:
+                        break
+                    parent = parent.parent
+                complete("delete", relative)
+            for relative in write_paths:
+                _update_atomic(_update_target(root, relative), frozen.payload[relative])
+                complete("write", relative)
+            _update_atomic(root / MANIFEST, frozen.manifest)
+            complete("write_manifest", MANIFEST)
+            installed = accept_publication(root, trusted_leaf=frozen.payload[LEAF])
+            if installed is None or installed.manifest_sha256 != digest(
+                frozen.manifest
+            ):
+                raise NativeControlError()
+            publish(frozen.payload[LEAF])
+            successor = producer._state()
+            handoff = {
+                "schema_version": 1,
+                "root": str(root),
+                "epoch": producer._epoch(successor),
+                "generation": successor["adoption"],
+                "selection": successor["selection"],
+                "manifest_sha256": digest(frozen.manifest),
+                "leaf_sha256": digest(frozen.payload[LEAF]),
+                "leaf": base64.b64encode(frozen.payload[LEAF]).decode("ascii"),
+                "archive": base64.b64encode(archive_raw).decode("ascii"),
+                "archive_sha256": digest(archive_raw),
+                "workplace_root": str(workplace_root) if workplace_root else None,
+                "device_config_path": str(plan["_native_device_config_path"]),
+                "configuration": plan["_native_configuration"],
+                "progress": progress,
+                "migration": migration,
+                "migration_id": migration_id,
+                "available_version": plan["available_version"],
+            }
+        except Exception as error:
+            # Only captured stdlib leaf code writes after the first overwrite.
+            progress.update(
+                status="failed",
+                failed_at=_update_now(),
+                error={"code": "file_operation_failed", "message": str(error)},
+            )
+            try:
+                _update_json(progress_path, progress)
+            except OSError:
+                pass
+            raise NativeUpdateError("file_operation_failed", str(error)) from error
+    # No parent lease survives here. The child independently acquires before
+    # accepting payload/importing Core; a racing publication causes refusal.
+    return _launch_update_child(handoff)
+
+
+_UPDATE_CHILD_BOOTSTRAP = """import base64,json,sys,types
+data=json.load(sys.stdin)
+leaf=base64.b64decode(data["leaf"],validate=True)
+module=types.ModuleType("pf_native_control")
+module.__file__=data["root"]+"/tools/pf_native_control.py"
+module._captured_source=leaf
+sys.modules[module.__name__]=module
+exec(compile(leaf,module.__file__,"exec",dont_inherit=True),module.__dict__)
+module._run_update_child(data)
+"""
+
+
+def _launch_update_child(
+    handoff: dict[str, Any], *, timeout: float = 210
+) -> dict[str, Any]:
+    try:
+        child = subprocess.run(
+            [sys.executable, "-I", "-B", "-c", _UPDATE_CHILD_BOOTSTRAP],
+            input=json.dumps(handoff),
+            text=True,
+            encoding="utf-8",
+            errors="strict",
+            capture_output=True,
+            shell=False,
+            timeout=timeout,
+        )
+        result = json.loads(child.stdout)
+        if child.returncode != 0 or not isinstance(result, dict):
+            raise ValueError("post-update child refused")
+        if "_update_error" in result:
+            error = result["_update_error"]
+            raise NativeUpdateError(error["code"], error["message"])
+        if handoff.get("phase") in {"doctor", "storage"}:
+            return result
+        if result.get("update_id") != handoff["progress"]["update_id"]:
+            raise ValueError("post-update child identity mismatch")
+        return result
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        # Parent does not repair/write old last-apply, diagnostics or domains.
+        raise NativeUpdateError(
+            "file_operation_failed", "post-update child unavailable"
+        ) from error
+
+
+def _run_update_child(data: dict[str, Any]) -> None:
+    """Own an independent lease before capture/import through the final write."""
+    import base64
+
+    global _ENTRY
+    root = Path(data["root"])
+    trusted_leaf = getattr(sys.modules[__name__], "_captured_source")
+    seal = leaf_seal(trusted_leaf)
+    if (
+        data.get("schema_version") != 1
+        or seal is None
+        or digest(trusted_leaf) != data["leaf_sha256"]
+    ):
+        raise NativeControlError()
+    for path in (root, *root.parents):
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise NativeControlError()
+    producer = ManagedEnrollmentProducer(root, trusted_leaf)
+    control = _durable_control(root, seal[1])
+    if control.accepted_epoch != data["epoch"]:
+        raise NativeControlError()
+    with control.operation():
+        successor = producer._state()
+        if (
+            successor["adoption"] != data["generation"]
+            or successor["selection"] != data["selection"]
+            or producer._epoch(successor) != data["epoch"]
+        ):
+            raise NativeControlError()
+        # Publication epochs can repeat on a same-byte reinstall. Bind this
+        # finalizer to the exact durable update, not just the publication hash.
+        if data.get("phase") not in {"doctor", "storage"}:
+            progress = json.loads(
+                _read_regular(
+                    root, "runtime/core-update/in-progress.json", MAX_MANIFEST
+                )
+            )
+            if (
+                progress.get("update_id") != data["progress"]["update_id"]
+                or progress.get("status") != "applying"
+            ):
+                raise NativeControlError()
+        if _read_regular(root, LEAF, MAX_FILE) != trusted_leaf:
+            raise NativeControlError()
+        publication = accept_publication(root, trusted_leaf=trusted_leaf)
+        if (
+            publication is None
+            or publication.manifest_sha256 != data["manifest_sha256"]
+        ):
+            raise NativeControlError()
+        archive_raw = base64.b64decode(data["archive"], validate=True)
+        if digest(archive_raw) != data["archive_sha256"]:
+            raise NativeControlError()
+        image = NativeImage.from_publication(root, publication)
+        image.activate()
+        _ENTRY = NativeEntry(root, publication, image, control)
+        sys.path[:0] = [str(root / "tools"), str(root / "src")]
+        if data.get("phase") in {"doctor", "storage"}:
+            result = _update_action(data)
+        else:
+            try:
+                result = _finish_update_child(data, archive_raw)
+            except Exception as error:
+                failure = {
+                    "code": getattr(error, "code", "file_operation_failed"),
+                    "message": getattr(error, "message", str(error)),
+                }
+                data["progress"].update(
+                    status="failed", failed_at=_update_now(), error=failure
+                )
+                try:
+                    _update_json(
+                        root / "runtime/core-update/in-progress.json", data["progress"]
+                    )
+                except OSError:
+                    pass
+                result = {"_update_error": failure}
+        print(json.dumps(result, indent=2, sort_keys=True))
+
+
+def _finish_update_child(data: dict[str, Any], archive_raw: bytes) -> dict[str, Any]:
+    """Run only new Core code under the child's live operation lease."""
+    from processforge_core.maintenance.update import apply_workplace_migration
+
+    progress = data["progress"]
+    root, backup = Path(data["root"]), Path(progress["backup_dir"])
+    work = root / "runtime/core-update"
+    migration = data["migration"]
+    workplace = Path(data["workplace_root"]) if data["workplace_root"] else None
+    migration_record = None
+    if migration.get("status") == "planned" and migration.get("operations"):
+        if workplace is None:
+            raise NativeUpdateError(
+                "workplace_root_missing",
+                "Workplace migration was planned without a Workplace root",
+            )
+        # ZipFile accepts BytesIO: no reread of the mutable operator archive.
+        archive_source: Any = io.BytesIO(archive_raw)
+        migration_record = apply_workplace_migration(
+            archive_source, workplace, migration, backup
+        )
+        item = {"op": "workplace_migration", "path": data["migration_id"]}
+        progress["pending_operations"].remove(item)
+        progress["completed_operations"].append({**item, "completed_at": _update_now()})
+        _update_json(work / "in-progress.json", progress)
+    record = {
+        "schema_version": 1,
+        "update_id": progress["update_id"],
+        "status": "applied",
+        "applied_at": _update_now(),
+        "available_version": data["available_version"],
+        "backup_dir": str(backup),
+        "backed_up": progress["backed_up"],
+        "counts": progress["counts"],
+        "workplace_migration": migration_record,
+    }
+    _update_json(work / "last-apply.json", record)
+    (work / "in-progress.json").unlink(missing_ok=True)
+    if workplace is not None:
+        record["post_update_doctor"] = _update_doctor(data, root, workplace)
+        _update_json(work / "last-apply.json", record)
+    return record
+
+
+def _update_action(data: dict[str, Any]) -> dict[str, Any]:
+    import contextlib
+    import importlib.util
+
+    root = Path(data["root"])
+    workplace = str(data["workplace_root"])
+    doctor = data["phase"] == "doctor"
+    script = "tools/processforge.py" if doctor else "tools/migrate-storage.py"
+    arguments = (
+        ["doctor-workplace", "--root", workplace]
+        if doctor
+        else [
+            "--workplace-root",
+            workplace,
+            "--apply",
+            "--json",
+            "--device-config",
+            data["device_config_path"],
+        ]
+    )
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+        try:
+            # spec_from_file_location is the existing captured image loader;
+            # runpy/open_code or a fresh disk/pyc script loader is not used.
+            spec = importlib.util.spec_from_file_location(
+                "_pf_update_" + data["phase"], root / script
+            )
+            if spec is None or spec.loader is None:
+                raise NativeControlError()
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = module
+            spec.loader.exec_module(module)
+            from processforge_core.configuration import ConfigurationProvider, PFConfig
+            from processforge_core.project.configuration_inputs import (
+                configuration_operation,
+            )
+
+            pinned = ConfigurationProvider.pinned(
+                PFConfig.from_dict(data["configuration"])
+            )
+            with configuration_operation(
+                None,
+                Path(workplace),
+                device_config_path=Path(data["device_config_path"]),
+                configuration=pinned,
+            ):
+                if doctor:
+                    code = module.main(arguments)
+                else:
+                    code = module.main(
+                        arguments, configuration_builder=lambda **_: pinned
+                    )
+        except SystemExit as exit_value:
+            code = exit_value.code if isinstance(exit_value.code, int) else 1
+    result: dict[str, Any] = {"exit_code": code, "output": output.getvalue()}
+    if not doctor:
+        storage = json.loads(output.getvalue())
+        if not isinstance(storage, dict):
+            raise ValueError("storage_result_invalid")
+        result["result"] = storage
+    return result
+
+
+def _update_doctor(data: dict[str, Any], root: Path, workplace: Path) -> dict[str, Any]:
+    # Each action is a fresh independently leased process with its original
+    # 90-second bound, nested under the fresh supervisor's operation lease.
+    command = [
+        sys.executable,
+        str(root / "bin/pf.py"),
+        "doctor-workplace",
+        "--root",
+        str(workplace),
+    ]
+    try:
+        doctor = _launch_update_child({**data, "phase": "doctor"}, timeout=90)
+        result: dict[str, Any] = {
+            "status": "pass" if doctor["exit_code"] == 0 else "fail",
+            "command": command,
+            "output": doctor["output"],
+        }
+    except NativeUpdateError as error:
+        result = {"status": "fail", "command": command, "output": str(error)}
+    try:
+        storage = _launch_update_child({**data, "phase": "storage"}, timeout=90)
+        result["storage_migration"] = {
+            "exit_code": storage["exit_code"],
+            "result": storage["result"],
+        }
+        if storage["exit_code"] != 0:
+            result["status"] = "fail"
+    except NativeUpdateError:
+        result["storage_migration"] = {
+            "error": {"code": "storage_migration_unavailable"}
+        }
+        result["status"] = "fail"
+    return result

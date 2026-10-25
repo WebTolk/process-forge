@@ -254,3 +254,15 @@ Reads report the pending route without repairing it. A safe ordinary mutation
 or native resume can repair only the marker's exact owner, UUID and profile under
 admission, qualified native capability and stable safety generation. Ready
 publication revalidates safety; no alternate target or UUID is selected.
+
+A genuinely adopted installation retains its original retirement commitment,
+filesystem binding, successor generation and committed native epoch. Subsequent
+processes validate that durable state before Core capture and acquire their own
+short OS leases; the original manager may exit after bound publication. The
+initial historical closure is still required until bound and is never inferred
+from new empty state. Pending/updating heads refuse shared entry, including the
+crash window before epoch replacement. Migration proof uses the actual selected
+owner/routing/instance/targets and pinned full configuration under admission.
+Native update publishes an exact pending transition before overwrite, then a
+successor epoch/head. Only a fresh independently leased child runs new Core
+maintenance; stale same-publication children cannot finalize a later update.

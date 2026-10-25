@@ -590,118 +590,73 @@ def apply_update(
     workplace_root: Path | None = None,
 ) -> dict[str, Any]:
     if not confirm:
-        raise CoreUpdateError("confirm_required", "core update apply requires explicit confirmation")
-    plan = build_plan(core_root, archive_path, workplace_root=workplace_root)
-    blockers = [item for item in plan["blockers"] if item.get("code") != "locally_modified" or not force_local_modifications]
-    if blockers:
-        raise CoreUpdateError("plan_blocked", "core update plan has blockers")
-    update_id = "core-update-" + _core_common_clock.now_utc().replace(":", "").replace("-", "")
-    work_root = runtime_root(core_root)
-    backup_dir = work_root / "backups" / update_id
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    in_progress_path = work_root / "in-progress.json"
-    in_progress_path.parent.mkdir(parents=True, exist_ok=True)
-    backed_up: dict[str, str | None] = {}
-    pending_operations: list[dict[str, str]] = []
-    missing_unchanged = set(plan["restored"])
-    backup_paths = set(plan["removed"]).union(plan["changed"]).union(missing_unchanged)
-    for relative_path in sorted(backup_paths):
-        pending_operations.append({"op": "backup", "path": relative_path})
-    for relative_path in plan["removed"]:
-        pending_operations.append({"op": "delete", "path": relative_path})
-    write_paths = set(plan["added"]).union(plan["changed"]).union(missing_unchanged)
-    for relative_path in sorted(write_paths):
-        pending_operations.append({"op": "write", "path": relative_path})
-    migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
-    pending_operations.append({"op": "write_manifest", "path": CORE_MANIFEST_NAME})
-    if migration.get("status") == "planned" and migration.get("operations"):
-        pending_operations.append({"op": "workplace_migration", "path": str(migration.get("migration", {}).get("id") or "workplace")})
-    progress = {
-        "schema_version": 1,
-        "update_id": update_id,
-        "status": "applying",
-        "started_at": _core_common_clock.now_utc(),
-        "core_root": str(core_root.resolve()),
-        "archive": str(archive_path.resolve()),
-        "backup_dir": str(backup_dir),
-        "installed_version": plan.get("installed_version"),
-        "target_version": plan.get("available_version"),
-        "counts": plan.get("counts"),
-        "completed_operations": [],
-        "pending_operations": pending_operations,
-        "backed_up": backed_up,
-    }
+        raise CoreUpdateError(
+            "confirm_required", "core update apply requires explicit confirmation"
+        )
+    # The CLI dispatch bypasses invocation/diagnostic scopes. Direct native
+    # callers must unwind theirs too: never pop somebody else's live scope.
+    from contextvars import copy_context
 
-    def complete_operation(op: str, relative_path: str) -> None:
-        completed = progress["completed_operations"]
-        pending = progress["pending_operations"]
-        assert isinstance(completed, list)
-        assert isinstance(pending, list)
-        completed.append({"op": op, "path": relative_path, "completed_at": _core_common_clock.now_utc()})
-        for index, item in enumerate(list(pending)):
-            if isinstance(item, dict) and item.get("op") == op and item.get("path") == relative_path:
-                del pending[index]
-                break
-        write_json(in_progress_path, progress)
+    from pf_native_control import (
+        NativeControlError,
+        NativeUpdateError,
+        current_entry,
+        replace_core,
+    )
 
-    def record_failure(code: str, message: str) -> None:
-        failure = {
-            **progress,
-            "schema_version": 1,
-            "update_id": update_id,
-            "status": "failed",
-            "failed_at": _core_common_clock.now_utc(),
-            "backup_dir": str(backup_dir),
-            "error": {"code": code, "message": message},
-        }
-        try:
-            write_json(in_progress_path, failure)
-        except OSError:
-            pass
+    for variable, value in copy_context().items():
+        if (
+            variable.name
+            in {"pf_diagnostic", "pf_configuration_operation", "pf_storage_operation"}
+            and value is not None
+        ):
+            raise CoreUpdateError(
+                "plan_blocked", "core update requires unwound operation scopes"
+            )
+    entry = current_entry()
+    if entry is None or entry.root.resolve() != core_root.resolve():
+        raise CoreUpdateError(
+            "plan_blocked", "core update requires qualified installation exclusion"
+        )
 
-    old_manifest = installed_manifest(core_root)
-    if old_manifest:
-        write_json(backup_dir / "control" / "old-manifest.json", old_manifest)
-    write_json(backup_dir / "control" / "new-manifest.json", plan["new_manifest"])
-    write_json(backup_dir / "control" / "plan.json", {key: value for key, value in plan.items() if key != "new_manifest"})
-    write_json(in_progress_path, progress)
+    def prepare() -> dict[str, Any]:
+        plan = build_plan(core_root, archive_path, workplace_root=workplace_root)
+        blockers = [
+            item
+            for item in plan["blockers"]
+            if item.get("code") != "locally_modified" or not force_local_modifications
+        ]
+        if blockers:
+            raise CoreUpdateError("plan_blocked", "core update plan has blockers")
+        from ..configuration import DeviceConfigurationSource
+        from ..project.configuration_inputs import operation_device_path
+
+        device = (
+            operation_device_path(None, workplace_root)
+            or DeviceConfigurationSource.default_path()
+        )
+        from ..composition import build_configuration_provider
+
+        snapshot = build_configuration_provider(
+            device_config_path=device, workplace_root=workplace_root
+        ).snapshot()
+        if snapshot.errors:
+            raise CoreUpdateError(
+                "plan_blocked", "core update configuration is invalid"
+            )
+        plan["_native_device_config_path"] = str(device)
+        plan["_native_configuration"] = snapshot.config.to_dict()
+        return plan
+
     try:
-        migration_record = None
-        for relative_path in sorted(backup_paths):
-            backed_up[relative_path] = backup_file(core_root, backup_dir, relative_path)
-            complete_operation("backup", relative_path)
-        for relative_path in plan["removed"]:
-            target = ensure_inside(core_root, relative_path)
-            if target.exists():
-                target.unlink()
-                prune_empty_parents(core_root, relative_path)
-            complete_operation("delete", relative_path)
-        with zipfile.ZipFile(archive_path) as archive:
-            for relative_path in sorted(write_paths):
-                content = read_archive_member(archive, relative_path)
-                atomic_write(ensure_inside(core_root, relative_path), content)
-                complete_operation("write", relative_path)
-        atomic_write(manifest_path(core_root), manifest_bytes(plan["new_manifest"]))
-        complete_operation("write_manifest", CORE_MANIFEST_NAME)
-        if migration.get("status") == "planned" and migration.get("operations"):
-            if workplace_root is None:
-                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
-            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
-            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
-        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": _core_common_clock.now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
-        last_apply = work_root / "last-apply.json"
-        write_json(last_apply, record)
-        in_progress_path.unlink(missing_ok=True)
-        return record
-    except CoreUpdateError as exc:
-        record_failure(exc.code, exc.message)
-        raise
-    except zipfile.BadZipFile as exc:
-        record_failure("archive_invalid", f"invalid ZIP archive: {archive_path}")
-        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
-    except OSError as exc:
-        record_failure("file_operation_failed", str(exc))
-        raise CoreUpdateError("file_operation_failed", str(exc)) from exc
+        return replace_core(entry, archive_path, prepare, workplace_root=workplace_root)
+    except NativeControlError as error:
+        raise CoreUpdateError(
+            "plan_blocked", "core update requires qualified installation exclusion"
+        ) from error
+    except NativeUpdateError as error:
+        # Pure value translation; no old Core writes/error diagnostics/finally.
+        raise CoreUpdateError(error.code, error.message) from error
 
 
 def recovery_assessment(in_progress: dict[str, Any]) -> str:
@@ -711,12 +666,20 @@ def recovery_assessment(in_progress: dict[str, Any]) -> str:
     completed = in_progress.get("completed_operations")
     if not isinstance(completed, list):
         return "manual_repair_required"
-    manifest_written = any(isinstance(item, dict) and item.get("op") == "write_manifest" for item in completed)
+    manifest_written = any(
+        isinstance(item, dict) and item.get("op") == "write_manifest"
+        for item in completed
+    )
     if manifest_written:
         return "manual_repair_required"
     raw_backup_dir = str(in_progress.get("backup_dir") or "")
     backup_dir = Path(raw_backup_dir) if raw_backup_dir else None
-    if status == "failed" and backup_dir is not None and backup_dir.is_dir() and (backup_dir / "control" / "old-manifest.json").is_file():
+    if (
+        status == "failed"
+        and backup_dir is not None
+        and backup_dir.is_dir()
+        and (backup_dir / "control" / "old-manifest.json").is_file()
+    ):
         return "safe_to_rollback"
     return "manual_repair_required"
 

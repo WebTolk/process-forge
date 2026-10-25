@@ -149,3 +149,10 @@ its selector; a value-only pinned provider does not trigger device rediscovery.
 The host revalidates actual project ownership, flow root, enrollment and target
 routing at each migration safety boundary. These checks do not refresh or replace
 the operation's PFConfig snapshot and grant no additional file access.
+
+Native updater planning freezes the full effective configuration and its selected
+device path before replacement. Its private fresh-child channel carries that
+snapshot alongside accepted publication, manifest, successor generation and epoch
+pins. Child maintenance validates the typed snapshot and reuses its pinned value;
+it does not reread live configuration during that update. The channel grants no
+additional project, file or infrastructure access.

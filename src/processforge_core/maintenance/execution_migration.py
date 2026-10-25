@@ -86,6 +86,24 @@ def _read(path: Path) -> JsonObject:
     return execution_json(execution_bytes(path))
 
 
+def _read_code_document(path: Path) -> JsonObject:
+    """Read an accepted code resource; mutable migration facts keep fd checks."""
+    import sys
+
+    module = sys.modules.get("pf_native_control")
+    current = getattr(module, "current_entry", None)
+    entry = current() if callable(current) else None
+    image = getattr(entry, "image", None)
+    if image is not None:
+        relative = image.relative(path)
+        if relative in image.files:
+            raw = image.read(relative)
+            if len(raw) > 65536:
+                raise MaintenanceError("execution_source_too_large")
+            return execution_json(raw)
+    return _read(path)
+
+
 def _ordered_inventory(
     project: Path, flow: Path, project_id: str, skip: bool
 ) -> Iterator[tuple[JsonObject, ExecutionSnapshot | None, bytes | None]]:
@@ -165,7 +183,7 @@ class ExecutionMigrationService:
     @staticmethod
     def _descriptor() -> JsonObject:
         root = Path(__file__).absolute().parents[3]
-        descriptor = _read(root / "schemas/execution-migration-v1.json")
+        descriptor = _read_code_document(root / "schemas/execution-migration-v1.json")
         expected = {
             "migration_id": MIGRATION_ID,
             "descriptor_version": 1,

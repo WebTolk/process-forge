@@ -17,7 +17,7 @@ from contextlib import AbstractContextManager, closing, contextmanager
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path, PurePosixPath
-from typing import Literal
+from typing import Any, Literal
 from uuid import uuid4
 
 from ..database import (
@@ -44,7 +44,13 @@ from .contracts import (
     StorageMigrationContext,
     StoreTarget,
 )
-from .execution_migration import ExecutionMigrationService, _atomic, _hash, _read
+from .execution_migration import (
+    ExecutionMigrationService,
+    _atomic,
+    _hash,
+    _read,
+    _read_code_document,
+)
 from .journal_scan import _check_links, _exclusive_bytes
 
 MIGRATION_ID = "r02-storage-v1"
@@ -426,7 +432,7 @@ def _connection(
 
 def _descriptor(*, verify_transforms: bool = True) -> JsonObject:
     root = Path(__file__).absolute().parents[3]
-    descriptor = _read(root / "schemas/storage-migration-v1.json")
+    descriptor = _read_code_document(root / "schemas/storage-migration-v1.json")
     paths = (
         "src/processforge_core/maintenance/contracts.py",
         "src/processforge_core/maintenance/storage_migration.py",
@@ -639,6 +645,13 @@ class StorageMigrationService:
         self.safety, self.execution = safety, execution
         self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
         self.execution_factory = execution_factory
+        self._native_selection: Callable[[], Any] | None = None
+        self._native_operation: (
+            Callable[
+                [StorageMigrationContext, float | None], AbstractContextManager[object]
+            ]
+            | None
+        ) = None
 
     @contextmanager
     def _admit(
@@ -651,14 +664,7 @@ class StorageMigrationService:
             ):
                 yield
         elif context.workplace_root is not None:
-            timeout = (
-                30.0 if deadline is None else max(0.001, deadline - time.monotonic())
-            )
-            with self.registry_lock(
-                context.workplace_root / "runtime/pf-runtime/execution-admission",
-                timeout_seconds=timeout,
-                stale_after_seconds=0,
-            ):
+            with self.admission.workplace(context.workplace_root, deadline=deadline):
                 _deadline(deadline)
                 yield
         else:
@@ -861,6 +867,23 @@ class StorageMigrationService:
     def _run(
         self, context: StorageMigrationContext, operation: str, deadline: float | None
     ) -> JsonObject:
+        try:
+            if self._native_operation is not None:
+                with self._native_operation(context, deadline):
+                    return self._run_selected(context, operation, deadline)
+            return self._run_selected(context, operation, deadline)
+        except (
+            MaintenanceError,
+            DatabaseError,
+            ExecutionError,
+            OSError,
+            ValueError,
+        ) as error:
+            return self._failure(self._report(operation), error)
+
+    def _run_selected(
+        self, context: StorageMigrationContext, operation: str, deadline: float | None
+    ) -> JsonObject:
         report = self._report(operation)
         try:
             targets, descriptor = validate_storage_context(context), _descriptor()
@@ -1033,6 +1056,27 @@ class StorageMigrationService:
 
     @contextmanager
     def new_store_identity(
+        self,
+        context: StorageMigrationContext,
+        target: StoreTarget,
+        *,
+        _allow_legacy: bool = False,
+    ) -> Iterator[str | None]:
+        from contextlib import nullcontext
+
+        operation = (
+            self._native_operation(context, None)
+            if self._native_operation is not None
+            else nullcontext()
+        )
+        with operation:
+            with self._new_store_identity(
+                context, target, _allow_legacy=_allow_legacy
+            ) as store_id:
+                yield store_id
+
+    @contextmanager
+    def _new_store_identity(
         self,
         context: StorageMigrationContext,
         target: StoreTarget,

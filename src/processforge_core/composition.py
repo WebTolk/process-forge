@@ -316,7 +316,12 @@ def build_storage_migration_host(
     def safety(context: StorageMigrationContext) -> MigrationSafety:
         # The frozen value stays pinned, but owner/flow/enrollment facts must
         # still name the same physical targets at every mutation boundary.
-        if resolve_context() != context:
+        from dataclasses import replace
+
+        actual = resolve_context()
+        if replace(actual, targets=context.targets) != context or not set(
+            context.targets
+        ).issubset(actual.targets):
             raise MaintenanceError("storage_enrollment_conflict")
         # Native leaf was captured before Core. Importing/reloading tools here
         # would invent authority from current-file bytes, so use only that entry.
@@ -445,6 +450,13 @@ def build_storage_migration_host(
             # Re-resolve routing/owners at every freeze/resume/cutover boundary.
             if resolve_context() != selected_context:
                 raise MaintenanceError("storage_enrollment_conflict")
+            if context.phase == "inspect":
+                # Planning scans outside admission; its host proof still uses
+                # the real gates. Freeze/cutover revalidate source facts again.
+                with admission.maintenance(
+                    context.project_root, context.workplace_root
+                ):
+                    return safety(selected_context)
             return safety(selected_context)
 
         selected_context = context
@@ -458,6 +470,81 @@ def build_storage_migration_host(
             profile_id=profile_id,
         )
 
+    def native_selection() -> Any:
+        import hashlib
+        import json
+
+        actual = resolve_context()
+        module = sys.modules.get("pf_native_control")
+        selection_type = getattr(module, "ManagedSelection", None)
+        if selection_type is None:
+            raise MaintenanceError("storage_safety_unavailable")
+        instance = ""
+        if actual.workplace_root is not None:
+            state_path = _safe(
+                actual.workplace_root / "runtime/pf-runtime/service.json"
+            )
+            if state_path.exists():
+                with state_path.open("rb") as stream:
+                    raw = stream.read(65537)
+                if len(raw) > 65536:
+                    raise MaintenanceError("storage_enrollment_conflict")
+                state = json.loads(raw)
+                instance = state.get("instance_id", "")
+                if not isinstance(instance, str):
+                    raise MaintenanceError("storage_enrollment_conflict")
+        route = {
+            "device": str(actual.device_config_path),
+            "configuration": configuration.current().to_dict(),
+            "unqualified": [
+                (kind, str(path)) for kind, path in actual.unqualified_targets
+            ],
+        }
+        revision = hashlib.sha256(
+            json.dumps(route, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        owners = sorted({target.owner_id for target in actual.targets})
+        return selection_type(
+            str(actual.project_root or ""),
+            str(actual.workplace_root or ""),
+            ":".join(owners),
+            instance,
+            revision,
+            tuple((t.kind, str(t.target), t.scope, t.owner_id) for t in actual.targets),
+        )
+
+    from contextlib import contextmanager
+
+    @contextmanager
+    def native_operation(
+        context: StorageMigrationContext, deadline: float | None
+    ) -> Any:
+        module = sys.modules.get("pf_native_control")
+        current = getattr(module, "current_entry", None)
+        entry = current() if callable(current) else None
+        if entry is None or getattr(entry, "control", None) is None:
+            # No first-old provider: legacy proof stays unknown; pending refuses.
+            yield
+            return
+        producer_type = getattr(module, "ManagedEnrollmentProducer", None)
+        if module is None or producer_type is None or entry.publication is None:
+            raise MaintenanceError("storage_safety_unavailable")
+        producer = producer_type(entry.root, entry.publication.payload[module.LEAF])
+        try:
+            with producer.operation(
+                entry,
+                resolver=native_selection,
+                admission_held=lambda: admission.held(
+                    context.project_root, context.workplace_root
+                ),
+                deadline=deadline,
+            ):
+                yield
+        except RuntimeError as error:
+            if isinstance(error, getattr(module, "NativeControlError", ())):
+                raise MaintenanceError("execution_activity_unknown") from None
+            raise
+
     # Driver resolution also remains lazy with respect to the supplied provider.
     # The closed default is SQLite; the resolved full snapshot is bound when
     # context is first requested, before any service operation connects.
@@ -469,6 +556,9 @@ def build_storage_migration_host(
         execution_factory=engine,
         driver=SQLiteDriver(),
     )
+    service._native_operation = native_operation
+    # Native-only qualification fixtures/handoffs use the actual resolver; no bool proof.
+    service._native_selection = native_selection
     original_resolve = resolve_context
 
     def bind_context() -> StorageMigrationContext:
