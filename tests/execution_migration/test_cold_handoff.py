@@ -676,7 +676,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
     from processforge_core.work.context import build_context_fields, fingerprint
 
     distribution = Path(__file__).resolve().parents[2]
-    project = tmp_path / "project"
+    project = tmp_path / "project with spaces"
     project.mkdir()
     (project / ".pf/artifacts").mkdir(parents=True)
 
@@ -834,7 +834,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
     write_yaml_file(snapshot_path, snapshot)
     pin = {
         "process_id": "fixture-process",
-        "process_version": "1",
+        "process_version": "1.0.0",
         "process_fingerprint": fingerprint({"stages": []}),
         "definition": {"stages": []},
         "selected_resource_ids": [],
@@ -1117,6 +1117,132 @@ def test_normal_fixed_command_acceptance(native_fixture: Any) -> None:
         },
     )
     h.validate_command(prepared, f.project, f.project, command)
+    target = command["command"]["argv"]
+    assert target[-2:] == [
+        str(f.project / "tools/pf_native_maintenance.py"),
+        str(path),
+    ]
+    for mutation in ("script", "argv", "environment"):
+        changed = copy.deepcopy(command)
+        if mutation == "script":
+            changed["command"]["argv"][-2] += ".tampered"
+            changed["command"]["args"][-2] += ".tampered"
+        elif mutation == "argv":
+            changed["command"]["argv"].append("--extra")
+        else:
+            changed["command"]["environment"]["PYTHONPATH"] = str(f.project)
+        with pytest.raises(h.Rejected):
+            h.validate_command(prepared, f.project, f.project, changed)
+
+
+@pytest.mark.parametrize("fixed", [False, True])
+def test_fixed_path_composition_preserves_other_arguments(
+    tmp_path: Path, fixed: bool
+) -> None:
+    from processforge_core.runtime.command import WorkerCommandBuilder
+    from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
+
+    driver = RuntimeDriverDefinitionPolicy().default_documents()["generic-shell"]
+    driver["id"] = "native-maintenance-fixed-v1" if fixed else "generic-shell"
+    driver["prepared_lifecycle_wrapper"] = False
+    driver["command"] = {
+        "executable": "{python_executable}",
+        "args": [
+            "-I",
+            "-B",
+            "{processforge_root}/tools/pf_native_maintenance.py",
+            "literal/a\\b",
+        ],
+    }
+    task = {"id": "task", "run_id": "run"}
+    command, _ = WorkerCommandBuilder(tmp_path).build(tmp_path, task, driver)
+    expected = (
+        str(tmp_path / "tools/pf_native_maintenance.py")
+        if fixed
+        else str(tmp_path) + "/tools/pf_native_maintenance.py"
+    )
+    assert command["command"]["args"] == ["-I", "-B", expected, "literal/a\\b"]
+    # A different template must stay visible to strict consumer validation.
+    driver["command"]["args"][2] = "{processforge_root}/tools/../other.py"
+    command, _ = WorkerCommandBuilder(tmp_path).build(tmp_path, task, driver)
+    assert command["command"]["args"][2] == str(tmp_path) + "/tools/../other.py"
+
+
+def test_normal_fixed_prepare_start_collection(
+    native_fixture: Any, monkeypatch: Any
+) -> None:
+    """Real normal route; only workplace health/device location/event sink are seams."""
+    import pf_native_maintenance as h
+    import processforge as core
+
+    from processforge_core.configuration import DeviceConfigurationSource
+    from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
+    from processforge_core.prepared import input as prepared_input
+    from processforge_core.work.context import validate_execution_contract
+
+    f = native_fixture
+    # Component fixtures relocate __file__; the normal gate must use the actual
+    # imported management distribution, just as its standalone wrapper will.
+    monkeypatch.setattr(
+        h, "__file__", str(f.distribution / "tools/pf_native_maintenance.py")
+    )
+    monkeypatch.setattr(
+        core, "project_context_check_result", f.core.project_context_check_result
+    )
+    monkeypatch.setattr(core, "resolve_workplace_root", f.core.resolve_workplace_root)
+    monkeypatch.setattr(
+        DeviceConfigurationSource,
+        "default_path",
+        staticmethod(lambda: f.project / "device.yaml"),
+    )
+    monkeypatch.setattr(
+        core._process_event_recorder, "emit_process_event", lambda *a, **k: {}
+    )
+    disk_capsule = core.load_yaml_document(
+        core.assignment_capsule_path(f.project, f.task["id"])
+    )
+    assert disk_capsule == f.capsule
+    disk_task = core.extract_assignment_front_matter(
+        f.project / ".pf/assignments/fixture-task.yaml"
+    )
+    validation = validate_execution_contract(
+        f.project,
+        f.project / ".pf/assignments/fixture-task.yaml",
+        disk_task,
+        disk_capsule,
+        core,
+        require_ready=True,
+    )
+    assert validation["status"] == "valid", validation
+    task, driver, paths = core.prepare_worker_run(
+        f.project, f.task["id"], "driver.json"
+    )
+    command = core.json_read(paths["command"])
+    document = prepared_input.load(f.project, task, command, core)
+    schema = json.loads(
+        (f.distribution / "schemas/prepared-input.schema.json").read_bytes()
+    )
+    assert not UpdateSchemaChecks(f.distribution).validate(
+        document, schema, schema, "$"
+    )
+    args = SimpleNamespace(
+        project_root=str(f.project),
+        task=task["id"],
+        driver="driver.json",
+        executable=None,
+        model=None,
+        reasoning_effort=None,
+        detach=False,
+    )
+    result = core.command_worker_run_start(args)
+    assert result == 0, paths["stderr"].read_text(encoding="utf-8", errors="replace")
+    assert core.json_read(paths["exit"])["exit_code"] == 0
+    receipt_path, receipt = prepared_input.collection_receipt(
+        f.project, task, command, core
+    )
+    assert receipt_path.is_file()
+    assert receipt["identity"] == document["identity"]
+    assert receipt["outputs"][0]["status"] == "present"
 
 
 def test_native_schema_rejects_widening(native_fixture: Any) -> None:

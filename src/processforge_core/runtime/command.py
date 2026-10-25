@@ -334,6 +334,13 @@ class WorkerCommandBuilder:
             else [],
             variables,
         )
+        if (
+            driver.get("id") == "native-maintenance-fixed-v1"
+            and isinstance(command_spec.get("args"), list)
+            and command_spec["args"][2:3]
+            == ["{processforge_root}/tools/pf_native_maintenance.py"]
+        ):
+            args[2] = str(self.distribution_root / "tools" / "pf_native_maintenance.py")
         if variables["agent_model"]:
             model_args_raw = (
                 command_spec.get("model_args")

@@ -135,8 +135,17 @@ pin; он не заменяет actual token/ACL, held fence, retirement, epoch 
 leases. Текущие source budgets сохраняются: oversized closure блокируется.
 Synthetic fixture qualification не является normal-host или genuine cold proof.
 
-Windows normal-command acceptance остаётся отдельным блокером этого source
-checkpoint: descriptor expansion даёт mixed-slash harness argument, а fixed
-validator и wrapper сравнивают другую точную строку пути. До governed исправления
-и повторного полного producer/preparation/command/wrapper/harness gate этот
-checkpoint не устанавливает source completeness или deployment readiness.
+Windows mixed-slash harness argument исправлен в Core command builder только
+для точного шаблонного аргумента private fixed profile: путь составляется
+лексически с нативными разделителями. Строгие validator/wrapper и generic argv
+сохранены; fixed-command acceptance, tamper и generic-path регрессии проходят.
+При разных project/distribution roots строгий normal fixture с фактическим
+расположением импортированного harness останавливается уже на preparation:
+`harness_path_mismatch` при проверке source-role. Компонентная fixture с подменой
+`harness.__file__` проходит preparation/schema/command и доходит до wrapper,
+но там независимая повторная проверка отклоняет ту же source identity. Эта
+подмена не является доказательством полного normal route. Его start/harness/
+collection пока не завершены; отдельный standalone harness fixture не заменяет
+этот gate. Требуется governed successor для согласования точной source identity
+в producer и consumer; source completeness и deployment readiness этим
+checkpoint не установлены.
