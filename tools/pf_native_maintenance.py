@@ -184,6 +184,19 @@ def identity(value: Any) -> dict[str, Any]:
 
 
 def _body_granted(prepared: dict[str, Any], row: dict[str, Any]) -> bool:
+    import fnmatch
+
+    scope = prepared["input"].get("scope", {})
+    if (
+        "read" not in scope.get("allowed_actions", [])
+        or "read" in scope.get("forbidden_actions", [])
+        or row["path"] not in scope.get("allowed_read_files", [])
+        or any(
+            fnmatch.fnmatchcase(row["path"].casefold(), pattern.casefold())
+            for pattern in scope.get("forbidden_files", [])
+        )
+    ):
+        return False
     sources = prepared["input"].get("sources", [])
     return isinstance(sources, list) and any(
         isinstance(source, dict)
@@ -266,11 +279,363 @@ def qualify_archive(archive: bytes, manifest: bytes) -> dict[str, Any]:
     }
 
 
+def _native_authority(
+    semantic: dict[str, Any], selected: dict[str, Any] | None = None
+) -> dict[str, Any] | None:
+    """Intersect the fixed private request, authoritative tool policy and Work.
+
+    No file is read and no command is interpreted by this admission check.
+    The standalone harness repeats this bounded check without importing Core.
+    """
+    import fnmatch
+    import json
+
+    def require(ok: bool, reason: str = "native_authority_required") -> None:
+        if not ok:
+            raise ValueError(reason)
+
+    def seal(value: Any) -> str:
+        return (
+            "sha256:"
+            + hashlib.sha256(
+                (
+                    json.dumps(
+                        value,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=True,
+                        allow_nan=False,
+                    )
+                    + "\n"
+                ).encode("ascii")
+            ).hexdigest()
+        )
+
+    def pinned(value: Any) -> bool:
+        return (
+            isinstance(value, str)
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", value) is not None
+        )
+
+    def shape(value: Any) -> None:
+        require(
+            isinstance(value, dict)
+            and set(value)
+            == {
+                "schema_version",
+                "identity",
+                "job_sha256",
+                "descriptor_sha256",
+                "runtime",
+                "execute_sources",
+                "operation",
+                "management_sha256",
+                "qualification_sha256",
+                "deployment",
+            }
+        )
+        require(type(value["schema_version"]) is int and value["schema_version"] == 1)
+        ident = value["identity"]
+        require(
+            isinstance(ident, dict)
+            and set(ident)
+            == {
+                "kind",
+                "project_id",
+                "run_id",
+                "assignment_id",
+                "context_id",
+                "attempt",
+            }
+        )
+        require(
+            ident["kind"] == "work"
+            and type(ident["attempt"]) is int
+            and ident["attempt"] > 0
+            and all(
+                isinstance(ident[key], str)
+                and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", ident[key]) is not None
+                for key in set(ident) - {"kind", "attempt"}
+            )
+        )
+        require(
+            all(
+                pinned(value[key])
+                for key in (
+                    "job_sha256",
+                    "descriptor_sha256",
+                    "management_sha256",
+                    "qualification_sha256",
+                )
+            )
+        )
+        runtime = value["runtime"]
+        require(
+            isinstance(runtime, dict)
+            and set(runtime) == {"resource_id", "access", "sha256", "version"}
+        )
+        require(
+            runtime["resource_id"] == "management-python"
+            and runtime["access"] == ["body", "execute"]
+            and pinned(runtime["sha256"])
+            and isinstance(runtime["version"], str)
+            and 0 < len(runtime["version"]) <= 64
+        )
+        rows = value["execute_sources"]
+        require(isinstance(rows, list) and len(rows) == 4)
+        roles = set()
+        for row in rows:
+            require(
+                isinstance(row, dict) and set(row) == {"role", "path", "sha256", "size"}
+            )
+            require(
+                isinstance(row["role"], str)
+                and row["role"] in {"wrapper", "harness", "controller", "native"}
+                and row["role"] not in roles
+                and isinstance(row["path"], str)
+                and pinned(row["sha256"])
+                and type(row["size"]) is int
+                and 0 < row["size"] <= 32 * 1024 * 1024
+            )
+            roles.add(row["role"])
+        operation = value["operation"]
+        require(
+            isinstance(operation, str)
+            and operation
+            in {
+                "qualify-archive",
+                "construct-management",
+                "cold-stage",
+                "cold-resume",
+                "cold-finalize",
+                "cold-release",
+            }
+        )
+        deployment = value["deployment"]
+        if operation in {"qualify-archive", "construct-management"}:
+            require(deployment is None)
+        else:
+            require(
+                isinstance(deployment, dict)
+                and set(deployment)
+                == {"access", "operations", "spec_sha256", "management_sha256"}
+            )
+            require(
+                deployment["access"] == ["read", "write", "acl"]
+                and deployment["operations"] == [operation]
+                and pinned(deployment["spec_sha256"])
+                and deployment["management_sha256"] == value["management_sha256"]
+            )
+
+    resources = semantic.get("resources", {})
+    requests = resources.get("requested", {}).get("tools", [])
+    grants = resources.get("grants", {}).get("tools", [])
+    job = semantic.get("parameters", {}).get("native_maintenance_job")
+    native_requests = [
+        r for r in requests if isinstance(r, dict) and "native_maintenance" in r
+    ]
+    if job is None:
+        require(not native_requests)
+        return None
+    require(
+        isinstance(job, dict)
+        and set(job)
+        == {"schema_version", "identity", "operation", "resources", "runtime", "report"}
+    )
+    require(type(job["schema_version"]) is int and job["schema_version"] == 1)
+    require(len(native_requests) == 1)
+    request = native_requests[0]
+    require(
+        set(request) == {"id", "path_ref", "native_maintenance"}
+        and isinstance(request["id"], str)
+        and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", request["id"]) is not None
+    )
+    require(request["path_ref"] == {"registry": "tools", "id": request["id"]})
+    require(
+        sum(
+            (
+                r == request["id"]
+                or isinstance(r, dict)
+                and (
+                    r.get("id") == request["id"]
+                    or r.get("path_ref") == request["path_ref"]
+                )
+            )
+            for r in requests
+        )
+        == 1
+    )
+    matches = [
+        g
+        for g in grants
+        if isinstance(g, dict)
+        and (g.get("id") == request["id"] or g.get("path_ref") == request["path_ref"])
+    ]
+    require(len(matches) == 1)
+    grant = matches[0]
+    require(
+        set(grant) == {"id", "path_ref", "resolution"}
+        and grant["id"] == request["id"]
+        and grant["path_ref"] == request["path_ref"]
+    )
+    resolution = grant["resolution"]
+    require(
+        isinstance(resolution, dict)
+        and set(resolution) == {"status", "entry"}
+        and resolution["status"] == "descriptor"
+    )
+    entry = resolution["entry"]
+    require(
+        isinstance(entry, dict)
+        and entry.get("id") == request["id"]
+        and "path" not in entry
+        and entry.get("status") == "configured"
+        and entry.get("capability") == "processforge.native-maintenance.fixed-v1"
+        and isinstance(entry.get("command"), str)
+        and bool(entry["command"].strip())
+    )
+    policy = entry.get("native_maintenance")
+    require(
+        isinstance(policy, dict)
+        and set(policy) == {"schema_version", "profile", "bindings"}
+    )
+    require(
+        type(policy["schema_version"]) is int
+        and policy["schema_version"] == 1
+        and policy["profile"] == "native-maintenance-fixed-v1"
+    )
+    bindings = policy["bindings"]
+    require(isinstance(bindings, list) and 0 < len(bindings) <= 64)
+    for binding in bindings:
+        shape(binding)
+    require(len({seal(binding) for binding in bindings}) == len(bindings))
+    binding = request["native_maintenance"]
+    shape(binding)
+    require(sum(binding == item for item in bindings) == 1)
+    require(
+        {key: value for key, value in binding["identity"].items() if key != "attempt"}
+        == semantic.get("identity"),
+        "native_identity_mismatch",
+    )
+    require(
+        selected is None or selected == binding["identity"], "native_identity_mismatch"
+    )
+    require(
+        job["identity"] == binding["identity"]
+        and seal(job) == binding["job_sha256"]
+        and job["runtime"] == binding["runtime"]
+        and job["operation"] == binding["operation"],
+        "native_job_mismatch",
+    )
+    scope = semantic.get("scope", {})
+
+    def permitted(name: str, action: str, field: str) -> bool:
+        return (
+            action in scope.get("allowed_actions", [])
+            and action not in scope.get("forbidden_actions", [])
+            and name in scope.get(field, [])
+            and not any(
+                fnmatch.fnmatchcase(name.casefold(), pattern.casefold())
+                for pattern in scope.get("forbidden_files", [])
+            )
+        )
+
+    require("execute" not in scope.get("forbidden_actions", []), "native_scope_denied")
+    require(
+        isinstance(job["report"], str)
+        and permitted(job["report"], "write_artifact", "allowed_files"),
+        "native_scope_denied",
+    )
+    require(
+        job["report"]
+        == semantic.get("outputs", {}).get("expected_report", {}).get("artifact"),
+        "native_report_mismatch",
+    )
+    rows = job["resources"]
+    roles = {
+        "wrapper",
+        "harness",
+        "controller",
+        "native",
+        "descriptor",
+        "archive",
+        "manifest",
+        "management",
+    }
+    require(isinstance(rows, list) and len(rows) == len(roles))
+    by_role = {}
+    names = {job["report"].casefold()}
+    for row in rows:
+        require(
+            isinstance(row, dict)
+            and set(row) == {"role", "path", "access", "sha256", "size"}
+        )
+        name = row["path"]
+        require(
+            isinstance(name, str)
+            and bool(name)
+            and "\\" not in name
+            and ":" not in name
+            and "\x00" not in name
+            and all(
+                part not in {"", ".", ".."} and not part.endswith((".", " "))
+                for part in name.split("/")
+            )
+        )
+        require(
+            isinstance(row["role"], str)
+            and row["role"] in roles
+            and row["role"] not in by_role
+            and name.casefold() not in names
+            and row["access"] == "body"
+            and pinned(row["sha256"])
+            and type(row["size"]) is int
+            and 0 < row["size"] <= 128 * 1024 * 1024
+        )
+        require(permitted(name, "read", "allowed_read_files"), "native_scope_denied")
+        sources = [
+            s
+            for s in semantic.get("sources", [])
+            if isinstance(s, dict) and s.get("path") == name
+        ]
+        require(
+            len(sources) == 1
+            and sources[0].get("status") == "available"
+            and sources[0].get("checksum") == row["sha256"]
+            and sources[0].get("size") == row["size"],
+            "native_source_body_required",
+        )
+        if selected is not None:
+            require(
+                sources[0].get("delivery") in {"inline", "reference"},
+                "native_source_body_required",
+            )
+        by_role[row["role"]] = row
+        names.add(name.casefold())
+    require(
+        by_role["descriptor"]["sha256"] == binding["descriptor_sha256"]
+        and by_role["management"]["sha256"] == binding["management_sha256"],
+        "native_source_pin_mismatch",
+    )
+    require(
+        {row["role"]: row for row in binding["execute_sources"]}
+        == {
+            role: {
+                key: value for key, value in by_role[role].items() if key != "access"
+            }
+            for role in ("wrapper", "harness", "controller", "native")
+        },
+        "native_execute_source_mismatch",
+    )
+    return binding
+
+
 def capture_job(
     prepared: dict[str, Any], root: Path
 ) -> tuple[dict[str, Any], dict[str, bytes]]:
     """Validate all grants/pins before producing an artifact-only result."""
     selected = identity(prepared.get("identity"))
+    _native_authority(prepared.get("input", {}), selected)
     semantic = prepared.get("input")
     if not isinstance(semantic, dict):
         raise Rejected("input_shape")
@@ -312,7 +677,7 @@ def capture_job(
         report.startswith(".pf/artifacts/")
         and "write_artifact" in scope.get("allowed_actions", [])
         and report in scope.get("allowed_files", [])
-        and not scope.get("forbidden_files")
+        and "write_artifact" not in scope.get("forbidden_actions", [])
         and report
         == semantic.get("outputs", {}).get("expected_report", {}).get("artifact"),
         "report_grant_required",
@@ -434,7 +799,15 @@ def main(argv: list[str]) -> int:
         publish(root, report, result)
         sys.stdout.buffer.write(result)
         return 0
-    except Rejected, OSError, ValueError, KeyError, TypeError, RecursionError:
+    except (
+        Rejected,
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+        AttributeError,
+        RecursionError,
+    ):
         # Private exit 125 belongs to this proposal only, not a new PF public code.
         print('{"result":"refused","code":"native_job_invalid"}', file=sys.stderr)
         return 125
@@ -553,6 +926,19 @@ def management(
         q["path"] in prepared["input"]["scope"]["allowed_read_files"],
         "qualification_scope",
     )
+    binding = _native_authority(prepared["input"], identity(prepared["identity"]))
+    if binding is None:
+        raise Rejected("native_authority_required")
+    reject_unless(
+        q["sha256"] == binding["qualification_sha256"],
+        "qualification_authority",
+    )
+    if binding["deployment"] is not None:
+        reject_unless(
+            digest(canonical(spec["deployment"]))
+            == binding["deployment"]["spec_sha256"],
+            "deployment_authority",
+        )
     raw = read_file(located(root, relative(q["path"])), MANIFEST_LIMIT)
     reject_unless(
         digest(raw) == q["sha256"] and len(raw) == q["size"], "qualification_pin"
@@ -596,14 +982,7 @@ def bind_preparation(
     reject_unless(
         "maintenance" not in prepared.get("native_launch", {}), "already_prepared"
     )
-    reject_unless(
-        job["runtime"]
-        in prepared["input"]
-        .get("resources", {})
-        .get("grants", {})
-        .get("native_runtimes", []),
-        "runtime_execute_grant_required",
-    )
+    _native_authority(prepared["input"], identity(prepared["identity"]))
     prepared.setdefault("native_launch", {})["maintenance"] = {
         "runtime": job["runtime"],
         "job_sha256": digest(canonical(job)),
@@ -732,13 +1111,17 @@ def construct_management(
     prepared: dict[str, Any], root: Path, captured: dict[str, bytes]
 ) -> dict[str, Any]:
     """Build an independent accepted runtime/source bundle, create-once/resumable."""
+    import fnmatch
+
     spec, closure = management(prepared, root, captured)
     destination = Path(spec["namespace"]["bundle"])
     scope = prepared["input"]["scope"]
     # Explicit management writes only. Target-root grants never imply this grant.
     grant = destination.relative_to(root).as_posix() + "/**"
     reject_unless(
-        "write_product" in scope["allowed_actions"] and grant in scope["allowed_files"],
+        "write_product" in scope["allowed_actions"]
+        and "write_product" not in scope.get("forbidden_actions", [])
+        and grant in scope["allowed_files"],
         "bundle_write_grant",
     )
     rows = {
@@ -756,6 +1139,18 @@ def construct_management(
     inventory = {
         name: {"sha256": digest(raw), "size": len(raw)} for name, raw in rows.items()
     }
+    destinations = [
+        (destination / name).relative_to(root).as_posix()
+        for name in (*rows, "bundle.json")
+    ]
+    reject_unless(
+        not any(
+            fnmatch.fnmatchcase(name.casefold(), pattern.casefold())
+            for name in destinations
+            for pattern in scope.get("forbidden_files", [])
+        ),
+        "bundle_write_grant",
+    )
     destination.mkdir(parents=True, exist_ok=True)
     for name, raw in rows.items():
         path = destination / name
@@ -783,19 +1178,6 @@ def execute(prepared: dict[str, Any], root: Path) -> tuple[str, bytes]:
             captured["controller"],
             str(root / "accepted-controller.py"),
         )
-        required = {
-            "target_roots": spec["target_roots"],
-            "control": spec["namespace"]["control"],
-            "access": ["read", "write", "acl"],
-            "operations": [operation],
-        }
-        grants = (
-            prepared["input"]
-            .get("resources", {})
-            .get("grants", {})
-            .get("native_deployment", [])
-        )
-        reject_unless(required in grants, "native_deployment_grant_required")
         summary = controller.execute_job(operation, spec, captured, native)
     return job["report"], canonical(
         {

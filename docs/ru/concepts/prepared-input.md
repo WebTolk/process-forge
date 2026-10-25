@@ -92,3 +92,51 @@ sidecar body access. При capable wrapper native captured receipt paths мог
 переноситься в каталог его attempt приватным CAS; сам input, его checksum и
 scope не переписываются. Полная конфигурация закрепляется на время операции и
 передаётся новому wrapper только через точный native grant.
+
+
+### Private native-maintenance authority
+
+Для фиксированного `native-maintenance-fixed-v1` Core producer проверяет один
+явный dictionary request `workspace_access.tools[]` против единственного
+актуального configured descriptor-only tool с capability
+`processforge.native-maintenance.fixed-v1`. Его private policy:
+
+```json
+{"native_maintenance":{"schema_version":1,"profile":"native-maintenance-fixed-v1","bindings":["полные точные объекты request.native_maintenance"]}}
+```
+
+`bindings` содержит непустой ограниченный список объектов, без wildcard/default;
+строка в примере обозначает место объекта и не является допустимым grant.
+Запрос содержит `id`, точный tools `path_ref` и `native_maintenance` с полной
+identity/attempt, canonical job digest, descriptor/runtime/execute-source pins,
+operation, management/qualification pins и deployment (`null` для archive и
+construct-management). Четыре штатные resource groups остаются прежними.
+Authoritative policy сохраняется в `tools[].resolution.entry`, явный запрос —
+в `resources.requested.tools[]`. `definition.command` не интерпретируется.
+
+Полномочие выдаёт владелец trusted policy в пересечении со свежим Work issuer.
+ID, command, descriptor path, metadata, PFConfig и hash сами полномочий не дают.
+Required source body и exact read scope нужны независимо для каждого role,
+qualification и runtime-closure member. Runtime требует `body` и `execute`;
+исполняются только четыре закреплённых роли wrapper/harness/controller/native.
+Повторный независимый gate в harness проверяет binding до чтения role bodies;
+management/qualification/deployment pins проверяются до compilation/import.
+
+`native_launch.maintenance={runtime,job_sha256}` — производный immutable marker,
+покрытый полным checksum. Policy/request входят в semantic input fingerprint.
+Старые preparations и capsules не дополняются при start/collection. Строгая схема
+объявляет только существующие optional configuration и maintenance markers;
+неизвестные top-level и marker fields запрещены.
+
+Archive qualification не требует deployment. Construct-management требует
+собственного точного bundle `write_product` scope. Cold binding содержит
+`access:[read,write,acl]`, одну operation, canonical deployment digest и management
+pin; он не заменяет actual token/ACL, held fence, retirement, epoch и independent
+leases. Текущие source budgets сохраняются: oversized closure блокируется.
+Synthetic fixture qualification не является normal-host или genuine cold proof.
+
+Windows normal-command acceptance остаётся отдельным блокером этого source
+checkpoint: descriptor expansion даёт mixed-slash harness argument, а fixed
+validator и wrapper сравнивают другую точную строку пути. До governed исправления
+и повторного полного producer/preparation/command/wrapper/harness gate этот
+checkpoint не устанавливает source completeness или deployment readiness.

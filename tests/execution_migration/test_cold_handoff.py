@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import copy
 import io
+import json
 import os
 import re
 import subprocess
@@ -623,7 +625,18 @@ def test_metadata_never_body_grant(key: str, value: str) -> None:
         assert row["access"] != "body"
     else:
         source[key] = value
-        assert not h._body_granted({"input": {"sources": [source]}}, row)
+        assert not h._body_granted(
+            {
+                "input": {
+                    "sources": [source],
+                    "scope": {
+                        "allowed_actions": ["read"],
+                        "allowed_read_files": ["body.json"],
+                    },
+                }
+            },
+            row,
+        )
 
 
 def test_runtime_closure_requires_declared_bodies(tmp_path: Path) -> None:
@@ -646,3 +659,638 @@ def test_runtime_closure_requires_declared_bodies(tmp_path: Path) -> None:
             tmp_path,
             spec,
         )
+
+
+@pytest.fixture
+def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
+    """Real Core producer/registry with synthetic management qualification only.
+
+    No Work lifecycle is started. All issuer records are isolated file fixtures.
+    The tiny closure is deliberately synthetic, not host/runtime qualification.
+    """
+    import pf_native_maintenance as h
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.prepared.registry_resources import tool_snapshot_record
+    from processforge_core.work.context import build_context_fields, fingerprint
+
+    distribution = Path(__file__).resolve().parents[2]
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / ".pf/artifacts").mkdir(parents=True)
+
+    def put(name: str, raw: bytes) -> dict[str, Any]:
+        path = project / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        return {"path": name, "sha256": h.digest(raw), "size": len(raw)}
+
+    # A venv redirector permits an isolated executable location without installing.
+    runtime_source = Path(os.environ["NATIVE_FIXTURE_PYTHON"])
+    interpreter = put("runtime/python.exe", runtime_source.read_bytes())
+    (project / "runtime/pyvenv.cfg").write_text(
+        "home = " + sys.base_prefix + "\ninclude-system-site-packages = true\n",
+        encoding="utf-8",
+    )
+    executable = str(project / interpreter["path"])
+    closure = [dict(interpreter, role="interpreter")]
+    for role in ("dll", "stdlib", "bootstrap"):
+        closure.append(dict(put("runtime/" + role, b"synthetic fixture"), role=role))
+    namespace = {
+        key: str(project / ("namespace/" + key))
+        for key in (
+            "bundle",
+            "workplace",
+            "device",
+            "accounting",
+            "execution",
+            "control",
+        )
+    }
+    namespace["project"] = str(project)
+    qualification = put(
+        "qualification.json",
+        h.canonical(
+            {
+                "management_namespace": namespace,
+                "runtime_closure_sha256": h.digest(h.canonical(closure)),
+                "runtime_version": sys.version.split()[0],
+            }
+        ),
+    )
+    spec = {
+        "schema_version": 1,
+        "namespace": namespace,
+        "target_roots": [str(tmp_path / "target")],
+        "runtime_closure": closure,
+        "qualification": qualification,
+        "deployment": {"fixture": "not real cold authority"},
+    }
+    bodies = {"management": put("management.json", h.canonical(spec))}
+    for role, name in {
+        "harness": "pf_native_maintenance.py",
+        "controller": "pf_cold_controller.py",
+        "native": "pf_native_control.py",
+        "wrapper": "prepared_executor.py",
+    }.items():
+        bodies[role] = put(
+            "tools/" + name, (distribution / "tools" / name).read_bytes()
+        )
+    driver = json.loads(
+        (
+            distribution / "templates/runtime-drivers/native-maintenance-fixed-v1.json"
+        ).read_bytes()
+    )
+    bodies["descriptor"] = put("driver.json", h.canonical(driver))
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr("hello.txt", b"hello")
+    bodies["archive"] = put("archive.zip", stream.getvalue())
+    bodies["manifest"] = put(
+        "manifest.json",
+        h.canonical(
+            {
+                "schema_version": 1,
+                "files": [
+                    {"path": "hello.txt", "sha256": h.digest(b"hello"), "size": 5}
+                ],
+            }
+        ),
+    )
+    selected = {
+        "kind": "work",
+        "project_id": "fixture",
+        "run_id": "fixture-run",
+        "assignment_id": "fixture-task",
+        "context_id": "fixture-task-capsule",
+        "attempt": 1,
+    }
+    runtime = {
+        "resource_id": "management-python",
+        "access": ["body", "execute"],
+        "sha256": interpreter["sha256"],
+        "version": sys.version.split()[0],
+    }
+    job = {
+        "schema_version": 1,
+        "identity": selected,
+        "operation": "qualify-archive",
+        "resources": [
+            dict(row, role=role, access="body") for role, row in bodies.items()
+        ],
+        "runtime": runtime,
+        "report": ".pf/artifacts/report.json",
+    }
+    binding = {
+        "schema_version": 1,
+        "identity": selected,
+        "job_sha256": h.digest(h.canonical(job)),
+        "descriptor_sha256": bodies["descriptor"]["sha256"],
+        "runtime": runtime,
+        "execute_sources": [
+            dict(bodies[role], role=role)
+            for role in ("wrapper", "harness", "controller", "native")
+        ],
+        "operation": job["operation"],
+        "management_sha256": bodies["management"]["sha256"],
+        "qualification_sha256": qualification["sha256"],
+        "deployment": None,
+    }
+    request = {
+        "id": "fixture-native",
+        "path_ref": {"registry": "tools", "id": "fixture-native"},
+        "native_maintenance": binding,
+    }
+    definition = {
+        "id": request["id"],
+        "status": "configured",
+        "capability": "processforge.native-maintenance.fixed-v1",
+        "command": "NEVER EXECUTED",
+        "native_maintenance": {
+            "schema_version": 1,
+            "profile": "native-maintenance-fixed-v1",
+            "bindings": [copy.deepcopy(binding)],
+        },
+    }
+    write_yaml_file(project / "workplace.yaml", {"schema_version": 1})
+    write_yaml_file(
+        project / "registries/tools.yaml", {"schema_version": 1, "tools": [definition]}
+    )
+    write_yaml_file(
+        project / ".pf/process-forge.yaml",
+        {"project": {"id": "fixture"}, "workplace": {"reference": "auto"}},
+    )
+    snapshot = {
+        "snapshot": {"id": "fixture-snapshot"},
+        "resolved": {
+            "tools": [
+                tool_snapshot_record(project / "workplace.yaml", request["id"], set())
+            ],
+            "knowledge_resources": [],
+        },
+    }
+    snapshot_path = project / ".pf/contexts/project-context.snapshot.yaml"
+    write_yaml_file(snapshot_path, snapshot)
+    pin = {
+        "process_id": "fixture-process",
+        "process_version": "1",
+        "process_fingerprint": fingerprint({"stages": []}),
+        "definition": {"stages": []},
+        "selected_resource_ids": [],
+    }
+    task = {
+        "id": "fixture-task",
+        "run_id": "fixture-run",
+        "process": "fixture-process",
+        "execution_mode": {
+            "kind": "implementation",
+            "code_changes_allowed": True,
+            "artifact_changes_allowed": True,
+        },
+        "objective": "synthetic authority fixture",
+        "allowed_actions": ["read", "write_artifact", "write_product"],
+        "allowed_files": [job["report"], "namespace/bundle/**"],
+        "allowed_read_files": [row["path"] for row in bodies.values()]
+        + [row["path"] for row in closure]
+        + [qualification["path"]],
+        "required_sources": [row["path"] for row in bodies.values()]
+        + [row["path"] for row in closure]
+        + [qualification["path"]],
+        "expected_report": {"artifact": job["report"]},
+        "required_outputs": [{"id": "report", "path": job["report"], "required": True}],
+        "workspace_access": {"tools": [request]},
+        "parameters": {"native_maintenance_job": job},
+    }
+    run = {
+        "id": task["run_id"],
+        "process": task["process"],
+        "tasks": [{"id": task["id"]}],
+    }
+    write_yaml_file(project / ".pf/runs/fixture-run/run.yaml", run)
+    assignment = project / ".pf/assignments/fixture-task.yaml"
+    write_yaml_file(assignment, task)
+
+    class FixtureCore:
+        # Only workplace health is synthetic. No producer/validator is mocked.
+        def __getattr__(self, name: str) -> Any:
+            return getattr(core, name)
+
+        def project_context_check_result(
+            self, *args: Any, **kwargs: Any
+        ) -> dict[str, str]:
+            return {"status": "fresh"}
+
+        def resolve_workplace_root(self, *args: Any, **kwargs: Any) -> Path:
+            return project
+
+    selected_core = FixtureCore()
+    fields = build_context_fields(
+        project,
+        assignment,
+        task,
+        snapshot,
+        selected_core,
+        workplace=project,
+        pin=pin,
+        run_record=run,
+    )
+    capsule = {
+        **fields,
+        "capsule": {"id": selected["context_id"]},
+        "context_snapshot": {
+            "id": "fixture-snapshot",
+            "sha256": h.digest(snapshot_path.read_bytes()),
+        },
+    }
+    assert capsule["execution_contract"]["readiness"] == {
+        "status": "ready",
+        "blockers": [],
+    }
+    write_yaml_file(
+        project / ".pf/contexts/assignment-capsules/fixture-task.capsule.yaml", capsule
+    )
+    monkeypatch.setattr(h, "__file__", str(project / "tools/pf_native_maintenance.py"))
+    monkeypatch.setattr(sys, "executable", executable)
+    return SimpleNamespace(
+        project=project,
+        task=task,
+        capsule=capsule,
+        core=selected_core,
+        driver=driver,
+        definition=definition,
+        binding=binding,
+        spec=spec,
+        distribution=distribution,
+    )
+
+
+def prepare_native(f: Any) -> dict[str, Any]:
+    import pf_native_maintenance as h
+
+    from processforge_core.prepared.input import build
+
+    prepared = build(f.project, f.task, f.capsule, 1, f.core)
+    h.bind_preparation(prepared, f.project, f.project, f.driver)
+    return prepared
+
+
+def test_normal_native_producer_schema_consumer(native_fixture: Any) -> None:
+    import pf_native_maintenance as h
+
+    from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
+    from processforge_core.prepared.input import write_once
+    from processforge_core.runtime.command import WorkerCommandBuilder
+
+    f = native_fixture
+    prepared = prepare_native(f)
+    assert set(prepared["input"]["resources"]["grants"]) == {
+        "tools",
+        "mcp",
+        "templates",
+        "knowledge_resources",
+    }
+    schema = json.loads(
+        (f.distribution / "schemas/prepared-input.schema.json").read_bytes()
+    )
+    assert not UpdateSchemaChecks(f.distribution).validate(
+        prepared, schema, schema, "$"
+    )
+    path = (
+        f.project
+        / ".pf/runtime/agent-runs/fixture-run/fixture-task/attempts/1/prepared-input.json"
+    )
+    checksum = write_once(path, prepared)
+    with pytest.raises(FileExistsError):
+        write_once(path, prepared)
+    report, result = h.execute(prepared, f.project)
+    assert report == ".pf/artifacts/report.json"
+    assert json.loads(result)["summary"] == {"files": 1, "expanded_bytes": 5}
+    # Standalone fixed harness validates the same immutable bytes and emits report.
+    command, _ = WorkerCommandBuilder(f.project).build(
+        f.project,
+        f.task,
+        f.driver,
+        prepared_input={
+            "path": path.relative_to(f.project).as_posix(),
+            "checksum": checksum,
+        },
+    )
+    env = command["command"]["environment"]
+    child = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-B",
+            str(f.project / "tools/pf_native_maintenance.py"),
+            str(path),
+        ],
+        env=env,
+        cwd=f.project,
+        capture_output=True,
+        timeout=20,
+        check=False,
+    )
+    assert child.returncode == 0, child.stderr
+    assert (f.project / report).read_bytes() == result
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "id-only",
+        "no-policy",
+        "revoked",
+        "changed-policy",
+        "duplicate-policy",
+        "body-only",
+        "execute-only",
+        "metadata",
+        "scope",
+        "attempt",
+        "job",
+        "operation",
+        "source",
+        "version",
+    ],
+)
+def test_native_authority_denied_before_read(
+    native_fixture: Any, monkeypatch: Any, case: str
+) -> None:
+    import pf_native_maintenance as h
+
+    f = native_fixture
+    prepared = prepare_native(f)
+    semantic = prepared["input"]
+    request = semantic["resources"]["requested"]["tools"][0]
+    entry = semantic["resources"]["grants"]["tools"][0]["resolution"]["entry"]
+    if case == "id-only":
+        semantic["resources"]["requested"]["tools"] = [request["id"]]
+    elif case == "no-policy":
+        del entry["native_maintenance"]
+    elif case == "revoked":
+        entry["status"] = "revoked"
+    elif case == "changed-policy":
+        entry["native_maintenance"]["bindings"][0]["qualification_sha256"] = (
+            "sha256:" + "0" * 64
+        )
+    elif case == "duplicate-policy":
+        entry["native_maintenance"]["bindings"] *= 2
+    elif case in {"body-only", "execute-only"}:
+        request["native_maintenance"]["runtime"]["access"] = [
+            "body" if case == "body-only" else "execute"
+        ]
+    elif case == "metadata":
+        semantic["sources"][0]["delivery"] = "metadata"
+    elif case == "scope":
+        semantic["scope"]["forbidden_actions"] = ["read"]
+    elif case == "attempt":
+        prepared["identity"]["attempt"] = 2
+    elif case == "job":
+        semantic["parameters"]["native_maintenance_job"]["report"] += "-other"
+    elif case == "operation":
+        semantic["parameters"]["native_maintenance_job"]["operation"] = "cold-stage"
+    elif case == "source":
+        request["native_maintenance"]["execute_sources"][0]["sha256"] = (
+            "sha256:" + "0" * 64
+        )
+    elif case == "version":
+        request["native_maintenance"]["runtime"]["version"] = "0.0"
+
+    def unexpected(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("read or compile before denial")
+
+    monkeypatch.setattr(h, "read_file", unexpected)
+    monkeypatch.setattr(h, "_captured_module", unexpected)
+    with pytest.raises(ValueError):
+        h.execute(prepared, f.project)
+
+
+@pytest.mark.parametrize("case", ["revoked", "changed", "duplicate"])
+def test_normal_producer_current_policy_denial(native_fixture: Any, case: str) -> None:
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.prepared.input import build
+
+    f = native_fixture
+    definition = copy.deepcopy(f.definition)
+    if case == "revoked":
+        definition["status"] = "revoked"
+    if case == "changed":
+        definition["native_maintenance"]["bindings"][0]["job_sha256"] = (
+            "sha256:" + "0" * 64
+        )
+    write_yaml_file(
+        f.project / "registries/tools.yaml",
+        {
+            "schema_version": 1,
+            "tools": [definition] * (2 if case == "duplicate" else 1),
+        },
+    )
+    with pytest.raises(
+        ValueError,
+        match="resource_access_revoked|resource_generation_changed|resource_scope_invalid",
+    ):
+        build(f.project, f.task, f.capsule, 1, f.core)
+
+
+def test_normal_fixed_command_acceptance(native_fixture: Any) -> None:
+    """Acceptance gate: Windows normal builder must pass the fixed validator."""
+    import pf_native_maintenance as h
+
+    from processforge_core.prepared.input import write_once
+    from processforge_core.runtime.command import WorkerCommandBuilder
+
+    f = native_fixture
+    prepared = prepare_native(f)
+    path = (
+        f.project
+        / ".pf/runtime/agent-runs/fixture-run/fixture-task/attempts/1/prepared-input.json"
+    )
+    checksum = write_once(path, prepared)
+    command, _ = WorkerCommandBuilder(f.project).build(
+        f.project,
+        f.task,
+        f.driver,
+        prepared_input={
+            "path": path.relative_to(f.project).as_posix(),
+            "checksum": checksum,
+        },
+    )
+    h.validate_command(prepared, f.project, f.project, command)
+
+
+def test_native_schema_rejects_widening(native_fixture: Any) -> None:
+    from processforge_core.maintenance.schema_checks import UpdateSchemaChecks
+
+    f = native_fixture
+    prepared = prepare_native(f)
+    schema = json.loads(
+        (f.distribution / "schemas/prepared-input.schema.json").read_bytes()
+    )
+    check = UpdateSchemaChecks(f.distribution)
+    for mutate in (
+        lambda d: d["native_launch"].update(arbitrary=True),
+        lambda d: d["native_launch"]["maintenance"]["runtime"].update(
+            access=["execute"]
+        ),
+        lambda d: d["native_launch"]["maintenance"].update(permission=True),
+    ):
+        changed = copy.deepcopy(prepared)
+        mutate(changed)
+        assert check.validate(changed, schema, schema, "$")
+
+
+def test_fixed_authority_checks_stay_equivalent() -> None:
+    import ast
+    import inspect
+
+    import pf_native_maintenance as h
+
+    from processforge_core.prepared.resources import _native_authority
+
+    # Standalone held management has no Core imports; compare its repeated gate.
+    assert ast.dump(ast.parse(inspect.getsource(h._native_authority))) == ast.dump(
+        ast.parse(inspect.getsource(_native_authority))
+    )
+
+
+def reissue_fixture(f: Any, operation: str) -> None:
+    """Issue fresh synthetic fixture policy/context without mutating old inputs."""
+    import pf_native_maintenance as h
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.prepared.registry_resources import tool_snapshot_record
+    from processforge_core.work.context import build_context_fields
+
+    f.task = copy.deepcopy(f.task)
+    binding = f.task["workspace_access"]["tools"][0]["native_maintenance"]
+    job = f.task["parameters"]["native_maintenance_job"]
+    job["operation"] = operation
+    binding["operation"] = operation
+    binding["job_sha256"] = h.digest(h.canonical(job))
+    binding["deployment"] = (
+        {
+            "access": ["read", "write", "acl"],
+            "operations": [operation],
+            "management_sha256": binding["management_sha256"],
+            "spec_sha256": h.digest(h.canonical(f.spec["deployment"])),
+        }
+        if operation.startswith("cold-")
+        else None
+    )
+    f.definition = copy.deepcopy(f.definition)
+    f.definition["native_maintenance"]["bindings"] = [copy.deepcopy(binding)]
+    write_yaml_file(f.project / "registries/tools.yaml", {"tools": [f.definition]})
+    snapshot_path = f.project / ".pf/contexts/project-context.snapshot.yaml"
+    snapshot = f.core.load_yaml_document(snapshot_path)
+    snapshot["resolved"]["tools"] = [
+        tool_snapshot_record(f.project / "workplace.yaml", f.definition["id"], set())
+    ]
+    write_yaml_file(snapshot_path, snapshot)
+    assignment = f.project / ".pf/assignments/fixture-task.yaml"
+    write_yaml_file(assignment, f.task)
+    fields = build_context_fields(
+        f.project,
+        assignment,
+        f.task,
+        snapshot,
+        f.core,
+        workplace=f.project,
+        pin=f.capsule["process_execution"],
+        run_record=f.core.load_run(f.project, "fixture-run"),
+    )
+    f.capsule = {
+        **fields,
+        "capsule": {"id": "fixture-task-capsule"},
+        "context_snapshot": {
+            "id": "fixture-snapshot",
+            "sha256": h.digest(snapshot_path.read_bytes()),
+        },
+    }
+    write_yaml_file(
+        f.project / ".pf/contexts/assignment-capsules/fixture-task.capsule.yaml",
+        f.capsule,
+    )
+
+
+def test_normal_construct_management_requires_own_scope(native_fixture: Any) -> None:
+    import pf_native_maintenance as h
+
+    f = native_fixture
+    reissue_fixture(f, "construct-management")
+    prepared = prepare_native(f)
+    denied = copy.deepcopy(prepared)
+    denied["input"]["scope"]["allowed_files"].remove("namespace/bundle/**")
+    with pytest.raises(h.Rejected, match="bundle_write_grant"):
+        h.execute(denied, f.project)
+    destination = f.project / "namespace/bundle"
+    assert not destination.exists()
+    _, result = h.execute(prepared, f.project)
+    assert json.loads(result)["summary"]["files"] == 9
+    assert (destination / "bundle.json").is_file()
+
+
+@pytest.mark.parametrize("case", ["spec", "qualification", "closure-scope"])
+def test_synthetic_cold_denies_before_compile(
+    native_fixture: Any, monkeypatch: Any, case: str
+) -> None:
+    import pf_native_maintenance as h
+
+    f = native_fixture
+    reissue_fixture(f, "cold-stage")
+    prepared = prepare_native(f)
+    if case == "spec":
+        f.spec["deployment"]["fixture"] = "different destination"
+        # Altering pinned management bytes cannot gain new operational scope.
+        (f.project / "management.json").write_bytes(h.canonical(f.spec))
+    elif case == "qualification":
+        prepared["input"]["sources"] = [
+            s for s in prepared["input"]["sources"] if s["path"] != "qualification.json"
+        ]
+    else:
+        prepared["input"]["scope"]["allowed_read_files"].remove("runtime/dll")
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("captured module compiled before permission denial")
+
+    monkeypatch.setattr(h, "_captured_module", forbidden)
+    with pytest.raises(ValueError):
+        h.execute(prepared, f.project)
+
+
+def test_ordinary_file_only_build_has_no_native_authority(native_fixture: Any) -> None:
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.prepared.input import build
+    from processforge_core.work.context import build_context_fields
+
+    f = native_fixture
+    f.task = copy.deepcopy(f.task)
+    f.task["parameters"] = {}
+    f.task["workspace_access"] = {}
+    assignment = f.project / ".pf/assignments/fixture-task.yaml"
+    write_yaml_file(assignment, f.task)
+    snapshot = f.core.load_yaml_document(
+        f.project / ".pf/contexts/project-context.snapshot.yaml"
+    )
+    fields = build_context_fields(
+        f.project,
+        assignment,
+        f.task,
+        snapshot,
+        f.core,
+        workplace=f.project,
+        pin=f.capsule["process_execution"],
+        run_record=f.core.load_run(f.project, "fixture-run"),
+    )
+    capsule = {
+        **fields,
+        "capsule": f.capsule["capsule"],
+        "context_snapshot": f.capsule["context_snapshot"],
+    }
+    write_yaml_file(
+        f.project / ".pf/contexts/assignment-capsules/fixture-task.capsule.yaml",
+        capsule,
+    )
+    prepared = build(f.project, f.task, capsule, 1, f.core)
+    assert "native_launch" not in prepared
+    assert all(not rows for rows in prepared["input"]["resources"]["grants"].values())

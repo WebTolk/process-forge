@@ -14,10 +14,15 @@
     "input": { "$ref": "#/$defs/input" },
     "input_fingerprint": { "$ref": "#/$defs/digest" },
     "output_baseline": { "type": "array", "items": { "$ref": "#/$defs/output_baseline_item" } },
-    "limits": { "$ref": "#/$defs/limits" }
+    "limits": { "$ref": "#/$defs/limits" },
+    "native_launch": { "$ref": "#/$defs/native_launch" }
   },
   "additionalProperties": false,
   "$defs": {
+    "native_launch": {"type": "object", "minProperties": 1, "properties": {"configuration": {"$ref": "#/$defs/native_configuration"}, "maintenance": {"$ref": "#/$defs/native_maintenance"}}, "additionalProperties": false},
+    "native_configuration": {"type": "object", "required": ["reader", "access", "path", "sha256", "size"], "properties": {"reader": {"const": "native"}, "access": {"const": "body"}, "path": {"type": "string", "pattern": "^\\.pf/runtime/agent-runs/.+/configuration\\.snapshot\\.json$"}, "sha256": {"$ref": "#/$defs/digest"}, "size": {"type": "integer", "minimum": 1, "maximum": 65536}}, "additionalProperties": false},
+    "native_maintenance": {"type": "object", "required": ["runtime", "job_sha256"], "properties": {"runtime": {"$ref": "#/$defs/native_runtime"}, "job_sha256": {"$ref": "#/$defs/digest"}}, "additionalProperties": false},
+    "native_runtime": {"type": "object", "required": ["resource_id", "access", "sha256", "version"], "properties": {"resource_id": {"const": "management-python"}, "access": {"const": ["body", "execute"]}, "sha256": {"$ref": "#/$defs/digest"}, "version": {"type": "string", "minLength": 1, "maxLength": 64}}, "additionalProperties": false},
     "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
     "identity": {
       "type": "object",
