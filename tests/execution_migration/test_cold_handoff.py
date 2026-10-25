@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import importlib.util
+import inspect
 import io
 import json
 import os
@@ -910,7 +912,14 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
     write_yaml_file(
         project / ".pf/contexts/assignment-capsules/fixture-task.capsule.yaml", capsule
     )
-    monkeypatch.setattr(h, "__file__", str(project / "tools/pf_native_maintenance.py"))
+    # Import the actual pinned file, rather than relabeling an ambient module.
+    module_spec = importlib.util.spec_from_file_location(
+        "pf_native_maintenance", project / "tools/pf_native_maintenance.py"
+    )
+    assert module_spec is not None and module_spec.loader is not None
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    monkeypatch.setitem(sys.modules, "pf_native_maintenance", module)
     monkeypatch.setattr(sys, "executable", executable)
     return SimpleNamespace(
         project=project,
@@ -933,6 +942,56 @@ def prepare_native(f: Any) -> dict[str, Any]:
     prepared = build(f.project, f.task, f.capsule, 1, f.core)
     h.bind_preparation(prepared, f.project, f.project, f.driver)
     return prepared
+
+
+@pytest.mark.parametrize(
+    "case", ["same-body-wrong-root", "harness-body", "qualified-root", "runtime-origin"]
+)
+def test_native_actual_origin_and_body_reference(
+    native_fixture: Any, monkeypatch: Any, case: str
+) -> None:
+    """A body pin never substitutes for the actual admitted execution origin."""
+    import pf_native_maintenance as h
+
+    f = native_fixture
+    prepared = prepare_native(f)
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("effect module compiled before origin/body denial")
+
+    monkeypatch.setattr(h, "_captured_module", forbidden)
+    if case == "same-body-wrong-root":
+        path = f.project.parent / "unauthorized" / "pf_native_maintenance.py"
+        path.parent.mkdir()
+        path.write_bytes(Path(h.__file__).read_bytes())
+        spec = importlib.util.spec_from_file_location("foreign_harness", path)
+        assert spec is not None and spec.loader is not None
+        foreign = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(foreign)
+        assert path.read_bytes() == Path(h.__file__).read_bytes()
+        monkeypatch.setattr(foreign, "_captured_module", forbidden)
+        with pytest.raises(foreign.Rejected, match="harness_path_mismatch"):
+            foreign.execute(prepared, f.project)
+    elif case == "harness-body":
+        path = f.project / "tools/pf_native_maintenance.py"
+        path.write_bytes(path.read_bytes() + b"\n# changed body\n")
+        with pytest.raises(h.Rejected, match="resource_pin_mismatch"):
+            h.execute(prepared, f.project)
+    elif case == "qualified-root":
+        _, captured = h.capture_job(prepared, f.project)
+        changed = copy.deepcopy(f.spec)
+        changed["namespace"]["project"] = str(f.project.parent / "unqualified")
+        captured["management"] = h.canonical(changed)
+        # Isolate the namespace gate; capture_job separately enforces body pins.
+        with pytest.raises(h.Rejected, match="management_project_binding"):
+            h.management(prepared, f.project, captured)
+    else:
+        path = f.project.parent / "unqualified-python.exe"
+        path.write_bytes(Path(sys.executable).read_bytes())
+        monkeypatch.setattr(sys, "executable", str(path))
+        with pytest.raises(h.Rejected, match="executing_runtime_not_bound"):
+            h.execute(prepared, f.project)
+    assert not (f.project / ".pf/artifacts/report.json").exists()
 
 
 def test_normal_native_producer_schema_consumer(native_fixture: Any) -> None:
@@ -1168,10 +1227,19 @@ def test_fixed_path_composition_preserves_other_arguments(
     assert command["command"]["args"][2] == str(tmp_path) + "/tools/../other.py"
 
 
-def test_normal_fixed_prepare_start_collection(
-    native_fixture: Any, monkeypatch: Any
-) -> None:
-    """Real normal route; only workplace health/device location/event sink are seams."""
+def _isolated_normal_route(project: str) -> None:
+    """Run from the independent fixture distribution in a fresh interpreter."""
+    import json
+    import sys
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    root = Path(project)
+    assert not any(
+        name in sys.modules
+        for name in ("processforge", "pf_native_maintenance", "processforge_core")
+    )
+    sys.path[:0] = [str(root / "tools"), str(root / "src")]
     import pf_native_maintenance as h
     import processforge as core
 
@@ -1180,53 +1248,45 @@ def test_normal_fixed_prepare_start_collection(
     from processforge_core.prepared import input as prepared_input
     from processforge_core.work.context import validate_execution_contract
 
-    f = native_fixture
-    # Component fixtures relocate __file__; the normal gate must use the actual
-    # imported management distribution, just as its standalone wrapper will.
-    monkeypatch.setattr(
-        h, "__file__", str(f.distribution / "tools/pf_native_maintenance.py")
-    )
-    monkeypatch.setattr(
-        core, "project_context_check_result", f.core.project_context_check_result
-    )
-    monkeypatch.setattr(core, "resolve_workplace_root", f.core.resolve_workplace_root)
-    monkeypatch.setattr(
-        DeviceConfigurationSource,
-        "default_path",
-        staticmethod(lambda: f.project / "device.yaml"),
-    )
-    monkeypatch.setattr(
-        core._process_event_recorder, "emit_process_event", lambda *a, **k: {}
-    )
+    # Only health, device location and event recording are synthetic seams.
+    core.project_context_check_result = lambda *a, **k: {"status": "fresh"}
+    core.resolve_workplace_root = lambda *a, **k: root
+    DeviceConfigurationSource.default_path = staticmethod(lambda: root / "device.yaml")
+    core._process_event_recorder.emit_process_event = lambda *a, **k: {}
+    assert core.ROOT == root
+    assert Path(core.__file__) == root / "tools/processforge.py"
+    assert Path(h.__file__) == root / "tools/pf_native_maintenance.py"
+    assert Path(sys.executable) == root / "runtime/python.exe"
+    for name, module in tuple(sys.modules.items()):
+        if name.startswith("processforge_core"):
+            if module.__file__ is not None:
+                assert Path(module.__file__).is_relative_to(root / "src")
+            else:
+                assert all(
+                    Path(path).is_relative_to(root / "src") for path in module.__path__
+                )
     disk_capsule = core.load_yaml_document(
-        core.assignment_capsule_path(f.project, f.task["id"])
+        core.assignment_capsule_path(root, "fixture-task")
     )
-    assert disk_capsule == f.capsule
     disk_task = core.extract_assignment_front_matter(
-        f.project / ".pf/assignments/fixture-task.yaml"
+        root / ".pf/assignments/fixture-task.yaml"
     )
     validation = validate_execution_contract(
-        f.project,
-        f.project / ".pf/assignments/fixture-task.yaml",
+        root,
+        root / ".pf/assignments/fixture-task.yaml",
         disk_task,
         disk_capsule,
         core,
         require_ready=True,
     )
     assert validation["status"] == "valid", validation
-    task, driver, paths = core.prepare_worker_run(
-        f.project, f.task["id"], "driver.json"
-    )
+    task, driver, paths = core.prepare_worker_run(root, "fixture-task", "driver.json")
     command = core.json_read(paths["command"])
-    document = prepared_input.load(f.project, task, command, core)
-    schema = json.loads(
-        (f.distribution / "schemas/prepared-input.schema.json").read_bytes()
-    )
-    assert not UpdateSchemaChecks(f.distribution).validate(
-        document, schema, schema, "$"
-    )
+    document = prepared_input.load(root, task, command, core)
+    schema = json.loads((root / "schemas/prepared-input.schema.json").read_bytes())
+    assert not UpdateSchemaChecks(root).validate(document, schema, schema, "$")
     args = SimpleNamespace(
-        project_root=str(f.project),
+        project_root=str(root),
         task=task["id"],
         driver="driver.json",
         executable=None,
@@ -1237,12 +1297,100 @@ def test_normal_fixed_prepare_start_collection(
     result = core.command_worker_run_start(args)
     assert result == 0, paths["stderr"].read_text(encoding="utf-8", errors="replace")
     assert core.json_read(paths["exit"])["exit_code"] == 0
-    receipt_path, receipt = prepared_input.collection_receipt(
-        f.project, task, command, core
-    )
+    receipt_path, receipt = prepared_input.collection_receipt(root, task, command, core)
     assert receipt_path.is_file()
     assert receipt["identity"] == document["identity"]
     assert receipt["outputs"][0]["status"] == "present"
+    report = json.loads((root / ".pf/artifacts/report.json").read_bytes())
+    assert report["identity"] == document["identity"]
+    assert report["operation"] == "qualify-archive"
+    assert report["summary"] == {"files": 1, "expanded_bytes": 5}
+    assert report["actual_provider_qualified"] is False
+    assert report["production_ready"] is False
+    job = document["input"]["parameters"]["native_maintenance_job"]
+    rows = {row["role"]: row for row in job["resources"]}
+    assert root / rows["harness"]["path"] == Path(h.__file__)
+    assert h.digest(Path(h.__file__).read_bytes()) == rows["harness"]["sha256"]
+    management = json.loads((root / rows["management"]["path"]).read_bytes())
+    assert Path(management["namespace"]["project"]) == core.ROOT
+    assert not any(
+        core.ROOT == Path(target) or core.ROOT.is_relative_to(Path(target))
+        for target in management["target_roots"]
+    )
+    process = core.json_read(paths["root"] / "process.json")
+    assert int(process["pid"]) > 0
+    (root / "normal-route-evidence.json").write_text(
+        json.dumps(
+            {
+                "identity": document["identity"],
+                "prepared_checksum": command["prepared_input"]["checksum"],
+                "stages": [
+                    "contract",
+                    "prepare",
+                    "schema",
+                    "start",
+                    "wrapper",
+                    "harness",
+                    "collection",
+                ],
+                "exit": core.json_read(paths["exit"]),
+                "process_pid": process["pid"],
+                "report_sha256": h.digest(
+                    (root / ".pf/artifacts/report.json").read_bytes()
+                ),
+                "body_reference": rows["harness"],
+                "runtime": job["runtime"],
+                "descriptor_sha256": rows["descriptor"]["sha256"],
+                "source_root_equals_management_project": core.ROOT == root,
+                "module_cache_isolated": True,
+                "synthetic_qualification": True,
+                "synchronous_start": args.detach is False,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_normal_fixed_prepare_start_collection(native_fixture: Any) -> None:
+    """Actual producer/wrapper/harness, independent Core, no module path seam."""
+    f = native_fixture
+    # The four-file construct inventory is insufficient: provide all Python
+    # bootstrap/Core/tool sources and distribution data as fixture material.
+    for directory in ("src", "tools", "schemas", "templates"):
+        for source in (f.distribution / directory).rglob("*"):
+            if source.is_file() and "__pycache__" not in source.parts:
+                destination = f.project / source.relative_to(f.distribution)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(source.read_bytes())
+    for name in ("VERSION",):
+        source = f.distribution / name
+        if source.is_file():
+            (f.project / name).write_bytes(source.read_bytes())
+    script = f.project / "normal-route-fixture.py"
+    script.write_text(
+        inspect.getsource(_isolated_normal_route)
+        + "\n_isolated_normal_route("
+        + repr(str(f.project))
+        + ")\n",
+        encoding="utf-8",
+    )
+    child = subprocess.run(
+        [sys.executable, "-I", "-B", str(script)],
+        cwd=f.project,
+        env={
+            key: value for key, value in os.environ.items() if not key.startswith("PF_")
+        },
+        capture_output=True,
+        timeout=60,
+        check=False,
+    )
+    (f.project / "normal-route.stdout").write_bytes(child.stdout)
+    (f.project / "normal-route.stderr").write_bytes(child.stderr)
+    assert child.returncode == 0, child.stderr.decode("utf-8", errors="replace")
+    evidence = json.loads((f.project / "normal-route-evidence.json").read_bytes())
+    assert evidence["exit"]["exit_code"] == 0
 
 
 def test_native_schema_rejects_widening(native_fixture: Any) -> None:

@@ -139,13 +139,27 @@ Windows mixed-slash harness argument исправлен в Core command builder 
 для точного шаблонного аргумента private fixed profile: путь составляется
 лексически с нативными разделителями. Строгие validator/wrapper и generic argv
 сохранены; fixed-command acceptance, tamper и generic-path регрессии проходят.
-При разных project/distribution roots строгий normal fixture с фактическим
-расположением импортированного harness останавливается уже на preparation:
-`harness_path_mismatch` при проверке source-role. Компонентная fixture с подменой
-`harness.__file__` проходит preparation/schema/command и доходит до wrapper,
-но там независимая повторная проверка отклоняет ту же source identity. Эта
-подмена не является доказательством полного normal route. Его start/harness/
-collection пока не завершены; отдельный standalone harness fixture не заменяет
-этот gate. Требуется governed successor для согласования точной source identity
-в producer и consumer; source completeness и deployment readiness этим
-checkpoint не установлены.
+Project-relative body reference и фактическое расположение исполняемого harness
+проверяются независимо: source требует точных Work/tool/body grants и совпадения
+байтов, а `capture_job` требует, чтобы импортированный harness находился именно
+по закреплённому пути внутри management project. Совпадающий hash копии в другом
+root этого условия не заменяет: отказ `harness_path_mismatch` сохраняется.
+`management` отдельно связывает namespace project с prepared project root,
+qualified runtime closure — с фактическим interpreter, а `validate_preparation`
+сверяет четыре executable source roles с distribution перед fixed launch.
+Произвольный внешний distribution не становится разрешённым через body reference.
+
+Для normal fixture полный независимый distribution расположен в самом
+management project, вне replacement targets. Он содержит Python Core/bootstrap/
+tools и необходимые schemas/templates; inventory четырёх файлов, создаваемый
+`construct_management`, такой distribution не заменяет. Fixture импортирует
+реальный закреплённый harness и запускает producer в новом процессе с собственным
+Core, без изменения `__file__` и без унаследованных cached modules. Настоящий
+маршрут producer → prepare/schema/write_once → fixed start/wrapper/harness →
+collection проверен вместе с before-effect отказами для неправильных origin,
+body, management root, runtime origin и command tamper. Это проверка source route:
+freshness, qualification и малая runtime closure остаются явно синтетическими.
+Полная независимая operational qualification, bounded transport больших bodies,
+standalone management packaging и genuine host/cold evidence требуют отдельных
+разрешённых проверок; source completeness и deployment readiness из fixture
+success не следуют. Budgets и публичные/generic контракты сохранены.
