@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import os
 import re
+from collections.abc import Callable, Iterator
+from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -230,47 +234,94 @@ def _native_authority(
         require(isinstance(name, str) and 0 < len(name.encode("utf-8")) <= 1024)
         require(unicodedata.normalize("NFC", name) == name)
         require(not any(ord(c) < 32 or ord(c) == 127 or c in '\\:<>"|?*' for c in name))
-        require(all(
-            part not in {"", ".", ".."} and not part.endswith((".", " "))
-            and re.fullmatch(r"(?i:con|prn|aux|nul|conin\$|conout\$|com[0-9]|lpt[0-9])", part.split(".")[0]) is None
-            for part in name.split("/")
-        ))
+        require(
+            all(
+                part not in {"", ".", ".."}
+                and not part.endswith((".", " "))
+                and re.fullmatch(
+                    r"(?i:con|prn|aux|nul|conin\$|conout\$|com[0-9]|lpt[0-9])",
+                    part.split(".")[0],
+                )
+                is None
+                for part in name.split("/")
+            )
+        )
         return str(name)
 
     def material_shape(value: Any) -> None:
-        require(isinstance(value, dict) and set(value) == {
-            "schema_version", "body_manifest", "roots", "permission", "capture", "quotas"
-        }, "native_material_shape")
+        require(
+            isinstance(value, dict)
+            and set(value)
+            == {
+                "schema_version",
+                "body_manifest",
+                "roots",
+                "permission",
+                "capture",
+                "quotas",
+            },
+            "native_material_shape",
+        )
         require(type(value["schema_version"]) is int and value["schema_version"] == 1)
         require(value["permission"] == "body-and-qualified-runtime-load")
         manifest = value["body_manifest"]
-        require(isinstance(manifest, dict) and set(manifest) == {"resource_id", "path", "sha256", "size"})
-        require(isinstance(manifest["resource_id"], str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", manifest["resource_id"]) is not None)
+        require(
+            isinstance(manifest, dict)
+            and set(manifest) == {"resource_id", "path", "sha256", "size"}
+        )
+        require(
+            isinstance(manifest["resource_id"], str)
+            and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", manifest["resource_id"])
+            is not None
+        )
         portable(manifest["path"])
-        require(pinned(manifest["sha256"]) and type(manifest["size"]) is int and 0 < manifest["size"] <= 1048576)
+        require(
+            pinned(manifest["sha256"])
+            and type(manifest["size"]) is int
+            and 0 < manifest["size"] <= 1048576
+        )
         roots = value["roots"]
         require(isinstance(roots, list) and len(roots) == 2)
         prefixes = {}
         for row in roots:
-            require(isinstance(row, dict) and set(row) == {"id", "base", "relative_path"})
-            require(isinstance(row["id"], str) and row["id"] in {"archive", "runtime"} and row["id"] not in prefixes and row["base"] == "project")
+            require(
+                isinstance(row, dict) and set(row) == {"id", "base", "relative_path"}
+            )
+            require(
+                isinstance(row["id"], str)
+                and row["id"] in {"archive", "runtime"}
+                and row["id"] not in prefixes
+                and row["base"] == "project"
+            )
             prefixes[row["id"]] = portable(row["relative_path"]).casefold()
         left, right = prefixes["archive"], prefixes["runtime"]
-        require(left != right and not left.startswith(right + "/") and not right.startswith(left + "/"))
+        require(
+            left != right
+            and not left.startswith(right + "/")
+            and not right.startswith(left + "/")
+        )
         capture = value["capture"]
         require(isinstance(capture, dict) and set(capture) == {"directory", "access"})
         portable(capture["directory"])
         require(capture["access"] == ["create_once", "read", "remove_own_partial"])
         ceilings = {
-            "manifest_bytes": 1048576, "receipt_index_bytes": 1048576,
-            "members": 4096, "root_prefixes": 2, "path_utf8_bytes": 1024,
-            "resource_id_bytes": 160, "member_bytes": 134217728,
-            "interpreter_bytes": 33554432, "total_material_bytes": 536870912,
-            "copy_chunk_bytes": 65536, "capture_working_buffer_bytes": 1048576,
+            "manifest_bytes": 1048576,
+            "receipt_index_bytes": 1048576,
+            "members": 4096,
+            "root_prefixes": 2,
+            "path_utf8_bytes": 1024,
+            "resource_id_bytes": 160,
+            "member_bytes": 134217728,
+            "interpreter_bytes": 33554432,
+            "total_material_bytes": 536870912,
+            "copy_chunk_bytes": 65536,
+            "capture_working_buffer_bytes": 1048576,
             "capture_metadata_accounted_bytes": 16777216,
             "capture_directory_disk_bytes": 536870912,
-            "zip_central_directory_bytes": 4194304, "zip_header_member_bytes": 16384,
-            "zip_header_total_bytes": 4194304, "zip_tail_probe_bytes": 65557,
+            "zip_central_directory_bytes": 4194304,
+            "zip_header_member_bytes": 16384,
+            "zip_header_total_bytes": 4194304,
+            "zip_tail_probe_bytes": 65557,
             "native_consumer_payload_reservation_bytes": 2147483648,
         }
         quotas = value["quotas"]
@@ -407,14 +458,44 @@ def _native_authority(
     material = binding["material"]
     capture = material["capture"]["directory"]
     ident = binding["identity"]
-    require(capture == ".pf/runtime/agent-runs/" + ident["run_id"] + "/" + ident["assignment_id"] + "/attempts/" + str(ident["attempt"]) + "/native-material", "native_capture_attempt")
-    require(permitted(capture + "/**", "write_artifact", "allowed_files") and permitted(capture + "/**", "read", "allowed_read_files"), "native_capture_scope")
+    require(
+        capture
+        == ".pf/runtime/agent-runs/"
+        + ident["run_id"]
+        + "/"
+        + ident["assignment_id"]
+        + "/attempts/"
+        + str(ident["attempt"])
+        + "/native-material",
+        "native_capture_attempt",
+    )
+    require(
+        permitted(capture + "/**", "write_artifact", "allowed_files")
+        and permitted(capture + "/**", "read", "allowed_read_files"),
+        "native_capture_scope",
+    )
     manifest = material["body_manifest"]
-    require(permitted(manifest["path"], "read", "allowed_read_files"), "native_material_manifest_scope")
-    declarations = [row for row in semantic.get("sources", []) if isinstance(row, dict) and row.get("path") == manifest["path"]]
-    require(len(declarations) == 1 and declarations[0].get("status") == "available" and declarations[0].get("checksum") == manifest["sha256"] and declarations[0].get("size") == manifest["size"], "native_material_manifest_body")
+    require(
+        permitted(manifest["path"], "read", "allowed_read_files"),
+        "native_material_manifest_scope",
+    )
+    declarations = [
+        row
+        for row in semantic.get("sources", [])
+        if isinstance(row, dict) and row.get("path") == manifest["path"]
+    ]
+    require(
+        len(declarations) == 1
+        and declarations[0].get("status") == "available"
+        and declarations[0].get("checksum") == manifest["sha256"]
+        and declarations[0].get("size") == manifest["size"],
+        "native_material_manifest_body",
+    )
     if selected is not None:
-        require(declarations[0].get("delivery") in {"inline", "reference"}, "native_material_manifest_body")
+        require(
+            declarations[0].get("delivery") in {"inline", "reference"},
+            "native_material_manifest_body",
+        )
     rows = job["resources"]
     roles = {
         "wrapper",
@@ -460,7 +541,9 @@ def _native_authority(
         by_role[row["role"]] = row
         names.add(name.casefold())
         if row["role"] == "archive":
-            prefix = next(r["relative_path"] for r in material["roots"] if r["id"] == "archive")
+            prefix = next(
+                r["relative_path"] for r in material["roots"] if r["id"] == "archive"
+            )
             require(name.startswith(prefix + "/"), "native_material_archive_root")
             continue
         require(row["size"] <= 1048576, "native_small_source_limit")
@@ -753,3 +836,253 @@ def authorize_resources(
 
 
 __all__ = ["authorize_resources"]
+
+
+def _start_require(condition: bool, reason: str) -> None:
+    if not condition:
+        raise ValueError(reason)
+
+
+_ACTIVE_START: ContextVar[_NativeStartPreflight | None] = ContextVar(
+    "native_maintenance_start", default=None
+)
+
+
+class _NativeStartPreflight:
+    """One synchronous held validation; never serialized or accepted as input.
+
+    The issuer is native_start_preflight(), after current policy and actual-byte validation. Windows
+    sharing-denial handles remain live through synchronous child completion.
+    The wrapper/harness independently revalidate before any consumer effect.
+    """
+
+    release_command: Callable[[], None]
+    task: dict[str, Any]
+    driver: dict[str, Any]
+    run_directory: Path
+    run_version: int
+    flow_directory: Path
+    flow_version: int
+
+    def __init__(
+        self, command: dict[str, Any], prepared: dict[str, Any], entry: Any
+    ) -> None:
+        import copy
+        import threading
+
+        self.command = copy.deepcopy(command)
+        self.document = prepared
+        self._command = copy.deepcopy(command)
+        self._attempt = prepared["identity"]["attempt"]
+        self._entry = entry
+        self._owner = (os.getpid(), threading.get_ident())
+        self._used = False
+
+    def admit(self, command: dict[str, Any], attempt: Any, reference: Any) -> None:
+        """Bounded, no body IO/hash/ZIP/history; call immediately before reserve.
+
+        Command size is fixed by validate_command. Current attempt comes from
+        the locked authoritative repository/state, never the preflight itself.
+        """
+        import threading
+
+        import pf_native_control as native
+
+        _start_require(
+            _ACTIVE_START.get() is self
+            and not self._used
+            and self._owner == (os.getpid(), threading.get_ident()),
+            "native_preflight_not_held",
+        )
+        _start_require(native.current_entry() is self._entry, "native_preflight_epoch")
+        if self._entry is not None and self._entry.control is not None:
+            _start_require(
+                native._native_life_held(self._entry.control), "native_preflight_lease"
+            )
+        _start_require(
+            command == self._command
+            and str(attempt) == str(self._attempt)
+            and reference == self._command["prepared_input"],
+            "native_preflight_attempt",
+        )
+        _start_require(
+            self.run_directory.stat().st_mtime_ns == self.run_version
+            and self.flow_directory.stat().st_mtime_ns == self.flow_version,
+            "native_preflight_inputs_changed",
+        )
+        # The caller now uses this validated memory command; a later disk
+        # rewrite cannot change argv/env or the immutable prepared reference.
+        self.release_command()
+        self._used = True
+
+
+class NativeStartFailure(ValueError):
+    """Private native start preflight/held-lifetime refusal."""
+
+
+@contextmanager
+def native_start_preflight(
+    project: Path, task: dict[str, Any], core: Any
+) -> Iterator[_NativeStartPreflight | None]:
+    """Hold current policy and semantic bodies before private native admission.
+
+    Selection grants no authority. The ordinary loader still performs complete
+    current/pinned authorization *after* handles have excluded replacement.
+    No body scans are repeated inside the caller's admission/lifecycle gates.
+    Unsupported handles or unprotectable authority inputs fail closed.
+    """
+    from ..work.paths import WorkPaths
+    from . import input as prepared_input
+
+    if "native_maintenance_job" not in task.get("parameters", {}):
+        yield None
+        return
+    try:
+        paths = WorkPaths().worker_run(project, task["run_id"], task["id"])
+        command = core.json_read(paths["command"]) if paths["command"].is_file() else {}
+        if command.get("driver_id") != "native-maintenance-fixed-v1":
+            if task.get("parameters", {}).get("native_maintenance_job"):
+                raise ValueError("native_prepared_attempt_required")
+            yield None
+            return
+        import pf_native_maintenance as harness
+
+        from ..project.coordination_state import ProjectCoordinationStateService
+        from ..resources.workplace_catalog import WorkplaceCatalogReader
+
+        with ExitStack() as held:
+
+            def protect(path: Path) -> None:
+                held.enter_context(
+                    harness._safe_material_file(
+                        Path(path.anchor), path.relative_to(path.anchor).as_posix()
+                    )
+                )
+
+            command_handles = held.enter_context(ExitStack())
+            command_handles.enter_context(
+                harness._safe_material_file(
+                    project, paths["command"].relative_to(project).as_posix()
+                )
+            )
+            # A fixed validated command is consumed from memory. Release this input
+            # handle before the legacy writer republishes the same command; the gate
+            # compares its current complete bounded value before reservation.
+            with harness._safe_material_file(
+                project, paths["command"].relative_to(project).as_posix()
+            ):
+                command = harness.document(
+                    (project / paths["command"]).read_bytes(), 65536
+                )
+            protect(core.locate_flow_root(project) / "process-forge.yaml")
+            flow_directory = core.locate_flow_root(project)
+            flow_version = flow_directory.stat().st_mtime_ns
+            local_config = flow_directory / "process-forge.local.yaml"
+            if local_config.is_file():
+                protect(local_config)
+            protect(WorkPaths().assignment_document(project, task["id"]))
+            # Re-read selection from protected bytes; no stale task is authoritative.
+            task = core._worker_assignment_service.load(project, task["id"])
+            run_path = WorkPaths().run_document(project, task["run_id"])
+            protect(run_path)
+            capsule_path = core.assignment_capsule_path(project, task["id"])
+            protect(capsule_path)
+            capsule = core.load_yaml_document(capsule_path)
+            snapshot, _ = core.project_context_snapshot_paths(project)
+            protect(snapshot)
+            generation = (
+                snapshot.parent
+                / "project-context.snapshots"
+                / (capsule["context_snapshot"]["id"] + ".yaml")
+            )
+            if generation.exists():
+                protect(generation)
+            manifest = (
+                ProjectCoordinationStateService().resolve_project_workplace_manifest(
+                    project
+                )
+            )
+            if manifest is None:
+                raise ValueError("native_policy_unprotectable")
+            protect(manifest)
+            catalog = WorkplaceCatalogReader()
+            # Freeze exact authority carriers, including configured registry paths.
+            for (
+                group,
+                default,
+                _collection,
+            ) in catalog.workspace_registry_specs().values():
+                registry = catalog.resolve_registry_path(manifest, group, default)
+                if registry.is_file():
+                    protect(registry)
+            protect(project / harness.relative(command["prepared_input"]["path"]))
+            for row in capsule["execution_contract"]["required_sources"]:
+                if row.get("status") == "available":
+                    protect(project / harness.relative(row["path"]))
+            document = prepared_input.load(project, task, command, core)
+            configuration = document.get("native_launch", {}).get("configuration")
+            if configuration is not None:
+                protect(project / harness.relative(configuration["path"]))
+            # Referenced fulltext material is separately authorized by the loader.
+            for grant in document["input"]["resources"]["grants"][
+                "knowledge_resources"
+            ]:
+                if grant.get("material_kind") == "fulltext":
+                    base = Path(grant["resolution"]["path"])
+                    for row in grant.get("manifest", []):
+                        protect(base / harness.relative(row["relative_path"]))
+            # Current semantic comparison is repeated after *all* input handles exist.
+            document = prepared_input.load(project, task, command, core)
+            from processforge_core.runtime.command import load_configuration_snapshot
+
+            environment = core._worker_environment_policy.materialize(
+                command["command"]
+            )
+            load_configuration_snapshot(
+                document, project / command["prepared_input"]["path"], environment
+            )
+            if core._worker_observation_inputs.worker_run_work_is_terminal(
+                project, task
+            ):
+                raise ValueError("work_is_terminal")
+            run_version = run_path.parent.stat().st_mtime_ns
+            if any(
+                not path.with_suffix(".applied.json").is_file()
+                for path in run_path.parent.glob("cancellation-*.yaml")
+            ):
+                raise ValueError("cancellation_recovery_pending")
+            # A newly published cancellation changes the held run-directory version.
+            held.enter_context(
+                harness._safe_material_file(
+                    project,
+                    run_path.parent.relative_to(project).as_posix(),
+                    directory=True,
+                )
+            )
+            with harness.hold_start_material(
+                document, project, core.ROOT, command
+            ) as entry:
+                sealed = _NativeStartPreflight(command, document, entry)
+                sealed.release_command = command_handles.close
+                sealed.task = task
+                sealed.run_directory = run_path.parent
+                sealed.run_version = run_version
+                sealed.flow_directory = flow_directory
+                sealed.flow_version = flow_version
+                _start_require(
+                    run_path.parent.stat().st_mtime_ns == run_version
+                    and flow_directory.stat().st_mtime_ns == flow_version,
+                    "native_preflight_inputs_changed",
+                )
+                sealed.driver = core._runtime_driver_selection_service.for_worker_state(
+                    project,
+                    task,
+                    core.load_agent_run_state(project, task["run_id"], task["id"]),
+                )
+                token = _ACTIVE_START.set(sealed)
+                try:
+                    yield sealed
+                finally:
+                    _ACTIVE_START.reset(token)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise NativeStartFailure(str(exc)) from exc

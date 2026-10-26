@@ -10266,6 +10266,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     from processforge_core.database import DatabaseError
     from processforge_core.executions.model import ExecutionError
     from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.prepared.resources import NativeStartFailure
 
     project_root = Path(args.project_root).expanduser().resolve()
     try:
@@ -10276,6 +10277,9 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         if repository is None:
             return _legacy_worker_run_start(args)
         return _sql_worker_run_start(args, project_root, repository)
+    except NativeStartFailure as exc:
+        print("FAIL: prepared launch blocked: " + str(exc))
+        return 1
     except (ExecutionError, DatabaseError, ExecutorError, MaintenanceError) as exc:
         print("FAIL: " + exc.code)
         return 1
@@ -10293,240 +10297,297 @@ def _sql_worker_run_start(
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    with (
-        _worker_start_admission(project_root),
-        worker_run_lifecycle_lock(project_root, run_id, task_id),
-    ):
-        from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.resources import native_start_preflight
 
-        selected = _execution_storage(project_root).repository
-        if selected is None or selected.database.target != repository.database.target:
-            raise ExecutionError("execution_identity_conflict")
-
-        if any(
-            not intent.with_suffix(".applied.json").is_file()
-            for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
-                "cancellation-*.yaml"
-            )
+    with native_start_preflight(project_root, task, sys.modules[__name__]) as preflight:
+        if preflight is not None and bool(getattr(args, "detach", False)):
+            print("FAIL: native_synchronous_start_required")
+            return 1
+        with (
+            _worker_start_admission(project_root),
+            worker_run_lifecycle_lock(project_root, run_id, task_id),
         ):
-            print("FAIL: cancellation_recovery_pending")
-            return 1
-        if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
-            print("FAIL: work_is_terminal")
-            return 1
-        record = repository.load_latest(run_id, task_id)
-        if record is not None and record.phase in {
-            "starting",
-            "running",
-            "stopping",
-            "unresolved",
-        }:
-            record = _observe_sql_locked(project_root, repository, record)
-            if record.phase != "absent":
-                print(
-                    f"SKIPPED: {task_id} already running pid={projected_payload(record).get('pid')}"
+            from processforge_core.executions.model import ExecutionError
+
+            selected = _execution_storage(project_root).repository
+            if (
+                selected is None
+                or selected.database.target != repository.database.target
+            ):
+                raise ExecutionError("execution_identity_conflict")
+
+            if preflight is None and any(
+                not intent.with_suffix(".applied.json").is_file()
+                for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
+                    "cancellation-*.yaml"
                 )
-                return 0
-        if (
-            record is None
-            or record.phase == "absent"
-            or projected_payload(record)["status"] == "cancelled"
-        ):
-            task, driver, paths = prepare_worker_run(
-                project_root,
-                task_id,
-                getattr(args, "driver", None),
-                getattr(args, "executable", None),
-                getattr(args, "model", None),
-                getattr(args, "reasoning_effort", None),
-            )
+            ):
+                print("FAIL: cancellation_recovery_pending")
+                return 1
+            if (
+                preflight is None
+                and _worker_observation_inputs.worker_run_work_is_terminal(
+                    project_root, task
+                )
+            ):
+                print("FAIL: work_is_terminal")
+                return 1
             record = repository.load_latest(run_id, task_id)
-        assert record is not None
-        state = projected_payload(record)
-        if (
-            state["status"] not in {"ready", "manual_required"}
-            or record.collection != "pending"
-        ):
-            print(
-                "FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair"
-            )
-            return 1
-        paths = _work_paths.worker_run(project_root, run_id, task_id)
-        command = json_read(paths["command"])
-        driver = _runtime_driver_selection_service.for_worker_state(
-            project_root, task, state
-        )
-        requested = getattr(args, "driver", None)
-        if requested and _runtime_driver_selection_service.for_task(
-            project_root, task, requested
-        ).get("id") != command.get("driver_id"):
-            print("FAIL: prepared driver differs; use explicit worker-run prepare")
-            return 1
-        for option, field in (
-            ("model", "agent_model"),
-            ("reasoning_effort", "agent_reasoning_effort"),
-            ("executable", "executable_override"),
-        ):
-            value = getattr(args, option, None)
-            if value is not None and value != command.get(field):
+            if preflight is not None and (
+                record is None
+                or record.phase != "prepared"
+                or record.collection != "pending"
+            ):
+                raise ExecutionError("execution_identity_conflict")
+            if record is not None and record.phase in {
+                "starting",
+                "running",
+                "stopping",
+                "unresolved",
+            }:
+                record = _observe_sql_locked(project_root, repository, record)
+                if record.phase != "absent":
+                    print(
+                        f"SKIPPED: {task_id} already running pid={projected_payload(record).get('pid')}"
+                    )
+                    return 0
+            if (
+                record is None
+                or record.phase == "absent"
+                or projected_payload(record)["status"] == "cancelled"
+            ):
+                task, driver, paths = prepare_worker_run(
+                    project_root,
+                    task_id,
+                    getattr(args, "driver", None),
+                    getattr(args, "executable", None),
+                    getattr(args, "model", None),
+                    getattr(args, "reasoning_effort", None),
+                )
+                record = repository.load_latest(run_id, task_id)
+            assert record is not None
+            state = projected_payload(record)
+            if (
+                state["status"] not in {"ready", "manual_required"}
+                or record.collection != "pending"
+            ):
                 print(
-                    "FAIL: prepared launch preference differs; use explicit worker-run prepare"
+                    "FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair"
                 )
                 return 1
-        if command.get("prepared_input") != state.get("prepared_input") or str(
-            command.get("attempt")
-        ) != str(record.key.attempt):
-            print("FAIL: prepared command and state identity mismatch")
-            return 1
-        for key, relative in command.get("paths", {}).items():
-            if key in paths and key != "root":
-                paths[key] = project_root / relative
-        try:
-            document = prepared_input.load(
-                project_root, task, command, sys.modules[__name__]
-            )
-            spec = command.get("command", {})
-            environment = _worker_environment_policy.materialize(spec)
-            for name in (
-                "PF_CONFIGURATION_SNAPSHOT_PATH",
-                "PF_CONFIGURATION_SNAPSHOT_SHA256",
+            paths = _work_paths.worker_run(project_root, run_id, task_id)
+            command = json_read(paths["command"])
+            if (
+                preflight is None
+                and command.get("driver_id") == "native-maintenance-fixed-v1"
             ):
-                if name not in spec.get("environment", {}):
-                    environment.pop(name, None)
-            load_configuration_snapshot(
-                document, project_root / command["prepared_input"]["path"], environment
+                print("FAIL: prepared launch blocked: native_authority_required")
+                return 1
+            driver = (
+                preflight.driver
+                if preflight is not None
+                else _runtime_driver_selection_service.for_worker_state(
+                    project_root, task, state
+                )
             )
-            if command.get("driver_id") == "native-maintenance-fixed-v1":
-                from pf_native_maintenance import validate_command
+            requested = getattr(args, "driver", None)
+            if requested and _runtime_driver_selection_service.for_task(
+                project_root, task, requested
+            ).get("id") != command.get("driver_id"):
+                print("FAIL: prepared driver differs; use explicit worker-run prepare")
+                return 1
+            for option, field in (
+                ("model", "agent_model"),
+                ("reasoning_effort", "agent_reasoning_effort"),
+                ("executable", "executable_override"),
+            ):
+                value = getattr(args, option, None)
+                if value is not None and value != command.get(field):
+                    print(
+                        "FAIL: prepared launch preference differs; use explicit worker-run prepare"
+                    )
+                    return 1
+            if command.get("prepared_input") != state.get("prepared_input") or str(
+                command.get("attempt")
+            ) != str(record.key.attempt):
+                print("FAIL: prepared command and state identity mismatch")
+                return 1
+            for key, relative in command.get("paths", {}).items():
+                if key in paths and key != "root":
+                    paths[key] = project_root / relative
+            try:
+                document = (
+                    preflight.document
+                    if preflight is not None
+                    else prepared_input.load(
+                        project_root, task, command, sys.modules[__name__]
+                    )
+                )
+                spec = command.get("command", {})
+                environment = _worker_environment_policy.materialize(spec)
+                for name in (
+                    "PF_CONFIGURATION_SNAPSHOT_PATH",
+                    "PF_CONFIGURATION_SNAPSHOT_SHA256",
+                ):
+                    if name not in spec.get("environment", {}):
+                        environment.pop(name, None)
+                if preflight is None:
+                    load_configuration_snapshot(
+                        document,
+                        project_root / command["prepared_input"]["path"],
+                        environment,
+                    )
+            except (OSError, ValueError, RuntimeError) as exc:
+                repository._update_unlaunched(record, status="blocked", reason=str(exc))
+                _publish_sql_locked(project_root, repository, run_id, task_id)
+                print("FAIL: prepared launch blocked: " + str(exc))
+                return 1
+            if str(driver.get("kind")) == "manual":
+                print(
+                    f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}"
+                )
+                return 0
+            argv = spec.get("argv", [])
+            # Only installed native wrappers have the required receipt/tree protocol.
+            wrapper = Path(__file__).with_name("prepared_executor.py").resolve()
+            codex_wrapper = Path(__file__).with_name("codex_exec_worker.py").resolve()
+            if not any(
+                Path(str(item)).resolve() in {wrapper, codex_wrapper}
+                for item in (
+                    argv[3:4]
+                    if command.get("driver_id") == "native-maintenance-fixed-v1"
+                    else argv[1:2]
+                )
+            ):
+                print("FAIL: execution_receipt_capability_required")
+                return 1
+            attempt_root = (project_root / command["prepared_input"]["path"]).parent
+            if (
+                paths["heartbeat"].parent != attempt_root
+                or paths["exit"].parent != attempt_root
+            ):
+                # Old immutable input remains valid; capture new native receipt paths
+                # without granting a configuration sidecar or reauthoring the input.
+                command, paths = _sql_attempt_paths(
+                    project_root, command, paths, attempt_root
+                )
+                spec = command["command"]
+                argv = spec["argv"]
+                for name in ("heartbeat", "exit", "process", "stdout", "stderr"):
+                    prepared_input.private_file(
+                        project_root, rel(paths[name], project_root)
+                    )
+                record = repository._launch_paths(
+                    record,
+                    heartbeat_path=rel(paths["heartbeat"], project_root),
+                    stdout_path=rel(paths["stdout"], project_root),
+                    stderr_path=rel(paths["stderr"], project_root),
+                )
+                _core_common_json_io.json_write(paths["command"], command)
+            from prepared_executor import _LAUNCH_ENV
 
-                validate_command(document, project_root, ROOT, command)
-        except (OSError, ValueError, RuntimeError) as exc:
-            repository._update_unlaunched(record, status="blocked", reason=str(exc))
-            _publish_sql_locked(project_root, repository, run_id, task_id)
-            print("FAIL: prepared launch blocked: " + str(exc))
-            return 1
-        if str(driver.get("kind")) == "manual":
-            print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
-            return 0
-        argv = spec.get("argv", [])
-        # Only installed native wrappers have the required receipt/tree protocol.
-        wrapper = Path(__file__).with_name("prepared_executor.py").resolve()
-        codex_wrapper = Path(__file__).with_name("codex_exec_worker.py").resolve()
-        if not any(
-            Path(str(item)).resolve() in {wrapper, codex_wrapper} for item in (argv[3:4] if command.get("driver_id") == "native-maintenance-fixed-v1" else argv[1:2])
-        ):
-            print("FAIL: execution_receipt_capability_required")
-            return 1
-        attempt_root = (project_root / command["prepared_input"]["path"]).parent
-        if (
-            paths["heartbeat"].parent != attempt_root
-            or paths["exit"].parent != attempt_root
-        ):
-            # Old immutable input remains valid; capture new native receipt paths
-            # without granting a configuration sidecar or reauthoring the input.
-            command, paths = _sql_attempt_paths(
-                project_root, command, paths, attempt_root
+            for name in _LAUNCH_ENV:
+                environment.pop(name, None)
+            token = uuid4().hex
+            environment.update(
+                dict(
+                    zip(
+                        _LAUNCH_ENV,
+                        (
+                            record.key.project_id,
+                            run_id,
+                            task_id,
+                            str(record.key.attempt),
+                            token,
+                        ),
+                        strict=True,
+                    )
+                )
             )
-            spec = command["command"]
-            argv = spec["argv"]
-            for name in ("heartbeat", "exit", "process", "stdout", "stderr"):
+            for name in ("stdout", "stderr"):
                 prepared_input.private_file(
                     project_root, rel(paths[name], project_root)
                 )
-            record = repository._launch_paths(
-                record,
-                heartbeat_path=rel(paths["heartbeat"], project_root),
-                stdout_path=rel(paths["stdout"], project_root),
-                stderr_path=rel(paths["stderr"], project_root),
-            )
-            _core_common_json_io.json_write(paths["command"], command)
-        from prepared_executor import _LAUNCH_ENV
-
-        for name in _LAUNCH_ENV:
-            environment.pop(name, None)
-        token = uuid4().hex
-        environment.update(
-            dict(
-                zip(
-                    _LAUNCH_ENV,
-                    (
-                        record.key.project_id,
-                        run_id,
-                        task_id,
-                        str(record.key.attempt),
-                        token,
-                    ),
-                    strict=True,
+                paths[name].parent.mkdir(parents=True, exist_ok=True)
+            with (
+                paths["stdout"].open("wb") as stdout,
+                paths["stderr"].open("wb") as stderr,
+            ):
+                if preflight is not None:
+                    preflight.admit(
+                        command, record.key.attempt, state.get("prepared_input")
+                    )
+                record = repository.reserve_start(
+                    record.key,
+                    expected_revision=record.revision,
+                    generation=record.generation,
+                    launch_token=token,
                 )
-            )
-        )
-        for name in ("stdout", "stderr"):
-            prepared_input.private_file(project_root, rel(paths[name], project_root))
-            paths[name].parent.mkdir(parents=True, exist_ok=True)
-        with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
-            record = repository.reserve_start(
-                record.key,
-                expected_revision=record.revision,
-                generation=record.generation,
-                launch_token=token,
-            )
-            try:
-                from pf_native_control import spawn_owned
+                try:
+                    from pf_native_control import spawn_owned
 
-                process = spawn_owned(
-                    [str(item) for item in argv], token=token,
-                    cwd=spec.get("working_directory") or str(project_root),
-                    env=environment,
-                    stdout=stdout,
-                    stderr=stderr,
-                    shell=False,
-                    start_new_session=(os.name != "nt"),
-                )
-            except OSError:
-                _publish_sql_locked(project_root, repository, run_id, task_id)
-                print("FAIL: start failed for " + task_id)
-                return 1  # Ambiguous spawn never retires the committed reservation.
-        captured_key, generation = record.key, record.generation
-        record = _observe_sql_locked(project_root, repository, record)
-        if bool(getattr(args, "detach", False)):
-            print(f"RUNNING: {task_id} pid={process.pid}")
-            return 0
-    try:
-        process.wait(timeout=int(str(state.get("timeout_seconds") or 30)))
-    except subprocess.TimeoutExpired:
+                    process = spawn_owned(
+                        [str(item) for item in argv],
+                        token=token,
+                        cwd=spec.get("working_directory") or str(project_root),
+                        env=environment,
+                        stdout=stdout,
+                        stderr=stderr,
+                        shell=False,
+                        start_new_session=(os.name != "nt"),
+                    )
+                except OSError:
+                    _publish_sql_locked(project_root, repository, run_id, task_id)
+                    print("FAIL: start failed for " + task_id)
+                    return 1  # Ambiguous spawn never retires the committed reservation.
+            captured_key, generation = record.key, record.generation
+            if preflight is None:
+                record = _observe_sql_locked(project_root, repository, record)
+            if preflight is None and bool(getattr(args, "detach", False)):
+                print(f"RUNNING: {task_id} pid={process.pid}")
+                return 0
+        if preflight is not None:
+            with worker_run_lifecycle_lock(project_root, run_id, task_id):
+                record = _observe_sql_locked(project_root, repository, record)
+            if bool(getattr(args, "detach", False)):
+                print(f"RUNNING: {task_id} pid={process.pid}")
+                return 0
+        try:
+            process.wait(timeout=int(str(state.get("timeout_seconds") or 30)))
+        except subprocess.TimeoutExpired:
+            with worker_run_lifecycle_lock(project_root, run_id, task_id):
+                exact = repository.load(captured_key)
+                if exact is None or exact.generation != generation:
+                    print("FAIL: stale_generation")
+                    return 1
+                exact = _observe_sql_locked(project_root, repository, exact)
+                if exact.phase != "absent":
+                    exact = repository.request_stop(
+                        exact.key,
+                        launch_token=token,
+                        expected_revision=exact.revision,
+                        generation=generation,
+                    )
+                    if exact.process is not None:
+                        from prepared_executor import signal_owned_tree
+
+                        signal_owned_tree(exact.process)
+            print(f"TIMED_OUT: {task_id}")
+            return 1
         with worker_run_lifecycle_lock(project_root, run_id, task_id):
             exact = repository.load(captured_key)
             if exact is None or exact.generation != generation:
                 print("FAIL: stale_generation")
                 return 1
             exact = _observe_sql_locked(project_root, repository, exact)
-            if exact.phase != "absent":
-                exact = repository.request_stop(
-                    exact.key,
-                    launch_token=token,
-                    expected_revision=exact.revision,
-                    generation=generation,
-                )
-                if exact.process is not None:
-                    from prepared_executor import signal_owned_tree
-
-                    signal_owned_tree(exact.process)
-        print(f"TIMED_OUT: {task_id}")
-        return 1
-    with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        exact = repository.load(captured_key)
-        if exact is None or exact.generation != generation:
-            print("FAIL: stale_generation")
+            payload = projected_payload(exact)
+        if exact.phase != "absent":
+            print("FAIL: execution_activity_unknown")
             return 1
-        exact = _observe_sql_locked(project_root, repository, exact)
-        payload = projected_payload(exact)
-    if exact.phase != "absent":
-        print("FAIL: execution_activity_unknown")
-        return 1
-    print(
-        f"{str(payload['status']).upper()}: {task_id} exit_code={payload['exit_code']}"
-    )
-    return 0 if payload["status"] == "completed" else 1
+        print(
+            f"{str(payload['status']).upper()}: {task_id} exit_code={payload['exit_code']}"
+        )
+        return 0 if payload["status"] == "completed" else 1
 
 
 def _legacy_worker_run_start(args: argparse.Namespace) -> int:
@@ -10537,313 +10598,370 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     detach = bool(getattr(args, "detach", False))
     proc: subprocess.Popen[bytes] | None = None
-    with (
-        _worker_start_admission(project_root),
-        worker_run_lifecycle_lock(project_root, run_id, task_id),
-    ):
-        task = _worker_assignment_service.load(project_root, task_id)
-        if any(
-            not intent.with_suffix(".applied.json").is_file()
-            for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
-                "cancellation-*.yaml"
-            )
+    from processforge_core.prepared.resources import native_start_preflight
+
+    with native_start_preflight(project_root, task, sys.modules[__name__]) as preflight:
+        if preflight is not None and bool(getattr(args, "detach", False)):
+            print("FAIL: native_synchronous_start_required")
+            return 1
+        with (
+            _worker_start_admission(project_root),
+            worker_run_lifecycle_lock(project_root, run_id, task_id),
         ):
-            print("FAIL: cancellation_recovery_pending")
-            return 1
-        if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
-            print("FAIL: work_is_terminal")
-            return 1
-        running = existing_running_worker_run(
-            project_root, task, getattr(args, "driver", None)
-        )
-        if running:
-            state, driver, paths = running
-            emit_worker_run_skip(
-                project_root, task, driver, state, "worker.run.start_skipped"
+            task = (
+                preflight.task
+                if preflight is not None
+                else _worker_assignment_service.load(project_root, task_id)
             )
-            print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
-            return 0
-        state = load_agent_run_state(project_root, run_id, task_id)
-        if state.get("status") == "blocked" and state.get("prepared_input"):
-            print(
-                "FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair"
-            )
-            return 1
-        if state.get("status") in {"ready", "manual_required"}:
-            paths = _work_paths.worker_run(project_root, run_id, task_id)
-            saved = json_read(paths["command"])
-            driver = _runtime_driver_selection_service.for_worker_state(
-                project_root, task, state
-            )
-            requested_driver = getattr(args, "driver", None)
-            if requested_driver and _runtime_driver_selection_service.for_task(
-                project_root, task, requested_driver
-            ).get("id") != saved.get("driver_id"):
-                print("FAIL: prepared driver differs; use explicit worker-run prepare")
-                return 1
-            for option, field in (
-                ("model", "agent_model"),
-                ("reasoning_effort", "agent_reasoning_effort"),
-                ("executable", "executable_override"),
+            if preflight is None and any(
+                not intent.with_suffix(".applied.json").is_file()
+                for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
+                    "cancellation-*.yaml"
+                )
             ):
-                value = getattr(args, option, None)
-                if value is not None and value != saved.get(field):
+                print("FAIL: cancellation_recovery_pending")
+                return 1
+            if (
+                preflight is None
+                and _worker_observation_inputs.worker_run_work_is_terminal(
+                    project_root, task
+                )
+            ):
+                print("FAIL: work_is_terminal")
+                return 1
+            running = (
+                None
+                if preflight is not None
+                else existing_running_worker_run(
+                    project_root, task, getattr(args, "driver", None)
+                )
+            )
+            if running:
+                state, driver, paths = running
+                emit_worker_run_skip(
+                    project_root, task, driver, state, "worker.run.start_skipped"
+                )
+                print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
+                return 0
+            state = load_agent_run_state(project_root, run_id, task_id)
+            if preflight is not None and state.get("status") != "ready":
+                raise ValueError("native_preflight_attempt")
+            if state.get("status") == "blocked" and state.get("prepared_input"):
+                print(
+                    "FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair"
+                )
+                return 1
+            if state.get("status") in {"ready", "manual_required"}:
+                paths = _work_paths.worker_run(project_root, run_id, task_id)
+                saved = json_read(paths["command"])
+                driver = (
+                    preflight.driver
+                    if preflight is not None
+                    else _runtime_driver_selection_service.for_worker_state(
+                        project_root, task, state
+                    )
+                )
+                requested_driver = getattr(args, "driver", None)
+                if requested_driver and _runtime_driver_selection_service.for_task(
+                    project_root, task, requested_driver
+                ).get("id") != saved.get("driver_id"):
                     print(
-                        "FAIL: prepared launch preference differs; use explicit worker-run prepare"
+                        "FAIL: prepared driver differs; use explicit worker-run prepare"
                     )
                     return 1
-            if saved.get("prepared_input") != state.get("prepared_input") or str(
-                saved.get("attempt")
-            ) != str(state.get("attempt")):
-                print("FAIL: prepared command and state identity mismatch")
+                for option, field in (
+                    ("model", "agent_model"),
+                    ("reasoning_effort", "agent_reasoning_effort"),
+                    ("executable", "executable_override"),
+                ):
+                    value = getattr(args, option, None)
+                    if value is not None and value != saved.get(field):
+                        print(
+                            "FAIL: prepared launch preference differs; use explicit worker-run prepare"
+                        )
+                        return 1
+                if saved.get("prepared_input") != state.get("prepared_input") or str(
+                    saved.get("attempt")
+                ) != str(state.get("attempt")):
+                    print("FAIL: prepared command and state identity mismatch")
+                    return 1
+                for key, relative in saved.get("paths", {}).items():
+                    if key in paths and key != "root":
+                        paths[key] = project_root / relative
+            else:
+                task, driver, paths = prepare_worker_run(
+                    project_root,
+                    task_id,
+                    getattr(args, "driver", None),
+                    getattr(args, "executable", None),
+                    getattr(args, "model", None),
+                    getattr(args, "reasoning_effort", None),
+                )
+            run_id = safe_id(str(task.get("run_id") or "run"), "run")
+            command = json_read(paths["command"])
+            if (
+                preflight is None
+                and command.get("driver_id") == "native-maintenance-fixed-v1"
+            ):
+                print("FAIL: prepared launch blocked: native_authority_required")
                 return 1
-            for key, relative in saved.get("paths", {}).items():
-                if key in paths and key != "root":
-                    paths[key] = project_root / relative
-        else:
-            task, driver, paths = prepare_worker_run(
-                project_root,
-                task_id,
-                getattr(args, "driver", None),
-                getattr(args, "executable", None),
-                getattr(args, "model", None),
-                getattr(args, "reasoning_effort", None),
-            )
-        run_id = safe_id(str(task.get("run_id") or "run"), "run")
-        command = json_read(paths["command"])
-        import processforge_core.prepared.input as prepared_input
+            import processforge_core.prepared.input as prepared_input
 
-        try:
-            prepared_document = prepared_input.load(
-                project_root, task, command, sys.modules[__name__]
-            )
-        except (OSError, ValueError, RuntimeError) as exc:
-            write_agent_run_state(
-                project_root,
-                task,
-                driver,
-                "blocked",
-                failure_reason=str(exc),
-                command=command,
-                paths=paths,
-            )
-            print("FAIL: prepared launch blocked: " + str(exc))
-            return 1
-        if str(driver.get("kind")) == "manual":
-            print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
-            return 0
-        argv = (
-            command.get("command", {}).get("argv")
-            if isinstance(command.get("command"), dict)
-            else []
-        )
-        if not argv:
-            write_agent_run_state(
-                project_root,
-                task,
-                driver,
-                "failed",
-                failure_reason="empty argv",
-                command=command,
-                paths=paths,
-            )
-            print(f"FAIL: empty command argv for {task_id}")
-            return 1
-        limits = command.get("limits")
-        timeout_seconds = (
-            int(limits.get("timeout_seconds") or 30) if isinstance(limits, dict) else 30
-        )
-        selected_command = command.get("command")
-        command_spec = selected_command if isinstance(selected_command, dict) else {}
-        env = _worker_environment_policy.materialize(command_spec)
-        for name in (
-            "PF_CONFIGURATION_SNAPSHOT_PATH",
-            "PF_CONFIGURATION_SNAPSHOT_SHA256",
-        ):
-            # Inherited pointers belong to the parent attempt. Only this exact
-            # immutable command may select the child's snapshot.
-            if name not in command_spec.get("environment", {}):
-                env.pop(name, None)
-        from processforge_core.runtime.command import load_configuration_snapshot
-
-        try:
-            load_configuration_snapshot(
-                prepared_document, project_root / command["prepared_input"]["path"], env
-            )
-            if command.get("driver_id") == "native-maintenance-fixed-v1":
-                from pf_native_maintenance import validate_command
-
-                validate_command(prepared_document, project_root, ROOT, command)
-        except (OSError, ValueError):
-            print("FAIL: configuration_snapshot_invalid")
-            return 1
-        cwd = command_spec.get("working_directory") or str(project_root)
-        paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
-        paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
-        started_at = _core_common_clock.now_utc()
-        write_agent_run_state(
-            project_root,
-            task,
-            driver,
-            "starting",
-            started_at=started_at,
-            command=command,
-            paths=paths,
-        )
-        with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
             try:
-                from pf_native_control import spawn_owned
-
-                attempt_root = (
-                    (project_root / command["prepared_input"]["path"]).resolve().parent
+                prepared_document = (
+                    preflight.document
+                    if preflight is not None
+                    else prepared_input.load(
+                        project_root, task, command, sys.modules[__name__]
+                    )
                 )
-                attempt_root.relative_to(paths["root"].resolve())
-                native_receipt = attempt_root / "native-tree.json"
-                prepared_input.private_file(
-                    project_root, rel(native_receipt, project_root)
+            except (OSError, ValueError, RuntimeError) as exc:
+                write_agent_run_state(
+                    project_root,
+                    task,
+                    driver,
+                    "blocked",
+                    failure_reason=str(exc),
+                    command=command,
+                    paths=paths,
                 )
-                proc = spawn_owned(
-                    [str(item) for item in argv],
-                    receipt_path=native_receipt,
-                    identity={
-                        "run_id": run_id,
-                        "task_id": task_id,
-                        "attempt": int(command["attempt"]),
-                    },
-                    cwd=str(cwd),
-                    env=env,
-                    stdout=stdout,
-                    stderr=stderr,
-                    shell=False,
-                )
-            except OSError:
-                current = load_agent_run_state(project_root, run_id, task_id)
-                _legacy_activity_unknown(project_root, task, driver, current, paths)
-                print(f"FAIL: start failed for {task_id}")
+                print("FAIL: prepared launch blocked: " + str(exc))
                 return 1
-        write_agent_run_state(
-            project_root,
-            task,
-            driver,
-            "running",
-            pid=proc.pid,
-            started_at=started_at,
-            command=command,
-            paths=paths,
-        )
-        _core_common_json_io.json_write(
-            paths["process"],
-            {
-                "schema_version": 1,
-                "pid": proc.pid,
-                "started_at": started_at,
-                "argv": argv,
-            },
-        )
-        if detach:
-            _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES[
-                _core_runtime_observation_inputs.worker_process_key(
-                    project_root, run_id, task_id
+            if str(driver.get("kind")) == "manual":
+                print(
+                    f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}"
                 )
-            ] = proc
-            _process_event_recorder.emit_process_event(
-                project_root,
-                "worker.run.started",
-                process_id=_run_task_inputs.task_process_id(task),
-                subject=task_id,
-                assignment_id_value=task_id,
-                assignment_path=rel(
-                    _work_paths.assignment_document(project_root, task_id), project_root
-                ),
-                payload={
-                    "run_id": run_id,
-                    "driver_id": driver.get("id"),
-                    "status": "running",
-                    "pid": proc.pid,
-                },
-                correlation_id=f"run-{run_id}",
+                return 0
+            argv = (
+                command.get("command", {}).get("argv")
+                if isinstance(command.get("command"), dict)
+                else []
             )
-            print(f"RUNNING: {task_id} pid={proc.pid}")
-            return 0
-    assert proc is not None
-    timed_out = False
-    exit_code: int | None
-    try:
-        exit_code = proc.wait(timeout=timeout_seconds)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        exit_code = -1
-    with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        current = load_agent_run_state(project_root, run_id, task_id)
-        if (
-            current.get("attempt") != int(command["attempt"])
-            or current.get("pid") != proc.pid
-        ):
-            print("FAIL: execution_identity_conflict")
-            return 1
-        if (
-            _legacy_tree_probe(project_root, run_id, task_id, current, stop=timed_out)
-            is not True
-        ):
-            _legacy_activity_unknown(project_root, task, driver, current, paths)
-            print("FAIL: execution_activity_unknown")
-            return 1
-        proc.wait(timeout=5)
-        # A concurrent exact stop already published its compatibility outcome.
-        if current.get("status") == "cancelled":
-            final_status = "cancelled"
-            exit_code = current.get("exit_code")
-        else:
-            final_status = (
-                "timed_out"
-                if timed_out
-                else ("completed" if exit_code == 0 else "failed")
+            if not argv:
+                write_agent_run_state(
+                    project_root,
+                    task,
+                    driver,
+                    "failed",
+                    failure_reason="empty argv",
+                    command=command,
+                    paths=paths,
+                )
+                print(f"FAIL: empty command argv for {task_id}")
+                return 1
+            limits = command.get("limits")
+            timeout_seconds = (
+                int(limits.get("timeout_seconds") or 30)
+                if isinstance(limits, dict)
+                else 30
             )
-            finished_at = _core_common_clock.now_utc()
+            selected_command = command.get("command")
+            command_spec = (
+                selected_command if isinstance(selected_command, dict) else {}
+            )
+            env = _worker_environment_policy.materialize(command_spec)
+            for name in (
+                "PF_CONFIGURATION_SNAPSHOT_PATH",
+                "PF_CONFIGURATION_SNAPSHOT_SHA256",
+            ):
+                # Inherited pointers belong to the parent attempt. Only this exact
+                # immutable command may select the child's snapshot.
+                if name not in command_spec.get("environment", {}):
+                    env.pop(name, None)
+            from processforge_core.runtime.command import load_configuration_snapshot
+
+            try:
+                if preflight is None:
+                    load_configuration_snapshot(
+                        prepared_document,
+                        project_root / command["prepared_input"]["path"],
+                        env,
+                    )
+            except (OSError, ValueError):
+                print("FAIL: configuration_snapshot_invalid")
+                return 1
+            cwd = command_spec.get("working_directory") or str(project_root)
+            paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
+            paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
+            if preflight is not None:
+                current = load_agent_run_state(project_root, run_id, task_id)
+                preflight.admit(
+                    command, current.get("attempt"), current.get("prepared_input")
+                )
+                if current.get("status") != "ready":
+                    raise ValueError("native_preflight_attempt")
+            started_at = _core_common_clock.now_utc()
             write_agent_run_state(
                 project_root,
                 task,
                 driver,
-                final_status,
+                "starting",
+                started_at=started_at,
+                command=command,
+                paths=paths,
+            )
+            with (
+                paths["stdout"].open("wb") as stdout,
+                paths["stderr"].open("wb") as stderr,
+            ):
+                try:
+                    from pf_native_control import spawn_owned
+
+                    attempt_root = (
+                        (project_root / command["prepared_input"]["path"])
+                        .resolve()
+                        .parent
+                    )
+                    attempt_root.relative_to(paths["root"].resolve())
+                    native_receipt = attempt_root / "native-tree.json"
+                    prepared_input.private_file(
+                        project_root, rel(native_receipt, project_root)
+                    )
+                    proc = spawn_owned(
+                        [str(item) for item in argv],
+                        receipt_path=native_receipt,
+                        identity={
+                            "run_id": run_id,
+                            "task_id": task_id,
+                            "attempt": int(command["attempt"]),
+                        },
+                        cwd=str(cwd),
+                        env=env,
+                        stdout=stdout,
+                        stderr=stderr,
+                        shell=False,
+                    )
+                except OSError:
+                    current = load_agent_run_state(project_root, run_id, task_id)
+                    _legacy_activity_unknown(project_root, task, driver, current, paths)
+                    print(f"FAIL: start failed for {task_id}")
+                    return 1
+            write_agent_run_state(
+                project_root,
+                task,
+                driver,
+                "running",
                 pid=proc.pid,
                 started_at=started_at,
-                finished_at=finished_at,
-                exit_code=exit_code,
-                failure_reason="timeout" if timed_out else None,
                 command=command,
                 paths=paths,
             )
             _core_common_json_io.json_write(
-                paths["exit"],
+                paths["process"],
                 {
                     "schema_version": 1,
-                    "exit_code": exit_code,
-                    "finished_at": finished_at,
-                    "status": final_status,
+                    "pid": proc.pid,
+                    "started_at": started_at,
+                    "argv": argv,
                 },
             )
-        native_job = getattr(proc, "native_job", None)
-        if native_job is not None:
-            native_job.close()
-    _process_event_recorder.emit_process_event(
-        project_root,
-        "worker.run.finished",
-        process_id=_run_task_inputs.task_process_id(task),
-        subject=task_id,
-        assignment_id_value=task_id,
-        assignment_path=rel(
-            _work_paths.assignment_document(project_root, task_id), project_root
-        ),
-        payload={
-            "run_id": run_id,
-            "driver_id": driver.get("id"),
-            "status": final_status,
-            "exit_code": exit_code,
-        },
-        correlation_id=f"run-{run_id}",
-    )
-    print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
-    return 0 if final_status == "completed" else 1
+            if detach:
+                _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES[
+                    _core_runtime_observation_inputs.worker_process_key(
+                        project_root, run_id, task_id
+                    )
+                ] = proc
+                _process_event_recorder.emit_process_event(
+                    project_root,
+                    "worker.run.started",
+                    process_id=_run_task_inputs.task_process_id(task),
+                    subject=task_id,
+                    assignment_id_value=task_id,
+                    assignment_path=rel(
+                        _work_paths.assignment_document(project_root, task_id),
+                        project_root,
+                    ),
+                    payload={
+                        "run_id": run_id,
+                        "driver_id": driver.get("id"),
+                        "status": "running",
+                        "pid": proc.pid,
+                    },
+                    correlation_id=f"run-{run_id}",
+                )
+                print(f"RUNNING: {task_id} pid={proc.pid}")
+                return 0
+        assert proc is not None
+        timed_out = False
+        exit_code: int | None
+        try:
+            exit_code = proc.wait(timeout=timeout_seconds)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            exit_code = -1
+        with worker_run_lifecycle_lock(project_root, run_id, task_id):
+            current = load_agent_run_state(project_root, run_id, task_id)
+            if (
+                current.get("attempt") != int(command["attempt"])
+                or current.get("pid") != proc.pid
+            ):
+                print("FAIL: execution_identity_conflict")
+                return 1
+            if (
+                _legacy_tree_probe(
+                    project_root, run_id, task_id, current, stop=timed_out
+                )
+                is not True
+            ):
+                _legacy_activity_unknown(project_root, task, driver, current, paths)
+                print("FAIL: execution_activity_unknown")
+                return 1
+            proc.wait(timeout=5)
+            # A concurrent exact stop already published its compatibility outcome.
+            if current.get("status") == "cancelled":
+                final_status = "cancelled"
+                exit_code = current.get("exit_code")
+            else:
+                final_status = (
+                    "timed_out"
+                    if timed_out
+                    else ("completed" if exit_code == 0 else "failed")
+                )
+                finished_at = _core_common_clock.now_utc()
+                write_agent_run_state(
+                    project_root,
+                    task,
+                    driver,
+                    final_status,
+                    pid=proc.pid,
+                    started_at=started_at,
+                    finished_at=finished_at,
+                    exit_code=exit_code,
+                    failure_reason="timeout" if timed_out else None,
+                    command=command,
+                    paths=paths,
+                )
+                _core_common_json_io.json_write(
+                    paths["exit"],
+                    {
+                        "schema_version": 1,
+                        "exit_code": exit_code,
+                        "finished_at": finished_at,
+                        "status": final_status,
+                    },
+                )
+            native_job = getattr(proc, "native_job", None)
+            if native_job is not None:
+                native_job.close()
+        _process_event_recorder.emit_process_event(
+            project_root,
+            "worker.run.finished",
+            process_id=_run_task_inputs.task_process_id(task),
+            subject=task_id,
+            assignment_id_value=task_id,
+            assignment_path=rel(
+                _work_paths.assignment_document(project_root, task_id), project_root
+            ),
+            payload={
+                "run_id": run_id,
+                "driver_id": driver.get("id"),
+                "status": final_status,
+                "exit_code": exit_code,
+            },
+            correlation_id=f"run-{run_id}",
+        )
+        print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
+        return 0 if final_status == "completed" else 1
 
 
 @_worker_storage_errors

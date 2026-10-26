@@ -748,20 +748,61 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
     archive_raw, built = make_archive()
     bodies["archive"] = put("payloads/archive.zip", archive_raw)
     bodies["manifest"] = put("manifest.json", built.manifest)
-    material_rows = [dict(bodies["archive"], resource_id="target-archive", role="archive", root_id="archive")]
-    material_rows += [dict(row, resource_id="runtime-" + str(i), root_id="runtime") for i, row in enumerate(closure)]
-    material_manifest = put("native-material.json", h.canonical({"schema_version": 1, "kind": "pf.native-material.manifest", "members": material_rows}))
-    capture = ".pf/runtime/agent-runs/fixture-run/fixture-task/attempts/1/native-material"
+    material_rows = [
+        dict(
+            bodies["archive"],
+            resource_id="target-archive",
+            role="archive",
+            root_id="archive",
+        )
+    ]
+    material_rows += [
+        dict(row, resource_id="runtime-" + str(i), root_id="runtime")
+        for i, row in enumerate(closure)
+    ]
+    material_manifest = put(
+        "native-material.json",
+        h.canonical(
+            {
+                "schema_version": 1,
+                "kind": "pf.native-material.manifest",
+                "members": material_rows,
+            }
+        ),
+    )
+    capture = (
+        ".pf/runtime/agent-runs/fixture-run/fixture-task/attempts/1/native-material"
+    )
     material = {
-        "schema_version": 1, "body_manifest": dict(material_manifest, resource_id="native-material"),
-        "roots": [{"id": "archive", "base": "project", "relative_path": "payloads"}, {"id": "runtime", "base": "project", "relative_path": "runtime"}],
+        "schema_version": 1,
+        "body_manifest": dict(material_manifest, resource_id="native-material"),
+        "roots": [
+            {"id": "archive", "base": "project", "relative_path": "payloads"},
+            {"id": "runtime", "base": "project", "relative_path": "runtime"},
+        ],
         "permission": "body-and-qualified-runtime-load",
-        "capture": {"directory": capture, "access": ["create_once", "read", "remove_own_partial"]},
+        "capture": {
+            "directory": capture,
+            "access": ["create_once", "read", "remove_own_partial"],
+        },
         "quotas": {
-            "manifest_bytes": 1048576, "receipt_index_bytes": 1048576, "members": 4096, "root_prefixes": 2, "path_utf8_bytes": 1024, "resource_id_bytes": 160,
-            "member_bytes": 134217728, "interpreter_bytes": 33554432, "total_material_bytes": 536870912, "copy_chunk_bytes": 65536,
-            "capture_working_buffer_bytes": 1048576, "capture_metadata_accounted_bytes": 16777216, "capture_directory_disk_bytes": 536870912,
-            "zip_central_directory_bytes": 4194304, "zip_header_member_bytes": 16384, "zip_header_total_bytes": 4194304, "zip_tail_probe_bytes": 65557,
+            "manifest_bytes": 1048576,
+            "receipt_index_bytes": 1048576,
+            "members": 4096,
+            "root_prefixes": 2,
+            "path_utf8_bytes": 1024,
+            "resource_id_bytes": 160,
+            "member_bytes": 134217728,
+            "interpreter_bytes": 33554432,
+            "total_material_bytes": 536870912,
+            "copy_chunk_bytes": 65536,
+            "capture_working_buffer_bytes": 1048576,
+            "capture_metadata_accounted_bytes": 16777216,
+            "capture_directory_disk_bytes": 536870912,
+            "zip_central_directory_bytes": 4194304,
+            "zip_header_member_bytes": 16384,
+            "zip_header_total_bytes": 4194304,
+            "zip_tail_probe_bytes": 65557,
             "native_consumer_payload_reservation_bytes": 67108864,
         },
     }
@@ -862,7 +903,9 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         "allowed_read_files": [row["path"] for row in bodies.values()]
         + [row["path"] for row in closure]
         + [qualification["path"], material_manifest["path"], capture + "/**"],
-        "required_sources": [row["path"] for role, row in bodies.items() if role != "archive"]
+        "required_sources": [
+            row["path"] for role, row in bodies.items() if role != "archive"
+        ]
         + [qualification["path"], material_manifest["path"]],
         "expected_report": {"artifact": job["report"]},
         "required_outputs": [{"id": "report", "path": job["report"], "required": True}],
@@ -936,7 +979,10 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         binding=binding,
         spec=spec,
         distribution=distribution,
-        expected_summary={"files": len(built.payload), "expanded_bytes": sum(map(len, built.payload.values()))},
+        expected_summary={
+            "files": len(built.payload),
+            "expanded_bytes": sum(map(len, built.payload.values())),
+        },
     )
 
 
@@ -1233,7 +1279,7 @@ def test_fixed_path_composition_preserves_other_arguments(
     assert command["command"]["args"][2] == str(tmp_path) + "/tools/../other.py"
 
 
-def _isolated_normal_route(project: str) -> None:
+def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     """Run from the independent fixture distribution in a fresh interpreter."""
     import json
     import sys
@@ -1286,6 +1332,45 @@ def _isolated_normal_route(project: str) -> None:
         require_ready=True,
     )
     assert validation["status"] == "valid", validation
+    if backend == "sql":
+        # Synthetic issuer storage setup; the actual SQL adapter/CAS is exercised.
+        from uuid import uuid4
+
+        from processforge_core.database import (
+            Database,
+            DatabaseIdentity,
+            DatabaseTarget,
+            SchemaManager,
+            SQLiteDriver,
+            SqlStatement,
+        )
+        from processforge_core.executions.schema import EXECUTION_SCHEMA
+
+        store_id = uuid4().hex
+        database = Database(
+            SQLiteDriver(),
+            DatabaseTarget(
+                root / ".pf/data/pf.sqlite3",
+                DatabaseIdentity(store_id, "project", "fixture"),
+            ),
+        )
+        SchemaManager().initialize(database, (EXECUTION_SCHEMA,))
+        with database.transaction() as session:
+            session.execute(
+                SqlStatement(
+                    "INSERT INTO execution_state VALUES(1,'fixture',1,'sql','ready','complete',0,1,NULL,NULL)"
+                )
+            )
+        core._core_common_json_io.json_write(
+            root / ".pf/data/execution-storage.json",
+            {
+                "schema_version": 1,
+                "project_id": "fixture",
+                "store_id": store_id,
+                "profile_id": "project_main",
+                "target_relative_path": "data/pf.sqlite3",
+            },
+        )
     task, driver, paths = core.prepare_worker_run(root, "fixture-task", "driver.json")
     command = core.json_read(paths["command"])
     document = prepared_input.load(root, task, command, core)
@@ -1300,8 +1385,270 @@ def _isolated_normal_route(project: str) -> None:
         reasoning_effort=None,
         detach=False,
     )
+    if attack == "detach":
+        args.detach = True
+        assert core.command_worker_run_start(args) == 1
+        assert (
+            not paths["process"].exists()
+            and not (root / ".pf/artifacts/report.json").exists()
+        )
+        (root / "denied-route-evidence.json").write_text(
+            json.dumps(
+                {
+                    "backend": backend,
+                    "attack": attack,
+                    "spawned": False,
+                    "thread_created": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return
+    import contextlib
+
+    if attack in {"preflight-cancellation", "preflight-config"}:
+        original_hold = h.hold_start_material
+
+        @contextlib.contextmanager
+        def mutate_during_preflight(*a, **kw):
+            with original_hold(*a, **kw) as entry:
+                if attack == "preflight-cancellation":
+                    (root / ".pf/runs/fixture-run/cancellation-other.yaml").write_text(
+                        "new intent", encoding="utf-8"
+                    )
+                else:
+                    (root / ".pf/process-forge.local.yaml").write_text(
+                        "workplace: {}", encoding="utf-8"
+                    )
+                yield entry
+
+        h.hold_start_material = mutate_during_preflight
+        assert core.command_worker_run_start(args) == 1
+        assert (
+            not paths["process"].exists()
+            and not (root / ".pf/artifacts/report.json").exists()
+        )
+        (root / "denied-route-evidence.json").write_text(
+            json.dumps(
+                {
+                    "backend": backend,
+                    "attack": attack,
+                    "spawned": False,
+                    "thread_created": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return
+    import threading
+    import time
+
+    import pf_native_control as native
+
+    from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
+
+    inside = False
+    scans = {}
+    timings = []
+    operations = []
+    blocked = []
+    consume_blocked = []
+    seals = []
+    proceed = threading.Event()
+    done = threading.Event()
+    material = document["native_launch"]["maintenance"]["material"]
+    request = document["input"]["resources"]["requested"]["tools"][0][
+        "native_maintenance"
+    ]
+    capture = request["material"]["capture"]["directory"]
+    protected = [
+        material["index"]["path"],
+        capture + "/archive.snapshot",
+        "runtime/python.exe",
+        "payloads/archive.zip",
+        "tools/pf_native_maintenance.py",
+        "management.json",
+        "qualification.json",
+        "registries/tools.yaml",
+        ".pf/assignments/fixture-task.yaml",
+        ".pf/contexts/project-context.snapshot.yaml",
+        command["prepared_input"]["path"],
+        paths["command"].relative_to(root).as_posix(),
+        document["native_launch"]["configuration"]["path"],
+    ]
+
+    def writer():
+        assert proceed.wait(20)
+        try:
+            for name in protected:
+                try:
+                    with (root / name).open("r+b") as stream:
+                        stream.write(b"tampered")
+                except OSError:
+                    blocked.append(name)
+                else:
+                    raise AssertionError("preflight input was writable: " + name)
+        finally:
+            done.set()
+
+    thread = threading.Thread(target=writer)
+    thread.start()
+
+    def spy(owner, name):
+        original = getattr(owner, name)
+
+        def checked(*a, **kw):
+            assert not inside, "expensive scan inside admission: " + name
+            scans[name] = scans.get(name, 0) + 1
+            return original(*a, **kw)
+
+        setattr(owner, name, checked)
+
+    for name in (
+        "_stream_material",
+        "_zip_preflight",
+        "digest",
+        "read_file",
+        "_material_plan",
+    ):
+        spy(h, name)
+    spy(prepared_input, "load")
+    spy(core, "_observe_sql_locked")
+    spy(core, "_legacy_tree_probe")
+    spy(SQLiteExecutionRepository, "page_history")
+    real_gate = core._worker_start_admission
+    real_spawn = native.spawn_owned
+
+    @contextlib.contextmanager
+    def gate(project_root):
+        nonlocal inside
+        assert (
+            scans.get("_stream_material", 0) > 0 and scans.get("_zip_preflight", 0) > 0
+        )
+        proceed.set()
+        assert done.wait(20)
+        thread.join(5)
+        assert not thread.is_alive() and len(blocked) == len(protected)
+        if attack == "attempt":
+            if backend == "sql":
+                repository = core._execution_storage(root).repository
+                old = repository.load_latest("fixture-run", "fixture-task")
+                repository.allocate_attempt(
+                    "fixture-run",
+                    "fixture-task",
+                    old.payload_json,
+                    generation=old.generation,
+                )
+            else:
+                state = core.json_read(paths["status"])
+                state["attempt"] = 2
+                core._core_common_json_io.json_write(paths["status"], state)
+        elif attack == "entry":
+            native._ENTRY = native.NativeEntry(root, None, None, None)
+        elif attack == "cancellation":
+            (root / ".pf/runs/fixture-run/cancellation-other.yaml").write_text(
+                "new intent", encoding="utf-8"
+            )
+        with real_gate(project_root):
+            before = time.monotonic()
+            inside = True
+            try:
+                from processforge_core.prepared.resources import _ACTIVE_START
+
+                seal = _ACTIVE_START.get()
+                assert seal is not None
+                seals.append(seal)
+                try:
+                    seal.admit(command, 999, command["prepared_input"])
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("wrong attempt admitted")
+                changed = dict(command, agent_model="late override")
+                try:
+                    seal.admit(changed, 1, command["prepared_input"])
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("mutated command admitted")
+                yield
+            finally:
+                inside = False
+                timings.append(time.monotonic() - before)
+
+    def spawn(*a, **kw):
+        assert inside
+        if backend == "sql":
+            record = core._execution_storage(root).repository.load_latest(
+                "fixture-run", "fixture-task"
+            )
+            assert record.phase == "starting" and record.launch_token == kw["token"]
+        else:
+            assert core.json_read(paths["status"])["status"] == "starting"
+        operations.append("reserved-before-spawn")
+        process = real_spawn(*a, **kw)
+        actual_wait = process.wait
+
+        def wait(*wa, **wk):
+            assert not inside
+            # Parent retains input handles through actual child consumption.
+            for name in protected:
+                if name == paths["command"].relative_to(root).as_posix():
+                    continue
+                try:
+                    with (root / name).open("r+b") as stream:
+                        stream.write(b"late tamper")
+                except OSError:
+                    consume_blocked.append(name)
+                else:
+                    raise AssertionError("consumer input became writable")
+            return actual_wait(*wa, **wk)
+
+        process.wait = wait
+        try:
+            seals[-1].admit(command, 1, command["prepared_input"])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("preflight used twice")
+        return process
+
+    core._worker_start_admission = gate
+    native.spawn_owned = spawn
     result = core.command_worker_run_start(args)
-    assert result == 0, paths["stderr"].read_text(encoding="utf-8", errors="replace")
+    if attack:
+        assert result == 1 and not operations
+        assert not (root / ".pf/artifacts/report.json").exists()
+        (root / "denied-route-evidence.json").write_text(
+            json.dumps(
+                {
+                    "backend": backend,
+                    "attack": attack,
+                    "blocked_writers": blocked,
+                    "consume_blocked": consume_blocked,
+                    "scan_counts": scans,
+                    "gate_seconds": timings,
+                    "spawned": False,
+                    "thread_joined": not thread.is_alive(),
+                }
+            ),
+            encoding="utf-8",
+        )
+        return
+    assert result == 0, (
+        paths["stderr"].read_text(encoding="utf-8", errors="replace")
+        if paths["stderr"].is_file()
+        else "start refused"
+    )
+    assert operations == ["reserved-before-spawn"]
+    assert len(consume_blocked) >= len(protected) - 1
+    try:
+        seals[-1].admit(command, 1, command["prepared_input"])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expired seal admitted")
+    assert timings and scans and len(blocked) == len(protected)
     assert core.json_read(paths["exit"])["exit_code"] == 0
     receipt_path, receipt = prepared_input.collection_receipt(root, task, command, core)
     assert receipt_path.is_file()
@@ -1324,11 +1671,18 @@ def _isolated_normal_route(project: str) -> None:
         core.ROOT == Path(target) or core.ROOT.is_relative_to(Path(target))
         for target in management["target_roots"]
     )
-    process = core.json_read(paths["root"] / "process.json")
+    process = core.json_read(paths["process"])
     assert int(process["pid"]) > 0
     (root / "normal-route-evidence.json").write_text(
         json.dumps(
             {
+                "backend": backend,
+                "scan_counts": scans,
+                "gate_seconds": timings,
+                "operations": operations,
+                "blocked_writers": blocked,
+                "consume_blocked": consume_blocked,
+                "thread_joined": not thread.is_alive(),
                 "identity": document["identity"],
                 "prepared_checksum": command["prepared_input"]["checksum"],
                 "stages": [
@@ -1360,7 +1714,22 @@ def _isolated_normal_route(project: str) -> None:
     )
 
 
-def test_normal_fixed_prepare_start_collection(native_fixture: Any) -> None:
+@pytest.mark.parametrize("backend", ["legacy", "sql"])
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "",
+        "attempt",
+        "cancellation",
+        "entry",
+        "detach",
+        "preflight-cancellation",
+        "preflight-config",
+    ],
+)
+def test_normal_fixed_prepare_start_collection(
+    native_fixture: Any, backend: str, attack: str
+) -> None:
     """Actual producer/wrapper/harness, independent Core, no module path seam."""
     f = native_fixture
     # The four-file construct inventory is insufficient: provide all Python
@@ -1380,6 +1749,10 @@ def test_normal_fixed_prepare_start_collection(native_fixture: Any) -> None:
         inspect.getsource(_isolated_normal_route)
         + "\n_isolated_normal_route("
         + repr(str(f.project))
+        + ", "
+        + repr(backend)
+        + ", "
+        + repr(attack)
         + ")\n",
         encoding="utf-8",
     )
@@ -1396,8 +1769,14 @@ def test_normal_fixed_prepare_start_collection(native_fixture: Any) -> None:
     (f.project / "normal-route.stdout").write_bytes(child.stdout)
     (f.project / "normal-route.stderr").write_bytes(child.stderr)
     assert child.returncode == 0, child.stderr.decode("utf-8", errors="replace")
-    evidence = json.loads((f.project / "normal-route-evidence.json").read_bytes())
-    assert evidence["exit"]["exit_code"] == 0
+    if attack:
+        evidence = json.loads((f.project / "denied-route-evidence.json").read_bytes())
+        assert evidence["spawned"] is False
+        if attack not in {"detach", "preflight-cancellation", "preflight-config"}:
+            assert evidence["thread_joined"]
+    else:
+        evidence = json.loads((f.project / "normal-route-evidence.json").read_bytes())
+        assert evidence["exit"]["exit_code"] == 0 and evidence["backend"] == backend
 
 
 def test_native_schema_rejects_widening(native_fixture: Any) -> None:

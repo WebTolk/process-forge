@@ -102,7 +102,7 @@ scope не переписываются. Полная конфигурация �
 `processforge.native-maintenance.fixed-v1`. Его private policy:
 
 ```json
-{"native_maintenance":{"schema_version":1,"profile":"native-maintenance-fixed-v1","bindings":["полные точные объекты request.native_maintenance"]}}
+{"native_maintenance":{"schema_version":2,"profile":"native-maintenance-fixed-v1","bindings":["полные точные объекты request.native_maintenance"]}}
 ```
 
 `bindings` содержит непустой ограниченный список объектов, без wildcard/default;
@@ -116,13 +116,14 @@ Authoritative policy сохраняется в `tools[].resolution.entry`, яв�
 
 Полномочие выдаёт владелец trusted policy в пересечении со свежим Work issuer.
 ID, command, descriptor path, metadata, PFConfig и hash сами полномочий не дают.
-Required source body и exact read scope нужны независимо для каждого role,
-qualification и runtime-closure member. Runtime требует `body` и `execute`;
+Обычные small role bodies, qualification и material manifest требуют собственных
+required-source body declarations и exact read scope. Для archive/runtime members
+дополнительно необходим явный material grant, описанный ниже. Runtime требует `body` и `execute`;
 исполняются только четыре закреплённых роли wrapper/harness/controller/native.
 Повторный независимый gate в harness проверяет binding до чтения role bodies;
 management/qualification/deployment pins проверяются до compilation/import.
 
-`native_launch.maintenance={runtime,job_sha256}` — производный immutable marker,
+`native_launch.maintenance={runtime,job_sha256,material}` — производный immutable marker,
 покрытый полным checksum. Policy/request входят в semantic input fingerprint.
 Старые preparations и capsules не дополняются при start/collection. Строгая схема
 объявляет только существующие optional configuration и maintenance markers;
@@ -159,7 +160,109 @@ Core, без изменения `__file__` и без унаследованны�
 collection проверен вместе с before-effect отказами для неправильных origin,
 body, management root, runtime origin и command tamper. Это проверка source route:
 freshness, qualification и малая runtime closure остаются явно синтетическими.
-Полная независимая operational qualification, bounded transport больших bodies,
-standalone management packaging и genuine host/cold evidence требуют отдельных
+Полная независимая operational qualification, фактическая пригодность большого
+комплекта, доставка management distribution и genuine host/cold evidence требуют отдельных
 разрешённых проверок; source completeness и deployment readiness из fixture
 success не следуют. Budgets и публичные/generic контракты сохранены.
+
+
+### Private native material и начало запуска
+
+Текущая private policy/request/job revision — строго **2**; предыдущий alpha6
+prototype не является поддерживаемым внутренним форматом. Старые, смешанные,
+неизвестные версии и поля отвергаются. Capability/profile IDs и четыре resource
+groups неизменны; released generic prepared input и configuration snapshot
+сохраняют свой контракт. Для retry требуется новая явно выданная exact identity,
+request/policy/capsule/attempt; start не дописывает прежний immutable документ.
+
+`native_maintenance.material` одинаков в запросе и одном точном binding policy.
+Он содержит `body_manifest`, два непересекающихся project-relative roots
+`archive/runtime`, `permission=body-and-qualified-runtime-load`, точный каталог
+capture фактической попытки и конечные quotas. Manifest — обычный явно выданный
+body source. Его перечисление, metadata, ID или hash отдельно не дают доступа
+к binaries. Issuer дополнительно выдаёт read каждого member и write_artifact
+capture-prefix; deny имеет приоритет. Archive остаётся data-only. Runtime отдельно
+требует body+execute, closure и независимо qualified первоначальный origin.
+
+Producer проверяет весь конечный набор manifest members до native member IO.
+Разрешены один archive, один interpreter и роли dll/stdlib/bootstrap; runtime
+rows точно совпадают с management closure. Safe Windows handles удерживают
+файлы и ancestors без reparse/alias/hardlink и write/delete sharing; actual
+FileId/volume, size, mutation и SHA256 проверяются потоково. На неподдержанном
+backend — отказ. Runtime не переносится; archive получает create-once snapshot.
+Только полный успех публикует immutable index и receipt
+`pf.native-material.available-body`. Receipt связывает полную identity, job,
+manifest/request pins, index pin и checked totals. Старт не ремонтирует missing
+receipt/index/snapshot, а collection не выдаёт дополнительных прав.
+
+| Ограничение | Предел |
+| --- | --- |
+| Ordinary Work sources | 128 файлов, 1 МиБ на файл, 8 МиБ всего |
+| Prepared JSON / inline file / inline total | 4 МиБ / 64 КиБ / 256 КиБ |
+| Material manifest / index | по 1 МиБ |
+| Material members / roots | 4096 / 2 |
+| Material member / interpreter / aggregate | 128 МиБ / 32 МиБ / 512 МиБ |
+| Capture chunk / working buffer / accounted metadata | 64 КиБ / 1 МиБ / 16 МиБ |
+| Capture disk, включая snapshot/index/partial | 512 МиБ |
+| Archive / expanded / member / entries | 128 МиБ / 256 МиБ / 32 МиБ / 4096 |
+| ZIP central directory / header total / one header | 4 МиБ / 4 МиБ / 16 КиБ |
+| Downstream payload ceiling | максимум 2 ГиБ, дополнительно exact issued budget |
+
+Действует минимум применимых bounds. До downstream allocation/compile проверяется
+консервативный peak по actual archive/expanded/manifest/leaf sizes против именно
+выданного budget. Ceiling не означает unconditional allocation и не обещает общий
+RSS/commit PF. До ZipFile/decompression проверяются bounded EOCD/central/local
+headers, offsets, aliases, compression и expansion. Private archive использует
+реальный raw embedded Core manifest, native parser, leaf seal и checksum inventory;
+outer release sidecar его не заменяет. ZIP64/multidisk/encryption и посторонние
+members отвергаются. Quotas не повышаются автоматически.
+
+### Lifetime preflight и короткий admission
+
+Оба настоящих start consumer, SQL и legacy, входят в Core
+`native_start_preflight` **до** admission и task lifecycle lock. Core удерживает
+actual handles на актуальные policy/registry, assignment/run/capsule/snapshots,
+обычные body sources и configuration snapshot; затем повторяет штатную current
+semantic-input проверку. Harness `hold_start_material` удерживает index, archive
+snapshot, исходные runtime/material references и принятую native operation lease.
+Все material body/hash/ZIP/reference/qualification checks заканчиваются вне gate.
+Core один выдаёт operation-local preflight: это непереносимый объект в активном
+контексте текущего process/thread, а не caller dict, receipt, hash или boolean.
+Standalone harness удерживает material, но не выдаёт current-policy seal.
+
+Внутри gate выполняются bounded проверки живого preflight, identity/current attempt,
+неизменного command/reference, accepted native entry/lease, версии каталога run
+для новой cancellation и локальной конфигурации. Private command ограничен 64 КиБ.
+SQL сохраняет current-attempt/revision/generation CAS и reserve-before-spawn;
+legacy под тем же lifecycle lock повторно читает current state и публикует starting
+до spawn. Native path не делает material rehash/ZIP/history/Job scans внутри gate;
+SQL observation после spawn вынесено за admission. Generic paths сохраняют прежний
+порядок проверок и существующие admission/stop primitives.
+
+Command handle освобождается после одноразового admission: запуск использует
+проверенное значение команды из памяти, поэтому последующая запись command.json
+не меняет argv/env. Остальные handles и lease живут до **синхронного завершения**
+wrapper/harness; их освобождение и metadata checks также происходят за admission.
+Private maintenance требует заранее подготовленную ready попытку и синхронный
+start; detach для этого unreleased private profile отказывает, поскольку без
+квалифицированной передачи held references освобождать parent нельзя. Обычные
+released generic detach/file-only/config/legacy flows не меняются.
+
+Wrapper и harness независимо проверяют immutable prepared checksum, body права,
+origin, identity/attempt и pins. Сам consumer `execute` удерживает свои references
+на время compilation/effects. OS namespace/ancestor ACL, initial trusted bootstrap,
+independent leases/epoch и genuine fence/retirement по-прежнему являются отдельными
+условиями. Потеря parent или его token не становится доказательством platform trust;
+parent/child crash и реальный host требуют независимой qualification.
+
+Management project P одновременно является полным immutable distribution D,
+вне каждого replacement target. Нужен весь existing release inventory, Core,
+pf_cli/bootstrap/tools, descriptor/schemas и отдельно qualified runtime/dependencies
+с проверенным isolated startup/sys.path. `construct_management` создаёт inventory,
+а не relocated standalone launcher. Ни self-hash, ни synthetic fixture не заменяют
+independent Q0; перенос P требует новой qualification/spec/request/capsule.
+
+Source fixtures проверяют actual SQL/legacy producer → prepare/schema/write_once →
+start/wrapper/harness → collection и barrier-controlled mutation между preflight,
+reservation и consume. Измеренные локальные lock/operation timings не являются
+глобальной гарантией 500 мс/400000, genuine cold, private-ACL или production readiness.

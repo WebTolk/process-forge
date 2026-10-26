@@ -7,7 +7,6 @@ import io
 import json
 import os
 import struct
-import sys
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -16,8 +15,12 @@ import pytest
 
 from .test_cold_handoff import (
     make_archive,
-    native_fixture as native_fixture,
     prepare_native,
+)
+from .test_cold_handoff import (
+    native_fixture as native_fixture,
+)
+from .test_cold_handoff import (
     tmp_path as tmp_path,
 )
 
@@ -33,7 +36,9 @@ def issue_material(prepared: dict[str, Any], change: Any) -> None:
     semantic = prepared["input"]
     binding = semantic["resources"]["requested"]["tools"][0]["native_maintenance"]
     change(binding["material"])
-    semantic["resources"]["grants"]["tools"][0]["resolution"]["entry"]["native_maintenance"]["bindings"] = [copy.deepcopy(binding)]
+    semantic["resources"]["grants"]["tools"][0]["resolution"]["entry"][
+        "native_maintenance"
+    ]["bindings"] = [copy.deepcopy(binding)]
 
 
 def issue_manifest(f: Any, prepared: dict[str, Any], change: Any) -> None:
@@ -44,13 +49,41 @@ def issue_manifest(f: Any, prepared: dict[str, Any], change: Any) -> None:
     change(manifest)
     raw = h.canonical(manifest)
     (f.project / name).write_bytes(raw)
-    declaration = next(row for row in prepared["input"]["sources"] if row["path"] == name)
+    declaration = next(
+        row for row in prepared["input"]["sources"] if row["path"] == name
+    )
     declaration.update(checksum=h.digest(raw), size=len(raw))
-    issue_material(prepared, lambda material: material["body_manifest"].update(sha256=h.digest(raw), size=len(raw)))
+    issue_material(
+        prepared,
+        lambda material: material["body_manifest"].update(
+            sha256=h.digest(raw), size=len(raw)
+        ),
+    )
 
 
-@pytest.mark.parametrize("case", ["absent", "metadata", "permission", "capture", "capture-deny", "read-deny", "attempt", "old", "mixed", "unknown", "body-only", "execute-only", "manifest-size", "quota", "bool-quota"])
-def test_no_native_io_before_issued_authority(native_fixture: Any, monkeypatch: Any, case: str) -> None:
+@pytest.mark.parametrize(
+    "case",
+    [
+        "absent",
+        "metadata",
+        "permission",
+        "capture",
+        "capture-deny",
+        "read-deny",
+        "attempt",
+        "old",
+        "mixed",
+        "unknown",
+        "body-only",
+        "execute-only",
+        "manifest-size",
+        "quota",
+        "bool-quota",
+    ],
+)
+def test_no_native_io_before_issued_authority(
+    native_fixture: Any, monkeypatch: Any, case: str
+) -> None:
     import pf_native_maintenance as h
 
     f = native_fixture
@@ -60,13 +93,19 @@ def test_no_native_io_before_issued_authority(native_fixture: Any, monkeypatch: 
     if case == "absent":
         del binding["material"]
     elif case == "metadata":
-        next(s for s in semantic["sources"] if s["path"] == "native-material.json")["delivery"] = "metadata"
+        next(s for s in semantic["sources"] if s["path"] == "native-material.json")[
+            "delivery"
+        ] = "metadata"
     elif case == "permission":
         issue_material(prepared, lambda m: m.update(permission="body"))
     elif case == "capture":
-        semantic["scope"]["allowed_files"] = [semantic["outputs"]["expected_report"]["artifact"]]
+        semantic["scope"]["allowed_files"] = [
+            semantic["outputs"]["expected_report"]["artifact"]
+        ]
     elif case == "capture-deny":
-        semantic["scope"]["forbidden_files"] = [binding["material"]["capture"]["directory"] + "/archive.snapshot"]
+        semantic["scope"]["forbidden_files"] = [
+            binding["material"]["capture"]["directory"] + "/archive.snapshot"
+        ]
     elif case == "read-deny":
         semantic["scope"]["forbidden_files"] = ["runtime/*"]
     elif case == "attempt":
@@ -82,7 +121,9 @@ def test_no_native_io_before_issued_authority(native_fixture: Any, monkeypatch: 
     elif case == "manifest-size":
         issue_material(prepared, lambda m: m["body_manifest"].update(size=1048577))
     elif case == "quota":
-        issue_material(prepared, lambda m: m["quotas"].update(total_material_bytes=536870913))
+        issue_material(
+            prepared, lambda m: m["quotas"].update(total_material_bytes=536870913)
+        )
     else:
         issue_material(prepared, lambda m: m["quotas"].update(members=True))
 
@@ -95,8 +136,30 @@ def test_no_native_io_before_issued_authority(native_fixture: Any, monkeypatch: 
         h.capture_material(prepared, f.project)
 
 
-@pytest.mark.parametrize("case", ["extra-key", "duplicate", "id-case", "path-case", "role", "zero", "bool-size", "large", "root", "runtime-row", "nfc", "device", "ads", "dotdot", "unc", "path-long"])
-def test_bad_manifest_denied_before_any_member_open(native_fixture: Any, monkeypatch: Any, case: str) -> None:
+@pytest.mark.parametrize(
+    "case",
+    [
+        "extra-key",
+        "duplicate",
+        "id-case",
+        "path-case",
+        "role",
+        "zero",
+        "bool-size",
+        "large",
+        "root",
+        "runtime-row",
+        "nfc",
+        "device",
+        "ads",
+        "dotdot",
+        "unc",
+        "path-long",
+    ],
+)
+def test_bad_manifest_denied_before_any_member_open(
+    native_fixture: Any, monkeypatch: Any, case: str
+) -> None:
     import pf_native_maintenance as h
 
     f = native_fixture
@@ -125,15 +188,28 @@ def test_bad_manifest_denied_before_any_member_open(native_fixture: Any, monkeyp
         elif case == "runtime-row":
             rows[2]["sha256"] = "sha256:" + "0" * 64
         else:
-            rows[2]["path"] = {"nfc": "runtime/e\u0301", "device": "runtime/CON.txt", "ads": "runtime/x:stream", "dotdot": "runtime/../x", "unc": "//host/x", "path-long": "runtime/" + "a" * 1025}[case]
+            rows[2]["path"] = {
+                "nfc": "runtime/e\u0301",
+                "device": "runtime/CON.txt",
+                "ads": "runtime/x:stream",
+                "dotdot": "runtime/../x",
+                "unc": "//host/x",
+                "path-long": "runtime/" + "a" * 1025,
+            }[case]
 
     issue_manifest(f, prepared, mutate)
-    monkeypatch.setattr(h, "_safe_material_file", lambda *a, **k: pytest.fail("member opened before whole manifest validation"))
+    monkeypatch.setattr(
+        h,
+        "_safe_material_file",
+        lambda *a, **k: pytest.fail("member opened before whole manifest validation"),
+    )
     with pytest.raises(ValueError):
         h.capture_material(prepared, f.project)
 
 
-def test_actual_streaming_large_data_vs_unchanged_work_budget(native_fixture: Any) -> None:
+def test_actual_streaming_large_data_vs_unchanged_work_budget(
+    native_fixture: Any,
+) -> None:
     import pf_native_control as native
     import pf_native_maintenance as h
 
@@ -142,10 +218,22 @@ def test_actual_streaming_large_data_vs_unchanged_work_budget(native_fixture: An
     f = native_fixture
     prepared = envelope(f)
     # Synthetic release-shaped payload, no executable code loaded from archive.
-    built = native.build_publication({native.LEAF: Path(native.__file__).read_bytes(), native.INVENTORY: b"", "data.bin": b"x" * 2097152}, version="1.3.0-alpha6", source={}, generated_at="2026-10-26T00:00:00Z")
+    built = native.build_publication(
+        {
+            native.LEAF: Path(native.__file__).read_bytes(),
+            native.INVENTORY: b"",
+            "data.bin": b"x" * 2097152,
+        },
+        version="1.3.0-alpha6",
+        source={},
+        generated_at="2026-10-26T00:00:00Z",
+    )
     output = io.BytesIO()
     with zipfile.ZipFile(output, "w") as package:
-        for name, raw in {**dict(built.payload), native.MANIFEST: built.manifest}.items():
+        for name, raw in {
+            **dict(built.payload),
+            native.MANIFEST: built.manifest,
+        }.items():
             package.writestr(name, raw)
     archive = output.getvalue()
     (f.project / "payloads/archive.zip").write_bytes(archive)
@@ -158,23 +246,49 @@ def test_actual_streaming_large_data_vs_unchanged_work_budget(native_fixture: An
     for row in prepared["input"]["sources"]:
         if row["path"] == "manifest.json":
             row.update(size=len(built.manifest), checksum=h.digest(built.manifest))
-    binding = prepared["input"]["resources"]["requested"]["tools"][0]["native_maintenance"]
+    binding = prepared["input"]["resources"]["requested"]["tools"][0][
+        "native_maintenance"
+    ]
     binding["job_sha256"] = h.digest(h.canonical(job))
-    issue_manifest(f, prepared, lambda m: m["members"][0].update(size=len(archive), sha256=h.digest(archive)))
+    issue_manifest(
+        f,
+        prepared,
+        lambda m: m["members"][0].update(size=len(archive), sha256=h.digest(archive)),
+    )
     with pytest.raises(ContextContractError, match="required_source_budget_exceeded"):
         _source(f.project, "payloads/archive.zip")
     receipt = h.capture_material(prepared, f.project)
     assert receipt["totals"]["bytes"] > 2097152
     assert h.validate_material(prepared, f.project, receipt)
-    assert all(row["path"] != "payloads/archive.zip" for row in prepared["input"]["sources"])
+    assert all(
+        row["path"] != "payloads/archive.zip" for row in prepared["input"]["sources"]
+    )
     from pf_cold_controller import FrozenArchive
 
-    assert FrozenArchive.capture(archive, built.manifest, expected_sha256=h.digest(archive)).payload == built.payload
+    assert (
+        FrozenArchive.capture(
+            archive, built.manifest, expected_sha256=h.digest(archive)
+        ).payload
+        == built.payload
+    )
     assert h.qualify_archive(archive, built.manifest, native)["files"] == 3
 
 
-@pytest.mark.parametrize("case", ["original", "runtime", "snapshot", "index", "snapshot-same-bytes", "missing", "attempt"])
-def test_frozen_material_changes_never_repaired(native_fixture: Any, monkeypatch: Any, case: str) -> None:
+@pytest.mark.parametrize(
+    "case",
+    [
+        "original",
+        "runtime",
+        "snapshot",
+        "index",
+        "snapshot-same-bytes",
+        "missing",
+        "attempt",
+    ],
+)
+def test_frozen_material_changes_never_repaired(
+    native_fixture: Any, monkeypatch: Any, case: str
+) -> None:
     import pf_native_maintenance as h
 
     f = native_fixture
@@ -199,20 +313,38 @@ def test_frozen_material_changes_never_repaired(native_fixture: Any, monkeypatch
         del prepared["native_launch"]["maintenance"]["material"]
     else:
         prepared["identity"]["attempt"] = 2
-    before = {path.name: path.read_bytes() for path in directory.parent.iterdir() if path.is_file()}
-    monkeypatch.setattr(h, "_captured_module", lambda *a, **k: pytest.fail("compile before revalidation"))
+    before = {
+        path.name: path.read_bytes()
+        for path in directory.parent.iterdir()
+        if path.is_file()
+    }
+    monkeypatch.setattr(
+        h,
+        "_captured_module",
+        lambda *a, **k: pytest.fail("compile before revalidation"),
+    )
     with pytest.raises((ValueError, OSError)):
         h.execute(prepared, f.project)
-    assert before == {path.name: path.read_bytes() for path in directory.parent.iterdir() if path.is_file()}
+    assert before == {
+        path.name: path.read_bytes()
+        for path in directory.parent.iterdir()
+        if path.is_file()
+    }
 
 
-def test_create_once_exact_reuse_and_partial_refusal(native_fixture: Any, monkeypatch: Any) -> None:
+def test_create_once_exact_reuse_and_partial_refusal(
+    native_fixture: Any, monkeypatch: Any
+) -> None:
     import pf_native_maintenance as h
 
     f = native_fixture
     prepared = envelope(f)
     real = os.fsync
-    monkeypatch.setattr(h.os, "fsync", lambda fd: (_ for _ in ()).throw(OSError("fixture fsync interruption")))
+    monkeypatch.setattr(
+        h.os,
+        "fsync",
+        lambda fd: (_ for _ in ()).throw(OSError("fixture fsync interruption")),
+    )
     with pytest.raises(OSError):
         h.capture_material(prepared, f.project)
     monkeypatch.setattr(h.os, "fsync", real)
@@ -221,7 +353,9 @@ def test_create_once_exact_reuse_and_partial_refusal(native_fixture: Any, monkey
     assert "material" not in prepared.get("native_launch", {}).get("maintenance", {})
 
 
-def test_actual_windows_handles_block_writer_rename_and_parent_swap(tmp_path: Path) -> None:
+def test_actual_windows_handles_block_writer_rename_and_parent_swap(
+    tmp_path: Path,
+) -> None:
     import pf_native_maintenance as h
 
     directory = tmp_path / "runtime"
@@ -242,20 +376,48 @@ def test_actual_windows_handles_block_writer_rename_and_parent_swap(tmp_path: Pa
             pytest.fail("hardlinked member admitted")
 
 
-def test_payload_budget_applies_before_effect_module(native_fixture: Any, monkeypatch: Any) -> None:
+def test_payload_budget_applies_before_effect_module(
+    native_fixture: Any, monkeypatch: Any
+) -> None:
     import pf_native_maintenance as h
 
     prepared = envelope(native_fixture)
-    issue_material(prepared, lambda m: m["quotas"].update(native_consumer_payload_reservation_bytes=1))
+    issue_material(
+        prepared,
+        lambda m: m["quotas"].update(native_consumer_payload_reservation_bytes=1),
+    )
     receipt = h.capture_material(prepared, native_fixture.project)
     job = prepared["input"]["parameters"]["native_maintenance_job"]
-    prepared["native_launch"] = {"maintenance": {"runtime": job["runtime"], "job_sha256": h.digest(h.canonical(job)), "material": receipt}}
-    monkeypatch.setattr(h, "_captured_module", lambda *a, **k: pytest.fail("compiled above issued memory budget"))
+    prepared["native_launch"] = {
+        "maintenance": {
+            "runtime": job["runtime"],
+            "job_sha256": h.digest(h.canonical(job)),
+            "material": receipt,
+        }
+    }
+    monkeypatch.setattr(
+        h,
+        "_captured_module",
+        lambda *a, **k: pytest.fail("compiled above issued memory budget"),
+    )
     with pytest.raises(h.Rejected, match="native_payload_peak"):
         h.execute(prepared, native_fixture.project)
 
 
-@pytest.mark.parametrize("case", ["extra", "embedded", "duplicate", "header", "zip64", "multidisk", "overlap", "compressed", "expanded"])
+@pytest.mark.parametrize(
+    "case",
+    [
+        "extra",
+        "embedded",
+        "duplicate",
+        "header",
+        "zip64",
+        "multidisk",
+        "overlap",
+        "compressed",
+        "expanded",
+    ],
+)
 def test_release_archive_parser_bounds(case: str) -> None:
     import pf_native_control as native
     import pf_native_maintenance as h
@@ -264,8 +426,16 @@ def test_release_archive_parser_bounds(case: str) -> None:
     output = io.BytesIO()
     if case in {"extra", "embedded", "duplicate"}:
         with zipfile.ZipFile(output, "w") as package:
-            for name, content in {**dict(built.payload), native.MANIFEST: built.manifest}.items():
-                package.writestr(name, b"{}" if case == "embedded" and name == native.MANIFEST else content)
+            for name, content in {
+                **dict(built.payload),
+                native.MANIFEST: built.manifest,
+            }.items():
+                package.writestr(
+                    name,
+                    b"{}"
+                    if case == "embedded" and name == native.MANIFEST
+                    else content,
+                )
             if case == "extra":
                 package.writestr("extra", b"x")
             elif case == "duplicate":
@@ -290,3 +460,91 @@ def test_release_archive_parser_bounds(case: str) -> None:
         raw = bytes(data)
     with pytest.raises(ValueError):
         h.qualify_archive(raw, built.manifest, native)
+
+
+def test_real_lease_and_guard_generation_lifetime(
+    native_fixture: Any, monkeypatch: Any
+) -> None:
+    """Real Windows lease/handles with synthetic entry; never Q0 authority."""
+    import sys
+    import threading
+
+    import pf_native_control as native
+    import pf_native_maintenance as h
+
+    from processforge_core.prepared.input import write_once
+    from processforge_core.prepared.resources import _NativeStartPreflight
+    from processforge_core.runtime.command import WorkerCommandBuilder
+
+    f = native_fixture
+    prepared = prepare_native(f)
+    path = (
+        f.project
+        / ".pf/runtime/agent-runs/fixture-run/fixture-task/attempts/1/prepared-input.json"
+    )
+    checksum = write_once(path, prepared)
+    command, _ = WorkerCommandBuilder(f.project).build(
+        f.project,
+        f.task,
+        f.driver,
+        prepared_input={
+            "path": path.relative_to(f.project).as_posix(),
+            "checksum": checksum,
+        },
+    )
+    assert command["command"]["argv"][0] == sys.executable
+    base = f.project / ".pf/lease-fixture"
+    guard = base / "native-control/installation.guard"
+    guard.parent.mkdir(parents=True)
+    guard.write_bytes(b"guard")
+    epoch = guard.with_name("epoch")
+    epoch.write_text("fixture-epoch", encoding="ascii")
+    head = base / "managed-ingress/adoption.json"
+    head.parent.mkdir()
+    head.write_bytes(
+        h.canonical(
+            {
+                "installation": "synthetic",
+                "archive": "synthetic",
+                "generation": 1,
+                "phase": "bound",
+                "epoch": "fixture-epoch",
+            }
+        )
+    )
+    control = native.NativeControl(guard, epoch, "fixture-epoch")
+    entry = native.NativeEntry(f.project, None, None, control)
+    monkeypatch.setattr(native, "_ENTRY", entry)
+    blocked = []
+
+    def mutate():
+        for name, path in (("epoch", epoch), ("generation", head)):
+            try:
+                path.write_bytes(b"changed")
+            except OSError:
+                blocked.append(name)
+        try:
+            guard.rename(guard.with_name("replaced.guard"))
+        except OSError:
+            blocked.append("guard")
+
+    with h.hold_start_material(prepared, f.project, f.project, command):
+        assert native._native_life_held(control)
+        thread = threading.Thread(target=mutate)
+        thread.start()
+        thread.join(5)
+        assert not thread.is_alive() and set(blocked) == {
+            "guard",
+            "epoch",
+            "generation",
+        }
+        # A caller dictionary and even a material-holding harness cannot issue
+        # the Core current-policy seal or bypass its operation-local issuer.
+        fake = _NativeStartPreflight(command, prepared, entry)
+        with pytest.raises(ValueError, match="native_preflight_not_held"):
+            fake.admit(command, 1, command["prepared_input"])
+    assert not native._native_life_held(control)
+    epoch.write_text("next-generation", encoding="ascii")
+    with pytest.raises(OSError):
+        with h.hold_start_material(prepared, f.project, f.project, command):
+            pytest.fail("stale guard epoch admitted")
