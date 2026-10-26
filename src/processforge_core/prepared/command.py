@@ -410,3 +410,39 @@ def finalize_scratch(
         )
         temporary.replace(path)
     return receipt
+
+
+def require_resolved_preparation(
+    project: Path, task: dict[str, Any], core: Any
+) -> None:
+    """Block every producer entry while an exact prior allocation is unresolved.
+
+    This bounded check performs no disposal under a caller's lifecycle lock.
+    Only explicit prepare resolves SQL authority and cleanup outside that lock.
+    """
+    state = core.load_agent_run_state(project, task["run_id"], task["id"])
+    if state.get("prepared_input") or state.get("attempt") is None:
+        return
+    capsule = core.load_yaml_document(core.assignment_capsule_path(project, task["id"]))
+    identity = {
+        **capsule.get("execution_contract", {}).get("identity", {}),
+        "attempt": state["attempt"],
+    }
+    creation = _attempt(project, identity)
+    if not creation.exists():
+        return
+    try:
+        record = _read(creation)
+        receipt = _read(creation.with_name("scratch-cleanup.json"))
+        if (
+            record.get("identity") == identity
+            and receipt.get("identity") == identity
+            and receipt.get("resource_id") == record.get("resource_id")
+            and receipt.get("result")
+            in {"deleted", "already_absent", "retained_by_configuration"}
+            and receipt.get("complete") is True
+        ):
+            return
+    except (OSError, ValueError):
+        pass
+    raise SystemExit("FAIL: temporary_cleanup_needed")

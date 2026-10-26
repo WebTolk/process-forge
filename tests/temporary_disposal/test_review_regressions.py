@@ -354,3 +354,118 @@ def test_entry_secondary_diagnostic_failure_cannot_mask_result(
             stage(resource)
             outcome.update(action="incomplete", transaction="preserved")
         assert outcome == {"action": "incomplete", "transaction": "preserved"}
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "recovered",
+        "retained",
+        "unknown",
+        "committed",
+        "cas_race",
+        "cleanup_retry",
+        "changed_record",
+        "missing_manifest",
+    ],
+)
+def test_ambiguous_publication_reentry_resolves_before_allocation(
+    sql_cli_fixture: SqlFixture, monkeypatch: pytest.MonkeyPatch, mode: str
+) -> None:
+    import processforge as core
+
+    from processforge_core.prepared import command as scratch
+
+    root, repository, args, _driver = sql_cli_fixture
+    managed_scope(root)
+    primary = PermissionError("publication_ambiguous")
+    finalize = type(repository)._finalize_prepared
+
+    def unreadable(*args: Any, **kwargs: Any) -> Any:
+        raise OSError("readback_unknown")
+
+    with monkeypatch.context() as fault:
+
+        def uncertain(self: Any, *args: Any, **kwargs: Any) -> Any:
+            if mode == "committed":
+                finalize(self, *args, **kwargs)
+            fault.setattr(core, "load_agent_run_state", unreadable)
+            raise primary
+
+        fault.setattr(type(repository), "_finalize_prepared", uncertain)
+        with pytest.raises(PermissionError) as caught:
+            core.command_worker_run_prepare(args)
+        assert caught.value is primary
+    # The in-memory guard has ended: only durable attempt records remain.
+    assert scratch._PREPARATION.get() is None
+    first = repository.load_latest("run", "task")
+    previous = set((root / ".pf/tmp/scratch-owned").iterdir())
+    assert len(previous) == 1
+    task = core._worker_assignment_service.load(root, "task")
+    attempt = root / ".pf/runtime/agent-runs/run/task/attempts/1"
+    if mode != "committed":
+        with pytest.raises(SystemExit, match="temporary_cleanup_needed"):
+            core.prepare_worker_run(root, "task", str(_driver), None)
+        assert repository.load_latest("run", "task").key == first.key
+    if mode == "retained":
+        from processforge_core.common.yaml_io import write_yaml_file
+
+        write_yaml_file(
+            root / "device.yaml",
+            {"runtime": {"temporary_files": {"retain_unused": True}}},
+        )
+    if mode == "changed_record":
+        record_path = attempt / "scratch-resource.json"
+        record_path.write_text("{}", encoding="utf8")
+    if mode == "missing_manifest":
+        (attempt / "prepared-input.json").unlink()
+    if mode == "committed":
+        assert core._finalize_worker_scratch(root, task, trigger="before_retry")
+        assert all(path.exists() for path in previous)
+        assert not (attempt / "scratch-cleanup.json").exists()
+        return
+    if mode in {"unknown", "cas_race"}:
+        with monkeypatch.context() as fault:
+            if mode == "unknown":
+                fault.setattr(type(repository), "load", unreadable)
+            else:
+
+                def concurrent(self: Any, *args: Any, **kwargs: Any) -> Any:
+                    raise ExecutionError("stale_revision")
+
+                fault.setattr(type(repository), "_update_unlaunched", concurrent)
+            if mode == "unknown":
+                assert not core._finalize_worker_scratch(
+                    root, task, trigger="before_retry"
+                )
+            else:
+                assert core.command_worker_run_prepare(args) == 1
+        assert repository.load_latest("run", "task").key == first.key
+        assert all(path.exists() for path in previous)
+        return
+    if mode in {"changed_record", "missing_manifest"}:
+        assert core.command_worker_run_prepare(args) == 1
+        assert repository.load_latest("run", "task").key == first.key
+        assert all(path.exists() for path in previous)
+        return
+    if mode == "cleanup_retry":
+        with monkeypatch.context() as fault:
+            fault.setattr(scratch, "dispose_owned", unreadable)
+            assert core.command_worker_run_prepare(args) == 1
+        cancelled = repository.load_latest("run", "task")
+        assert cancelled.key == first.key
+        assert projected_payload(cancelled)["status"] == "cancelled"
+        with pytest.raises(ExecutionError):
+            repository._finalize_prepared(
+                first, json.dumps({**projected_payload(first), "status": "ready"})
+            )
+    assert core.command_worker_run_prepare(args) == 0
+    assert repository.load_latest("run", "task").key.attempt == 2
+    receipt = json.loads((attempt / "scratch-cleanup.json").read_text())
+    assert receipt["result"] == (
+        "retained_by_configuration" if mode == "retained" else "deleted"
+    )
+    assert all(path.exists() == (mode == "retained") for path in previous)
+    assert len(list((root / ".pf/tmp/scratch-owned").iterdir())) == (
+        2 if mode == "retained" else 1
+    )
