@@ -9821,9 +9821,6 @@ def prepare_worker_run(
             validate_command(document, project_root, ROOT, command)
         prepared_input.private_file(project_root, reference["path"])
         prepared_input.write_once(prepared_path, document)
-        from processforge_core.prepared.command import scratch_published
-
-        scratch_published(document)
     except (OSError, ValueError, RuntimeError) as exc:
         raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
     _core_common_json_io.json_write(
@@ -9843,27 +9840,47 @@ def prepare_worker_run(
     # A deliberate prepare is a new attempt.  An old durable exit contract
     # belongs to the preceding attempt and must not be observed as the result
     # of a newly launched process.
-    if repository is None:
-        paths["exit"].unlink(missing_ok=True)
-        write_agent_run_state(
-            project_root,
-            task,
-            driver,
-            state_status,
-            command=command,
-            paths=paths,
-            attempt=attempt,
-        )
-    else:
-        assert allocated is not None
-        from processforge_core.executions.projection import canonical_json
+    from processforge_core.prepared.command import scratch_published
 
-        payload = _agent_run_payload(
-            project_root, task, driver, state_status, paths, attempt
-        )
-        payload["prepared_input"] = reference
-        _core_common_json_io.json_write(paths["command"], command)
-        repository._finalize_prepared(allocated, canonical_json(payload))
+    try:
+        if repository is None:
+            paths["exit"].unlink(missing_ok=True)
+            write_agent_run_state(
+                project_root,
+                task,
+                driver,
+                state_status,
+                command=command,
+                paths=paths,
+                attempt=attempt,
+            )
+        else:
+            assert allocated is not None
+            from processforge_core.executions.projection import canonical_json
+
+            payload = _agent_run_payload(
+                project_root, task, driver, state_status, paths, attempt
+            )
+            payload["prepared_input"] = reference
+            _core_common_json_io.json_write(paths["command"], command)
+            repository._finalize_prepared(allocated, canonical_json(payload))
+        # The authoritative attempt now owns the exact immutable resource. Later
+        # projection/event failures must not roll back potentially launchable temp.
+        scratch_published(document)
+    except BaseException as error:
+        try:
+            bound = load_agent_run_state(project_root, run_id, task_id)
+        except Exception as verification_error:
+            # An ambiguous commit is not proof of an unpublished allocation.
+            scratch_published(document)
+            error.add_note(
+                "scratch_publication_unknown:" + type(verification_error).__name__
+            )
+        else:
+            if bound.get("prepared_input") == reference:
+                scratch_published(document)
+        raise
+    if repository is not None:
         _publish_sql_locked(project_root, repository, run_id, task_id)
     _process_event_recorder.emit_process_event(
         project_root,
@@ -9980,8 +9997,29 @@ def _finalize_worker_scratch(
                     repository.project_id, task["run_id"], task["id"], state["attempt"]
                 )
             )
-            absent = exact is not None and exact.phase == "absent"
+            from processforge_core.executions.projection import projected_payload
+
+            # _update_unlaunched atomically cancels a prepared attempt by CAS;
+            # reserve_start accepts only ready. This durable cancelled state
+            # cannot race into launch, unlike a prepared/no-PID observation.
+            cancelled = projected_payload(exact) if exact is not None else {}
+            never_launched = (
+                exact is not None
+                and exact.phase == "prepared"
+                and exact.launch_token is None
+                and exact.process is None
+                and exact.collection == "pending"
+                and cancelled.get("status") == "cancelled"
+                and cancelled.get("finished_at") is not None
+                and cancelled.get("prepared_input") == state.get("prepared_input")
+                and all(
+                    cancelled.get(field) is None
+                    for field in ("pid", "started_at", "exit_code", "last_heartbeat_at")
+                )
+            )
+            absent = never_launched or (exact is not None and exact.phase == "absent")
         else:
+            never_launched = False
             absent = (
                 _legacy_tree_probe(project_root, task["run_id"], task["id"], state)
                 is True
@@ -10019,7 +10057,7 @@ def _finalize_worker_scratch(
                     and exact is not None
                     and _sql_receipt(project_root, exit_path, exact, "exit") is not None
                 )
-        proof = collected or (failed and raw_exit)
+        proof = never_launched or collected or (failed and raw_exit)
         if not absent or not proof:
             if trigger == "before_retry":
                 print("FAIL: temporary_cleanup_needed")

@@ -71,28 +71,47 @@ def _transaction_temporaries(root: Path):
         # complete data or rollback inputs. Incomplete staging is reproducible
         # from that journal; source, journal and recovery bytes stay protected.
         for resource in resources:
-            receipt = dispose_owned(release_owned(resource))
-            folder = _directory(root, JOURNALS + "/cleanup", private=True)
-            path = folder / (resource.resource_id + ".json")
+            receipt = None
             try:
+                receipt = dispose_owned(release_owned(resource))
+                folder = _directory(root, JOURNALS + "/cleanup", private=True)
+                path = folder / (resource.resource_id + ".json")
                 with atomic_staging(path) as temporary:
                     temporary.write_bytes(
                         encoded({"schema_version": 1, **asdict(receipt)})
                     )
                     temporary.replace(path)
-            except OSError as error:
-                if primary is not None:
-                    primary.add_note(
-                        "temporary_cleanup_receipt:" + type(error).__name__
-                    )
-                else:
-                    raise
-            if receipt.result not in {"deleted", "already_absent"}:
-                if primary is not None:
-                    primary.add_note("temporary_cleanup:" + receipt.result)
-                elif outcome.get("action") != "incomplete":
+                if receipt.result not in {"deleted", "already_absent"}:
                     raise OSError("temporary_cleanup:" + receipt.result)
+            except Exception as error:
+                if primary is None and outcome.get("action") != "incomplete":
+                    raise
+                # Diagnostics are secondary even if their own sink or an
+                # exception's custom add_note fails. Never alter the public DTO.
+                code = "temporary_cleanup_receipt:" + type(error).__name__
+                try:
+                    if primary is not None:
+                        primary.add_note(code)
+                except Exception:
+                    pass
+                try:
+                    from .. import diagnostics
 
+                    diagnostics.emit(
+                        "error",
+                        "agent_entry.cleanup_failed",
+                        {
+                            "reason": code,
+                            "resource_id": resource.resource_id,
+                            "result": receipt.result if receipt else "unknown",
+                            "complete": receipt.complete if receipt else False,
+                            "deleted_files": receipt.deleted_files if receipt else 0,
+                            "deleted_bytes": receipt.deleted_bytes if receipt else 0,
+                        },
+                        component="agent_entry",
+                    )
+                except Exception:
+                    pass
 
 
 def root_path(value: Path) -> Path:

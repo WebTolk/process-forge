@@ -72,7 +72,7 @@ def preparation_scratch():
         _PREPARATION.reset(token)
         for resource, document in pending:
             # Only the actual in-memory producer can register this callback.
-            # Publication disarms it before an attempt becomes launchable.
+            # Durable authoritative binding disarms it before outer locks unwind.
             path = _attempt(Path(document["project_root"]), document["identity"])
             try:
                 failure = path.with_name("scratch-preparation-failure.json")
@@ -115,7 +115,7 @@ def preparation_scratch():
 
 
 def scratch_published(document: dict[str, Any]) -> None:
-    """A durable prepared manifest transfers lifetime to the exact-attempt owner."""
+    """Transfer lifetime only after durable authoritative attempt binding."""
     pending = _PREPARATION.get()
     if pending is not None:
         pending[:] = [
