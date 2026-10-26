@@ -859,6 +859,7 @@ class _NativeStartPreflight:
     release_command: Callable[[], None]
     task: dict[str, Any]
     driver: dict[str, Any]
+    requested_driver_id: str | None
     run_directory: Path
     run_version: int
     flow_directory: Path
@@ -922,7 +923,7 @@ class NativeStartFailure(ValueError):
 
 @contextmanager
 def native_start_preflight(
-    project: Path, task: dict[str, Any], core: Any
+    project: Path, task: dict[str, Any], core: Any, requested_driver: str | None = None
 ) -> Iterator[_NativeStartPreflight | None]:
     """Hold current policy and semantic bodies before private native admission.
 
@@ -1078,6 +1079,13 @@ def native_start_preflight(
                     project,
                     task,
                     core.load_agent_run_state(project, task["run_id"], task["id"]),
+                )
+                sealed.requested_driver_id = (
+                    core._runtime_driver_selection_service.for_task(
+                        project, task, requested_driver
+                    ).get("id")
+                    if requested_driver
+                    else None
                 )
                 token = _ACTIVE_START.set(sealed)
                 try:

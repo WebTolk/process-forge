@@ -10299,7 +10299,9 @@ def _sql_worker_run_start(
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     from processforge_core.prepared.resources import native_start_preflight
 
-    with native_start_preflight(project_root, task, sys.modules[__name__]) as preflight:
+    with native_start_preflight(
+        project_root, task, sys.modules[__name__], getattr(args, "driver", None)
+    ) as preflight:
         if preflight is not None and bool(getattr(args, "detach", False)):
             print("FAIL: native_synchronous_start_required")
             return 1
@@ -10376,7 +10378,11 @@ def _sql_worker_run_start(
                 )
                 return 1
             paths = _work_paths.worker_run(project_root, run_id, task_id)
-            command = json_read(paths["command"])
+            command = (
+                preflight.command
+                if preflight is not None
+                else json_read(paths["command"])
+            )
             if (
                 preflight is None
                 and command.get("driver_id") == "native-maintenance-fixed-v1"
@@ -10391,9 +10397,13 @@ def _sql_worker_run_start(
                 )
             )
             requested = getattr(args, "driver", None)
-            if requested and _runtime_driver_selection_service.for_task(
-                project_root, task, requested
-            ).get("id") != command.get("driver_id"):
+            if requested and (
+                preflight.requested_driver_id
+                if preflight is not None
+                else _runtime_driver_selection_service.for_task(
+                    project_root, task, requested
+                ).get("id")
+            ) != command.get("driver_id"):
                 print("FAIL: prepared driver differs; use explicit worker-run prepare")
                 return 1
             for option, field in (
@@ -10600,7 +10610,9 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
     proc: subprocess.Popen[bytes] | None = None
     from processforge_core.prepared.resources import native_start_preflight
 
-    with native_start_preflight(project_root, task, sys.modules[__name__]) as preflight:
+    with native_start_preflight(
+        project_root, task, sys.modules[__name__], getattr(args, "driver", None)
+    ) as preflight:
         if preflight is not None and bool(getattr(args, "detach", False)):
             print("FAIL: native_synchronous_start_required")
             return 1
@@ -10653,7 +10665,11 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
                 return 1
             if state.get("status") in {"ready", "manual_required"}:
                 paths = _work_paths.worker_run(project_root, run_id, task_id)
-                saved = json_read(paths["command"])
+                saved = (
+                    preflight.command
+                    if preflight is not None
+                    else json_read(paths["command"])
+                )
                 driver = (
                     preflight.driver
                     if preflight is not None
@@ -10662,9 +10678,13 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
                     )
                 )
                 requested_driver = getattr(args, "driver", None)
-                if requested_driver and _runtime_driver_selection_service.for_task(
-                    project_root, task, requested_driver
-                ).get("id") != saved.get("driver_id"):
+                if requested_driver and (
+                    preflight.requested_driver_id
+                    if preflight is not None
+                    else _runtime_driver_selection_service.for_task(
+                        project_root, task, requested_driver
+                    ).get("id")
+                ) != saved.get("driver_id"):
                     print(
                         "FAIL: prepared driver differs; use explicit worker-run prepare"
                     )
@@ -10698,7 +10718,11 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
                     getattr(args, "reasoning_effort", None),
                 )
             run_id = safe_id(str(task.get("run_id") or "run"), "run")
-            command = json_read(paths["command"])
+            command = (
+                preflight.command
+                if preflight is not None
+                else json_read(paths["command"])
+            )
             if (
                 preflight is None
                 and command.get("driver_id") == "native-maintenance-fixed-v1"

@@ -1515,6 +1515,8 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     spy(prepared_input, "load")
     spy(core, "_observe_sql_locked")
     spy(core, "_legacy_tree_probe")
+    spy(type(core._runtime_driver_selection_service), "for_task")
+    spy(type(core._runtime_driver_selection_service), "for_worker_state")
     spy(SQLiteExecutionRepository, "page_history")
     real_gate = core._worker_start_admission
     real_spawn = native.spawn_owned
