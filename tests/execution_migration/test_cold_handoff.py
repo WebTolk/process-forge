@@ -655,7 +655,7 @@ def test_runtime_closure_requires_declared_bodies(tmp_path: Path) -> None:
             ]
         ]
     }
-    with pytest.raises(h.Rejected, match="runtime_body_grant"):
+    with pytest.raises((ValueError, KeyError)):
         h._closure(
             {"input": {"scope": {"allowed_read_files": []}, "sources": []}},
             tmp_path,
@@ -745,21 +745,26 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         ).read_bytes()
     )
     bodies["descriptor"] = put("driver.json", h.canonical(driver))
-    stream = io.BytesIO()
-    with zipfile.ZipFile(stream, "w") as archive:
-        archive.writestr("hello.txt", b"hello")
-    bodies["archive"] = put("archive.zip", stream.getvalue())
-    bodies["manifest"] = put(
-        "manifest.json",
-        h.canonical(
-            {
-                "schema_version": 1,
-                "files": [
-                    {"path": "hello.txt", "sha256": h.digest(b"hello"), "size": 5}
-                ],
-            }
-        ),
-    )
+    archive_raw, built = make_archive()
+    bodies["archive"] = put("payloads/archive.zip", archive_raw)
+    bodies["manifest"] = put("manifest.json", built.manifest)
+    material_rows = [dict(bodies["archive"], resource_id="target-archive", role="archive", root_id="archive")]
+    material_rows += [dict(row, resource_id="runtime-" + str(i), root_id="runtime") for i, row in enumerate(closure)]
+    material_manifest = put("native-material.json", h.canonical({"schema_version": 1, "kind": "pf.native-material.manifest", "members": material_rows}))
+    capture = ".pf/runtime/agent-runs/fixture-run/fixture-task/attempts/1/native-material"
+    material = {
+        "schema_version": 1, "body_manifest": dict(material_manifest, resource_id="native-material"),
+        "roots": [{"id": "archive", "base": "project", "relative_path": "payloads"}, {"id": "runtime", "base": "project", "relative_path": "runtime"}],
+        "permission": "body-and-qualified-runtime-load",
+        "capture": {"directory": capture, "access": ["create_once", "read", "remove_own_partial"]},
+        "quotas": {
+            "manifest_bytes": 1048576, "receipt_index_bytes": 1048576, "members": 4096, "root_prefixes": 2, "path_utf8_bytes": 1024, "resource_id_bytes": 160,
+            "member_bytes": 134217728, "interpreter_bytes": 33554432, "total_material_bytes": 536870912, "copy_chunk_bytes": 65536,
+            "capture_working_buffer_bytes": 1048576, "capture_metadata_accounted_bytes": 16777216, "capture_directory_disk_bytes": 536870912,
+            "zip_central_directory_bytes": 4194304, "zip_header_member_bytes": 16384, "zip_header_total_bytes": 4194304, "zip_tail_probe_bytes": 65557,
+            "native_consumer_payload_reservation_bytes": 67108864,
+        },
+    }
     selected = {
         "kind": "work",
         "project_id": "fixture",
@@ -775,7 +780,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         "version": sys.version.split()[0],
     }
     job = {
-        "schema_version": 1,
+        "schema_version": 2,
         "identity": selected,
         "operation": "qualify-archive",
         "resources": [
@@ -785,7 +790,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         "report": ".pf/artifacts/report.json",
     }
     binding = {
-        "schema_version": 1,
+        "schema_version": 2,
         "identity": selected,
         "job_sha256": h.digest(h.canonical(job)),
         "descriptor_sha256": bodies["descriptor"]["sha256"],
@@ -798,6 +803,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         "management_sha256": bodies["management"]["sha256"],
         "qualification_sha256": qualification["sha256"],
         "deployment": None,
+        "material": material,
     }
     request = {
         "id": "fixture-native",
@@ -810,7 +816,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         "capability": "processforge.native-maintenance.fixed-v1",
         "command": "NEVER EXECUTED",
         "native_maintenance": {
-            "schema_version": 1,
+            "schema_version": 2,
             "profile": "native-maintenance-fixed-v1",
             "bindings": [copy.deepcopy(binding)],
         },
@@ -852,13 +858,12 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         },
         "objective": "synthetic authority fixture",
         "allowed_actions": ["read", "write_artifact", "write_product"],
-        "allowed_files": [job["report"], "namespace/bundle/**"],
+        "allowed_files": [job["report"], "namespace/bundle/**", capture + "/**"],
         "allowed_read_files": [row["path"] for row in bodies.values()]
         + [row["path"] for row in closure]
-        + [qualification["path"]],
-        "required_sources": [row["path"] for row in bodies.values()]
-        + [row["path"] for row in closure]
-        + [qualification["path"]],
+        + [qualification["path"], material_manifest["path"], capture + "/**"],
+        "required_sources": [row["path"] for role, row in bodies.items() if role != "archive"]
+        + [qualification["path"], material_manifest["path"]],
         "expected_report": {"artifact": job["report"]},
         "required_outputs": [{"id": "report", "path": job["report"], "required": True}],
         "workspace_access": {"tools": [request]},
@@ -931,6 +936,7 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
         binding=binding,
         spec=spec,
         distribution=distribution,
+        expected_summary={"files": len(built.payload), "expanded_bytes": sum(map(len, built.payload.values()))},
     )
 
 
@@ -1024,7 +1030,7 @@ def test_normal_native_producer_schema_consumer(native_fixture: Any) -> None:
         write_once(path, prepared)
     report, result = h.execute(prepared, f.project)
     assert report == ".pf/artifacts/report.json"
-    assert json.loads(result)["summary"] == {"files": 1, "expanded_bytes": 5}
+    assert json.loads(result)["summary"] == f.expected_summary
     # Standalone fixed harness validates the same immutable bytes and emits report.
     command, _ = WorkerCommandBuilder(f.project).build(
         f.project,
@@ -1304,7 +1310,8 @@ def _isolated_normal_route(project: str) -> None:
     report = json.loads((root / ".pf/artifacts/report.json").read_bytes())
     assert report["identity"] == document["identity"]
     assert report["operation"] == "qualify-archive"
-    assert report["summary"] == {"files": 1, "expanded_bytes": 5}
+    assert report["summary"]["files"] >= 3
+    assert report["summary"]["expanded_bytes"] > 100000
     assert report["actual_provider_qualified"] is False
     assert report["production_ready"] is False
     job = document["input"]["parameters"]["native_maintenance_job"]

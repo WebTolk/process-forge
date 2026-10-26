@@ -85,6 +85,7 @@ def _native_authority(
     """
     import fnmatch
     import json
+    import unicodedata
 
     def require(ok: bool, reason: str = "native_authority_required") -> None:
         if not ok:
@@ -128,9 +129,10 @@ def _native_authority(
                 "management_sha256",
                 "qualification_sha256",
                 "deployment",
+                "material",
             }
         )
-        require(type(value["schema_version"]) is int and value["schema_version"] == 1)
+        require(type(value["schema_version"]) is int and value["schema_version"] == 2)
         ident = value["identity"]
         require(
             isinstance(ident, dict)
@@ -207,6 +209,7 @@ def _native_authority(
                 "cold-release",
             }
         )
+        material_shape(value["material"])
         deployment = value["deployment"]
         if operation in {"qualify-archive", "construct-management"}:
             require(deployment is None)
@@ -223,6 +226,60 @@ def _native_authority(
                 and deployment["management_sha256"] == value["management_sha256"]
             )
 
+    def portable(name: Any) -> str:
+        require(isinstance(name, str) and 0 < len(name.encode("utf-8")) <= 1024)
+        require(unicodedata.normalize("NFC", name) == name)
+        require(not any(ord(c) < 32 or ord(c) == 127 or c in '\\:<>"|?*' for c in name))
+        require(all(
+            part not in {"", ".", ".."} and not part.endswith((".", " "))
+            and re.fullmatch(r"(?i:con|prn|aux|nul|conin\$|conout\$|com[0-9]|lpt[0-9])", part.split(".")[0]) is None
+            for part in name.split("/")
+        ))
+        return str(name)
+
+    def material_shape(value: Any) -> None:
+        require(isinstance(value, dict) and set(value) == {
+            "schema_version", "body_manifest", "roots", "permission", "capture", "quotas"
+        }, "native_material_shape")
+        require(type(value["schema_version"]) is int and value["schema_version"] == 1)
+        require(value["permission"] == "body-and-qualified-runtime-load")
+        manifest = value["body_manifest"]
+        require(isinstance(manifest, dict) and set(manifest) == {"resource_id", "path", "sha256", "size"})
+        require(isinstance(manifest["resource_id"], str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", manifest["resource_id"]) is not None)
+        portable(manifest["path"])
+        require(pinned(manifest["sha256"]) and type(manifest["size"]) is int and 0 < manifest["size"] <= 1048576)
+        roots = value["roots"]
+        require(isinstance(roots, list) and len(roots) == 2)
+        prefixes = {}
+        for row in roots:
+            require(isinstance(row, dict) and set(row) == {"id", "base", "relative_path"})
+            require(isinstance(row["id"], str) and row["id"] in {"archive", "runtime"} and row["id"] not in prefixes and row["base"] == "project")
+            prefixes[row["id"]] = portable(row["relative_path"]).casefold()
+        left, right = prefixes["archive"], prefixes["runtime"]
+        require(left != right and not left.startswith(right + "/") and not right.startswith(left + "/"))
+        capture = value["capture"]
+        require(isinstance(capture, dict) and set(capture) == {"directory", "access"})
+        portable(capture["directory"])
+        require(capture["access"] == ["create_once", "read", "remove_own_partial"])
+        ceilings = {
+            "manifest_bytes": 1048576, "receipt_index_bytes": 1048576,
+            "members": 4096, "root_prefixes": 2, "path_utf8_bytes": 1024,
+            "resource_id_bytes": 160, "member_bytes": 134217728,
+            "interpreter_bytes": 33554432, "total_material_bytes": 536870912,
+            "copy_chunk_bytes": 65536, "capture_working_buffer_bytes": 1048576,
+            "capture_metadata_accounted_bytes": 16777216,
+            "capture_directory_disk_bytes": 536870912,
+            "zip_central_directory_bytes": 4194304, "zip_header_member_bytes": 16384,
+            "zip_header_total_bytes": 4194304, "zip_tail_probe_bytes": 65557,
+            "native_consumer_payload_reservation_bytes": 2147483648,
+        }
+        quotas = value["quotas"]
+        require(isinstance(quotas, dict) and set(quotas) == set(ceilings))
+        for key, maximum in ceilings.items():
+            require(type(quotas[key]) is int and 0 < quotas[key] <= maximum)
+            if key != "native_consumer_payload_reservation_bytes":
+                require(quotas[key] == maximum)
+
     resources = semantic.get("resources", {})
     requests = resources.get("requested", {}).get("tools", [])
     grants = resources.get("grants", {}).get("tools", [])
@@ -238,7 +295,7 @@ def _native_authority(
         and set(job)
         == {"schema_version", "identity", "operation", "resources", "runtime", "report"}
     )
-    require(type(job["schema_version"]) is int and job["schema_version"] == 1)
+    require(type(job["schema_version"]) is int and job["schema_version"] == 2)
     require(len(native_requests) == 1)
     request = native_requests[0]
     require(
@@ -297,7 +354,7 @@ def _native_authority(
     )
     require(
         type(policy["schema_version"]) is int
-        and policy["schema_version"] == 1
+        and policy["schema_version"] == 2
         and policy["profile"] == "native-maintenance-fixed-v1"
     )
     bindings = policy["bindings"]
@@ -347,6 +404,17 @@ def _native_authority(
         == semantic.get("outputs", {}).get("expected_report", {}).get("artifact"),
         "native_report_mismatch",
     )
+    material = binding["material"]
+    capture = material["capture"]["directory"]
+    ident = binding["identity"]
+    require(capture == ".pf/runtime/agent-runs/" + ident["run_id"] + "/" + ident["assignment_id"] + "/attempts/" + str(ident["attempt"]) + "/native-material", "native_capture_attempt")
+    require(permitted(capture + "/**", "write_artifact", "allowed_files") and permitted(capture + "/**", "read", "allowed_read_files"), "native_capture_scope")
+    manifest = material["body_manifest"]
+    require(permitted(manifest["path"], "read", "allowed_read_files"), "native_material_manifest_scope")
+    declarations = [row for row in semantic.get("sources", []) if isinstance(row, dict) and row.get("path") == manifest["path"]]
+    require(len(declarations) == 1 and declarations[0].get("status") == "available" and declarations[0].get("checksum") == manifest["sha256"] and declarations[0].get("size") == manifest["size"], "native_material_manifest_body")
+    if selected is not None:
+        require(declarations[0].get("delivery") in {"inline", "reference"}, "native_material_manifest_body")
     rows = job["resources"]
     roles = {
         "wrapper",
@@ -366,7 +434,7 @@ def _native_authority(
             isinstance(row, dict)
             and set(row) == {"role", "path", "access", "sha256", "size"}
         )
-        name = row["path"]
+        name = portable(row["path"])
         require(
             isinstance(name, str)
             and bool(name)
@@ -389,6 +457,13 @@ def _native_authority(
             and 0 < row["size"] <= 128 * 1024 * 1024
         )
         require(permitted(name, "read", "allowed_read_files"), "native_scope_denied")
+        by_role[row["role"]] = row
+        names.add(name.casefold())
+        if row["role"] == "archive":
+            prefix = next(r["relative_path"] for r in material["roots"] if r["id"] == "archive")
+            require(name.startswith(prefix + "/"), "native_material_archive_root")
+            continue
+        require(row["size"] <= 1048576, "native_small_source_limit")
         sources = [
             s
             for s in semantic.get("sources", [])

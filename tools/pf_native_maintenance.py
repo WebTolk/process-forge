@@ -15,6 +15,9 @@ import stat
 import sys
 import zipfile
 import zlib
+import unicodedata
+from contextlib import contextmanager
+from collections.abc import Iterator
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -95,6 +98,7 @@ def relative(value: Any) -> str:
         "\\" not in value and ":" not in value and "\x00" not in value,
         "unsafe_path",
     )
+    reject_unless(unicodedata.normalize("NFC", value) == value and len(value.encode("utf-8")) <= 1024 and not any(ord(c) < 32 or ord(c) == 127 or c in '<>"|?*' for c in value), "unsafe_path")
     parts = value.split("/")
     reject_unless(
         not PurePosixPath(value).is_absolute()
@@ -209,74 +213,35 @@ def _body_granted(prepared: dict[str, Any], row: dict[str, Any]) -> bool:
     )
 
 
-def qualify_archive(archive: bytes, manifest: bytes) -> dict[str, Any]:
-    """Check exact frozen archive membership and bytes without extraction/import."""
-    expected = document(manifest, MANIFEST_LIMIT)
-    reject_unless(
-        set(expected) == {"schema_version", "files"}
-        and type(expected["schema_version"]) is int
-        and expected["schema_version"] == 1
-        and isinstance(expected["files"], list)
-        and 0 < len(expected["files"]) <= ENTRY_LIMIT,
-        "manifest_shape",
-    )
-    files: dict[str, dict[str, Any]] = {}
-    folded: set[str] = set()
-    for row in expected["files"]:
-        reject_unless(
-            isinstance(row, dict) and set(row) == {"path", "sha256", "size"},
-            "manifest_file",
-        )
-        name = relative(row["path"])
-        reject_unless(
-            name.casefold() not in folded
-            and pin(row["sha256"])
-            and type(row["size"]) is int
-            and 0 <= row["size"] <= FILE_LIMIT,
-            "manifest_file",
-        )
-        folded.add(name.casefold())
-        files[name] = row
-    reject_unless(len(archive) <= ARCHIVE_LIMIT, "archive_size")
+def qualify_archive(archive: bytes, manifest: bytes, native: Any) -> dict[str, Any]:
+    """Use the unchanged native Core parser/seal/inventory on release bytes."""
+    reject_unless(len(manifest) <= MANIFEST_LIMIT, "manifest_size")
+    expected = native.parse_manifest(manifest)
+    reject_unless(len(expected["files"]) < ENTRY_LIMIT, "archive_entries")
+    files = {row["relative_path"]: row for row in expected["files"]}
+    reject_unless(all(row["size"] <= FILE_LIMIT for row in files.values()) and sum(row["size"] for row in files.values()) + len(manifest) <= EXPANDED_LIMIT, "archive_expansion")
+    stream = io.BytesIO(archive)
+    _zip_preflight(stream)
+    payload = {}
     try:
-        with zipfile.ZipFile(io.BytesIO(archive)) as package:
-            entries = package.infolist()
-            reject_unless(len(entries) == len(files), "archive_membership")
-            names: set[str] = set()
-            expanded = 0
-            for entry in entries:
-                name = relative(entry.filename)
-                mode = entry.external_attr >> 16
-                reject_unless(
-                    name not in names
-                    and name in files
-                    and not entry.is_dir()
-                    and not stat.S_ISLNK(mode)
-                    and stat.S_IFMT(mode) in {0, stat.S_IFREG}
-                    and entry.flag_bits & 1 == 0
-                    and entry.compress_type
-                    in {zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED},
-                    "archive_member",
-                )
-                names.add(name)
-                row = files[name]
-                expanded += entry.file_size
-                reject_unless(
-                    entry.file_size == row["size"] and expanded <= EXPANDED_LIMIT,
-                    "archive_expansion",
-                )
+        with zipfile.ZipFile(stream) as package:
+            reject_unless(set(package.namelist()) == set(files) | {native.MANIFEST} and len(package.infolist()) == len(files) + 1, "archive_membership")
+            for entry in package.infolist():
+                expected_size = len(manifest) if entry.filename == native.MANIFEST else files[entry.filename]["size"]
+                reject_unless(entry.file_size == expected_size, "archive_expansion")
                 with package.open(entry) as member:
-                    raw = member.read(row["size"] + 1)
-                reject_unless(
-                    len(raw) == row["size"] and digest(raw) == row["sha256"],
-                    "archive_digest",
-                )
-    except zipfile.BadZipFile, zlib.error, NotImplementedError, RuntimeError, EOFError:
+                    raw = member.read(expected_size + 1)
+                reject_unless(len(raw) == expected_size, "archive_expansion")
+                if entry.filename == native.MANIFEST:
+                    reject_unless(raw == manifest, "embedded_manifest_mismatch")
+                else:
+                    reject_unless(native.digest(raw) == files[entry.filename]["sha256"], "archive_digest")
+                    payload[entry.filename] = raw
+    except (zipfile.BadZipFile, zlib.error, NotImplementedError, RuntimeError, EOFError):
         raise Rejected("archive_invalid") from None
-    return {
-        "files": len(files),
-        "expanded_bytes": sum(row["size"] for row in files.values()),
-    }
+    reject_unless(native.leaf_seal(payload[native.LEAF]) == (native.SEAL_KIND, native.digest(native.projection(manifest))), "archive_leaf_seal")
+    reject_unless(payload[native.INVENTORY] == native.inventory_bytes(payload), "archive_inventory")
+    return {"files": len(files), "expanded_bytes": sum(r["size"] for r in files.values())}
 
 
 def _native_authority(
@@ -289,6 +254,7 @@ def _native_authority(
     """
     import fnmatch
     import json
+    import unicodedata
 
     def require(ok: bool, reason: str = "native_authority_required") -> None:
         if not ok:
@@ -332,9 +298,10 @@ def _native_authority(
                 "management_sha256",
                 "qualification_sha256",
                 "deployment",
+                "material",
             }
         )
-        require(type(value["schema_version"]) is int and value["schema_version"] == 1)
+        require(type(value["schema_version"]) is int and value["schema_version"] == 2)
         ident = value["identity"]
         require(
             isinstance(ident, dict)
@@ -411,6 +378,7 @@ def _native_authority(
                 "cold-release",
             }
         )
+        material_shape(value["material"])
         deployment = value["deployment"]
         if operation in {"qualify-archive", "construct-management"}:
             require(deployment is None)
@@ -427,6 +395,60 @@ def _native_authority(
                 and deployment["management_sha256"] == value["management_sha256"]
             )
 
+    def portable(name: Any) -> str:
+        require(isinstance(name, str) and 0 < len(name.encode("utf-8")) <= 1024)
+        require(unicodedata.normalize("NFC", name) == name)
+        require(not any(ord(c) < 32 or ord(c) == 127 or c in '\\:<>"|?*' for c in name))
+        require(all(
+            part not in {"", ".", ".."} and not part.endswith((".", " "))
+            and re.fullmatch(r"(?i:con|prn|aux|nul|conin\$|conout\$|com[0-9]|lpt[0-9])", part.split(".")[0]) is None
+            for part in name.split("/")
+        ))
+        return str(name)
+
+    def material_shape(value: Any) -> None:
+        require(isinstance(value, dict) and set(value) == {
+            "schema_version", "body_manifest", "roots", "permission", "capture", "quotas"
+        }, "native_material_shape")
+        require(type(value["schema_version"]) is int and value["schema_version"] == 1)
+        require(value["permission"] == "body-and-qualified-runtime-load")
+        manifest = value["body_manifest"]
+        require(isinstance(manifest, dict) and set(manifest) == {"resource_id", "path", "sha256", "size"})
+        require(isinstance(manifest["resource_id"], str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", manifest["resource_id"]) is not None)
+        portable(manifest["path"])
+        require(pinned(manifest["sha256"]) and type(manifest["size"]) is int and 0 < manifest["size"] <= 1048576)
+        roots = value["roots"]
+        require(isinstance(roots, list) and len(roots) == 2)
+        prefixes = {}
+        for row in roots:
+            require(isinstance(row, dict) and set(row) == {"id", "base", "relative_path"})
+            require(isinstance(row["id"], str) and row["id"] in {"archive", "runtime"} and row["id"] not in prefixes and row["base"] == "project")
+            prefixes[row["id"]] = portable(row["relative_path"]).casefold()
+        left, right = prefixes["archive"], prefixes["runtime"]
+        require(left != right and not left.startswith(right + "/") and not right.startswith(left + "/"))
+        capture = value["capture"]
+        require(isinstance(capture, dict) and set(capture) == {"directory", "access"})
+        portable(capture["directory"])
+        require(capture["access"] == ["create_once", "read", "remove_own_partial"])
+        ceilings = {
+            "manifest_bytes": 1048576, "receipt_index_bytes": 1048576,
+            "members": 4096, "root_prefixes": 2, "path_utf8_bytes": 1024,
+            "resource_id_bytes": 160, "member_bytes": 134217728,
+            "interpreter_bytes": 33554432, "total_material_bytes": 536870912,
+            "copy_chunk_bytes": 65536, "capture_working_buffer_bytes": 1048576,
+            "capture_metadata_accounted_bytes": 16777216,
+            "capture_directory_disk_bytes": 536870912,
+            "zip_central_directory_bytes": 4194304, "zip_header_member_bytes": 16384,
+            "zip_header_total_bytes": 4194304, "zip_tail_probe_bytes": 65557,
+            "native_consumer_payload_reservation_bytes": 2147483648,
+        }
+        quotas = value["quotas"]
+        require(isinstance(quotas, dict) and set(quotas) == set(ceilings))
+        for key, maximum in ceilings.items():
+            require(type(quotas[key]) is int and 0 < quotas[key] <= maximum)
+            if key != "native_consumer_payload_reservation_bytes":
+                require(quotas[key] == maximum)
+
     resources = semantic.get("resources", {})
     requests = resources.get("requested", {}).get("tools", [])
     grants = resources.get("grants", {}).get("tools", [])
@@ -442,7 +464,7 @@ def _native_authority(
         and set(job)
         == {"schema_version", "identity", "operation", "resources", "runtime", "report"}
     )
-    require(type(job["schema_version"]) is int and job["schema_version"] == 1)
+    require(type(job["schema_version"]) is int and job["schema_version"] == 2)
     require(len(native_requests) == 1)
     request = native_requests[0]
     require(
@@ -501,7 +523,7 @@ def _native_authority(
     )
     require(
         type(policy["schema_version"]) is int
-        and policy["schema_version"] == 1
+        and policy["schema_version"] == 2
         and policy["profile"] == "native-maintenance-fixed-v1"
     )
     bindings = policy["bindings"]
@@ -551,6 +573,17 @@ def _native_authority(
         == semantic.get("outputs", {}).get("expected_report", {}).get("artifact"),
         "native_report_mismatch",
     )
+    material = binding["material"]
+    capture = material["capture"]["directory"]
+    ident = binding["identity"]
+    require(capture == ".pf/runtime/agent-runs/" + ident["run_id"] + "/" + ident["assignment_id"] + "/attempts/" + str(ident["attempt"]) + "/native-material", "native_capture_attempt")
+    require(permitted(capture + "/**", "write_artifact", "allowed_files") and permitted(capture + "/**", "read", "allowed_read_files"), "native_capture_scope")
+    manifest = material["body_manifest"]
+    require(permitted(manifest["path"], "read", "allowed_read_files"), "native_material_manifest_scope")
+    declarations = [row for row in semantic.get("sources", []) if isinstance(row, dict) and row.get("path") == manifest["path"]]
+    require(len(declarations) == 1 and declarations[0].get("status") == "available" and declarations[0].get("checksum") == manifest["sha256"] and declarations[0].get("size") == manifest["size"], "native_material_manifest_body")
+    if selected is not None:
+        require(declarations[0].get("delivery") in {"inline", "reference"}, "native_material_manifest_body")
     rows = job["resources"]
     roles = {
         "wrapper",
@@ -570,7 +603,7 @@ def _native_authority(
             isinstance(row, dict)
             and set(row) == {"role", "path", "access", "sha256", "size"}
         )
-        name = row["path"]
+        name = portable(row["path"])
         require(
             isinstance(name, str)
             and bool(name)
@@ -593,6 +626,13 @@ def _native_authority(
             and 0 < row["size"] <= 128 * 1024 * 1024
         )
         require(permitted(name, "read", "allowed_read_files"), "native_scope_denied")
+        by_role[row["role"]] = row
+        names.add(name.casefold())
+        if row["role"] == "archive":
+            prefix = next(r["relative_path"] for r in material["roots"] if r["id"] == "archive")
+            require(name.startswith(prefix + "/"), "native_material_archive_root")
+            continue
+        require(row["size"] <= 1048576, "native_small_source_limit")
         sources = [
             s
             for s in semantic.get("sources", [])
@@ -630,6 +670,366 @@ def _native_authority(
     return binding
 
 
+def _material_request(prepared: dict[str, Any]) -> dict[str, Any]:
+    binding = _native_authority(prepared["input"], identity(prepared["identity"]))
+    reject_unless(binding is not None, "native_authority_required")
+    return dict(binding["material"])  # type: ignore[index]
+
+
+def _material_plan(prepared: dict[str, Any], root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Admit the entire finite set before opening any native member."""
+    import fnmatch
+
+    request = _material_request(prepared)
+    row = request["body_manifest"]
+    reject_unless(_body_granted(prepared, row), "material_manifest_body")
+    raw = read_file(located(root, row["path"]), MANIFEST_LIMIT)
+    reject_unless(len(raw) == row["size"] and digest(raw) == row["sha256"], "material_manifest_pin")
+    manifest = document(raw, MANIFEST_LIMIT)
+    reject_unless(set(manifest) == {"schema_version", "kind", "members"} and type(manifest["schema_version"]) is int and manifest["schema_version"] == 1 and manifest["kind"] == "pf.native-material.manifest", "material_manifest_shape")
+    members = manifest["members"]
+    reject_unless(isinstance(members, list) and 5 <= len(members) <= ENTRY_LIMIT, "material_members")
+    job = prepared["input"]["parameters"]["native_maintenance_job"]
+    small = {r["role"]: r for r in job["resources"]}
+    management_row = small["management"]
+    reject_unless(_body_granted(prepared, management_row), "management_body")
+    raw_spec = read_file(located(root, management_row["path"]), MANIFEST_LIMIT)
+    reject_unless(digest(raw_spec) == management_row["sha256"] and len(raw_spec) == management_row["size"], "management_pin")
+    spec = document(raw_spec, MANIFEST_LIMIT)
+    reject_unless(isinstance(spec.get("runtime_closure"), list), "runtime_closure")
+    roots = {r["id"]: r["relative_path"] for r in request["roots"]}
+    scope = prepared["input"]["scope"]
+    capture = request["capture"]["directory"]
+    for name in (capture, capture + "/index.json", capture + "/archive.snapshot"):
+        reject_unless(not any(fnmatch.fnmatchcase(name.casefold(), pattern.casefold()) for pattern in scope.get("forbidden_files", [])), "material_capture_denied")
+    reject_unless(all(not (capture.casefold() == prefix.casefold() or capture.casefold().startswith(prefix.casefold() + "/") or prefix.casefold().startswith(capture.casefold() + "/")) for prefix in roots.values()), "material_capture_overlap")
+    names = {r["path"].casefold() for r in job["resources"] if r["role"] != "archive"}
+    names.add(row["path"].casefold())
+    names.add(job["report"].casefold())
+    ids: set[str] = set()
+    runtime = []
+    roles = []
+    total = 0
+    archive_size = 0
+    for member in members:
+        reject_unless(isinstance(member, dict) and set(member) == {"resource_id", "role", "root_id", "path", "size", "sha256"}, "material_member_shape")
+        name = relative(member["path"])
+        rid = member["resource_id"]
+        role = member["role"]
+        reject_unless(isinstance(rid, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", rid) is not None and rid.casefold() not in ids and name.casefold() not in names, "material_alias")
+        reject_unless(isinstance(role, str) and role in {"archive", "interpreter", "dll", "stdlib", "bootstrap"} and member["root_id"] == ("archive" if role == "archive" else "runtime"), "material_role")
+        reject_unless(name.startswith(roots[member["root_id"]] + "/") and pin(member["sha256"]) and type(member["size"]) is int and 0 < member["size"] <= (FILE_LIMIT if role == "interpreter" else ARCHIVE_LIMIT), "material_member_bounds")
+        reject_unless(name in scope.get("allowed_read_files", []) and not any(fnmatch.fnmatchcase(name.casefold(), pattern.casefold()) for pattern in scope.get("forbidden_files", [])), "material_member_scope")
+        reject_unless(not any(name.casefold().startswith(other + "/") or other.startswith(name.casefold() + "/") for other in names), "material_path_collision")
+        names.add(name.casefold())
+        ids.add(rid.casefold())
+        roles.append(role)
+        total += member["size"]
+        if role == "archive":
+            archive_size = member["size"]
+            reject_unless({k: member[k] for k in ("path", "sha256", "size")} == {k: small["archive"][k] for k in ("path", "sha256", "size")}, "material_archive_binding")
+        else:
+            runtime.append({k: member[k] for k in ("path", "sha256", "size", "role")})
+    reject_unless(roles.count("archive") == 1 and roles.count("interpreter") == 1 and {"dll", "stdlib", "bootstrap"} <= set(roles), "material_role_set")
+    reject_unless(runtime == spec["runtime_closure"], "material_runtime_binding")
+    interpreter = next(r for r in runtime if r["role"] == "interpreter")
+    reject_unless(root / interpreter["path"] == Path(sys.executable), "executing_runtime_not_bound")
+    reject_unless(interpreter["sha256"] == job["runtime"]["sha256"], "runtime_pin_mismatch")
+    reject_unless(total <= request["quotas"]["total_material_bytes"], "material_total")
+    # Charge conservative per-row Python metadata plus raw manifest/index and buffers.
+    reject_unless(len(members) * 3072 + 2 * len(raw) <= request["quotas"]["capture_metadata_accounted_bytes"], "material_metadata_budget")
+    reject_unless(archive_size + MANIFEST_LIMIT <= request["quotas"]["capture_directory_disk_bytes"], "material_disk_budget")
+    q = spec.get("qualification", {})
+    reject_unless(isinstance(q, dict) and set(q) == {"path", "sha256", "size"} and _body_granted(prepared, q), "qualification_body")
+    qraw = read_file(located(root, relative(q["path"])), MANIFEST_LIMIT)
+    reject_unless(len(qraw) == q["size"] and digest(qraw) == q["sha256"], "qualification_pin")
+    qualified = document(qraw, MANIFEST_LIMIT)
+    binding = _native_authority(prepared["input"], prepared["identity"])
+    reject_unless(binding is not None and q["sha256"] == binding["qualification_sha256"], "qualification_authority")
+    reject_unless(qualified.get("management_namespace") == spec.get("namespace") and qualified.get("runtime_closure_sha256") == digest(canonical(runtime)) and qualified.get("runtime_version") == sys.version.split()[0], "qualification_binding")
+    namespace = spec.get("namespace")
+    reject_unless(isinstance(namespace, dict) and set(namespace) == {"bundle", "project", "workplace", "device", "accounting", "execution", "control"}, "namespace_shape")
+    paths = [Path(value) for value in namespace.values()]
+    reject_unless(all(path.is_absolute() and ".." not in path.parts for path in paths) and len(set(paths)) == 7, "namespace_alias")
+    reject_unless(namespace["project"] == str(root), "management_project_binding")
+    targets = spec.get("target_roots")
+    reject_unless(isinstance(targets, list) and 0 < len(targets) <= 128, "target_roots")
+    targets = [Path(value) for value in targets]
+    reject_unless(all(t.is_absolute() and ".." not in t.parts for t in targets), "target_root")
+    for target in targets:
+        reject_unless(all(target != path and target not in path.parents and path not in target.parents for path in paths), "namespace_overlap")
+        reject_unless(all(target == other or (target not in other.parents and other not in target.parents) for other in targets), "target_overlap")
+    return request, members
+
+
+def _file_identity(info: os.stat_result) -> dict[str, int]:
+    return {"volume": info.st_dev, "file_id": info.st_ino, "size": info.st_size, "mtime_ns": info.st_mtime_ns, "ctime_ns": info.st_ctime_ns}
+
+
+@contextmanager
+def _safe_material_file(root: Path, name: str, *, create: bool = False, directory: bool = False) -> Iterator[Any]:
+    """Hold Windows ancestors and a no-write/delete-sharing regular file.
+
+    Fail closed on other backends. Protected namespace/parent ACL qualification
+    remains independent; these handles do not establish the issuer's legitimacy.
+    """
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    reject_unless(os.name == "nt", "material_backend_unsupported")
+    path = root if directory and not name else root / relative(name)
+    reject_unless(root.is_absolute() and not root.drive.startswith("\\\\"), "material_root")
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.GetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.c_void_p]
+    kernel.GetFinalPathNameByHandleW.argtypes = [wintypes.HANDLE, wintypes.LPWSTR, wintypes.DWORD, wintypes.DWORD]
+    class Info(ctypes.Structure):
+        _fields_ = [("attributes", wintypes.DWORD), ("created", wintypes.FILETIME), ("accessed", wintypes.FILETIME), ("written", wintypes.FILETIME), ("volume", wintypes.DWORD), ("size_high", wintypes.DWORD), ("size_low", wintypes.DWORD), ("links", wintypes.DWORD), ("index_high", wintypes.DWORD), ("index_low", wintypes.DWORD)]
+
+    handles = []
+    try:
+        for item in (*reversed(path.parents), path):
+            is_file = item == path and not directory
+            handle = kernel.CreateFileW(str(item), 0xC0000000 if create and is_file else (0x80000000 if is_file else 0x80), 1 if is_file else 3, None, 1 if create and is_file else 3, 0x00200000 | (0 if is_file else 0x02000000), None)
+            if handle == ctypes.c_void_p(-1).value:
+                raise OSError(ctypes.get_last_error(), "material_handle_denied")
+            handles.append(handle)
+            info = Info()
+            reject_unless(bool(kernel.GetFileInformationByHandle(handle, ctypes.byref(info))), "material_handle_info")
+            reject_unless(not info.attributes & (0x400 | 0x200) and (not info.attributes & 0x10 and info.links == 1 if is_file else bool(info.attributes & 0x10)), "material_redirected")
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = kernel.GetFinalPathNameByHandleW(handle, buffer, len(buffer), 0)
+            reject_unless(0 < length < len(buffer), "material_final_path")
+            actual = buffer.value.removeprefix("\\\\?\\")
+            reject_unless(actual.casefold().rstrip("\\") == str(item).casefold().rstrip("\\"), "material_path_alias")
+        if directory:
+            yield _file_identity(path.stat())
+            return
+        fd = msvcrt.open_osfhandle(int(handles.pop()), os.O_BINARY | (os.O_RDWR if create else os.O_RDONLY))
+        with os.fdopen(fd, "w+b" if create else "rb") as stream:
+            before = os.fstat(stream.fileno())
+            reject_unless(stat.S_ISREG(before.st_mode) and before.st_nlink == 1, "material_regular")
+            yield stream
+            after = os.fstat(stream.fileno())
+            if not create:
+                reject_unless(_file_identity(before) == _file_identity(after), "material_changed")
+                # Windows path stat may expose birth time as ctime while fstat
+                # exposes NT change time. Compare change time only handle-to-handle.
+                final = _file_identity(path.stat())
+                reject_unless(all(_file_identity(after)[key] == final[key] for key in ("volume", "file_id", "size", "mtime_ns")), "material_replaced")
+    finally:
+        for handle in reversed(handles):
+            kernel.CloseHandle(handle)
+
+
+def _stream_material(stream: Any, row: dict[str, Any], target: Any = None) -> None:
+    before = os.fstat(stream.fileno())
+    reject_unless(before.st_size == row["size"], "material_size")
+    hashed = hashlib.sha256()
+    count = 0
+    while chunk := stream.read(65536):
+        count += len(chunk)
+        reject_unless(count <= row["size"], "material_growth")
+        hashed.update(chunk)
+        if target is not None:
+            reject_unless(target.write(chunk) == len(chunk), "material_short_write")
+    reject_unless(count == row["size"] and "sha256:" + hashed.hexdigest() == row["sha256"], "material_pin")
+    reject_unless(_file_identity(before) == _file_identity(os.fstat(stream.fileno())), "material_changed")
+
+
+def _material_index_paths(request: dict[str, Any]) -> tuple[str, str]:
+    directory = request["capture"]["directory"]
+    return directory + "/index.json", directory + "/archive.snapshot"
+
+
+def _material_receipt(prepared: dict[str, Any], request: dict[str, Any], index: dict[str, Any], raw: bytes) -> dict[str, Any]:
+    name, _ = _material_index_paths(request)
+    return {"schema_version": 1, "kind": "pf.native-material.available-body", "identity": identity(prepared["identity"]), "job_sha256": digest(canonical(prepared["input"]["parameters"]["native_maintenance_job"])), "manifest_sha256": request["body_manifest"]["sha256"], "request_sha256": digest(canonical(request)), "index": {"path": name, "sha256": digest(raw), "size": len(raw)}, "totals": index["totals"]}
+
+
+def capture_material(prepared: dict[str, Any], root: Path) -> dict[str, Any]:
+    """Producer only. An interrupted create is retained, never made available."""
+    request, members = _material_plan(prepared, root)
+    index_name, snapshot = _material_index_paths(request)
+    directory = root / request["capture"]["directory"]
+    # This exact attempt namespace is never enumerated/cleaned to recover a retry.
+    if directory.exists():
+        reject_unless((root / index_name).is_file(), "material_partial")
+        with _safe_material_file(root, index_name) as stream:
+            raw = stream.read(MANIFEST_LIMIT + 1)
+        index = document(raw, MANIFEST_LIMIT)
+        receipt = _material_receipt(prepared, request, index, raw)
+        validate_material(prepared, root, receipt)
+        return receipt
+    # Create only exact authorized ancestry, checking each existing component.
+    parent = root
+    for part in relative(request["capture"]["directory"]).split("/"):
+        parent /= part
+        if not parent.exists():
+            parent_name = parent.parent.relative_to(root).as_posix()
+            with _safe_material_file(root, "" if parent_name == "." else parent_name, directory=True):
+                parent.mkdir()
+        _plain(parent, file=False)
+    import shutil
+    archive = next(row for row in members if row["role"] == "archive")
+    reject_unless(shutil.disk_usage(directory).free >= archive["size"] + MANIFEST_LIMIT, "material_disk_free")
+    index_rows = []
+    aliases: set[tuple[int, int]] = set()
+    for row in members:
+        with _safe_material_file(root, row["path"]) as stream:
+            info = _file_identity(os.fstat(stream.fileno()))
+            key = (info["volume"], info["file_id"])
+            reject_unless(key not in aliases, "material_file_alias")
+            aliases.add(key)
+            prefix = next(r["relative_path"] for r in request["roots"] if r["id"] == row["root_id"])
+            root_info = _file_identity((root / prefix).stat())
+            if row["role"] == "archive":
+                with _safe_material_file(root, snapshot, create=True) as target:
+                    _stream_material(stream, row, target)
+                    target.flush()
+                    os.fsync(target.fileno())
+                reference = snapshot
+                mode = "captured_copy"
+                with _safe_material_file(root, snapshot) as frozen:
+                    reference_info = _file_identity(os.fstat(frozen.fileno()))
+            else:
+                _stream_material(stream, row)
+                reference, mode = row["path"], "protected_reference"
+                reference_info = info
+        index_rows.append({"resource_id": row["resource_id"], "role": row["role"], "source_path": row["path"], "source_identity": {"original": info, "reference": reference_info}, "root_identity": root_info, "mode": mode, "reference_path": reference, "size": row["size"], "sha256": row["sha256"]})
+    index = {"schema_version": 1, "kind": "pf.native-material.index", "identity": identity(prepared["identity"]), "job_sha256": digest(canonical(prepared["input"]["parameters"]["native_maintenance_job"])), "manifest_sha256": request["body_manifest"]["sha256"], "request_sha256": digest(canonical(request)), "members": index_rows, "totals": {"files": len(members), "bytes": sum(r["size"] for r in members)}}
+    raw = canonical(index)
+    reject_unless(len(raw) <= MANIFEST_LIMIT, "material_index_limit")
+    receipt = _material_receipt(prepared, request, index, raw)
+    # Validate original + captured archive and bounded ZIP before commit marker.
+    _validate_material_members(root, request, members, index)
+    with _safe_material_file(root, snapshot) as stream:
+        _zip_preflight(stream)
+    with _safe_material_file(root, index_name, create=True) as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    return receipt
+
+
+def _validate_material_members(root: Path, request: dict[str, Any], members: list[dict[str, Any]], index: dict[str, Any]) -> None:
+    reject_unless(isinstance(index.get("members"), list) and len(index["members"]) == len(members), "material_index_members")
+    _, snapshot = _material_index_paths(request)
+    aliases: set[tuple[int, int]] = set()
+    for row, saved in zip(members, index["members"], strict=True):
+        reject_unless(isinstance(saved, dict) and set(saved) == {"resource_id", "role", "source_path", "source_identity", "root_identity", "mode", "reference_path", "size", "sha256"}, "material_index_row")
+        reject_unless(isinstance(saved["source_identity"], dict) and set(saved["source_identity"]) == {"original", "reference"}, "material_identity_shape")
+        for item in (saved["source_identity"]["original"], saved["source_identity"]["reference"], saved["root_identity"]):
+            reject_unless(isinstance(item, dict) and set(item) == {"volume", "file_id", "size", "mtime_ns", "ctime_ns"} and all(type(value) is int and value >= 0 for value in item.values()), "material_identity_shape")
+        reject_unless(all(saved.get(k) == row[k] for k in ("resource_id", "role", "size", "sha256")) and saved["source_path"] == row["path"] and saved["mode"] == ("captured_copy" if row["role"] == "archive" else "protected_reference") and saved["reference_path"] == (snapshot if row["role"] == "archive" else row["path"]), "material_reference_binding")
+        with _safe_material_file(root, row["path"]) as source:
+            actual = _file_identity(os.fstat(source.fileno()))
+            reject_unless(actual == saved["source_identity"]["original"], "material_source_identity")
+            key = (actual["volume"], actual["file_id"])
+            reject_unless(key not in aliases, "material_file_alias")
+            aliases.add(key)
+            prefix = next(r["relative_path"] for r in request["roots"] if r["id"] == row["root_id"])
+            current_root = _file_identity((root / prefix).stat())
+            # Directory mtime changes when files are added; identity is physical.
+            reject_unless(all(current_root[k] == saved["root_identity"].get(k) for k in ("volume", "file_id")), "material_root_identity")
+            _stream_material(source, row)
+        if row["role"] == "archive":
+            with _safe_material_file(root, snapshot) as stream:
+                reject_unless(_file_identity(os.fstat(stream.fileno())) == saved["source_identity"]["reference"], "material_snapshot_identity")
+                _stream_material(stream, row)
+
+
+def validate_material(prepared: dict[str, Any], root: Path, receipt: Any = None) -> list[dict[str, Any]]:
+    """Read-only consumer. Never creates a receipt or repairs partial capture."""
+    request, members = _material_plan(prepared, root)
+    if receipt is None:
+        receipt = prepared.get("native_launch", {}).get("maintenance", {}).get("material")
+    reject_unless(isinstance(receipt, dict) and set(receipt) == {"schema_version", "kind", "identity", "job_sha256", "manifest_sha256", "request_sha256", "index", "totals"}, "material_receipt_required")
+    index_name, _ = _material_index_paths(request)
+    pin_row = receipt["index"]
+    reject_unless(isinstance(pin_row, dict) and set(pin_row) == {"path", "sha256", "size"} and pin_row["path"] == index_name and pin(pin_row["sha256"]) and type(pin_row["size"]) is int and 0 < pin_row["size"] <= MANIFEST_LIMIT, "material_index_reference")
+    with _safe_material_file(root, index_name) as stream:
+        raw = stream.read(MANIFEST_LIMIT + 1)
+    reject_unless(len(raw) == pin_row["size"] and digest(raw) == pin_row["sha256"], "material_index_pin")
+    index = document(raw, MANIFEST_LIMIT)
+    reject_unless(set(index) == {"schema_version", "kind", "identity", "job_sha256", "manifest_sha256", "request_sha256", "members", "totals"} and type(index["schema_version"]) is int and index["schema_version"] == 1 and index["kind"] == "pf.native-material.index", "material_index_shape")
+    reject_unless(isinstance(receipt["totals"], dict) and set(receipt["totals"]) == {"files", "bytes"} and all(type(v) is int for v in receipt["totals"].values()), "material_totals_shape")
+    expected = _material_receipt(prepared, request, index, raw)
+    reject_unless(type(receipt["schema_version"]) is int and receipt == expected, "material_receipt_binding")
+    reject_unless(all(index[k] == expected[k] for k in ("identity", "job_sha256", "manifest_sha256", "request_sha256")) and index["totals"] == {"files": len(members), "bytes": sum(r["size"] for r in members)}, "material_index_binding")
+    _validate_material_members(root, request, members, index)
+    return members
+
+
+def _zip_preflight(stream: Any) -> None:
+    """Bound EOCD, central and local headers before ZipFile allocates metadata."""
+    import struct
+
+    stream.seek(0, 2)
+    size = stream.tell()
+    reject_unless(22 <= size <= ARCHIVE_LIMIT, "archive_size")
+    stream.seek(max(0, size - 65557))
+    tail = stream.read(65557)
+    offset = tail.rfind(b"PK\x05\x06")
+    reject_unless(offset >= 0 and offset + 22 <= len(tail), "zip_eocd")
+    _, disk, cd_disk, disk_count, count, cd_size, cd_offset, comment = struct.unpack_from("<4s4H2IH", tail, offset)
+    reject_unless(disk == cd_disk == 0 and disk_count == count and 0 < count <= ENTRY_LIMIT and count != 65535 and cd_size <= 4194304 and cd_offset + cd_size == size - len(tail) + offset and offset + 22 + comment == len(tail), "zip_directory_bounds")
+    stream.seek(cd_offset)
+    central = stream.read(cd_size)
+    reject_unless(len(central) == cd_size, "zip_directory_short")
+    pos = 0
+    spans = []
+    names: set[str] = set()
+    expanded = 0
+    header_total = 0
+    for _ in range(count):
+        reject_unless(pos + 46 <= len(central), "zip_central_header")
+        fields = struct.unpack_from("<4s6H3I5H2I", central, pos)
+        sig, _, _, flags, method, _, _, crc, compressed, plain, nlen, xlen, clen, disk, _, external, local = fields
+        length = 46 + nlen + xlen + clen
+        reject_unless(sig == b"PK\x01\x02" and length <= 16384 and pos + length <= len(central) and not flags & (1 | 8 | 0x20 | 0x40 | 0x2000) and method in {0, 8} and disk == 0 and max(compressed, plain, local) < 0xFFFFFFFF and plain <= FILE_LIMIT and not external & 0x410 and stat.S_IFMT(external >> 16) in {0, stat.S_IFREG}, "zip_central_header")
+        name_raw = central[pos + 46:pos + 46 + nlen]
+        name = relative(name_raw.decode("utf-8" if flags & 0x800 else "cp437"))
+        reject_unless(name.casefold() not in names, "zip_alias")
+        names.add(name.casefold())
+        extra = central[pos + 46 + nlen:pos + 46 + nlen + xlen]
+        _zip_extra(extra)
+        stream.seek(local)
+        header = stream.read(30)
+        reject_unless(len(header) == 30, "zip_local_header")
+        lsig, _, lflags, lmethod, _, _, lcrc, lc, lp, ln, lx = struct.unpack("<4s5H3I2H", header)
+        reject_unless(lsig == b"PK\x03\x04" and (lflags, lmethod, lcrc, lc, lp, ln) == (flags, method, crc, compressed, plain, nlen) and 30 + ln + lx <= 16384 and local + 30 + ln + lx + compressed <= cd_offset, "zip_local_header")
+        reject_unless(stream.read(ln) == name_raw, "zip_local_name")
+        _zip_extra(stream.read(lx))
+        spans.append((local, local + 30 + ln + lx + compressed))
+        header_total += length + 30 + ln + lx
+        expanded += plain
+        reject_unless(expanded <= EXPANDED_LIMIT and header_total <= 4194304, "zip_totals")
+        pos += length
+    reject_unless(pos == len(central), "zip_directory_trailing")
+    end = 0
+    for first, last in sorted(spans):
+        reject_unless(first == end, "zip_overlap_or_gap")
+        end = last
+    reject_unless(end == cd_offset, "zip_payload_trailing")
+    stream.seek(0)
+
+
+def _zip_extra(raw: bytes) -> None:
+    import struct
+
+    offset = 0
+    while offset < len(raw):
+        reject_unless(offset + 4 <= len(raw), "zip_extra")
+        kind, size = struct.unpack_from("<HH", raw, offset)
+        offset += 4 + size
+        reject_unless(kind != 1 and offset <= len(raw), "zip64_or_extra")
+
+
+
 def capture_job(
     prepared: dict[str, Any], root: Path
 ) -> tuple[dict[str, Any], dict[str, bytes]]:
@@ -655,7 +1055,7 @@ def capture_job(
         set(job)
         == {"schema_version", "identity", "operation", "resources", "runtime", "report"}
         and type(job["schema_version"]) is int
-        and job["schema_version"] == 1
+        and job["schema_version"] == 2
         and identity(job["identity"]) == selected,
         "job_shape",
     )
@@ -692,19 +1092,21 @@ def capture_job(
         and runtime["version"] == sys.version.split()[0],
         "runtime_binding_required",
     )
-    # External interpreter body read is permitted only by this explicit native
-    # preparation grant, whose resource must be resolved/qualified before spawn.
-    reject_unless(
-        prepared.get("native_launch", {}).get("maintenance")
-        == {"runtime": runtime, "job_sha256": digest(canonical(job))},
-        "runtime_body_grant_required",
-    )
-    reject_unless(
-        digest(read_file(Path(sys.executable), FILE_LIMIT)) == runtime["sha256"],
-        "runtime_pin_mismatch",
-    )
+    marker = prepared.get("native_launch", {}).get("maintenance", {})
+    reject_unless(set(marker) == {"runtime", "job_sha256", "material"} and marker["runtime"] == runtime and marker["job_sha256"] == digest(canonical(job)), "runtime_body_grant_required")
+    validate_material(prepared, root)
     rows = job["resources"]
     reject_unless(isinstance(rows, list) and len(rows) == len(ROLES), "resource_roles")
+    request = _material_request(prepared)
+    archive_row = next(r for r in rows if r["role"] == "archive")
+    # BytesIO + FrozenArchive + base64/JSON parent+child + simultaneous images.
+    _, snapshot = _material_index_paths(request)
+    with _safe_material_file(root, snapshot) as stream:
+        _zip_preflight(stream)
+        with zipfile.ZipFile(stream) as package:
+            expanded = sum(entry.file_size for entry in package.infolist())
+    peak = archive_row["size"] * 8 + expanded * 10 + sum(r["size"] for r in rows if r["role"] != "archive") * 4
+    reject_unless(peak <= request["quotas"]["native_consumer_payload_reservation_bytes"], "native_payload_peak")
     captured: dict[str, bytes] = {}
     resource_pins: dict[str, str] = {}
     paths: set[str] = {report.casefold()}
@@ -728,6 +1130,15 @@ def capture_job(
             and name in scope.get("allowed_read_files", []),
             "source_scope_required",
         )
+        if row["role"] == "archive":
+            request = _material_request(prepared)
+            _, snapshot = _material_index_paths(request)
+            with _safe_material_file(root, snapshot) as stream:
+                _zip_preflight(stream)
+                raw = stream.read(ARCHIVE_LIMIT + 1)
+            reject_unless(len(raw) == row["size"] and digest(raw) == row["sha256"], "material_snapshot_pin")
+            captured["archive"] = raw
+            continue
         reject_unless(_body_granted(prepared, row), "resource_body_grant_required")
         limit = ARCHIVE_LIMIT if row["role"] == "archive" else MANIFEST_LIMIT
         raw = read_file(located(root, name), limit)
@@ -825,49 +1236,17 @@ def _captured_module(name: str, raw: bytes, filename: str) -> Any:
     return module
 
 
-def _closure(
-    prepared: dict[str, Any], root: Path, spec: dict[str, Any]
-) -> dict[str, bytes]:
-    """Validate the entire explicitly accepted runtime image before any effect."""
-    rows = spec["runtime_closure"]
-    reject_unless(isinstance(rows, list) and 3 <= len(rows) <= 20000, "runtime_closure")
-    result: dict[str, bytes] = {}
-    roles: set[str] = set()
-    for row in rows:
-        reject_unless(
-            set(row) == {"path", "sha256", "size", "role"}
-            and row["role"] in {"interpreter", "dll", "stdlib", "bootstrap"}
-            and pin(row["sha256"])
-            and type(row["size"]) is int
-            and 0 < row["size"] <= ARCHIVE_LIMIT,
-            "runtime_closure",
-        )
-        name = relative(row["path"])
-        reject_unless(
-            name.casefold() not in {key.casefold() for key in result}, "runtime_alias"
-        )
-        reject_unless(
-            name in prepared["input"]["scope"]["allowed_read_files"]
-            and _body_granted(prepared, row),
-            "runtime_body_grant",
-        )
-        raw = read_file(located(root, name), ARCHIVE_LIMIT)
-        reject_unless(
-            len(raw) == row["size"] and digest(raw) == row["sha256"],
-            "runtime_closure_pin",
-        )
-        result[name] = raw
-        roles.add(row["role"])
-    reject_unless(
-        {"interpreter", "dll", "stdlib", "bootstrap"} <= roles,
-        "runtime_closure_incomplete",
-    )
-    return result
+def _closure(prepared: dict[str, Any], root: Path, spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Validate protected runtime references without accumulating their bytes."""
+    members = validate_material(prepared, root)
+    runtime = [{k: row[k] for k in ("path", "sha256", "size", "role")} for row in members if row["role"] != "archive"]
+    reject_unless(runtime == spec["runtime_closure"], "runtime_closure_pin")
+    return {row["path"]: row for row in runtime}
 
 
 def management(
     prepared: dict[str, Any], root: Path, captured: dict[str, bytes]
-) -> tuple[dict[str, Any], dict[str, bytes]]:
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     """Exact independent namespace and runtime contract; no host discovery."""
     spec = document(captured["management"], MANIFEST_LIMIT)
     reject_unless(
@@ -986,6 +1365,7 @@ def bind_preparation(
     prepared.setdefault("native_launch", {})["maintenance"] = {
         "runtime": job["runtime"],
         "job_sha256": digest(canonical(job)),
+        "material": capture_material(prepared, root),
     }
     validate_preparation(prepared, root, distribution, driver)
 
@@ -1134,14 +1514,14 @@ def construct_management(
         }[role]: captured[role]
         for role in ("harness", "controller", "native", "wrapper")
     }
-    rows.update({"runtime/" + name: raw for name, raw in closure.items()})
     rows["management.json"] = captured["management"]
     inventory = {
         name: {"sha256": digest(raw), "size": len(raw)} for name, raw in rows.items()
     }
+    inventory.update({"runtime/" + name: {"sha256": row["sha256"], "size": row["size"]} for name, row in closure.items()})
     destinations = [
         (destination / name).relative_to(root).as_posix()
-        for name in (*rows, "bundle.json")
+        for name in (*inventory, "bundle.json")
     ]
     reject_unless(
         not any(
@@ -1156,23 +1536,35 @@ def construct_management(
         path = destination / name
         path.parent.mkdir(parents=True, exist_ok=True)
         publish(destination, name, raw)
+    for name, row in closure.items():
+        target = destination / "runtime" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        relative_target = target.relative_to(root).as_posix()
+        with _safe_material_file(root, name) as source:
+            if target.exists():
+                with _safe_material_file(root, relative_target) as existing:
+                    _stream_material(existing, row)
+            else:
+                with _safe_material_file(root, relative_target, create=True) as output:
+                    _stream_material(source, row, output)
+                    output.flush()
+                    os.fsync(output.fileno())
     publish(destination, "bundle.json", canonical(inventory))
-    return {"bundle_sha256": digest(canonical(inventory)), "files": len(rows)}
+    return {"bundle_sha256": digest(canonical(inventory)), "files": len(inventory)}
 
 
 def execute(prepared: dict[str, Any], root: Path) -> tuple[str, bytes]:
     job, captured = capture_job(prepared, root)
     spec, _ = management(prepared, root, captured)
     operation = job["operation"]
+    native = _captured_module("pf_native_control", captured["native"], str(root / "accepted-native.py"))
+    summary_archive = qualify_archive(captured["archive"], captured["manifest"], native)
     if operation == "qualify-archive":
-        summary = qualify_archive(captured["archive"], captured["manifest"])
+        summary = summary_archive
     elif operation == "construct-management":
         summary = construct_management(prepared, root, captured)
     else:
         # Captured management code is independent of inhibited target imports.
-        native = _captured_module(
-            "pf_native_control", captured["native"], str(root / "accepted-native.py")
-        )
         controller = _captured_module(
             "pf_cold_controller",
             captured["controller"],
