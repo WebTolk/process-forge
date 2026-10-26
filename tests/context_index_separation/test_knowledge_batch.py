@@ -11,8 +11,10 @@ import argparse
 import copy
 import io
 import json
+import os
 import shutil
 import sys
+import tempfile
 import unittest
 import uuid
 from contextlib import redirect_stderr, redirect_stdout
@@ -35,7 +37,10 @@ from processforge_core.resources.knowledge_batch import (
 from processforge_core.resources.project_packages import PackageRootResolution
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SCRATCH_ROOT = PROJECT_ROOT / ".pf/tmp/context-index-alpha4-batch-native-20261023"
+SCRATCH_ROOT = (
+    Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or tempfile.gettempdir())
+    / "context-index-knowledge-batch"
+)
 PACKAGE_ID = "docs.fixture"
 
 
@@ -351,6 +356,7 @@ class KnowledgeBatchTests(_OwnedFixture):
 
     def test_incomplete_or_malformed_journal_is_a_failed_item(self) -> None:
         self.execute.side_effect = None
+        journal: object
         for journal in (
             None,
             [],

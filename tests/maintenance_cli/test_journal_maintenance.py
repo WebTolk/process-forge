@@ -26,7 +26,10 @@ from processforge_core.maintenance.contracts import JsonObject, MaintenanceError
 from processforge_core.sqlite_storage import JournalError
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRATCH = ROOT / ".pf/tmp/sqlite-maintenance-cli-v3-20261022"
+SCRATCH = (
+    Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or tempfile.gettempdir())
+    / "journal-maintenance-cli"
+)
 
 
 def parser_for(command: JournalMaintenanceCommand) -> argparse.ArgumentParser:
@@ -67,7 +70,7 @@ class ParserTests(unittest.TestCase):
 
     def test_incomplete_selectors_and_abbreviated_effects_are_rejected(self) -> None:
         parser = parser_for(JournalMaintenanceCommand())
-        cases = (
+        cases: tuple[list[str], ...] = (
             [],
             ["backup", "--database", "db"],
             ["verify"],

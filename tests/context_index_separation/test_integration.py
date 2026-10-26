@@ -16,6 +16,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import time
 import unittest
 import uuid
@@ -49,7 +50,10 @@ from processforge_core.work.resource_material import MaterialBudget, capture_mat
 from processforge_core.work.resources import WorkResourceService
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SCRATCH_ROOT = PROJECT_ROOT / ".pf/tmp/context-index-alpha4-integration-20261023"
+SCRATCH_ROOT = (
+    Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or tempfile.gettempdir())
+    / "context-index-integration"
+)
 CHARACTERIZATION: list[dict[str, Any]] = []
 
 

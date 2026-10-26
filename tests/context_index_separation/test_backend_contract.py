@@ -10,6 +10,7 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -37,7 +38,10 @@ from processforge_core.resources.local_search import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SCRATCH_ROOT = PROJECT_ROOT / ".pf/tmp/context-index-alpha4-integration-20261023"
+SCRATCH_ROOT = (
+    Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or tempfile.gettempdir())
+    / "context-index-backend-contract"
+)
 
 
 class _Reads:
@@ -81,7 +85,7 @@ class BackendContractTests(unittest.TestCase):
                     "indexing": {"mode": mode},
                 }
             )
-        self.snapshot = {
+        self.snapshot: dict[str, Any] = {
             "snapshot": {"id": "fixture", "checksum": "fixture"},
             "local_search_resources": resources,
         }

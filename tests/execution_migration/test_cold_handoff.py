@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import inspect
 import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
 import zipfile
+from collections.abc import Iterator
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -37,15 +40,186 @@ bootstrap_cold_control = p._durable_control
 cold_storage_safety = p._managed_storage_safety
 
 
+def _copy_distribution(
+    source: Path,
+    destination: Path,
+    directories: tuple[str, ...],
+    *,
+    include_version: bool = False,
+) -> None:
+    """Select release-filtered rows before reading bodies; verify copied pins."""
+    from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+    policy = ReleaseSourcePolicy()
+    patterns = policy.release_ignore_patterns(source)
+    selected = []
+    for directory in directories:
+        for parent_name, dirs, files in os.walk(source / directory, followlinks=False):
+            parent = Path(parent_name)
+            assert not _redirected(parent), "redirected distribution directory"
+            dirs[:] = [
+                name
+                for name in dirs
+                if not policy.release_path_is_forbidden(
+                    (parent / name).relative_to(source).as_posix() + "/"
+                )
+                and not policy.release_ignore_match(
+                    (parent / name).relative_to(source).as_posix() + "/", patterns
+                )
+            ]
+            for name in files:
+                path = parent / name
+                relative = path.relative_to(source).as_posix()
+                if not policy.release_path_is_forbidden(
+                    relative
+                ) and not policy.release_ignore_match(relative, patterns):
+                    selected.append((relative, path))
+    if include_version:
+        assert not policy.release_path_is_forbidden("VERSION")
+        assert not policy.release_ignore_match("VERSION", patterns)
+        selected.append(("VERSION", source / "VERSION"))
+    rows: list[dict[str, Any]] = []
+    for relative, path in sorted(selected):
+        assert not _redirected(path), "redirected distribution member"
+        raw = path.read_bytes()
+        rows.append(
+            {
+                "path": relative,
+                "size": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+            }
+        )
+    for row in rows:
+        path = source / row["path"]
+        assert not _redirected(path), "redirected distribution member"
+        raw = path.read_bytes()
+        assert len(raw) == row["size"]
+        assert hashlib.sha256(raw).hexdigest() == row["sha256"], "fixture source drift"
+        target = destination / row["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+    (destination / "fixture-selected-sources.json").write_text(
+        json.dumps(rows, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def _redirected(path: Path) -> bool:
+    """Refuse links, junctions and other Windows reparse points."""
+    return (
+        path.is_symlink()
+        or path.is_junction()
+        or bool(getattr(path.lstat(), "st_file_attributes", 0) & 0x400)
+    )
+
+
+def _remove_case(item: Path, parent: Path) -> None:
+    """Remove one resolved owned child only; never retry a refusal."""
+    assert not _redirected(parent) and not _redirected(item)
+    assert item.resolve().parent == parent.resolve(), "fixture escaped owned parent"
+    for root, dirs, files in os.walk(item, followlinks=False):
+        for name in (*dirs, *files):
+            assert not _redirected(Path(root) / name), "fixture cleanup redirected"
+    shutil.rmtree(item)
+
+
 @pytest.fixture
-def tmp_path() -> Path:
-    # Python 3.14 mode=0700 temp dirs are inaccessible to this sandbox token.
-    # Keep all exact fixture evidence, with inherited ACL, in owned scratch.
+def tmp_path(request: Any) -> Iterator[Path]:
+    # Inherit the issuer-owned scratch ACL; keep compact evidence outside the case.
     root = Path(os.environ["W3_FIXTURE_ROOT"]) / "cold"
     root.mkdir(exist_ok=True)
     item = root / uuid4().hex
     item.mkdir()
-    return item
+    evidence = root.parent / "cold-evidence" / item.name
+    try:
+        yield item
+    finally:
+        evidence.mkdir(parents=True)
+        try:
+            assert not _redirected(item) and not _redirected(root)
+            assert item.resolve().parent == root.resolve()
+            for parent, dirs, files in os.walk(item, followlinks=False):
+                for name in (*dirs, *files):
+                    assert not _redirected(Path(parent) / name)
+            # Preserve outputs, not fourteen full distribution/runtime copies.
+            for path in item.rglob("*"):
+                if path.is_file() and (
+                    path.name
+                    in {
+                        "normal-route-evidence.json",
+                        "denied-route-evidence.json",
+                        "normal-route.stdout",
+                        "normal-route.stderr",
+                        "fixture-selected-sources.json",
+                        ".retain-recovery.json",
+                        ".sddl-recovery.json",
+                        "fixture-child.stdout",
+                        "fixture-child.stderr",
+                    }
+                    or "collection" in path.name
+                    or path.name in {"exit.json", "process.json"}
+                ):
+                    assert path.stat().st_size <= 1048576, "oversize fixture evidence"
+                    target = evidence / path.relative_to(item)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(path.read_bytes())
+            assert not (item / ".retain-recovery.json").exists(), (
+                "fixture recovery required"
+            )
+            assert not (item / ".sddl-recovery.json").exists(), "SDDL recovery required"
+            _remove_case(item, root)
+            status = {"nodeid": request.node.nodeid, "cleanup": "removed"}
+        except BaseException as error:
+            status = {
+                "nodeid": request.node.nodeid,
+                "cleanup": "retained",
+                "residue": item.relative_to(root.parent).as_posix(),
+                "reason": type(error).__name__,
+            }
+            raise
+        finally:
+            (evidence / "cleanup.json").write_text(
+                json.dumps(status, indent=2) + "\n", encoding="utf-8"
+            )
+
+
+def _restore_fixture_sddl(windows: Any, file: Path, original: str, case: Path) -> None:
+    """Remove the pre-recorded recovery descriptor only after exact restoration."""
+    windows.set_sddl(file, original, owner=False)
+    (case / ".sddl-recovery.json").unlink()
+
+
+def _run_owned_fixture(argv: list[str], case: Path, **options: Any) -> Any:
+    """Wait for the real child and its native Job before permitting disposal."""
+    timeout = options.pop("timeout")
+    options.pop("check", None)
+    options.pop("capture_output", None)
+    (case / ".retain-recovery.json").write_text(
+        json.dumps({"reason": "child_launch_or_closure_pending"}), encoding="utf-8"
+    )
+    process = p.spawn_owned(
+        argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **options
+    )
+    job = getattr(process, "native_job", None)
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+        assert job is not None and job.active() == 0, "fixture descendants not closed"
+        (case / ".retain-recovery.json").unlink()
+        return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+    except BaseException as error:
+        if isinstance(error, subprocess.TimeoutExpired):
+            (case / "fixture-child.stdout").write_bytes(error.output or b"")
+            (case / "fixture-child.stderr").write_bytes(error.stderr or b"")
+        # No timeout-as-closure assertion, termination or denied-target retry.
+        (case / ".retain-recovery.json").write_text(
+            json.dumps({"reason": "child_closure_unconfirmed", "pid": process.pid}),
+            encoding="utf-8",
+        )
+        raise
+    finally:
+        if job is not None:
+            # Existing Job ownership closes its own descendants; residue stays
+            # retained on any failure until an issuer verifies actual closure.
+            job.close()
 
 
 def policy() -> Policy:
@@ -118,6 +292,9 @@ def test_actual_accesscheck_and_child_file_denial(tmp_path: Path) -> None:
     file = tmp_path / "payload.py"
     file.write_bytes(b"THIS IS NOT EXECUTED")
     original = windows.sddl(file)
+    (tmp_path / ".sddl-recovery.json").write_text(
+        json.dumps({"file": file.name, "original_sddl": original}), encoding="utf-8"
+    )
     with windows.process_token() as token:
         sid = windows.token_sid(token)
         assert windows.access(file, token) & 1
@@ -128,7 +305,7 @@ def test_actual_accesscheck_and_child_file_denial(tmp_path: Path) -> None:
             assert sid
             windows.set_sddl(file, denied, owner=False)
             assert not windows.access(file, token) & 1
-            child = subprocess.run(
+            child = _run_owned_fixture(
                 [
                     sys.executable,
                     "-I",
@@ -137,6 +314,7 @@ def test_actual_accesscheck_and_child_file_denial(tmp_path: Path) -> None:
                     "import sys;\ntry: open(sys.argv[1],'rb').read()\nexcept PermissionError: sys.exit(7)\nsys.exit(9)",
                     str(file),
                 ],
+                case=tmp_path,
                 capture_output=True,
                 timeout=10,
                 check=False,
@@ -144,7 +322,7 @@ def test_actual_accesscheck_and_child_file_denial(tmp_path: Path) -> None:
             assert child.returncode == 7, child.stderr
             assert not child.stdout
         finally:
-            windows.set_sddl(file, original, owner=False)
+            _restore_fixture_sddl(windows, file, original, tmp_path)
         assert file.read_bytes() == b"THIS IS NOT EXECUTED"
 
 
@@ -153,8 +331,11 @@ def test_gate_persists_after_child_exit(tmp_path: Path) -> None:
     file = tmp_path / "payload"
     file.write_bytes(b"old")
     original = windows.sddl(file)
+    (tmp_path / ".sddl-recovery.json").write_text(
+        json.dumps({"file": file.name, "original_sddl": original}), encoding="utf-8"
+    )
     try:
-        child = subprocess.run(
+        child = _run_owned_fixture(
             [
                 sys.executable,
                 "-B",
@@ -165,6 +346,7 @@ def test_gate_persists_after_child_exit(tmp_path: Path) -> None:
                 re.sub(r"(D:[^(]*)", r"\1(D;;0x1;;;WD)", original, count=1),
             ],
             cwd=Path(p.__file__).parent,
+            case=tmp_path,
             capture_output=True,
             timeout=10,
             check=False,
@@ -173,7 +355,7 @@ def test_gate_persists_after_child_exit(tmp_path: Path) -> None:
         with pytest.raises(PermissionError):
             file.read_bytes()
     finally:
-        windows.set_sddl(file, original, owner=False)
+        _restore_fixture_sddl(windows, file, original, tmp_path)
 
 
 def test_native_lock_blocks_real_other_process(tmp_path: Path) -> None:
@@ -188,9 +370,10 @@ def test_native_lock_blocks_real_other_process(tmp_path: Path) -> None:
         "except p.NativeControlError: sys.exit(7)\n"
     )
     with control.exclusive():
-        result = subprocess.run(
+        result = _run_owned_fixture(
             [sys.executable, "-B", "-c", script, str(guard), str(epoch)],
             cwd=Path(p.__file__).parent,
+            case=tmp_path,
             capture_output=True,
             check=False,
             timeout=10,
@@ -673,6 +856,15 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
     import pf_native_maintenance as h
     import processforge as core
 
+    # Register undo even for an originally absent entry. Captured loaders
+    # replace these registrations directly, outside monkeypatch's knowledge.
+    for name in ("pf_native_control", "pf_cold_controller"):
+        if name in sys.modules:
+            monkeypatch.setitem(sys.modules, name, sys.modules[name])
+        else:
+            monkeypatch.setitem(sys.modules, name, None)
+            monkeypatch.delitem(sys.modules, name)
+
     from processforge_core.common.yaml_io import write_yaml_file
     from processforge_core.prepared.registry_resources import tool_snapshot_record
     from processforge_core.work.context import build_context_fields, fingerprint
@@ -1088,7 +1280,7 @@ def test_normal_native_producer_schema_consumer(native_fixture: Any) -> None:
         },
     )
     env = command["command"]["environment"]
-    child = subprocess.run(
+    child = _run_owned_fixture(
         [
             sys.executable,
             "-I",
@@ -1098,6 +1290,7 @@ def test_normal_native_producer_schema_consumer(native_fixture: Any) -> None:
         ],
         env=env,
         cwd=f.project,
+        case=f.project.parent,
         capture_output=True,
         timeout=20,
         check=False,
@@ -1448,11 +1641,11 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
 
     inside = False
-    scans = {}
+    scans: dict[str, int] = {}
     timings = []
     operations = []
     blocked = []
-    consume_blocked = []
+    consume_blocked: list[str] = []
     seals = []
     proceed = threading.Event()
     done = threading.Event()
@@ -1734,18 +1927,12 @@ def test_normal_fixed_prepare_start_collection(
 ) -> None:
     """Actual producer/wrapper/harness, independent Core, no module path seam."""
     f = native_fixture
-    # The four-file construct inventory is insufficient: provide all Python
-    # bootstrap/Core/tool sources and distribution data as fixture material.
-    for directory in ("src", "tools", "schemas", "templates"):
-        for source in (f.distribution / directory).rglob("*"):
-            if source.is_file() and "__pycache__" not in source.parts:
-                destination = f.project / source.relative_to(f.distribution)
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                destination.write_bytes(source.read_bytes())
-    for name in ("VERSION",):
-        source = f.distribution / name
-        if source.is_file():
-            (f.project / name).write_bytes(source.read_bytes())
+    _copy_distribution(
+        f.distribution,
+        f.project,
+        ("src", "tools", "schemas", "templates"),
+        include_version=True,
+    )
     script = f.project / "normal-route-fixture.py"
     script.write_text(
         inspect.getsource(_isolated_normal_route)
@@ -1758,12 +1945,13 @@ def test_normal_fixed_prepare_start_collection(
         + ")\n",
         encoding="utf-8",
     )
-    child = subprocess.run(
+    child = _run_owned_fixture(
         [sys.executable, "-I", "-B", str(script)],
         cwd=f.project,
         env={
             key: value for key, value in os.environ.items() if not key.startswith("PF_")
         },
+        case=f.project.parent,
         capture_output=True,
         timeout=60,
         check=False,
