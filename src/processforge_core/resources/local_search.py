@@ -1213,16 +1213,20 @@ def _search_database(
             timeout=timeout,
         )
         try:
-            if (
+            host_required = (
                 identity is None
                 and db.execute(
                     "SELECT 1 FROM sqlite_master WHERE name='pf_store_meta'"
                 ).fetchone()
-            ):
-                raise LocalSearchError("storage_host_required")
-            yield db, identity
+                is not None
+            )
+            if not host_required:
+                yield db, identity
         finally:
             db.close()
+    # Refuse before yielding, without throwing a frozen error through the gate.
+    if host_required:
+        raise LocalSearchError("storage_host_required")
 
 
 def build_index(

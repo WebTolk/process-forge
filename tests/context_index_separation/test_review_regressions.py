@@ -1259,8 +1259,13 @@ def test_schema_recovery_preserves_unrelated_data_and_rolls_back(
         if failure == "source":
             scoped.setattr(Path, "read_text", refused)
         if failure:
-            with pytest.raises((sqlite3.Error, local_search.LocalSearchError)):
+            with pytest.raises(
+                (sqlite3.Error, local_search.LocalSearchError)
+            ) as caught:
                 local_search.rebuild_index(root, snapshot, workplace_root=root)
+            if failure == "identity":
+                assert isinstance(caught.value, local_search.LocalSearchError)
+                assert caught.value.code == "storage_host_required"
         else:
             assert (
                 local_search.rebuild_index(root, snapshot, workplace_root=root)[

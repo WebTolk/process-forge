@@ -17,6 +17,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+SCRATCH_ROOT = Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or ROOT / ".pf/tmp")
 
 import yaml
 import processforge as core
@@ -43,7 +44,7 @@ class RequestScopeTests(unittest.TestCase):
             self.assertEqual((other.parses, other.hits), (0, 1))
 
     def test_unchanged_metadata_does_not_hide_changes_or_deletion(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / ".pf" / "tmp") as directory:
+        with tempfile.TemporaryDirectory(dir=SCRATCH_ROOT) as directory:
             path = Path(directory) / "document.yaml"
             path.write_text("value: old\n", encoding="utf-8")
             metadata = path.stat()

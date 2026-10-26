@@ -126,9 +126,14 @@ def run_python(
         job = getattr(child, "native_job", None)
         try:
             stdout, stderr = child.communicate(timeout=30)
-            assert job is not None and job.active() == 0, (
-                "relocation descendants not closed"
-            )
+            if os.name == "nt":
+                assert job is not None and job.active() == 0, (
+                    "relocation descendants not closed"
+                )
+            else:
+                # communicate() reaps the direct child; it does not prove that
+                # every POSIX process-group descendant has exited.
+                assert child.returncode is not None, "relocation child not reaped"
             result = subprocess.CompletedProcess(argv, child.returncode, stdout, stderr)
             marker.unlink()
         finally:
@@ -143,7 +148,11 @@ def run_python(
                         "exit": result.returncode,
                         "stdout": result.stdout,
                         "stderr": result.stderr,
-                        "children_closed": True,
+                        "direct_child_reaped": True,
+                        "children_closed": True if os.name == "nt" else None,
+                        "descendant_proof": "native_job_empty"
+                        if os.name == "nt"
+                        else "not_verified",
                     }
                 )
                 + "\n"

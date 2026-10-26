@@ -42,7 +42,7 @@ def event(path: Path, project_root: Path, session: str, agent: str, event_type: 
 
 
 def main() -> int:
-    tmp_root = ROOT / ".pf" / "tmp"
+    tmp_root = Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or ROOT / ".pf/tmp")
     tmp_root.mkdir(parents=True, exist_ok=True)
     root = tmp_root / f"pf-ledger-hooks-mcp-{uuid.uuid4().hex}"
     root.mkdir()

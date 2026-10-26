@@ -13,6 +13,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
+SCRATCH_ROOT = Path(os.environ.get("PF_TEST_SCRATCH_ROOT") or ROOT / ".pf/tmp")
 
 import yaml
 import processforge as core
@@ -42,7 +43,7 @@ class YamlCacheTests(unittest.TestCase):
             self.assertEqual((request.parses, request.hits), (0, 2))
 
     def test_actual_bytes_win_over_same_size_and_restored_mtime(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / ".pf/tmp") as directory:
+        with tempfile.TemporaryDirectory(dir=SCRATCH_ROOT) as directory:
             path = Path(directory) / "run.yaml"
             reader = YamlDocumentReader(lambda _: {})
             path.write_text("id: alpha\nstatus: open\n", encoding="utf-8")
@@ -165,7 +166,7 @@ class YamlCacheTests(unittest.TestCase):
 
     def test_reader_fallback_and_strict_error_envelope(self):
         reader = YamlDocumentReader(lambda _: {"id": "fallback", "status": "open", "extra": 1})
-        with tempfile.TemporaryDirectory(dir=ROOT / ".pf/tmp") as directory:
+        with tempfile.TemporaryDirectory(dir=SCRATCH_ROOT) as directory:
             path = Path(directory) / "run.yaml"
             path.write_text("id: native\n", encoding="utf-8")
             with patch.dict(sys.modules, {"yaml": None}):
@@ -182,7 +183,7 @@ class YamlCacheTests(unittest.TestCase):
                     reader.load(path)
 
     def test_active_run_discovery_matches_legacy_types_errors_and_order(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / ".pf/tmp") as directory:
+        with tempfile.TemporaryDirectory(dir=SCRATCH_ROOT) as directory:
             project = Path(directory)
             (project / ".pf/runs").mkdir(parents=True)
             (project / ".pf/process-forge.yaml").write_text("schema_version: 1\n", encoding="utf-8")

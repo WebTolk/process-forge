@@ -39,10 +39,16 @@ if OPTIONS.reference:
 if OPTIONS.baseline and ORIGINAL is None:
     parser.error('--baseline requires --reference')
 
-SCRATCH = (OPTIONS.scratch_root or ROOT / '.pf/tmp/oop-parallel-20261011-oop-summary-20261011').resolve()
-SCRATCH.relative_to(ROOT / '.pf/tmp')
+SCRATCH = (
+    OPTIONS.scratch_root
+    or Path(
+        os.environ.get("PF_TEST_SCRATCH_ROOT")
+        or ROOT / ".pf/tmp/oop-parallel-20261011-oop-summary-20261011"
+    )
+).resolve()
 SCRATCH.mkdir(parents=True, exist_ok=True)
 RUN_ROOT = SCRATCH / ('summary-smoke-' + uuid.uuid4().hex)
+RUN_ROOT.resolve().relative_to(SCRATCH)
 RUN_ROOT.mkdir()
 PARITY_COUNT = 0
 
