@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from ..maintenance.storage_migration import StorageMigrationHost
@@ -60,6 +60,110 @@ def operation_device_path(
     return fallback
 
 
+def _identityless_legacy(
+    project: Path | None,
+    workplace: Path | None,
+    configuration: ConfigurationProvider,
+) -> None:
+    """Permit only unbound, pre-pending legacy; never synthesize an owner."""
+    from ..database import DatabaseFactory
+    from ..executions.composition import _fresh_initialization, select_execution_storage
+    from ..maintenance.contracts import MaintenanceError, StoreTarget
+    from ..maintenance.storage_migration import (
+        _descriptor,
+        _inspect_target,
+        _pins,
+        _safe,
+    )
+
+    if project is None:
+        raise MaintenanceError("project_identity_required")
+    metadata = ProjectMetadataReader(project)
+    flow = _safe(metadata.flow_root())
+    manifest = _safe(flow / "process-forge.yaml")
+    owner = metadata.manifest().get("project") if manifest.is_file() else None
+    if not isinstance(owner, dict) or "id" in owner:
+        raise MaintenanceError("project_identity_required")
+    if _fresh_initialization(flow) is not None:
+        raise MaintenanceError("project_identity_required")
+    # Execution composition owns the binding/profile/domain eligibility policy.
+    if (
+        select_execution_storage(
+            project, workplace, configuration=configuration
+        ).repository
+        is not None
+    ):
+        raise MaintenanceError("project_identity_required")
+    roots: list[tuple[Path, Literal["project", "workplace"]]] = [(flow, "project")]
+    if workplace is not None:
+        roots.append((_safe(workplace), "workplace"))
+    descriptor = _descriptor(verify_transforms=False)
+    driver = DatabaseFactory.resolve_driver(configuration.current().database)
+    for root, scope in roots:
+        if (
+            _pins(root)["slots"]
+            or _safe(root / "maintenance/storage-migrations").exists()
+        ):
+            raise MaintenanceError("project_identity_required")
+        paths: list[
+            tuple[Literal["events", "raw", "search", "accounting", "main"], str]
+        ] = [
+            ("events", "runtime/events/events.sqlite3"),
+            ("raw", "runtime/agent-events/hooks.sqlite3"),
+            ("search", "runtime/local-resource-search/search.sqlite")
+            if scope == "project"
+            else ("search", "runtime/search/local-resource-search.sqlite"),
+        ]
+        if scope == "workplace":
+            paths = [
+                ("raw", "runtime/agent-events/hooks.sqlite3"),
+                ("search", "runtime/search/local-resource-search.sqlite"),
+                ("accounting", "data/accounting/accounting.sqlite3"),
+            ]
+        for kind, relative in paths:
+            # An empty owner carries no adoption authority. Core rejects adopted
+            # or foreign envelopes and validates each existing legacy schema.
+            target = StoreTarget(kind, root / relative, relative, scope, "")
+            facts = _inspect_target(target, descriptor, driver)
+            if facts.get("store_id") is not None:
+                raise MaintenanceError("project_identity_required")
+
+
+def _first_write_storage_host(
+    project: Path,
+    workplace: Path | None,
+    device: Path | None,
+    configuration: ConfigurationProvider,
+) -> StorageMigrationHost | None:
+    """Return deliberate legacy deferral separately from an unselected host."""
+    from .. import composition
+    from ..maintenance.contracts import MaintenanceError
+    from ..maintenance.storage_migration import StorageMigrationHost
+
+    host = _STORAGE_OPERATION.get()
+    current = _OPERATION.get()
+    if host is None or current is None or current[0][:2] != (project, workplace):
+        factory = getattr(composition, "build_storage_migration_host", None)
+        if factory is None:
+            raise MaintenanceError("storage_host_factory_unavailable")
+        host = factory(
+            project_root=project,
+            workplace_root=workplace,
+            device_config_path=device,
+            configuration=configuration,
+        )
+    if not isinstance(host, StorageMigrationHost):
+        raise MaintenanceError("storage_host_factory_invalid")
+    try:
+        host.context
+    except MaintenanceError as error:
+        if error.code != "project_identity_required":
+            raise
+        _identityless_legacy(project, workplace, configuration)
+        return None
+    return host
+
+
 def operation_storage_host(path: Path) -> StorageMigrationHost | None:
     """Route a selected adapter within this operation; no process-global cache."""
     from ..maintenance.contracts import MaintenanceError
@@ -70,9 +174,9 @@ def operation_storage_host(path: Path) -> StorageMigrationHost | None:
     try:
         context = host.context
     except MaintenanceError as error:
-        if error.code == "project_identity_required":
-            # Old identity-less projects remain legacy; adapters still reject
-            # any unexpected/bound metadata instead of silently adopting it.
+        current = _OPERATION.get()
+        if error.code == "project_identity_required" and current is not None:
+            _identityless_legacy(current[0][0], current[0][1], current[1])
             return None
         raise
     return (

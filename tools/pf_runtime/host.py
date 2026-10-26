@@ -682,12 +682,18 @@ def rebuild_projection(project_root: Path, core: Any) -> Path:
 
 
 def command_init(args: argparse.Namespace, core: Any) -> int:
-    project_roots = [resolve_project(value, core) for value in getattr(args, "project_root", [])]
-    workplace_root = resolve_workplace(args, project_roots[0] if project_roots else None, core)
+    project_roots = [
+        resolve_project(value, core) for value in getattr(args, "project_root", [])
+    ]
+    workplace_root = resolve_workplace(
+        args, project_roots[0] if project_roots else None, core
+    )
     with registration_admission(workplace_root, project_roots), state_lock():
         state = load_state(workplace_root)
         for project_root in project_roots:
-            remember_project(state, route_project(str(project_root), workplace_root, core))
+            remember_project(
+                state, route_project(str(project_root), workplace_root, core)
+            )
         save_state(workplace_root, state, core)
     print(f"RUNTIME_HOST: initialized projects={len(state.get('projects', []))}")
     return 0
@@ -706,15 +712,27 @@ def command_event(args: argparse.Namespace, core: Any) -> int:
     return 0
 
 
-def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None) -> dict[str, Any]:
+def _ingest_derived_event(
+    raw: dict[str, Any],
+    workplace_root: Path | None,
+    core: Any,
+    *,
+    project_ref: str | None = None,
+) -> dict[str, Any]:
     project_ref = project_ref or raw.get("project_root") or raw.get("cwd")
     if not project_ref:
-        raise SystemExit("FAIL: runtime event requires --project-root or project_root/cwd in input")
+        raise SystemExit(
+            "FAIL: runtime event requires --project-root or project_root/cwd in input"
+        )
     project_root = resolve_project(str(project_ref), core)
-    workplace_root = workplace_root or core.resolve_workplace_root(None, project_root=project_root)
+    workplace_root = workplace_root or core.resolve_workplace_root(
+        None, project_root=project_root
+    )
     with registration_admission(workplace_root, [project_root]):
         handle = route_project(str(project_root), workplace_root, core)
-        source = raw.get("source") if isinstance(raw.get("source"), dict) else {}
+        source = raw.get("source")
+        if not isinstance(source, dict):
+            source = {}
         session_id = str(source.get("session_id") or raw.get("session_id") or "")
         event_type = str(raw.get("event_type") or raw.get("type") or "")
         presence: dict[str, Any] = {}
@@ -722,30 +740,63 @@ def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core
             presence = ledger_session(session_id, workplace_root, core)
             if presence:
                 if str(presence.get("project_id") or "") != handle["project_id"]:
-                    raise PermissionError("session is not authorized for requested project_root")
+                    raise PermissionError(
+                        "session is not authorized for requested project_root"
+                    )
             elif event_type not in {"agent.session.started", "agent.session.resumed"}:
                 raise PermissionError(f"runtime session is not routed: {session_id}")
         event = normalize_event(raw, project_root, core)
         from processforge_core.agents.hook_policy import HookDispatchPolicy
         from processforge_core.work.consistency import RunTaskInputReader
 
-        duplicate = event_exists(project_root, HookDispatchPolicy().event_id_value(event), core)
-        if not duplicate or (not presence and event_type in {"agent.session.started", "agent.session.resumed"}):
+        duplicate = event_exists(
+            project_root, HookDispatchPolicy().event_id_value(event), core
+        )
+        if not duplicate or (
+            not presence
+            and event_type in {"agent.session.started", "agent.session.resumed"}
+        ):
             ledger_from_event(raw, project_root, workplace_root, handle, core)
-        if session_id and event_type in {"agent.session.started", "agent.session.resumed"}:
+        if session_id and event_type in {
+            "agent.session.started",
+            "agent.session.resumed",
+        }:
             registered = ledger_session(session_id, workplace_root, core)
-            if not registered or str(registered.get("project_id") or "") != handle["project_id"]:
+            if (
+                not registered
+                or str(registered.get("project_id") or "") != handle["project_id"]
+            ):
                 raise PermissionError("runtime session registration failed")
         from processforge_core.agents.process_events import ProcessEventRecorder
-        duplicate = not ProcessEventRecorder().admit_process_event(project_root, event, workplace_root=workplace_root)
+
+        duplicate = not ProcessEventRecorder().admit_process_event(
+            project_root, event, workplace_root=workplace_root
+        )
         with state_lock():
             state = load_state(workplace_root)
             remember_project(state, handle)
-            remember_session(state, session_id, handle, str(source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""), core)
+            remember_session(
+                state,
+                session_id,
+                handle,
+                str(
+                    source.get("agent") or raw.get("agent_id") or raw.get("agent") or ""
+                ),
+                core,
+            )
             save_state(workplace_root, state, core)
         projection = projection_path(project_root, core)
         stage_projection = stage_obligations_path(project_root, core)
-        payload = {"event_id": HookDispatchPolicy().event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(RunTaskInputReader().event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
+        payload = {
+            "event_id": HookDispatchPolicy().event_id_value(event),
+            "duplicate": duplicate,
+            "project_id": handle["project_id"],
+            "events": core.rel(
+                RunTaskInputReader().event_runtime_paths(project_root)[0], project_root
+            ),
+            "projection": core.rel(projection, project_root),
+            "stage_projection": core.rel(stage_projection, project_root),
+        }
         return payload
 
 
@@ -1172,9 +1223,18 @@ def _conversation_messages(
     return identifiers, {}
 
 
-def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None, registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> dict[str, Any]:
+def ingest_event(
+    raw: dict[str, Any],
+    workplace_root: Path | None,
+    core: Any,
+    *,
+    project_ref: str | None = None,
+    registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY,
+) -> dict[str, Any]:
     from contextlib import ExitStack
+
     from pf_native_control import current_entry
+
     from processforge_core.project.configuration_inputs import configuration_operation
 
     with ExitStack() as operation:
@@ -1186,25 +1246,64 @@ def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *,
         project = resolve_project(source, core) if source else None
         selected_workplace = workplace_root
         if project is not None:
-            selected_workplace = selected_workplace or core.resolve_workplace_root(None, project_root=project)
-            operation.enter_context(configuration_operation(project, selected_workplace))
-        return _ingest_event_operation(raw, selected_workplace, core, project_ref=project_ref, registry=registry)
+            selected_workplace = selected_workplace or core.resolve_workplace_root(
+                None, project_root=project
+            )
+            operation.enter_context(
+                configuration_operation(project, selected_workplace)
+            )
+        return _ingest_event_operation(
+            raw, selected_workplace, core, project_ref=project_ref, registry=registry
+        )
 
 
-def _ingest_event_operation(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None, registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> dict[str, Any]:
+def _ingest_event_operation(
+    raw: dict[str, Any],
+    workplace_root: Path | None,
+    core: Any,
+    *,
+    project_ref: str | None = None,
+    registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY,
+) -> dict[str, Any]:
     from processforge_core import diagnostics
+
     envelope, _malformed = _ingress_envelope(raw, project_ref)
     source = str(envelope.get("source_project_ref") or project_ref or "")
     project = resolve_project(source, core) if source else None
-    logger = diagnostics.for_project(project, session_id=envelope.get("source_session_id"))
-    with diagnostics.operation(logger, "runtime", "runtime.ingress", project_root=str(project) if project else None,
-                               session_id=envelope.get("source_session_id"), build=diagnostics.identity_for(logger, __file__)):
-        result = _ingest_event(raw, workplace_root, core, project_ref=project_ref, registry=registry)
-        diagnostics.emit("info", "runtime.ingress_result", {key: result.get(key) for key in ("status", "routing_status", "raw_event_id")}, component="runtime")
+    logger = diagnostics.for_project(
+        project, session_id=envelope.get("source_session_id")
+    )
+    with diagnostics.operation(
+        logger,
+        "runtime",
+        "runtime.ingress",
+        project_root=str(project) if project else None,
+        session_id=envelope.get("source_session_id"),
+        build=diagnostics.identity_for(logger, __file__),
+    ):
+        result = _ingest_event(
+            raw, workplace_root, core, project_ref=project_ref, registry=registry
+        )
+        diagnostics.emit(
+            "info",
+            "runtime.ingress_result",
+            {
+                key: result.get(key)
+                for key in ("status", "routing_status", "raw_event_id")
+            },
+            component="runtime",
+        )
         return result
 
 
-def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None, registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> dict[str, Any]:
+def _ingest_event(
+    raw: dict[str, Any],
+    workplace_root: Path | None,
+    core: Any,
+    *,
+    project_ref: str | None = None,
+    registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY,
+) -> dict[str, Any]:
     """Persist a private raw event before attempting its derived project effect.
 
     Adapters provide native envelopes and may attach an already-normalized
@@ -1215,14 +1314,20 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
     envelope, malformed = _ingress_envelope(raw, project_ref)
     source_project_ref = str(envelope.get("source_project_ref") or project_ref or "")
     if not source_project_ref:
-        raise SystemExit("FAIL: runtime event requires --project-root or project_root/cwd in input")
+        raise SystemExit(
+            "FAIL: runtime event requires --project-root or project_root/cwd in input"
+        )
     project_root = resolve_project(source_project_ref, core)
-    workplace_root = workplace_root or core.resolve_workplace_root(None, project_root=project_root)
+    workplace_root = workplace_root or core.resolve_workplace_root(
+        None, project_root=project_root
+    )
     policy = registry.resolve(envelope)
     configuration, collect = hook_configuration(project_root, workplace_root, core)
     # Explicit PF operations include governed worker report collection; this
     # setting controls automatic observer hooks, not their mandatory results.
-    if not collect and not (policy is not None and policy.session_mode in {"none", "worker"}):
+    if not collect and not (
+        policy is not None and policy.session_mode in {"none", "worker"}
+    ):
         return ignored_hook()
     try:
         identity_valid = policy is None or policy.valid_raw_identity(envelope)
@@ -1233,17 +1338,39 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
     # a distinct deterministic namespace, then deny effects after persistence.
     raw_version = str(envelope.get("payload_version") or "1")
     if not identity_valid:
-        claimed = {key: envelope.get(key) for key in ("provider", "adapter", "native_event_type", "native_event_id", "native_id_scope", "native_event_id_stable", "payload_version")}
-        raw_version = "processforge.rejected-identity.v1:" + hashlib.sha256(json.dumps(claimed, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+        claimed = {
+            key: envelope.get(key)
+            for key in (
+                "provider",
+                "adapter",
+                "native_event_type",
+                "native_event_id",
+                "native_id_scope",
+                "native_event_id_stable",
+                "payload_version",
+            )
+        }
+        raw_version = (
+            "processforge.rejected-identity.v1:"
+            + hashlib.sha256(
+                json.dumps(claimed, sort_keys=True, ensure_ascii=False).encode("utf-8")
+            ).hexdigest()
+        )
     native = NativeAgentEvent(
         provider=str(envelope["provider"]),
         adapter=str(envelope["adapter"]),
         native_event_type=str(envelope["native_event_type"]),
         raw_payload=dict(envelope["raw_payload"]),
         payload_version=raw_version,
-        native_event_id=(str(envelope.get("native_event_id") or "") or None) if identity_valid else None,
-        native_id_scope=str(envelope.get("native_id_scope") or "provider") if identity_valid else "adapter",
-        native_event_id_stable=bool(envelope.get("native_event_id_stable", True)) if identity_valid else False,
+        native_event_id=(str(envelope.get("native_event_id") or "") or None)
+        if identity_valid
+        else None,
+        native_id_scope=str(envelope.get("native_id_scope") or "provider")
+        if identity_valid
+        else "adapter",
+        native_event_id_stable=bool(envelope.get("native_event_id_stable", True))
+        if identity_valid
+        else False,
         source_session_id=str(envelope.get("source_session_id") or "") or None,
         source_project_ref=source_project_ref,
     )
@@ -1254,25 +1381,46 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
     event_journal().count(RunTaskInputReader().event_runtime_paths(project_root)[0])
     from processforge_core.configuration import ConfigurationProvider
 
-    pinned = ConfigurationProvider.pinned(configuration.config, errors=configuration.errors)
+    pinned = ConfigurationProvider.pinned(
+        configuration.config, errors=configuration.errors
+    )
     kernel = RawIngressKernel(
-        workplace_root, flow_root=core.locate_flow_root(project_root),
-        record_raw=settings.raw_hooks, configuration=pinned,
+        workplace_root,
+        flow_root=core.locate_flow_root(project_root),
+        record_raw=settings.raw_hooks,
+        configuration=pinned,
     )
     receipt = kernel.ingest(native)
     response = _raw_receipt_payload(receipt)
-    response["diagnostics"]["logging"] = {"raw_hooks": settings.raw_hooks, "events": settings.events}
+    response["diagnostics"]["logging"] = {
+        "raw_hooks": settings.raw_hooks,
+        "events": settings.events,
+    }
     if configuration.errors:
         response["diagnostics"]["configuration_errors"] = list(configuration.errors)
     if not receipt.accepted:
         return response
-    reason = _adapter_admission(envelope, project_root, core, registry) if identity_valid and not malformed else "provenance_rejected"
+    reason = (
+        _adapter_admission(envelope, project_root, core, registry)
+        if identity_valid and not malformed
+        else "provenance_rejected"
+    )
     if reason:
-        response = {**response, "routing_status": "denied", "diagnostics": {**response["diagnostics"], "adapter": {"status": "denied", "reason": reason}, "conversation": {"status": "denied", "reason": reason}}}
+        response = {
+            **response,
+            "routing_status": "denied",
+            "diagnostics": {
+                **response["diagnostics"],
+                "adapter": {"status": "denied", "reason": reason},
+                "conversation": {"status": "denied", "reason": reason},
+            },
+        }
         kernel.finish(str(receipt.raw_event_id), response)
         return response
 
-    reason = _ensure_hook_session(envelope, project_root, workplace_root, core, registry)
+    reason = _ensure_hook_session(
+        envelope, project_root, workplace_root, core, registry
+    )
     if reason:
         response["routing_status"] = "denied"
         response["diagnostics"]["conversation"] = {"status": "denied", "reason": reason}
@@ -1281,21 +1429,54 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
 
     if receipt.deduplicated:
         previous = kernel.result(str(receipt.raw_event_id))
-        required_ids = list(previous.get("normalized_event_ids", [])) if previous else []
+        required_ids = (
+            list(previous.get("normalized_event_ids", [])) if previous else []
+        )
         if previous:
-            required_ids.extend("evt_" + hashlib.sha256(("chat.message.recorded:" + message_id).encode("utf-8")).hexdigest()[:32]
-                                for message_id in previous.get("chat_message_ids", []))
-        if (previous and previous.get("routing_status") == "routed"
-                and not _conversation_reason(previous.get("diagnostics", {}))
-                and (policy is None or policy.session_mode != "ledger"
-                     or bool(ledger_session(str(envelope.get("source_session_id") or ""), workplace_root, core)))
-                and all(event_exists(project_root, identifier, core) for identifier in required_ids)):
-            return {**previous, "deduplicated": True, "duplicate": True,
-                    "diagnostics": {**previous.get("diagnostics", {}), **response["diagnostics"]}}
+            required_ids.extend(
+                "evt_"
+                + hashlib.sha256(
+                    ("chat.message.recorded:" + message_id).encode("utf-8")
+                ).hexdigest()[:32]
+                for message_id in previous.get("chat_message_ids", [])
+            )
+        if (
+            previous
+            and previous.get("routing_status") == "routed"
+            and not _conversation_reason(previous.get("diagnostics", {}))
+            and (
+                policy is None
+                or policy.session_mode != "ledger"
+                or bool(
+                    ledger_session(
+                        str(envelope.get("source_session_id") or ""),
+                        workplace_root,
+                        core,
+                    )
+                )
+            )
+            and all(
+                event_exists(project_root, identifier, core)
+                for identifier in required_ids
+            )
+        ):
+            return {
+                **previous,
+                "deduplicated": True,
+                "duplicate": True,
+                "diagnostics": {
+                    **previous.get("diagnostics", {}),
+                    **response["diagnostics"],
+                },
+            }
 
     derived = envelope.get("derived_event")
-    derived_event_type = _derived_event_type(derived) if isinstance(derived, dict) else ""
-    derived_session_id = _derived_session_id(derived) if isinstance(derived, dict) else ""
+    derived_event_type = (
+        _derived_event_type(derived) if isinstance(derived, dict) else ""
+    )
+    derived_session_id = (
+        _derived_session_id(derived) if isinstance(derived, dict) else ""
+    )
     ended_session_presence: dict[str, Any] | None = None
     if (
         isinstance(derived, dict)
@@ -1303,15 +1484,21 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         and isinstance(envelope.get("derived_conversation_messages"), list)
         and derived_session_id
     ):
-        ended_session_presence = ledger_session(derived_session_id, workplace_root, core)
+        ended_session_presence = ledger_session(
+            derived_session_id, workplace_root, core
+        )
 
     if isinstance(derived, dict):
         derived_ref = str(derived.get("project_root") or derived.get("cwd") or "")
         if derived_ref and resolve_project(derived_ref, core) != project_root:
-            raise PermissionError("derived event project_root does not match native envelope")
+            raise PermissionError(
+                "derived event project_root does not match native envelope"
+            )
         # Preserve the established CLI/Runtime 403 behavior for project/session
         # denial.  The raw receipt already exists at this point for later audit.
-        routed = _ingest_derived_event(derived, workplace_root, core, project_ref=str(project_root))
+        routed = _ingest_derived_event(
+            derived, workplace_root, core, project_ref=str(project_root)
+        )
         response = {
             **routed,
             **response,
@@ -1319,7 +1506,9 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
             "normalized_event_ids": [str(routed["event_id"])],
         }
         if derived_event_type in {"agent.session.started", "agent.session.resumed"}:
-            flushed_ids, flushed_diagnostics = _flush_deferred_conversation(project_root, workplace_root, derived_session_id, core, registry)
+            flushed_ids, flushed_diagnostics = _flush_deferred_conversation(
+                project_root, workplace_root, derived_session_id, core, registry
+            )
             response["chat_message_ids"] = [*response["chat_message_ids"], *flushed_ids]
             response["diagnostics"] = {**response["diagnostics"], **flushed_diagnostics}
 
@@ -1338,9 +1527,13 @@ def _ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *
         and not _is_worker_conversation(envelope, registry)
         and derived_event_type not in {"agent.session.ended", "agent.session.stopped"}
         and str(envelope.get("source_session_id") or "")
-        and not ledger_session(str(envelope.get("source_session_id") or ""), workplace_root, core)
+        and not ledger_session(
+            str(envelope.get("source_session_id") or ""), workplace_root, core
+        )
     ):
-        _defer_conversation_capture(envelope, receipt, project_root, workplace_root, core)
+        _defer_conversation_capture(
+            envelope, receipt, project_root, workplace_root, core
+        )
         deferred = True
         chat_message_ids, conversation_diagnostics = _conversation_deferred(
             "session_not_authorized",
@@ -1364,11 +1557,15 @@ def command_status(args: argparse.Namespace, core: Any) -> int:
     return 0
 
 
-def status_payload(workplace_root: Path, project_roots: list[Path], core: Any) -> dict[str, Any]:
+def status_payload(
+    workplace_root: Path, project_roots: list[Path], core: Any
+) -> dict[str, Any]:
     with registration_admission(workplace_root, project_roots), state_lock():
         state = load_state(workplace_root)
         for project_root in project_roots:
-            remember_project(state, route_project(str(project_root), workplace_root, core))
+            remember_project(
+                state, route_project(str(project_root), workplace_root, core)
+            )
         core.update_stale_agent_presence(workplace_root)
         from processforge_core.agents.presence import AgentPresenceReader
 
@@ -1591,7 +1788,9 @@ def tick_payload(
     lease_ttl: int = 3600,
 ) -> tuple[dict[str, Any], int]:
     from contextlib import ExitStack
+
     from pf_native_control import current_entry
+
     from processforge_core.project.configuration_inputs import configuration_operation
 
     with ExitStack() as operation:
@@ -1608,10 +1807,24 @@ def tick_payload(
             handle = route_project(str(project_root), workplace_root, core)
             handles.append(handle)
             with configuration_operation(project_root, workplace_root):
-                item: dict[str, Any] = {"project_id": handle["project_id"], "effective_mode": handle["effective_mode"], "director": "skipped", "inspector": "skipped"}
+                item: dict[str, Any] = {
+                    "project_id": handle["project_id"],
+                    "effective_mode": handle["effective_mode"],
+                    "director": "skipped",
+                    "inspector": "skipped",
+                }
                 if director:
                     if handle["effective_mode"] == "organized":
-                        rc = call_quiet(core.command_agent_director_tick, argparse.Namespace(workplace=str(workplace_root), project_root=str(project_root), project_id=handle["project_id"], wait_ttl=wait_ttl, lease_ttl=lease_ttl))
+                        rc = call_quiet(
+                            core.command_agent_director_tick,
+                            argparse.Namespace(
+                                workplace=str(workplace_root),
+                                project_root=str(project_root),
+                                project_id=handle["project_id"],
+                                wait_ttl=wait_ttl,
+                                lease_ttl=lease_ttl,
+                            ),
+                        )
                         item["director"] = "tick"
                         status = status or rc
                         scheduler_status = scheduler_status or rc
@@ -1619,7 +1832,15 @@ def tick_payload(
                         item["director"] = "skipped_simple"
                 if inspector:
                     with contextlib.redirect_stdout(io.StringIO()):
-                        observation = core.supervisor_tick_result(argparse.Namespace(project_root=str(project_root), run=run, profile=profile, driver=driver, start_allowed=False))
+                        observation = core.supervisor_tick_result(
+                            argparse.Namespace(
+                                project_root=str(project_root),
+                                run=run,
+                                profile=profile,
+                                driver=driver,
+                                start_allowed=False,
+                            )
+                        )
                     item["inspector"] = "tick"
                     item["inspector_result"] = observation
                     status = status or (1 if observation["failed"] else 0)
@@ -1634,7 +1855,11 @@ def tick_payload(
             for handle in handles:
                 remember_project(state, handle)
             save_state(workplace_root, state, core)
-        payload = {"status": "ok" if status == 0 else "failed", "scheduler_status": "ok" if scheduler_status == 0 else "failed", "projects": results}
+        payload = {
+            "status": "ok" if status == 0 else "failed",
+            "scheduler_status": "ok" if scheduler_status == 0 else "failed",
+            "projects": results,
+        }
         return payload, status
 
 

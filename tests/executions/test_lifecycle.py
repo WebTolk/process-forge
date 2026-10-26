@@ -986,3 +986,77 @@ def test_legacy_guard_refuses_terminal_wrapper_without_tree_proof(
     )
     assert result["counts"]["running"] is None
     assert result["coverage"] == "partial"
+
+
+@pytest.mark.parametrize("operation", ["prepare", "start"])
+@pytest.mark.parametrize("cancellation", [False, True])
+def test_terminal_rejection_precedes_storage_and_provider(
+    sql_cli_fixture, monkeypatch, capsys, operation, cancellation
+):
+    import subprocess
+
+    import processforge as core
+
+    from processforge_core.prepared import input as prepared_input
+    from processforge_core.prepared import resources
+
+    root, _repository, args, _driver = sql_cli_fixture
+    task = core._worker_assignment_service.load(root, args.task)
+    task.update(status="cancelled", process_execution={})
+    monkeypatch.setattr(
+        core._worker_assignment_service.__class__, "load", lambda *a: task
+    )
+    if cancellation:
+        intent = root / ".pf/runs/run/cancellation-test.yaml"
+        intent.parent.mkdir(parents=True, exist_ok=True)
+        intent.write_text("pending\n")
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("rejected request reached a side effect")
+
+    monkeypatch.setattr(core, "_storage_first_write", forbidden)
+    monkeypatch.setattr(core, "prepare_worker_run", forbidden)
+    monkeypatch.setattr(prepared_input, "load", forbidden)
+    monkeypatch.setattr(resources, "native_start_preflight", forbidden)
+    monkeypatch.setattr(subprocess, "Popen", forbidden)
+    before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    assert getattr(core, "command_worker_run_" + operation)(args) == 1
+    assert (
+        "cancellation_recovery_pending" if cancellation else "work_is_terminal"
+    ) in capsys.readouterr().out
+    assert {p: p.read_bytes() for p in root.rglob("*") if p.is_file()} == before
+
+
+def test_real_missing_id_legacy_cli_prepare_start_and_retry(
+    sql_cli_fixture, monkeypatch
+):
+    import argparse
+    import shutil
+
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    original, _repository, args, _driver = sql_cli_fixture
+    root = original / "project"
+    flow = root / ".pf"
+    flow.mkdir(parents=True)
+    write_yaml_file(flow / "process-forge.yaml", {"project": {"name": "old-shaped"}})
+    for directory in ["assignments", "runs", "contexts", "runtime"]:
+        source = original / ".pf" / directory
+        if source.exists():
+            shutil.copytree(source, flow / directory)
+    legacy_args = argparse.Namespace(**vars(args))
+    legacy_args.project_root = str(root)
+    legacy_args.driver = str(flow / "runtime/fixture-driver.yaml")
+    # The actual custom driver and prepared provider are shared by the existing
+    # SQL fixture; no execution router or first-write coordinator is replaced.
+    assert core._execution_storage(root).repository is None
+    assert core.command_worker_run_prepare(legacy_args) == 0
+    assert core.command_worker_run_start(legacy_args) == 0
+    assert core.command_worker_run_prepare(legacy_args) == 0
+    assert core.command_worker_run_start(legacy_args) == 0
+    assert core._execution_storage(root).repository is None
+    assert not (flow / "data/execution-storage.json").exists()
+    assert not (flow / "data/pf.sqlite3").exists()
+    assert "id" not in core._ProjectMetadataReader(root).manifest()["project"]

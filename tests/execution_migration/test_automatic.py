@@ -725,3 +725,129 @@ def test_script_rejects_snapshot_errors_before_host_factory(
         == "storage_configuration_invalid"
     )
     assert not storage.slot
+
+
+@pytest.mark.parametrize("operation", [False, True])
+def test_missing_identity_legacy_first_write_is_read_only(legacy_root, operation):
+    from contextlib import nullcontext
+
+    import processforge as core
+
+    from processforge_core.database import SQLiteDriver
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    project = legacy_root / "legacy"
+    flow = project / ".pf"
+    flow.mkdir(parents=True)
+    (flow / "process-forge.yaml").write_text(
+        "project:\n  name: old-shaped\n", encoding="utf-8"
+    )
+    before = {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()}
+    with (
+        patch.object(
+            SQLiteDriver, "_connect", side_effect=AssertionError("DDL/connect")
+        ),
+        patch.object(subprocess, "Popen", side_effect=AssertionError("daemon")),
+        configuration_operation(project, None) if operation else nullcontext(),
+    ):
+        host, _configuration = core._storage_first_write(project)
+        assert host is None
+    assert {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()} == before
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "pending",
+        "initialized",
+        "binding",
+        "missing-bound",
+        "pins",
+        "migration",
+        "foreign",
+        "adopted",
+    ],
+)
+@pytest.mark.parametrize("operation", [False, True])
+def test_missing_identity_never_defers_fenced_or_foreign_storage(
+    legacy_root, state, operation
+):
+    import sqlite3
+    from contextlib import nullcontext
+
+    import processforge as core
+
+    from processforge_core.database import DatabaseError
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    project = legacy_root / "legacy"
+    flow = project / ".pf"
+    flow.mkdir(parents=True)
+    (flow / "process-forge.yaml").write_text(
+        "project:\n  name: old-shaped\n", encoding="utf-8"
+    )
+    if state in {"pending", "initialized"}:
+        marker = flow / "maintenance/execution-initialization.json"
+        marker.parent.mkdir()
+        marker.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "state": "pending" if state == "pending" else "ready",
+                    "binding": {},
+                }
+            )
+        )
+    elif state in {"binding", "missing-bound"}:
+        marker = flow / "data/execution-storage.json"
+        marker.parent.mkdir()
+        marker.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "project_id": "foreign",
+                    "store_id": "a" * 32,
+                    "profile_id": "default",
+                    "target_relative_path": "data/pf.sqlite3",
+                }
+            )
+        )
+    elif state == "pins":
+        marker = flow / "data/storage-identities.json"
+        marker.parent.mkdir()
+        marker.write_text('{"schema_version":1,"slots":[{}]}')
+    elif state == "migration":
+        (flow / "maintenance/storage-migrations/r02-storage-v1").mkdir(parents=True)
+    else:
+        database = flow / "runtime/events/events.sqlite3"
+        database.parent.mkdir(parents=True)
+        with sqlite3.connect(database) as connection:
+            connection.execute(
+                "CREATE TABLE "
+                + ("pf_store_meta" if state == "adopted" else "foreign_domain")
+                + "(value TEXT)"
+            )
+    before = {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()}
+    with (
+        configuration_operation(project, None) if operation else nullcontext(),
+        pytest.raises((MaintenanceError, ExecutionError, DatabaseError)),
+    ):
+        core._storage_first_write(project)
+    assert {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()} == before
+
+
+@pytest.fixture
+def legacy_root(monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Use the existing owned fixture-root contract without changing host ACLs."""
+    root = Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex
+    root.mkdir(parents=True)
+    from processforge_core.configuration import DeviceConfigurationSource
+
+    monkeypatch.setattr(
+        DeviceConfigurationSource,
+        "default_path",
+        staticmethod(lambda: root / "device.yaml"),
+    )
+    return root

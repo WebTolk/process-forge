@@ -144,13 +144,27 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
         if name == "sessions":
             from processforge_core.agents.registry import AgentWorkplaceRegistry
 
-            presence_dir = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace)
-            paths = ((path, workplace) for parts in (("*.json",), ("*", "*.json")) for path in budget.walk(presence_dir, parts, workplace))
+            presence_dir = AgentWorkplaceRegistry().workplace_agent_presence_dir(
+                workplace
+            )
+            paths = (
+                (path, workplace)
+                for parts in (("*.json",), ("*", "*.json"))
+                for path in budget.walk(presence_dir, parts, workplace)
+            )
         elif name == "leases":
             from processforge_core.agents.registry import AgentWorkplaceRegistry
 
-            paths = ((path, workplace) for path in budget.walk(AgentWorkplaceRegistry().workplace_agent_leases_dir(workplace), ("*.yaml",), workplace))
+            paths = (
+                (path, workplace)
+                for path in budget.walk(
+                    AgentWorkplaceRegistry().workplace_agent_leases_dir(workplace),
+                    ("*.yaml",),
+                    workplace,
+                )
+            )
         else:
+
             def project_paths():
                 for project in roots[:128]:
                     budget.check()
@@ -171,12 +185,19 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
                             if not current.complete:
                                 budget.issues.add("coverage")
                             continue
-                        folder, pattern = project / ".pf/runtime/agent-runs", ("*", "*", "status.json")
+                        folder, pattern = (
+                            project / ".pf/runtime/agent-runs",
+                            ("*", "*", "status.json"),
+                        )
                     else:
                         folder, pattern = project / ".pf/runs", ("*", "run.yaml")
-                    yield from ((path, project) for path in budget.walk(folder, pattern, project))
+                    yield from (
+                        (path, project)
+                        for path in budget.walk(folder, pattern, project)
+                    )
                 if len(roots) > 128:
                     budget.issues.add("budget")
+
             paths = project_paths()
         for path, base in paths:
             try:
@@ -184,40 +205,108 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
                 status = item.get("status")
                 if name == "sessions":
                     agent, session = item.get("agent_id"), item.get("session_id")
-                    if not isinstance(agent, str) or not agent or not isinstance(session, str) or not session:
+                    if (
+                        not isinstance(agent, str)
+                        or not agent
+                        or not isinstance(session, str)
+                        or not session
+                    ):
                         raise ValueError
                     canonical = core.agent_presence_path(workplace, agent, session)
                     from processforge_core.agents.registry import AgentWorkplaceRegistry
 
-                    legacy = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace) / core.safe_id(agent, "agent") / (core.safe_id(session, "session") + ".json")
-                    if path not in {canonical, legacy, core.legacy_agent_presence_path(workplace, agent)}:
+                    legacy = (
+                        AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace)
+                        / core.safe_id(agent, "agent")
+                        / (core.safe_id(session, "session") + ".json")
+                    )
+                    if path not in {
+                        canonical,
+                        legacy,
+                        core.legacy_agent_presence_path(workplace, agent),
+                    }:
                         raise ValueError
                     key = (agent, session)
                     if key not in rows or path == canonical:
                         rows[key] = (path == canonical, item)
                 elif name == "workers":
-                    if status not in {"planned", "ready", "starting", "running", "completed", "failed", "timed_out", "unknown_exit", "lost", "blocked", "cancelled", "manual_required"}:
+                    if status not in {
+                        "planned",
+                        "ready",
+                        "starting",
+                        "running",
+                        "completed",
+                        "failed",
+                        "timed_out",
+                        "unknown_exit",
+                        "lost",
+                        "blocked",
+                        "cancelled",
+                        "manual_required",
+                    }:
                         raise ValueError
                     if status in {"starting", "unknown_exit", "lost"}:
                         budget.issues.add("coverage")
-                    if status in {"completed", "failed", "timed_out", "cancelled"} and item.get("pid") is not None:
+                    if (
+                        status in {"completed", "failed", "timed_out", "cancelled"}
+                        and item.get("pid") is not None
+                    ):
                         probe = getattr(core, "_legacy_tree_probe", None)
                         budget.check()
-                        if probe is None or probe(base, item.get("run_id"), item.get("task_id"), item, deadline=budget.deadline) is not True:
+                        if (
+                            probe is None
+                            or probe(
+                                base,
+                                item.get("run_id"),
+                                item.get("task_id"),
+                                item,
+                                deadline=budget.deadline,
+                            )
+                            is not True
+                        ):
                             budget.issues.add("coverage")
                         budget.check()
                     counts["running"] += status == "running"
                 elif name == "work":
-                    if status not in {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}:
+                    if status not in {
+                        "draft",
+                        "open",
+                        "in_progress",
+                        "blocked",
+                        "review",
+                        "completed",
+                        "cancelled",
+                        "failed",
+                    }:
                         raise ValueError
                     if status in counts:
                         counts[status] += 1
                 else:
-                    issued, expires = epoch(item.get("issued_at")), epoch(item.get("expires_at"))
-                    if issued > now or expires < issued or status not in {"active", "released", "revoked", "expired", "stale"}:
+                    issued, expires = (
+                        epoch(item.get("issued_at")),
+                        epoch(item.get("expires_at")),
+                    )
+                    if (
+                        issued > now
+                        or expires < issued
+                        or status
+                        not in {"active", "released", "revoked", "expired", "stale"}
+                    ):
                         raise ValueError
-                    counts["held" if status == "active" and expires > now else "expired" if status in {"active", "expired"} else "inactive"] += 1
-            except (ValueError, TypeError, OverflowError, RecursionError, yaml.YAMLError):
+                    counts[
+                        "held"
+                        if status == "active" and expires > now
+                        else "expired"
+                        if status in {"active", "expired"}
+                        else "inactive"
+                    ] += 1
+            except (
+                ValueError,
+                TypeError,
+                OverflowError,
+                RecursionError,
+                yaml.YAMLError,
+            ):
                 budget.issues.add("invalid")
             except OSError:
                 budget.issues.add("unreadable")
@@ -225,9 +314,21 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
             try:
                 status, ttl = item.get("status"), item.get("heartbeat_ttl_seconds")
                 age = now - epoch(item.get("last_seen_at"))
-                if type(ttl) is not int or ttl < 1 or age < 0 or status not in {"online", "offline", "stale", "checked_out", "failed"}:
+                if (
+                    type(ttl) is not int
+                    or ttl < 1
+                    or age < 0
+                    or status
+                    not in {"online", "offline", "stale", "checked_out", "failed"}
+                ):
                     raise ValueError
-                counts["online" if status == "online" and age <= ttl else "stale" if status in {"online", "stale"} else "offline"] += 1
+                counts[
+                    "online"
+                    if status == "online" and age <= ttl
+                    else "stale"
+                    if status in {"online", "stale"}
+                    else "offline"
+                ] += 1
             except (ValueError, TypeError, OverflowError):
                 budget.issues.add("invalid")
     except TimeoutError:

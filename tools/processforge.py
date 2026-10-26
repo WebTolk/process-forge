@@ -9897,6 +9897,17 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    if any(
+        not intent.with_suffix(".applied.json").is_file()
+        for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
+            "cancellation-*.yaml"
+        )
+    ):
+        print("FAIL: cancellation_recovery_pending")
+        return 1
+    if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
+        print("FAIL: work_is_terminal")
+        return 1
     _storage_first_write(project_root)
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
         task = _worker_assignment_service.load(project_root, task_id)
@@ -9950,10 +9961,12 @@ def _storage_first_write(
         )
     if route is not None and route.repository is not None:
         return None, None
-    from processforge_core import composition
     from processforge_core.configuration import ConfigurationProvider
     from processforge_core.maintenance.contracts import MaintenanceError
-    from processforge_core.maintenance.storage_migration import StorageMigrationHost
+    from processforge_core.project.configuration_inputs import (
+        _first_write_storage_host,
+        operation_device_path,
+    )
 
     manifest = _ProjectMetadataReader(project_root).workplace_manifest()
     workplace = manifest.parent if manifest else None
@@ -9964,27 +9977,14 @@ def _storage_first_write(
     if snapshot.errors:
         raise MaintenanceError("storage_configuration_invalid")
     pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
-    factory = getattr(composition, "build_storage_migration_host", None)
-    if factory is None:
-        raise MaintenanceError("storage_host_factory_unavailable")
-    from processforge_core.project.configuration_inputs import (
-        operation_device_path,
-        operation_storage_host,
+    host = _first_write_storage_host(
+        project_root,
+        workplace,
+        operation_device_path(project_root, workplace, provider.device_path),
+        pinned,
     )
-
-    host = operation_storage_host(
-        _ProjectMetadataReader(project_root).flow_root()
-        / "runtime/events/events.sqlite3"
-    ) or factory(
-        project_root=project_root,
-        workplace_root=workplace,
-        device_config_path=operation_device_path(
-            project_root, workplace, provider.device_path
-        ),
-        configuration=pinned,
-    )
-    if not isinstance(host, StorageMigrationHost):
-        raise MaintenanceError("storage_host_factory_invalid")
+    if host is None:
+        return None, pinned
     result = host.service.ensure_ready(host.context, trigger="first_write")
     if result.get("blocked"):
         execution = next(
@@ -10270,6 +10270,21 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
 
     project_root = Path(args.project_root).expanduser().resolve()
     try:
+        _run_task_inputs.require_flow_root(project_root)
+        task_id = safe_id(args.task, "task")
+        task = _worker_assignment_service.load(project_root, task_id)
+        run_id = safe_id(str(task.get("run_id") or "run"), "run")
+        if any(
+            not intent.with_suffix(".applied.json").is_file()
+            for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
+                "cancellation-*.yaml"
+            )
+        ):
+            print("FAIL: cancellation_recovery_pending")
+            return 1
+        if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
+            print("FAIL: work_is_terminal")
+            return 1
         _host, configuration = _storage_first_write(project_root)
         repository = _execution_storage(
             project_root, configuration=configuration

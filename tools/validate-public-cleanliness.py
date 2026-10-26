@@ -126,12 +126,48 @@ def flow_core_files(root_path: Path) -> list[Path]:
     return sorted(set(files), key=lambda path: path.relative_to(root_path).as_posix())
 
 
+def platform_identifiers(text: str, *, python: bool) -> list[str]:
+    """Keep resource IDs in strings/comments; exclude actual Python API calls."""
+    api_offsets: set[int] = set()
+    if python:
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            tree = None
+        lines = text.splitlines(keepends=True)
+        for node in ast.walk(tree) if tree is not None else ():
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            if (
+                isinstance(func, ast.Attribute)
+                and func.attr == "startswith"
+                and isinstance(func.value, ast.Attribute)
+                and func.value.attr == "platform"
+                and isinstance(func.value.value, ast.Name)
+                and func.value.value.id == "sys"
+            ):
+                prefix = (
+                    lines[func.lineno - 1]
+                    .encode("utf-8")[: func.col_offset]
+                    .decode("utf-8")
+                )
+                api_offsets.add(
+                    sum(map(len, lines[: func.lineno - 1])) + len(prefix) + len("sys.")
+                )
+    return [
+        match.group(1)
+        for match in PLATFORM_ID_RE.finditer(text)
+        if match.start(1) not in api_offsets
+    ]
+
+
 def platform_neutrality_failures(root_path: Path) -> list[str]:
     failures: list[str] = []
     for path in flow_core_files(root_path):
         rel = path.relative_to(root_path).as_posix()
         text = path.read_text(encoding="utf-8", errors="replace")
-        for match in PLATFORM_ID_RE.findall(text):
+        for match in platform_identifiers(text, python=path.suffix == ".py"):
             normalized = match.rstrip(".,;:)]}'\"`").lower()
             if not normalized.startswith(ALLOWED_PLATFORM_ID_PREFIXES):
                 failures.append(f"{rel}: non-neutral platform id {match!r}")

@@ -4,12 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
 from pathlib import Path
 from typing import Any
-
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -816,14 +816,123 @@ def process_definition_files(root: Path) -> list[Path]:
     return sorted(files)
 
 
+def validate_migration_descriptor(root: Path, path: Path, data: object) -> None:
+    """Validate the two code-pinned migration documents as typed descriptors."""
+    sys.path.insert(0, str(root / "src"))
+    from processforge_core.executions.schema import EXECUTION_SCHEMA
+    from processforge_core.maintenance.storage_migration import STORE_IDENTITY_SCHEMA
+
+    def reject() -> None:
+        fail(f"{path.relative_to(root)} invalid migration descriptor")
+
+    def checksum(value: object) -> bool:
+        return (
+            isinstance(value, str)
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", value) is not None
+        )
+
+    if not isinstance(data, dict):
+        reject()
+        return
+    expected: dict[str, object]
+    common = [
+        "src/processforge_core/maintenance/contracts.py",
+        "src/processforge_core/maintenance/execution_migration.py",
+        "src/processforge_core/maintenance/journal_scan.py",
+        "src/processforge_core/executions/schema.py",
+        "src/processforge_core/executions/sqlite_repository.py",
+    ]
+    if path.name == "execution-migration-v1.json":
+        expected = {
+            "migration_id": "r02-worker-executions-v1",
+            "descriptor_version": 1,
+            "source_format": "worker-status-json",
+            "source_schema_versions": [1],
+            "target_namespace": "execution",
+            "from_schema_version": 0,
+            "to_schema_version": 1,
+            "min_reader_capability": "execution-storage-v1",
+            "min_writer_capability": "execution-storage-v1",
+            "target_schema_checksum": EXECUTION_SCHEMA.checksum,
+        }
+        paths = common
+    else:
+        expected = {
+            "migration_id": "r02-storage-v1",
+            "descriptor_version": 1,
+            "min_reader_capability": "storage-identity-v1",
+            "min_writer_capability": "storage-identity-v1",
+            "identity_schema_checksum": STORE_IDENTITY_SCHEMA.checksum,
+        }
+        formats = data.get("legacy_formats")
+        if not isinstance(formats, dict) or set(formats) != {
+            "events",
+            "raw",
+            "accounting",
+            "search",
+        }:
+            reject()
+            return
+        for value in formats.values():
+            if (
+                not isinstance(value, dict)
+                or set(value) != {"application_id", "user_version", "schema_checksum"}
+                or type(value["application_id"]) is not int
+                or type(value["user_version"]) is not int
+                or value["user_version"] < 0
+                or not checksum(value["schema_checksum"])
+            ):
+                reject()
+        if not checksum(data.get("metadata_schema_checksum")):
+            reject()
+        expected.update(
+            legacy_formats=formats,
+            metadata_schema_checksum=data.get("metadata_schema_checksum"),
+        )
+        paths = [
+            common[0],
+            "src/processforge_core/maintenance/storage_migration.py",
+            "src/processforge_core/maintenance/backup.py",
+            *common[1:],
+            "schemas/execution-migration-v1.json",
+        ]
+    # Canonical JSON also distinguishes bool from int inside version arrays.
+    for key, value in expected.items():
+        if json.dumps(data.get(key), sort_keys=True) != json.dumps(
+            value, sort_keys=True
+        ):
+            reject()
+    actual = [
+        {
+            "relative_path": name,
+            "sha256": "sha256:"
+            + hashlib.sha256((root / name).read_bytes()).hexdigest(),
+        }
+        for name in paths
+    ]
+    encoded = json.dumps(
+        actual, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    if (
+        set(data) != set(expected) | {"transform_files", "transform_checksum"}
+        or data.get("transform_files") != actual
+        or data.get("transform_checksum")
+        != "sha256:" + hashlib.sha256(encoded).hexdigest()
+    ):
+        reject()
+
+
 def validate_json_schemas(root: Path) -> None:
     for path in sorted((root / "schemas").glob("*.json")):
         try:
             data = json.loads(read_text(path))
         except json.JSONDecodeError as exc:
             fail(f"{path.relative_to(root)} is invalid JSON: {exc}")
+        if path.name in {"execution-migration-v1.json", "storage-migration-v1.json"}:
+            validate_migration_descriptor(root, path, data)
+            continue
         for key in ("$schema", "title", "type"):
-            if key not in data:
+            if not isinstance(data, dict) or key not in data:
                 fail(f"{path.relative_to(root)} missing {key}")
 
 

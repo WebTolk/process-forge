@@ -53,8 +53,12 @@ if TYPE_CHECKING:
 
 
 def _load_action_tool_api() -> tuple[
-    type[_ActionToolDependencies], type[_ActionToolError], type[_ActionToolService],
-    set[str], dict[str, str], Callable[[str], dict[str, Any]],
+    type[_ActionToolDependencies],
+    type[_ActionToolError],
+    type[_ActionToolService],
+    set[str],
+    dict[str, str],
+    Callable[[str], dict[str, Any]],
 ]:
     """Load the native adapter only after the trusted source image is active."""
     from pf_runtime.action_tools import (
@@ -66,8 +70,14 @@ def _load_action_tool_api() -> tuple[
         action_tool_schema,
     )
 
-    return (ActionToolDependencies, ActionToolError, ActionToolService,
-            MUTATING_TOOL_NAMES, TOOL_DESCRIPTIONS, action_tool_schema)
+    return (
+        ActionToolDependencies,
+        ActionToolError,
+        ActionToolService,
+        MUTATING_TOOL_NAMES,
+        TOOL_DESCRIPTIONS,
+        action_tool_schema,
+    )
 
 
 (ActionToolDependencies, ActionToolError, ActionToolService,
@@ -131,12 +141,16 @@ def runtime_bootstrap() -> Any:
     return _RUNTIME_BOOTSTRAP
 
 
-def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any]:
+def tool_result(
+    name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any
+) -> dict[str, Any]:
+    from contextlib import ExitStack
+
+    from pf_native_control import current_entry
+
+    from pf_runtime import session_read
     from processforge_core.common.request_scope import scoped_request
     from processforge_core.project.configuration_inputs import configuration_operation
-    from contextlib import ExitStack
-    from pf_native_control import current_entry
-    from pf_runtime import session_read
 
     def execute() -> dict[str, Any]:
         with ExitStack() as operation:
@@ -150,11 +164,20 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
             session = configured or requested
             selected = None
             if arguments.get("project_root"):
-                selected = runtime.host.resolve_project(str(arguments["project_root"]), runtime.core)
+                selected = runtime.host.resolve_project(
+                    str(arguments["project_root"]), runtime.core
+                )
             if session:
-                bound = runtime.host.project_for_session(argparse.Namespace(session=session, project_root=None), workplace, runtime.core)
-                if selected is not None and (selected.resolve() != bound.resolve()
-                    or runtime.core.project_id(selected) != runtime.core.project_id(bound)):
+                bound = runtime.host.project_for_session(
+                    argparse.Namespace(session=session, project_root=None),
+                    workplace,
+                    runtime.core,
+                )
+                if selected is not None and (
+                    selected.resolve() != bound.resolve()
+                    or runtime.core.project_id(selected)
+                    != runtime.core.project_id(bound)
+                ):
                     raise session_read.SessionReadError("session_project_mismatch")
                 selected = bound
             if selected is not None:
@@ -619,9 +642,12 @@ def rpc_error(request_id: Any, code: int, message: str) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
 
 
-def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+def respond(
+    request: Any, workplace: Path, session_id: str, runtime: Any
+) -> dict[str, Any] | None:
     """Hold a lease only while processing this request, never during stdio idle."""
     from contextlib import ExitStack
+
     from pf_native_control import NativeControlError, current_entry
 
     try:
@@ -634,22 +660,35 @@ def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dic
         if not isinstance(request, dict) or "id" not in request:
             return None
         if request.get("method") == "tools/call":
-            return {"jsonrpc": "2.0", "id": request["id"], "result": {
-                "content": [{"type": "text", "text": safe_tool_error(error)}], "isError": True}}
+            return {
+                "jsonrpc": "2.0",
+                "id": request["id"],
+                "result": {
+                    "content": [{"type": "text", "text": safe_tool_error(error)}],
+                    "isError": True,
+                },
+            }
         return rpc_error(request["id"], -32603, "internal error")
 
 
-def _respond_in_operation(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+def _respond_in_operation(
+    request: Any, workplace: Path, session_id: str, runtime: Any
+) -> dict[str, Any] | None:
     if isinstance(request, dict):
         params = request.get("params")
         method = request.get("method")
         if method in ("initialize", "tools/list", "notifications/initialized") or (
-            method == "tools/call" and isinstance(params, dict)
-            and (params.get("name") in (
-                "pf.project_initialization.status",
-                "pf.project_initialization.initialize",
-                "pf.project_initialization.repair",
-            ) or params.get("name") in TOOL_DESCRIPTIONS)
+            method == "tools/call"
+            and isinstance(params, dict)
+            and (
+                params.get("name")
+                in (
+                    "pf.project_initialization.status",
+                    "pf.project_initialization.initialize",
+                    "pf.project_initialization.repair",
+                )
+                or params.get("name") in TOOL_DESCRIPTIONS
+            )
         ):
             # Protocol reads, initialization and new action preflight create no logs.
             # Native CLI diagnostics follow the new tools' binding/schema checks.
@@ -660,6 +699,7 @@ def _respond_in_operation(request: Any, workplace: Path, session_id: str, runtim
     if src_root not in sys.path:
         sys.path.insert(0, src_root)
     from processforge_core import diagnostics
+
     arguments = {}
     if isinstance(request, dict) and isinstance(request.get("params"), dict):
         candidate = request["params"].get("arguments")
@@ -669,28 +709,53 @@ def _respond_in_operation(request: Any, workplace: Path, session_id: str, runtim
     # Never create optional private files before project/session authorization.
     try:
         if arguments.get("project_root"):
-            candidate = runtime.host.resolve_project(str(arguments["project_root"]), runtime.core)
+            candidate = runtime.host.resolve_project(
+                str(arguments["project_root"]), runtime.core
+            )
             if session_id and arguments.get("session_id") not in (None, "", session_id):
                 raise ValueError("session mismatch")
             if supplied_session:
-                bound = runtime.host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, runtime.core)
-                if runtime.core.project_id(bound) != runtime.core.project_id(candidate) or bound.resolve() != candidate.resolve():
+                bound = runtime.host.project_for_session(
+                    argparse.Namespace(session=supplied_session, project_root=None),
+                    workplace,
+                    runtime.core,
+                )
+                if (
+                    runtime.core.project_id(bound) != runtime.core.project_id(candidate)
+                    or bound.resolve() != candidate.resolve()
+                ):
                     raise ValueError("session project mismatch")
             project = candidate
         elif supplied_session:
-            project = runtime.host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, runtime.core)
+            project = runtime.host.project_for_session(
+                argparse.Namespace(session=supplied_session, project_root=None),
+                workplace,
+                runtime.core,
+            )
     except (Exception, SystemExit):
         pass  # original dispatcher remains the authority for returned errors
     logger = diagnostics.for_project(project, session_id=supplied_session)
-    identity = {"request_id": request.get("id") if isinstance(request, dict) and "id" in request else None,
-                "session_id": supplied_session, "project_id": runtime.core.project_id(project) if project else None,
-                "build": diagnostics.identity_for(logger, __file__)}
+    identity = {
+        "request_id": request.get("id")
+        if isinstance(request, dict) and "id" in request
+        else None,
+        "session_id": supplied_session,
+        "project_id": runtime.core.project_id(project) if project else None,
+        "build": diagnostics.identity_for(logger, __file__),
+    }
     if identity["request_id"] is None:
         identity.pop("request_id")  # generated operation id, never a fabricated session
     with diagnostics.operation(logger, "mcp", "mcp.request", **identity):
         response = _respond(request, workplace, session_id, runtime)
-        if response and ("error" in response or response.get("result", {}).get("isError")):
-            diagnostics.emit("error", "mcp.request_error", {"rpc_error": response.get("error", {}).get("code")}, component="mcp")
+        if response and (
+            "error" in response or response.get("result", {}).get("isError")
+        ):
+            diagnostics.emit(
+                "error",
+                "mcp.request_error",
+                {"rpc_error": response.get("error", {}).get("code")},
+                component="mcp",
+            )
         return response
 
 

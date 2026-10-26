@@ -77,8 +77,10 @@ def replay_session_raw_records(
         from processforge_core.composition import build_storage_migration_host
 
         storage_host = build_storage_migration_host(
-            project_root=project_root, workplace_root=workplace_root,
-            device_config_path=bound.device_path, configuration=pinned,
+            project_root=project_root,
+            workplace_root=workplace_root,
+            device_config_path=bound.device_path,
+            configuration=pinned,
         )
     kernel = RawIngressKernel(
         workplace_root,
