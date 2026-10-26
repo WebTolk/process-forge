@@ -4207,67 +4207,158 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
     timeout_scale = positive_timeout_scale(args)
     if timeout_scale is None:
         return 1
+    # The archive parser has no default caller report root. Never infer a foreign
+    # destination from an archive path or from the disposable extraction root.
+    if not getattr(args, "root", None):
+        print("FAIL: extracted evidence requires an authorized caller --root")
+        return 1
+    evidence_root = root / ".pf/runtime/release-test/commands"
+    for parent in (evidence_root, *evidence_root.parents):
+        if parent.exists() or parent.is_symlink():
+            info = parent.lstat()
+            if parent.is_symlink() or getattr(info, "st_file_attributes", 0) & 0x400:
+                raise OSError("linked release evidence destination")
+        if parent == root:
+            break
+    # Check actual destination writes before launching any disposable child.
+    probe = evidence_root / uuid.uuid4().hex
+    probe.mkdir(parents=True, exist_ok=False)
+    try:
+        with (probe / "result.json").open("xb") as stream:
+            stream.write(b"{}\n")
+    finally:
+        if (probe / "result.json").exists():
+            (probe / "result.json").unlink()
+        probe.rmdir()
+
+    def publish_evidence(extract_root: Path) -> None:
+        commands = extract_root / ".pf/runtime/release-test/commands"
+        if not commands.exists():
+            return
+        for parent in (commands, *commands.parents):
+            info = parent.lstat()
+            if parent.is_symlink() or getattr(info, "st_file_attributes", 0) & 0x400:
+                raise OSError("linked extracted evidence")
+            if parent == extract_root:
+                break
+        for source in sorted(commands.iterdir()):
+            if len(source.name) != 32 or any(
+                c not in "0123456789abcdef" for c in source.name
+            ):
+                continue
+            info = source.lstat()
+            if (
+                not stat.S_ISDIR(info.st_mode)
+                or source.is_symlink()
+                or getattr(info, "st_file_attributes", 0) & 0x400
+            ):
+                raise OSError("unsafe extracted command evidence")
+            files = [
+                source / name for name in ("stdout.log", "stderr.log", "result.json")
+            ]
+            for path in files:
+                info = path.lstat()
+                if (
+                    not stat.S_ISREG(info.st_mode)
+                    or info.st_nlink != 1
+                    or path.is_symlink()
+                    or getattr(info, "st_file_attributes", 0) & 0x400
+                ):
+                    raise OSError("unsafe extracted command stream")
+            destination = evidence_root / source.name
+            destination.mkdir(exist_ok=False)
+            for path in files:
+                with (
+                    path.open("rb") as incoming,
+                    (destination / path.name).open("xb") as outgoing,
+                ):
+                    shutil.copyfileobj(incoming, outgoing)
+            # Same UUID and stream names preserve all existing relative refs.
+            print(
+                "EVIDENCE: "
+                + destination.relative_to(root).as_posix()
+                + "/result.json",
+                flush=True,
+            )
+
     from processforge_core.maintenance.temporary_disposal import owned_directory
 
     with owned_directory(Path(tempfile.gettempdir())) as extract_root:
-        with zipfile.ZipFile(archive_path) as archive:
-            archive.extractall(extract_root)
-        cli = extract_root / "tools" / "processforge.py"
-        if not cli.is_file():
-            print(f"FAIL: extracted archive has no CLI: {cli}")
-            return 1
-        for label, target in [
-            ("bin/pf.py --help", extract_root / "bin" / "pf.py"),
-            ("tools/processforge.py --help", cli),
-        ]:
+        try:
+            with zipfile.ZipFile(archive_path) as archive:
+                archive.extractall(extract_root)
+            cli = extract_root / "tools" / "processforge.py"
+            if not cli.is_file():
+                print(f"FAIL: extracted archive has no CLI: {cli}")
+                return 1
+            for label, target in [
+                ("bin/pf.py --help", extract_root / "bin" / "pf.py"),
+                ("tools/processforge.py --help", cli),
+            ]:
+                result = run_release_command(
+                    label,
+                    [sys.executable, str(target), "--help"],
+                    extract_root,
+                    timeout=30,
+                )
+                print_release_command_output(result)
+                if result.status != "PASS":
+                    print("RESULT: FAIL")
+                    return 1
+            command = [
+                sys.executable,
+                str(cli),
+                "release-test",
+                "--root",
+                str(extract_root),
+            ]
+            if extracted_test == "quick":
+                command.extend(
+                    [
+                        "--only",
+                        "py_compile",
+                        "--only",
+                        "schema validation",
+                        "--only",
+                        "public cleanliness",
+                        "--only",
+                        "checksum",
+                        "--only",
+                        "smoke_processforge_core_package_bootstrap",
+                        "--only",
+                        "smoke_central_event_ingress",
+                        "--only",
+                        "smoke_conversation_completeness",
+                        "--only",
+                        "smoke_central_event_replay",
+                    ]
+                )
+            else:
+                command.append("--public")
+            command.extend(["--timeout-scale", str(timeout_scale)])
             result = run_release_command(
-                label, [sys.executable, str(target), "--help"], extract_root, timeout=30
+                "release-test extracted archive",
+                command,
+                extract_root,
+                timeout=max(1, int(1200 * timeout_scale)),
             )
             print_release_command_output(result)
             if result.status != "PASS":
                 print("RESULT: FAIL")
                 return 1
-        command = [
-            sys.executable,
-            str(cli),
-            "release-test",
-            "--root",
-            str(extract_root),
-        ]
-        if extracted_test == "quick":
-            command.extend(
-                [
-                    "--only",
-                    "py_compile",
-                    "--only",
-                    "schema validation",
-                    "--only",
-                    "public cleanliness",
-                    "--only",
-                    "checksum",
-                    "--only",
-                    "smoke_processforge_core_package_bootstrap",
-                    "--only",
-                    "smoke_central_event_ingress",
-                    "--only",
-                    "smoke_conversation_completeness",
-                    "--only",
-                    "smoke_central_event_replay",
-                ]
-            )
-        else:
-            command.append("--public")
-        command.extend(["--timeout-scale", str(timeout_scale)])
-        result = run_release_command(
-            "release-test extracted archive",
-            command,
-            extract_root,
-            timeout=max(1, int(1200 * timeout_scale)),
-        )
-        print_release_command_output(result)
-        if result.status != "PASS":
-            print("RESULT: FAIL")
-            return 1
+        finally:
+            # Finalize before owned_directory's unconditional disposal, including
+            # early help failure, failed public gate, timeout and exceptions.
+            primary = sys.exception()
+            try:
+                publish_evidence(extract_root)
+            except Exception as secondary:
+                if primary is None:
+                    raise
+                primary.add_note(
+                    "release_evidence_publication_failed:" + type(secondary).__name__
+                )
+                raise primary from secondary
     print("RESULT: PASS")
     return 0
 

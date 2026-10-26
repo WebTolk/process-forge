@@ -109,6 +109,7 @@ def release_namespace() -> dict[str, Any]:
         "write_release_test_report",
         "positive_timeout_scale",
         "command_release_test",
+        "command_release_archive_test",
     }
     tree = ast.parse((ROOT / "tools/processforge.py").read_bytes())
     selected = ast.Module(
@@ -124,6 +125,11 @@ def release_namespace() -> dict[str, Any]:
         time=time,
         sys=sys,
         math=__import__("math"),
+        stat=__import__("stat"),
+        shutil=__import__("shutil"),
+        uuid=uuid,
+        tempfile=__import__("tempfile"),
+        zipfile=__import__("zipfile"),
         _core_common_clock=types.SimpleNamespace(
             now_utc=lambda: "2026-10-26T15:00:00Z"
         ),
@@ -238,3 +244,202 @@ def test_linked_report_refused(sealed: Any) -> None:
     os.link(original, path)
     with pytest.raises(native.NativeControlError):
         path.write_text("unsafe")
+
+
+@pytest.mark.parametrize("mode", ["failed", "timeout", "early"])
+def test_archive_evidence_survives_disposal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    mode: str,
+) -> None:
+    ns, extraction = archive_fixture(tmp_path, monkeypatch)
+    script = "import sys,time; print('EARLY-'+'x'*7000,flush=True); print('ERR-'+'y'*7000,file=sys.stderr,flush=True); "
+    script += "time.sleep(5)" if mode == "timeout" else "sys.exit(7)"
+
+    def child(command: list[str], cwd: Path, timeout: int) -> CommandResult:
+        if "--help" in command and mode != "early":
+            return CommandResult(command, str(cwd), 0, "help", "", False, timeout)
+        if "--help" not in command:
+            for index in range(2):
+                value = run_command([sys.executable, "-B", "-c", script], cwd, 1)
+                retain_command_output(
+                    value,
+                    cwd / ".pf/runtime/release-test/commands",
+                    started_at="a",
+                    finished_at="b",
+                    elapsed_seconds=1,
+                )
+        return run_command([sys.executable, "-B", "-c", script], cwd, 1)
+
+    ns["run_subprocess_command"] = child
+    assert ns["command_release_archive_test"](archive_args(tmp_path)) == 1
+    assert not extraction.exists()
+    refs = [
+        line.removeprefix("EVIDENCE: ")
+        for line in capsys.readouterr().out.splitlines()
+        if line.startswith("EVIDENCE: ")
+    ]
+    assert len(refs) == (1 if mode == "early" else 3)
+    for ref in refs:
+        metadata_path = tmp_path / ref
+        metadata = json.loads(metadata_path.read_text())
+        stdout = metadata_path.with_name(metadata["stdout"]).read_text()
+        stderr = metadata_path.with_name(metadata["stderr"]).read_text()
+        assert stdout.startswith("EARLY-") and len(stdout) > 7000
+        assert stderr.startswith("ERR-") and len(stderr) > 7000
+        assert metadata["timed_out"] == (mode == "timeout")
+        assert metadata["returncode"] != 0
+
+
+def archive_args(root: Path) -> argparse.Namespace:
+    return argparse.Namespace(
+        archive=str(root / "tiny.zip"),
+        manifest=None,
+        root=str(root),
+        extracted_test="full",
+        timeout_scale=1,
+    )
+
+
+def archive_fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[dict[str, Any], Path]:
+    from contextlib import contextmanager
+    import shutil
+
+    ns = release_namespace()
+    extraction = tmp_path / "owned-extraction"
+    # Execute the real lifetime seam; only OS resource creation/disposal are
+    # isolated to the exact tiny fixture. No package extraction or bootstrap.
+    tree = ast.parse(
+        (ROOT / "src/processforge_core/maintenance/temporary_disposal.py").read_bytes()
+    )
+    seam = ast.Module(
+        body=[n for n in tree.body if getattr(n, "name", None) == "owned_directory"],
+        type_ignores=[],
+    )
+
+    def create(boundary: Path) -> Any:
+        assert boundary == tmp_path
+        extraction.mkdir()
+        return types.SimpleNamespace(path=extraction, resource_id="fixture")
+
+    def dispose(resource: Any) -> Any:
+        assert resource.path == extraction and extraction.is_relative_to(tmp_path)
+        shutil.rmtree(extraction)
+        return types.SimpleNamespace(result="deleted")
+
+    values: dict[str, Any] = dict(
+        contextmanager=contextmanager,
+        create_owned_directory=create,
+        dispose_owned=dispose,
+        release_owned=lambda r: r,
+        CleanupError=OSError,
+    )
+    exec(
+        compile(
+            seam,
+            "owned_directory_seam",
+            "exec",
+            flags=__import__("__future__").annotations.compiler_flag,
+        ),
+        values,
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "processforge_core.maintenance.temporary_disposal",
+        types.SimpleNamespace(owned_directory=values["owned_directory"]),
+    )
+
+    class Archive:
+        def __init__(self, path: Path) -> None:
+            pass
+
+        def __enter__(self) -> Any:
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            pass
+
+        def extractall(self, root: Path) -> None:
+            (root / "tools").mkdir()
+            (root / "tools/processforge.py").touch()
+
+    ns.update(
+        archive_manifest_path=lambda p: p.with_suffix(".json"),
+        inspect_release_archive=lambda *a: [],
+        archive_manifest_freshness_checks=lambda *a: [],
+        print_checks=lambda checks: 0,
+        zipfile=types.SimpleNamespace(ZipFile=Archive),
+        tempfile=types.SimpleNamespace(gettempdir=lambda: str(tmp_path)),
+    )
+    return ns, extraction
+
+
+def test_archive_evidence_destination_refused_before_child(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ns, extraction = archive_fixture(tmp_path, monkeypatch)
+    destination = tmp_path / ".pf/runtime/release-test/commands"
+    destination.parent.mkdir(parents=True)
+    destination.write_text("blocked")
+    ns["run_subprocess_command"] = lambda *a, **kw: pytest.fail("child launched")
+    with pytest.raises(OSError):
+        ns["command_release_archive_test"](archive_args(tmp_path))
+    assert not extraction.exists()
+
+
+def test_archive_evidence_publication_failure_nonzero(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ns, extraction = archive_fixture(tmp_path, monkeypatch)
+
+    def child(command: list[str], cwd: Path, timeout: int) -> CommandResult:
+        # Fail publication after successful preflight, without changing old data.
+        monkeypatch.setitem(
+            ns,
+            "shutil",
+            types.SimpleNamespace(
+                copyfileobj=lambda *a: (_ for _ in ()).throw(
+                    OSError("publication failed")
+                )
+            ),
+        )
+        return CommandResult(command, str(cwd), 7, "outer", "error", False, timeout)
+
+    ns["run_subprocess_command"] = child
+    with pytest.raises(OSError, match="publication failed"):
+        ns["command_release_archive_test"](archive_args(tmp_path))
+    assert not extraction.exists()
+
+
+def test_archive_evidence_missing_root_stops_before_child(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ns, extraction = archive_fixture(tmp_path, monkeypatch)
+    args = archive_args(tmp_path)
+    args.root = None
+    ns["run_subprocess_command"] = lambda *a, **kw: pytest.fail("child launched")
+    assert ns["command_release_archive_test"](args) == 1
+    assert not extraction.exists()
+
+
+def test_archive_evidence_publication_preserves_primary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ns, extraction = archive_fixture(tmp_path, monkeypatch)
+
+    def child(command: list[str], cwd: Path, timeout: int) -> CommandResult:
+        incomplete = cwd / ".pf/runtime/release-test/commands" / ("d" * 32)
+        incomplete.mkdir(parents=True)
+        (incomplete / "stdout.log").write_text("partial")
+        raise ValueError("primary child failure")
+
+    ns["run_subprocess_command"] = child
+    with pytest.raises(ValueError, match="primary child failure") as caught:
+        ns["command_release_archive_test"](archive_args(tmp_path))
+    assert any(
+        "release_evidence_publication_failed" in note for note in caught.value.__notes__
+    )
+    assert not extraction.exists()
