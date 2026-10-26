@@ -34,10 +34,12 @@ class MetricsConfig:
 class TemporaryFilesConfig:
     mode: str = "notify"
     max_age_hours: float = 168
+    retain_unused: bool = False
 
     def __post_init__(self) -> None:
         _temporary_mode(self.mode)
         _temporary_age(self.max_age_hours)
+        _temporary_retention(self.retain_unused)
 
 
 def _temporary_mode(value: Any) -> None:
@@ -54,16 +56,24 @@ def _temporary_age(value: Any) -> None:
         raise InvalidConfiguration("configuration_temporary_files_age_invalid")
 
 
+def _temporary_retention(value: Any) -> None:
+    if type(value) is not bool:
+        raise InvalidConfiguration("configuration_temporary_files_retention_invalid")
+
+
 @dataclass(frozen=True)
 class TemporaryFilesOverrides:
     mode: str | None = None
     max_age_hours: float | None = None
+    retain_unused: bool | None = None
 
     def __post_init__(self) -> None:
         if self.mode is not None:
             _temporary_mode(self.mode)
         if self.max_age_hours is not None:
             _temporary_age(self.max_age_hours)
+        if self.retain_unused is not None:
+            _temporary_retention(self.retain_unused)
 
 
 @dataclass(frozen=True)
@@ -187,7 +197,8 @@ class PFConfig:
         )
         metrics = _section(runtime.get("metrics", {}), {"interval_seconds"})
         temporary = _section(
-            runtime.get("temporary_files", {}), {"mode", "max_age_hours"}
+            runtime.get("temporary_files", {}),
+            {"mode", "max_age_hours", "retain_unused"},
         )
         logging = _section(root.get("logging", {}), {"raw_hooks", "events"})
         return cls(
@@ -232,6 +243,7 @@ class PFConfig:
                     "logging.events",
                     "runtime.temporary_files.mode",
                     "runtime.temporary_files.max_age_hours",
+                    "runtime.temporary_files.retain_unused",
                     "database",
                     "database.driver",
                 },
@@ -247,6 +259,7 @@ class PFConfig:
             "runtime.garage_hooks",
             "runtime.temporary_files.mode",
             "runtime.temporary_files.max_age_hours",
+            "runtime.temporary_files.retain_unused",
             "logging.raw_hooks",
             "logging.events",
         }
@@ -330,7 +343,8 @@ class ProjectPFConfig:
         logging = _section(root.get("logging", {}), {"raw_hooks", "events"})
         runtime = _section(root.get("runtime", {}), {"garage_hooks", "temporary_files"})
         temporary = _section(
-            runtime.get("temporary_files", {}), {"mode", "max_age_hours"}
+            runtime.get("temporary_files", {}),
+            {"mode", "max_age_hours", "retain_unused"},
         )
         return cls(
             logging=LoggingOverrides(**logging),
@@ -369,6 +383,7 @@ class ProjectPFConfig:
                     "runtime.garage_hooks",
                     "runtime.temporary_files.mode",
                     "runtime.temporary_files.max_age_hours",
+                    "runtime.temporary_files.retain_unused",
                     "database",
                     "database.driver",
                 },

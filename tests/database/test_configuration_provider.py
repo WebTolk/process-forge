@@ -27,6 +27,32 @@ from .test_profiles import MemoryStore, section
 tmp_path = isolated_path
 
 
+def test_retention_layers_and_last_valid_error(tmp_path):
+    key = "runtime.temporary_files.retain_unused"
+    device = write(
+        tmp_path / "device.yaml",
+        {"runtime": {"temporary_files": {"retain_unused": True}}},
+    )
+    workplace = write(
+        tmp_path / "work.yaml",
+        {"runtime": {"temporary_files": {"retain_unused": False}}},
+    )
+    project = write(
+        tmp_path / "project.yaml",
+        {"runtime": {"temporary_files": {"retain_unused": None}}},
+    )
+    provider = ConfigurationProvider(
+        device_path=device, workplace_path=workplace, project_path=project
+    )
+    assert provider.get(key) is False
+    write(project, {"runtime": {"temporary_files": {"retain_unused": True}}})
+    assert provider.get(key) is True
+    write(project, {"runtime": {"temporary_files": {"retain_unused": "true"}}})
+    snapshot = provider.snapshot()
+    assert snapshot.config.get(key) is True
+    assert "configuration_temporary_files_retention_invalid" in snapshot.errors
+
+
 def write(path, value):
     staged = path.with_suffix(".staged")
     staged.write_text(json.dumps(value), encoding="utf-8")

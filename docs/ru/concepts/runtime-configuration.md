@@ -144,3 +144,19 @@ device path ?? replacement. ????????? ????? ??????? child ???????? snapshot ????
 ? accepted publication/manifest ? successor generation/epoch. Child maintenance
 ?????????? typed snapshot ? ?????????? pinned value ??? ?????????? ?????? live
 configuration ? ???? ??????????. ????? ?? ????????? project/file/infra permissions.
+
+## Разрешение сохранять ненужные данные
+
+`runtime.temporary_files.retain_unused` — параметр существующего PFConfig.
+Глобальное значение по умолчанию — `false`; проект принимает `true`, `false`
+или `null` (наследование). Явный проектный `false` отменяет глобальный `true`.
+Приоритет: встроенные значения, device, явно заданные workplace-поля, проект,
+затем разрешённый typed project context. Строки и числа недопустимы.
+
+Только точный `true` в снимке операции без ошибок разрешает сохранять ненужный
+PF-owned payload. Last-valid значение при текущей ошибке конфигурации нового
+разрешения не даёт. Параметр не предоставляет filesystem- или Work-права.
+Режим уведомления (`off`/`notify`) и возраст не разрешают хранение или удаление.
+Собственный sibling staging для atomic replacement можно удалять после
+использования даже при разрешённом сохранении других данных. Нужные input,
+recovery и evidence сохраняются до завершения реальных потребителей.

@@ -31,11 +31,14 @@ class RuntimeServiceStateWriter:
         try:
             tmp.write_text(render(), encoding="utf-8")
             self._replace(tmp, path)
-        except BaseException:
+        except BaseException as publication_error:
             try:
                 tmp.unlink(missing_ok=True)
-            except OSError:
-                pass  # Cleanup denial must not replace the publication error.
+            except OSError as cleanup_error:
+                publication_error.add_note(
+                    "temporary_cleanup:runtime_state:cleanup_pending:"
+                    + str(getattr(cleanup_error, "winerror", None) or cleanup_error.errno)
+                )
             raise
 
     @staticmethod

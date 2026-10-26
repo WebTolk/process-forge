@@ -156,3 +156,19 @@ snapshot alongside accepted publication, manifest, successor generation and epoc
 pins. Child maintenance validates the typed snapshot and reuses its pinned value;
 it does not reread live configuration during that update. The channel grants no
 additional project, file or infrastructure access.
+
+## Permission to retain unused payload
+
+`runtime.temporary_files.retain_unused` is an existing PFConfig leaf. Its global
+default is `false`; a project accepts `true`, `false`, or `null` (inherit).
+An explicit project `false` overrides global `true`. Composition remains builtin,
+device, explicitly present workplace leaves, project, then authorized typed
+project context. Strings and numbers are invalid booleans.
+
+Only exact `true` in an error-free operation snapshot permits retention of unused
+PF-owned payload. Last-valid values accompanied by current configuration errors
+do not grant new permission. This setting grants no filesystem or Work rights.
+Neither notification mode (`off` or `notify`) nor age authorizes retention or
+deletion. Atomic sibling staging can always be discarded after its own use,
+even when retaining other payload is permitted. Required input, recovery and
+evidence remain needed until their actual consumers finish.

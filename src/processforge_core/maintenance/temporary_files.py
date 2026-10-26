@@ -227,8 +227,11 @@ def _read_report(project_root: Path) -> dict:
     with report_destination(project_root) as (path, parent):
         if os.name != "nt" and parent is None:
             raise OSError("unsafe_directory")
-        info = (path.lstat() if os.name == "nt"
-                else os.stat(path.name, dir_fd=parent, follow_symlinks=False))
+        info = (
+            path.lstat()
+            if os.name == "nt"
+            else os.stat(path.name, dir_fd=parent, follow_symlinks=False)
+        )
         if _linked(info) or not stat.S_ISREG(info.st_mode):
             raise ValueError("report_invalid")
         flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
@@ -237,29 +240,45 @@ def _read_report(project_root: Path) -> dict:
         fd = os.open(path.name if parent is not None else path, flags, dir_fd=parent)
         with os.fdopen(fd, "rb") as stream:
             opened = os.fstat(stream.fileno())
-            if (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino) or not stat.S_ISREG(opened.st_mode):
+            if (opened.st_dev, opened.st_ino) != (
+                info.st_dev,
+                info.st_ino,
+            ) or not stat.S_ISREG(opened.st_mode):
                 raise ValueError("report_invalid")
             raw = stream.read(MAX_REPORT_BYTES + 1)
     if len(raw) > MAX_REPORT_BYTES:
         raise ValueError("report_invalid")
     report = json.loads(raw)
-    if (not isinstance(report, dict) or report.get("kind") != "pf.temporary_files"
-            or type(report.get("schema_version")) is not int or report["schema_version"] != 1
-            or report.get("root") != ".pf/tmp" or report.get("state") not in STATES
-            or any(type(report.get(key)) is not int or report[key] < 0 for key in COUNTS)
-            or report["entries_observed"] > MAX_ENTRIES
-            or report["candidate_count_lower_bound"] > report["files_count_lower_bound"]
-            or report["files_count_lower_bound"] > report["entries_observed"]
-            or report["candidate_bytes_lower_bound"] > report["bytes_lower_bound"]
-            or not isinstance(report.get("candidate_paths"), list)
-            or len(report["candidate_paths"]) > MAX_CANDIDATES
-            or len(report["candidate_paths"]) > report["candidate_count_lower_bound"]
-            or any(not _valid_candidate(path) for path in report["candidate_paths"])
-            or not isinstance(report.get("reasons"), list) or len(report["reasons"]) > len(REASONS)
-            or any(not isinstance(reason, str) or reason not in REASONS for reason in report["reasons"])):
+    if (
+        not isinstance(report, dict)
+        or report.get("kind") != "pf.temporary_files"
+        or type(report.get("schema_version")) is not int
+        or report["schema_version"] != 1
+        or report.get("root") != ".pf/tmp"
+        or report.get("state") not in STATES
+        or any(type(report.get(key)) is not int or report[key] < 0 for key in COUNTS)
+        or report["entries_observed"] > MAX_ENTRIES
+        or report["candidate_count_lower_bound"] > report["files_count_lower_bound"]
+        or report["files_count_lower_bound"] > report["entries_observed"]
+        or report["candidate_bytes_lower_bound"] > report["bytes_lower_bound"]
+        or not isinstance(report.get("candidate_paths"), list)
+        or len(report["candidate_paths"]) > MAX_CANDIDATES
+        or len(report["candidate_paths"]) > report["candidate_count_lower_bound"]
+        or any(not _valid_candidate(path) for path in report["candidate_paths"])
+        or not isinstance(report.get("reasons"), list)
+        or len(report["reasons"]) > len(REASONS)
+        or any(
+            not isinstance(reason, str) or reason not in REASONS
+            for reason in report["reasons"]
+        )
+    ):
         raise ValueError("report_invalid")
     recorded = report.get("configuration")
-    if not isinstance(recorded, dict) or set(recorded) != {"mode", "max_age_hours"}:
+    if not isinstance(recorded, dict) or set(recorded) != {
+        "mode",
+        "max_age_hours",
+        "retain_unused",
+    }:
         raise ValueError("report_invalid")
     TemporaryFilesConfig(**recorded)
     stamp = datetime.fromisoformat(report["observed_at"])

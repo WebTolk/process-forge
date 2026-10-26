@@ -13,7 +13,7 @@ files beside their destination for atomic replacement keep their existing roles.
 ## Old-file notifications
 
 The optional app-server observes `.pf/tmp/` and reports files older than the
-configured age. **PF does not delete them.** Age identifies candidates for
+configured age. **The observer does not delete them.** Age identifies candidates for
 review; it does not prove that a file is unnecessary. There is no search across
 Work journals to guess which files are still useful.
 
@@ -82,3 +82,19 @@ File-only work does not require an app-server and still follows the scratch
 location rule. Without a running observer, do not expect a fresh background
 notification. Start or configure infrastructure only through the operator's
 chosen [Runtime workflow](getting-started/runtime-autostart.md).
+
+## Permission to retain unused payload
+
+`runtime.temporary_files.retain_unused` is an existing PFConfig leaf. Its global
+default is `false`; a project accepts `true`, `false`, or `null` (inherit).
+An explicit project `false` overrides global `true`. Composition remains builtin,
+device, explicitly present workplace leaves, project, then authorized typed
+project context. Strings and numbers are invalid booleans.
+
+Only exact `true` in an error-free operation snapshot permits retention of unused
+PF-owned payload. Last-valid values accompanied by current configuration errors
+do not grant new permission. This setting grants no filesystem or Work rights.
+Neither notification mode (`off` or `notify`) nor age authorizes retention or
+deletion. Atomic sibling staging can always be discarded after its own use,
+even when retaining other payload is permitted. Required input, recovery and
+evidence remain needed until their actual consumers finish.

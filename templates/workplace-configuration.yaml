@@ -2,6 +2,7 @@ schema_version: 1
 runtime:
   temporary_files:
     mode: notify
+    retain_unused: false
     max_age_hours: 168
   metrics:
     interval_seconds: 10

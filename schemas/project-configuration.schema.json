@@ -40,6 +40,14 @@
               "minimum": 1,
               "maximum": 87600,
               "default": null
+            },
+            "retain_unused": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": null,
+              "description": "Explicit permission to retain unused PF-owned temporary payload; null inherits. Grants no filesystem rights."
             }
           }
         }
