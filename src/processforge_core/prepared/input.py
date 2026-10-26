@@ -242,3 +242,10 @@ def collection_receipt(project: Path, task: dict, state: dict, core: Any) -> tup
             raise ValueError("output_not_attributable_to_attempt:" + item["path"])
     write_once(receipt_path, receipt)
     return receipt_path, receipt
+
+
+def bind_managed_scratch(project: Path, document: dict) -> None:
+    """Attach only a newly produced private ordinary-worker scratch contract."""
+    from .command import allocate_scratch
+
+    allocate_scratch(project, document)

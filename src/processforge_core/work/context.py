@@ -561,3 +561,40 @@ def stage_view(capsule: dict[str, Any], metadata: dict[str, Any]) -> dict[str, A
     return {"id": str(metadata.get("stage") or ""), "parameters": copy.deepcopy(stage.get("parameters") or {}),
             "required_capabilities": copy.deepcopy(stage.get("required_capabilities") or []),
             "required_inputs": copy.deepcopy(stage.get("required_inputs") or []), "produced_artifacts": copy.deepcopy(stage.get("produced_artifacts") or [])}
+
+
+def managed_scratch_namespace(scope: dict[str, Any]) -> str | None:
+    """Select only an unambiguous, literal, immutable owned scratch grant."""
+    ownership = scope.get("ownership") or {}
+    if ownership.get("writer") is not True or not ownership.get("owner_id"):
+        return None
+    candidates = set()
+    for pattern in ownership.get("owned_files", []):
+        if not pattern.startswith(".pf/tmp/") or not pattern.endswith("/**"):
+            continue
+        root = pattern[:-3]
+        try:
+            portable_path(root)
+        except ValueError:
+            continue
+        denied = False
+        for excluded in scope.get("forbidden_files", []):
+            prefix = re.split(r"[*?\[]", excluded.replace("\\", "/"), maxsplit=1)[
+                0
+            ].rstrip("/")
+            if (
+                not prefix
+                or root == prefix
+                or root.startswith(prefix + "/")
+                or prefix.startswith(root + "/")
+            ):
+                denied = True
+        if (
+            not denied
+            and pattern in scope.get("allowed_files", [])
+            and scope_allows(
+                scope, root + "/pf-scratch-probe/resource", "write_product"
+            )
+        ):
+            candidates.add(root)
+    return next(iter(candidates)) if len(candidates) == 1 else None

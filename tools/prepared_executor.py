@@ -600,7 +600,9 @@ def _run_target_in_operation(
             except ExecutorError, OSError, ValueError:
                 print("FAIL: execution_activity_unknown", file=sys.stderr)
                 return 125
-        child_environment = dict(current_env)
+        from processforge_core.prepared.command import scratch_environment
+
+        child_environment = scratch_environment(document, current_env)
         if receipts is not None:
             # A nested Codex wrapper is part of this owned tree, not another writer.
             for name in _LAUNCH_ENV:
@@ -657,6 +659,7 @@ def _run_target_in_operation(
                 while job.active():
                     time.sleep(0.05)
                 job.close()
+            tree_absent = job is not None
             status = "completed" if exit_code == 0 else "failed"
             if receipts is None:
                 write_exit_contract(exit_path, exit_code)
@@ -674,6 +677,10 @@ def _run_target_in_operation(
             else:
                 receipts.exit_receipt(exit_code)
                 receipts.heartbeat_receipt(status)
+            if tree_absent:
+                from processforge_core.prepared.command import release_scratch
+
+                release_scratch(document, tree_absent=True, evidence_finalized=True)
             return exit_code
         except KeyboardInterrupt:
             _terminate_and_wait(process)

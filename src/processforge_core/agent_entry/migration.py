@@ -3,20 +3,37 @@
 Each replacement is atomic, the set of replacements is not. The OS lock serializes
 this service; it is not a sandbox against a hostile concurrent filesystem owner.
 """
+
 from __future__ import annotations
 
 import base64
-from contextlib import contextmanager
 import os
-from pathlib import Path, PurePosixPath
 import re
 import stat
 import uuid
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import asdict
+from pathlib import Path, PurePosixPath
+from typing import Any
 
-from processforge_platforms.file_security import FileReplacementError, native_file_security
+from processforge_platforms.file_security import (
+    FileReplacementError,
+    native_file_security,
+)
 
-from .contract import (Contract, EntryError, block_span, decode_json, digest, encoded,
-                          load_contract, project_content, text_bytes)
+from ..maintenance.temporary_disposal import OwnedTemporary
+from .contract import (
+    Contract,
+    EntryError,
+    block_span,
+    decode_json,
+    digest,
+    encoded,
+    load_contract,
+    project_content,
+    text_bytes,
+)
 
 
 TARGETS = ("AGENTS.md", ".pf/AGENTS.md", ".pf/agent-entry.json")
@@ -26,6 +43,56 @@ PLACEMENT_TARGETS = (TARGETS, START_TARGETS, *ADAPTER_TARGETS)
 JOURNALS = ".pf/runtime/agent-entry-transactions"
 MAX_FILE = 1048576
 MAX_JOURNAL = 12 * MAX_FILE
+
+# Each placement/rollback owns only directories it creates in this invocation.
+_STAGING: ContextVar[list[OwnedTemporary] | None] = ContextVar("agent_entry_staging", default=None)
+
+
+@contextmanager
+def _transaction_temporaries(root: Path):
+    from ..maintenance.temporary_disposal import (
+        atomic_staging,
+        dispose_owned,
+        release_owned,
+    )
+
+    resources: list[OwnedTemporary] = []
+    token = _STAGING.set(resources)
+    primary: BaseException | None = None
+    outcome: dict[str, Any] = {}
+    try:
+        yield outcome
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        _STAGING.reset(token)
+        # The inner operation has closed entry_lock and durably journaled either
+        # complete data or rollback inputs. Incomplete staging is reproducible
+        # from that journal; source, journal and recovery bytes stay protected.
+        for resource in resources:
+            receipt = dispose_owned(release_owned(resource))
+            folder = _directory(root, JOURNALS + "/cleanup", private=True)
+            path = folder / (resource.resource_id + ".json")
+            try:
+                with atomic_staging(path) as temporary:
+                    temporary.write_bytes(
+                        encoded({"schema_version": 1, **asdict(receipt)})
+                    )
+                    temporary.replace(path)
+            except OSError as error:
+                if primary is not None:
+                    primary.add_note(
+                        "temporary_cleanup_receipt:" + type(error).__name__
+                    )
+                else:
+                    raise
+            if receipt.result not in {"deleted", "already_absent"}:
+                if primary is not None:
+                    primary.add_note("temporary_cleanup:" + receipt.result)
+                elif outcome.get("action") != "incomplete":
+                    raise OSError("temporary_cleanup:" + receipt.result)
+
 
 
 def root_path(value: Path) -> Path:
@@ -447,9 +514,22 @@ def _journal(root: Path, value: dict):
 
 
 def _stage(root: Path, transaction: str, raw: bytes) -> Path:
+    from ..maintenance.temporary_disposal import create_owned_directory
+
+    resources = _STAGING.get()
+    if resources is None:
+        raise EntryError("entry_transaction_incomplete")
     _directory(root, ".pf/tmp")
-    directory = _directory(root, f".pf/tmp/agent-entry-{transaction}", private=True)
-    path = safe_path(root, directory.relative_to(root).as_posix() + f"/{uuid.uuid4().hex}.stage", writable=True)
+    if not resources:
+        owned = create_owned_directory(root / ".pf/tmp")
+        resources.append(owned)
+        _directory(root, owned.path.relative_to(root).as_posix(), private=True)
+    directory = resources[0].path
+    path = safe_path(
+        root,
+        directory.relative_to(root).as_posix() + f"/{uuid.uuid4().hex}.stage",
+        writable=True,
+    )
     _durable_file(path, raw)
     return path
 
@@ -479,7 +559,9 @@ def _expect(root: Path, name: str, expected: dict):
 def _replacement_security(root: Path, transaction: str, name: str, acl: str) -> str:
     """Qualify the filesystem's ACL merge on empty private files before writes."""
     second = _stage(root, transaction, b"")
-    directory_name = f".pf/tmp/agent-entry-{transaction}/probe-{uuid.uuid4().hex}"
+    directory_name = (
+        second.parent.relative_to(root).as_posix() + f"/probe-{uuid.uuid4().hex}"
+    )
     directory = _directory(root, directory_name)
     target_parent = safe_path(root, name).parent
     _set_acl(directory, _acl(target_parent))
@@ -523,8 +605,32 @@ def apply_entry(project: Path, supplied: dict, *, apply: bool = False, source: P
                             source_guard=lambda: contract().source_digest, _fault=_fault)
 
 
-def _apply_placement(project: Path, supplied: dict, *, apply: bool, targets: tuple,
-                     planner, source_guard, _fault=None) -> dict:
+def _apply_placement(
+    project: Path,
+    supplied: dict,
+    *,
+    apply: bool,
+    targets: tuple,
+    planner,
+    source_guard,
+    _fault=None,
+) -> dict:
+    with _transaction_temporaries(root_path(project)) as outcome:
+        result = _apply_placement_owned(
+            project,
+            supplied,
+            apply=apply,
+            targets=targets,
+            planner=planner,
+            source_guard=source_guard,
+            _fault=_fault,
+        )
+        outcome.update(result)
+        return result
+
+
+def _apply_placement_owned(project: Path, supplied: dict, *, apply: bool, targets: tuple,
+                           planner, source_guard, _fault=None) -> dict:
     # Only bounded placement services can choose a fixed target set. Journals use the
     # same whitelist; arbitrary file placement is deliberately unsupported.
     if targets not in PLACEMENT_TARGETS:
@@ -608,7 +714,16 @@ def _apply_placement(project: Path, supplied: dict, *, apply: bool, targets: tup
                     "files": _states(root, journal), "remediation": "rollback_transaction"}
 
 
-def rollback_entry(project: Path, transaction: str, *, apply: bool = False, _fault=None) -> dict:
+def rollback_entry(
+    project: Path, transaction: str, *, apply: bool = False, _fault=None
+) -> dict:
+    with _transaction_temporaries(root_path(project)) as outcome:
+        result = _rollback_entry_owned(project, transaction, apply=apply, _fault=_fault)
+        outcome.update(result)
+        return result
+
+
+def _rollback_entry_owned(project: Path, transaction: str, *, apply: bool = False, _fault=None) -> dict:
     if not apply:
         raise EntryError("explicit_apply_required")
     root = root_path(project)

@@ -31,6 +31,7 @@ class OwnedTemporary:
     boundary: Path
     use: TemporaryUse
     _creation: object
+    kind: str = "file"
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,10 @@ class CleanupReceipt:
     deleted_bytes: int = 0
     error_code: int | None = None
     configuration_errors: tuple[str, ...] = ()
+    deleted_directories: int = 0
+    residuals: tuple[str, ...] = ()
+    complete: bool = True
+    reason_code: str = ""
 
 
 class CleanupError(OSError):
@@ -80,6 +85,29 @@ def create_owned_file(destination: Path) -> OwnedTemporary:
         destination.parent,
         TemporaryUse(),
         _CREATED,
+    )
+
+
+def create_owned_directory(boundary: Path) -> OwnedTemporary:
+    """Create one exclusive disposable child; existing directories are never adopted."""
+    boundary = Path(boundary).absolute()
+    resource_id = uuid.uuid4().hex
+    path = boundary / ("pf-scratch-" + resource_id)
+    with _parent(path) as descriptor:
+        os.mkdir(
+            path if descriptor is None else path.name,
+            mode=0o777 if os.name == "nt" else 0o700,
+            dir_fd=descriptor,
+        )
+        info = path.lstat()
+    return OwnedTemporary(
+        resource_id,
+        path,
+        (info.st_dev, info.st_ino),
+        boundary,
+        TemporaryUse(),
+        _CREATED,
+        "directory",
     )
 
 
@@ -147,7 +175,7 @@ def _windows_delete(resource: OwnedTemporary) -> int:
     close = kernel.CloseHandle
     close.argtypes, close.restype = [wintypes.HANDLE], wintypes.BOOL
     # DELETE | READ_ATTRIBUTES, no delete sharing; OPEN_REPARSE_POINT.
-    handle = create(str(resource.path), 0x10080, 3, None, 3, 0x00200000, None)
+    handle = create(str(resource.path), 0x10080, 3, None, 3, 0x02200000, None)
     if handle == wintypes.HANDLE(-1).value:
         raise ctypes.WinError(ctypes.get_last_error())
     try:
@@ -160,14 +188,19 @@ def _windows_delete(resource: OwnedTemporary) -> int:
         identity = (file_id.volume, int.from_bytes(bytes(file_id.identity), "little"))
         if identity != resource.identity:
             raise ValueError("identity_changed")
-        if info.attributes & (0x400 | 0x10) or info.links != 1:
+        directory = resource.kind == "directory"
+        if (
+            info.attributes & 0x400
+            or bool(info.attributes & 0x10) != directory
+            or (not directory and info.links != 1)
+        ):
             raise ValueError("unsafe_path")
         disposition = wintypes.BOOL(True)
         if not dispose(
             handle, 4, ctypes.byref(disposition), ctypes.sizeof(disposition)
         ):
             raise ctypes.WinError(ctypes.get_last_error())
-        return (info.size_high << 32) | info.size_low
+        return 0 if directory else (info.size_high << 32) | info.size_low
     finally:
         close(handle)
 
@@ -186,13 +219,10 @@ def dispose_owned(
     boundary but cannot exclude a hostile same-user mutation of the entry.
     """
 
-    def receipt(result: str, **values: int) -> CleanupReceipt:
-        return CleanupReceipt(
-            resource.resource_id,
-            result,
-            configuration_errors=configuration_errors,
-            **values,
-        )
+    def receipt(result: str, *, deleted_files: int = 0, deleted_bytes: int = 0,
+                error_code: int | None = None) -> CleanupReceipt:
+        return CleanupReceipt(resource.resource_id, result, deleted_files, deleted_bytes,
+                              error_code, configuration_errors)
 
     if resource._creation is not _CREATED:
         return receipt("ownership_unknown")
@@ -221,6 +251,8 @@ def dispose_owned(
                 )
             except FileNotFoundError:
                 return receipt("already_absent")
+            if resource.kind == "directory":
+                return _dispose_directory(resource, configuration_errors)
             if _linked(info) or not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
                 return receipt("unsafe_path")
             if (info.st_dev, info.st_ino) != resource.identity:
@@ -240,6 +272,95 @@ def dispose_owned(
         )
 
 
+def _dispose_directory(
+    resource: OwnedTemporary, errors: tuple[str, ...]
+) -> CleanupReceipt:
+    """Walk only this created namespace, pin ancestry, refuse links and bound work."""
+    files = size = directories = entries = 0
+    residuals: list[str] = []
+    result = "deleted"
+    error_code = None
+    reason_code = ""
+
+    def walk(owned: OwnedTemporary, depth: int) -> None:
+        nonlocal files, size, directories, entries
+        if depth > 32 or entries >= 10000:
+            raise ValueError("entry_limit")
+        with _parent(owned.path) as parent:
+            info = owned.path.lstat()
+            if _linked(info) or not stat.S_ISDIR(info.st_mode):
+                raise ValueError("unsafe_path")
+            if (info.st_dev, info.st_ino) != owned.identity:
+                raise ValueError("identity_changed")
+            with _directory(owned.path, parent) as descriptor:
+                with os.scandir(
+                    descriptor if descriptor is not None else owned.path
+                ) as children:
+                    for child in children:
+                        entries += 1
+                        if entries > 10000:
+                            raise ValueError("entry_limit")
+                        # Windows DirEntry.stat can omit dev/inode. Query the actual
+                        # entry while the producer namespace is pinned.
+                        child_info = os.stat(
+                            owned.path / child.name
+                            if descriptor is None
+                            else child.name,
+                            dir_fd=descriptor,
+                            follow_symlinks=False,
+                        )
+                        if _linked(child_info):
+                            raise ValueError("unsafe_path")
+                        kind = (
+                            "directory" if stat.S_ISDIR(child_info.st_mode) else "file"
+                        )
+                        nested = OwnedTemporary(
+                            owned.resource_id,
+                            owned.path / child.name,
+                            (child_info.st_dev, child_info.st_ino),
+                            owned.path,
+                            TemporaryUse(True, 0, True),
+                            _CREATED,
+                            kind,
+                        )
+                        if kind == "directory":
+                            walk(nested, depth + 1)
+                        else:
+                            receipt = dispose_owned(nested)
+                            files += receipt.deleted_files
+                            size += receipt.deleted_bytes
+                            if receipt.result not in {"deleted", "already_absent"}:
+                                raise OSError(receipt.error_code or 0, receipt.result)
+            if os.name == "nt":
+                _windows_delete(owned)
+            else:
+                current = os.stat(owned.path.name, dir_fd=parent, follow_symlinks=False)
+                if (current.st_dev, current.st_ino) != owned.identity:
+                    raise ValueError("identity_changed")
+                os.rmdir(owned.path.name, dir_fd=parent)
+            directories += 1
+
+    try:
+        walk(resource, 0)
+    except (OSError, ValueError) as error:
+        result = "partial" if files or directories else "cleanup_pending"
+        error_code = getattr(error, "winerror", None) or getattr(error, "errno", None)
+        reason_code = str(error)[:160]
+        residuals.append(str(resource.path))
+    return CleanupReceipt(
+        resource.resource_id,
+        result,
+        files,
+        size,
+        error_code,
+        errors,
+        directories,
+        tuple(residuals),
+        result == "deleted",
+        reason_code,
+    )
+
+
 @contextmanager
 def atomic_staging(destination: Path) -> Iterator[Path]:
     """Finalize the exact new sibling on every exit, preserving a primary error."""
@@ -254,6 +375,26 @@ def atomic_staging(destination: Path) -> Iterator[Path]:
         result = dispose_owned(release_owned(resource))
         if result.result not in {"deleted", "already_absent"}:
             diagnostic = f"temporary_cleanup:{result.resource_id}:{result.result}:{result.error_code}"
+            if primary is not None:
+                primary.add_note(diagnostic)
+            else:
+                raise CleanupError(diagnostic)
+
+
+@contextmanager
+def owned_directory(boundary: Path) -> Iterator[Path]:
+    """Finalize an exclusively created operation directory on success and failure."""
+    resource = create_owned_directory(boundary)
+    primary: BaseException | None = None
+    try:
+        yield resource.path
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        receipt = dispose_owned(release_owned(resource))
+        if receipt.result not in {"deleted", "already_absent"}:
+            diagnostic = f"temporary_cleanup:{resource.resource_id}:{receipt.result}:{receipt.error_code}"
             if primary is not None:
                 primary.add_note(diagnostic)
             else:

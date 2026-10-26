@@ -692,15 +692,20 @@ def _main_in_operation() -> int:
                 from pf_native_control import spawn_owned
                 from prepared_executor import _terminate_and_wait
 
+                from processforge_core.prepared.command import scratch_environment
+
+                child_environment = {
+                    key: value
+                    for key, value in os.environ.items()
+                    if not key.startswith(("PF_EXECUTION_", "PF_NATIVE_JOB_"))
+                }
+                if prepared is not None:
+                    child_environment = scratch_environment(prepared, child_environment)
                 native = spawn_owned(
                     command,
                     stdin=subprocess.PIPE,
                     stdout=receipt,
-                    env={
-                        key: value
-                        for key, value in os.environ.items()
-                        if not key.startswith(("PF_EXECUTION_", "PF_NATIVE_JOB_"))
-                    },
+                    env=child_environment,
                 )
                 try:
                     native.communicate(payload_text.encode("utf-8"))
@@ -738,6 +743,10 @@ def _main_in_operation() -> int:
                 "completed" if result.returncode == 0 else "failed",
                 {"exit_code": result.returncode},
             )
+        if prepared is not None and getattr(native, "native_job", None) is not None:
+            from processforge_core.prepared.command import release_scratch
+
+            release_scratch(prepared, tree_absent=True, evidence_finalized=True)
         return int(result.returncode)
 
 

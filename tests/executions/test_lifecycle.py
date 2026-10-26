@@ -1060,3 +1060,48 @@ def test_real_missing_id_legacy_cli_prepare_start_and_retry(
     assert not (flow / "data/execution-storage.json").exists()
     assert not (flow / "data/pf.sqlite3").exists()
     assert "id" not in core._ProjectMetadataReader(root).manifest()["project"]
+
+
+@pytest.mark.parametrize("failed", [False, True])
+def test_actual_managed_scratch_prepare_child_enduse_retry_collection(sql_cli_fixture, monkeypatch, failed):
+    """Exercise the actual ordinary SQL CLI and prepared executor, with a tiny child."""
+    import processforge as core
+    from processforge_core.prepared import input as prepared_input
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    root, repository, args, driver_path = sql_cli_fixture
+    (root / ".pf/tmp").mkdir()
+    semantic = prepared_input.semantic_input(root, {}, {}, core)
+    scope = {"allowed_files": [".pf/tmp/scratch-owned/**", ".pf/artifacts/report.md"],
+             "allowed_read_files": [], "forbidden_files": [], "forbidden_actions": [],
+             "allowed_actions": ["read", "write_product", "write_artifact"],
+             "ownership": {"writer": True, "owner_id": "worker", "owned_files": [".pf/tmp/scratch-owned/**"]}}
+    semantic["scope"] = scope
+    semantic["sources"] = []
+    driver = core.load_yaml_document(driver_path)
+    script = "import os,pathlib,tempfile; temp=pathlib.Path(tempfile.gettempdir()); assert str(temp)==os.environ['PF_WORKER_SCRATCH']; (temp/'child.tmp').write_bytes(b'disposable'); p=pathlib.Path(os.environ['PF_PROJECT_ROOT'])/'.pf/artifacts/report.md'; p.parent.mkdir(parents=True,exist_ok=True); p.write_text('# fixture result',encoding='utf8')"
+    if failed:
+        script += "; raise SystemExit(7)"
+    driver["command"]["args"] = ["-B", "-c", script]
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    state = core.load_agent_run_state(root, "run", "task")
+    doc = prepared_input.load(root, core._worker_assignment_service.load(root, "task"), state, core)
+    scratch_root = root / doc["managed_scratch"]["path"]
+    assert scratch_root.is_dir()
+    assert core.command_worker_run_start(args) == (1 if failed else 0)
+    record = repository.load_latest("run", "task")
+    assert record.phase == "absent"
+    if failed:
+        assert record.outcome == "failed" and not scratch_root.exists()
+        assert core.command_worker_run_prepare(args) == 0
+        next_state = core.load_agent_run_state(root, "run", "task")
+        assert next_state["attempt"] == state["attempt"] + 1
+    else:
+        assert (scratch_root / "child.tmp").read_bytes() == b"disposable"
+        assert core.command_worker_run_collect(args) == 0
+        assert not scratch_root.exists()
+    attempt = root / state["prepared_input"]["path"]
+    assert attempt.with_name("scratch-release.json").is_file()
+    receipt = json.loads(attempt.with_name("scratch-cleanup.json").read_bytes())
+    assert receipt["result"] == "deleted" and receipt["deleted_files"] == 1

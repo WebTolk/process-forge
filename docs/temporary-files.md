@@ -98,3 +98,23 @@ Neither notification mode (`off` or `notify`) nor age authorizes retention or
 deletion. Atomic sibling staging can always be discarded after its own use,
 even when retaining other payload is permitted. Required input, recovery and
 evidence remain needed until their actual consumers finish.
+
+
+Ordinary prepared workers may receive an optional private `managed_scratch`
+contract. Core allocates an exclusive new directory only under one literal,
+immutable owned `.pf/tmp/?/**` write grant. Empty/read-only or ambiguous grants
+allocate nothing. The contract adds no resource group or public CLI option;
+native maintenance keeps its separate strict authority and material checks.
+The prepared executor and Codex worker use the directory for `TEMP`, `TMP`,
+`TMPDIR` and `PF_WORKER_SCRATCH`. Keep durable outputs, source and recovery data
+outside this disposable namespace. A bounded private creation record is pinned
+by the immutable prepared manifest; selected-attempt release/cleanup receipts
+record real end of use and residual errors. Old unmanaged directories are not
+adopted. Unknown child ownership blocks disposal and a new large attempt.
+
+Owned directories use a bounded, identity-checked traversal without reparse
+traversal. Cleanup runs after failed use and before retry, or after final
+collection, outside admission/lifecycle locks and shutdown's active-only path.
+Only an exact absent owned process tree and finalized durable evidence allow
+release. Entry migration staging/probes are disposable once its durable journal
+contains recovery inputs; the journal and needed recovery data remain.

@@ -15,10 +15,12 @@
     "input_fingerprint": { "$ref": "#/$defs/digest" },
     "output_baseline": { "type": "array", "items": { "$ref": "#/$defs/output_baseline_item" } },
     "limits": { "$ref": "#/$defs/limits" },
-    "native_launch": { "$ref": "#/$defs/native_launch" }
+    "native_launch": { "$ref": "#/$defs/native_launch" },
+    "managed_scratch": { "$ref": "#/$defs/managed_scratch" }
   },
   "additionalProperties": false,
   "$defs": {
+    "managed_scratch": {"type": "object", "required": ["schema_version", "kind", "identity", "owner_id", "resource_id", "path", "object_identity", "record", "use"], "properties": {"schema_version": {"const": 1}, "kind": {"const": "pf.worker-scratch"}, "identity": {"$ref": "#/$defs/identity"}, "owner_id": {"type": "string", "minLength": 1, "maxLength": 256}, "resource_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"}, "path": {"type": "string", "pattern": "^\\.pf/tmp/.+/pf-scratch-[a-f0-9]{32}$", "maxLength": 1024}, "object_identity": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer", "minimum": 0}}, "record": {"type": "object", "required": ["path", "sha256", "size"], "properties": {"path": {"type": "string", "pattern": "^\\.pf/runtime/agent-runs/.+/attempts/[1-9][0-9]*/scratch-resource\\.json$", "maxLength": 1024}, "sha256": {"$ref": "#/$defs/digest"}, "size": {"type": "integer", "minimum": 1, "maximum": 65536}}, "additionalProperties": false}, "use": {"const": "disposable_worker_temp"}}, "additionalProperties": false},
     "native_launch": {"type": "object", "minProperties": 1, "properties": {"configuration": {"$ref": "#/$defs/native_configuration"}, "maintenance": {"$ref": "#/$defs/native_maintenance"}}, "additionalProperties": false},
     "native_configuration": {"type": "object", "required": ["reader", "access", "path", "sha256", "size"], "properties": {"reader": {"const": "native"}, "access": {"const": "body"}, "path": {"type": "string", "pattern": "^\\.pf/runtime/agent-runs/.+/configuration\\.snapshot\\.json$"}, "sha256": {"$ref": "#/$defs/digest"}, "size": {"type": "integer", "minimum": 1, "maximum": 65536}}, "additionalProperties": false},
     "native_maintenance": {"type": "object", "required": ["runtime", "job_sha256", "material"], "properties": {"runtime": {"$ref": "#/$defs/native_runtime"}, "job_sha256": {"$ref": "#/$defs/digest"}, "material": {"$ref": "#/$defs/native_material"}}, "additionalProperties": false},
