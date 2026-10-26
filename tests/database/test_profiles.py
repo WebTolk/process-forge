@@ -193,7 +193,11 @@ def test_old_default_payloads_exact():
         "runtime": {
             "metrics": {"interval_seconds": 10.0},
             "garage_hooks": False,
-            "temporary_files": {"mode": "notify", "max_age_hours": 168},
+            "temporary_files": {
+                "mode": "notify",
+                "max_age_hours": 168,
+                "retain_unused": False,
+            },
         },
         "schema_version": 1,
         "logging": {"raw_hooks": True, "events": True},
@@ -203,7 +207,11 @@ def test_old_default_payloads_exact():
         "schema_version": 1,
         "runtime": {
             "garage_hooks": None,
-            "temporary_files": {"mode": None, "max_age_hours": None},
+            "temporary_files": {
+                "mode": None,
+                "max_age_hours": None,
+                "retain_unused": None,
+            },
         },
     }
 

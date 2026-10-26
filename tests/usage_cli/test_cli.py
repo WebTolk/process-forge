@@ -53,10 +53,20 @@ class SyntheticCliTests(unittest.TestCase):
         )
         environment.start()
         self.addCleanup(environment.stop)
-        self.root = Path(__file__).parent.resolve() / ("fixture-" + uuid4().hex)
+        test_root = Path(
+            os.environ.get("PF_ACCOUNTING_TEST_ROOT") or Path(__file__).parent
+        ).resolve()
+        test_root.mkdir(parents=True, exist_ok=True)
+        self.root = test_root / ("fixture-" + uuid4().hex)
         self.root.mkdir()
-        assert self.root.parent == Path(__file__).parent.resolve()
+        assert self.root.parent == test_root
         self.addCleanup(shutil.rmtree, self.root)
+        device = patch(
+            "processforge_core.configuration.device.DeviceConfigurationSource.default_path",
+            return_value=self.root / "device.yaml",
+        )
+        device.start()
+        self.addCleanup(device.stop)
         self.workplace = self.root / "workplace"
         self.workplace.mkdir()
         (self.workplace / "workplace.yaml").write_text(
@@ -435,17 +445,25 @@ class SyntheticCliTests(unittest.TestCase):
             str(heartbeat),
         ]
 
-        def fake_run(
-            command: list[str], **kwargs: object
-        ) -> subprocess.CompletedProcess:
+        def fake_spawn(command: list[str], **kwargs: object):
             self.assertIn("--json", command)
             self.assertEqual(command[command.index("-o") + 1], str(output))
-            self.assertFalse(kwargs["check"])
-            kwargs["stdout"].write(
-                b'{"type":"turn.completed","usage":{"output_tokens":2}}\n'
-            )
-            output.write_text("synthetic final report", encoding="utf-8")
-            return subprocess.CompletedProcess(command, 7)
+            self.assertEqual(kwargs["stdin"], subprocess.PIPE)
+
+            class Child:
+                native_job = None
+                returncode = None
+
+                def communicate(child, payload):
+                    self.assertIsInstance(payload, bytes)
+                    kwargs["stdout"].write(
+                        b'{"type":"turn.completed","usage":{"output_tokens":2}}\n'
+                    )
+                    output.write_text("synthetic final report", encoding="utf-8")
+                    child.returncode = 7
+                    return None, None
+
+            return Child()
 
         with (
             patch.dict(
@@ -462,7 +480,7 @@ class SyntheticCliTests(unittest.TestCase):
                 codex_exec_worker, "codex_executable", return_value="synthetic-codex"
             ),
             patch.object(codex_exec_worker, "capture_worker_input"),
-            patch.object(codex_exec_worker.subprocess, "run", side_effect=fake_run),
+            patch("pf_native_control.spawn_owned", side_effect=fake_spawn),
             patch(
                 "processforge_core.accounting.composition.WorkplaceAccounting.service",
                 side_effect=OSError("PRIVATE"),

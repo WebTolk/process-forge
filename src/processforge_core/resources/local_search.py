@@ -1266,7 +1266,21 @@ def build_index(
     try:
         db.execute("BEGIN IMMEDIATE")
         if _rebuild and was_present:
-            _check_schema(db)
+            try:
+                _check_schema(db)
+            except LocalSearchError as error:
+                if error.code != "index_schema_mismatch":
+                    raise
+                # Only an established derived search schema is repairable here.
+                # Keep the identity envelope and unrelated objects untouched;
+                # DDL and replacement rows roll back together on any failure.
+                if not db.execute(
+                    "SELECT 1 FROM meta WHERE key='sqlite_version'"
+                ).fetchone():
+                    raise
+                for table in ("documents_fts", "documents", "resources", "index_state"):
+                    db.execute("DROP TABLE " + table)
+                db.execute("DELETE FROM meta WHERE key='schema_version'")
         _ensure_schema(db)
         if _rebuild:
             for table in ("documents_fts", "documents", "resources", "index_state"):

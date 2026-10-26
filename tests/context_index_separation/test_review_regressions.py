@@ -1223,6 +1223,63 @@ def test_pending_invalidation_allows_explicit_schema_recovery(corpus):
     assert IndexObservationService(root).observe()["status"] == "fresh"
 
 
+@pytest.mark.parametrize("failure", [None, "write", "source", "identity"])
+def test_schema_recovery_preserves_unrelated_data_and_rolls_back(
+    corpus, monkeypatch, failure
+):
+    root, snapshot, files = corpus
+    local_search.build_index(root, snapshot, workplace_root=root)
+    database = local_search.index_path(root, root)
+    with closing(sqlite3.connect(database)) as db:
+        db.execute("CREATE TABLE foreign_data(value TEXT)")
+        db.execute("INSERT INTO foreign_data VALUES('opaque foreign value')")
+        db.execute("INSERT INTO meta VALUES('foreign_key','opaque metadata')")
+        db.execute("UPDATE meta SET value='999' WHERE key='schema_version'")
+        if failure == "identity":
+            db.execute("CREATE TABLE pf_store_meta(value TEXT)")
+            db.execute("INSERT INTO pf_store_meta VALUES('unowned-envelope')")
+        db.commit()
+    before = database.read_bytes()
+    original = local_search._ensure_schema
+
+    def interrupted(db):
+        original(db)
+        raise sqlite3.OperationalError("injected replacement failure")
+
+    read = Path.read_text
+
+    def refused(path, *args, **kwargs):
+        if path == files[0]:
+            raise PermissionError("injected source failure")
+        return read(path, *args, **kwargs)
+
+    with monkeypatch.context() as scoped:
+        if failure == "write":
+            scoped.setattr(local_search, "_ensure_schema", interrupted)
+        if failure == "source":
+            scoped.setattr(Path, "read_text", refused)
+        if failure:
+            with pytest.raises((sqlite3.Error, local_search.LocalSearchError)):
+                local_search.rebuild_index(root, snapshot, workplace_root=root)
+        else:
+            assert (
+                local_search.rebuild_index(root, snapshot, workplace_root=root)[
+                    "status"
+                ]
+                == "fresh"
+            )
+    if failure:
+        assert database.read_bytes() == before
+    with closing(sqlite3.connect(database)) as db:
+        assert db.execute("SELECT * FROM foreign_data").fetchall() == [
+            ("opaque foreign value",)
+        ]
+        assert db.execute(
+            "SELECT value FROM meta WHERE key='foreign_key'"
+        ).fetchone() == ("opaque metadata",)
+        assert db.execute("SELECT count(*) FROM documents").fetchone() == (3,)
+
+
 @pytest.mark.parametrize("layer", ["backend", "service"])
 def test_query_handles_busy_between_status_and_sql_without_wait(
     corpus, monkeypatch, layer
