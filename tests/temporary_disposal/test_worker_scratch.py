@@ -14,7 +14,7 @@ import pytest
 from processforge_core.configuration.models import TemporaryFilesConfig
 from processforge_core.maintenance import temporary_disposal as disposal
 from processforge_core.prepared import command as scratch
-from processforge_core.work.context import managed_scratch_namespace
+from processforge_core.work.context import managed_scratch_namespace, scope_allows
 
 
 @pytest.fixture
@@ -122,17 +122,43 @@ def test_directory_failure_has_bounded_truthful_residual(project, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "mutation", ["readonly", "empty", "ambiguous", "forbidden", "metadata"]
+    "mutation",
+    [
+        "readonly",
+        "empty",
+        "ambiguous",
+        "forbidden",
+        "metadata",
+        "denied_action",
+        "unowned",
+        "missing_owner",
+        "read_grant_only",
+    ],
 )
-def test_empty_metadata_or_ambiguous_grants_allocate_nothing(project, mutation):
+@pytest.mark.parametrize("artifact_only", [False, True])
+def test_empty_metadata_or_ambiguous_grants_allocate_nothing(
+    project, mutation, artifact_only
+):
     doc = document(project)
     scope = doc["input"]["scope"]
+    action = "write_artifact" if artifact_only else "write_product"
+    scope["allowed_actions"] = ["read", action]
+    scope["forbidden_actions"] = ["write_product"] if artifact_only else []
     if mutation == "readonly":
         scope["allowed_actions"] = ["read"]
     if mutation == "empty":
         scope["allowed_files"] = []
     if mutation == "metadata":
         scope["ownership"]["writer"] = False
+    if mutation == "denied_action":
+        scope["forbidden_actions"].append(action)
+    if mutation == "unowned":
+        scope["ownership"]["owned_files"] = []
+    if mutation == "missing_owner":
+        scope["ownership"]["owner_id"] = ""
+    if mutation == "read_grant_only":
+        scope["allowed_read_files"] = scope["allowed_files"]
+        scope["allowed_files"] = []
     if mutation == "forbidden":
         scope["forbidden_files"] = [".pf/tmp/*/secret"]
     if mutation == "ambiguous":
@@ -144,11 +170,21 @@ def test_empty_metadata_or_ambiguous_grants_allocate_nothing(project, mutation):
     assert list((project / ".pf/tmp").iterdir()) == []
 
 
-def test_real_producer_schema_consumer_release_collection(project):
+@pytest.mark.parametrize("artifact_only", [False, True])
+def test_real_producer_schema_consumer_release_collection(project, artifact_only):
     import runpy
 
     doc = document(project)
+    scope = doc["input"]["scope"]
+    if artifact_only:
+        scope["allowed_actions"] = ["read", "write_artifact"]
+        scope["forbidden_actions"] = ["write_product"]
+    original_scope = copy.deepcopy(scope)
     scratch.allocate_scratch(project, doc)
+    assert scope == original_scope
+    if artifact_only:
+        assert not scope_allows(scope, "src/product.py", "write_product")
+        assert not scope_allows(scope, doc["managed_scratch"]["path"], "write_product")
     schema_path = (
         Path(__file__).resolve().parents[2] / "schemas/prepared-input.schema.json"
     )
@@ -166,23 +202,25 @@ def test_real_producer_schema_consumer_release_collection(project):
     assert env["TMP"] == env["TMPDIR"] == env["PF_WORKER_SCRATCH"] == str(root)
     assert env["OTHER"] == "kept"
     (root / "worker-result.tmp").write_bytes(b"actual disposable worker bytes")
-    assert (
-        scratch.finalize_scratch(doc, tree_absent=False, evidence_finalized=True).result
-        == "needed"
+    finalized = scratch.finalize_scratch(
+        doc, tree_absent=False, evidence_finalized=True
     )
-    assert (
-        scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=False).result
-        == "needed"
+    assert finalized is not None
+    assert finalized.result == "needed"
+    finalized = scratch.finalize_scratch(
+        doc, tree_absent=True, evidence_finalized=False
     )
+    assert finalized is not None
+    assert finalized.result == "needed"
     receipt = scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True)
+    assert receipt is not None
     assert receipt.result == "deleted" and receipt.deleted_files == 1, receipt
     attempt = scratch._attempt(project, doc["identity"])
     assert attempt.is_file() and attempt.with_name("scratch-release.json").is_file()
     assert attempt.with_name("scratch-cleanup.json").is_file() and not root.exists()
-    assert (
-        scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True).result
-        == "already_absent"
-    )
+    finalized = scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True)
+    assert finalized is not None
+    assert finalized.result == "already_absent"
 
 
 def test_failed_use_before_retry_and_valid_retention(project):
@@ -192,12 +230,11 @@ def test_failed_use_before_retry_and_valid_retention(project):
     assert resource is not None
     (resource.path / "failed.tmp").write_bytes(b"failed")
     config = TemporaryFilesConfig(retain_unused=True)
-    assert (
-        scratch.finalize_scratch(
-            doc, tree_absent=True, evidence_finalized=True, config=config
-        ).result
-        == "retained_by_configuration"
+    finalized = scratch.finalize_scratch(
+        doc, tree_absent=True, evidence_finalized=True, config=config
     )
+    assert finalized is not None
+    assert finalized.result == "retained_by_configuration"
     receipt = scratch.finalize_scratch(
         doc,
         tree_absent=True,
@@ -205,23 +242,38 @@ def test_failed_use_before_retry_and_valid_retention(project):
         config=config,
         configuration_errors=("configuration_read_failed",),
     )
+    assert receipt is not None
     assert receipt.result == "deleted"
     retry = document(project)
     retry["identity"]["attempt"] = 2
     scratch.allocate_scratch(project, retry)
     assert retry["managed_scratch"]["path"] != doc["managed_scratch"]["path"]
     assert not resource.path.exists()
-    assert (
-        scratch.finalize_scratch(
-            retry, tree_absent=True, evidence_finalized=True
-        ).result
-        == "deleted"
+    finalized = scratch.finalize_scratch(
+        retry, tree_absent=True, evidence_finalized=True
     )
+    assert finalized is not None
+    assert finalized.result == "deleted"
 
 
-@pytest.mark.parametrize("change", ["attempt", "owner", "path", "record", "extra"])
+@pytest.mark.parametrize(
+    "change",
+    [
+        "attempt",
+        "owner",
+        "path",
+        "record",
+        "extra",
+        "denied_action",
+        "unowned",
+        "forbidden_scope",
+        "ambiguous_scope",
+    ],
+)
 def test_tampered_metadata_never_adopted(project, change):
     doc = document(project)
+    doc["input"]["scope"]["allowed_actions"] = ["read", "write_artifact"]
+    doc["input"]["scope"]["forbidden_actions"] = ["write_product"]
     scratch.allocate_scratch(project, doc)
     mutated = copy.deepcopy(doc)
     marker = mutated["managed_scratch"]
@@ -235,12 +287,21 @@ def test_tampered_metadata_never_adopted(project, change):
         marker["record"]["sha256"] = "sha256:" + "0" * 64
     if change == "extra":
         marker["extra"] = True
+    scope = mutated["input"]["scope"]
+    if change == "denied_action":
+        scope["forbidden_actions"].append("write_artifact")
+    if change == "unowned":
+        scope["ownership"]["owned_files"] = []
+    if change == "forbidden_scope":
+        scope["forbidden_files"] = [".pf/tmp/worker-owned/**"]
+    if change == "ambiguous_scope":
+        scope["allowed_files"].append(".pf/tmp/other/**")
+        scope["ownership"]["owned_files"].append(".pf/tmp/other/**")
     with pytest.raises((ValueError, FileNotFoundError)):
         scratch.read_attempt_resources(project, mutated)
-    assert (
-        scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True).result
-        == "deleted"
-    )
+    finalized = scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True)
+    assert finalized is not None
+    assert finalized.result == "deleted"
 
 
 def test_old_input_environment_unchanged(project):
@@ -361,7 +422,6 @@ def test_private_record_rejects_boolean_numeric_equivalence(project, field, valu
         record["use"][field] = value
     with pytest.raises(ValueError, match="scratch_record_invalid"):
         scratch.validate_resource_record(record, doc)
-    assert (
-        scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True).result
-        == "deleted"
-    )
+    finalized = scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True)
+    assert finalized is not None
+    assert finalized.result == "deleted"

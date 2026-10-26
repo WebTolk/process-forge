@@ -629,8 +629,16 @@ def _apply_placement(
         return result
 
 
-def _apply_placement_owned(project: Path, supplied: dict, *, apply: bool, targets: tuple,
-                           planner, source_guard, _fault=None) -> dict:
+def _apply_placement_owned(
+    project: Path,
+    supplied: dict,
+    *,
+    apply: bool,
+    targets: tuple,
+    planner,
+    source_guard,
+    _fault=None,
+) -> dict:
     # Only bounded placement services can choose a fixed target set. Journals use the
     # same whitelist; arbitrary file placement is deliberately unsupported.
     if targets not in PLACEMENT_TARGETS:
@@ -656,24 +664,55 @@ def _apply_placement_owned(project: Path, supplied: dict, *, apply: bool, target
         if plan != supplied:
             raise EntryError("plan_stale")
         tx = uuid.uuid4().hex
-        journal = {"schema_version": 1, "transaction": tx, "project": project_identity(root), "state": "prepared",
-                   "files": [{"path": name, "before": base64.b64encode(before[name]).decode() if before[name] is not None else None,
-                              "after": base64.b64encode(after[name]).decode(), "before_sha256": plan["preconditions"][name]["sha256"],
-                              "after_sha256": digest(after[name]), "mode": plan["preconditions"][name].get("mode", 0o644),
-                              "before_security": plan["preconditions"][name].get("security"),
-                              "after_security": plan["preconditions"][name].get("security"), "transient_security": None,
-                              "acl": base64.b64encode(_acl(root / name)).decode() if os.name == "nt" and before[name] is not None else None} for name in targets]}
+        journal = {
+            "schema_version": 1,
+            "transaction": tx,
+            "project": project_identity(root),
+            "state": "prepared",
+            "files": [
+                {
+                    "path": name,
+                    "before": base64.b64encode(before[name]).decode()
+                    if before[name] is not None
+                    else None,
+                    "after": base64.b64encode(after[name]).decode(),
+                    "before_sha256": plan["preconditions"][name]["sha256"],
+                    "after_sha256": digest(after[name]),
+                    "mode": plan["preconditions"][name].get("mode", 0o644),
+                    "before_security": plan["preconditions"][name].get("security"),
+                    "after_security": plan["preconditions"][name].get("security"),
+                    "transient_security": None,
+                    "acl": base64.b64encode(_acl(root / name)).decode()
+                    if os.name == "nt" and before[name] is not None
+                    else None,
+                }
+                for name in targets
+            ],
+        }
         _journal(root, journal)
         try:
-            staged = {name: _stage(root, tx, after[name]) for name in targets if before[name] != after[name]}
+            staged = {
+                name: _stage(root, tx, after[name])
+                for name in targets
+                if before[name] != after[name]
+            }
             for row in journal["files"]:
                 if row["path"] in staged:
                     row["transient_security"] = security(staged[row["path"]])
                     if row["acl"] is not None:
-                        row["transient_security"] = _replacement_security(root, tx, row["path"], row["acl"])
-                        _set_acl(staged[row["path"]], base64.b64decode(row["acl"], validate=True))
+                        row["transient_security"] = _replacement_security(
+                            root, tx, row["path"], row["acl"]
+                        )
+                        _set_acl(
+                            staged[row["path"]],
+                            base64.b64decode(row["acl"], validate=True),
+                        )
                 if row["before"] is None:
-                    row["after_security"] = security(staged[row["path"]]) if os.name == "nt" else str(row["mode"])
+                    row["after_security"] = (
+                        security(staged[row["path"]])
+                        if os.name == "nt"
+                        else str(row["mode"])
+                    )
             _journal(root, journal)
             if _fault:
                 _fault("staged", tx)
@@ -687,15 +726,28 @@ def _apply_placement_owned(project: Path, supplied: dict, *, apply: bool, target
                 if name not in staged:
                     continue
                 _expect(root, name, plan["preconditions"][name])
-                staged_raw, _ = read_file(root, staged[name].relative_to(root).as_posix())
+                staged_raw, _ = read_file(
+                    root, staged[name].relative_to(root).as_posix()
+                )
                 if staged_raw != after[name]:
                     raise EntryError("staging_changed", name)
                 row = next(row for row in journal["files"] if row["path"] == name)
-                _replace(root, name, staged[name], row["mode"], acl=row["acl"], fault=_fault, transaction=tx)
+                _replace(
+                    root,
+                    name,
+                    staged[name],
+                    row["mode"],
+                    acl=row["acl"],
+                    fault=_fault,
+                    transaction=tx,
+                )
                 if _fault:
                     _fault("replaced:" + name, tx)
                 raw, state = read_file(root, name, writable=True)
-                if raw != after[name] or (before[name] is not None and state["security"] != plan["preconditions"][name]["security"]):
+                if raw != after[name] or (
+                    before[name] is not None
+                    and state["security"] != plan["preconditions"][name]["security"]
+                ):
                     raise EntryError("replacement_verification_failed", name)
             for name in targets:
                 raw, state = read_file(root, name, writable=True)
@@ -708,10 +760,22 @@ def _apply_placement_owned(project: Path, supplied: dict, *, apply: bool, target
                 raise EntryError("contract_source_changed")
             journal["state"] = "committed"
             _journal(root, journal)
-            return {"action": "applied", "transaction": tx, "budget": plan["budget"], "files": _states(root, journal)}
+            return {
+                "action": "applied",
+                "transaction": tx,
+                "budget": plan["budget"],
+                "files": _states(root, journal),
+            }
         except (EntryError, OSError) as exc:
-            return {"action": "incomplete", "transaction": tx, "reason": exc.reason if isinstance(exc, EntryError) else "storage_error",
-                    "files": _states(root, journal), "remediation": "rollback_transaction"}
+            return {
+                "action": "incomplete",
+                "transaction": tx,
+                "reason": exc.reason
+                if isinstance(exc, EntryError)
+                else "storage_error",
+                "files": _states(root, journal),
+                "remediation": "rollback_transaction",
+            }
 
 
 def rollback_entry(
@@ -723,7 +787,9 @@ def rollback_entry(
         return result
 
 
-def _rollback_entry_owned(project: Path, transaction: str, *, apply: bool = False, _fault=None) -> dict:
+def _rollback_entry_owned(
+    project: Path, transaction: str, *, apply: bool = False, _fault=None
+) -> dict:
     if not apply:
         raise EntryError("explicit_apply_required")
     root = root_path(project)
@@ -752,7 +818,10 @@ def _rollback_entry_owned(project: Path, transaction: str, *, apply: bool = Fals
                         if row["acl"] is None:
                             raise EntryError("rollback_conflict", name)
                         _expect(root, name, pre)
-                        _set_acl(safe_path(root, name, writable=True), base64.b64decode(row["acl"], validate=True))
+                        _set_acl(
+                            safe_path(root, name, writable=True),
+                            base64.b64decode(row["acl"], validate=True),
+                        )
                     continue
                 if pre["sha256"] != row["after_sha256"]:
                     raise EntryError("rollback_conflict", name)
@@ -761,14 +830,28 @@ def _rollback_entry_owned(project: Path, transaction: str, *, apply: bool = Fals
                     safe_path(root, name, writable=True).unlink()
                     _sync_dir((root / name).parent)
                 else:
-                    staged = _stage(root, transaction, base64.b64decode(row["before"], validate=True))
+                    staged = _stage(
+                        root,
+                        transaction,
+                        base64.b64decode(row["before"], validate=True),
+                    )
                     row["transient_security"] = security(staged)
                     if row["acl"] is not None:
-                        row["transient_security"] = _replacement_security(root, transaction, row["path"], row["acl"])
+                        row["transient_security"] = _replacement_security(
+                            root, transaction, row["path"], row["acl"]
+                        )
                         _set_acl(staged, base64.b64decode(row["acl"], validate=True))
                     _journal(root, journal)
                     _expect(root, name, pre)
-                    _replace(root, name, staged, row["mode"], acl=row["acl"], fault=_fault, transaction=transaction)
+                    _replace(
+                        root,
+                        name,
+                        staged,
+                        row["mode"],
+                        acl=row["acl"],
+                        fault=_fault,
+                        transaction=transaction,
+                    )
                 if _fault:
                     _fault("restored:" + name, transaction)
             if any(row["state"] != "before" for row in _states(root, journal)):
@@ -781,5 +864,12 @@ def _rollback_entry_owned(project: Path, transaction: str, *, apply: bool = Fals
             _journal(root, journal)
             return {"action": "rolled_back", "transaction": transaction}
         except (EntryError, OSError) as exc:
-            return {"action": "incomplete", "transaction": transaction, "reason": exc.reason if isinstance(exc, EntryError) else "storage_error",
-                    "files": _states(root, journal), "remediation": "rollback_transaction"}
+            return {
+                "action": "incomplete",
+                "transaction": transaction,
+                "reason": exc.reason
+                if isinstance(exc, EntryError)
+                else "storage_error",
+                "files": _states(root, journal),
+                "remediation": "rollback_transaction",
+            }

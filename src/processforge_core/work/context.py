@@ -568,6 +568,14 @@ def managed_scratch_namespace(scope: dict[str, Any]) -> str | None:
     ownership = scope.get("ownership") or {}
     if ownership.get("writer") is not True or not ownership.get("owner_id"):
         return None
+    # Scratch is private disposable payload, including for artifact-only workers.
+    # This does not change scope_allows or grant permission to write product files.
+    if not any(
+        action in scope.get("allowed_actions", [])
+        and action not in scope.get("forbidden_actions", [])
+        for action in ("write_artifact", "write_product")
+    ):
+        return None
     candidates = set()
     for pattern in ownership.get("owned_files", []):
         if not pattern.startswith(".pf/tmp/") or not pattern.endswith("/**"):
@@ -589,12 +597,6 @@ def managed_scratch_namespace(scope: dict[str, Any]) -> str | None:
                 or prefix.startswith(root + "/")
             ):
                 denied = True
-        if (
-            not denied
-            and pattern in scope.get("allowed_files", [])
-            and scope_allows(
-                scope, root + "/pf-scratch-probe/resource", "write_product"
-            )
-        ):
+        if not denied and pattern in scope.get("allowed_files", []):
             candidates.add(root)
     return next(iter(candidates)) if len(candidates) == 1 else None

@@ -1063,8 +1063,9 @@ def test_real_missing_id_legacy_cli_prepare_start_and_retry(
 
 
 @pytest.mark.parametrize("failed", [False, True])
+@pytest.mark.parametrize("artifact_only", [False, True])
 def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
-    sql_cli_fixture, monkeypatch, failed
+    sql_cli_fixture, monkeypatch, failed, artifact_only
 ):
     """Exercise the actual ordinary SQL CLI and prepared executor, with a tiny child."""
     import processforge as core
@@ -1087,13 +1088,19 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
             "owned_files": [".pf/tmp/scratch-owned/**"],
         },
     }
+    if artifact_only:
+        scope["allowed_actions"] = ["read", "write_artifact"]
+        scope["forbidden_actions"] = ["write_product"]
+    original_scope = json.loads(json.dumps(scope))
     semantic["scope"] = scope
     semantic["sources"] = []
     driver = core.load_yaml_document(driver_path)
     script = "import os,pathlib,tempfile; temp=pathlib.Path(tempfile.gettempdir()); assert str(temp)==os.environ['PF_WORKER_SCRATCH']; (temp/'child.tmp').write_bytes(b'disposable'); p=pathlib.Path(os.environ['PF_PROJECT_ROOT'])/'.pf/artifacts/report.md'; p.parent.mkdir(parents=True,exist_ok=True); p.write_text('# fixture result',encoding='utf8')"
-    if failed:
-        script += "; raise SystemExit(7)"
-    driver["command"]["args"] = ["-B", "-c", script]
+    driver["command"]["args"] = [
+        "-B",
+        "-c",
+        script + ("; raise SystemExit(7)" if failed else ""),
+    ]
     write_yaml_file(driver_path, driver)
     assert core.command_worker_run_prepare(args) == 0
     state = core.load_agent_run_state(root, "run", "task")
@@ -1102,14 +1109,33 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
     )
     scratch_root = root / doc["managed_scratch"]["path"]
     assert scratch_root.is_dir()
+    assert doc["input"]["scope"] == original_scope
     assert core.command_worker_run_start(args) == (1 if failed else 0)
     record = repository.load_latest("run", "task")
     assert record.phase == "absent"
     if failed:
         assert record.outcome == "failed" and not scratch_root.exists()
+        driver["command"]["args"] = ["-B", "-c", script]
+        write_yaml_file(driver_path, driver)
         assert core.command_worker_run_prepare(args) == 0
         next_state = core.load_agent_run_state(root, "run", "task")
         assert next_state["attempt"] == state["attempt"] + 1
+        retry_doc = prepared_input.load(
+            root, core._worker_assignment_service.load(root, "task"), next_state, core
+        )
+        retry_root = root / retry_doc["managed_scratch"]["path"]
+        assert retry_root != scratch_root and retry_root.is_dir()
+        assert retry_doc["input"]["scope"] == original_scope
+        assert core.command_worker_run_start(args) == 0
+        assert (retry_root / "child.tmp").read_bytes() == b"disposable"
+        assert core.command_worker_run_collect(args) == 0
+        assert not retry_root.exists()
+        retry_attempt = root / next_state["prepared_input"]["path"]
+        retry_receipt = json.loads(
+            retry_attempt.with_name("scratch-cleanup.json").read_bytes()
+        )
+        assert retry_receipt["result"] == "deleted"
+        assert retry_receipt["deleted_files"] == 1
     else:
         assert (scratch_root / "child.tmp").read_bytes() == b"disposable"
         assert core.command_worker_run_collect(args) == 0

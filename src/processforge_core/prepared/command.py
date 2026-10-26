@@ -24,7 +24,7 @@ from ..maintenance.temporary_disposal import (
     dispose_owned,
     release_owned,
 )
-from ..work.context import managed_scratch_namespace, scope_allows
+from ..work.context import managed_scratch_namespace
 from .input import bounded_read, digest, local_file, private_file, write_once
 
 RECORD_LIMIT = 65536
@@ -202,7 +202,6 @@ def validate_resource_record(record: dict[str, Any], document: dict[str, Any]) -
         or any(
             record[k] != marker[k] for k in ("path", "resource_id", "object_identity")
         )
-        or not scope_allows(scope, marker["path"], "write_product")
         or not isinstance(marker["object_identity"], list)
         or len(marker["object_identity"]) != 2
         or any(type(x) is not int or x < 0 for x in marker["object_identity"])
