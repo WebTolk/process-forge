@@ -469,3 +469,91 @@ def test_ambiguous_publication_reentry_resolves_before_allocation(
     assert len(list((root / ".pf/tmp/scratch-owned").iterdir())) == (
         2 if mode == "retained" else 1
     )
+
+
+@pytest.mark.parametrize("retain", [False, True])
+def test_committed_ambiguous_retry_preserves_binding_for_start(
+    sql_cli_fixture: SqlFixture, monkeypatch: pytest.MonkeyPatch, retain: bool
+) -> None:
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    root, repository, args, driver = sql_cli_fixture
+    managed_scope(root)
+    if retain:
+        write_yaml_file(
+            root / "device.yaml",
+            {"runtime": {"temporary_files": {"retain_unused": True}}},
+        )
+    finalize = type(repository)._finalize_prepared
+    primary = PermissionError("committed_publication_ambiguous")
+
+    def unreadable(*args: Any, **kwargs: Any) -> Any:
+        raise OSError("readback_unknown")
+
+    with monkeypatch.context() as fault:
+
+        def uncertain(self: Any, *args: Any, **kwargs: Any) -> Any:
+            finalize(self, *args, **kwargs)
+            fault.setattr(core, "load_agent_run_state", unreadable)
+            raise primary
+
+        fault.setattr(type(repository), "_finalize_prepared", uncertain)
+        with pytest.raises(PermissionError) as caught:
+            core.command_worker_run_prepare(args)
+        assert caught.value is primary
+    first = repository.load_latest("run", "task")
+    assert projected_payload(first)["status"] == "ready"
+    previous = set((root / ".pf/tmp/scratch-owned").iterdir())
+    assert len(previous) == 1
+    assert core.command_worker_run_prepare(args) == 1
+    with pytest.raises(SystemExit, match="temporary_cleanup_needed"):
+        core.prepare_worker_run(root, "task", str(driver), None)
+    assert repository.load_latest("run", "task") == first
+    assert set((root / ".pf/tmp/scratch-owned").iterdir()) == previous
+    assert not list((root / ".pf").rglob("scratch-release.json"))
+    assert not list((root / ".pf").rglob("scratch-cleanup.json"))
+    # Start consumes the already committed binding; retention is not admission.
+    assert core.command_worker_run_start(args) == 0
+    completed = repository.load_latest("run", "task")
+    assert completed.key == first.key and completed.outcome == "completed"
+    assert (root / ".pf/artifacts/report.md").read_text() == "# fixture result"
+
+
+@pytest.mark.parametrize("phase", ["starting", "stopping"])
+def test_bound_launch_reservation_cannot_be_replaced_or_disposed(
+    sql_cli_fixture: SqlFixture, phase: str
+) -> None:
+    import processforge as core
+
+    root, repository, args, driver = sql_cli_fixture
+    managed_scope(root)
+    assert core.command_worker_run_prepare(args) == 0
+    ready = repository.load_latest("run", "task")
+    starting = repository.reserve_start(
+        ready.key,
+        expected_revision=ready.revision,
+        generation=ready.generation,
+        launch_token="a" * 32,
+    )
+    if phase == "stopping":
+        repository.request_stop(
+            starting.key,
+            launch_token=starting.launch_token,
+            expected_revision=starting.revision,
+            generation=starting.generation,
+        )
+    bound = repository.load_latest("run", "task")
+    with pytest.raises(SystemExit, match="temporary_cleanup_needed"):
+        core.prepare_worker_run(root, "task", str(driver), None)
+    with pytest.raises(ExecutionError, match="stale_revision"):
+        repository.reserve_start(
+            ready.key,
+            expected_revision=ready.revision,
+            generation=ready.generation,
+            launch_token="b" * 32,
+        )
+    assert repository.load_latest("run", "task") == bound
+    assert len(list((root / ".pf/tmp/scratch-owned").iterdir())) == 1
+    assert not list((root / ".pf").rglob("scratch-release.json"))

@@ -421,7 +421,7 @@ def require_resolved_preparation(
     Only explicit prepare resolves SQL authority and cleanup outside that lock.
     """
     state = core.load_agent_run_state(project, task["run_id"], task["id"])
-    if state.get("prepared_input") or state.get("attempt") is None:
+    if state.get("attempt") is None:
         return
     capsule = core.load_yaml_document(core.assignment_capsule_path(project, task["id"]))
     identity = {
