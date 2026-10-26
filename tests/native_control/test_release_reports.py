@@ -414,14 +414,80 @@ def test_archive_evidence_publication_failure_nonzero(
     assert not extraction.exists()
 
 
-def test_archive_evidence_missing_root_stops_before_child(
+@pytest.mark.parametrize("project", [False, True])
+@pytest.mark.parametrize("mode", ["full", "quick", "skip"])
+@pytest.mark.parametrize("code", [0, 7])
+def test_archive_evidence_default_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    project: bool,
+    mode: str,
+    code: int,
+) -> None:
+    ns, extraction = archive_fixture(tmp_path, monkeypatch)
+    caller = tmp_path / "caller"
+    caller.mkdir()
+    if project:
+        (caller / ".pf").mkdir()
+    ns["ROOT"] = caller
+    ns["archive_manifest_freshness_checks"] = lambda *a: pytest.fail(
+        "default report root must not enable source verification"
+    )
+    calls = []
+
+    def child(command: list[str], cwd: Path, timeout: int) -> CommandResult:
+        calls.append(command)
+        return CommandResult(
+            command,
+            str(cwd),
+            0 if "--help" in command else code,
+            "default root stdout",
+            "default root stderr",
+            False,
+            timeout,
+        )
+
+    ns["run_subprocess_command"] = child
+    args = archive_args(tmp_path)
+    args.root = None
+    args.extracted_test = mode
+    assert ns["command_release_archive_test"](args) == (
+        1 if code and mode != "skip" else 0
+    )
+    assert not extraction.exists()
+    refs = [
+        line.removeprefix("EVIDENCE: ")
+        for line in capsys.readouterr().out.splitlines()
+        if line.startswith("EVIDENCE: ")
+    ]
+    assert len(calls) == (0 if mode == "skip" else 3)
+    assert len(refs) == (1 if code and mode != "skip" else 0)
+    for ref in refs:
+        metadata = caller / ref
+        assert json.loads(metadata.read_text())["returncode"] == code
+        assert metadata.with_name("stdout.log").read_text() == "default root stdout"
+        assert metadata.with_name("stderr.log").read_text() == "default root stderr"
+    if calls:
+        assert ("--public" in calls[-1]) == (mode == "full")
+        assert ("--only" in calls[-1]) == (mode == "quick")
+    assert not (tmp_path / ".pf/runtime/release-test/commands").exists()
+
+
+def test_archive_evidence_default_root_refused_before_child(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     ns, extraction = archive_fixture(tmp_path, monkeypatch)
+    caller = tmp_path / "caller"
+    destination = caller / ".pf/runtime/release-test/commands"
+    destination.parent.mkdir(parents=True)
+    destination.write_text("blocked")
+    ns["ROOT"] = caller
+    ns["run_subprocess_command"] = lambda *a, **kw: pytest.fail("child launched")
     args = archive_args(tmp_path)
     args.root = None
-    ns["run_subprocess_command"] = lambda *a, **kw: pytest.fail("child launched")
-    assert ns["command_release_archive_test"](args) == 1
+    with pytest.raises(OSError):
+        ns["command_release_archive_test"](args)
     assert not extraction.exists()
 
 

@@ -4207,11 +4207,11 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
     timeout_scale = positive_timeout_scale(args)
     if timeout_scale is None:
         return 1
-    # The archive parser has no default caller report root. Never infer a foreign
-    # destination from an archive path or from the disposable extraction root.
-    if not getattr(args, "root", None):
-        print("FAIL: extracted evidence requires an authorized caller --root")
-        return 1
+    # Optional source verification stays separate from the standard release
+    # report destination, including file-only callers without a project.
+    root = (
+        Path(args.root).expanduser().resolve() if getattr(args, "root", None) else ROOT
+    )
     evidence_root = root / ".pf/runtime/release-test/commands"
     for parent in (evidence_root, *evidence_root.parents):
         if parent.exists() or parent.is_symlink():
