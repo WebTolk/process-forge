@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+## 1.3.0-beta1 - 2026-10-26
+
+### Changed
+
+- Prepare the beta1 source candidate from the existing alpha6 development
+  checkpoint. This release-identity change adds no functionality.
+- Document the existing owned worker scratch lifecycle and retention boundaries;
+  required input, recovery data and durable evidence remain protected.
+
+### Fixed
+
+- Preserve committed scratch bindings on prepare retry and recover unpublished
+  worker scratch before retry; retain explicit cancellation and cleanup results.
+- Preserve sealed release reports, child failure output and extracted release
+  evidence before disposal.
+- Restore `release-archive-test` without `--root`, retaining explicit-root source
+  verification and the existing default evidence root.
+
+### Qualification
+
+- This is a source candidate, not a publication or beta acceptance record.
+  Archive, installed Core and connected-host qualification remain separate;
+  real OS cold-stop, restart and reboot operations require their own delivery.
+- Stable remains 1.2.0. Update channels, tags and published assets are unchanged.
+
+See the [beta1 candidate notes](release/1.3.0-beta1/notes.md).
+
+## 1.3.0-alpha6 - source checkpoint
+
+- Internal development identity preceding beta1; this entry does not assert
+  publication or completed release qualification.
+
+## 1.3.0-alpha5 - 2026-10-24
+
+### Fixed
+
+- Read Core identity from the owning distribution through shared CoreProperties
+  across CLI, Runtime, monitor, MCP and Host.
+- Keep the loaded identity immutable and observe installed metadata separately;
+  diagnose changed builds and report unknown for missing or inconsistent data.
+
+### Changed
+
+- Record build-aware Core provenance in Runtime/Host state and MCP action
+  discovery while retaining separate release, component, protocol and schema
+  versions and existing public CLI/MCP parameters and response fields.
+
+See the [alpha5 release notes](release/1.3.0-alpha5/notes.md).
+
 ## 1.3.0-alpha4 - 2026-10-23
 
 ### Changed
