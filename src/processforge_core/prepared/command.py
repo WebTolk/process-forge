@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import json
 import os
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -48,6 +50,77 @@ RECORD_KEYS = {
     "boundary",
     "use",
 }
+
+
+_PREPARATION: ContextVar[list[tuple[OwnedTemporary, dict[str, Any]]] | None] = (
+    ContextVar("worker_scratch_preparation", default=None)
+)
+
+
+@contextmanager
+def preparation_scratch():
+    """Finalize aborted, unpublished allocations after outer locks unwind."""
+    pending: list[tuple[OwnedTemporary, dict[str, Any]]] = []
+    token = _PREPARATION.set(pending)
+    primary: BaseException | None = None
+    try:
+        yield
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        _PREPARATION.reset(token)
+        for resource, document in pending:
+            # Only the actual in-memory producer can register this callback.
+            # Publication disarms it before an attempt becomes launchable.
+            path = _attempt(Path(document["project_root"]), document["identity"])
+            try:
+                failure = path.with_name("scratch-preparation-failure.json")
+                payload = {
+                    "schema_version": 1,
+                    "identity": document["identity"],
+                    "resource_id": resource.resource_id,
+                    "reason": type(primary).__name__
+                    if primary
+                    else "preparation_unpublished",
+                }
+                write_once(failure, payload)
+                receipt = dispose_owned(release_owned(resource))
+                from ..maintenance.temporary_disposal import atomic_staging
+
+                with atomic_staging(
+                    path.with_name("scratch-cleanup.json")
+                ) as temporary:
+                    temporary.write_text(
+                        json.dumps(
+                            {
+                                "schema_version": 1,
+                                "identity": document["identity"],
+                                **asdict(receipt),
+                            }
+                        )
+                        + "\n",
+                        encoding="utf8",
+                    )
+                    temporary.replace(path.with_name("scratch-cleanup.json"))
+                if receipt.result not in {"deleted", "already_absent"}:
+                    raise OSError("temporary_cleanup:" + receipt.result)
+            except (OSError, ValueError) as error:
+                if primary is not None:
+                    primary.add_note(
+                        "scratch_preparation_cleanup:" + type(error).__name__
+                    )
+                else:
+                    raise
+
+
+def scratch_published(document: dict[str, Any]) -> None:
+    """A durable prepared manifest transfers lifetime to the exact-attempt owner."""
+    pending = _PREPARATION.get()
+    if pending is not None:
+        pending[:] = [
+            (resource, doc) for resource, doc in pending if doc is not document
+        ]
 
 
 def _pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -162,6 +235,9 @@ def allocate_scratch(project: Path, document: dict[str, Any]) -> None:
                 dir_fd=parent,
             )
     resource = create_owned_directory(boundary)
+    pending = _PREPARATION.get()
+    if pending is not None:
+        pending.append((resource, document))
     identity = document["identity"]
     record_path = _attempt(project, identity)
     owner = document["input"]["scope"]["ownership"]["owner_id"]
@@ -176,12 +252,7 @@ def allocate_scratch(project: Path, document: dict[str, Any]) -> None:
         "object_identity": list(resource.identity),
         "use": {"released": False, "consumers": 1, "evidence_finalized": False},
     }
-    try:
-        checksum = write_once(record_path, record)
-    except BaseException as error:
-        receipt = dispose_owned(release_owned(resource))
-        error.add_note("scratch_preparation_cleanup:" + receipt.result)
-        raise
+    checksum = write_once(record_path, record)
     document["managed_scratch"] = {
         **{
             k: record[k]
@@ -312,8 +383,10 @@ def finalize_scratch(
 
     if receipt.result == "already_absent" and path.exists():
         previous = _read(path)
-        if (previous.get("identity") != document["identity"]
-                or previous.get("resource_id") != resource.resource_id):
+        if (
+            previous.get("identity") != document["identity"]
+            or previous.get("resource_id") != resource.resource_id
+        ):
             raise ValueError("scratch_cleanup_changed")
         if previous.get("result") == "deleted" and previous.get("complete") is True:
             return receipt  # Preserve original truthful deleted counts on replay.

@@ -9821,6 +9821,9 @@ def prepare_worker_run(
             validate_command(document, project_root, ROOT, command)
         prepared_input.private_file(project_root, reference["path"])
         prepared_input.write_once(prepared_path, document)
+        from processforge_core.prepared.command import scratch_published
+
+        scratch_published(document)
     except (OSError, ValueError, RuntimeError) as exc:
         raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
     _core_common_json_io.json_write(
@@ -9911,8 +9914,11 @@ def _worker_storage_errors(
 
             project = Path(args.project_root).expanduser().resolve()
             manifest = _ProjectMetadataReader(project).workplace_manifest()
-            with configuration_operation(
-                project, manifest.parent if manifest else None
+            from processforge_core.prepared.command import preparation_scratch
+
+            with (
+                configuration_operation(project, manifest.parent if manifest else None),
+                preparation_scratch(),
             ):
                 return function(args)
         except (
@@ -9980,18 +9986,39 @@ def _finalize_worker_scratch(
                 _legacy_tree_probe(project_root, task["run_id"], task["id"], state)
                 is True
             )
-        collected = (
-            (Path(project_root) / state["prepared_input"]["path"])
-            .with_name("collection-receipt.json")
-            .is_file()
+        prepared_path = prepared_input.private_file(
+            project_root, state["prepared_input"]["path"]
         )
-        # Failed payload is disposable only after raw exit evidence is durable.
+        collection_path = prepared_path.with_name("collection-receipt.json")
+        collected = False
+        if collection_path.is_file():
+            # A filename alone is not proof. Repeat the bounded identity, output
+            # pins and attribution check outside the lifecycle/admission gates.
+            checked_path, _receipt = prepared_input.collection_receipt(
+                project_root, task, state, sys.modules[__name__]
+            )
+            collected = checked_path == collection_path
+        # Failures retain their minimal raw exit evidence. Validate its payload;
+        # exact tree quiescence was independently established above.
         failed = status in {"failed", "timed_out", "cancelled", "unknown_exit"}
-        exit_path = (Path(project_root) / state["prepared_input"]["path"]).with_name(
-            "exit.json"
-        )
         paths = _work_paths.worker_run(project_root, task["run_id"], task["id"])
-        raw_exit = exit_path.is_file() or paths["exit"].is_file()
+        exit_path = prepared_path.with_name("exit.json")
+        if not exit_path.exists():
+            exit_path = paths["exit"]
+        raw_exit = False
+        if failed and exit_path.is_file():
+            value = json.loads(prepared_input.bounded_read(exit_path, 65536))
+            raw_exit = (
+                isinstance(value, dict)
+                and type(value.get("exit_code")) is int
+                and value.get("status") in {"completed", "failed"}
+            )
+            if repository is not None:
+                raw_exit = (
+                    raw_exit
+                    and exact is not None
+                    and _sql_receipt(project_root, exit_path, exact, "exit") is not None
+                )
         proof = collected or (failed and raw_exit)
         if not absent or not proof:
             if trigger == "before_retry":

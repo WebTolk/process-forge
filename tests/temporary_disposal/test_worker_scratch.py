@@ -251,3 +251,92 @@ def test_old_input_environment_unchanged(project):
     assert (
         scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True) is None
     )
+
+
+def test_controller_failure_cleanup_precedes_retry_and_outside_locks(
+    project, monkeypatch
+):
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    import processforge as core
+
+    from processforge_core.prepared import input as prepared_input
+
+    doc = document(project)
+    scratch.allocate_scratch(project, doc)
+    attempt = scratch._attempt(project, doc["identity"])
+    prepared_path = attempt.with_name("prepared-input.json")
+    state = {
+        "status": "failed",
+        "attempt": 1,
+        "prepared_input": {"path": prepared_path.relative_to(project).as_posix()},
+    }
+    attempt.with_name("exit.json").write_text(
+        '{"status":"failed","exit_code":7}', encoding="utf8"
+    )
+    task = {"id": "task", "run_id": "run"}
+    monkeypatch.setattr(core, "load_agent_run_state", lambda *a: state)
+    monkeypatch.setattr(prepared_input, "load", lambda *a, **k: doc)
+    monkeypatch.setattr(
+        core, "_execution_storage", lambda *a: SimpleNamespace(repository=None)
+    )
+    monkeypatch.setattr(core, "_legacy_tree_probe", lambda *a, **k: True)
+    monkeypatch.setattr(
+        core,
+        "_ProjectMetadataReader",
+        lambda *a: SimpleNamespace(workplace_manifest=lambda: None),
+    )
+    monkeypatch.setattr(
+        core,
+        "build_configuration_provider",
+        lambda **k: SimpleNamespace(
+            snapshot=lambda: SimpleNamespace(
+                config=SimpleNamespace(
+                    runtime=SimpleNamespace(temporary_files=TemporaryFilesConfig())
+                ),
+                errors=(),
+            )
+        ),
+    )
+
+    @contextmanager
+    def forbidden_lock(*args):
+        raise AssertionError("cleanup entered lifecycle lock")
+        yield
+
+    monkeypatch.setattr(core, "worker_run_lifecycle_lock", forbidden_lock)
+    original = scratch.dispose_owned
+    calls = []
+
+    def blocked(resource, **kwargs):
+        calls.append(resource.path)
+        return disposal.CleanupReceipt(
+            resource.resource_id, "cleanup_pending", error_code=13
+        )
+
+    monkeypatch.setattr(scratch, "dispose_owned", blocked)
+    assert core._finalize_worker_scratch(project, task, trigger="before_retry") is False
+    assert len(calls) == 1
+    monkeypatch.setattr(scratch, "dispose_owned", original)
+    # No retry of a denied target: this modeled refusal leaves it as explicit evidence.
+    assert calls[0].is_dir()
+
+
+def test_preparation_failure_finalizes_after_outer_scope_and_preserves_primary(project):
+    doc = document(project)
+    original = RuntimeError("command preparation failed")
+    allocated = None
+    with pytest.raises(RuntimeError) as caught:
+        with scratch.preparation_scratch():
+            scratch.allocate_scratch(project, doc)
+            allocated = project / doc["managed_scratch"]["path"]
+            assert allocated.is_dir()
+            raise original
+    assert caught.value is original and allocated is not None and not allocated.exists()
+    attempt = scratch._attempt(project, doc["identity"])
+    assert attempt.with_name("scratch-preparation-failure.json").is_file()
+    assert (
+        json.loads(attempt.with_name("scratch-cleanup.json").read_bytes())["result"]
+        == "deleted"
+    )

@@ -219,10 +219,21 @@ def dispose_owned(
     boundary but cannot exclude a hostile same-user mutation of the entry.
     """
 
-    def receipt(result: str, *, deleted_files: int = 0, deleted_bytes: int = 0,
-                error_code: int | None = None) -> CleanupReceipt:
-        return CleanupReceipt(resource.resource_id, result, deleted_files, deleted_bytes,
-                              error_code, configuration_errors)
+    def receipt(
+        result: str,
+        *,
+        deleted_files: int = 0,
+        deleted_bytes: int = 0,
+        error_code: int | None = None,
+    ) -> CleanupReceipt:
+        return CleanupReceipt(
+            resource.resource_id,
+            result,
+            deleted_files,
+            deleted_bytes,
+            error_code,
+            configuration_errors,
+        )
 
     if resource._creation is not _CREATED:
         return receipt("ownership_unknown")

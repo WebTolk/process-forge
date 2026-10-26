@@ -1063,19 +1063,30 @@ def test_real_missing_id_legacy_cli_prepare_start_and_retry(
 
 
 @pytest.mark.parametrize("failed", [False, True])
-def test_actual_managed_scratch_prepare_child_enduse_retry_collection(sql_cli_fixture, monkeypatch, failed):
+def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
+    sql_cli_fixture, monkeypatch, failed
+):
     """Exercise the actual ordinary SQL CLI and prepared executor, with a tiny child."""
     import processforge as core
-    from processforge_core.prepared import input as prepared_input
+
     from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.prepared import input as prepared_input
 
     root, repository, args, driver_path = sql_cli_fixture
     (root / ".pf/tmp").mkdir()
     semantic = prepared_input.semantic_input(root, {}, {}, core)
-    scope = {"allowed_files": [".pf/tmp/scratch-owned/**", ".pf/artifacts/report.md"],
-             "allowed_read_files": [], "forbidden_files": [], "forbidden_actions": [],
-             "allowed_actions": ["read", "write_product", "write_artifact"],
-             "ownership": {"writer": True, "owner_id": "worker", "owned_files": [".pf/tmp/scratch-owned/**"]}}
+    scope = {
+        "allowed_files": [".pf/tmp/scratch-owned/**", ".pf/artifacts/report.md"],
+        "allowed_read_files": [],
+        "forbidden_files": [],
+        "forbidden_actions": [],
+        "allowed_actions": ["read", "write_product", "write_artifact"],
+        "ownership": {
+            "writer": True,
+            "owner_id": "worker",
+            "owned_files": [".pf/tmp/scratch-owned/**"],
+        },
+    }
     semantic["scope"] = scope
     semantic["sources"] = []
     driver = core.load_yaml_document(driver_path)
@@ -1086,7 +1097,9 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(sql_cli_fi
     write_yaml_file(driver_path, driver)
     assert core.command_worker_run_prepare(args) == 0
     state = core.load_agent_run_state(root, "run", "task")
-    doc = prepared_input.load(root, core._worker_assignment_service.load(root, "task"), state, core)
+    doc = prepared_input.load(
+        root, core._worker_assignment_service.load(root, "task"), state, core
+    )
     scratch_root = root / doc["managed_scratch"]["path"]
     assert scratch_root.is_dir()
     assert core.command_worker_run_start(args) == (1 if failed else 0)
