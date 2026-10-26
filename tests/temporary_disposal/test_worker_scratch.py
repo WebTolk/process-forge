@@ -340,3 +340,28 @@ def test_preparation_failure_finalizes_after_outer_scope_and_preserves_primary(p
         json.loads(attempt.with_name("scratch-cleanup.json").read_bytes())["result"]
         == "deleted"
     )
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("schema_version", True),
+        ("released", 0),
+        ("consumers", True),
+        ("evidence_finalized", 0),
+    ],
+)
+def test_private_record_rejects_boolean_numeric_equivalence(project, field, value):
+    doc = document(project)
+    scratch.allocate_scratch(project, doc)
+    record = json.loads(scratch._attempt(project, doc["identity"]).read_bytes())
+    if field == "schema_version":
+        record[field] = value
+    else:
+        record["use"][field] = value
+    with pytest.raises(ValueError, match="scratch_record_invalid"):
+        scratch.validate_resource_record(record, doc)
+    assert (
+        scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True).result
+        == "deleted"
+    )

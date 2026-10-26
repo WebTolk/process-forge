@@ -171,6 +171,8 @@ def validate_resource_record(record: dict[str, Any], document: dict[str, Any]) -
         or set(marker) != MARKER_KEYS
         or not isinstance(record, dict)
         or set(record) != RECORD_KEYS
+        or type(marker["schema_version"]) is not int
+        or type(record["schema_version"]) is not int
         or marker["schema_version"] != 1
         or record["schema_version"] != 1
         or marker["kind"] != "pf.worker-scratch"
@@ -178,6 +180,10 @@ def validate_resource_record(record: dict[str, Any], document: dict[str, Any]) -
         or marker["identity"] != document["identity"]
         or record["identity"] != document["identity"]
         or marker["use"] != "disposable_worker_temp"
+        or not isinstance(record["use"], dict)
+        or type(record["use"].get("released")) is not bool
+        or type(record["use"].get("consumers")) is not int
+        or type(record["use"].get("evidence_finalized")) is not bool
         or record["use"]
         != {"released": False, "consumers": 1, "evidence_finalized": False}
         or marker["owner_id"] != scope.get("ownership", {}).get("owner_id")
