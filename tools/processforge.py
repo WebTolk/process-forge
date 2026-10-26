@@ -459,7 +459,7 @@ from pf_cli.parsers.work import WorkCommandParser
 from pf_cli.parsers.workplace import WorkplaceCommandParser
 from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
-from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
+from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, retain_command_output, run_command as run_subprocess_command
 
 from processforge_core.agents.registry import AgentWorkplaceRegistry
 from processforge_core.chat.export import ChatExportService
@@ -3466,7 +3466,16 @@ def format_command(command: list[str]) -> str:
     return format_subprocess_command(command)
 
 
-def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False, *, layer: str = "public", public_gate: bool = True) -> ReleaseCommandResult:
+def run_release_command(
+    label: str,
+    command: list[str],
+    cwd: Path,
+    timeout: int,
+    allow_warn: bool = False,
+    *,
+    layer: str = "public",
+    public_gate: bool = True,
+) -> ReleaseCommandResult:
     started_at = _core_common_clock.now_utc()
     started = time.perf_counter()
     print(f"RUN {label}:")
@@ -3476,15 +3485,81 @@ def run_release_command(label: str, command: list[str], cwd: Path, timeout: int,
     result = run_subprocess_command(command, cwd=cwd, timeout=timeout)
     elapsed = time.perf_counter() - started
     finished_at = _core_common_clock.now_utc()
+    if result.timed_out or result.returncode != 0:
+        evidence = retain_command_output(
+            result,
+            cwd / ".pf/runtime/release-test/commands",
+            started_at=started_at,
+            finished_at=finished_at,
+            elapsed_seconds=elapsed,
+        )
+        diagnostics.emit(
+            "error",
+            "release.child_failed",
+            {
+                "result": evidence.relative_to(cwd).as_posix() + "/result.json",
+                "returncode": result.returncode,
+                "timed_out": result.timed_out,
+            },
+            component="release",
+        )
     output = "\n".join(part for part in [result.stdout, result.stderr] if part)
     if result.timed_out:
-        return ReleaseCommandResult(label, "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}", started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+        return ReleaseCommandResult(
+            label,
+            "FAIL",
+            124,
+            f"timeout after {timeout}s\n{diagnostic_text(result)}",
+            started_at,
+            finished_at,
+            elapsed,
+            timeout,
+            command,
+            layer,
+            public_gate,
+        )
     code = int(result.returncode or 0)
     if code == 0:
-        return ReleaseCommandResult(label, "PASS", 0, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+        return ReleaseCommandResult(
+            label,
+            "PASS",
+            0,
+            output,
+            started_at,
+            finished_at,
+            elapsed,
+            timeout,
+            command,
+            layer,
+            public_gate,
+        )
     if allow_warn:
-        return ReleaseCommandResult(label, "WARN", code, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
-    return ReleaseCommandResult(label, "FAIL", code, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+        return ReleaseCommandResult(
+            label,
+            "WARN",
+            code,
+            output,
+            started_at,
+            finished_at,
+            elapsed,
+            timeout,
+            command,
+            layer,
+            public_gate,
+        )
+    return ReleaseCommandResult(
+        label,
+        "FAIL",
+        code,
+        output,
+        started_at,
+        finished_at,
+        elapsed,
+        timeout,
+        command,
+        layer,
+        public_gate,
+    )
 
 
 def print_release_command_output(result: ReleaseCommandResult) -> None:

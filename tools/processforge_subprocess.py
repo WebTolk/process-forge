@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 import signal
 import subprocess
 import sys
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -146,11 +148,11 @@ def run_command(
         _terminate_process_tree(proc)
         try:
             more_stdout, more_stderr = proc.communicate(timeout=5)
-            stdout += _decode_output(more_stdout)
-            stderr += _decode_output(more_stderr)
+            stdout = _decode_output(more_stdout)
+            stderr = _decode_output(more_stderr)
         except subprocess.TimeoutExpired as final_exc:
-            stdout += _decode_output(final_exc.stdout)
-            stderr += _decode_output(final_exc.stderr)
+            stdout = _decode_output(final_exc.stdout)
+            stderr = _decode_output(final_exc.stderr)
     result = CommandResult(
         args=command,
         cwd=cwd_text,
@@ -164,6 +166,38 @@ def run_command(
     if check and (result.timed_out or result.returncode != 0):
         raise RuntimeError(diagnostic_text(result))
     return result
+
+
+def retain_command_output(
+    result: CommandResult,
+    directory: Path,
+    *,
+    started_at: str,
+    finished_at: str,
+    elapsed_seconds: float,
+) -> Path:
+    """Retain available decoded child streams before any diagnostic truncation."""
+    output = directory / uuid.uuid4().hex
+    output.mkdir(parents=True, exist_ok=False)
+    (output / "stdout.log").write_text(result.stdout, encoding="utf-8", newline="")
+    (output / "stderr.log").write_text(result.stderr, encoding="utf-8", newline="")
+    metadata = {
+        "args": result.args,
+        "cwd": result.cwd,
+        "returncode": result.returncode,
+        "timed_out": result.timed_out,
+        "timeout_seconds": result.timeout_seconds,
+        "label": result.label,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "elapsed_seconds": elapsed_seconds,
+        "stdout": "stdout.log",
+        "stderr": "stderr.log",
+    }
+    (output / "result.json").write_text(
+        json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
+    )
+    return output
 
 
 def diagnostic_text(result: CommandResult, max_chars: int = 4000) -> str:
@@ -186,4 +220,10 @@ def diagnostic_text(result: CommandResult, max_chars: int = 4000) -> str:
     return "\n".join(lines)
 
 
-__all__ = ["CommandResult", "diagnostic_text", "format_command", "run_command", "tail_text"]
+__all__ = [
+    "CommandResult",
+    "diagnostic_text",
+    "format_command",
+    "run_command",
+    "tail_text",
+]

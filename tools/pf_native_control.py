@@ -632,7 +632,41 @@ class NativeImage:
             opener: Any = None,
         ) -> Any:
             relative = image.relative(file)
-            if relative is None or relative.startswith("runtime/"):
+            report_parts = relative.split("/") if relative is not None else []
+            report_output = relative in {
+                ".pf/runtime/release-test/latest-report.json",
+                ".pf/runtime/release-test/latest-report.md",
+                ".pf/runtime/release-test/latest-trace.ndjson",
+            } or (
+                len(report_parts) == 6
+                and report_parts[:4] == [".pf", "runtime", "release-test", "commands"]
+                and len(report_parts[4]) == 32
+                and all(char in "0123456789abcdef" for char in report_parts[4])
+                and report_parts[5] in {"stdout.log", "stderr.log", "result.json"}
+            )
+            if report_output:
+                target = image.root.joinpath(*report_parts)
+                # Only these mutable outputs may bypass the accepted byte image.
+                # Aliases, symlinks/reparse points and hard links stay failclosed.
+                for node in (target, *target.parents):
+                    if node.exists() or node.is_symlink():
+                        info = node.lstat()
+                        if (
+                            node.is_symlink()
+                            or getattr(info, "st_file_attributes", 0) & 0x400
+                            or (node.is_file() and info.st_nlink != 1)
+                        ):
+                            raise NativeControlError()
+                    if node == image.root:
+                        break
+                if (
+                    target.resolve() != target
+                    or relative in image.files
+                    or opener is not None
+                    or not closefd
+                ):
+                    raise NativeControlError()
+            if relative is None or relative.startswith("runtime/") or report_output:
                 return original_open(
                     file, mode, buffering, encoding, errors, newline, closefd, opener
                 )
