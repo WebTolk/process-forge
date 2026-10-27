@@ -1674,10 +1674,52 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
     from processforge_core.common.json_io import json_read
     supervisor = json_read(SupervisorStateInputs().supervisor_state_path(project_root))
     projection = stage_obligations_payload(project_root, core)
-    obligations = projection.get("obligations") if isinstance(projection.get("obligations"), list) else []
+    raw_obligations = projection.get("obligations")
+    obligations = raw_obligations if isinstance(raw_obligations, list) else []
     execution = active_execution_records(project_root, core)
     active = execution[0] if execution else {}
+    declarative_state = build_process_execution_service(
+        project_root, workplace_root, core
+    ).state(session_id=str(session or ""))
+    if declarative_state.get("action") != "start_recommended":
+        selected = {
+            "process_id": str(declarative_state.get("process", {}).get("id") or ""),
+            "run_id": str(declarative_state.get("run", {}).get("id") or ""),
+            "task_id": str(declarative_state.get("assignment", {}).get("id") or ""),
+        }
+        selected_stage = str(declarative_state.get("stage", {}).get("id") or "")
+        # Older assignments may omit stage. Reuse only the same Work's
+        # declared runtime mapping, never another assignment's stage.
+        active = next(
+            (
+                row
+                for row in execution
+                if all(row.get(key) == value for key, value in selected.items())
+                and (not selected_stage or row.get("stage_id") == selected_stage)
+            ),
+            {**selected, "stage_id": selected_stage},
+        )
     active_stage = active.get("stage") if isinstance(active.get("stage"), dict) else {}
+    obligations = [
+        row
+        for row in obligations
+        if isinstance(row, dict)
+        and active.get("stage_id")
+        and all(
+            row.get(key) == active.get(key)
+            for key in ("process_id", "run_id", "task_id", "stage_id")
+        )
+    ]
+    freshness = projection.get("status")
+    if freshness not in {"missing", "invalid"}:
+        freshness = next(
+            (
+                status
+                for status in ("invalid", "missing", "stale")
+                if any(row.get("freshness") == status for row in obligations)
+            ),
+            "current",
+        )
     event_rows = journal_events(project_root, core)
     current_work_state = {
         "project": handle["project_id"],
@@ -1695,27 +1737,17 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
         "automation_bindings": obligations,
         "blockers": [],
         "execution": execution,
-        "freshness": projection.get("status"),
+        "freshness": freshness,
         "last_relevant_activity": str(event_rows[-1].get("time") or "") if event_rows else "",
     }
-    declarative_state = build_process_execution_service(project_root, workplace_root, core).state(session_id=str(session or ""))
     if declarative_state.get("action") != "start_recommended":
-        current_work_state.update(
-            {
-                "active_process": str(declarative_state.get("process", {}).get("id") or current_work_state["active_process"]),
-                "active_stage": str(declarative_state.get("stage", {}).get("id") or current_work_state["active_stage"]),
-                "run": str(declarative_state.get("run", {}).get("id") or current_work_state["run"]),
-                "task": str(declarative_state.get("assignment", {}).get("id") or current_work_state["task"]),
-                "assignment": str(declarative_state.get("assignment", {}).get("id") or current_work_state["assignment"]),
-                "stage_contract": {
-                    "entry_gates": declarative_state.get("gates", {}).get("entry", []),
-                    "exit_gates": declarative_state.get("gates", {}).get("exit", []),
-                },
-                "automation_bindings": declarative_state.get("obligations", []),
-                "freshness": "pinned",
-                "process_execution": declarative_state,
+        if not active_stage:
+            current_work_state["stage_contract"] = {
+                "entry_gates": declarative_state.get("gates", {}).get("entry", []),
+                "exit_gates": declarative_state.get("gates", {}).get("exit", []),
             }
-        )
+        current_work_state["blockers"] = declarative_state.get("blockers", [])
+        current_work_state["process_execution"] = declarative_state
     return {
         "project": handle,
         "current_session": core.read_current_project_session(project_root),

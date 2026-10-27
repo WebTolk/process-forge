@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
+import processforge_core.resources.registries as _core_resources_registries
+from processforge_core.common.properties import CoreProperties
+from processforge_core.common.release_identity import RELEASE_NAME
 from processforge_core.common.yaml_dump import dump_yaml
 from processforge_core.process_catalog.profile_packs import OfficialPackProfileReader
 from processforge_core.project.coordination import ProjectCoordinationReader
 from processforge_core.project.setup_answers import WorkplaceSetupAnswers
 from processforge_core.project.workplace_terms import WorkplaceTermsBuilder
-import processforge_core.resources.registries as _core_resources_registries
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 
 
@@ -134,8 +137,6 @@ class WorkplaceFileBuilder:
                     "id": "processforge",
                     "name": "ProcessForge",
                     "path": str(self.distribution_root),
-                    "version": "1.0.0",
-                    "channel": "stable",
                     "status": "available",
                     "provides": [
                         "processforge.core",
@@ -146,6 +147,31 @@ class WorkplaceFileBuilder:
                     ],
                 }
             ]
+        registry_paths = _core_resources_registries.WorkplaceRegistryReader()
+        for entry in distribution_entries:
+            resolution = registry_paths.resolve_path_with_constants(
+                entry["path"], root, path_constants
+            )
+            version = "unknown"
+            if not resolution["errors"]:
+                version = CoreProperties.from_distribution(
+                    registry_paths.path_resolution_to_path(resolution)
+                ).loaded.version
+            channel = "unknown"
+            if version != "unknown":
+                prerelease = version.split("+", 1)[0].partition("-")[2]
+                label = re.match(r"[A-Za-z]+", prerelease)
+                channel = (
+                    label.group().lower()
+                    if label
+                    else ("prerelease" if prerelease else "stable")
+                )
+            entry.setdefault(
+                "name",
+                "ProcessForge" if entry["id"] == RELEASE_NAME else entry["label"],
+            )
+            entry.setdefault("version", version)
+            entry.setdefault("channel", channel)
         active_process_packs = self.profile_packs.official_pack_registry_entries_for_profile(profile)
     
         agents = f"""# ProcessForge Workplace Layer

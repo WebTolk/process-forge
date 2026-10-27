@@ -19,7 +19,15 @@ _CHILD_RESULTS: list[subprocess.CompletedProcess[str]] = []
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
-        [sys.executable, str(PF), *args],
+        [
+            sys.executable,
+            str(PF),
+            "--diagnostic-profile",
+            "off",
+            "--diagnostic-sink",
+            "none",
+            *args,
+        ],
         cwd=ROOT,
         text=True,
         encoding="utf-8",
