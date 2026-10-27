@@ -96,6 +96,58 @@ def main() -> int:
             raise AssertionError("failed doctor did not create failed verification")
         if semantic.read_text(encoding="utf-8") != "human-owned\n":
             raise AssertionError("projector overwrote semantic artifact")
+
+    # A selected Core stage exposes evaluated, pinned gates even when Runtime
+    # finds the same stage in a changed live process declaration.
+    from process_execution_smoke_support import fixture, transition
+
+    with fixture() as (workplace, root, started):
+        moved = transition(workplace, root, "brief", "prepare-ready")
+        if (
+            moved.get("action") != "stage_transitioned"
+            or moved.get("next_stage_id") != "build"
+        ):
+            raise AssertionError(moved)
+        process_path = root / "processes" / "custom" / "declarative-smoke.yaml"
+        live = core.load_yaml_document(process_path)
+        live["version"] = "9.9.9"
+        live["stages"][1]["entry_gates"] = ["verify-ready"]
+        live["stages"][1]["exit_gates"] = ["prepare-ready"]
+        process_path.write_text(json.dumps(live), encoding="utf-8")
+        state = host.work_state_payload(workplace, core, project_root_ref=str(root))[
+            "current_work_state"
+        ]
+        selected = state["process_execution"]
+        if (state["run"], state["assignment"], state["active_stage"]) != (
+            started["run_id"],
+            started["assignment_id"],
+            "build",
+        ):
+            raise AssertionError("runtime did not retain the selected Work and stage")
+        if (
+            selected["process"]["pin_status"] != "pinned"
+            or selected["process"]["version"] != "1.0.0"
+        ):
+            raise AssertionError("selected Work did not retain its pinned process")
+        for phase in ("entry", "exit"):
+            gates = state["stage_contract"][f"{phase}_gates"]
+            if (
+                not gates
+                or gates != selected["gates"][phase]
+                or not all(isinstance(gate, dict) for gate in gates)
+            ):
+                raise AssertionError("outer stage contract lost computed Core gates")
+        (entry,) = state["stage_contract"]["entry_gates"]
+        (exit_gate,) = state["stage_contract"]["exit_gates"]
+        if (
+            entry["id"] != "prepare-ready"
+            or not entry["satisfied"]
+            or exit_gate["id"] != "build-ready"
+            or exit_gate["satisfied"]
+        ):
+            raise AssertionError(
+                "outer gate evaluation followed the live process instead of pinned evidence"
+            )
     print("PASS: verification-state and current-work-state smoke")
     return 0
 

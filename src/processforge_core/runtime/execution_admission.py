@@ -392,6 +392,8 @@ class ExecutionAdmission:
                 raw = stream.read(65537)
         except FileNotFoundError:
             return
+        except OSError:
+            raise ExecutionError("execution_activity_unknown") from None
         try:
             if len(raw) > 65536:
                 raise ValueError

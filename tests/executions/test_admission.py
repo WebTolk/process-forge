@@ -10,7 +10,8 @@ from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
+from unittest.mock import mock_open
 
 import pytest
 
@@ -203,6 +204,68 @@ def test_admission_owned_failures_remain_normalized(
         expected += [("enter", project_gate), ("leave", project_gate)]
     expected.append(("leave", workplace_gate))
     assert events == expected
+
+
+@pytest.mark.parametrize("route", ["direct", "start", "registration"])
+@pytest.mark.parametrize("phase", ["open", "read"])
+@pytest.mark.parametrize("error_type", [OSError, PermissionError])
+def test_stopping_state_io_failure_is_normalized_for_every_caller(
+    isolated_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    route: str,
+    phase: str,
+    error_type: type[OSError],
+) -> None:
+    import traceback
+
+    sys.path.insert(0, str(_CLI.parent))
+    try:
+        from pf_runtime.host import registration_admission
+    finally:
+        sys.path.remove(str(_CLI.parent))
+
+    project = isolated_path / "project"
+    workplace = isolated_path / "workplace"
+    state_path = workplace / "runtime/pf-runtime/service.json"
+    error = error_type(13, "private stopping-fence diagnostic", str(state_path))
+    state_open = mock_open(read_data=b'{"status":"ready"}')
+    if phase == "open":
+        state_open.side_effect = error
+    else:
+        state_open.return_value.read.side_effect = error
+    original_open = Path.open
+
+    def open_state(path: Path, *args: Any, **options: Any) -> Any:
+        if path == state_path:
+            return state_open(*args, **options)
+        return original_open(path, *args, **options)
+
+    monkeypatch.setattr(Path, "open", open_state)
+    admission = ExecutionAdmission()
+    with pytest.raises(ExecutionError, match="^execution_activity_unknown$") as caught:
+        if route == "direct":
+            admission.check_stopping(workplace)
+        else:
+            gate = (
+                admission.start(project, workplace)
+                if route == "start"
+                else registration_admission(workplace, [project])
+            )
+            with gate:
+                pytest.fail("unreadable stopping fence admitted an operation")
+    state_open.assert_called_once_with("rb")
+    if phase == "read":
+        state_open.return_value.read.assert_called_once_with(65537)
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__
+    rendered = "".join(traceback.format_exception(caught.value))
+    assert str(state_path) not in rendered
+    assert "private stopping-fence diagnostic" not in rendered
+    assert not admission.held(project, workplace)
+    monkeypatch.undo()
+    with admission.start(project, workplace):
+        assert admission.held(project, workplace)
+    assert not admission.held(project, workplace)
 
 
 def test_shutdown_requires_exact_selector_and_refuses_lock_timeout(

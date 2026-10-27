@@ -374,22 +374,68 @@ class AdapterTests(NormalizedTests):
 
     def test_mcp_factory_selectors_and_guard(self):
         from pf_runtime import mcp_server, session_read
-        service = fixture()
-        core = SimpleNamespace(project_id=lambda path: path.name)
-        host = SimpleNamespace(resolve_project=lambda ref, core: Path(ref), project_for_session=lambda args, workplace, core: Path('fixture'))
-        runtime = SimpleNamespace(core=core, host=host)
-        records = []
-        arguments = {'project_root': 'fixture', 'run_id': 'r', 'assignment_id': 'a', 'context_id': 'a-capsule'}
-        with d.operation(logger(sinks=[records.append]), 'mcp', 'request', request_id='mcp-request'), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
-            state = mcp_server.tool_result('pf.work.state', arguments, Path('workplace'), 'session', runtime)
-            self.assertEqual(state, service.state())
-            factory.assert_called_once_with(Path('fixture'), Path('workplace'), core)
-        completed = next(r for r in records if r['code'] == 'work.state.completed')
-        self.assertEqual(completed['identity']['request_id'], 'mcp-request')
-        self.assertEqual(completed['identity']['session_id'], 'session')
-        with patch('processforge_core.composition.build_process_execution_service', side_effect=AssertionError('guard before factory')):
-            with self.assertRaises(session_read.SessionReadError):
-                mcp_server.tool_result('pf.work.state', {**arguments, 'session_id': 'other'}, Path('workplace'), 'session', runtime)
+
+        from processforge_core.configuration import DeviceConfigurationSource
+
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as raw:
+            root = Path(raw).resolve()
+            project = root / "fixture"
+            workplace = root / "workplace"
+            project.mkdir()
+            workplace.mkdir()
+            service = fixture(project=str(project))
+            core = SimpleNamespace(project_id=lambda path: path.name)
+            host = SimpleNamespace(
+                resolve_project=lambda ref, core: Path(ref),
+                project_for_session=lambda args, workplace, core: project,
+            )
+            runtime = SimpleNamespace(core=core, host=host)
+            records = []
+            arguments = {
+                "project_root": str(project),
+                "run_id": "r",
+                "assignment_id": "a",
+                "context_id": "a-capsule",
+            }
+            with patch.object(
+                DeviceConfigurationSource,
+                "default_path",
+                return_value=root / "device.yaml",
+            ):
+                with (
+                    d.operation(
+                        logger(sinks=[records.append]),
+                        "mcp",
+                        "request",
+                        request_id="mcp-request",
+                    ),
+                    patch(
+                        "processforge_core.composition.build_process_execution_service",
+                        return_value=service,
+                    ) as factory,
+                ):
+                    state = mcp_server.tool_result(
+                        "pf.work.state", arguments, workplace, "session", runtime
+                    )
+                    self.assertEqual(state, service.state())
+                    factory.assert_called_once_with(project, workplace, core)
+                completed = next(
+                    r for r in records if r["code"] == "work.state.completed"
+                )
+                self.assertEqual(completed["identity"]["request_id"], "mcp-request")
+                self.assertEqual(completed["identity"]["session_id"], "session")
+                with patch(
+                    "processforge_core.composition.build_process_execution_service",
+                    side_effect=AssertionError("guard before factory"),
+                ):
+                    with self.assertRaises(session_read.SessionReadError):
+                        mcp_server.tool_result(
+                            "pf.work.state",
+                            {**arguments, "session_id": "other"},
+                            workplace,
+                            "session",
+                            runtime,
+                        )
 
     def test_host_factory_shared_payload_and_denied_guard(self):
         from pf_runtime import host

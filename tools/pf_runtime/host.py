@@ -1741,7 +1741,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
         "last_relevant_activity": str(event_rows[-1].get("time") or "") if event_rows else "",
     }
     if declarative_state.get("action") != "start_recommended":
-        if not active_stage:
+        if selected_stage or not active_stage:
             current_work_state["stage_contract"] = {
                 "entry_gates": declarative_state.get("gates", {}).get("entry", []),
                 "exit_gates": declarative_state.get("gates", {}).get("exit", []),
