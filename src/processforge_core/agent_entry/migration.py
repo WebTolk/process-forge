@@ -540,7 +540,12 @@ def _stage(root: Path, transaction: str, raw: bytes) -> Path:
         raise EntryError("entry_transaction_incomplete")
     _directory(root, ".pf/tmp")
     if not resources:
-        owned = create_owned_directory(root / ".pf/tmp")
+        from ..egress.contracts import EgressError
+
+        try:
+            owned = create_owned_directory(root / ".pf/tmp", private=True)
+        except EgressError:
+            raise EntryError("private_acl_unavailable") from None
         resources.append(owned)
         _directory(root, owned.path.relative_to(root).as_posix(), private=True)
     directory = resources[0].path

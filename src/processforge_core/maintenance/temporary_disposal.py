@@ -88,17 +88,53 @@ def create_owned_file(destination: Path) -> OwnedTemporary:
     )
 
 
-def create_owned_directory(boundary: Path) -> OwnedTemporary:
+def create_owned_directory(boundary: Path, *, private: bool = False) -> OwnedTemporary:
     """Create one exclusive disposable child; existing directories are never adopted."""
     boundary = Path(boundary).absolute()
     resource_id = uuid.uuid4().hex
     path = boundary / ("pf-scratch-" + resource_id)
     with _parent(path) as descriptor:
-        os.mkdir(
-            path if descriptor is None else path.name,
-            mode=0o777 if os.name == "nt" else 0o700,
-            dir_fd=descriptor,
-        )
+        if private and os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            from ..egress.contracts import EgressError
+            from ..egress.windows import apis, current_sid
+
+            # Match the existing private-directory DACL at creation, but keep
+            # this producer's exclusive-create rule even for a private collision.
+            class Attributes(ctypes.Structure):
+                _fields_ = [
+                    ("length", wintypes.DWORD),
+                    ("descriptor", ctypes.c_void_p),
+                    ("inherit", wintypes.BOOL),
+                ]
+
+            kernel, adv = apis()
+            security = ctypes.c_void_p()
+            sid = current_sid()
+            if not adv.ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                f"O:{sid}D:P(A;OICI;FA;;;{sid})",
+                1,
+                ctypes.byref(security),
+                None,
+            ):
+                raise EgressError("private_acl_unavailable")
+            try:
+                attributes = Attributes(ctypes.sizeof(Attributes), security, False)
+                if not kernel.CreateDirectoryW(str(path), ctypes.byref(attributes)):
+                    error = ctypes.get_last_error()
+                    if error == 183:
+                        raise FileExistsError(17, "File exists", str(path))
+                    raise EgressError("private_acl_unavailable")
+            finally:
+                kernel.LocalFree(security)
+        else:
+            os.mkdir(
+                path if descriptor is None else path.name,
+                mode=0o777 if os.name == "nt" else 0o700,
+                dir_fd=descriptor,
+            )
         info = path.lstat()
     return OwnedTemporary(
         resource_id,

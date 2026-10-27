@@ -30,6 +30,7 @@ from unittest.mock import patch
 
 from processforge_core import composition
 from processforge_core.common.yaml_dump import dump_yaml
+from processforge_core.configuration.device import DeviceConfigurationSource
 from processforge_core.project.snapshot import load_snapshot
 from processforge_core.resources import (
     index_maintenance,
@@ -98,6 +99,17 @@ class ContextIndexIntegrationTests(unittest.TestCase):
         self.root = SCRATCH_ROOT / ("integration-" + uuid.uuid4().hex)
         self.root.mkdir()
         self.addCleanup(self._cleanup)
+        profile = self.root / "profile"
+        environment = patch.dict(
+            os.environ,
+            {
+                "LOCALAPPDATA": str(profile / "localappdata"),
+                "XDG_CONFIG_HOME": str(profile / "config"),
+            },
+        )
+        environment.start()
+        self.addCleanup(environment.stop)
+        _write_yaml(DeviceConfigurationSource.default_path(), {})
         self.distribution = self.root / "distribution"
         self.distribution.mkdir()
         self.workplace = self.root / "workplace"
@@ -244,13 +256,35 @@ class ContextIndexIntegrationTests(unittest.TestCase):
         """Count content opens by purpose; reject reads outside this fixture."""
         counts: Counter[str] = Counter()
         real_open = Path.open
+        # Exact code resources verified by storage_migration._descriptor;
+        # no registry, document or arbitrary distribution read is admitted.
+        code_contract_paths = {
+            (PROJECT_ROOT / relative).resolve()
+            for relative in (
+                "schemas/storage-migration-v1.json",
+                "schemas/execution-migration-v1.json",
+                "src/processforge_core/maintenance/contracts.py",
+                "src/processforge_core/maintenance/storage_migration.py",
+                "src/processforge_core/maintenance/backup.py",
+                "src/processforge_core/maintenance/execution_migration.py",
+                "src/processforge_core/maintenance/journal_scan.py",
+                "src/processforge_core/executions/schema.py",
+                "src/processforge_core/executions/sqlite_repository.py",
+            )
+        }
 
         def tracked(path: Path, *args: Any, **kwargs: Any) -> Any:
             mode = args[0] if args else kwargs.get("mode", "r")
             if "r" in mode:
-                if not path.resolve().is_relative_to(self.root.resolve()):
+                resolved = path.resolve()
+                if (
+                    not resolved.is_relative_to(self.root.resolve())
+                    and resolved not in code_contract_paths
+                ):
                     raise AssertionError("Operation attempted a nonfixture file read")
-                if path in self.document_paths:
+                if resolved in code_contract_paths:
+                    category = "distribution_contract_metadata"
+                elif path in self.document_paths:
                     category = (
                         "selected_document"
                         if path in self.selected_paths

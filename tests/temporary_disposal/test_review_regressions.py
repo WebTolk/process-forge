@@ -557,3 +557,114 @@ def test_bound_launch_reservation_cannot_be_replaced_or_disposed(
     assert repository.load_latest("run", "task") == bound
     assert len(list((root / ".pf/tmp/scratch-owned").iterdir())) == 1
     assert not list((root / ".pf").rglob("scratch-release.json"))
+
+
+@pytest.mark.parametrize("private", [False, True])
+def test_owned_creation_security_and_default_cleanup(
+    isolated_path: Path, private: bool
+) -> None:
+    import os
+
+    resource = disposal.create_owned_directory(isolated_path, private=private)
+    try:
+        info = resource.path.lstat()
+        assert resource.identity == (info.st_dev, info.st_ino)
+        assert resource.boundary == isolated_path.absolute()
+        if private and os.name == "nt":
+            from processforge_core.egress.windows import verify_private
+
+            verify_private(resource.path, directory=True)
+        elif os.name != "nt":
+            assert info.st_mode & 0o077 == 0
+        (resource.path / "payload").write_bytes(b"owned staging")
+    finally:
+        receipt = disposal.dispose_owned(disposal.release_owned(resource))
+    assert receipt.result == "deleted" and receipt.complete
+    assert receipt.deleted_files == 1 and receipt.deleted_bytes == 13
+    assert not resource.path.exists()
+
+
+@pytest.mark.parametrize(
+    ("private", "existing_private"), [(False, False), (True, False), (True, True)]
+)
+def test_owned_creation_collision_never_adopts_or_changes_existing(
+    isolated_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    private: bool,
+    existing_private: bool,
+) -> None:
+    from types import SimpleNamespace
+
+    fixed = SimpleNamespace(hex="c" * 32)
+    monkeypatch.setattr(disposal.uuid, "uuid4", lambda: fixed)
+    resource = disposal.create_owned_directory(isolated_path, private=existing_private)
+    payload = resource.path / "foreign.txt"
+    payload.write_bytes(b"preserve")
+    before = migration.security(resource.path)
+    try:
+        with pytest.raises(FileExistsError):
+            disposal.create_owned_directory(isolated_path, private=private)
+        assert migration.security(resource.path) == before
+        assert payload.read_bytes() == b"preserve"
+        assert resource.path.lstat().st_ino == resource.identity[1]
+    finally:
+        receipt = disposal.dispose_owned(disposal.release_owned(resource))
+    assert receipt.result == "deleted"
+
+
+def test_private_creation_failure_preserves_error_and_allocates_nothing(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import os
+
+    if os.name != "nt":
+        pytest.skip("Windows private DACL creation")
+    from processforge_core.egress import windows
+    from processforge_core.egress.contracts import EgressError
+
+    original = EgressError("private_acl_unavailable")
+
+    def denied() -> Any:
+        raise original
+
+    with monkeypatch.context() as fault:
+        fault.setattr(windows, "current_sid", denied)
+        with pytest.raises(EgressError) as caught:
+            disposal.create_owned_directory(isolated_path, private=True)
+        assert caught.value is original
+        # Default callers must not enter the private ACL mechanism.
+        resource = disposal.create_owned_directory(isolated_path)
+    assert disposal.dispose_owned(disposal.release_owned(resource)).result == "deleted"
+    assert list(isolated_path.iterdir()) == []
+
+
+def test_entry_private_staging_failure_keeps_owned_cleanup(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (isolated_path / ".pf").mkdir()
+    with migration.entry_lock(isolated_path):
+        pass
+    directory = migration._directory
+    created: list[Path] = []
+
+    def rejected(root: Path, name: str, *, private: bool = False) -> Path:
+        if "pf-scratch-" in name:
+            path = root / name
+            created.append(path)
+            assert private and path.is_dir()
+            raise migration.EntryError("private_acl_unavailable")
+        return directory(root, name, private=private)
+
+    with monkeypatch.context() as fault:
+        fault.setattr(migration, "_directory", rejected)
+        with migration._transaction_temporaries(isolated_path) as outcome:
+            with pytest.raises(migration.EntryError, match="private_acl_unavailable"):
+                migration._stage(isolated_path, "owned", b"must not be written")
+            resources = migration._STAGING.get()
+            assert resources is not None and len(resources) == 1
+            assert list(resources[0].path.iterdir()) == []
+            outcome.update(action="incomplete")
+    assert len(created) == 1 and not created[0].exists()
+    receipts = list((isolated_path / migration.JOURNALS / "cleanup").glob("*.json"))
+    assert len(receipts) == 1
+    assert json.loads(receipts[0].read_text())["result"] == "deleted"
