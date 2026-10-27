@@ -1,5 +1,6 @@
 """Full application layering, byte presence, refresh and request isolation."""
 
+import argparse
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -25,6 +26,95 @@ from . import isolated_path
 from .test_profiles import MemoryStore, section
 
 tmp_path = isolated_path
+
+
+@pytest.mark.parametrize(
+    "command", ["init", "status", "tick", "rebuild-projections", "projection-doctor"]
+)
+@pytest.mark.parametrize("root_count", [0, 1, 2])
+def test_cli_repeatable_roots_dispatch_with_isolated_configuration(
+    tmp_path, monkeypatch, command, root_count
+):
+    import pf_native_control
+    from pf_cli.application import CliApplication
+    from pf_cli.parsers.host import RuntimeHostCommandParser
+
+    from processforge_core.project.configuration_inputs import (
+        ProjectConfigurationReader,
+        operation_configuration,
+    )
+
+    monkeypatch.setattr(pf_native_control, "current_entry", lambda: None)
+    device = write(tmp_path / "device.yaml", {})
+    workplace = tmp_path / "workplace"
+    workplace.mkdir()
+    write(workplace / "configuration.yaml", {"logging": {"raw_hooks": False}})
+    projects = [tmp_path / f"project-{index}" for index in range(root_count)]
+    for index, project in enumerate(projects):
+        (project / ".pf").mkdir(parents=True)
+        write(
+            project / ".pf/configuration.yaml",
+            {"logging": {"events": bool(index % 2)}},
+        )
+    roots = [str(project) for project in projects]
+    selected_workplace = workplace if command in {"init", "status", "tick"} else None
+    calls = []
+
+    def dispatch(args):
+        calls.append(args)
+        assert args.project_root == roots
+        reader = ProjectConfigurationReader()
+        for index in reversed(range(root_count)):
+            project = projects[index]
+            assert operation_configuration(project, selected_workplace) is None
+            provider = reader.configuration_provider(
+                project, selected_workplace, device_config_path=device
+            )
+            assert provider.get("logging.events") is bool(index % 2)
+            assert provider.get("logging.raw_hooks") is (selected_workplace is None)
+        return 7
+
+    def parser_factory():
+        parser = argparse.ArgumentParser()
+        parser.set_defaults(
+            diagnostic_profile="off",
+            diagnostic_threshold=None,
+            diagnostic_components=None,
+            diagnostic_sink="none",
+            device_config_path=device,
+        )
+        commands = parser.add_subparsers(dest="command", required=True)
+        RuntimeHostCommandParser(
+            runtime_host_event=dispatch,
+            runtime_host_init=dispatch,
+            runtime_host_project_state=dispatch,
+            runtime_host_projection_doctor=dispatch,
+            runtime_host_rebuild_projections=dispatch,
+            runtime_host_resolve=dispatch,
+            runtime_host_status=dispatch,
+            runtime_host_tick=dispatch,
+            runtime_host_work_state=dispatch,
+        ).register(commands.add_parser)
+        return parser
+
+    arguments = ["runtime-host", command]
+    if selected_workplace is not None:
+        arguments += ["--workplace", str(selected_workplace)]
+    for root in roots:
+        arguments += ["--project-root", root]
+    application = CliApplication(
+        parser_factory=parser_factory,
+        project_id_resolver=lambda project: pytest.fail("unexpected scalar root"),
+        entry_file=__file__,
+    )
+    if command == "projection-doctor" and not roots:
+        with pytest.raises(SystemExit) as caught:
+            application.run(arguments)
+        assert caught.value.code == 2
+        assert not calls
+    else:
+        assert application.run(arguments) == 7
+        assert len(calls) == 1
 
 
 def test_retention_layers_and_last_valid_error(tmp_path):

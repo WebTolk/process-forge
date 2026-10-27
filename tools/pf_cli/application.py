@@ -49,7 +49,13 @@ class CliApplication:
                 from processforge_core.project.metadata import ProjectMetadataReader
 
                 value = getattr(args, "project_root", None)
-                project = Path(value).expanduser().resolve() if value else None
+                # Repeatable roots stay with the handler; never pin one project's
+                # configuration across a batch of independently selected roots.
+                project = (
+                    Path(value).expanduser().resolve()
+                    if value and not isinstance(value, list)
+                    else None
+                )
                 value = getattr(args, "workplace_root", None) or getattr(
                     args, "workplace", None
                 )

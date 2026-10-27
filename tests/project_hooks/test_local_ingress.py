@@ -134,7 +134,6 @@ class LocalIngressTests(HookFixture):
                     "--apply",
                 )
                 history = []
-                binding_before = None
                 manifest_before = None
                 for extra in ((), (), ("--force",)):
                     initialized = yaml.safe_load(self.cli(*arguments, *extra).stdout)
@@ -154,11 +153,9 @@ class LocalIngressTests(HookFixture):
                         self.workplace.resolve(),
                     )
                     binding_path = flow / "data/execution-storage.json"
-                    binding = binding_path.read_bytes()
-                    self.assertEqual(json.loads(binding)["project_id"], owner)
-                    if binding_before is not None:
-                        self.assertEqual(binding, binding_before)
-                    binding_before = binding
+                    # Unsealed Source has no qualified native publication and
+                    # therefore does not initialize fresh SQL execution storage.
+                    self.assertFalse(binding_path.exists())
                     records = list(
                         journal.records(flow / "runtime/events/events.sqlite3")
                     )
