@@ -2865,12 +2865,25 @@ def _execute_project_initialization(
     flow_root = project_root / PROJECT_FLOW_ROOT
     for dirname in PROJECT_FLOW_DIRS:
         (flow_root / dirname).mkdir(parents=True, exist_ok=True)
-    _process_event_recorder.emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
     protected = {project_root / name for name in entry_targets}
     # Legacy START is not initializer-owned, even for an old caller's file map.
     protected.add(flow_root / "START_AGENT_HERE.md")
-    results = [write_file(path, content, force=force) for path, content in files.items()
-               if path not in protected]
+    # Publish identity and enrollment before the first owned journal access.
+    # Retain each write result in the original public file order; do not rewrite.
+    bootstrap = {
+        path: write_file(path, files[path], force=force)
+        for path in (
+            flow_root / "process-forge.yaml",
+            flow_root / "process-forge.local.yaml",
+        )
+        if path in files and path not in protected
+    }
+    _process_event_recorder.emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
+    results = [
+        bootstrap[path] if path in bootstrap else write_file(path, content, force=force)
+        for path, content in files.items()
+        if path not in protected
+    ]
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
     from processforge_core.project.host_integration import optional_host_integration_status
     codex_integration = optional_host_integration_status(project_root, sys.modules[__name__])

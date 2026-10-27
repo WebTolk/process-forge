@@ -98,6 +98,85 @@ class LocalIngressTests(HookFixture):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
+    def test_fresh_cli_identity_precedes_journal_and_survives_repeat(self):
+        from processforge_core.process_event_journal import ProcessEventJournal
+
+        device = self.seed_real_workplace()
+        journal = ProcessEventJournal()
+        expected = [
+            "project.onboarding.started",
+            "project.flow_root.created",
+            "project.platform.detected",
+            "project.snapshot.refreshed",
+            "launcher.project_runtime.created",
+            "assignment.created",
+            "project.doctor.passed",
+            "project.onboarding.completed",
+        ]
+        for command in ("project-onboard", "project-init", "init-project"):
+            with self.subTest(command=command):
+                project = self.root / command
+                owner = "explicit-owner-" + command
+                answers = self.root / (command + "-answers.yaml")
+                answers.write_text(
+                    yaml.safe_dump({"project": {"id": owner}}), encoding="utf-8"
+                )
+                arguments = (
+                    command,
+                    "--project-root",
+                    str(project),
+                    "--workplace",
+                    str(device),
+                    "--type",
+                    "generic",
+                    "--answers",
+                    str(answers),
+                    "--apply",
+                )
+                history = []
+                binding_before = None
+                manifest_before = None
+                for extra in ((), (), ("--force",)):
+                    initialized = yaml.safe_load(self.cli(*arguments, *extra).stdout)
+                    self.assertEqual(initialized["status"], "complete")
+                    self.assertEqual(initialized["project"]["id"], owner)
+                    flow = project / ".pf"
+                    manifest = (flow / "process-forge.yaml").read_bytes()
+                    self.assertEqual(yaml.safe_load(manifest)["project"]["id"], owner)
+                    if manifest_before is not None:
+                        self.assertEqual(manifest, manifest_before)
+                    manifest_before = manifest
+                    local = yaml.safe_load(
+                        (flow / "process-forge.local.yaml").read_text(encoding="utf-8")
+                    )
+                    self.assertEqual(
+                        Path(local["workplace"]["manifest"]).resolve(),
+                        self.workplace.resolve(),
+                    )
+                    binding_path = flow / "data/execution-storage.json"
+                    binding = binding_path.read_bytes()
+                    self.assertEqual(json.loads(binding)["project_id"], owner)
+                    if binding_before is not None:
+                        self.assertEqual(binding, binding_before)
+                    binding_before = binding
+                    records = list(
+                        journal.records(flow / "runtime/events/events.sqlite3")
+                    )
+                    self.assertTrue(records)
+                    self.assertTrue(all(error is None for _, _, error in records))
+                    events = [row for _, row, _ in records]
+                    self.assertEqual(events[: len(history)], history)
+                    added = events[len(history) :]
+                    self.assertEqual([row["event_type"] for row in added], expected)
+                    self.assertTrue(
+                        all(row["project"]["project_id"] == owner for row in events)
+                    )
+                    self.assertEqual(
+                        len({row["event_id"] for row in events}), len(events)
+                    )
+                    self.assertEqual(added[0]["data"]["command"], command)
+                    history = events
+
     def test_real_init_generated_command_and_ingress_binding_replay_and_mcp(self):
         device = self.seed_real_workplace()
         initialized = yaml.safe_load(self.onboard(device).stdout)
