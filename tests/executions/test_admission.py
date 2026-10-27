@@ -92,6 +92,119 @@ def test_deadline_failure_and_exception_release(isolated_path: Path) -> None:
     assert events == ["acquired", "acquired", "released", "released"]
 
 
+@pytest.mark.parametrize("enrolled", [False, True])
+@pytest.mark.parametrize(
+    "error",
+    [
+        OSError("after admission, before dispatch"),
+        PermissionError("session is not authorized for requested project_root"),
+        TimeoutError("operation timed out"),
+        SystemExit(23),
+    ],
+    ids=["oserror", "permission", "timeout", "exit"],
+)
+def test_operation_exception_identity_and_reentrant_release(
+    isolated_path: Path, enrolled: bool, error: BaseException
+) -> None:
+    events: list[tuple[str, Path]] = []
+    observed: list[BaseException] = []
+
+    @contextmanager
+    def lock(path: Path, **options: float) -> Iterator[None]:
+        events.append(("enter", path))
+        try:
+            yield
+        except BaseException as exc:
+            observed.append(exc)
+            raise
+        finally:
+            events.append(("leave", path))
+
+    project = isolated_path / "project"
+    workplace = isolated_path / "workplace" if enrolled else None
+    admission = ExecutionAdmission(lock)
+    paths = [project / ".pf/runtime/execution-admission"]
+    if workplace is not None:
+        paths.insert(0, workplace / "runtime/pf-runtime/execution-admission")
+    with pytest.raises(type(error)) as caught:
+        with admission.start(project, workplace):
+            assert admission.held(project, workplace)
+            with admission.maintenance(project, workplace):
+                assert admission.held(project, workplace)
+                raise error
+    assert caught.value is error
+    assert len(observed) == len(paths)
+    assert all(exc is error for exc in observed)
+    assert events == [("enter", path) for path in paths] + [
+        ("leave", path) for path in reversed(paths)
+    ]
+    assert not admission.held(project, workplace)
+    events.clear()
+    with admission.start(project, workplace):
+        assert admission.held(project, workplace)
+    assert len(events) == 2 * len(paths)
+    assert not admission.held(project, workplace)
+
+
+@pytest.mark.parametrize("phase", ["factory", "enter", "leave", "stopping"])
+@pytest.mark.parametrize(
+    "error",
+    [
+        OSError("registry unavailable"),
+        PermissionError("denied"),
+        TimeoutError("registry timeout"),
+        SystemExit("registry locked"),
+    ],
+    ids=["oserror", "permission", "timeout", "exit"],
+)
+def test_admission_owned_failures_remain_normalized(
+    isolated_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    phase: str,
+    error: BaseException,
+) -> None:
+    events: list[tuple[str, Path]] = []
+    project = isolated_path / "project"
+    workplace = isolated_path / "workplace"
+    project_gate = project / ".pf/runtime/execution-admission"
+    workplace_gate = workplace / "runtime/pf-runtime/execution-admission"
+
+    @contextmanager
+    def lock(path: Path, **options: float) -> Iterator[None]:
+        if phase == "enter" and path == project_gate:
+            raise error
+        events.append(("enter", path))
+        try:
+            yield
+        finally:
+            events.append(("leave", path))
+            if phase == "leave" and path == project_gate:
+                raise error
+
+    def factory(path: Path, **options: float) -> AbstractContextManager[object]:
+        if phase == "factory" and path == project_gate:
+            raise error
+        return lock(path, **options)
+
+    def stopping(root: Path) -> None:
+        raise error
+
+    admission = ExecutionAdmission(factory)
+    if phase == "stopping":
+        monkeypatch.setattr(admission, "check_stopping", stopping)
+    with pytest.raises(ExecutionError, match="^execution_activity_unknown$") as caught:
+        with admission.start(project, workplace):
+            assert phase == "leave", "refused admission yielded"
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__
+    assert not admission.held(project, workplace)
+    expected = [("enter", workplace_gate)]
+    if phase in {"leave", "stopping"}:
+        expected += [("enter", project_gate), ("leave", project_gate)]
+    expected.append(("leave", workplace_gate))
+    assert events == expected
+
+
 def test_shutdown_requires_exact_selector_and_refuses_lock_timeout(
     isolated_path: Path,
 ) -> None:

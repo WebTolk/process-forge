@@ -250,6 +250,7 @@ class ExecutionAdmission:
         if key in held:
             yield
             return
+        operation_error: BaseException | None = None
         try:
             with self.registry_lock(
                 path, timeout_seconds=timeout, stale_after_seconds=0
@@ -259,9 +260,17 @@ class ExecutionAdmission:
                 token = _HELD_GATES.set((*held, key))
                 try:
                     yield
+                except BaseException as exc:
+                    # contextlib throws the operation's exception back at yield.
+                    # Remember its identity before the lock unwinds so only our
+                    # own admission/acquisition/release errors are normalized.
+                    operation_error = exc
+                    raise
                 finally:
                     _HELD_GATES.reset(token)
-        except (OSError, TimeoutError, SystemExit):
+        except (OSError, TimeoutError, SystemExit) as exc:
+            if exc is operation_error:
+                raise
             raise ExecutionError("execution_activity_unknown") from None
 
     @contextmanager
@@ -291,7 +300,10 @@ class ExecutionAdmission:
                 deadline,
             ):
                 with self._gate(project_gate, deadline):
-                    self.check_stopping(workplace_root)
+                    try:
+                        self.check_stopping(workplace_root)
+                    except (OSError, TimeoutError, SystemExit):
+                        raise ExecutionError("execution_activity_unknown") from None
                     if deadline is not None and time.monotonic() >= deadline:
                         raise ExecutionError("execution_activity_unknown")
                     yield
