@@ -163,6 +163,7 @@ def _update_selection(
     workplace_root: Path | None = None,
 ) -> AbstractContextManager[Any]:
     """Keep frozen domain errors intact while releasing the selection gates."""
+
     class Selected(AbstractContextManager[Any]):
         def __enter__(self) -> Any:
             self.scope = _update_selection_scope(

@@ -32,8 +32,6 @@ class CoreUpdateError(Exception):
     message: str
 
 
-
-
 def sha256_bytes(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
@@ -47,14 +45,28 @@ def safe_relative_path(raw: Any) -> str:
         raise CoreUpdateError("invalid_manifest_path", "manifest path is empty")
     value = raw.replace("\\", "/")
     if value != raw:
-        raise CoreUpdateError("invalid_manifest_path", f"manifest path contains backslash: {raw}")
-    if value.startswith("/") or value.startswith("//") or (len(value) > 1 and value[1] == ":"):
-        raise CoreUpdateError("invalid_manifest_path", f"manifest path is absolute: {raw}")
+        raise CoreUpdateError(
+            "invalid_manifest_path", f"manifest path contains backslash: {raw}"
+        )
+    if (
+        value.startswith("/")
+        or value.startswith("//")
+        or (len(value) > 1 and value[1] == ":")
+    ):
+        raise CoreUpdateError(
+            "invalid_manifest_path", f"manifest path is absolute: {raw}"
+        )
     parts = value.split("/")
     if any(part in {"", ".", ".."} for part in parts):
-        raise CoreUpdateError("invalid_manifest_path", f"manifest path escapes or is not normalized: {raw}")
+        raise CoreUpdateError(
+            "invalid_manifest_path",
+            f"manifest path escapes or is not normalized: {raw}",
+        )
     if value == CORE_MANIFEST_NAME:
-        raise CoreUpdateError("invalid_manifest_path", f"{CORE_MANIFEST_NAME} is a control file, not an owned payload file")
+        raise CoreUpdateError(
+            "invalid_manifest_path",
+            f"{CORE_MANIFEST_NAME} is a control file, not an owned payload file",
+        )
     return value
 
 
@@ -62,7 +74,9 @@ def ensure_inside(root: Path, relative_path: str) -> Path:
     root_resolved = root.resolve()
     target = (root / relative_path).resolve()
     if root_resolved != target and root_resolved not in target.parents:
-        raise CoreUpdateError("path_outside_core_root", f"path escapes core root: {relative_path}")
+        raise CoreUpdateError(
+            "path_outside_core_root", f"path escapes core root: {relative_path}"
+        )
     return target
 
 
@@ -76,26 +90,52 @@ def runtime_root(core_root: Path) -> Path:
 
 def manifest_file_map(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
     if manifest.get("schema_version") != CORE_MANIFEST_SCHEMA_VERSION:
-        raise CoreUpdateError("invalid_core_manifest", "core manifest schema_version must be 1")
+        raise CoreUpdateError(
+            "invalid_core_manifest", "core manifest schema_version must be 1"
+        )
     files = manifest.get("files")
     if not isinstance(files, list):
-        raise CoreUpdateError("invalid_core_manifest", "core manifest files must be a list")
+        raise CoreUpdateError(
+            "invalid_core_manifest", "core manifest files must be a list"
+        )
     result: dict[str, dict[str, Any]] = {}
     for item in files:
         if not isinstance(item, dict):
-            raise CoreUpdateError("invalid_core_manifest", "core manifest file entry must be an object")
-        relative_path = safe_relative_path(item.get("relative_path") or item.get("path"))
+            raise CoreUpdateError(
+                "invalid_core_manifest", "core manifest file entry must be an object"
+            )
+        relative_path = safe_relative_path(
+            item.get("relative_path") or item.get("path")
+        )
         digest = item.get("sha256")
-        if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdefABCDEF" for char in digest):
-            raise CoreUpdateError("invalid_core_manifest", f"invalid sha256 for {relative_path}")
-        result[relative_path] = {**item, "relative_path": relative_path, "sha256": digest.lower()}
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(char not in "0123456789abcdefABCDEF" for char in digest)
+        ):
+            raise CoreUpdateError(
+                "invalid_core_manifest", f"invalid sha256 for {relative_path}"
+            )
+        result[relative_path] = {
+            **item,
+            "relative_path": relative_path,
+            "sha256": digest.lower(),
+        }
     return result
 
 
-def make_core_manifest(*, version: str, source: dict[str, Any] | None, files: Iterable[dict[str, Any]], generated_at: str | None = None) -> dict[str, Any]:
-    normalized_files = []
+def make_core_manifest(
+    *,
+    version: str,
+    source: dict[str, Any] | None,
+    files: Iterable[dict[str, Any]],
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    normalized_files: list[dict[str, Any]] = []
     for item in files:
-        relative_path = safe_relative_path(item.get("relative_path") or item.get("path"))
+        relative_path = safe_relative_path(
+            item.get("relative_path") or item.get("path")
+        )
         normalized_files.append(
             {
                 "relative_path": relative_path,
@@ -116,13 +156,27 @@ def make_core_manifest(*, version: str, source: dict[str, Any] | None, files: It
     return manifest
 
 
-def make_core_manifest_from_release_files(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
+def make_core_manifest_from_release_files(
+    files: list[tuple[str, Path]],
+    *,
+    version: str,
+    source: dict[str, Any] | None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
     entries = []
     for archive_path, source_path in files:
         if archive_path == CORE_MANIFEST_NAME:
             continue
-        entries.append({"relative_path": archive_path, "size": source_path.stat().st_size, "sha256": sha256_file(source_path)})
-    return make_core_manifest(version=version, source=source, files=entries, generated_at=generated_at)
+        entries.append(
+            {
+                "relative_path": archive_path,
+                "size": source_path.stat().st_size,
+                "sha256": sha256_file(source_path),
+            }
+        )
+    return make_core_manifest(
+        version=version, source=source, files=entries, generated_at=generated_at
+    )
 
 
 def manifest_bytes(manifest: dict[str, Any]) -> bytes:
@@ -133,11 +187,17 @@ def read_manifest(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise CoreUpdateError("manifest_missing", f"manifest not found: {path}") from exc
+        raise CoreUpdateError(
+            "manifest_missing", f"manifest not found: {path}"
+        ) from exc
     except json.JSONDecodeError as exc:
-        raise CoreUpdateError("manifest_invalid_json", f"invalid manifest JSON: {path}: {exc}") from exc
+        raise CoreUpdateError(
+            "manifest_invalid_json", f"invalid manifest JSON: {path}: {exc}"
+        ) from exc
     if not isinstance(data, dict):
-        raise CoreUpdateError("invalid_core_manifest", "core manifest must be an object")
+        raise CoreUpdateError(
+            "invalid_core_manifest", "core manifest must be an object"
+        )
     manifest_file_map(data)
     return data
 
@@ -148,15 +208,24 @@ def read_archive_manifest(archive_path: Path) -> dict[str, Any]:
             try:
                 raw = archive.read(CORE_MANIFEST_NAME)
             except KeyError as exc:
-                raise CoreUpdateError("archive_manifest_missing", f"archive does not contain {CORE_MANIFEST_NAME}") from exc
+                raise CoreUpdateError(
+                    "archive_manifest_missing",
+                    f"archive does not contain {CORE_MANIFEST_NAME}",
+                ) from exc
     except zipfile.BadZipFile as exc:
-        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+        raise CoreUpdateError(
+            "archive_invalid", f"invalid ZIP archive: {archive_path}"
+        ) from exc
     try:
         data = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise CoreUpdateError("archive_manifest_invalid", f"archive manifest is invalid JSON: {exc}") from exc
+        raise CoreUpdateError(
+            "archive_manifest_invalid", f"archive manifest is invalid JSON: {exc}"
+        ) from exc
     if not isinstance(data, dict):
-        raise CoreUpdateError("invalid_core_manifest", "archive core manifest must be an object")
+        raise CoreUpdateError(
+            "invalid_core_manifest", "archive core manifest must be an object"
+        )
     manifest_file_map(data)
     return data
 
@@ -168,10 +237,15 @@ def validate_archive_payload(archive_path: Path, manifest: dict[str, Any]) -> No
             names = set(archive.namelist())
             for relative_path, entry in new_files.items():
                 if relative_path not in names:
-                    raise CoreUpdateError("archive_file_missing", f"archive file missing: {relative_path}")
+                    raise CoreUpdateError(
+                        "archive_file_missing", f"archive file missing: {relative_path}"
+                    )
                 actual = sha256_bytes(archive.read(relative_path))
                 if actual != entry["sha256"]:
-                    raise CoreUpdateError("archive_checksum_mismatch", f"archive file sha256 mismatch: {relative_path}")
+                    raise CoreUpdateError(
+                        "archive_checksum_mismatch",
+                        f"archive file sha256 mismatch: {relative_path}",
+                    )
             for name in names:
                 if name.endswith("/"):
                     continue
@@ -179,37 +253,52 @@ def validate_archive_payload(archive_path: Path, manifest: dict[str, Any]) -> No
                     continue
                 safe_relative_path(name)
     except zipfile.BadZipFile as exc:
-        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+        raise CoreUpdateError(
+            "archive_invalid", f"invalid ZIP archive: {archive_path}"
+        ) from exc
 
 
 def load_yaml_bytes(content: bytes, *, source: str) -> dict[str, Any]:
     try:
-        import yaml  # type: ignore
+        import yaml
     except ModuleNotFoundError as exc:
-        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+        raise CoreUpdateError(
+            "yaml_support_missing", "PyYAML is required for Workplace migration"
+        ) from exc
     try:
         data = yaml.safe_load(content.decode("utf-8"))
-    except (UnicodeDecodeError, yaml.YAMLError) as exc:  # type: ignore[attr-defined]
-        raise CoreUpdateError("workplace_migration_invalid", f"invalid YAML in {source}: {exc}") from exc
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise CoreUpdateError(
+            "workplace_migration_invalid", f"invalid YAML in {source}: {exc}"
+        ) from exc
     if not isinstance(data, dict):
-        raise CoreUpdateError("workplace_migration_invalid", f"migration document must be a mapping: {source}")
+        raise CoreUpdateError(
+            "workplace_migration_invalid",
+            f"migration document must be a mapping: {source}",
+        )
     return data
 
 
 def dump_yaml_bytes(data: dict[str, Any]) -> bytes:
     try:
-        import yaml  # type: ignore
+        import yaml
     except ModuleNotFoundError as exc:
-        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+        raise CoreUpdateError(
+            "yaml_support_missing", "PyYAML is required for Workplace migration"
+        ) from exc
     return yaml.safe_dump(data, allow_unicode=True, sort_keys=False).encode("utf-8")
 
 
-def load_archive_workplace_migration(archive_path: Path, *, installed_version: str | None, target_version: str) -> tuple[str | None, dict[str, Any] | None]:
+def load_archive_workplace_migration(
+    archive_path: Path, *, installed_version: str | None, target_version: str
+) -> tuple[str | None, dict[str, Any] | None]:
     """Select the one declared Workplace migration applicable to this Core plan."""
     try:
         with zipfile.ZipFile(archive_path) as archive:
             for name in sorted(archive.namelist()):
-                if not name.startswith("updates/migrations/") or not name.endswith((".yaml", ".yml")):
+                if not name.startswith("updates/migrations/") or not name.endswith(
+                    (".yaml", ".yml")
+                ):
                     continue
                 migration = load_yaml_bytes(archive.read(name), source=name)
                 if migration.get("kind") != WORKPLACE_MIGRATION_KIND:
@@ -217,12 +306,21 @@ def load_archive_workplace_migration(archive_path: Path, *, installed_version: s
                 if str(migration.get("to_version") or "") != target_version:
                     continue
                 versions = migration.get("from_versions")
-                allowed = {str(value) for value in versions} if isinstance(versions, list) else set()
-                if installed_version not in allowed and not (installed_version is None and migration.get("allow_unmanaged_installed_core") is True):
+                allowed = (
+                    {str(value) for value in versions}
+                    if isinstance(versions, list)
+                    else set()
+                )
+                if installed_version not in allowed and not (
+                    installed_version is None
+                    and migration.get("allow_unmanaged_installed_core") is True
+                ):
                     continue
                 return name, migration
     except zipfile.BadZipFile as exc:
-        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+        raise CoreUpdateError(
+            "archive_invalid", f"invalid ZIP archive: {archive_path}"
+        ) from exc
     return None, None
 
 
@@ -235,12 +333,23 @@ def read_archive_member(archive: zipfile.ZipFile, relative_path: str) -> bytes:
     try:
         return archive.read(relative_path)
     except KeyError as exc:
-        raise CoreUpdateError("archive_file_missing", f"archive file missing: {relative_path}") from exc
+        raise CoreUpdateError(
+            "archive_file_missing", f"archive file missing: {relative_path}"
+        ) from exc
     except (zipfile.BadZipFile, OSError, EOFError) as exc:
-        raise CoreUpdateError("archive_read_failed", f"archive member read failed: {relative_path}: {exc}") from exc
+        raise CoreUpdateError(
+            "archive_read_failed", f"archive member read failed: {relative_path}: {exc}"
+        ) from exc
 
 
-def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+def workplace_migration_plan(
+    core_root: Path,
+    archive_path: Path,
+    *,
+    installed_version: str | None,
+    target_version: str,
+    workplace_root: Path | None,
+) -> dict[str, Any]:
     result: dict[str, Any] = {
         "status": "not_requested",
         "workplace_root": str(workplace_root.resolve()) if workplace_root else None,
@@ -253,7 +362,17 @@ def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_v
         return result
     workplace_root = workplace_root.resolve()
     if not (workplace_root / "workplace.yaml").is_file():
-        result.update({"status": "blocked", "blockers": [{"code": "workplace_manifest_missing", "path": str(workplace_root / "workplace.yaml")} ]})
+        result.update(
+            {
+                "status": "blocked",
+                "blockers": [
+                    {
+                        "code": "workplace_manifest_missing",
+                        "path": str(workplace_root / "workplace.yaml"),
+                    }
+                ],
+            }
+        )
         return result
     source_path, migration = load_archive_workplace_migration(
         archive_path, installed_version=installed_version, target_version=target_version
@@ -264,21 +383,34 @@ def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_v
     migration_id = str(migration.get("id") or "")
     operations = migration.get("operations")
     if not migration_id or not isinstance(operations, list):
-        raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
-    result.update({"status": "planned", "migration": {"id": migration_id, "source": source_path}})
+        raise CoreUpdateError(
+            "workplace_migration_invalid",
+            f"migration {source_path} requires id and operations",
+        )
+    result.update(
+        {"status": "planned", "migration": {"id": migration_id, "source": source_path}}
+    )
     try:
         with zipfile.ZipFile(archive_path) as archive:
             archive_members = {info.filename: info for info in archive.infolist()}
     except zipfile.BadZipFile as exc:
-        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+        raise CoreUpdateError(
+            "archive_invalid", f"invalid ZIP archive: {archive_path}"
+        ) from exc
     for item in operations:
         if not isinstance(item, dict):
-            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
+            raise CoreUpdateError(
+                "workplace_migration_invalid",
+                f"migration {migration_id} contains a non-object operation",
+            )
         operation_id = str(item.get("id") or "")
         operation_type = str(item.get("type") or "")
         target_path = str(item.get("target") or "")
         if not operation_id or not target_path:
-            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
+            raise CoreUpdateError(
+                "workplace_migration_invalid",
+                f"migration {migration_id} operation requires id and target",
+            )
         target = workplace_target(workplace_root, target_path)
         if operation_type == "copy_if_missing":
             raw_source = item.get("source")
@@ -329,34 +461,76 @@ def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_v
                 )
                 continue
             if target.exists():
-                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_file"})
+                result["preserved"].append(
+                    {"id": operation_id, "path": target_path, "reason": "existing_file"}
+                )
             else:
-                result["operations"].append({"id": operation_id, "type": operation_type, "source": source, "target": target_path})
+                result["operations"].append(
+                    {
+                        "id": operation_id,
+                        "type": operation_type,
+                        "source": source,
+                        "target": target_path,
+                    }
+                )
             continue
         if operation_type == "append_registry_entry_if_missing":
             list_key = str(item.get("list_key") or "")
             match_key = str(item.get("match_key") or "id")
             entry = item.get("entry")
             if not list_key or not isinstance(entry, dict) or not entry.get(match_key):
-                raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} registry operation {operation_id} is invalid")
-            data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+                raise CoreUpdateError(
+                    "workplace_migration_invalid",
+                    f"migration {migration_id} registry operation {operation_id} is invalid",
+                )
+            data = (
+                load_yaml_bytes(target.read_bytes(), source=target_path)
+                if target.is_file()
+                else {"schema_version": 1}
+            )
             current = data.get(list_key)
             if current is None:
                 current = []
             if not isinstance(current, list):
-                raise CoreUpdateError("workplace_migration_invalid", f"registry list is invalid: {target_path}:{list_key}")
-            if any(isinstance(row, dict) and row.get(match_key) == entry[match_key] for row in current):
-                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_registry_entry", "value": entry[match_key]})
+                raise CoreUpdateError(
+                    "workplace_migration_invalid",
+                    f"registry list is invalid: {target_path}:{list_key}",
+                )
+            if any(
+                isinstance(row, dict) and row.get(match_key) == entry[match_key]
+                for row in current
+            ):
+                result["preserved"].append(
+                    {
+                        "id": operation_id,
+                        "path": target_path,
+                        "reason": "existing_registry_entry",
+                        "value": entry[match_key],
+                    }
+                )
             else:
-                result["operations"].append({"id": operation_id, "type": operation_type, "target": target_path, "list_key": list_key, "entry": entry})
+                result["operations"].append(
+                    {
+                        "id": operation_id,
+                        "type": operation_type,
+                        "target": target_path,
+                        "list_key": list_key,
+                        "entry": entry,
+                    }
+                )
             continue
-        raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+        raise CoreUpdateError(
+            "workplace_migration_invalid",
+            f"unsupported migration operation: {operation_type}",
+        )
     if result["blockers"]:
         result["status"] = "blocked"
     return result
 
 
-def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_path: str) -> dict[str, Any]:
+def backup_workplace_target(
+    workplace_root: Path, backup_dir: Path, relative_path: str
+) -> dict[str, Any]:
     source = workplace_target(workplace_root, relative_path)
     record: dict[str, Any] = {"path": relative_path, "existed": source.is_file()}
     if source.is_file():
@@ -367,13 +541,22 @@ def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_pat
     return record
 
 
-def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
-    operations = migration_plan.get("operations") if isinstance(migration_plan.get("operations"), list) else []
+def apply_workplace_migration(
+    archive_path: Path,
+    workplace_root: Path,
+    migration_plan: dict[str, Any],
+    backup_dir: Path,
+) -> dict[str, Any]:
+    operations = migration_plan.get("operations")
+    if not isinstance(operations, list):
+        operations = []
     backed_up: list[dict[str, Any]] = []
     record = {
-        "schema_version": 1, "status": "applying",
+        "schema_version": 1,
+        "status": "applying",
         "migration": migration_plan.get("migration"),
-        "operations": operations, "preserved": migration_plan.get("preserved", []),
+        "operations": operations,
+        "preserved": migration_plan.get("preserved", []),
         "backed_up": backed_up,
     }
     with zipfile.ZipFile(archive_path) as archive:
@@ -381,15 +564,26 @@ def apply_workplace_migration(archive_path: Path, workplace_root: Path, migratio
             if not isinstance(operation, dict):
                 continue
             target_path = str(operation["target"])
-            backed_up.append(backup_workplace_target(workplace_root, backup_dir, target_path))
+            backed_up.append(
+                backup_workplace_target(workplace_root, backup_dir, target_path)
+            )
             # Preserve recovery evidence before each mutation, including when
             # a subsequent archive member disappears or cannot be decoded.
-            atomic_write(backup_dir / "workplace-migration.json", (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+            atomic_write(
+                backup_dir / "workplace-migration.json",
+                (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+            )
             target = workplace_target(workplace_root, target_path)
             if operation["type"] == "copy_if_missing":
-                atomic_write(target, read_archive_member(archive, str(operation["source"])))
+                atomic_write(
+                    target, read_archive_member(archive, str(operation["source"]))
+                )
             elif operation["type"] == "append_registry_entry_if_missing":
-                data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+                data: dict[str, Any] = (
+                    load_yaml_bytes(target.read_bytes(), source=target_path)
+                    if target.is_file()
+                    else {"schema_version": 1}
+                )
                 values = data.get(str(operation["list_key"]))
                 if not isinstance(values, list):
                     values = []
@@ -429,11 +623,17 @@ def unowned_path_blocker(
     """
     target = core_root / relative_path
     if os.path.lexists(target):
-        return {"code": "unowned_path_collision", "path": relative_path, "conflict_path": relative_path}
+        return {
+            "code": "unowned_path_collision",
+            "path": relative_path,
+            "conflict_path": relative_path,
+        }
 
     ancestor = target.parent
     while ancestor != core_root:
-        if os.path.lexists(ancestor) and (ancestor.is_symlink() or not ancestor.is_dir()):
+        if os.path.lexists(ancestor) and (
+            ancestor.is_symlink() or not ancestor.is_dir()
+        ):
             conflict_path = ancestor.relative_to(core_root).as_posix()
             if (
                 conflict_path in removable_owned_paths
@@ -442,12 +642,18 @@ def unowned_path_blocker(
             ):
                 ancestor = ancestor.parent
                 continue
-            return {"code": "unowned_path_collision", "path": relative_path, "conflict_path": conflict_path}
+            return {
+                "code": "unowned_path_collision",
+                "path": relative_path,
+                "conflict_path": conflict_path,
+            }
         ancestor = ancestor.parent
     return None
 
 
-def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | None = None) -> dict[str, Any]:
+def build_plan(
+    core_root: Path, archive_path: Path, *, workplace_root: Path | None = None
+) -> dict[str, Any]:
     return _build_plan(
         core_root,
         archive_path,
@@ -477,8 +683,16 @@ def _build_plan(
     added = sorted(new_paths - old_paths)
     removed = sorted(old_paths - new_paths)
     common = old_paths & new_paths
-    changed = sorted(path for path in common if old_files[path]["sha256"] != new_files[path]["sha256"])
-    unchanged = sorted(path for path in common if old_files[path]["sha256"] == new_files[path]["sha256"])
+    changed = sorted(
+        path
+        for path in common
+        if old_files[path]["sha256"] != new_files[path]["sha256"]
+    )
+    unchanged = sorted(
+        path
+        for path in common
+        if old_files[path]["sha256"] == new_files[path]["sha256"]
+    )
     locally_modified = []
     missing_owned = []
     blockers = []
@@ -501,12 +715,19 @@ def _build_plan(
     unchanged = sorted(set(unchanged) - set(changed))
     restored = sorted(set(missing_owned).intersection(unchanged))
     for relative_path in added:
-        collision = unowned_path_blocker(core_root, relative_path, removable_owned_paths=set(removed))
+        collision = unowned_path_blocker(
+            core_root, relative_path, removable_owned_paths=set(removed)
+        )
         if collision is not None:
             blockers.append(collision)
     incomplete = (runtime_root(core_root) / "in-progress.json").is_file()
     if incomplete:
-        blockers.append({"code": "incomplete_update", "path": str(runtime_root(core_root) / "in-progress.json")})
+        blockers.append(
+            {
+                "code": "incomplete_update",
+                "path": str(runtime_root(core_root) / "in-progress.json"),
+            }
+        )
     migration = workplace_migration_plan(
         core_root,
         archive_path,
@@ -524,7 +745,15 @@ def _build_plan(
         "installed_manifest": str(manifest_path(core_root)) if old_manifest else None,
         "installed_version": old_manifest.get("version") if old_manifest else None,
         "available_version": new_manifest.get("version"),
-        "counts": {"added": len(added), "removed": len(removed), "changed": len(changed), "unchanged": len(unchanged), "locally_modified": len(locally_modified), "missing_owned": len(missing_owned), "restored": len(restored)},
+        "counts": {
+            "added": len(added),
+            "removed": len(removed),
+            "changed": len(changed),
+            "unchanged": len(unchanged),
+            "locally_modified": len(locally_modified),
+            "missing_owned": len(missing_owned),
+            "restored": len(restored),
+        },
         "added": added,
         "removed": removed,
         "changed": changed,
@@ -554,7 +783,9 @@ def core_status(core_root: Path) -> dict[str, Any]:
     }
     if incomplete_path.is_file():
         try:
-            payload["in_progress"] = json.loads(incomplete_path.read_text(encoding="utf-8"))
+            payload["in_progress"] = json.loads(
+                incomplete_path.read_text(encoding="utf-8")
+            )
         except json.JSONDecodeError:
             payload["in_progress"] = {"status": "unreadable"}
     return payload
@@ -596,7 +827,9 @@ def atomic_write(target: Path, content: bytes) -> None:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def apply_update(
@@ -641,7 +874,7 @@ def apply_update(
             "plan_blocked", "core update requires qualified installation exclusion"
         ) from error
 
-    def prepare() -> dict[str, Any]:
+    def prepare_plan() -> dict[str, Any]:
         plan = _build_plan(
             core_root,
             archive_path,
@@ -663,12 +896,27 @@ def apply_update(
 
         selection, locator = _update_selection_inputs()
         try:
-            with _update_selection(selection, Path(locator) if locator else None, workplace_root=workplace_root) as (actual, configuration):
+            with _update_selection(
+                selection,
+                Path(locator) if locator else None,
+                workplace_root=workplace_root,
+            ) as (actual, configuration):
                 plan["_native_device_config_path"] = actual._device_config_path
                 plan["_native_configuration"] = configuration
         except (MaintenanceError, OSError, ValueError, KeyError, TypeError) as error:
-            raise CoreUpdateError("plan_blocked", "core update selection is invalid") from error
+            raise CoreUpdateError(
+                "plan_blocked", "core update selection is invalid"
+            ) from error
         return plan
+
+    def prepare() -> dict[str, Any]:
+        try:
+            return prepare_plan()
+        except CoreUpdateError as error:
+            # Generator-based native scopes assign __traceback__ while
+            # unwinding. Carry plain native data until every scope releases;
+            # restore the frozen public error only at the outer boundary.
+            raise NativeUpdateError(error.code, error.message) from error
 
     try:
         return replace_core(entry, archive_path, prepare, workplace_root=workplace_root)
@@ -709,8 +957,15 @@ def recovery_assessment(in_progress: dict[str, Any]) -> str:
 def repair_status(core_root: Path) -> dict[str, Any]:
     status = core_status(core_root)
     if not status.get("incomplete_update"):
-        return {"schema_version": 1, "kind": "processforge.core_update.repair", "status": "nothing_to_repair", "core_root": str(core_root.resolve())}
-    in_progress = status.get("in_progress") if isinstance(status.get("in_progress"), dict) else {}
+        return {
+            "schema_version": 1,
+            "kind": "processforge.core_update.repair",
+            "status": "nothing_to_repair",
+            "core_root": str(core_root.resolve()),
+        }
+    in_progress = status.get("in_progress")
+    if not isinstance(in_progress, dict):
+        in_progress = {}
     assessment = recovery_assessment(in_progress)
     return {
         "schema_version": 1,

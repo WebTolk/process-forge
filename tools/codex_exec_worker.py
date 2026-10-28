@@ -701,6 +701,8 @@ def _main_in_operation() -> int:
                 }
                 if prepared is not None:
                     child_environment = scratch_environment(prepared, child_environment)
+                # The native launcher adapts a selected Windows batch shim
+                # before CreateProcess, within the same suspended Job fence.
                 native = spawn_owned(
                     command,
                     stdin=subprocess.PIPE,

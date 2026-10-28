@@ -56,14 +56,23 @@ output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         encoding="utf-8",
     )
     cmd = bin_dir / "codex.cmd"
-    cmd.write_text(f'@echo off\n"{sys.executable}" "%~dp0fake_codex.py" %*\n', encoding="utf-8")
+    cmd.write_text(
+        f'@echo off\n"{sys.executable}" "%~dp0fake_codex.py" %*\n', encoding="utf-8"
+    )
     shell = bin_dir / "codex"
-    shell.write_text(f'#!/usr/bin/env sh\n"{sys.executable}" "$(dirname "$0")/fake_codex.py" "$@"\n', encoding="utf-8")
+    shell.write_text(
+        f'#!/usr/bin/env sh\n"{sys.executable}" "$(dirname "$0")/fake_codex.py" "$@"\n',
+        encoding="utf-8",
+    )
     shell.chmod(shell.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def optional_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else "<not created>"
+    return (
+        path.read_text(encoding="utf-8", errors="replace")
+        if path.is_file()
+        else "<not created>"
+    )
 
 
 def main() -> int:
@@ -98,18 +107,62 @@ knowledge_roots:
             f"""
 schema_version: 1
 workplace:
-  manifest: "{(workplace / 'workplace.yaml').as_posix()}"
+  manifest: "{(workplace / "workplace.yaml").as_posix()}"
 local:
   project_root: "{project.as_posix()}"
 """,
         )
         package = project / ".pf" / "packages" / "docs-joomla" / "package.yaml"
-        old_ref = "\n".join(["path_ref:", "      package: docs-joomla", "      relative_path: joomla-core/5.4.5"])
-        new_ref = "\n".join(["path_ref:", "      registry: knowledge_roots", "      id: shared-docs", "      relative_path: joomla-core/5.4.5"])
-        package.write_text(package.read_text(encoding="utf-8").replace(old_ref, new_ref), encoding="utf-8")
+        old_ref = "\n".join(
+            [
+                "path_ref:",
+                "      package: docs-joomla",
+                "      relative_path: joomla-core/5.4.5",
+            ]
+        )
+        new_ref = "\n".join(
+            [
+                "path_ref:",
+                "      registry: knowledge_roots",
+                "      id: shared-docs",
+                "      relative_path: joomla-core/5.4.5",
+            ]
+        )
+        package.write_text(
+            package.read_text(encoding="utf-8").replace(old_ref, new_ref),
+            encoding="utf-8",
+        )
         refresh(project)
-        require_ok(run_pf("run-create", "--project-root", str(project), "--id", "codex-run", "--title", "Codex fixture", "--process", "task-batch-execution", "--apply"))
-        require_ok(run_pf("task-create", "--project-root", str(project), "--run", "codex-run", "--id", "codex-task", "--title", "Codex task", "--process", "task-batch-execution", "--apply"))
+        require_ok(
+            run_pf(
+                "run-create",
+                "--project-root",
+                str(project),
+                "--id",
+                "codex-run",
+                "--title",
+                "Codex fixture",
+                "--process",
+                "task-batch-execution",
+                "--apply",
+            )
+        )
+        require_ok(
+            run_pf(
+                "task-create",
+                "--project-root",
+                str(project),
+                "--run",
+                "codex-run",
+                "--id",
+                "codex-task",
+                "--title",
+                "Codex task",
+                "--process",
+                "task-batch-execution",
+                "--apply",
+            )
+        )
         write_yaml(
             project / ".pf" / "assignments" / "codex-task.yaml",
             f"""
@@ -147,7 +200,16 @@ expected_report:
         # The driver inherits explicit executable overrides before consulting PATH.
         os.environ["PF_CODEX_EXECUTABLE"] = str(fake_executable)
         try:
-            result = run_pf("worker-run", "start", "--project-root", str(project), "--task", "codex-task", "--driver", "codex-exec")
+            result = run_pf(
+                "worker-run",
+                "start",
+                "--project-root",
+                str(project),
+                "--task",
+                "codex-task",
+                "--driver",
+                "codex-exec",
+            )
             if result.returncode != 0:
                 run_dir = (
                     project
@@ -346,30 +408,57 @@ expected_report:
                 os.environ.pop("PF_CODEX_EXECUTABLE", None)
             else:
                 os.environ["PF_CODEX_EXECUTABLE"] = previous_executable
-        report = json.loads((project / ".pf" / "artifacts" / "codex-exec-report.json").read_text(encoding="utf-8"))
+        report = json.loads(
+            (project / ".pf" / "artifacts" / "codex-exec-report.json").read_text(
+                encoding="utf-8"
+            )
+        )
         argv = report["argv"]
         if "--add-dir" in argv:
-            raise AssertionError("prepared references must not become whole external directory grants")
+            raise AssertionError(
+                "prepared references must not become whole external directory grants"
+            )
         if '"kind": "pf.prepared-input"' not in report["stdin"]:
-            raise AssertionError("codex-exec did not deliver the prepared execution input")
-        if "immutable prepared input" not in report["stdin"] or "## Workspace Access File" in report["stdin"]:
-            raise AssertionError("codex-exec must use immutable input, without a mutable sidecar instruction")
+            raise AssertionError(
+                "codex-exec did not deliver the prepared execution input"
+            )
+        if (
+            "immutable prepared input" not in report["stdin"]
+            or "## Workspace Access File" in report["stdin"]
+        ):
+            raise AssertionError(
+                "codex-exec must use immutable input, without a mutable sidecar instruction"
+            )
         if "Проверка кириллицы" not in report["stdin"]:
-            raise AssertionError("codex-exec did not provide a UTF-8-decodable non-ASCII prompt payload")
+            raise AssertionError(
+                "codex-exec did not provide a UTF-8-decodable non-ASCII prompt payload"
+            )
         if "Your final response is captured verbatim" not in report["stdin"]:
-            raise AssertionError("codex-exec prompt does not explain the output artifact delivery contract")
+            raise AssertionError(
+                "codex-exec prompt does not explain the output artifact delivery contract"
+            )
         if "do not attempt to write the report file yourself" not in report["stdin"]:
-            raise AssertionError("codex-exec prompt does not distinguish read-only report delivery")
+            raise AssertionError(
+                "codex-exec prompt does not distinguish read-only report delivery"
+            )
         if not report.get("workspace_access_file"):
-            raise AssertionError("fake Codex process did not receive PF_WORKSPACE_ACCESS_FILE")
+            raise AssertionError(
+                "fake Codex process did not receive PF_WORKSPACE_ACCESS_FILE"
+            )
         if report.get("agent_model") != MODEL:
             raise AssertionError("fake Codex process did not receive PF_AGENT_MODEL")
         if report.get("agent_reasoning_effort") != "high":
-            raise AssertionError("fake Codex process did not receive PF_AGENT_REASONING_EFFORT")
+            raise AssertionError(
+                "fake Codex process did not receive PF_AGENT_REASONING_EFFORT"
+            )
         if report.get("codex_reasoning_effort") != "high":
-            raise AssertionError("fake Codex process did not receive PF_CODEX_REASONING_EFFORT")
+            raise AssertionError(
+                "fake Codex process did not receive PF_CODEX_REASONING_EFFORT"
+            )
         if 'model_reasoning_effort="high"' not in argv:
-            raise AssertionError("codex-exec did not pass selected high reasoning effort")
+            raise AssertionError(
+                "codex-exec did not pass selected high reasoning effort"
+            )
         direct_exit = root / "direct-worker-exit.json"
         direct_output = root / "direct-worker-output.json"
         direct_heartbeat = root / "direct-worker-heartbeat.json"
@@ -389,11 +478,37 @@ expected_report:
             [
                 sys.executable,
                 str(WORKER),
-                "--worker-prompt", str(project / ".pf" / "runs" / "codex-run" / "worker-prompts" / "codex-task.md"),
-                "--capsule", str(project / ".pf" / "contexts" / "assignment-capsules" / "codex-task.capsule.yaml"),
-                "--workspace-access", str(project / ".pf" / "runtime" / "agent-runs" / "codex-run" / "codex-task" / "workspace-access.json"),
-                "--output", str(direct_output),
-                "--heartbeat", str(direct_heartbeat),
+                "--worker-prompt",
+                str(
+                    project
+                    / ".pf"
+                    / "runs"
+                    / "codex-run"
+                    / "worker-prompts"
+                    / "codex-task.md"
+                ),
+                "--capsule",
+                str(
+                    project
+                    / ".pf"
+                    / "contexts"
+                    / "assignment-capsules"
+                    / "codex-task.capsule.yaml"
+                ),
+                "--workspace-access",
+                str(
+                    project
+                    / ".pf"
+                    / "runtime"
+                    / "agent-runs"
+                    / "codex-run"
+                    / "codex-task"
+                    / "workspace-access.json"
+                ),
+                "--output",
+                str(direct_output),
+                "--heartbeat",
+                str(direct_heartbeat),
             ],
             env=direct_env,
             check=False,
@@ -402,7 +517,9 @@ expected_report:
             raise AssertionError("direct codex-exec worker did not complete")
         exit_payload = json.loads(direct_exit.read_text(encoding="utf-8"))
         if exit_payload != {"schema_version": 1, "exit_code": 0, "status": "completed"}:
-            raise AssertionError("codex-exec worker did not publish its durable exit contract")
+            raise AssertionError(
+                "codex-exec worker did not publish its durable exit contract"
+            )
         write_yaml(
             project / ".pf" / "assignments" / "codex-task-no-model.yaml",
             """
@@ -444,10 +561,16 @@ expected_report:
             else:
                 os.environ["PF_CODEX_EXECUTABLE"] = previous_executable
         if no_model.returncode == 0:
-            raise AssertionError("codex-exec accepted a shell-agent run without an orchestrator-selected model")
-        no_model_report = project / ".pf" / "artifacts" / "codex-exec-no-model-report.json"
+            raise AssertionError(
+                "codex-exec accepted a shell-agent run without an orchestrator-selected model"
+            )
+        no_model_report = (
+            project / ".pf" / "artifacts" / "codex-exec-no-model-report.json"
+        )
         if no_model_report.exists():
-            raise AssertionError("codex-exec missing-model failure still produced a worker report")
+            raise AssertionError(
+                "codex-exec missing-model failure still produced a worker report"
+            )
     print("PASS: codex exec worker smoke")
     return 0
 

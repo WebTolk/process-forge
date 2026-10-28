@@ -298,6 +298,36 @@ def inherited_job(environment: dict[str, str]) -> OwnedJob | None:
 _INHERITED_JOBS: list[OwnedJob] = []
 
 
+def _windows_batch_command(argv: list[str]) -> tuple[str, str]:
+    """Quote a batch shim and its forwarded CRT argv for both CMD parses.
+
+    Popen's sequence conversion quotes for the C runtime, not CMD. A batch
+    shim then reparses its arguments when forwarding %*, so arguments need
+    two layers of CMD escaping. Keep delayed expansion and AutoRun disabled.
+    """
+    # Physical line breaks cannot be safely represented in a CMD invocation.
+    # Refuse rather than treating argument data as a second command.
+    if any(any(character in value for character in "\x00\r\n") for value in argv):
+        raise ValueError("batch arguments contain unsupported control characters")
+    interpreter = str(Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe")
+    metacharacters = re.compile(r'([()\[\]%!^"`<>&|;, *?\t])')
+
+    def escape(value: str) -> str:
+        return metacharacters.sub(r"^\1", value)
+
+    arguments = []
+    for argument in argv[1:]:
+        # Always quote, including empty strings and metacharacters without
+        # whitespace. Double backslashes before quotes and the closing quote
+        # according to the Windows CRT argument rules.
+        quoted = re.sub(r'(\\*)"', r'\1\1\\"', argument)
+        quoted = re.sub(r"(\\*)$", r"\1\1", quoted)
+        arguments.append(escape(escape('"' + quoted + '"')))
+    body = " ".join([escape(argv[0]), *arguments])
+    command = subprocess.list2cmdline([interpreter]) + ' /d /s /v:off /c "' + body + '"'
+    return interpreter, command
+
+
 def spawn_owned(
     argv: list[str],
     *,
@@ -341,7 +371,12 @@ def spawn_owned(
         options["creationflags"] = (
             int(options.get("creationflags", 0)) | 4
         )  # CREATE_SUSPENDED
-        process = subprocess.Popen(argv, env=environment, **options)
+        command: str | list[str] = argv
+        if argv and Path(argv[0]).suffix.lower() in {".cmd", ".bat"}:
+            executable, command = _windows_batch_command(argv)
+            options["executable"] = executable
+            options["shell"] = False
+        process = subprocess.Popen(command, env=environment, **options)
         if not kernel.AssignProcessToJobObject(
             job.handle, int(getattr(process, "_handle"))
         ):
@@ -1372,9 +1407,13 @@ def _replacement_target(entry: NativeEntry) -> AbstractContextManager[None]:
     discovered from CLI arguments. This scope creates no authority or lease;
     replacement revalidates the exact entry under target ingress/exclusive.
     """
+
     class Target(AbstractContextManager[None]):
         def __enter__(self) -> None:
-            if _REPLACEMENT_TARGET.get() is not None or _CONTROL_LEASE.get() is not None:
+            if (
+                _REPLACEMENT_TARGET.get() is not None
+                or _CONTROL_LEASE.get() is not None
+            ):
                 raise NativeControlError()
             self.token = _REPLACEMENT_TARGET.set(entry)
 

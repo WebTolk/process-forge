@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 
@@ -17,16 +18,31 @@ def format_scalar(value: Any) -> str:
     text = str(value)
     if text == "":
         return '""'
+    if any(
+        ord(char) < 0x20 or 0x7F <= ord(char) <= 0x9F or char in "\u2028\u2029"
+        for char in text
+    ):
+        # JSON escapes preserve ASCII controls, quotes and backslashes in YAML.
+        # Keep non-BMP characters intact; YAML does not combine surrogate pairs.
+        quoted = json.dumps(text, ensure_ascii=False)
+        return "".join(
+            f"\\u{ord(char):04x}"
+            if 0x7F <= ord(char) <= 0x9F or char in "\u2028\u2029"
+            else char
+            for char in quoted
+        )
     yaml_literals = {"*", "null", "true", "false", "yes", "no", "on", "off", "~"}
-    special_start = ("-", "?", "&", "*", "!", "%", "@", "`", ">", "|")
+    special_start = ("-", "?", "&", "*", "!", "%", "@", "`", ">", "|", "'", '"', ",")
     if (
         text.lower() in yaml_literals
+        or text == "..."
         or text.startswith(special_start)
         or any(char in text for char in [":", "#", "{", "}", "[", "]", "\\"])
         or text.strip() != text
     ):
         return "'" + text.replace("'", "''") + "'"
     return text
+
 
 def dump_yaml(data: Any, indent: int = 0) -> str:
     lines: list[str] = []

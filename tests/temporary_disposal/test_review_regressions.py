@@ -103,7 +103,9 @@ def test_tampered_prepared_launch_preserves_denial_and_scratch_obligation(
     assert core.command_worker_run_prepare(args) == 0
     ready = repository.load_latest("run", "task")
     state = projected_payload(ready)
-    manifest = root / state["prepared_input"]["path"]
+    prepared_input = state["prepared_input"]
+    assert isinstance(prepared_input, dict)
+    manifest = root / prepared_input["path"]
     tampered = manifest.read_bytes() + b" "
     manifest.write_bytes(tampered)
     capsys.readouterr()

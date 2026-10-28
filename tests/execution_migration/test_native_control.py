@@ -76,9 +76,9 @@ def test_runtime_idle_releases_lease_and_stale_finalizer_writes_nothing() -> Non
     runtime.token = "fixture-token"
     runtime.stop_event = threading.Event()
     runtime.state_lock = threading.RLock()
-    runtime.save = write
     server = SimpleNamespace(server_address=("127.0.0.1", 0), serve_forever=idle)
     with (
+        patch.object(runtime, "save", write),
         patch.object(
             p, "current_entry", return_value=SimpleNamespace(operation=operation)
         ),
@@ -139,10 +139,15 @@ def test_runtime_metrics_error_persistence_stays_within_live_cycle() -> None:
             runtime=SimpleNamespace(metrics=SimpleNamespace(interval_seconds=1.0))
         )
     )
-    runtime.stop_event = SimpleNamespace(is_set=lambda: False, wait=wait)
-    runtime.reload_configuration = lambda: None
-    runtime.save = save
     with (
+        patch.object(
+            runtime,
+            "stop_event",
+            SimpleNamespace(is_set=lambda: False, wait=wait),
+            create=True,
+        ),
+        patch.object(runtime, "reload_configuration", lambda: None),
+        patch.object(runtime, "save", save),
         patch.object(
             p, "current_entry", return_value=SimpleNamespace(operation=operation)
         ),
@@ -182,16 +187,19 @@ def test_native_acquire_refusal_does_not_relabel_body_oserror(
 def test_stale_runtime_closes_idle_transport_without_core_writes() -> None:
     import threading
     from types import SimpleNamespace
+    from unittest.mock import patch
 
     from pf_runtime import service
 
     runtime = object.__new__(service.RuntimeProcess)
     runtime.stop_event = threading.Event()
     closed = threading.Event()
-    runtime.httpd = SimpleNamespace(shutdown=closed.set)
-    runtime._stop_stale()
-    assert runtime.stop_event.is_set()
-    assert closed.wait(1)
+    with patch.object(
+        runtime, "httpd", SimpleNamespace(shutdown=closed.set), create=True
+    ):
+        runtime._stop_stale()
+        assert runtime.stop_event.is_set()
+        assert closed.wait(1)
 
 
 def test_copied_context_cannot_reuse_released_or_foreign_thread_lease(
@@ -250,9 +258,13 @@ def test_raw_iterator_retains_lease_until_close() -> None:
 
     kernel = object.__new__(RawIngressKernel)
     kernel.database = Path("unused-fixture.sqlite")
-    kernel._operation = lambda: (SimpleNamespace(records=records), True)
-    with patch.object(
-        p, "current_entry", return_value=SimpleNamespace(operation=operation)
+    with (
+        patch.object(
+            kernel, "_operation", lambda: (SimpleNamespace(records=records), True)
+        ),
+        patch.object(
+            p, "current_entry", return_value=SimpleNamespace(operation=operation)
+        ),
     ):
         iterator = kernel.records()
         assert held == 0
@@ -1560,7 +1572,18 @@ def test_joint_real_updater_and_independent_successor_child(native_root: Path) -
             bundle.writestr(name, raw)
     before = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
     management, _ = _adopted_fixture_install(native_root / "independent-management")
-    command = [sys.executable, "-B", str(management / "bin/pf.py"), "core-update", "apply", "--core-root", str(root), "--archive", str(archive), "--confirm"]
+    command = [
+        sys.executable,
+        "-B",
+        str(management / "bin/pf.py"),
+        "core-update",
+        "apply",
+        "--core-root",
+        str(root),
+        "--archive",
+        str(archive),
+        "--confirm",
+    ]
     applied = subprocess.run(command, capture_output=True, text=True, timeout=240)
     assert applied.returncode == 0, applied.stdout + applied.stderr
     record = json.loads(applied.stdout)
@@ -1579,14 +1602,34 @@ def test_joint_real_updater_and_independent_successor_child(native_root: Path) -
     second = subprocess.run(command, capture_output=True, text=True, timeout=240)
     assert second.returncode == 0, second.stdout + second.stderr
     second_record = json.loads(second.stdout)
-    assert (Path(second_record["backup_dir"]) / "files/VERSION").read_bytes() == b"local second preimage"
+    assert (
+        Path(second_record["backup_dir"]) / "files/VERSION"
+    ).read_bytes() == b"local second preimage"
     latest = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
     assert len(latest["successors"]) == 2 and latest["adoption"] != after["adoption"]
-    assert latest["successors"][-1]["maintenance"]["manifest_sha256"] == p.digest(new.manifest)
+    assert latest["successors"][-1]["maintenance"]["manifest_sha256"] == p.digest(
+        new.manifest
+    )
 
 
 @pytest.mark.parametrize(
-    "case", ["missing", "local", "unchanged-local", "manifest", "epoch", "selection", "unbound-cli", "public-cli", "configuration", "owner", "excluded-leaf", "excluded-inventory", "malformed", "unknown"]
+    "case",
+    [
+        "missing",
+        "local",
+        "unchanged-local",
+        "manifest",
+        "epoch",
+        "selection",
+        "unbound-cli",
+        "public-cli",
+        "configuration",
+        "owner",
+        "excluded-leaf",
+        "excluded-inventory",
+        "malformed",
+        "unknown",
+    ],
 )
 def test_real_updater_retained_target_repair_force_and_authority(
     native_root: Path, case: str
@@ -1699,7 +1742,9 @@ with managed_target(target,files) as retained:
         case,
     )
     assert result["case"] == case
-    assert result["refused"] is (case not in {"missing", "local", "unchanged-local", "public-cli"})
+    assert result["refused"] is (
+        case not in {"missing", "local", "unchanged-local", "public-cli"}
+    )
 
 
 @pytest.mark.parametrize("drift", ["configuration", "owner"])
