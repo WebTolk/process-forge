@@ -790,7 +790,9 @@ class RuntimeProcess:
         from processforge_core.project.metadata import ProjectMetadataReader
         from processforge_core.runtime.execution_admission import ExecutionAdmission
 
-        if guarded and expected_instance_id != self.instance_id:
+        if (guarded or expected_instance_id is not None) and (
+            expected_instance_id != self.instance_id
+        ):
             return "owner_changed"
         with self.state_lock:
             if guarded and (
@@ -816,10 +818,39 @@ class RuntimeProcess:
                         deadline=deadline,
                     )
                 )
-                # The durable singleton can have changed during admission wait.
-                lock = budget.read(
-                    lock_path(self.workplace_root), self.workplace_root, maximum=65536
+                # Hold the singleton owner fence through stopping publication.
+                native_scope.enter_context(
+                    admission._gate(lock_path(self.workplace_root), deadline)
                 )
+                # The durable singleton can have changed during admission wait.
+                try:
+                    lock = budget.read(
+                        lock_path(self.workplace_root),
+                        self.workplace_root,
+                        maximum=65536,
+                    )
+                except FileNotFoundError:
+                    # Only the authenticated, exact live instance can recover a
+                    # missing lock. Guarded stop still requires its durable owner.
+                    if guarded:
+                        raise
+                    if expected_instance_id != self.instance_id:
+                        return "owner_changed"
+                    lock = budget.read(
+                        service_path(self.workplace_root),
+                        self.workplace_root,
+                        maximum=65536,
+                    )
+                    with self.state_lock:
+                        if (
+                            self.state.get("status") != "ready"
+                            or lock.get("status") != "ready"
+                            or not lock.get("endpoint")
+                            or lock.get("endpoint") != self.state.get("endpoint")
+                            or lock.get("workplace_root") != str(self.workplace_root)
+                            or lock.get("token_hash") != token_hash(self.token)
+                        ):
+                            return "owner_changed"
                 if (
                     lock.get("instance_id") != self.instance_id
                     or lock.get("pid") != os.getpid()
@@ -1603,6 +1634,7 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     inspection = inspect_lifecycle(workplace_root, core)
     state = inspection["state"]
+    orphaned = inspection["kind"] == "orphaned"
     guarded = getattr(args, "command", "") == "server" and not getattr(
         args, "force", False
     )
@@ -1670,7 +1702,7 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
     payload = (
         {"require_idle": True, "expected_instance_id": state.get("instance_id")}
         if guarded
-        else {}
+        else ({"expected_instance_id": state.get("instance_id")} if orphaned else {})
     )
     code, body = http_json(
         "POST",

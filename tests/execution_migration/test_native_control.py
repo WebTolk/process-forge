@@ -1479,6 +1479,11 @@ with entry.operation():
 def _adopted_run(code: str, root: Path, *args: object) -> dict[str, Any]:
     result = subprocess.run(
         [sys.executable, "-B", "-c", code, str(root), *map(str, args)],
+        env={
+            **os.environ,
+            "LOCALAPPDATA": str(root / "runtime/device"),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        },
         capture_output=True,
         text=True,
         timeout=60,
@@ -1516,6 +1521,9 @@ def _adopted_fixture_install(root: Path) -> tuple[Path, p.Build]:
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
+    device = root / "runtime/device/ProcessForge/configuration.yaml"
+    device.parent.mkdir(parents=True)
+    device.write_text("schema_version: 1\n", encoding="utf-8")
     return root, build
 
 
@@ -1563,6 +1571,95 @@ def test_joint_real_updater_and_independent_successor_child(native_root: Path) -
     # Stale generation loses its epoch even if the payload is replaced again with identical bytes.
     result = _adopted_run(_ADOPTED_CHILD, root, "after-update")
     assert result["generation"] == after["adoption"]
+
+
+@pytest.mark.parametrize(
+    "case", ["missing", "local", "manifest", "epoch", "selection", "unbound-cli"]
+)
+def test_real_updater_retained_target_repair_force_and_authority(
+    native_root: Path, case: str
+) -> None:
+    management, _ = _adopted_fixture_install(native_root / "management")
+    result = _adopted_run(
+        _ADOPTED_PREAMBLE
+        + r"""
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+import zipfile
+from smoke_core_update_manifest import managed_target,write_native_archive,apply_managed_update
+from processforge_core.maintenance.update import CoreUpdateError,apply_update,build_plan
+case=sys.argv[2];target=root.parent/'target';archive=root.parent/'new.zip'
+files={'same.txt':'same','changed.txt':'old','removed.txt':'gone'}
+with managed_target(target,files) as retained:
+    write_native_archive(archive,{'same.txt':'same','changed.txt':'new'},version='1.3.0-alpha7')
+    with zipfile.ZipFile(archive) as bundle: expected_leaf=bundle.read(p.LEAF)
+    (target/'unknown.txt').write_bytes(b'preserve')
+    authority=('runtime/managed-ingress/baseline.json','runtime/managed-ingress/adoption.json','runtime/native-control/epoch')
+    def snapshot():
+        return {name:(target/name).read_bytes() for name in (*authority,p.MANIFEST,'changed.txt','unknown.txt') if (target/name).is_file()}
+    before_generation=json.loads((target/authority[0]).read_text())['adoption']
+    if case=='missing':
+        for name in files: (target/name).unlink()
+        plan=build_plan(target,archive)
+        assert plan['missing_owned']==['changed.txt','removed.txt','same.txt'],plan
+        assert plan['restored']==['same.txt'],plan
+    elif case=='local':
+        (target/'changed.txt').write_bytes(b'local-preimage')
+        before=snapshot()
+        try: apply_managed_update(retained,archive)
+        except CoreUpdateError as error: assert error.code=='plan_blocked',error
+        else: raise AssertionError('local modification accepted without force')
+        assert snapshot()==before
+        assert not (target/'runtime/core-update').exists()
+    elif case=='manifest':
+        raw=json.loads((target/p.MANIFEST).read_text())
+        (target/p.MANIFEST).write_text(json.dumps(raw))
+    elif case=='epoch':
+        (target/authority[2]).write_bytes(b'stale-target-epoch')
+    elif case=='selection':
+        raw=json.loads((target/authority[0]).read_text());raw['selection']['owner']='another-owner'
+        (target/authority[0]).write_text(json.dumps(raw))
+    if case=='unbound-cli': (target/'changed.txt').write_bytes(b'local-preimage')
+    if case in {'manifest','epoch','selection','unbound-cli'}:
+        before=snapshot()
+        if case=='unbound-cli':
+            import subprocess
+            refused=subprocess.run([sys.executable,'-B',str(root/'tools/processforge.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=30)
+            assert refused.returncode!=0,refused.stdout
+            assert json.loads(refused.stdout)['error']['code']=='plan_blocked',refused.stdout+refused.stderr
+        else:
+            try: apply_managed_update(retained,archive,force_local_modifications=True)
+            except CoreUpdateError as error: assert error.code=='plan_blocked',error
+            else: raise AssertionError('force bypassed target authority')
+        assert snapshot()==before
+        assert not (target/'runtime/core-update').exists()
+        print(json.dumps({'case':case,'refused':True}))
+    else:
+        record=apply_managed_update(retained,archive,force_local_modifications=case=='local')
+        assert record['status']=='applied',record
+        assert (target/'same.txt').read_bytes()==b'same'
+        assert (target/'changed.txt').read_bytes()==b'new'
+        assert not (target/'removed.txt').exists()
+        assert (target/'unknown.txt').read_bytes()==b'preserve'
+        if case=='missing':
+            assert record['backed_up']['same.txt'] is None
+            assert record['backed_up']['changed.txt'] is None
+            assert record['backed_up']['removed.txt'] is None
+        else:
+            assert (Path(record['backup_dir'])/'files/changed.txt').read_bytes()==b'local-preimage'
+        state=json.loads((target/authority[0]).read_text())
+        assert state['phase']=='bound' and len(state['successors'])==1,state
+        assert state['adoption']!=before_generation
+        assert not (target/'runtime/core-update/in-progress.json').exists()
+        assert (target/p.LEAF).read_bytes()==expected_leaf
+        accepted=p.accept_publication(target,trusted_leaf=expected_leaf)
+        assert accepted is not None
+        print(json.dumps({'case':case,'refused':False,'status':record['status']}))
+""",
+        management,
+        case,
+    )
+    assert result["case"] == case
+    assert result["refused"] is (case not in {"missing", "local"})
 
 
 @pytest.mark.parametrize("drift", ["configuration", "owner"])

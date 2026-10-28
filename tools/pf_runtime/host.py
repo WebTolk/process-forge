@@ -537,6 +537,69 @@ def remember_project(state: dict[str, Any], handle: dict[str, Any]) -> None:
     state["projects"] = sorted(projects, key=lambda item: str(item.get("project_id") or ""))
 
 
+def register_worker_project(
+    workplace_root: Path, project_root: Path, core: Any
+) -> None:
+    """Publish observation routing under the start gates, before reservation.
+
+    The selected project's metadata supplies the route; cache membership is not
+    launch authority. Only absence initializes a cache. Invalid or incomplete
+    prior coverage must never be repaired by hiding other registered projects.
+    """
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+    from processforge_core.runtime.metrics import (
+        Budget,
+        registered_projects,
+        registration_routes,
+    )
+
+    if not ExecutionAdmission.held(project_root, workplace_root):
+        raise ExecutionError("execution_activity_unknown")
+    budget = Budget()
+    try:
+        with state_lock():
+            try:
+                state = budget.read(
+                    state_path(workplace_root), workplace_root, maximum=4194304
+                )
+            except FileNotFoundError:
+                # Same lazy state protocol as load_state; no service is needed.
+                state = {
+                    "schema_version": 1,
+                    "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
+                    "status": "lazy",
+                    "projects": [],
+                    "sessions": {},
+                }
+            roots, _registration, complete = registration_routes(state, budget=budget)
+            if not complete or not isinstance(state.get("sessions"), dict):
+                raise ExecutionError("execution_activity_unknown")
+            handle = route_project(str(project_root), workplace_root, core)
+            budget.check()
+            # remember_project keys by id: never evict a different root sharing it.
+            if any(
+                item.get("project_id") == handle["project_id"]
+                and Path(item["project_root"]) != project_root
+                for item in state["projects"]
+            ):
+                raise ExecutionError("execution_activity_unknown")
+            if project_root in roots:
+                return
+            if len(state["projects"]) >= 128:
+                raise ExecutionError("execution_activity_unknown")
+            budget.check()
+            remember_project(state, handle)
+            save_state(workplace_root, state, core)
+            published, _registration, complete = registered_projects(
+                workplace_root, budget=budget
+            )
+            if not complete or not set([*roots, project_root]).issubset(published):
+                raise ExecutionError("execution_activity_unknown")
+    except (OSError, ValueError, TypeError, TimeoutError, SystemExit):
+        raise ExecutionError("execution_activity_unknown") from None
+
+
 def remember_session(state: dict[str, Any], session_id: str, handle: dict[str, Any], agent_id: str, core: Any) -> None:
     if not session_id:
         return

@@ -11,16 +11,11 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import processforge_core.maintenance.update as core_update
 from processforge_core.maintenance.update import (
     CORE_MANIFEST_NAME,
     CoreUpdateError,
-    apply_update,
     build_plan,
     core_status,
     make_core_manifest,
@@ -28,6 +23,17 @@ from processforge_core.maintenance.update import (
     repair_status,
 )
 
+# The named Core entry captures native before its library import.
+# isort: split
+from smoke_core_update_manifest import (
+    apply_managed_update,
+    managed_target,
+    run_managed_smoke,
+    write_native_archive,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
 
 MIGRATION_PATH = "updates/migrations/fixture.yaml"
 
@@ -122,75 +128,66 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-migration-positive-", dir=temp_root) as raw:
         root = Path(raw)
         core, workplace = make_fixture(root)
-        existing = workplace / "runtime-drivers" / "existing.yaml"
-        existing.parent.mkdir(parents=True)
-        existing.write_text("keep-existing\n", encoding="utf-8")
-        archive = root / "release.zip"
-        write_archive(
-            archive,
-            migration_yaml(
-                [
-                    {"id": "preserve", "source": "templates/preserve.yaml", "target": "runtime-drivers/existing.yaml"},
-                    {"id": "install", "source": "templates/new.yaml", "target": "runtime-drivers/new.yaml"},
-                ]
-            ),
-            extra_entries={"templates/preserve.yaml": "archive-preserve\n", "templates/new.yaml": "new-driver\n"},
-        )
-        plan = build_plan(core, archive, workplace_root=workplace)
-        assert plan["status"] == "planned", plan
-        assert len(plan["workplace_migration"]["operations"]) == 1, plan
-        assert len(plan["workplace_migration"]["preserved"]) == 1, plan
-        applied = apply_update(core, archive, confirm=True, workplace_root=workplace)
-        assert applied["workplace_migration"]["migration"]["id"] == "fixture-migration", applied
-        assert existing.read_text(encoding="utf-8") == "keep-existing\n"
-        assert (workplace / "runtime-drivers" / "new.yaml").read_text(encoding="utf-8") == "new-driver\n"
+        with managed_target(core, {"a.txt": "same"}, workplace_root=workplace) as entry:
+            existing = workplace / "runtime-drivers" / "existing.yaml"
+            existing.parent.mkdir(parents=True)
+            existing.write_text("keep-existing\n", encoding="utf-8")
+            archive = root / "release.zip"
+            write_native_archive(
+                archive,
+                {MIGRATION_PATH: migration_yaml(
+                    [
+                        {"id": "preserve", "source": "templates/preserve.yaml", "target": "runtime-drivers/existing.yaml"},
+                        {"id": "install", "source": "templates/new.yaml", "target": "runtime-drivers/new.yaml"},
+                    ]
+                ), "a.txt": "same", "templates/preserve.yaml": "archive-preserve\n", "templates/new.yaml": "new-driver\n"},
+                version="1.1.0",
+            )
+            plan = build_plan(core, archive, workplace_root=workplace)
+            assert plan["status"] == "planned", plan
+            assert len(plan["workplace_migration"]["operations"]) == 1, plan
+            assert len(plan["workplace_migration"]["preserved"]) == 1, plan
+            applied = apply_managed_update(entry, archive, workplace_root=workplace)
+            assert applied["workplace_migration"]["migration"]["id"] == "fixture-migration", applied
+            assert existing.read_text(encoding="utf-8") == "keep-existing\n"
+            assert (workplace / "runtime-drivers" / "new.yaml").read_text(encoding="utf-8") == "new-driver\n"
 
     with tempfile.TemporaryDirectory(prefix="pf-migration-read-fault-", dir=temp_root) as raw:
         root = Path(raw)
         core, workplace = make_fixture(root)
-        archive = root / "release.zip"
-        write_archive(
-            archive,
-            migration_yaml([
-                {"id": "first-read", "source": "templates/first.yaml", "target": "runtime-drivers/first.yaml"},
-                {"id": "faulted-read", "source": "templates/new.yaml", "target": "runtime-drivers/new.yaml"},
-            ]),
-            extra_entries={"templates/first.yaml": "first-driver\n", "templates/new.yaml": "new-driver\n"},
-        )
-        plan = build_plan(core, archive, workplace_root=workplace)
-        assert plan["status"] == "planned", plan
-        original = zipfile.ZipFile.read
-
-        def fail_read(archive: zipfile.ZipFile, relative_path: str, *args, **kwargs) -> bytes:
-            if relative_path == "templates/new.yaml":
-                raise KeyError(relative_path)
-            return original(archive, relative_path, *args, **kwargs)
-
-        zipfile.ZipFile.read = fail_read
-        try:
+        with managed_target(core, {"a.txt": "same"}, workplace_root=workplace) as entry:
+            archive = root / "release.zip"
+            write_native_archive(
+                archive,
+                {MIGRATION_PATH: migration_yaml([
+                    {"id": "first-read", "source": "templates/first.yaml", "target": "runtime-drivers/first.yaml"},
+                    {"id": "faulted-read", "source": "templates/new.yaml", "target": "runtime-drivers/new.yaml"},
+                ]), "a.txt": "same", "templates/first.yaml": "first-driver\n", "templates/new.yaml": "new-driver\n"},
+                version="1.1.0", child_fault="migration-read",
+            )
+            plan = build_plan(core, archive, workplace_root=workplace)
+            assert plan["status"] == "planned", plan
             try:
-                apply_update(core, archive, confirm=True, workplace_root=workplace)
+                apply_managed_update(entry, archive, workplace_root=workplace)
             except CoreUpdateError as exc:
                 assert exc.code == "archive_file_missing", exc
             else:
                 raise AssertionError("post-plan archive read fault was accepted")
-        finally:
-            zipfile.ZipFile.read = original
-        status = core_status(core)
-        assert status["in_progress"]["status"] == "failed", status
-        assert status["in_progress"]["error"]["code"] == "archive_file_missing", status
-        assert status["version"] == "1.1.0", status
-        assert repair_status(core)["status"] == "manual_repair_required", status
-        assert not (workplace / "runtime-drivers" / "new.yaml").exists()
-        assert (workplace / "runtime-drivers" / "first.yaml").read_text(encoding="utf-8") == "first-driver\n"
-        backup = Path(status["in_progress"]["backup_dir"])
-        record = json.loads((backup / "workplace-migration.json").read_text(encoding="utf-8"))
-        assert record["status"] == "applying" and len(record["backed_up"]) == 2, record
-        assert all(item["existed"] is False for item in record["backed_up"]), record
+            status = core_status(core)
+            assert status["in_progress"]["status"] == "failed", status
+            assert status["in_progress"]["error"]["code"] == "archive_file_missing", status
+            assert status["version"] == "1.1.0", status
+            assert repair_status(core)["status"] == "manual_repair_required", status
+            assert not (workplace / "runtime-drivers" / "new.yaml").exists()
+            assert (workplace / "runtime-drivers" / "first.yaml").read_text(encoding="utf-8") == "first-driver\n"
+            backup = Path(status["in_progress"]["backup_dir"])
+            record = json.loads((backup / "workplace-migration.json").read_text(encoding="utf-8"))
+            assert record["status"] == "applying" and len(record["backed_up"]) == 2, record
+            assert all(item["existed"] is False for item in record["backed_up"]), record
 
     print("PASS: core update migration source validation and recovery")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(run_managed_smoke(Path(__file__)))

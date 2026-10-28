@@ -91,6 +91,52 @@ def test_cancelled_never_launched_can_prepare_again(
         assert len(list((root / ".pf/tmp/scratch-owned").iterdir())) == 1
 
 
+@pytest.mark.parametrize("managed", [False, True])
+def test_tampered_prepared_launch_preserves_denial_and_scratch_obligation(
+    sql_cli_fixture: SqlFixture, managed: bool, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import processforge as core
+
+    root, repository, args, _driver = sql_cli_fixture
+    if managed:
+        managed_scope(root)
+    assert core.command_worker_run_prepare(args) == 0
+    ready = repository.load_latest("run", "task")
+    state = projected_payload(ready)
+    manifest = root / state["prepared_input"]["path"]
+    tampered = manifest.read_bytes() + b" "
+    manifest.write_bytes(tampered)
+    capsys.readouterr()
+
+    assert core.command_worker_run_start(args) == 1
+    assert "prepared_input_checksum_mismatch" in capsys.readouterr().out
+    blocked = repository.load_latest("run", "task")
+    assert blocked.key == ready.key and blocked.phase == "prepared"
+    assert projected_payload(blocked)["status"] == "blocked"
+    assert blocked.launch_token is None and blocked.process is None
+    assert not (root / ".pf/artifacts/report.md").exists()
+    assert core.command_worker_run_start(args) == 1
+    assert "explicit worker-run prepare" in capsys.readouterr().out
+    assert repository.load_latest("run", "task").key == ready.key
+
+    if managed:
+        # Corruption is never authority to release the still-needed allocation.
+        scratch = list((root / ".pf/tmp/scratch-owned").iterdir())
+        assert len(scratch) == 1
+        with pytest.raises(SystemExit, match="temporary_cleanup_needed"):
+            core.command_worker_run_prepare(args)
+        assert repository.load_latest("run", "task").key == ready.key
+        assert scratch[0].is_dir()
+        assert not manifest.with_name("scratch-release.json").exists()
+        assert not manifest.with_name("scratch-cleanup.json").exists()
+    else:
+        assert core.command_worker_run_prepare(args) == 0
+        assert (
+            repository.load_latest("run", "task").key.attempt == ready.key.attempt + 1
+        )
+    assert manifest.read_bytes() == tampered
+
+
 @pytest.mark.parametrize("actual", ["ready", "blocked", "starting", "stopping"])
 def test_cancelled_projection_cannot_prove_uncertain_attempt_unused(
     sql_cli_fixture: SqlFixture, monkeypatch: pytest.MonkeyPatch, actual: str

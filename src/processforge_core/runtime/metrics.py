@@ -401,7 +401,17 @@ def registered_projects(workplace, *, budget=None):
     """Bounded cache routing for observation; no project execution/context build."""
     budget = budget or Budget()
     try:
-        cache = budget.read(workplace / "runtime/pf-runtime-host/state.json", workplace, maximum=4194304)
+        cache = budget.read(
+            workplace / "runtime/pf-runtime-host/state.json", workplace, maximum=4194304
+        )
+    except (OSError, ValueError, TypeError, TimeoutError):
+        return [], registrations({}), False
+    return registration_routes(cache, budget=budget)
+
+
+def registration_routes(cache, *, budget):
+    """Validate the same bounded routing coverage before and after publication."""
+    try:
         projects = cache.get("projects")
         if not isinstance(projects, list) or len(projects) > 128:
             raise ValueError
@@ -410,10 +420,15 @@ def registered_projects(workplace, *, budget=None):
         for item in projects:
             budget.check()
             try:
-                if not isinstance(item, dict) or not isinstance(item.get("project_root"), str):
+                if not isinstance(item, dict) or not isinstance(
+                    item.get("project_root"), str
+                ):
                     raise ValueError
                 root = Path(item["project_root"])
-                if not root.is_absolute() or not (root / ".pf/process-forge.yaml").is_file():
+                if (
+                    not root.is_absolute()
+                    or not (root / ".pf/process-forge.yaml").is_file()
+                ):
                     raise ValueError
                 contained(root / ".pf/process-forge.yaml", root)
                 if root not in roots:

@@ -383,10 +383,16 @@ class SearchSnapshotTests(unittest.TestCase):
         sys.path.insert(0, str(ROOT / "tools"))
         from pf_runtime import mcp_server, session_read
 
+        fixture_root = Path(
+            self.enterContext(tempfile.TemporaryDirectory(dir=SCRATCH))
+        ).resolve()
+        project_root = fixture_root / "bound"
+        workplace_root = fixture_root / "workplace"
+
         core = SimpleNamespace(project_id=lambda root: str(root))
         host = SimpleNamespace(
             resolve_project=lambda reference, core: Path(reference),
-            project_for_session=lambda *a: Path("bound"),
+            project_for_session=lambda *a: project_root,
         )
         runtime = SimpleNamespace(core=core, host=host)
         calls = []
@@ -400,23 +406,32 @@ class SearchSnapshotTests(unittest.TestCase):
         ):
             for arguments, session, reason in [
                 (
-                    {"project_root": "bound", "session_id": "other"},
+                    {"project_root": str(project_root), "session_id": "other"},
                     "s",
                     "session_mismatch",
                 ),
-                ({"project_root": "other"}, "s", "session_project_mismatch"),
+                (
+                    {"project_root": str(fixture_root / "other")},
+                    "s",
+                    "session_project_mismatch",
+                ),
                 ({}, "", "missing_project_root"),
             ]:
                 with self.assertRaises(session_read.SessionReadError) as caught:
                     mcp_server.tool_result(
-                        "pf.search", arguments, Path("w"), session, runtime
+                        "pf.search", arguments, workplace_root, session, runtime
                     )
                 self.assertEqual(caught.exception.code, reason)
                 self.assertFalse(calls)
             result = mcp_server.tool_result(
                 "pf.search",
-                {"project_root": "bound", "query": "needle", "limit": "2", "offset": 0},
-                Path("w"),
+                {
+                    "project_root": str(project_root),
+                    "query": "needle",
+                    "limit": "2",
+                    "offset": 0,
+                },
+                workplace_root,
                 "s",
                 runtime,
             )
@@ -424,7 +439,7 @@ class SearchSnapshotTests(unittest.TestCase):
                 result["query_arguments"],
                 {"query": "needle", "limit": "2", "limitstart": None, "offset": 0},
             )
-        self.assertEqual(calls, [Path("bound")])
+        self.assertEqual(calls, [project_root])
         denied = SimpleNamespace(
             search=lambda **kw: (_ for _ in ()).throw(
                 access.LocalSearchError("snapshot_not_fresh")
@@ -436,8 +451,8 @@ class SearchSnapshotTests(unittest.TestCase):
             with self.assertRaises(session_read.SessionReadError) as caught:
                 mcp_server.tool_result(
                     "pf.search",
-                    {"project_root": "bound", "query": "needle"},
-                    Path("w"),
+                    {"project_root": str(project_root), "query": "needle"},
+                    workplace_root,
                     "",
                     runtime,
                 )

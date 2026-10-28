@@ -186,33 +186,38 @@ class ResolveSnapshotTests(unittest.TestCase):
     def test_mcp_guards_precede_factory(self):
         sys.path.insert(0, str(ROOT / 'tools'))
         from pf_runtime import mcp_server, session_read
+        fixture_root = Path(
+            self.enterContext(tempfile.TemporaryDirectory(dir=SCRATCH))
+        ).resolve()
+        project_root = fixture_root / 'bound'
+        workplace_root = fixture_root / 'workplace'
         status = ['fresh']
         events = []
         def check(root, **kw):
             events.append('check')
             return {'status': status[0]}
         core = SimpleNamespace(project_id=lambda root: str(root), project_context_check_result=check)
-        host = SimpleNamespace(resolve_project=lambda reference, core: Path(reference), project_for_session=lambda *a: Path('bound'))
+        host = SimpleNamespace(resolve_project=lambda reference, core: Path(reference), project_for_session=lambda *a: project_root)
         runtime = SimpleNamespace(core=core, host=host)
         def factory(root, workplace):
             events.append('factory')
             return SimpleNamespace(resolve=lambda **kw: kw)
         with patch.object(composition, 'build_resource_resolve_service', side_effect=factory):
-            for arguments, session, reason in [({'project_root': 'bound', 'session_id': 'other'}, 's', 'session_mismatch'), ({'project_root': 'other'}, 's', 'session_project_mismatch'), ({}, '', 'missing_project_root')]:
+            for arguments, session, reason in [({'project_root': str(project_root), 'session_id': 'other'}, 's', 'session_mismatch'), ({'project_root': str(fixture_root / 'other')}, 's', 'session_project_mismatch'), ({}, '', 'missing_project_root')]:
                 with self.assertRaises(session_read.SessionReadError) as caught:
-                    mcp_server.tool_result('pf.resolve', arguments, Path('w'), session, runtime)
+                    mcp_server.tool_result('pf.resolve', arguments, workplace_root, session, runtime)
                 self.assertEqual(caught.exception.code, reason)
                 self.assertFalse(events)
             status[0] = 'stale'
             with self.assertRaises(session_read.SessionReadError) as caught:
-                mcp_server.tool_result('pf.resolve', {'project_root': 'bound', 'resource_id': RESOURCE_ID}, Path('w'), 's', runtime)
+                mcp_server.tool_result('pf.resolve', {'project_root': str(project_root), 'resource_id': RESOURCE_ID}, workplace_root, 's', runtime)
             self.assertEqual(caught.exception.code, 'snapshot_not_fresh')
             self.assertEqual(events, ['check'])
             for accepted in ('fresh', 'fresh_with_updates'):
                 status[0] = accepted
                 for resource_id, expected in [('', None), (RESOURCE_ID, RESOURCE_ID), (42, '42')]:
                     events.clear()
-                    result = mcp_server.tool_result('pf.resolve', {'project_root': 'bound', 'resource_id': resource_id}, Path('w'), 's', runtime)
+                    result = mcp_server.tool_result('pf.resolve', {'project_root': str(project_root), 'resource_id': resource_id}, workplace_root, 's', runtime)
                     self.assertEqual(result, {'resource_id': expected})
                     self.assertEqual(events, ['check', 'factory'])
         self.assertIsNone(request_scope._CURRENT.get())

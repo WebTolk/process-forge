@@ -1357,6 +1357,83 @@ def current_entry() -> NativeEntry | None:
     return _ENTRY
 
 
+_REPLACEMENT_TARGET: ContextVar[NativeEntry | None] = ContextVar(
+    "pf_replacement_target", default=None
+)
+_UPDATE_PLAN_ENTRY: ContextVar[NativeEntry | None] = ContextVar(
+    "pf_update_plan_entry", default=None
+)
+
+
+@contextmanager
+def _replacement_target(entry: NativeEntry) -> Iterator[None]:
+    """Bind an already qualified target for management Core's existing apply.
+
+    The native host supplies its retained adoption/attach entry, never a root
+    discovered from CLI arguments. This scope creates no authority or lease;
+    replacement revalidates the exact entry under target ingress/exclusive.
+    """
+    if _REPLACEMENT_TARGET.get() is not None or _CONTROL_LEASE.get() is not None:
+        raise NativeControlError()
+    token = _REPLACEMENT_TARGET.set(entry)
+    try:
+        yield
+    finally:
+        _REPLACEMENT_TARGET.reset(token)
+
+
+def _update_entry(core_root: Path) -> NativeEntry:
+    execution = current_entry()
+    entry = _REPLACEMENT_TARGET.get() or execution
+    if (
+        execution is None
+        or execution.publication is None
+        or execution.image is None
+        or entry is None
+        or entry.root != core_root.resolve()
+    ):
+        raise NativeControlError()
+    return entry
+
+
+def _update_plan_path(path: Path) -> tuple[NativeEntry, str]:
+    """Physical target data only during the once-only exclusive planner."""
+    entry = _UPDATE_PLAN_ENTRY.get()
+    if entry is None or not _native_life_held(entry.control):
+        raise NativeControlError()
+    try:
+        relative = path.absolute().relative_to(entry.root).as_posix()
+    except ValueError:
+        raise NativeControlError() from None
+    if entry.publication is None or (
+        relative != MANIFEST and relative not in entry.publication.payload
+    ):
+        raise NativeControlError()
+    return entry, safe_path(relative)
+
+
+def _read_update_plan_file(path: Path) -> bytes:
+    entry, relative = _update_plan_path(path)
+    if relative != MANIFEST:
+        raise NativeControlError()
+    return _read_regular(entry.root, relative, MAX_MANIFEST)
+
+
+def _sha256_update_plan_file(path: Path) -> str:
+    entry, relative = _update_plan_path(path)
+    target = _update_target(entry.root, relative)
+    info = target.lstat()
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise NativeControlError()
+    # Local preimages need not have the old release's size. Stream physical
+    # bytes without the publication capture limit or the Core digest cache.
+    result = hashlib.sha256()
+    with _PHYSICAL_OPEN(target, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            result.update(chunk)
+    return result.hexdigest()
+
+
 def supports_owned_execution() -> bool:
     """Probe the actual retained whole-tree backend, independently of SQLite.
 
@@ -2028,6 +2105,49 @@ class ManagedEnrollmentProducer:
             raise NativeControlError()
         return publication
 
+    def _replacement_authority(self, entry: NativeEntry, state: dict[str, Any]) -> None:
+        """Validate retained old authority, not repairable executable payload.
+
+        Called only under target ingress and installation exclusive. The old
+        publication/image came from genuine earlier admission; physical target
+        bytes are planner data and must never be captured or activated here.
+        """
+        publication, image, control = entry.publication, entry.image, entry.control
+        if publication is None or image is None or control is None:
+            raise NativeControlError()
+        seal = leaf_seal(self.trusted_leaf)
+        if (
+            entry.root != self.root
+            or image.root != self.root
+            or control.guard != self.root / "runtime/native-control/installation.guard"
+            or control.epoch_path != self.root / "runtime/native-control/epoch"
+            or not _native_life_held(control)
+            or seal is None
+            or publication.payload.get(LEAF) != self.trusted_leaf
+            or publication.projection_sha256 != seal[1]
+            or state["archive"] != seal[1]
+            or digest(publication.manifest) != publication.manifest_sha256
+            or digest(projection(publication.manifest)) != seal[1]
+            or dict(image.files)
+            != {**publication.payload, MANIFEST: publication.manifest}
+            or _read_regular(self.root, MANIFEST, MAX_MANIFEST) != publication.manifest
+        ):
+            raise NativeControlError()
+        # _durable binds selection to the retired baseline and validates the
+        # full successor chain/binding. The retained epoch commits that chain.
+        self._durable(state)
+        if control.accepted_epoch != self._epoch(state):
+            raise NativeControlError()
+        head = _read(self.directory / "adoption.json", 4096)
+        if head != {
+            "installation": state["installation"],
+            "archive": state["archive"],
+            "generation": state["adoption"],
+            "phase": "bound",
+            "epoch": control.accepted_epoch,
+        }:
+            raise NativeControlError()
+
     def launch_legacy(
         self,
         argv: list[str],
@@ -2237,9 +2357,10 @@ class ManagedEnrollmentProducer:
             if entry.control.accepted_epoch != self._epoch(state):
                 raise NativeControlError()
             with entry.control.exclusive():
-                # Revalidate accepted old bytes under exclusion BEFORE overwrite.
-                self._publication(entry)
-                if _prepare is not None:
+                if _prepare is None:
+                    self._publication(entry)
+                else:
+                    self._replacement_authority(entry, state)
                     # Once-only old Core planning happens under exclusion,
                     # before any durable fence or payload mutation.
                     _prepare()
@@ -2811,7 +2932,11 @@ def replace_core(
     plan: dict[str, Any] = {}
 
     def prepare_once() -> None:
-        plan.update(prepare())
+        token = _UPDATE_PLAN_ENTRY.set(entry)
+        try:
+            plan.update(prepare())
+        finally:
+            _UPDATE_PLAN_ENTRY.reset(token)
         if plan["new_manifest"] != selected_manifest:
             raise NativeControlError()
 
@@ -2903,6 +3028,8 @@ def replace_core(
                 complete("write", relative)
             _update_atomic(root / MANIFEST, frozen.manifest)
             complete("write_manifest", MANIFEST)
+            if _read_regular(root, LEAF, MAX_FILE) != frozen.payload[LEAF]:
+                raise NativeControlError()
             installed = accept_publication(root, trusted_leaf=frozen.payload[LEAF])
             if installed is None or installed.manifest_sha256 != digest(
                 frozen.manifest

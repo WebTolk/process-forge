@@ -11,22 +11,30 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import processforge_core.maintenance.update as core_update
 from processforge_core.maintenance.update import (
     CORE_MANIFEST_NAME,
     CoreUpdateError,
-    apply_update,
     build_plan,
     core_status,
     make_core_manifest,
     manifest_bytes,
     repair_status,
 )
+
+# The named Core entry captures native before its library import.
+# isort: split
+import pf_native_control as native
+from smoke_core_update_manifest import (
+    apply_managed_update,
+    managed_target,
+    run_managed_smoke,
+    write_native_archive,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
 
 
 def write_archive(path: Path, files: dict[str, str], *, version: str = "2.0.0") -> None:
@@ -82,46 +90,54 @@ def main() -> int:
         assert plan["restored"] == ["same.txt"], plan
         assert not (core / "same.txt").exists(), "plan must remain read-only"
         assert not (core / "runtime").exists(), "plan must not create update state"
-        applied = apply_update(core, archive, confirm=True)
-        assert (core / "same.txt").read_text(encoding="utf-8") == "same"
-        assert (core / "changed.txt").read_text(encoding="utf-8") == "new"
-        assert not (core / "removed.txt").exists()
-        assert (core / "user.txt").read_text(encoding="utf-8") == "keep"
-        assert applied["backed_up"]["same.txt"] is None
-        assert applied["backed_up"]["changed.txt"] is None
-        backup_dir = Path(applied["backup_dir"])
-        assert json.loads((backup_dir / "control" / "plan.json").read_text())["missing_owned"]
+        with managed_target(core, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}) as entry:
+            for name in ("same.txt", "changed.txt", "removed.txt"):
+                (core / name).unlink()
+            write_native_archive(archive, {"same.txt": "same", "changed.txt": "new"})
+            native_plan = build_plan(core, archive)
+            assert native_plan["missing_owned"] == ["changed.txt", "removed.txt", "same.txt"], native_plan
+            assert native_plan["restored"] == ["same.txt"], native_plan
+            assert not (core / "runtime/core-update").exists()
+            applied = apply_managed_update(entry, archive)
+            assert (core / "same.txt").read_text(encoding="utf-8") == "same"
+            assert (core / "changed.txt").read_text(encoding="utf-8") == "new"
+            assert not (core / "removed.txt").exists()
+            assert (core / "user.txt").read_text(encoding="utf-8") == "keep"
+            assert applied["backed_up"]["same.txt"] is None
+            assert applied["backed_up"]["changed.txt"] is None
+            backup_dir = Path(applied["backup_dir"])
+            assert json.loads((backup_dir / "control" / "plan.json").read_text())["missing_owned"]
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-missing-failure-", dir=args.root) as raw:
         root = Path(raw)
         core = root / "core"
         core.mkdir()
-        install_old(core)
-        (core / "same.txt").unlink()
-        archive = root / "release.zip"
-        write_archive(archive, {"same.txt": "same", "changed.txt": "old"})
-        original = core_update.atomic_write
+        with managed_target(core, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}) as entry:
+            (core / "same.txt").unlink()
+            archive = root / "release.zip"
+            write_native_archive(archive, {"same.txt": "same", "changed.txt": "old"})
+            original = native._update_atomic
 
-        def fail_restore(target: Path, content: bytes) -> None:
-            if target.name == "same.txt":
-                raise OSError("injected restore failure")
-            original(target, content)
+            def fail_restore(path: Path, raw: bytes) -> None:
+                if path.name == "same.txt":
+                    raise OSError("injected restore failure")
+                original(path, raw)
 
-        core_update.atomic_write = fail_restore
-        try:
+            native._update_atomic = fail_restore
             try:
-                apply_update(core, archive, confirm=True)
-            except CoreUpdateError as exc:
-                assert exc.code == "file_operation_failed", exc
-            else:
-                raise AssertionError("injected restore failure was accepted")
-        finally:
-            core_update.atomic_write = original
-        progress = core_status(core)["in_progress"]
-        assert progress["status"] == "failed", progress
-        assert progress["backed_up"]["same.txt"] is None, progress
-        assert any(item["op"] == "write" and item["path"] == "same.txt" for item in progress["pending_operations"])
-        assert repair_status(core)["status"] == "safe_to_rollback"
+                try:
+                    apply_managed_update(entry, archive)
+                except CoreUpdateError as exc:
+                    assert exc.code == "file_operation_failed", exc
+                else:
+                    raise AssertionError("injected restore failure was accepted")
+            finally:
+                native._update_atomic = original
+            progress = core_status(core)["in_progress"]
+            assert progress["status"] == "failed", progress
+            assert progress["backed_up"]["same.txt"] is None, progress
+            assert any(item["op"] == "write" and item["path"] == "same.txt" for item in progress["pending_operations"])
+            assert repair_status(core)["status"] == "safe_to_rollback"
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-nonregular-", dir=args.root) as raw:
         root = Path(raw)
@@ -140,59 +156,58 @@ def main() -> int:
         root = Path(raw)
         core = root / "core"
         core.mkdir()
-        old = make_core_manifest(version="1.0.0", source={"fixture": True}, files=[
-            {"relative_path": "dir/same.txt", "size": 4, "sha256": hashlib.sha256(b"same").hexdigest()},
-        ])
-        (core / CORE_MANIFEST_NAME).write_bytes(manifest_bytes(old))
-        (core / "dir").write_text("user obstruction", encoding="utf-8")
-        archive = root / "release.zip"
-        write_archive(archive, {"dir/same.txt": "same"})
-        assert build_plan(core, archive)["status"] == "blocked"
-        for force in (False, True):
-            try:
-                apply_update(core, archive, confirm=True, force_local_modifications=force)
-            except CoreUpdateError as exc:
-                assert exc.code == "plan_blocked"
-            else:
-                raise AssertionError("missing owned file bypassed its unowned parent")
-        assert (core / "dir").read_text(encoding="utf-8") == "user obstruction"
-        assert not (core / "runtime").exists()
+        with managed_target(core, {"dir/same.txt": "same"}) as entry:
+            (core / "dir/same.txt").unlink()
+            (core / "dir").rmdir()
+            (core / "dir").write_text("user obstruction", encoding="utf-8")
+            archive = root / "release.zip"
+            write_native_archive(archive, {"dir/same.txt": "same"})
+            assert build_plan(core, archive)["status"] == "blocked"
+            for force in (False, True):
+                try:
+                    apply_managed_update(entry, archive, force_local_modifications=force)
+                except CoreUpdateError as exc:
+                    assert exc.code == "plan_blocked"
+                else:
+                    raise AssertionError("missing owned file bypassed its unowned parent")
+            assert (core / "dir").read_text(encoding="utf-8") == "user obstruction"
+            assert not (core / "runtime/core-update").exists()
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-manifest-failure-", dir=args.root) as raw:
         root = Path(raw)
         core = root / "core"
         core.mkdir()
-        install_old(core)
-        (core / "same.txt").unlink()
-        archive = root / "release.zip"
-        write_archive(archive, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"})
-        original = core_update.atomic_write
+        with managed_target(core, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}) as entry:
+            (core / "same.txt").unlink()
+            archive = root / "release.zip"
+            write_native_archive(archive, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"})
+            original = native._update_atomic
 
-        def fail_manifest(target: Path, content: bytes) -> None:
-            if target.name == CORE_MANIFEST_NAME:
-                raise OSError("injected manifest failure after restored file write")
-            original(target, content)
+            def fail_manifest(path: Path, raw: bytes) -> None:
+                if path.name == CORE_MANIFEST_NAME:
+                    raise OSError("injected manifest failure after restored file write")
+                original(path, raw)
 
-        core_update.atomic_write = fail_manifest
-        try:
+            native._update_atomic = fail_manifest
             try:
-                apply_update(core, archive, confirm=True)
-            except CoreUpdateError as exc:
-                assert exc.code == "file_operation_failed"
-            else:
-                raise AssertionError("expected manifest failure")
-        finally:
-            core_update.atomic_write = original
-        progress = core_status(core)["in_progress"]
-        assert progress["backed_up"]["same.txt"] is None
-        assert any(op["op"] == "write" and op["path"] == "same.txt" for op in progress["completed_operations"])
-        assert (core / "same.txt").read_bytes() == b"same"
-        assert core_status(core)["version"] == "1.0.0"
-        assert repair_status(core)["status"] == "safe_to_rollback"
+                try:
+                    apply_managed_update(entry, archive)
+                except CoreUpdateError as exc:
+                    assert exc.code == "file_operation_failed"
+                else:
+                    raise AssertionError("expected manifest failure")
+            finally:
+                native._update_atomic = original
+            progress = core_status(core)["in_progress"]
+            assert progress["backed_up"]["same.txt"] is None
+            assert any(op["op"] == "write" and op["path"] == "same.txt" for op in progress["completed_operations"])
+            assert (core / "same.txt").read_bytes() == b"same"
+            assert core_status(core)["version"] == "1.0.0"
+            assert repair_status(core)["status"] == "safe_to_rollback"
 
     print("PASS: missing owned core update smoke")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(run_managed_smoke(Path(__file__)))

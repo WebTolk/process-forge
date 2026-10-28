@@ -569,3 +569,147 @@ def test_corrupt_stopping_state_cannot_admit_start(
     with pytest.raises(ExecutionError, match="execution_activity_unknown"):
         with ExecutionAdmission().start(isolated_path / "project", workplace):
             pytest.fail("invalid stopping state admitted start")
+
+
+@pytest.fixture
+def first_start_project(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[ModuleType, Path, Path]:
+    """Real enrolled metadata without runtime-host initialization or a service."""
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.configuration import DeviceConfigurationSource
+
+    real_registry_lock()
+    core = sys.modules["w3_admission_cli_fixture"]
+    project, workplace = isolated_path / "project", isolated_path / "workplace"
+    write_yaml_file(project / ".pf/process-forge.yaml", {"project": {"id": "project"}})
+    write_yaml_file(workplace / "workplace.yaml", {"schema_version": 1})
+    write_yaml_file(
+        project / ".pf/process-forge.local.yaml",
+        {"workplace": {"manifest": str(workplace / "workplace.yaml")}},
+    )
+    monkeypatch.setattr(
+        DeviceConfigurationSource,
+        "default_path",
+        staticmethod(lambda: isolated_path / "device.yaml"),
+    )
+    return core, project, workplace
+
+
+@pytest.mark.parametrize("storage", ["legacy", "sql"])
+@pytest.mark.parametrize("existing", [False, True])
+def test_first_start_publishes_route_for_shutdown_and_global_count(
+    first_start_project: tuple[ModuleType, Path, Path], storage: str, existing: bool
+) -> None:
+    import json
+
+    from pf_runtime import host
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.runtime import metrics
+
+    from .test_configuration_access import _sql_project
+
+    core, project, workplace = first_start_project
+    runtime, _service = native_runtime_fixture(workplace)
+    runtime.core = core
+    cache = host.state_path(workplace)
+    cache.unlink()  # The runtime policy fixture alone seeds an empty cache.
+    other = project.parent / "other"
+    if existing:
+        write_yaml_file(other / ".pf/process-forge.yaml", {"project": {"id": "other"}})
+        host.write_json(
+            cache,
+            {
+                "projects": [host.route_project(str(other), workplace, core)],
+                "sessions": {"kept": {"cache_only": True}},
+            },
+        )
+    else:
+        assert not cache.exists()
+    with core._worker_start_admission(project):
+        assert ExecutionAdmission.held(project, workplace)
+        roots, _registration, complete = metrics.registered_projects(workplace)
+        assert complete and project in roots
+        assert (other in roots) is existing
+        if storage == "sql":
+            _sql_project(project, current_count=1)
+        else:
+            core._core_common_json_io.json_write(
+                project / ".pf/runtime/agent-runs/run/task/status.json",
+                {"status": "running"},
+            )
+    published = cache.read_bytes()
+    # Re-entry must keep both routing and unrelated session metadata intact.
+    with core._worker_start_admission(project):
+        assert cache.read_bytes() == published
+    if existing:
+        assert json.loads(published)["sessions"] == {"kept": {"cache_only": True}}
+    assert metrics.shutdown_workers(workplace, core)["counts"]["running"] == 1
+    assert runtime.active_worker_count(runtime.known_project_roots()) == 1
+    assert (
+        runtime.request_shutdown(guarded=True, expected_instance_id=runtime.instance_id)
+        == "runtime_busy_or_activity_unknown"
+    )
+    # The same published route must keep unknown activity from becoming idle.
+    if storage == "sql":
+        (project / ".pf/data/pf.sqlite3").unlink()
+    else:
+        core._core_common_json_io.json_write(
+            project / ".pf/runtime/agent-runs/run/task/status.json",
+            {"status": "unknown_exit"},
+        )
+    assert metrics.shutdown_workers(workplace, core)["counts"]["running"] is None
+    assert runtime.active_worker_count(runtime.known_project_roots()) is None
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["corrupt", "coverage", "sessions", "collision", "budget", "stopping", "workplace"],
+)
+def test_first_start_registration_refuses_without_replacing_coverage(
+    first_start_project: tuple[ModuleType, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+) -> None:
+    import json
+
+    from pf_runtime import host
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.runtime import metrics
+
+    core, project, workplace = first_start_project
+    cache = host.state_path(workplace)
+    state: dict[str, Any] = {"projects": [], "sessions": {}}
+    if failure in {"coverage", "collision"}:
+        other = project.parent / "other"
+        if failure == "collision":
+            write_yaml_file(
+                other / ".pf/process-forge.yaml", {"project": {"id": "project"}}
+            )
+        state["projects"] = [{"project_id": "project", "project_root": str(other)}]
+    if failure == "sessions":
+        state["sessions"] = None
+    cache.parent.mkdir(parents=True)
+    cache.write_text(
+        "{" if failure == "corrupt" else json.dumps(state), encoding="utf-8"
+    )
+    before = cache.read_bytes()
+    if failure == "budget":
+
+        def exhausted(self: metrics.Budget) -> None:
+            raise TimeoutError
+
+        monkeypatch.setattr(metrics.Budget, "check", exhausted)
+    elif failure == "stopping":
+        core._core_common_json_io.json_write(
+            workplace / "runtime/pf-runtime/service.json", {"status": "stopping"}
+        )
+    elif failure == "workplace":
+        (workplace / "workplace.yaml").unlink()
+    with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+        with core._worker_start_admission(project):
+            pytest.fail("unproven observation coverage admitted start")
+    assert cache.read_bytes() == before
+    assert not ExecutionAdmission.held(project, workplace)

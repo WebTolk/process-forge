@@ -10,8 +10,10 @@ import json
 import os
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 sys.path.insert(0, str((ROOT := Path(__file__).resolve().parents[1]) / "tools"))
 
@@ -48,9 +50,64 @@ def call(project: Path, task: str, operation: str, **options: Any) -> tuple[int,
         "detach": False,
         "wait": True,
     }
-    return core.run_command_capture(
-        getattr(core, f"command_worker_run_{operation}"), argparse.Namespace(**values)
-    )
+    admission_failure: dict[str, Any] = {}
+    original_admission = core._worker_start_admission
+
+    @contextmanager
+    def observed_admission(root: Path):
+        try:
+            with original_admission(root):
+                yield
+        except Exception as exc:
+            # Inspect only the actual failed call; never re-run admission, read
+            # the cache again, change its result or serialize private paths.
+            from processforge_core.executions.model import ExecutionError
+
+            if isinstance(exc, ExecutionError):
+                admission_failure["code"] = exc.code
+                frames = []
+                trace = exc.__traceback__
+                while trace is not None:
+                    frame = trace.tb_frame
+                    frames.append(
+                        {
+                            "file": Path(frame.f_code.co_filename).name,
+                            "function": frame.f_code.co_name,
+                            "line": trace.tb_lineno,
+                        }
+                    )
+                    if frame.f_code is original_admission.__wrapped__.__code__:
+                        local = frame.f_locals
+                        if "complete" in local:
+                            admission_failure["registration_complete"] = local[
+                                "complete"
+                            ]
+                            admission_failure["project_in_cache"] = (
+                                root in local["roots"]
+                            )
+                    trace = trace.tb_next
+                admission_failure["frames"] = frames
+                caller = sys._getframe().f_back
+                while caller is not None:
+                    if caller.f_code.co_name in {
+                        "_legacy_worker_run_start",
+                        "_sql_worker_run_start",
+                    }:
+                        admission_failure["storage_route"] = caller.f_code.co_name
+                        break
+                    caller = caller.f_back
+            raise
+
+    with patch.object(core, "_worker_start_admission", observed_admission):
+        status, output = core.run_command_capture(
+            getattr(core, f"command_worker_run_{operation}"),
+            argparse.Namespace(**values),
+        )
+    if status != 0 and admission_failure:
+        output += "\nADMISSION_DIAGNOSTIC: " + json.dumps(
+            admission_failure, sort_keys=True
+        )
+    return status, output
 
 
 def create_task(

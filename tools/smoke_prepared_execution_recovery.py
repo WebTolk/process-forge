@@ -7,7 +7,7 @@ import copy
 import io
 import json
 import os
-from contextlib import ExitStack, nullcontext, redirect_stdout
+from contextlib import ExitStack, contextmanager, nullcontext, redirect_stdout
 from pathlib import Path
 import subprocess
 import sys
@@ -212,6 +212,56 @@ def terminal_worker_admission() -> None:
             before = files()
             stdout = io.StringIO()
             argv = argparse.Namespace(project_root=str(project), task="fixture")
+            admission_failure = {}
+            original_admission = core._worker_start_admission
+
+            @contextmanager
+            def observed_admission(root):
+                try:
+                    with original_admission(root):
+                        yield
+                except Exception as exc:
+                    # Preserve the actual exception and all guards. These are
+                    # failure-time locals, not a later cache/fence observation.
+                    from processforge_core.executions.model import ExecutionError
+
+                    if isinstance(exc, ExecutionError):
+                        admission_failure["code"] = exc.code
+                        frames = []
+                        trace = exc.__traceback__
+                        while trace is not None:
+                            frame = trace.tb_frame
+                            frames.append(
+                                {
+                                    "file": Path(frame.f_code.co_filename).name,
+                                    "function": frame.f_code.co_name,
+                                    "line": trace.tb_lineno,
+                                }
+                            )
+                            if frame.f_code is original_admission.__wrapped__.__code__:
+                                local = frame.f_locals
+                                if "complete" in local:
+                                    admission_failure["registration_complete"] = local[
+                                        "complete"
+                                    ]
+                                    admission_failure["project_in_cache"] = (
+                                        root in local["roots"]
+                                    )
+                            trace = trace.tb_next
+                        admission_failure["frames"] = frames
+                        caller = sys._getframe().f_back
+                        while caller is not None:
+                            if caller.f_code.co_name in {
+                                "_legacy_worker_run_start",
+                                "_sql_worker_run_start",
+                            }:
+                                admission_failure["storage_route"] = (
+                                    caller.f_code.co_name
+                                )
+                                break
+                            caller = caller.f_back
+                    raise
+
             with ExitStack() as stack:
                 from processforge_core.work.consistency import RunTaskInputReader
 
@@ -258,6 +308,9 @@ def terminal_worker_admission() -> None:
                         core, "_storage_first_write", return_value=(None, None)
                     )
                 )
+                stack.enter_context(
+                    patch.object(core, "_worker_start_admission", observed_admission)
+                )
                 with redirect_stdout(stdout):
                     code = getattr(core, "command_worker_run_" + operation)(argv)
             after = files()
@@ -275,6 +328,7 @@ def terminal_worker_admission() -> None:
                     "changed_files": sorted(k for k in before.keys() | after.keys()
                                             if before.get(k) != after.get(k)),
                     "stdout": stdout.getvalue(),
+                    "admission": admission_failure,
                 }
 
             assert code == 0 and prepare.call_count == 1, diagnostics()

@@ -270,12 +270,17 @@ class GarageSnapshotTests(unittest.TestCase):
     def test_mcp_factory_after_guards_and_existing_projection(self):
         sys.path.insert(0, str(ROOT / 'tools'))
         from pf_runtime import mcp_server, session_read
+        fixture_root = Path(
+            self.enterContext(tempfile.TemporaryDirectory(dir=SCRATCH))
+        ).resolve()
+        project_root = fixture_root / 'bound'
+        workplace_root = fixture_root / 'workplace'
         calls = []
         context = {'project': {'id': 'p'}, 'work': {'active_work': []}, 'context': {'status': 'fresh'}, 'session': {'id': 's'}}
         service = SimpleNamespace(context=lambda **k: copy.deepcopy(context), snapshot=lambda: {'knowledge_resources': {'selected': [{'id': 'fixture.knowledge:root'}]}})
         core = SimpleNamespace(project_id=lambda root: str(root))
         host = SimpleNamespace(resolve_project=lambda reference, core: Path(reference),
-                               project_for_session=lambda *a: Path('bound'))
+                               project_for_session=lambda *a: project_root)
         runtime = SimpleNamespace(host=host, core=core)
         def factory(root, workplace, given_core, *, work_metadata=None):
             if work_metadata is not None:
@@ -284,16 +289,16 @@ class GarageSnapshotTests(unittest.TestCase):
             return service
         with patch.object(composition, 'build_project_context_service', side_effect=factory), patch.object(composition, 'build_process_execution_service', return_value=SimpleNamespace(state=lambda **k: {'action': 'start_recommended'})):
             for name in ['pf.context', 'pf.work_state']:
-                for arguments, session, code in [({'project_root': 'bound', 'session_id': 'other'}, 's', 'session_mismatch'),
-                                                ({'project_root': 'other'}, 's', 'session_project_mismatch'),
+                for arguments, session, code in [({'project_root': str(project_root), 'session_id': 'other'}, 's', 'session_mismatch'),
+                                                ({'project_root': str(fixture_root / 'other')}, 's', 'session_project_mismatch'),
                                                 ({}, '', 'missing_project_root')]:
                     with self.assertRaises(session_read.SessionReadError) as caught:
-                        mcp_server.tool_result(name, arguments, Path('w'), session, runtime)
+                        mcp_server.tool_result(name, arguments, workplace_root, session, runtime)
                     self.assertEqual(caught.exception.code, code)
                     self.assertFalse(calls)
-            result = mcp_server.tool_result('pf.work_state', {'project_root': 'bound'}, Path('w'), 's', runtime)
+            result = mcp_server.tool_result('pf.work_state', {'project_root': str(project_root)}, workplace_root, 's', runtime)
             self.assertEqual(result, context)
-            result = mcp_server.tool_result('pf.context', {'project_root': 'bound'}, Path('w'), 's', runtime)
+            result = mcp_server.tool_result('pf.context', {'project_root': str(project_root)}, workplace_root, 's', runtime)
             self.assertEqual(result['resources']['authorized_knowledge_ids'], ['fixture.knowledge:root'])
             self.assertEqual(result['work']['current'], {'action': 'start_recommended'})
             self.assertEqual(result['project'], context['project'])

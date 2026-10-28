@@ -10256,6 +10256,11 @@ def _finalize_worker_scratch(
         state = load_agent_run_state(project_root, run_id, task["id"])
         if not state.get("prepared_input"):
             return _recover_unpublished_worker_scratch(project_root, task, state)
+        if state.get("status") in {"ready", "manual_required", "blocked"}:
+            # Launch validates its own immutable input and records a blocked
+            # attempt on failure. There is no end-of-use proof here; prepare's
+            # creation-record guard still forbids replacing unresolved scratch.
+            return True
         document = prepared_input.load(
             project_root, task, state, sys.modules[__name__], current=False
         )
@@ -10749,13 +10754,11 @@ def _worker_start_admission(project_root: Path) -> Iterator[None]:
     workplace = manifest.parent if manifest else None
     with ExecutionAdmission(registry_file_lock).start(project_root, workplace):
         if workplace is not None:
-            from processforge_core.runtime.metrics import registered_projects
+            from pf_runtime.host import register_worker_project
 
             if manifest is None or not manifest.is_file():
                 raise ExecutionError("execution_activity_unknown")
-            roots, _registration, complete = registered_projects(workplace)
-            if not complete or project_root not in roots:
-                raise ExecutionError("execution_activity_unknown")
+            register_worker_project(workplace, project_root, sys.modules[__name__])
         yield
 
 

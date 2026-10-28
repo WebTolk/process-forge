@@ -14,11 +14,11 @@ import shutil
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
-from ..common.digests import FileDigestReader
+from typing import Any, Callable, Iterable
 
 import processforge_core.common.clock as _core_common_clock
 
+from ..common.digests import FileDigestReader
 
 _file_digests = FileDigestReader()
 CORE_MANIFEST_NAME = "processforge-core.manifest.json"
@@ -448,11 +448,28 @@ def unowned_path_blocker(
 
 
 def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | None = None) -> dict[str, Any]:
+    return _build_plan(
+        core_root,
+        archive_path,
+        workplace_root=workplace_root,
+        read_installed=lambda: installed_manifest(core_root.resolve()),
+        sha256_owned=sha256_file,
+    )
+
+
+def _build_plan(
+    core_root: Path,
+    archive_path: Path,
+    *,
+    workplace_root: Path | None,
+    read_installed: Callable[[], dict[str, Any] | None],
+    sha256_owned: Callable[[Path], str],
+) -> dict[str, Any]:
     core_root = core_root.resolve()
     archive_path = archive_path.resolve()
     new_manifest = read_archive_manifest(archive_path)
     validate_archive_payload(archive_path, new_manifest)
-    old_manifest = installed_manifest(core_root)
+    old_manifest = read_installed()
     old_files = manifest_file_map(old_manifest) if old_manifest else {}
     new_files = manifest_file_map(new_manifest)
     old_paths = set(old_files)
@@ -477,7 +494,7 @@ def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | No
                 blockers.append(collision)
             continue
         target = ensure_inside(core_root, relative_path)
-        if sha256_file(target) != old_files[relative_path]["sha256"]:
+        if sha256_owned(target) != old_files[relative_path]["sha256"]:
             locally_modified.append(relative_path)
     restored = sorted(set(missing_owned).intersection(unchanged))
     for relative_path in sorted(set(locally_modified).intersection(set(removed).union(changed))):
@@ -600,7 +617,9 @@ def apply_update(
     from pf_native_control import (
         NativeControlError,
         NativeUpdateError,
-        current_entry,
+        _read_update_plan_file,
+        _sha256_update_plan_file,
+        _update_entry,
         replace_core,
     )
 
@@ -613,14 +632,23 @@ def apply_update(
             raise CoreUpdateError(
                 "plan_blocked", "core update requires unwound operation scopes"
             )
-    entry = current_entry()
-    if entry is None or entry.root.resolve() != core_root.resolve():
+    try:
+        entry = _update_entry(core_root)
+    except NativeControlError as error:
         raise CoreUpdateError(
             "plan_blocked", "core update requires qualified installation exclusion"
-        )
+        ) from error
 
     def prepare() -> dict[str, Any]:
-        plan = build_plan(core_root, archive_path, workplace_root=workplace_root)
+        plan = _build_plan(
+            core_root,
+            archive_path,
+            workplace_root=workplace_root,
+            read_installed=lambda: json.loads(
+                _read_update_plan_file(core_root.resolve() / CORE_MANIFEST_NAME)
+            ),
+            sha256_owned=_sha256_update_plan_file,
+        )
         blockers = [
             item
             for item in plan["blockers"]
