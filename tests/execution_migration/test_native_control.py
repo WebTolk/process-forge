@@ -688,6 +688,122 @@ except NativeControlError: sys.exit(42)
     assert child.returncode == 0, child.stderr
 
 
+def test_automatic_storage_reselects_between_adapters_but_refuses_stale_proof(
+    native_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from processforge_core.accounting.composition import WorkplaceAccounting
+    from processforge_core.composition import (
+        build_configuration_provider,
+        build_storage_migration_host,
+    )
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.process_event_journal import ProcessEventJournal
+
+    project = native_root / "project"
+    flow = project / ".pf"
+    flow.mkdir(parents=True)
+    (flow / "process-forge.yaml").write_text("project:\n  id: stable-project\n")
+    workplace = native_root / "workplace"
+    workplace.mkdir()
+    (workplace / "workplace.yaml").write_text("id: stable-workplace\n")
+    device = native_root / "device.yaml"
+    device.write_text("schema_version: 1\n")
+    provider = build_configuration_provider(
+        project_root=project, workplace_root=workplace, device_config_path=device
+    )
+    host = build_storage_migration_host(
+        project_root=project,
+        workplace_root=workplace,
+        device_config_path=device,
+        configuration=provider,
+    )
+    # Source mode has no managed migration authority, even after reselection.
+    monkeypatch.setattr(p, "current_entry", lambda: None)
+    before = host.context
+    journal = ProcessEventJournal(storage_host=host)
+    events = flow / "runtime/events/events.sqlite3"
+    journal.append(events, {"event_id": "before"}, record=True)
+    accounting = WorkplaceAccounting(
+        workplace=workplace,
+        project_root=project,
+        project_id="stable-project",
+        configuration=provider,
+        storage_host=host,
+    )
+    assert accounting.service(create=True) is not None
+    after = host.context
+    assert before != after
+    assert any(kind == "accounting" for kind, _path in before.unqualified_targets)
+    assert not after.unqualified_targets
+    assert host.service._proof(after).state == "unknown"
+    with pytest.raises(MaintenanceError, match="storage_safety_unavailable"):
+        host.service._proof(before)
+    journal.append(events, {"event_id": "after"}, record=True)
+    assert not (flow / "data/storage-identities.json").exists()
+    assert not (workplace / "data/storage-identities.json").exists()
+    # Re-enrollment still invalidates the captured context during one operation.
+    (workplace / "workplace.yaml").write_text("id: other-workplace\n")
+    with pytest.raises(MaintenanceError, match="storage_safety_unavailable"):
+        host.service._proof(after)
+
+
+def test_selected_cmd_round_trips_literal_argv_without_injection(
+    native_root: Path,
+) -> None:
+    fake = native_root / "fake executable.py"
+    received = native_root / "received.json"
+    fake.write_text(
+        "import json,pathlib,sys;"
+        "pathlib.Path(__file__).with_name('received.json').write_text("
+        "json.dumps(sys.argv[1:]),encoding='utf-8')",
+        encoding="utf-8",
+    )
+    selected = native_root / "selected shim.cmd"
+    selected.write_text(
+        f'@echo off\n"{sys.executable}" -B "{fake}" %*\n', encoding="utf-8"
+    )
+    arguments = [
+        "with spaces",
+        'embedded"quote',
+        "",
+        "trailing\\",
+        "space and trailing\\\\",
+        'slashes\\\\"quote\\',
+        "%!^&|<>()",
+        "%W272_LITERAL%",
+        "!W272_LITERAL!",
+        'space %W272_LITERAL% !W272_LITERAL! ^&|<>() "quote" \\',
+        "& echo injected>side-effect.txt &",
+        '"& echo injected>side-effect.txt & rem "',
+        '%W272_LITERAL%" & echo injected>side-effect.txt & "!W272_LITERAL!',
+        "tab\tand (parentheses)",
+    ]
+    environment = {
+        **os.environ,
+        "PF_CODEX_EXECUTABLE": str(selected),
+        "W272_LITERAL": "expanded & echo injected>side-effect.txt &",
+    }
+    process = spawn_owned(
+        [environment["PF_CODEX_EXECUTABLE"], *arguments],
+        cwd=native_root,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    job = getattr(process, "native_job")
+    try:
+        stdout, stderr = process.communicate(timeout=5)
+        assert process.returncode == 0, (stdout, stderr)
+        assert received.is_file(), (stdout, stderr)
+        assert json.loads(received.read_text(encoding="utf-8")) == arguments
+        assert not (native_root / "side-effect.txt").exists()
+        assert job.active() == 0
+    finally:
+        job.stop(deadline=time.monotonic() + 5)
+        process.wait(timeout=5)
+        job.close()
+
+
 def test_actual_codex_cmd_wrapper_contains_live_native_grandchild(
     native_root: Path,
 ) -> None:
@@ -1488,7 +1604,9 @@ with entry.operation():
 )
 
 
-def _adopted_run(code: str, root: Path, *args: object) -> dict[str, Any]:
+def _adopted_run(
+    code: str, root: Path, *args: object, timeout: int = 60
+) -> dict[str, Any]:
     result = subprocess.run(
         [sys.executable, "-B", "-c", code, str(root), *map(str, args)],
         env={
@@ -1498,7 +1616,7 @@ def _adopted_run(code: str, root: Path, *args: object) -> dict[str, Any]:
         },
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=timeout,
     )
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
     return json.loads(result.stdout)
@@ -1740,6 +1858,7 @@ with managed_target(target,files) as retained:
 """,
         management,
         case,
+        timeout=300,
     )
     assert result["case"] == case
     assert result["refused"] is (

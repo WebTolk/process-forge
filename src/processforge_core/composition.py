@@ -645,7 +645,18 @@ def build_storage_migration_host(
         service.backup = SQLiteBackupService(driver=service.driver)
         return context
 
-    return StorageMigrationHost(
+    class AutomaticStorageHost(StorageMigrationHost):
+        @property
+        def context(self) -> StorageMigrationContext:
+            """Select metadata at each adapter boundary within the CLI operation.
+
+            A completed adapter may establish a previously unqualified owner.
+            The next adapter selects again; each service call still captures
+            one immutable context and safety strictly revalidates that value.
+            """
+            return bind_context()
+
+    return AutomaticStorageHost(
         None, service, _context_factory=bind_context, _automatic=True
     )
 
