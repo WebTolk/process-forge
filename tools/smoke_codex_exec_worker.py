@@ -463,6 +463,20 @@ expected_report:
         direct_output = root / "direct-worker-output.json"
         direct_heartbeat = root / "direct-worker-heartbeat.json"
         direct_env = os.environ.copy()
+        # This independent direct CLI fixture is not the enclosing managed worker.
+        # Drop only its prepared-input/capture binding; preserve native containment
+        # and execution lineage, including any inherited job handles and leases.
+        for name in (
+            "PF_PREPARED_INPUT_FILE",
+            "PF_PREPARED_INPUT_SHA256",
+            "PF_RUN_ID",
+            "PF_TASK_ID",
+            "PF_WORKER_RUN_ID",
+            "PF_WORKER_TASK_ID",
+            "PF_WORKER_ATTEMPT",
+            "PF_AGENT_RUN_DIR",
+        ):
+            direct_env.pop(name, None)
         direct_env["PATH"] = str(fake_bin) + os.pathsep + direct_env.get("PATH", "")
         direct_env["PF_CODEX_EXECUTABLE"] = str(fake_executable)
         direct_env.update(
