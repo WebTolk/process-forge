@@ -210,6 +210,8 @@ def terminal_worker_admission() -> None:
             provider = Mock(return_value={})
             launch = Mock(side_effect=AssertionError("manual fixture launched process"))
             before = files()
+            stdout = io.StringIO()
+            argv = argparse.Namespace(project_root=str(project), task="fixture")
             with ExitStack() as stack:
                 from processforge_core.work.consistency import RunTaskInputReader
 
@@ -256,13 +258,28 @@ def terminal_worker_admission() -> None:
                         core, "_storage_first_write", return_value=(None, None)
                     )
                 )
-                with redirect_stdout(io.StringIO()):
-                    code = getattr(core, "command_worker_run_" + operation)(
-                        argparse.Namespace(project_root=str(project), task="fixture")
-                    )
-            assert code == 0 and prepare.call_count == 1
-            assert provider.call_count == (1 if operation == "start" else 0)
-            assert not launch.called and files() == before
+                with redirect_stdout(stdout):
+                    code = getattr(core, "command_worker_run_" + operation)(argv)
+            after = files()
+
+            def diagnostics():
+                # Evaluated only by a failed assertion; retain the actual call.
+                return {
+                    "argv": list(sys.argv),
+                    "command": "command_worker_run_" + operation,
+                    "arguments": vars(argv),
+                    "code": code,
+                    "prepare_calls": prepare.call_count,
+                    "provider_calls": provider.call_count,
+                    "launch_calls": launch.call_count,
+                    "changed_files": sorted(k for k in before.keys() | after.keys()
+                                            if before.get(k) != after.get(k)),
+                    "stdout": stdout.getvalue(),
+                }
+
+            assert code == 0 and prepare.call_count == 1, diagnostics()
+            assert provider.call_count == (1 if operation == "start" else 0), diagnostics()
+            assert not launch.called and after == before, diagnostics()
 
         for status, marker in [
             ("open", "task"),

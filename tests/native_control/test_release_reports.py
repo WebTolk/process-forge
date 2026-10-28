@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import sys
 import time
 import types
@@ -16,6 +17,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 import pytest
 
@@ -509,3 +511,64 @@ def test_archive_evidence_publication_preserves_primary(
         "release_evidence_publication_failed" in note for note in caught.value.__notes__
     )
     assert not extraction.exists()
+
+
+def test_release_selection_public_notes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.syspath_prepend(str(ROOT / "src"))
+    from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+    policy = ReleaseSourcePolicy()
+    spec = importlib.util.spec_from_file_location(
+        "release_notes_checksums", ROOT / "tools/validate-process-forge-checksums.py"
+    )
+    assert spec is not None and spec.loader is not None
+    validator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validator)
+    notes = {
+        f"release/{version}/{name}"
+        for version in ("1.3.0-alpha5", "1.3.0-beta1")
+        for name in ("notes.md", "notes.ru.md")
+    }
+    excluded = {
+        "release/1.3.0-beta1/private-notes.md",
+        "release/1.3.0-beta1/processforge-1.3.0-beta1.manifest.json",
+        "release/1.3.0-alpha5/processforge-1.3.0-alpha5.manifest.json",
+        "release/1.2.0/notes.md",
+        "release/updates/processforge-stable.json",
+    }
+    for name in notes | excluded | {"CHANGELOG.md", "checksums/processforge.sha256"}:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("fixture", encoding="utf-8")
+    release = policy.release_source_files(tmp_path)
+    checksums = validator.public_file_entries(tmp_path)
+    assert [name for name, _ in release] == sorted(
+        notes | {"CHANGELOG.md", "checksums/processforge.sha256"}
+    )
+    assert [name for name, _ in checksums] == sorted(notes | {"CHANGELOG.md"})
+    assert release == policy.release_source_files(tmp_path)
+    assert checksums == validator.public_file_entries(tmp_path)
+
+    selected = {
+        name: path
+        for name, path in policy.release_source_files(ROOT)
+        if not policy.release_ignore_match(name, policy.release_ignore_patterns(ROOT))
+        and not policy.release_path_is_forbidden(name)
+    }
+    assert notes <= selected.keys()
+    assert {name for name in selected if name.startswith("release/")} == notes
+    assert selected.keys() == {
+        name for name, _ in validator.public_file_entries(ROOT)
+    } | {"checksums/processforge.sha256"}
+    for name in notes:
+        path = selected[name]
+        for target in re.findall(
+            r"\[[^]]*\]\(([^)]+)\)", path.read_text(encoding="utf-8")
+        ):
+            if target.startswith("#") or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+                continue
+            local = unquote(target.split("#", 1)[0].split("?", 1)[0])
+            resolved = (path.parent / local).resolve()
+            assert resolved.relative_to(ROOT).as_posix() in selected

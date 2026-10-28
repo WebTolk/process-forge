@@ -30,7 +30,10 @@ class CliApplication:
         args = parser.parse_args(argv)
         # Installation replacement must run after invocation/diagnostic scopes
         # have unwound. It owns its explicit updater boundary separately.
-        if args.command == "core-update-apply" or (
+        if (
+            args.command == "core-update"
+            and getattr(args, "core_update_command", "") == "apply"
+        ) or (
             args.command in {"runtime", "server"}
             and getattr(args, "runtime_command", "") in {"serve", "run"}
         ):

@@ -9,7 +9,25 @@ from processforge_core.common.paths import rel
 
 RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
 
-RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "NOTICE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
+RELEASE_ROOT_FILES = [
+    "README.md",
+    "README.ru.md",
+    "QUICKSTART.md",
+    "QUICKSTART.ru.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE",
+    "VERSION",
+    "requirements.txt",
+    ".gitignore",
+    ".processforge-releaseignore",
+    # Public notes linked by CHANGELOG, including their translated editions.
+    # Keep release manifests, update feeds and unrelated artifacts unselected.
+    "release/1.3.0-alpha5/notes.md",
+    "release/1.3.0-alpha5/notes.ru.md",
+    "release/1.3.0-beta1/notes.md",
+    "release/1.3.0-beta1/notes.ru.md",
+]
 
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 import hashlib
 import json
 import runpy
@@ -31,6 +32,65 @@ _worker_assignment_service = WorkerAssignmentService()
 def records(project):
     return {str(p.relative_to(project)): p.read_bytes() for folder in ("assignments", "runs", "contexts/assignment-capsules")
             for p in (project / ".pf" / folder).rglob("*.yaml")}
+
+
+@contextmanager
+def nonquiescent_worker(project, workplace, selectors):
+    """Install only an unlaunched fixture in the genuinely selected backend."""
+    from processforge_core.database import SqlStatement
+    from processforge_core.executions.composition import select_execution_storage
+    from processforge_core.work.paths import WorkPaths
+
+    route = select_execution_storage(project, workplace)
+    repository = route.repository
+    run_id, task_id = selectors['run_id'], selectors['assignment_id']
+    if repository is None:
+        worker = WorkPaths().worker_run(project, run_id, task_id)['status']
+        assert not worker.exists()
+        worker.parent.mkdir(parents=True, exist_ok=True)
+        worker.write_text('{"status":"running"}', encoding='utf-8')
+        try:
+            yield
+        finally:
+            worker.unlink()
+        return
+
+    assert repository.load_latest(run_id, task_id) is None
+    payload = {
+        'schema_version': 1, 'run_id': run_id, 'task_id': task_id,
+        'attempt': 1, 'status': 'planned', 'timeout_seconds': 0, 'max_retries': 0,
+        **{key: '' for key in ('driver_id', 'agent_model', 'capsule_path',
+                              'worker_prompt_path', 'expected_report_path',
+                              'stdout_path', 'stderr_path', 'heartbeat_path')},
+        **{key: None for key in ('pid', 'exit_code', 'started_at', 'finished_at',
+                                'last_heartbeat_at', 'failure_reason')},
+    }
+    allocated = repository.allocate_attempt(
+        run_id, task_id, json.dumps(payload), generation=repository.readiness().generation
+    )
+    try:
+        assert allocated.phase == 'prepared' and allocated.process is None
+        yield
+    finally:
+        # Tear down this never-launched fixture, rather than inventing absence.
+        assert repository.load_latest(run_id, task_id) == allocated
+        identity = (repository.project_id, run_id, task_id)
+        with repository.database.transaction() as session:
+            for table in ('execution_current', 'execution_receipt_admissions',
+                          'execution_allocation_floors'):
+                assert session.fetch_one(SqlStatement(
+                    f'SELECT 1 FROM {table} WHERE project_id=? AND run_id=? AND task_id=?',
+                    identity,
+                )) is None
+            session.execute(SqlStatement(
+                'DELETE FROM execution_heads WHERE project_id=? AND run_id=? AND task_id=? AND latest_attempt=?',
+                (*identity, allocated.key.attempt),
+            ))
+            session.execute(SqlStatement(
+                'DELETE FROM execution_attempts WHERE project_id=? AND run_id=? AND task_id=? AND attempt=?',
+                (*identity, allocated.key.attempt),
+            ))
+        assert repository.load_latest(run_id, task_id) is None
 
 
 def main():
@@ -144,12 +204,9 @@ def main():
         before_cancel = records(project)
         assert continuation.request('cancel_work', **cancel)['action'] == 'preview'
         assert records(project) == before_cancel
-        from processforge_core.work.paths import WorkPaths
-        worker = WorkPaths().worker_run(project, selectors['run_id'], selectors['assignment_id'])['status']
-        worker.parent.mkdir(parents=True,exist_ok=True); worker.write_text('{"status":"running"}',encoding='utf-8')
-        assert continuation.request('resume', continuation_id='resume-exact')['reason'] == 'worker_not_quiescent'
-        assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'worker_not_quiescent'
-        worker.unlink()
+        with nonquiescent_worker(project, workplace, selectors):
+            assert continuation.request('resume', continuation_id='resume-exact')['reason'] == 'worker_not_quiescent'
+            assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'worker_not_quiescent'
         lease = {'schema_version':1,'id':'fixture-lease','status':'active','scope':{'project_id':core.project_id(project),'task_id':selectors['assignment_id']}}
         core.save_lease(workplace,lease)
         assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'active_lease'

@@ -18,6 +18,8 @@ import urllib.request
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
+# Capture before raw_ingress_kernel imports Core.
+import processforge  # noqa: E402, F401
 from pf_runtime.raw_ingress_kernel import _strip_windows_extended_prefix
 
 

@@ -513,7 +513,7 @@ class NativeImage:
         except KeyError:
             raise NativeControlError() from None
 
-    def activate(self) -> None:
+    def activate(self, *, _core_entry: Any = None) -> None:
         """Install lifetime byte loaders before any Core import; no pyc reads."""
         import builtins
         import importlib.abc
@@ -525,11 +525,43 @@ class NativeImage:
 
         if self._active:
             return
-        if any(
-            name == "processforge_core" or name.startswith("processforge_core.")
+        loaded_core = {
+            name
             for name in sys.modules
-        ):
-            raise NativeControlError()
+            if name == "processforge_core" or name.startswith("processforge_core.")
+        }
+        if loaded_core:
+            # Only the still-running named entry may precede capture. Its full
+            # code must match accepted bytes, and it must be the direct caller
+            # of bootstrap_entry now, before its first business import. This
+            # never qualifies an already executed module or a direct alias.
+            entry_path = str(self.root / "src/processforge_core/__init__.py")
+            module = sys.modules.get("processforge_core")
+            frame = sys._getframe(1).f_back
+            if (
+                loaded_core != {"processforge_core"}
+                or sys._getframe(1).f_code is not bootstrap_entry.__code__
+                or frame is None
+                or _core_entry is None
+                or _core_entry is not frame
+                or frame.f_globals is not getattr(module, "__dict__", None)
+                or frame.f_locals is not frame.f_globals
+                or getattr(getattr(module, "__spec__", None), "name", None)
+                != "processforge_core"
+                or getattr(getattr(module, "__spec__", None), "_initializing", False)
+                is not True
+                or getattr(getattr(module, "__spec__", None), "origin", None)
+                != entry_path
+                or frame.f_code.co_filename != entry_path
+                or frame.f_code
+                != compile(
+                    self.read("src/processforge_core/__init__.py"),
+                    entry_path,
+                    "exec",
+                    dont_inherit=True,
+                )
+            ):
+                raise NativeControlError()
         image = self
         original_spec = importlib.util.spec_from_file_location
         original_open, original_io_open = builtins.open, io.open
@@ -686,6 +718,13 @@ class NativeImage:
             )
 
         self._originals = (original_spec, original_open, original_io_open)
+        # Metadata-only handshake with optional configuration storage: absence
+        # on disk must never hide a captured body. No body/refusal is suppressed.
+        setattr(
+            captured_open,
+            "_pf_captured_path",
+            lambda path: image.relative(path) in image.files,
+        )
         self._finder = Finder()
         sys.meta_path.insert(0, self._finder)
         importlib.util.spec_from_file_location = captured_spec
@@ -1211,34 +1250,46 @@ class NativeEntry:
         self, *, deadline: float | None = None
     ) -> AbstractContextManager[NativeEntry]:
         """Use existing controls without creating installation state on reads."""
-        from contextlib import contextmanager
+        entry = self
 
-        @contextmanager
-        def held() -> Iterator[NativeEntry]:
-            if self.control is None:
-                # No authority to migrate follows from an unadopted publication.
-                yield self
-            elif _CONTROL_LEASE.get() is self.control:
-                life = _OPERATION_LIFETIME.get()
-                if (
-                    life is None
-                    or not life.active
-                    or life.pid != os.getpid()
-                    or life.thread_id != threading.get_ident()
-                ):
-                    raise NativeControlError()
-                yield self
-            else:
-                with self.control.operation(deadline=deadline):
-                    yield self
+        class Held(AbstractContextManager[NativeEntry]):
+            def __init__(self) -> None:
+                self.lease: AbstractContextManager[NativeControl] | None = None
 
-        return held()
+            def __enter__(self) -> NativeEntry:
+                if entry.control is None:
+                    # Unadopted publication grants no migration authority.
+                    return entry
+                if _CONTROL_LEASE.get() is entry.control:
+                    life = _OPERATION_LIFETIME.get()
+                    if (
+                        life is None
+                        or not life.active
+                        or life.pid != os.getpid()
+                        or life.thread_id != threading.get_ident()
+                    ):
+                        raise NativeControlError()
+                else:
+                    lease = entry.control.operation(deadline=deadline)
+                    lease.__enter__()
+                    self.lease = lease
+                return entry
+
+            def __exit__(self, *_exception: Any) -> None:
+                if self.lease is not None:
+                    # Like request_scope: finish the generator lease without
+                    # injecting an exception whose traceback may be frozen.
+                    self.lease.__exit__(None, None, None)
+
+        return Held()
 
 
 _ENTRY: NativeEntry | None = None
 
 
-def bootstrap_entry(root: Path, *, trusted_leaf: bytes) -> NativeEntry:
+def bootstrap_entry(
+    root: Path, *, trusted_leaf: bytes, _core_entry: Any = None
+) -> NativeEntry:
     """Accept captured native source before Core; never use a bytecode loader.
 
     The trusted entry/interpreter and qualified deployment remain the TCB.
@@ -1275,20 +1326,30 @@ def bootstrap_entry(root: Path, *, trusted_leaf: bytes) -> NativeEntry:
         if publication is None:
             raise NativeControlError()
         image = NativeImage.from_publication(root, publication)
-    image.activate()
+    image.activate(_core_entry=_core_entry)
     _ENTRY = NativeEntry(root, publication, image, control)
     return _ENTRY
 
 
-@contextmanager
-def operation_lease(*, deadline: float | None = None) -> Iterator[None]:
+def operation_lease(*, deadline: float | None = None) -> AbstractContextManager[None]:
     """Retain only a live operation, using the already captured native image."""
-    entry = current_entry()
-    if entry is None:
-        yield
-    else:
-        with entry.operation(deadline=deadline):
-            yield
+
+    class Held(AbstractContextManager[None]):
+        def __init__(self) -> None:
+            self.scope: AbstractContextManager[NativeEntry] | None = None
+
+        def __enter__(self) -> None:
+            entry = current_entry()
+            if entry is not None:
+                scope = entry.operation(deadline=deadline)
+                scope.__enter__()
+                self.scope = scope
+
+        def __exit__(self, *_exception: Any) -> None:
+            if self.scope is not None:
+                self.scope.__exit__(None, None, None)
+
+    return Held()
 
 
 def current_entry() -> NativeEntry | None:

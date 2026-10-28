@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -187,8 +187,41 @@ def operation_storage_host(path: Path) -> StorageMigrationHost | None:
     )
 
 
-@contextmanager
+class _ConfigurationOperation:
+    def __init__(self, scope: AbstractContextManager[ConfigurationProvider]) -> None:
+        self._scope = scope
+
+    def __enter__(self) -> ConfigurationProvider:
+        return self._scope.__enter__()
+
+    def __exit__(self, *_exception: object) -> None:
+        # As in request_scope, complete cleanup without injecting the original
+        # exception: generator context managers rewrite frozen tracebacks.
+        self._scope.__exit__(None, None, None)
+
+
 def configuration_operation(
+    project_root: Path | None,
+    workplace_root: Path | None,
+    *,
+    device_config_path: Path | None = None,
+    context_overrides: ProjectPFConfig | None = None,
+    configuration: ConfigurationProvider | None = None,
+) -> _ConfigurationOperation:
+    """Pin configuration without rewriting exceptions on operation exit."""
+    return _ConfigurationOperation(
+        _configuration_scope(
+            project_root,
+            workplace_root,
+            device_config_path=device_config_path,
+            context_overrides=context_overrides,
+            configuration=configuration,
+        )
+    )
+
+
+@contextmanager
+def _configuration_scope(
     project_root: Path | None,
     workplace_root: Path | None,
     *,

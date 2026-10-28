@@ -27,9 +27,7 @@ from processforge_core.work.inventory import WorkInventory
 
 class YamlInventoryTests(unittest.TestCase):
     def setUp(self):
-        scratch = ROOT / ".pf" / "tmp"
-        scratch.mkdir(exist_ok=True)
-        self.directory = tempfile.TemporaryDirectory(dir=scratch)
+        self.directory = tempfile.TemporaryDirectory(prefix="pf-yaml-inventory-")
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         self.flow = self.root / ".pf"

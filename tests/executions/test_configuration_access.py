@@ -1180,3 +1180,182 @@ def test_configuration_operation_pins_exact_scope_and_restores(workspace, monkey
         assert other is not pinned
     assert reader.configuration_provider(project) is not pinned
     assert reads == [workspace / "device.yaml", project / ".pf/configuration.yaml"]
+
+
+def test_selected_project_optional_absence_does_not_open_body(workspace, monkeypatch):
+    project = workspace / "project"
+    (project / ".pf").mkdir(parents=True)
+    workplace = workspace / "workplace"
+    _write(workplace / "configuration.yaml", "logging: {events: false}\n")
+    absent = project / ".pf/configuration.yaml"
+    original = Path.open
+
+    def approved_open(path, *args, **kwargs):
+        if path == absent:
+            pytest.fail("physically absent optional configuration reached image reader")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", approved_open)
+    provider = ProjectConfigurationReader().configuration_provider(project, workplace)
+    assert provider.project_path == absent
+    snapshot = provider.snapshot()
+    assert snapshot.project.revision is None
+    assert snapshot.project.config == ProjectPFConfig()
+    assert snapshot.config.get("logging.events") is False
+
+
+@pytest.mark.parametrize("state", ["captured", "deleted", "absent", "uncaptured"])
+def test_existing_project_configuration_never_falls_back_to_live_body(workspace, state):
+    import os
+    import subprocess
+    import sys
+
+    root = workspace / "image"
+    root.mkdir()
+    script = r"""
+import hashlib,sys
+from pathlib import Path
+from pf_native_control import NativeImage,NativeControlError
+root=Path(sys.argv[1]); state=sys.argv[2]
+path=root/'project/.pf/configuration.yaml'
+path.parent.mkdir(parents=True)
+raw=b'logging: {events: false}\n'
+path.write_bytes(raw)
+marker=root/'marker.txt';marker.write_bytes(b'accepted')
+pins={'marker.txt':hashlib.sha256(b'accepted').hexdigest()}
+if state in {'captured','deleted'}:
+    pins[path.relative_to(root).as_posix()]=hashlib.sha256(raw).hexdigest()
+image=NativeImage(root,pins)
+if state in {'deleted','absent'}:
+    path.unlink()
+else:
+    path.write_bytes(b'logging: {events: true}\n')
+image.activate()
+from processforge_core.configuration.yaml_store import YamlConfigStore
+from processforge_core.configuration import ProjectPFConfig
+from processforge_core.configuration.errors import ConfigurationStorageError
+store=YamlConfigStore(path,model=ProjectPFConfig)
+if state=='uncaptured':
+    try: store.read()
+    except ConfigurationStorageError as error:
+        assert error.code=='configuration_read_failed'
+        assert isinstance(error.__cause__,NativeControlError)
+    else: raise AssertionError('uncaptured live body admitted')
+else:
+    snapshot=store.read()
+    if state=='absent':
+        assert snapshot.revision is None and snapshot.config==ProjectPFConfig()
+    else:
+        assert snapshot.revision=='sha256:'+hashlib.sha256(raw).hexdigest()
+        assert snapshot.config.get('logging.events') is False
+print('configuration image verified')
+"""
+    completed = subprocess.run(
+        [sys.executable, "-B", "-c", script, str(root), state],
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.strip() == "configuration image verified"
+
+
+@pytest.mark.parametrize("nested", ["none", "same", "other"])
+def test_configuration_operation_preserves_frozen_error_and_contexts(workspace, nested):
+    from pf_runtime.session_read import SessionReadError
+
+    from processforge_core.project import configuration_inputs as inputs
+
+    before = (inputs._OPERATION.get(), inputs._STORAGE_OPERATION.get())
+    project = workspace / "project"
+    error = SessionReadError("snapshot_not_fresh")
+    with pytest.raises(SessionReadError) as caught:
+        with inputs.configuration_operation(project, None, configuration=_pinned()):
+            outer = (inputs._OPERATION.get(), inputs._STORAGE_OPERATION.get())
+            if nested == "none":
+                raise error
+            selected = project if nested == "same" else workspace / "other"
+            try:
+                with inputs.configuration_operation(
+                    selected, None, configuration=_pinned()
+                ):
+                    raise error
+            except SessionReadError as original:
+                assert original is error
+                assert inputs._OPERATION.get() is outer[0]
+                assert inputs._STORAGE_OPERATION.get() is outer[1]
+                raise
+    assert caught.value is error
+    assert caught.value.code == "snapshot_not_fresh"
+    assert inputs._OPERATION.get() is before[0]
+    assert inputs._STORAGE_OPERATION.get() is before[1]
+
+
+def test_configuration_operation_restores_context_when_host_build_fails(
+    workspace, monkeypatch
+):
+    from pf_runtime.session_read import SessionReadError
+
+    from processforge_core import composition
+    from processforge_core.project import configuration_inputs as inputs
+
+    before = (inputs._OPERATION.get(), inputs._STORAGE_OPERATION.get())
+    error = SessionReadError("session_project_mismatch")
+
+    def refuse(**kwargs):
+        raise error
+
+    monkeypatch.setattr(composition, "build_storage_migration_host", refuse)
+    with pytest.raises(SessionReadError) as caught:
+        with inputs.configuration_operation(
+            workspace / "project", None, configuration=_pinned()
+        ):
+            pytest.fail("host construction should refuse before operation body")
+    assert caught.value is error
+    assert inputs._OPERATION.get() is before[0]
+    assert inputs._STORAGE_OPERATION.get() is before[1]
+
+
+@pytest.mark.parametrize("command", ["apply", "plan", "status", "repair"])
+def test_cli_parsed_updater_apply_alone_bypasses_invocation_scopes(
+    workspace, monkeypatch, command
+):
+    from contextlib import ExitStack
+
+    import pf_native_control
+    from pf_cli import application
+    from pf_cli.parsers.distribution import CoreUpdateCommandParser
+
+    calls = []
+
+    def handler(args):
+        calls.append("handler")
+        assert args.command == "core-update" and args.core_update_command == command
+        return 7
+
+    parser = argparse.ArgumentParser()
+    CoreUpdateCommandParser(
+        core_update_apply=handler,
+        core_update_plan=handler,
+        core_update_repair=handler,
+        core_update_status=handler,
+    ).register(parser.add_subparsers(dest="command", required=True).add_parser)
+
+    def invocation():
+        calls.append("scope")
+        return ExitStack()
+
+    monkeypatch.setattr(application, "ExitStack", invocation)
+    monkeypatch.setattr(pf_native_control, "current_entry", lambda: None)
+    app = application.CliApplication(
+        parser_factory=lambda: parser,
+        project_id_resolver=lambda path: "project",
+        entry_file=__file__,
+    )
+    monkeypatch.setattr(app, "_run_parsed", lambda parser, args: handler(args))
+    args = ["core-update", command, "--core-root", str(workspace)]
+    if command in {"apply", "plan"}:
+        args.extend(["--archive", str(workspace / "update.zip")])
+    assert app.run(args) == 7
+    assert calls == (["handler"] if command == "apply" else ["scope", "handler"])

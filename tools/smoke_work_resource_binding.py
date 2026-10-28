@@ -18,11 +18,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
+# Capture the trusted entry before Core imports in this adapter smoke.
+import processforge as core
 from processforge_core.resources.local_search import authorized_coverage, build_index, index_status
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
 from processforge_core.work.resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material
 from processforge_core.work.resources import WorkResourceService
-import processforge as core
 from processforge_core.agents.process_events import ProcessEventRecorder
 from processforge_core.composition import bind_process_events, bind_work_summaries
 from processforge_core.presentation.work_summaries import WorkSummaryRenderer

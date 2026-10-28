@@ -555,6 +555,64 @@ def test_operation_lease_releases_at_idle_and_refuses_epoch_drift(
             raise AssertionError("stale operation admitted")
 
 
+@pytest.mark.parametrize("mode", ["unadopted", "acquired", "nested"])
+@pytest.mark.parametrize("boundary", ["entry", "service"])
+def test_native_entry_preserves_frozen_error_and_releases_lease(
+    native_root: Path,
+    mode: str,
+    boundary: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import dataclass
+
+    @dataclass(frozen=True)
+    class FrozenError(Exception):
+        code: str
+
+    guard, epoch = native_root / "guard", native_root / "epoch"
+    guard.write_bytes(b"0")
+    epoch.write_bytes(b"accepted")
+    control = p.NativeControl(guard, epoch, "accepted")
+    entry = p.NativeEntry(
+        native_root, None, None, None if mode == "unadopted" else control
+    )
+    monkeypatch.setattr(p, "_ENTRY", entry)
+    operation = entry.operation if boundary == "entry" else p.operation_lease
+    error = FrozenError("snapshot_not_fresh")
+    life = None
+    try:
+        with operation() as held:
+            assert held is (entry if boundary == "entry" else None)
+            life = p._OPERATION_LIFETIME.get()
+            if mode == "unadopted":
+                assert p._CONTROL_LEASE.get() is None
+                assert life is None
+            else:
+                assert p._CONTROL_LEASE.get() is control
+                assert life is not None and life.active
+            if mode == "nested":
+                try:
+                    with operation():
+                        raise error
+                except FrozenError as caught:
+                    assert caught is error
+                    assert p._CONTROL_LEASE.get() is control
+                    assert life is not None and life.active
+                    raise
+            raise error
+    except FrozenError as caught:
+        assert caught is error
+        assert caught.code == "snapshot_not_fresh"
+    else:
+        raise AssertionError("domain error suppressed")
+    assert p._CONTROL_LEASE.get() is None
+    assert p._OPERATION_LIFETIME.get() is None
+    if life is not None:
+        assert not life.active
+    with control.exclusive(deadline=time.monotonic() + 0.1):
+        pass
+
+
 def test_shared_requests_exclude_update_within_deadline(native_root: Path) -> None:
     import threading
 
@@ -1085,27 +1143,38 @@ def test_real_packager_rejects_duplicates_before_mapping(native_root: Path) -> N
         )
 
 
+@pytest.mark.parametrize("entry_name", ["cli", "service", "core"])
 def test_actual_trusted_entry_captures_leaf_core_aliases_and_resources(
     native_root: Path,
+    entry_name: str,
 ) -> None:
     import processforge as cli
 
     assert p.__file__ is not None
-    candidate = build(
-        {
-            p.LEAF: Path(p.__file__).read_bytes(),
-            p.INVENTORY: b"source inventory\n",
-            "src/fixture_core.py": b"VALUE = 'accepted'\n",
-            "docs/data.txt": b"accepted resource\n",
-            "VERSION": b"1.3.0-alpha6\n",
-        }
-    )
+    payload = {
+        p.LEAF: Path(p.__file__).read_bytes(),
+        p.INVENTORY: b"source inventory\n",
+        "src/fixture_core.py": b"VALUE = 'accepted'\n",
+        "src/processforge_core/__init__.py": b"VALUE = 'accepted Core'\n",
+        "docs/data.txt": b"accepted resource\n",
+        "VERSION": b"1.3.0-alpha6\n",
+    }
+    if entry_name in {"service", "core"}:
+        # Exercise the complete existing service/Legacy bridge, not an extracted
+        # preamble with synthetic Core. The helper is shared with adopted tests.
+        payload.update(_adopted_publication().payload)
+    candidate = build(payload)
     for name, raw in candidate.payload.items():
         path = native_root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
     (native_root / p.MANIFEST).write_bytes(candidate.manifest)
-    for name in (p.LEAF, "src/fixture_core.py"):
+    cached = [p.LEAF, "src/fixture_core.py"]
+    if entry_name == "cli":
+        cached.append("src/processforge_core/__init__.py")
+    else:
+        cached.append("src/processforge_core/bootstrap.py")
+    for name in cached:
         source = native_root / name
         cache = Path(importlib.util.cache_from_source(str(source)))
         cache.parent.mkdir(parents=True, exist_ok=True)
@@ -1122,14 +1191,51 @@ def test_actual_trusted_entry_captures_leaf_core_aliases_and_resources(
             )
         )
     assert cli.__file__ is not None
-    preamble = (
-        Path(cli.__file__).read_text(encoding="utf-8").split("if TYPE_CHECKING:", 1)[0]
-    )
-    entry = native_root / "tools/fixture-entry.py"
+    if entry_name == "cli":
+        preamble = (
+            Path(cli.__file__)
+            .read_text(encoding="utf-8")
+            .split("if TYPE_CHECKING:", 1)[0]
+        )
+        entry = native_root / "tools/fixture-entry.py"
+    else:
+        preamble = """
+import importlib.util,json,sys
+from pathlib import Path
+_native_root = Path(__file__).absolute().parents[1]
+sys.path[:0] = [str(_native_root / 'src'), str(_native_root / 'tools')]
+"""
+        if entry_name == "core":
+            preamble += """
+from processforge_core import bootstrap_runtime
+assert 'processforge' not in sys.modules
+assert not any(n.startswith(('pf_cli', 'pf_runtime')) for n in sys.modules)
+runtime = bootstrap_runtime(__file__)
+"""
+        else:
+            preamble += """
+from pf_runtime import service
+from processforge_core import bootstrap_runtime
+runtime = bootstrap_runtime(__file__)
+assert runtime.service is service
+assert hasattr(service, 'RuntimeProcess')
+"""
+        preamble += """
+assert runtime.core is sys.modules['processforge']
+assert runtime.core is sys.modules['processforge_core._legacy_processforge']
+assert runtime.service.host is runtime.host
+assert bootstrap_runtime(__file__).core is runtime.core
+_native_module = sys.modules['pf_native_control']
+_native_entry = _native_module.current_entry()
+"""
+        entry = native_root / "tools/fixture-entry.py"
     entry.write_text(
         preamble
         + """
 sys.path.insert(0, str(_native_root / "src"))
+import processforge_core
+if hasattr(processforge_core, 'VALUE'):
+    assert processforge_core.VALUE == 'accepted Core'
 import fixture_core
 with _native_module._PHYSICAL_OPEN(_native_root / "src/fixture_core.py", "wb") as target:
     target.write(b"raise RuntimeError('drift executed')")
@@ -1147,7 +1253,7 @@ print(json.dumps({"normal": fixture_core.VALUE, "alias": alias.VALUE,
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
         capture_output=True,
         text=True,
-        timeout=15,
+        timeout=60,
     )
     assert completed.returncode == 0, completed.stderr
     result = json.loads(completed.stdout)
@@ -1158,6 +1264,61 @@ print(json.dumps({"normal": fixture_core.VALUE, "alias": alias.VALUE,
         "publication": candidate.projection_sha256,
     }
     assert not (native_root / "runtime").exists()
+    if entry_name == "core":
+        (native_root / "src/fixture_core.py").write_bytes(
+            candidate.payload["src/fixture_core.py"]
+        )
+        # A completed/unqualified Core cannot be retrospectively promoted.
+        refused = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                "-c",
+                "import sys,types; from pathlib import Path; "
+                "root=Path(sys.argv[1]); "
+                "sys.path[:0]=[str(root/'tools'),str(root/'src')]; "
+                "m=types.ModuleType('processforge_core'); "
+                "exec('VALUE = 1',m.__dict__); "
+                "sys.modules[m.__name__]=m; from pf_runtime import service",
+                str(native_root),
+            ],
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert refused.returncode != 0
+        assert "execution_activity_unknown" in refused.stderr
+        initializer = native_root / "src/processforge_core/__init__.py"
+        unqualified = (
+            initializer.read_bytes()
+            + b"\nraise AssertionError('unqualified business ran')\n"
+        )
+        cache = Path(importlib.util.cache_from_source(str(initializer)))
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_bytes(
+            importlib.util.MAGIC_NUMBER
+            + struct.pack("<I", 1)
+            + b"\0" * 8
+            + marshal.dumps(compile(unqualified, str(initializer), "exec"))
+        )
+        refused = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                "-c",
+                "import sys; sys.path[:0]=sys.argv[1:]; import processforge_core",
+                str(native_root / "src"),
+                str(native_root / "tools"),
+            ],
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert refused.returncode != 0
+        assert "execution_activity_unknown" in refused.stderr
+        assert "unqualified business ran" not in refused.stderr
 
 
 def test_publication_read_exclusion_blocks_an_old_uncooperative_writer(

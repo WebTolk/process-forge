@@ -5,9 +5,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
+import tempfile
 import sys
-import uuid
 from pathlib import Path
 
 from processforge_subprocess import diagnostic_text, run_command
@@ -166,10 +165,8 @@ def assert_conversation_replay_repairs_transcript(workplace: Path, project: Path
 def main() -> int:
     runtime = runtime_bootstrap()
     core = runtime.core
-    scratch_root = ROOT / ".pf" / "tmp"
-    scratch_root.mkdir(parents=True, exist_ok=True)
-    root = scratch_root / f"pf-central-replay-{uuid.uuid4().hex}"
-    root.mkdir()
+    temporary = tempfile.TemporaryDirectory(prefix="pf-central-replay-")
+    root = Path(temporary.name)
     try:
         workplace = root / "workplace"
         first, second = root / "first", root / "second"
@@ -249,11 +246,7 @@ def main() -> int:
         assert_malformed_raw_checkpoint_stops_at_previous_success(workplace, first, core)
 
     finally:
-        shutil.rmtree(root, ignore_errors=True)
-        try:
-            scratch_root.rmdir()
-        except OSError:
-            pass
+        temporary.cleanup()
     print("PASS: central session replay smoke")
     return 0
 

@@ -7,10 +7,9 @@ import contextlib
 import hashlib
 import json
 import os
-import shutil
+import tempfile
 import subprocess
 import sys
-import uuid
 from pathlib import Path
 from typing import Iterator
 
@@ -518,15 +517,13 @@ def smoke_worker_capture(root: Path) -> None:
 
 
 def main() -> int:
-    tmp_root = ROOT / ".pf" / "tmp"
-    tmp_root.mkdir(parents=True, exist_ok=True)
-    root = tmp_root / f"pf-conversation-{uuid.uuid4().hex}"
-    root.mkdir()
+    temporary = tempfile.TemporaryDirectory(prefix="pf-conversation-")
+    root = Path(temporary.name)
     try:
         smoke_codex_user_prompt(root)
         smoke_worker_capture(root)
     finally:
-        shutil.rmtree(root, ignore_errors=True)
+        temporary.cleanup()
     print("PASS: conversation completeness smoke")
     return 0
 

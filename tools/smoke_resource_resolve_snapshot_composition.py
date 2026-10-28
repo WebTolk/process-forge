@@ -13,6 +13,8 @@ import unittest
 from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
+# Capture the trusted entry before Core imports in this adapter smoke.
+import processforge  # noqa: E402, F401
 from processforge_core import composition, garage
 from processforge_core.resources import access
 from processforge_core.common import request_scope

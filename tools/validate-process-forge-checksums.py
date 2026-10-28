@@ -23,6 +23,11 @@ PUBLIC_ROOT_FILES = [
     "requirements.txt",
     ".gitignore",
     ".processforge-releaseignore",
+    # Match the explicit public notes in the release source selection.
+    "release/1.3.0-alpha5/notes.md",
+    "release/1.3.0-alpha5/notes.ru.md",
+    "release/1.3.0-beta1/notes.md",
+    "release/1.3.0-beta1/notes.ru.md",
 ]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PUBLIC_INVENTORY = Path("checksums/processforge.sha256")

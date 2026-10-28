@@ -476,11 +476,34 @@ def windows_acl_checks(base):
         planned = plan_entry(root)
         check_entry(root)
         assert tree(root) == readonly
-        receipt = apply_entry(root, planned, apply=True)
+        staged = []
+
+        def inspect_staging(point, transaction):
+            if point == "staged":
+                resources = migration._STAGING.get()
+                assert resources and len(resources) == 1
+                resource = resources[0]
+                verify_private(resource.path, directory=True)
+                assert any(resource.path.iterdir())
+                staged.append(resource)
+
+        receipt = apply_entry(root, planned, apply=True, _fault=inspect_staging)
         assert receipt["action"] == "applied", receipt
+        assert len(staged) == 1
+        resource = staged[0]
+        assert not resource.path.exists()
+        cleanup_path = root / JOURNALS / "cleanup" / (resource.resource_id + ".json")
+        cleanup = json.loads(cleanup_path.read_text(encoding="utf-8"))
+        assert cleanup["resource_id"] == resource.resource_id
+        assert cleanup["result"] == "deleted" and cleanup["complete"] is True, cleanup
         assert adapter.descriptor(target) == descriptor
         verify_private(root / JOURNALS, directory=True)
-        verify_private(root / ".pf/tmp" / ("agent-entry-" + receipt["transaction"]), directory=True)
+        verify_private(cleanup_path, directory=False)
+        journal_path = root / JOURNALS / (receipt["transaction"] + ".json")
+        verify_private(journal_path, directory=False)
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        assert journal["payload"]["transaction"] == receipt["transaction"]
+        assert journal["sha256"] == digest(encoded(journal["payload"]))
         assert plan_entry(root)["status"] == "current"
         assert rollback_entry(root, receipt["transaction"], apply=True)["action"] == "rolled_back"
         assert targets(root) == original and adapter.descriptor(target) == descriptor

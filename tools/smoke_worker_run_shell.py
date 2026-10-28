@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import threading
 import time
 import uuid
@@ -497,12 +498,14 @@ def smoke_durable_exit_reconciliation(project: Path) -> str:
 
 def main() -> int:
     tasks_for_cleanup: list[str] = []
-    temp_parent = ROOT / ".pf" / "tmp"
-    temp_parent.mkdir(parents=True, exist_ok=True)
-    temp_root = make_temporary_root("pf-worker-shell", temp_parent)
-    driver_root = make_temporary_root("pf-worker-shell-driver", temp_parent)
+    temp_parent = Path(tempfile.mkdtemp(prefix="pf-worker-shell-"))
     project = None
+    cleanup_roots = []
     try:
+        temp_root = make_temporary_root("pf-worker-shell", temp_parent)
+        cleanup_roots.append(temp_root)
+        driver_root = make_temporary_root("pf-worker-shell-driver", temp_parent)
+        cleanup_roots.append(driver_root)
         project = make_project(temp_root)
 
         smoke_environment_isolation(project)
@@ -518,11 +521,15 @@ def main() -> int:
             for task_id in tasks_for_cleanup:
                 stop_if_running(project, task_id)
                 ensure_stopped(project, task_id)
-        for cleanup_root in (temp_root, driver_root):
+        for cleanup_root in cleanup_roots:
             resolved = cleanup_root.resolve()
             if resolved == temp_parent.resolve() or not resolved.is_relative_to(temp_parent.resolve()):
                 raise AssertionError("temporary cleanup target escapes the smoke workspace")
-            shutil.rmtree(resolved, ignore_errors=True)
+            shutil.rmtree(resolved)
+        resolved = temp_parent.resolve()
+        if resolved.parent != Path(tempfile.gettempdir()).resolve() or resolved.name != temp_parent.name:
+            raise AssertionError("temporary cleanup target escapes the smoke workspace")
+        shutil.rmtree(resolved)
 
     print("PASS: worker-run shell regressions smoke")
     return 0

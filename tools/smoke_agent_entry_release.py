@@ -13,6 +13,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
+# Capture the trusted entry before Core imports in this adapter smoke.
+import processforge  # noqa: E402, F401
 from processforge_core.agent_entry.contract import encoded, load_contract
 # Core imports require the source path bootstrap above.
 from processforge_core.common.properties import CoreProperties  # noqa: E402

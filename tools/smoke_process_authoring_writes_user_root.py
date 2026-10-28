@@ -17,7 +17,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-authoring-user-root-") as raw:
         project = Path(raw)
         (project / ".pf").mkdir()
-        (project / ".pf" / "process-forge.yaml").write_text("schema_version: 1\nid: smoke\n", encoding="utf-8")
+        (project / ".pf" / "process-forge.yaml").write_text("schema_version: 1\nproject:\n  id: smoke\n", encoding="utf-8")
         command = [
             sys.executable,
             str(ROOT / "bin" / "pf.py"),

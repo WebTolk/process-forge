@@ -253,7 +253,17 @@ def consumer_failures(scratch):
 
 
 def run(scratch):
-    checks = core_only(ROOT / "src")
+    # A pure Core interpreter cannot later become a sealed trusted entry.
+    # Keep its transport prohibition in a separate, real source probe.
+    source_probe = subprocess.run(
+        [sys.executable, "-I", "-B", str(Path(__file__).resolve()),
+         "--core-only", str(ROOT / "src")],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf8", timeout=30,
+    )
+    assert source_probe.returncode == 0, (source_probe.stdout, source_probe.stderr)
+    assert "PASS: isolated Core capability records" in source_probe.stdout
+    checks = [line.removeprefix("PASS: ") for line in source_probe.stdout.splitlines()
+              if line.startswith("PASS: ")]
     copied = scratch / "copied-core"
     shutil.copytree(ROOT / "src", copied / "src", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     probe = copied / "probe.py"
@@ -276,7 +286,8 @@ def main():
     parser.add_argument("--core-only", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.core_only:
-        core_only(args.core_only)
+        for check in core_only(args.core_only):
+            print("PASS: " + check)
         print("PASS: isolated Core capability records")
         return
     if args.scratch:

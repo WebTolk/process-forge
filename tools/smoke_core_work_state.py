@@ -24,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 sys.path.insert(0, str(ROOT / 'tools'))
 
+# Capture the trusted entry before Core imports in this adapter smoke.
+import processforge  # noqa: E402, F401
 from processforge_core import diagnostics as d
 from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap

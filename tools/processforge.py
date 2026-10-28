@@ -9810,9 +9810,9 @@ def prepare_worker_run(
     task = _worker_assignment_service.load(project_root, task_id)
     from processforge_core.prepared.command import require_resolved_preparation
 
-    require_resolved_preparation(project_root, task, sys.modules[__name__])
     if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
         raise SystemExit("FAIL: work_is_terminal")
+    require_resolved_preparation(project_root, task, sys.modules[__name__])
     agent_model = _context_contract_inputs.normalize_agent_model(
         model_arg or task.get("agent_model") or task.get("model") or ""
     )

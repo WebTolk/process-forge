@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import os
 import stat
 import sys
@@ -67,22 +68,26 @@ class YamlConfigStore:
     def _revision(raw: bytes | None) -> str | None:
         return None if raw is None else "sha256:" + hashlib.sha256(raw).hexdigest()
 
-    def _check_path(self, path: Path) -> None:
+    def _check_path(self, path: Path) -> bool:
         if path.parent.resolve() != path.parent:
             raise ConfigurationStorageError("configuration_unsafe_path")
         try:
             info = path.lstat()
         except FileNotFoundError:
-            return
+            return False
         if (
             not stat.S_ISREG(info.st_mode)
             or info.st_nlink != 1
             or getattr(info, "st_file_attributes", 0) & 0x400
         ):
             raise ConfigurationStorageError("configuration_unsafe_path")
+        return True
 
     def _raw(self) -> bytes | None:
-        self._check_path(self.path)
+        if not self._check_path(self.path):
+            captured_path = getattr(io.open, "_pf_captured_path", None)
+            if captured_path is None or not captured_path(self.path):
+                return None
         try:
             with self.path.open("rb") as stream:
                 raw = stream.read(MAX_BYTES + 1)
