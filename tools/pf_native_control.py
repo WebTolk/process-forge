@@ -23,7 +23,7 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from contextvars import ContextVar
 from ctypes import wintypes
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -1360,43 +1360,158 @@ def current_entry() -> NativeEntry | None:
 _REPLACEMENT_TARGET: ContextVar[NativeEntry | None] = ContextVar(
     "pf_replacement_target", default=None
 )
-_UPDATE_PLAN_ENTRY: ContextVar[NativeEntry | None] = ContextVar(
+_UPDATE_PLAN_ENTRY: ContextVar[NativeEntry | _MaintenanceTarget | None] = ContextVar(
     "pf_update_plan_entry", default=None
 )
 
 
-@contextmanager
-def _replacement_target(entry: NativeEntry) -> Iterator[None]:
+def _replacement_target(entry: NativeEntry) -> AbstractContextManager[None]:
     """Bind an already qualified target for management Core's existing apply.
 
     The native host supplies its retained adoption/attach entry, never a root
     discovered from CLI arguments. This scope creates no authority or lease;
     replacement revalidates the exact entry under target ingress/exclusive.
     """
-    if _REPLACEMENT_TARGET.get() is not None or _CONTROL_LEASE.get() is not None:
-        raise NativeControlError()
-    token = _REPLACEMENT_TARGET.set(entry)
-    try:
-        yield
-    finally:
-        _REPLACEMENT_TARGET.reset(token)
+    class Target(AbstractContextManager[None]):
+        def __enter__(self) -> None:
+            if _REPLACEMENT_TARGET.get() is not None or _CONTROL_LEASE.get() is not None:
+                raise NativeControlError()
+            self.token = _REPLACEMENT_TARGET.set(entry)
+
+        def __exit__(self, *_exception: Any) -> None:
+            # Core's frozen errors must not be thrown through a generator scope.
+            _REPLACEMENT_TARGET.reset(self.token)
+
+    return Target()
 
 
-def _update_entry(core_root: Path) -> NativeEntry:
-    execution = current_entry()
-    entry = _REPLACEMENT_TARGET.get() or execution
+@dataclass(frozen=True)
+class _MaintenanceTarget:
+    """Authenticated target data; never an executable entry or image."""
+
+    root: Path
+    control: NativeControl
+    generation: str
+    manifest: bytes
+    maintenance: Mapping[str, str]
+    selection: Mapping[str, Any]
+    owned_paths: frozenset[str]
+
+
+def _maintenance_record(value: Any) -> dict[str, str]:
     if (
-        execution is None
-        or execution.publication is None
-        or execution.image is None
-        or entry is None
-        or entry.root != core_root.resolve()
+        not isinstance(value, dict)
+        or set(value) != {"manifest_sha256", "device_config_path"}
+        or not isinstance(value["manifest_sha256"], str)
+        or not HEX.fullmatch(value["manifest_sha256"])
+        or not isinstance(value["device_config_path"], str)
+        or not value["device_config_path"]
+        or not Path(value["device_config_path"]).is_absolute()
+        or str(Path(value["device_config_path"]).resolve())
+        != value["device_config_path"]
     ):
         raise NativeControlError()
-    return entry
+    return value
 
 
-def _update_plan_path(path: Path) -> tuple[NativeEntry, str]:
+def _accepted_maintenance(state: dict[str, Any]) -> dict[str, str] | None:
+    record = (
+        state["successors"][-1]
+        if state["successors"]
+        else state["retirement"]["baseline"]
+    )
+    return (
+        _maintenance_record(record["maintenance"]) if "maintenance" in record else None
+    )
+
+
+def _issued_maintenance(
+    publication: Publication, selection: ManagedSelection
+) -> dict[str, str] | None:
+    # Old private/synthetic issuers remain old-form, without repair authority.
+    # Real host selections carry their actual source locator, never a digest-derived guess.
+    if not selection._device_config_path:
+        return None
+    from processforge_core.composition import _update_selection
+
+    with _update_selection(
+        selection.document(), Path(selection._device_config_path)
+    ) as (actual, _):
+        return _maintenance_record(
+            {
+                "manifest_sha256": publication.manifest_sha256,
+                "device_config_path": actual._device_config_path,
+            }
+        )
+
+
+def _maintenance_manifest(
+    root: Path, state: dict[str, Any], maintenance: Mapping[str, str]
+) -> bytes:
+    raw = _read_regular(root, MANIFEST, MAX_MANIFEST)
+    if (
+        digest(raw) != maintenance["manifest_sha256"]
+        or digest(projection(raw)) != state["archive"]
+    ):
+        raise NativeControlError()
+    rows = {row["relative_path"]: row for row in parse_manifest(raw)["files"]}
+    inventory = "".join(
+        f"{row['sha256']}  {path}\n"
+        for path, row in sorted(rows.items())
+        if path != INVENTORY
+    ).encode("utf-8")
+    if (
+        len(inventory) != rows[INVENTORY]["size"]
+        or digest(inventory) != rows[INVENTORY]["sha256"]
+    ):
+        raise NativeControlError()
+    return raw
+
+
+def _update_entry(core_root: Path) -> NativeEntry | _MaintenanceTarget:
+    execution = current_entry()
+    if execution is None or execution.publication is None or execution.image is None:
+        raise NativeControlError()
+    root = core_root.absolute()
+    for path in (root, *root.parents):
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise NativeControlError()
+    root = root.resolve(strict=True)
+    entry = _REPLACEMENT_TARGET.get()
+    if entry is not None:
+        if entry.root != root:
+            raise NativeControlError()
+        return entry
+    if execution.root == root:
+        return execution
+    if execution.root in root.parents or root in execution.root.parents:
+        raise NativeControlError()
+    # Noncreating exact-root lookup: no scan, enrollment or executable target capture.
+    producer = ManagedEnrollmentProducer(root, b"")
+    try:
+        state = producer._state()
+        if state["phase"] != "bound":
+            raise NativeControlError()
+        control = producer._control(state)
+        maintenance = _accepted_maintenance(state)
+        if maintenance is None:
+            raise NativeControlError()
+        raw = _maintenance_manifest(root, state, maintenance)
+        return _MaintenanceTarget(
+            root,
+            control,
+            state["adoption"],
+            raw,
+            MappingProxyType(dict(maintenance)),
+            MappingProxyType(dict(state["selection"])),
+            frozenset(row["relative_path"] for row in parse_manifest(raw)["files"]),
+        )
+    except (OSError, ValueError, KeyError, TypeError):
+        raise NativeControlError() from None
+
+
+def _update_plan_path(path: Path) -> tuple[NativeEntry | _MaintenanceTarget, str]:
     """Physical target data only during the once-only exclusive planner."""
     entry = _UPDATE_PLAN_ENTRY.get()
     if entry is None or not _native_life_held(entry.control):
@@ -1405,11 +1520,26 @@ def _update_plan_path(path: Path) -> tuple[NativeEntry, str]:
         relative = path.absolute().relative_to(entry.root).as_posix()
     except ValueError:
         raise NativeControlError() from None
-    if entry.publication is None or (
-        relative != MANIFEST and relative not in entry.publication.payload
-    ):
+    owned = (
+        entry.owned_paths
+        if isinstance(entry, _MaintenanceTarget)
+        else (entry.publication.payload if entry.publication is not None else {})
+    )
+    if relative != MANIFEST and relative not in owned:
         raise NativeControlError()
     return entry, safe_path(relative)
+
+
+def _update_selection_inputs() -> tuple[dict[str, Any], str | None]:
+    entry = _UPDATE_PLAN_ENTRY.get()
+    if entry is None or not _native_life_held(entry.control):
+        raise NativeControlError()
+    producer = ManagedEnrollmentProducer(entry.root, b"")
+    state = producer._state()
+    maintenance = _accepted_maintenance(state)
+    return state["selection"], maintenance[
+        "device_config_path"
+    ] if maintenance else None
 
 
 def _read_update_plan_file(path: Path) -> bytes:
@@ -1542,6 +1672,7 @@ class ManagedSelection:
     runtime_instance: str
     routing_revision: str
     targets: tuple[tuple[str, str, str, str], ...]
+    _device_config_path: str = field(default="", compare=False, repr=False)
 
     def document(self) -> dict[str, Any]:
         return {
@@ -1843,6 +1974,9 @@ class ManagedEnrollmentProducer:
                         "selection": selection.document(),
                         "cold": record,
                     }
+                    maintenance = _issued_maintenance(publication, selection)
+                    if maintenance is not None:
+                        baseline["maintenance"] = maintenance
                     generation = "sha256:" + digest(canonical_json(baseline))
                     state = {
                         "schema": 1,
@@ -2105,13 +2239,42 @@ class ManagedEnrollmentProducer:
             raise NativeControlError()
         return publication
 
-    def _replacement_authority(self, entry: NativeEntry, state: dict[str, Any]) -> None:
+    def _replacement_authority(
+        self, entry: NativeEntry | _MaintenanceTarget, state: dict[str, Any]
+    ) -> None:
         """Validate retained old authority, not repairable executable payload.
 
         Called only under target ingress and installation exclusive. The old
         publication/image came from genuine earlier admission; physical target
         bytes are planner data and must never be captured or activated here.
         """
+        if isinstance(entry, _MaintenanceTarget):
+            target_control = entry.control
+            self._durable(state)
+            if (
+                entry.root != self.root
+                or entry.generation != state["adoption"]
+                or dict(entry.selection) != state["selection"]
+                or dict(entry.maintenance) != _accepted_maintenance(state)
+                or target_control.guard
+                != self.root / "runtime/native-control/installation.guard"
+                or target_control.epoch_path
+                != self.root / "runtime/native-control/epoch"
+                or not _native_life_held(target_control)
+                or target_control.accepted_epoch != self._epoch(state)
+                or _maintenance_manifest(self.root, state, entry.maintenance)
+                != entry.manifest
+            ):
+                raise NativeControlError()
+            if _read(self.directory / "adoption.json", 4096) != {
+                "installation": state["installation"],
+                "archive": state["archive"],
+                "generation": state["adoption"],
+                "phase": "bound",
+                "epoch": target_control.accepted_epoch,
+            }:
+                raise NativeControlError()
+            return
         publication, image, control = entry.publication, entry.image, entry.control
         if publication is None or image is None or control is None:
             raise NativeControlError()
@@ -2246,6 +2409,16 @@ class ManagedEnrollmentProducer:
                 }
                 if "legacy_archive" in state:
                     baseline["legacy_archive"] = state["legacy_archive"]
+                maintenance = _issued_maintenance(publication, selection)
+                if maintenance is not None:
+                    baseline["maintenance"] = maintenance
+                # Exact old pending records keep their original committed shape.
+                if state["phase"] == "pending" and "retirement" in state:
+                    retained_baseline = state["retirement"]["baseline"]
+                    if "maintenance" not in retained_baseline:
+                        baseline.pop("maintenance", None)
+                    if baseline != retained_baseline:
+                        raise NativeControlError()
                 generation = "sha256:" + digest(canonical_json(baseline))
                 if state["phase"] == "pending" and state["adoption"] != generation:
                     raise NativeControlError()
@@ -2338,11 +2511,12 @@ class ManagedEnrollmentProducer:
     @contextmanager
     def replacement(
         self,
-        entry: NativeEntry,
+        entry: NativeEntry | _MaintenanceTarget,
         *,
         target_leaf: bytes,
         checkpoint: Callable[[str], None] = lambda _: None,
         _prepare: Callable[[], None] | None = None,
+        _maintenance: dict[str, str] | None = None,
     ) -> Iterator[Callable[[bytes], Publication]]:
         if entry.control is None or _CONTROL_LEASE.get() is not None:
             raise NativeControlError()
@@ -2358,13 +2532,15 @@ class ManagedEnrollmentProducer:
                 raise NativeControlError()
             with entry.control.exclusive():
                 if _prepare is None:
+                    if not isinstance(entry, NativeEntry):
+                        raise NativeControlError()
                     self._publication(entry)
                 else:
                     self._replacement_authority(entry, state)
                     # Once-only old Core planning happens under exclusion,
                     # before any durable fence or payload mutation.
                     _prepare()
-                successor = {
+                successor: dict[str, Any] = {
                     "from_archive": state["archive"],
                     "to_archive": seal[1],
                     "previous": state["adoption"],
@@ -2375,6 +2551,17 @@ class ManagedEnrollmentProducer:
                         )
                     ),
                 }
+                if _maintenance is not None:
+                    successor["maintenance"] = _maintenance_record(_maintenance)
+                    successor["generation"] = "sha256:" + digest(
+                        canonical_json(
+                            {
+                                "previous": state["adoption"],
+                                "archive": seal[1],
+                                "maintenance": _maintenance,
+                            }
+                        )
+                    )
                 future = dict(
                     state,
                     archive=seal[1],
@@ -2434,7 +2621,11 @@ class ManagedEnrollmentProducer:
     ) -> None:
         record = state["replacement"]
         successor = record["successor"]
-        if successor["to_archive"] != publication.projection_sha256:
+        if successor["to_archive"] != publication.projection_sha256 or (
+            "maintenance" in successor
+            and _maintenance_record(successor["maintenance"])["manifest_sha256"]
+            != publication.manifest_sha256
+        ):
             raise NativeControlError()
         future = dict(
             state,
@@ -2634,6 +2825,13 @@ class ManagedEnrollmentProducer:
         ):
             raise NativeControlError()
         baseline = retired["baseline"]
+        if not isinstance(baseline, dict) or not isinstance(state["successors"], list):
+            raise NativeControlError()
+        if state.get("origin") != "cold-v1" and set(baseline) - {
+            "legacy_archive",
+            "maintenance",
+        } != {"installation", "archive", "selection", "sentinel", "launches"}:
+            raise NativeControlError()
         keys: tuple[str, ...]
         if state.get("origin") == "cold-v1":
             _validate_cold_baseline(state, baseline)
@@ -2647,20 +2845,26 @@ class ManagedEnrollmentProducer:
         generation = "sha256:" + digest(canonical_json(baseline))
         if generation != retired["generation"]:
             raise NativeControlError()
+        if "maintenance" in baseline:
+            _maintenance_record(baseline["maintenance"])
         archive = baseline["archive"]
         for successor in state["successors"]:
-            if set(successor) != {
+            if set(successor) - {"maintenance"} != {
                 "from_archive",
                 "to_archive",
                 "previous",
                 "generation",
             }:
                 raise NativeControlError()
-            expected = "sha256:" + digest(
-                canonical_json(
-                    {"previous": generation, "archive": successor["to_archive"]}
+            commitment: dict[str, Any] = {
+                "previous": generation,
+                "archive": successor["to_archive"],
+            }
+            if "maintenance" in successor:
+                commitment["maintenance"] = _maintenance_record(
+                    successor["maintenance"]
                 )
-            )
+            expected = "sha256:" + digest(canonical_json(commitment))
             if (
                 successor["from_archive"] != archive
                 or successor["previous"] != generation
@@ -2894,7 +3098,7 @@ def _freeze_update_archive(raw: bytes, plan: Mapping[str, Any]) -> Build:
 
 
 def replace_core(
-    entry: NativeEntry,
+    entry: NativeEntry | _MaintenanceTarget,
     archive_path: Path,
     prepare: Callable[[], dict[str, Any]],
     *,
@@ -2911,10 +3115,18 @@ def replace_core(
     import shutil
     import zipfile
 
-    if entry.control is None or entry.publication is None or entry.image is None:
+    if entry.control is None or (
+        isinstance(entry, NativeEntry)
+        and (entry.publication is None or entry.image is None)
+    ):
         raise NativeControlError()
     root = entry.root
-    producer = ManagedEnrollmentProducer(root, entry.publication.payload[LEAF])
+    producer = ManagedEnrollmentProducer(
+        root,
+        entry.publication.payload[LEAF]
+        if isinstance(entry, NativeEntry) and entry.publication
+        else b"",
+    )
     try:
         with _PHYSICAL_OPEN(archive_path, "rb") as stream:
             archive_raw = stream.read(MAX_TOTAL + MAX_MANIFEST + 1)
@@ -2930,6 +3142,7 @@ def replace_core(
     except (Refusal, KeyError) as error:
         raise NativeControlError() from error
     plan: dict[str, Any] = {}
+    maintenance: dict[str, str] = {}
 
     def prepare_once() -> None:
         token = _UPDATE_PLAN_ENTRY.set(entry)
@@ -2939,9 +3152,40 @@ def replace_core(
             _UPDATE_PLAN_ENTRY.reset(token)
         if plan["new_manifest"] != selected_manifest:
             raise NativeControlError()
+        maintenance.update(
+            _maintenance_record(
+                {
+                    "manifest_sha256": digest(frozen.manifest),
+                    "device_config_path": plan["_native_device_config_path"],
+                }
+            )
+        )
+        # The full qualified archive supplies every replaced byte. Remaining
+        # owned paths must already match it; collision/containment guards remain.
+        writes = set(plan["added"]) | set(plan["changed"]) | set(plan["restored"])
+        removed = set(plan["removed"])
+        for relative, raw in frozen.payload.items():
+            # A removed owned file may be the new directory's ancestor.
+            if any(parent.as_posix() in removed for parent in Path(relative).parents):
+                continue
+            target = _update_target(root, relative)
+            if target.exists() and target.is_file() and target.stat().st_nlink != 1:
+                raise NativeControlError()
+            if (
+                relative not in writes
+                and _read_regular(root, relative, len(raw)) != raw
+            ):
+                raise NativeControlError()
+        for relative in removed:
+            target = _update_target(root, relative)
+            if target.exists() and target.is_file() and target.stat().st_nlink != 1:
+                raise NativeControlError()
 
     with producer.replacement(
-        entry, target_leaf=frozen.payload[LEAF], _prepare=prepare_once
+        entry,
+        target_leaf=frozen.payload[LEAF],
+        _prepare=prepare_once,
+        _maintenance=maintenance,
     ) as publish:
         update_id = "core-update-" + _update_now().replace(":", "").replace("-", "")
         work = root / "runtime/core-update"
@@ -3175,6 +3419,24 @@ def _run_update_child(data: dict[str, Any]) -> None:
         image.activate()
         _ENTRY = NativeEntry(root, publication, image, control)
         sys.path[:0] = [str(root / "tools"), str(root / "src")]
+        from processforge_core.composition import _update_selection
+
+        maintenance = _accepted_maintenance(successor)
+        if (
+            maintenance is None
+            or maintenance["manifest_sha256"] != publication.manifest_sha256
+            or maintenance["device_config_path"] != data["device_config_path"]
+        ):
+            raise NativeControlError()
+        # Re-read external configuration/owners before any child domain write.
+        with _update_selection(
+            successor["selection"],
+            Path(maintenance["device_config_path"]),
+            workplace_root=Path(data["workplace_root"])
+            if data["workplace_root"]
+            else None,
+        ):
+            pass
         if data.get("phase") in {"doctor", "storage"}:
             result = _update_action(data)
         else:
@@ -3216,9 +3478,16 @@ def _finish_update_child(data: dict[str, Any], archive_raw: bytes) -> dict[str, 
             )
         # ZipFile accepts BytesIO: no reread of the mutable operator archive.
         archive_source: Any = io.BytesIO(archive_raw)
-        migration_record = apply_workplace_migration(
-            archive_source, workplace, migration, backup
-        )
+        from processforge_core.composition import _update_selection
+
+        with _update_selection(
+            data["selection"],
+            Path(data["device_config_path"]),
+            workplace_root=workplace,
+        ):
+            migration_record = apply_workplace_migration(
+                archive_source, workplace, migration, backup
+            )
         item = {"op": "workplace_migration", "path": data["migration_id"]}
         progress["pending_operations"].remove(item)
         progress["completed_operations"].append({**item, "completed_at": _update_now()})
@@ -3289,12 +3558,19 @@ def _update_action(data: dict[str, Any]) -> dict[str, Any]:
                 device_config_path=Path(data["device_config_path"]),
                 configuration=pinned,
             ):
-                if doctor:
-                    code = module.main(arguments)
-                else:
-                    code = module.main(
-                        arguments, configuration_builder=lambda **_: pinned
-                    )
+                from processforge_core.composition import _update_selection
+
+                with _update_selection(
+                    data["selection"],
+                    Path(data["device_config_path"]),
+                    workplace_root=Path(workplace),
+                ):
+                    if doctor:
+                        code = module.main(arguments)
+                    else:
+                        code = module.main(
+                            arguments, configuration_builder=lambda **_: pinned
+                        )
         except SystemExit as exit_value:
             code = exit_value.code if isinstance(exit_value.code, int) else 1
     result: dict[str, Any] = {"exit_code": code, "output": output.getvalue()}
@@ -3349,7 +3625,8 @@ def _cold_require(condition: bool) -> None:
 def _validate_cold_baseline(state: dict[str, Any], baseline: dict[str, Any]) -> None:
     """Pure post-bound validation: no controller import, discovery or OS scan."""
     _cold_require(
-        set(baseline) == {"origin", "installation", "archive", "selection", "cold"}
+        set(baseline) - {"maintenance"}
+        == {"origin", "installation", "archive", "selection", "cold"}
     )
     _cold_require(baseline["origin"] == "cold-v1")
     cold = baseline["cold"]

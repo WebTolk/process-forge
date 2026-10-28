@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -153,6 +154,79 @@ def build_configuration_provider(
         device_config_path=device_config_path,
         context_overrides=context_overrides,
     )
+
+
+def _update_selection(
+    expected: dict[str, Any],
+    device_config_path: Path | None,
+    *,
+    workplace_root: Path | None = None,
+) -> AbstractContextManager[Any]:
+    """Keep frozen domain errors intact while releasing the selection gates."""
+    class Selected(AbstractContextManager[Any]):
+        def __enter__(self) -> Any:
+            self.scope = _update_selection_scope(
+                expected, device_config_path, workplace_root=workplace_root
+            )
+            return self.scope.__enter__()
+
+        def __exit__(self, *_exception: Any) -> None:
+            self.scope.__exit__(None, None, None)
+
+    return Selected()
+
+
+@contextmanager
+def _update_selection_scope(
+    expected: dict[str, Any],
+    device_config_path: Path | None,
+    *,
+    workplace_root: Path | None,
+) -> Any:
+    """Re-read external selectors under the existing gates, without SQL."""
+    from contextlib import ExitStack
+
+    from .configuration import ConfigurationProvider, DeviceConfigurationSource
+    from .maintenance.contracts import MaintenanceError
+    from .runtime.execution_admission import ExecutionAdmission
+    from .work.context_documents import ContextContractInputs
+
+    project = Path(expected["project"]) if expected["project"] else None
+    workplace = Path(expected["workplace"]) if expected["workplace"] else None
+    if workplace_root is not None and workplace_root.resolve() != workplace:
+        raise MaintenanceError("storage_enrollment_conflict")
+    device = (device_config_path or DeviceConfigurationSource.default_path()).resolve()
+    admission = ExecutionAdmission()
+    with ExitStack() as gates:
+        gates.enter_context(admission.workplace(workplace))
+        if project is not None:
+            gates.enter_context(admission.project(project))
+        # Never reuse an operation's pinned provider: this is an independent
+        # external-fact check, including inside the child's configuration scope.
+        provider = ConfigurationProvider(
+            device_path=device,
+            workplace_path=workplace / "configuration.yaml" if workplace else None,
+            project_path=ContextContractInputs().locate_flow_root(project)
+            / "configuration.yaml"
+            if project
+            else None,
+        )
+        snapshot = provider.snapshot(refresh=True)
+        if snapshot.errors:
+            raise MaintenanceError("storage_configuration_invalid")
+        host = build_storage_migration_host(
+            project_root=project,
+            workplace_root=workplace,
+            device_config_path=device,
+            configuration=ConfigurationProvider.pinned(snapshot.config),
+        )
+        resolver = host.service._native_selection
+        if resolver is None:
+            raise MaintenanceError("storage_safety_unavailable")
+        selected = resolver()
+        if selected.document() != expected:
+            raise MaintenanceError("storage_enrollment_conflict")
+        yield selected, snapshot.config.to_dict()
 
 
 def build_storage_migration_host(
@@ -511,6 +585,7 @@ def build_storage_migration_host(
             instance,
             revision,
             tuple((t.kind, str(t.target), t.scope, t.owner_id) for t in actual.targets),
+            _device_config_path=str(actual.device_config_path),
         )
 
     from contextlib import contextmanager

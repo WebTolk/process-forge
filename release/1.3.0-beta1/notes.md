@@ -8,6 +8,19 @@ Core identity continues to come from the owning distribution. Loaded identity
 and live installed metadata remain separate, as do release, Runtime component,
 protocol and schema versions. Existing CLI/MCP contracts remain in place.
 
+The Core update policy requires confirmed updates to bring every release-owned
+Core file to the qualified target release bytes, replacing local edits even when
+the official bytes did not change between releases. The existing recovery backup
+must preserve actual replaced or removed preimages, including local edits and
+absence for missing files. Existing public flags remain accepted; force is not
+required solely for local Core edits and cannot bypass authority, ownership,
+selection, path, collision or safety checks. Unknown non-owned files,
+configuration, project and Workplace data, and runtime state retain their
+existing handling. The first update from 1.2.0 retains its existing handoff,
+confirmation and recovery requirements. Matching the final implementation to
+this policy and completing the normal documentation and release checks remain
+mandatory.
+
 The candidate includes fixes to owned worker scratch preparation, retry and
 cancellation cleanup. Committed scratch bindings survive prepare retries, and
 unpublished scratch is recovered before retry. Retention permission does not

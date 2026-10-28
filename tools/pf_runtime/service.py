@@ -1317,22 +1317,34 @@ class RuntimeProcess:
                                 "agent": agent,
                             },
                         }
-                        host.ingest_event(
+                        result = host.ingest_event(
                             registration, runtime.workplace_root, runtime.core
                         )
-                        with (
-                            host.registration_admission(
-                                runtime.workplace_root,
-                                [Path(handle["project_root"])],
-                            ),
-                            host.state_lock(),
+                        # Routed ingestion has already verified Ledger presence
+                        # and merged this session under admission + state_lock.
+                        # Re-entering the workplace queue here makes a completed
+                        # registration wait behind the other concurrent ingests.
+                        # Disabled hooks and receipt-only duplicate returns still
+                        # need the established cache publication; that cache
+                        # never grants session authority.
+                        if result.get("routing_status") != "routed" or result.get(
+                            "deduplicated"
                         ):
-                            state = host.load_state(runtime.workplace_root)
-                            host.remember_project(state, handle)
-                            host.remember_session(
-                                state, session, handle, agent, runtime.core
-                            )
-                            host.save_state(runtime.workplace_root, state, runtime.core)
+                            with (
+                                host.registration_admission(
+                                    runtime.workplace_root,
+                                    [Path(handle["project_root"])],
+                                ),
+                                host.state_lock(),
+                            ):
+                                state = host.load_state(runtime.workplace_root)
+                                host.remember_project(state, handle)
+                                host.remember_session(
+                                    state, session, handle, agent, runtime.core
+                                )
+                                host.save_state(
+                                    runtime.workplace_root, state, runtime.core
+                                )
                         self.send_json(200, {"session_id": session, "project": handle})
                     elif self.path == "/project-state":
                         runtime.assert_session_project_scope(payload)

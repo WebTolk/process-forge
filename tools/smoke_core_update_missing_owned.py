@@ -30,6 +30,7 @@ from smoke_core_update_manifest import (
     apply_managed_update,
     managed_target,
     run_managed_smoke,
+    run_pf,
     write_native_archive,
 )
 
@@ -98,15 +99,17 @@ def main() -> int:
             assert native_plan["missing_owned"] == ["changed.txt", "removed.txt", "same.txt"], native_plan
             assert native_plan["restored"] == ["same.txt"], native_plan
             assert not (core / "runtime/core-update").exists()
-            applied = apply_managed_update(entry, archive)
-            assert (core / "same.txt").read_text(encoding="utf-8") == "same"
-            assert (core / "changed.txt").read_text(encoding="utf-8") == "new"
-            assert not (core / "removed.txt").exists()
-            assert (core / "user.txt").read_text(encoding="utf-8") == "keep"
-            assert applied["backed_up"]["same.txt"] is None
-            assert applied["backed_up"]["changed.txt"] is None
-            backup_dir = Path(applied["backup_dir"])
-            assert json.loads((backup_dir / "control" / "plan.json").read_text())["missing_owned"]
+        applied_process = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--confirm")
+        assert applied_process.returncode == 0, applied_process.stdout + applied_process.stderr
+        applied = json.loads(applied_process.stdout)
+        assert (core / "same.txt").read_text(encoding="utf-8") == "same"
+        assert (core / "changed.txt").read_text(encoding="utf-8") == "new"
+        assert not (core / "removed.txt").exists()
+        assert (core / "user.txt").read_text(encoding="utf-8") == "keep"
+        assert applied["backed_up"]["same.txt"] is None
+        assert applied["backed_up"]["changed.txt"] is None
+        backup_dir = Path(applied["backup_dir"])
+        assert json.loads((backup_dir / "control" / "plan.json").read_text())["missing_owned"]
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-missing-failure-", dir=args.root) as raw:
         root = Path(raw)

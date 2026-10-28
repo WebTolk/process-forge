@@ -1385,9 +1385,21 @@ def execute_job(
                     "installed",
                 }:
                     entry = copy_resumable(authority, archive, root)
-                    _, entry = p.ManagedEnrollmentProducer.from_cold_provider(
-                        authority, entry, selection=selection
+                    from processforge_core.composition import _update_selection
+                    from processforge_core.project.configuration_inputs import (
+                        operation_device_path,
                     )
+
+                    project = Path(selection.project) if selection.project else None
+                    workplace = (
+                        Path(selection.workplace) if selection.workplace else None
+                    )
+                    with _update_selection(
+                        selection.document(), operation_device_path(project, workplace)
+                    ) as (actual, _):
+                        _, entry = p.ManagedEnrollmentProducer.from_cold_provider(
+                            authority, entry, selection=actual
+                        )
                     if entry.control is None:
                         raise Refused()
                     return {"phase": "bound", "epoch": entry.control.accepted_epoch}

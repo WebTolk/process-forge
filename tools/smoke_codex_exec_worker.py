@@ -3,15 +3,23 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import re
 import stat
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-from context_lock_smoke_helpers import make_project, refresh, require_ok, run_pf, write_yaml
+from context_lock_smoke_helpers import (
+    make_project,
+    refresh,
+    require_ok,
+    run_pf,
+    write_yaml,
+)
 
 MODEL = "chatgpt-5.3-codex-spark"
 WORKER = Path(__file__).with_name("codex_exec_worker.py")
@@ -29,6 +37,9 @@ import sys
 from pathlib import Path
 
 argv = sys.argv[1:]
+Path(__file__).with_name("invocation.json").write_text(
+    json.dumps({"argv": argv}), encoding="utf-8"
+)
 output = Path(argv[argv.index("-o") + 1])
 if not output.parent.is_dir():
     raise SystemExit("output parent was not created by codex-exec worker")
@@ -129,26 +140,212 @@ expected_report:
         fake_bin = root / "fake-bin"
         fake_bin.mkdir()
         write_fake_codex(fake_bin)
-        env_path = os.environ.get("PATH", "")
-        os.environ["PATH"] = str(fake_bin) + os.pathsep + env_path
+        fake_executable = fake_bin / ("codex.cmd" if os.name == "nt" else "codex")
+        env_path = os.environ.get("PATH")
+        previous_executable = os.environ.get("PF_CODEX_EXECUTABLE")
+        os.environ["PATH"] = str(fake_bin) + os.pathsep + (env_path or "")
+        # The driver inherits explicit executable overrides before consulting PATH.
+        os.environ["PF_CODEX_EXECUTABLE"] = str(fake_executable)
         try:
             result = run_pf("worker-run", "start", "--project-root", str(project), "--task", "codex-task", "--driver", "codex-exec")
             if result.returncode != 0:
-                stderr = project / ".pf" / "runtime" / "agent-runs" / "codex-run" / "codex-task" / "stderr.log"
-                stdout = project / ".pf" / "runtime" / "agent-runs" / "codex-run" / "codex-task" / "stdout.log"
-                raise AssertionError(
-                    "\n".join(
-                        [
-                            result.stdout,
-                            "STDOUT",
-                            optional_text(stdout),
-                            "STDERR",
-                            optional_text(stderr),
-                        ]
+                run_dir = (
+                    project
+                    / ".pf"
+                    / "runtime"
+                    / "agent-runs"
+                    / "codex-run"
+                    / "codex-task"
+                )
+                # Only allowlisted fields/literals leave the disposable fixture.
+                # Never dump command.environment, arbitrary log lines or host paths.
+                safe_literals = {
+                    "",
+                    "-",
+                    "--",
+                    "-B",
+                    "-I",
+                    "exec",
+                    "-m",
+                    "-c",
+                    "-o",
+                    "--worker-prompt",
+                    "--capsule",
+                    "--workspace-access",
+                    "--output",
+                    "--heartbeat",
+                    "--prepared-input",
+                    "--prepared-sha256",
+                    "--exit-path",
+                    "--sandbox",
+                    "--cd",
+                    "--json",
+                    "--add-dir",
+                    MODEL,
+                    "high",
+                    "read-only",
+                    "workspace-write",
+                    'model_reasoning_effort="high"',
+                    "features.memories=false",
+                    'mcp_servers.processforge.default_tools_approval_mode="approve"',
+                    "planned",
+                    "ready",
+                    "starting",
+                    "running",
+                    "completed",
+                    "failed",
+                    "blocked",
+                    "cancelled",
+                    "unknown",
+                    "timed_out",
+                    "manual_required",
+                    "codex-exec",
+                    "shell",
+                    "codex-run",
+                    "codex-task",
+                    "worker-run",
+                    "start",
+                    "--project-root",
+                    "--task",
+                    "--driver",
+                    "storage_safety_unavailable",
+                    "The syntax of the command is incorrect.",
+                }
+
+                def safe_value(value: object) -> object:
+                    if value is None or isinstance(value, (bool, int)):
+                        return value
+                    if isinstance(value, list):
+                        return [safe_value(item) for item in value]
+                    if isinstance(value, dict):
+                        return {
+                            key: safe_value(item)
+                            for key, item in value.items()
+                            if key
+                            in {
+                                "schema_version",
+                                "attempt",
+                                "driver_id",
+                                "command",
+                                "executable",
+                                "args",
+                                "argv",
+                                "working_directory",
+                                "shell",
+                                "exit_code",
+                                "status",
+                                "failure_reason",
+                                "error",
+                                "code",
+                            }
+                        }
+                    if isinstance(value, str):
+                        if value in safe_literals or re.fullmatch(
+                            r"sha256:[0-9a-f]{64}|[0-9]+", value
+                        ):
+                            return value
+                        normalized = value.replace("\\", "/")
+                        if normalized == Path(sys.executable).as_posix():
+                            return "<python>"
+                        for base, label in (
+                            (root, "<fixture>"),
+                            (WORKER.parent.parent, "<source>"),
+                        ):
+                            prefix = base.as_posix()
+                            if normalized == prefix:
+                                return label
+                            if normalized.startswith(prefix + "/"):
+                                relative = normalized[len(prefix) :]
+                                if (
+                                    re.fullmatch(r"/[A-Za-z0-9_./-]+", relative)
+                                    and ".." not in Path(relative).parts
+                                ):
+                                    return label + relative
+                                return label + "/<redacted-path>"
+                        if value.startswith("FAIL: ") and value[6:] in safe_literals:
+                            return value
+                    return "<redacted>"
+
+                evidence: dict[str, object] = {
+                    "worker_run_command": safe_value(result.args),
+                    "worker_run_exit_code": result.returncode,
+                    "codex_selection": {
+                        "source": "PF_CODEX_EXECUTABLE (smoke fixture binding)",
+                        "executable": safe_value(str(fake_executable)),
+                        "invocation_observed": (fake_bin / "invocation.json").is_file(),
+                    },
+                    "worker_run_output": [
+                        safe_value(line) for line in result.stdout.splitlines()
+                    ],
+                }
+                receipt_paths = [
+                    run_dir / name
+                    for name in (
+                        "command.json",
+                        "exit.json",
+                        "status.json",
+                        "stdout.log",
+                        "stderr.log",
                     )
+                ]
+                receipt_paths.extend(
+                    path
+                    for path in sorted((run_dir / "attempts").glob("*/*"))
+                    if path.parent.name.isdigit()
+                    and path.name
+                    in {
+                        "command.json",
+                        "exit.json",
+                        "status.json",
+                        "stdout.log",
+                        "stderr.log",
+                        "heartbeat.json",
+                    }
+                )
+                receipt_paths.append(fake_bin / "invocation.json")
+                receipts: dict[str, object] = {}
+                evidence["receipts"] = receipts
+                for path in receipt_paths:
+                    name = path.relative_to(root).as_posix()
+                    try:
+                        raw = path.read_bytes()
+                        text = raw.decode("utf-8", errors="replace")
+                        body = (
+                            safe_value(json.loads(text))
+                            if path.suffix == ".json"
+                            else [safe_value(line) for line in text.splitlines()]
+                        )
+                        receipts[name] = {
+                            "bytes": len(raw),
+                            "sha256": hashlib.sha256(raw).hexdigest(),
+                            "body": body,
+                        }
+                    except FileNotFoundError:
+                        receipts[name] = {"receipt": "not created"}
+                    except (OSError, ValueError) as error:
+                        receipts[name] = {
+                            "receipt": "unreadable",
+                            "error_type": type(error).__name__,
+                        }
+                # Flush sanitized receipts before TemporaryDirectory.__exit__ runs.
+                print(
+                    "CODEX SMOKE FAILURE EVIDENCE\n"
+                    + json.dumps(evidence, ensure_ascii=True, indent=2),
+                    file=sys.stderr,
+                    flush=True,
+                )
+                raise AssertionError(
+                    f"codex-exec worker-run failed (exit {result.returncode}); sanitized receipts emitted before cleanup"
                 )
         finally:
-            os.environ["PATH"] = env_path
+            if env_path is None:
+                os.environ.pop("PATH", None)
+            else:
+                os.environ["PATH"] = env_path
+            if previous_executable is None:
+                os.environ.pop("PF_CODEX_EXECUTABLE", None)
+            else:
+                os.environ["PF_CODEX_EXECUTABLE"] = previous_executable
         report = json.loads((project / ".pf" / "artifacts" / "codex-exec-report.json").read_text(encoding="utf-8"))
         argv = report["argv"]
         if "--add-dir" in argv:
@@ -178,6 +375,7 @@ expected_report:
         direct_heartbeat = root / "direct-worker-heartbeat.json"
         direct_env = os.environ.copy()
         direct_env["PATH"] = str(fake_bin) + os.pathsep + direct_env.get("PATH", "")
+        direct_env["PF_CODEX_EXECUTABLE"] = str(fake_executable)
         direct_env.update(
             {
                 "PF_AGENT_MODEL": MODEL,
@@ -228,7 +426,23 @@ expected_report:
   artifact: .pf/artifacts/codex-exec-no-model-report.json
 """,
         )
-        no_model = run_pf("worker-run", "start", "--project-root", str(project), "--task", "codex-task-no-model", "--driver", "codex-exec")
+        os.environ["PF_CODEX_EXECUTABLE"] = str(fake_executable)
+        try:
+            no_model = run_pf(
+                "worker-run",
+                "start",
+                "--project-root",
+                str(project),
+                "--task",
+                "codex-task-no-model",
+                "--driver",
+                "codex-exec",
+            )
+        finally:
+            if previous_executable is None:
+                os.environ.pop("PF_CODEX_EXECUTABLE", None)
+            else:
+                os.environ["PF_CODEX_EXECUTABLE"] = previous_executable
         if no_model.returncode == 0:
             raise AssertionError("codex-exec accepted a shell-agent run without an orchestrator-selected model")
         no_model_report = project / ".pf" / "artifacts" / "codex-exec-no-model-report.json"

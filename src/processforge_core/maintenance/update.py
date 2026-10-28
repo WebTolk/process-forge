@@ -496,9 +496,10 @@ def _build_plan(
         target = ensure_inside(core_root, relative_path)
         if sha256_owned(target) != old_files[relative_path]["sha256"]:
             locally_modified.append(relative_path)
+    # PF-owned Core converges to release bytes, including unchanged local drift.
+    changed = sorted(set(changed) | (set(locally_modified) & set(unchanged)))
+    unchanged = sorted(set(unchanged) - set(changed))
     restored = sorted(set(missing_owned).intersection(unchanged))
-    for relative_path in sorted(set(locally_modified).intersection(set(removed).union(changed))):
-        blockers.append({"code": "locally_modified", "path": relative_path})
     for relative_path in added:
         collision = unowned_path_blocker(core_root, relative_path, removable_owned_paths=set(removed))
         if collision is not None:
@@ -620,6 +621,7 @@ def apply_update(
         _read_update_plan_file,
         _sha256_update_plan_file,
         _update_entry,
+        _update_selection_inputs,
         replace_core,
     )
 
@@ -634,7 +636,7 @@ def apply_update(
             )
     try:
         entry = _update_entry(core_root)
-    except NativeControlError as error:
+    except (NativeControlError, OSError, ValueError, KeyError, TypeError) as error:
         raise CoreUpdateError(
             "plan_blocked", "core update requires qualified installation exclusion"
         ) from error
@@ -656,29 +658,21 @@ def apply_update(
         ]
         if blockers:
             raise CoreUpdateError("plan_blocked", "core update plan has blockers")
-        from ..configuration import DeviceConfigurationSource
-        from ..project.configuration_inputs import operation_device_path
+        from ..composition import _update_selection
+        from ..maintenance.contracts import MaintenanceError
 
-        device = (
-            operation_device_path(None, workplace_root)
-            or DeviceConfigurationSource.default_path()
-        )
-        from ..composition import build_configuration_provider
-
-        snapshot = build_configuration_provider(
-            device_config_path=device, workplace_root=workplace_root
-        ).snapshot()
-        if snapshot.errors:
-            raise CoreUpdateError(
-                "plan_blocked", "core update configuration is invalid"
-            )
-        plan["_native_device_config_path"] = str(device)
-        plan["_native_configuration"] = snapshot.config.to_dict()
+        selection, locator = _update_selection_inputs()
+        try:
+            with _update_selection(selection, Path(locator) if locator else None, workplace_root=workplace_root) as (actual, configuration):
+                plan["_native_device_config_path"] = actual._device_config_path
+                plan["_native_configuration"] = configuration
+        except (MaintenanceError, OSError, ValueError, KeyError, TypeError) as error:
+            raise CoreUpdateError("plan_blocked", "core update selection is invalid") from error
         return plan
 
     try:
         return replace_core(entry, archive_path, prepare, workplace_root=workplace_root)
-    except NativeControlError as error:
+    except (NativeControlError, OSError, ValueError, KeyError, TypeError) as error:
         raise CoreUpdateError(
             "plan_blocked", "core update requires qualified installation exclusion"
         ) from error

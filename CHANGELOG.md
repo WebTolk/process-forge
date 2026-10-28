@@ -10,6 +10,17 @@
   checkpoint. This release-identity change adds no functionality.
 - Document the existing owned worker scratch lifecycle and retention boundaries;
   required input, recovery data and durable evidence remain protected.
+- Define the Core update policy: confirmed updates must converge all
+  release-owned Core files to qualified target release bytes, replacing local
+  edits even when official bytes are unchanged between releases. Preserve actual
+  replaced or removed preimages, including missing-file absence, in the existing
+  recovery backup. Existing flags remain accepted; force is not required solely
+  for local Core edits and cannot bypass authority, ownership, selection, path,
+  collision or safety checks. Unknown non-owned files, configuration, project and
+  Workplace data, and runtime state retain their existing handling. The first
+  update from 1.2.0 retains its handoff, confirmation and recovery requirements.
+  Final implementation matching and normal documentation/release checks remain
+  mandatory.
 
 ### Fixed
 

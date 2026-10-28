@@ -123,8 +123,8 @@ def test_tampered_prepared_launch_preserves_denial_and_scratch_obligation(
         # Corruption is never authority to release the still-needed allocation.
         scratch = list((root / ".pf/tmp/scratch-owned").iterdir())
         assert len(scratch) == 1
-        with pytest.raises(SystemExit, match="temporary_cleanup_needed"):
-            core.command_worker_run_prepare(args)
+        assert core.command_worker_run_prepare(args) == 1
+        assert "temporary_cleanup_needed" in capsys.readouterr().out
         assert repository.load_latest("run", "task").key == ready.key
         assert scratch[0].is_dir()
         assert not manifest.with_name("scratch-release.json").exists()

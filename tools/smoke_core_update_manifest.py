@@ -153,7 +153,7 @@ def apply_managed_update(entry: native.NativeEntry, archive: Path, *, force_loca
 def run_managed_smoke(script: Path) -> int:
     """Capture an independent management fixture before the child's Core imports."""
     payload = {}
-    for directory in ("src", "tools", "schemas"):
+    for directory in ("src", "tools", "schemas", "bin"):
         for path in (ROOT / directory).rglob("*"):
             if path.is_file() and path.suffix in {".py", ".json", ".yaml", ".txt", ".md"} and "__pycache__" not in path.parts:
                 payload[path.relative_to(ROOT).as_posix()] = path.read_bytes()
@@ -185,7 +185,7 @@ raise SystemExit(module.main())
 
 
 def run_pf(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([sys.executable, str(ROOT / "tools" / "processforge.py"), *args], cwd=ROOT, text=True, encoding="utf-8", errors="replace", capture_output=True)
+    return subprocess.run([sys.executable, "-B", str(ROOT / "bin" / "pf.py"), *args], cwd=ROOT, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=240)
 
 
 def sha_text(value: str) -> str:
@@ -283,14 +283,16 @@ def main() -> int:
 
         with managed_target(core, {"a.txt": "old-a", "dir/b.txt": "old-b", "dir/c.txt": "same-c"}) as entry:
             write_native_archive(archive, {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "d.txt": "new-d"})
-            applied = apply_managed_update(entry, archive)
-            assert applied["status"] == "applied", applied
-            assert not (core / "a.txt").exists()
-            assert (core / "dir" / "b.txt").read_text(encoding="utf-8") == "new-b"
-            assert (core / "dir" / "c.txt").read_text(encoding="utf-8") == "same-c"
-            assert (core / "d.txt").read_text(encoding="utf-8") == "new-d"
-            assert (core / "user-note.txt").read_text(encoding="utf-8") == "must stay"
-            assert json.loads((core / CORE_MANIFEST_NAME).read_text(encoding="utf-8"))["version"] == "2.0.0"
+        applied_process = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--confirm")
+        assert applied_process.returncode == 0, applied_process.stdout + applied_process.stderr
+        applied = json.loads(applied_process.stdout)
+        assert applied["status"] == "applied", applied
+        assert not (core / "a.txt").exists()
+        assert (core / "dir" / "b.txt").read_text(encoding="utf-8") == "new-b"
+        assert (core / "dir" / "c.txt").read_text(encoding="utf-8") == "same-c"
+        assert (core / "d.txt").read_text(encoding="utf-8") == "new-d"
+        assert (core / "user-note.txt").read_text(encoding="utf-8") == "must stay"
+        assert json.loads((core / CORE_MANIFEST_NAME).read_text(encoding="utf-8"))["version"] == "2.0.0"
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-local-mod-") as raw:
         root = Path(raw)
@@ -301,8 +303,9 @@ def main() -> int:
         archive = root / "processforge.zip"
         write_archive(archive, {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "d.txt": "new-d"})
         cli_plan = run_pf("core-update", "plan", "--core-root", str(core), "--archive", str(archive))
-        assert cli_plan.returncode == 2, cli_plan.stdout + cli_plan.stderr
-        assert json.loads(cli_plan.stdout)["blockers"][0]["code"] == "locally_modified"
+        assert cli_plan.returncode == 0, cli_plan.stdout + cli_plan.stderr
+        assert json.loads(cli_plan.stdout)["locally_modified"] == ["dir/b.txt"]
+        assert json.loads(cli_plan.stdout)["blockers"] == []
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-owned-ancestor-") as raw:
         root = Path(raw)
@@ -329,17 +332,10 @@ def main() -> int:
             before = ancestor.read_bytes()
 
             plan = core_update.build_plan(core, archive)
-            assert plan["status"] == "blocked", plan
-            assert any(item.get("code") == "locally_modified" and item.get("path") == "a.txt" for item in plan["blockers"]), plan
-            try:
-                apply_managed_update(entry, archive)
-            except CoreUpdateError as exc:
-                assert exc.code == "plan_blocked", exc
-            else:
-                raise AssertionError("locally modified owned ancestor was accepted without force")
-            assert ancestor.read_bytes() == before
-
-            forced = apply_managed_update(entry, archive, force_local_modifications=True)
+            assert plan["status"] == "planned", plan
+            assert plan["locally_modified"] == ["a.txt"], plan
+            assert plan["blockers"] == [], plan
+            forced = apply_managed_update(entry, archive)
             assert (core / "a.txt" / "child.txt").read_text(encoding="utf-8") == "new child"
             forced_backup = Path(forced["backup_dir"]) / "files" / "a.txt"
             assert forced_backup.read_bytes() == before
@@ -528,14 +524,16 @@ operations:
             assert plan["status"] == "planned", plan
             assert plan["workplace_migration"]["status"] == "planned", plan
             assert len(plan["workplace_migration"]["operations"]) == 2, plan
-            record = apply_managed_update(entry, archive, workplace_root=workplace)
-            assert record["workplace_migration"]["migration"]["id"] == "fixture-workplace-1.0.2-to-1.1.0", record
-            assert (workplace / "runtime-drivers" / "codex-exec.yaml").read_text(encoding="utf-8") == driver_yaml
-            migrated_registry = (workplace / "registries" / "runtime-drivers.yaml").read_text(encoding="utf-8")
-            assert "custom_registry_setting: preserve" in migrated_registry
-            assert "id: codex-exec" in migrated_registry
-            assert "custom_setting: preserve" in (workplace / "workplace.yaml").read_text(encoding="utf-8")
-            assert (Path(record["backup_dir"]) / "workplace-migration.json").is_file()
+        applied_process = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--confirm", "--workplace-root", str(workplace))
+        assert applied_process.returncode == 0, applied_process.stdout + applied_process.stderr
+        record = json.loads(applied_process.stdout)
+        assert record["workplace_migration"]["migration"]["id"] == "fixture-workplace-1.0.2-to-1.1.0", record
+        assert (workplace / "runtime-drivers" / "codex-exec.yaml").read_text(encoding="utf-8") == driver_yaml
+        migrated_registry = (workplace / "registries" / "runtime-drivers.yaml").read_text(encoding="utf-8")
+        assert "custom_registry_setting: preserve" in migrated_registry
+        assert "id: codex-exec" in migrated_registry
+        assert "custom_setting: preserve" in (workplace / "workplace.yaml").read_text(encoding="utf-8")
+        assert (Path(record["backup_dir"]) / "workplace-migration.json").is_file()
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-failure-") as raw:
         root = Path(raw)

@@ -78,7 +78,16 @@ changed = common paths with different sha256
 
 Only paths present in the old manifest and absent from the new manifest are deleted. Unknown files are preserved. Directories are removed only when they become empty.
 
-Locally modified PF-owned files are detected by comparing the current file hash with the old installed manifest. They block apply unless the operator explicitly uses the force option.
+PF owns the release-owned Core payload. A confirmed update must bring all such
+files to the qualified target release bytes, replacing local Core edits even
+when the official bytes did not change between releases. The manifest
+differences above therefore do not limit which Core files need replacement.
+
+Existing public flags remain accepted. Force is not required solely for local
+Core edits and does not bypass authority, ownership, selection, path, collision
+or safety checks. Unknown non-owned files, configuration, project and Workplace
+data, and runtime state retain their existing handling. This replacement policy
+does not authorize deleting user data.
 
 The new installed manifest is written last, after file changes have succeeded.
 
@@ -90,7 +99,11 @@ Apply writes runtime update state under:
 <core>/runtime/core-update/
 ```
 
-Backups are written before replacing or removing old PF-owned files. If an update is interrupted or a file operation fails, `core-update status` reports `incomplete_update`, and `core-update repair` reports the incomplete state for operator handling.
+Before replacing or removing old PF-owned files, the existing recovery backup
+preserves their actual pre-update bytes, including local edits, and records
+absence for missing files. If an update is interrupted or a file operation fails,
+`core-update status` reports `incomplete_update`, and `core-update repair` reports
+the incomplete state for operator handling.
 
 File operation failures, including locked-file style failures surfaced by the OS, are converted into explicit `file_operation_failed` errors and leave `runtime/core-update/in-progress.json` with `status: failed`.
 

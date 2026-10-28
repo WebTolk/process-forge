@@ -1494,7 +1494,7 @@ def _adopted_run(code: str, root: Path, *args: object) -> dict[str, Any]:
 
 def _adopted_publication(version: str = "1.3.0-alpha6") -> p.Build:
     payload = {}
-    for directory in ("src", "tools", "schemas"):
+    for directory in ("src", "tools", "schemas", "bin"):
         for path in (_ADOPTED_SOURCE / directory).rglob("*"):
             if (
                 path.is_file()
@@ -1551,7 +1551,7 @@ print(json.dumps(record))
 
 
 def test_joint_real_updater_and_independent_successor_child(native_root: Path) -> None:
-    root, old = _adopted_fixture_install(native_root)
+    root, old = _adopted_fixture_install(native_root / "target")
     _adopted_run(_ADOPTED_MANAGER, root)
     new = _adopted_publication("1.3.0-alpha7")
     archive = root / "runtime/fixture-release.zip"
@@ -1559,7 +1559,11 @@ def test_joint_real_updater_and_independent_successor_child(native_root: Path) -
         for name, raw in {**new.payload, p.MANIFEST: new.manifest}.items():
             bundle.writestr(name, raw)
     before = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
-    record = _adopted_run(_ADOPTED_UPDATE, root, archive)
+    management, _ = _adopted_fixture_install(native_root / "independent-management")
+    command = [sys.executable, "-B", str(management / "bin/pf.py"), "core-update", "apply", "--core-root", str(root), "--archive", str(archive), "--confirm"]
+    applied = subprocess.run(command, capture_output=True, text=True, timeout=240)
+    assert applied.returncode == 0, applied.stdout + applied.stderr
+    record = json.loads(applied.stdout)
     after = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
     assert before["adoption"] != after["adoption"]
     assert after["phase"] == "bound" and len(after["successors"]) == 1
@@ -1571,10 +1575,18 @@ def test_joint_real_updater_and_independent_successor_child(native_root: Path) -
     # Stale generation loses its epoch even if the payload is replaced again with identical bytes.
     result = _adopted_run(_ADOPTED_CHILD, root, "after-update")
     assert result["generation"] == after["adoption"]
+    (root / "VERSION").write_bytes(b"local second preimage")
+    second = subprocess.run(command, capture_output=True, text=True, timeout=240)
+    assert second.returncode == 0, second.stdout + second.stderr
+    second_record = json.loads(second.stdout)
+    assert (Path(second_record["backup_dir"]) / "files/VERSION").read_bytes() == b"local second preimage"
+    latest = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
+    assert len(latest["successors"]) == 2 and latest["adoption"] != after["adoption"]
+    assert latest["successors"][-1]["maintenance"]["manifest_sha256"] == p.digest(new.manifest)
 
 
 @pytest.mark.parametrize(
-    "case", ["missing", "local", "manifest", "epoch", "selection", "unbound-cli"]
+    "case", ["missing", "local", "unchanged-local", "manifest", "epoch", "selection", "unbound-cli", "public-cli", "configuration", "owner", "excluded-leaf", "excluded-inventory", "malformed", "unknown"]
 )
 def test_real_updater_retained_target_repair_force_and_authority(
     native_root: Path, case: str
@@ -1602,13 +1614,8 @@ with managed_target(target,files) as retained:
         plan=build_plan(target,archive)
         assert plan['missing_owned']==['changed.txt','removed.txt','same.txt'],plan
         assert plan['restored']==['same.txt'],plan
-    elif case=='local':
-        (target/'changed.txt').write_bytes(b'local-preimage')
-        before=snapshot()
-        try: apply_managed_update(retained,archive)
-        except CoreUpdateError as error: assert error.code=='plan_blocked',error
-        else: raise AssertionError('local modification accepted without force')
-        assert snapshot()==before
+    elif case in {'local','unchanged-local','public-cli'}:
+        (target/('same.txt' if case=='unchanged-local' else 'changed.txt')).write_bytes(b'local-preimage')
         assert not (target/'runtime/core-update').exists()
     elif case=='manifest':
         raw=json.loads((target/p.MANIFEST).read_text())
@@ -1618,23 +1625,56 @@ with managed_target(target,files) as retained:
     elif case=='selection':
         raw=json.loads((target/authority[0]).read_text());raw['selection']['owner']='another-owner'
         (target/authority[0]).write_text(json.dumps(raw))
-    if case=='unbound-cli': (target/'changed.txt').write_bytes(b'local-preimage')
-    if case in {'manifest','epoch','selection','unbound-cli'}:
+    if case=='unbound-cli':
+        # A truly never-adopted sibling retains the negative CLI control.
+        target=root.parent/'never-adopted';target.mkdir()
+        for name,raw in {**retained.publication.payload,p.MANIFEST:retained.publication.manifest}.items():
+            path=target/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(raw)
+        (target/'changed.txt').write_bytes(b'local-preimage')
+    if case=='configuration':
+        device=Path(json.loads((target/authority[0]).read_text())['retirement']['baseline']['maintenance']['device_config_path'])
+        device.write_text('schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 18\n')
+    if case=='owner':
+        project=Path(json.loads((target/authority[0]).read_text())['selection']['project'])
+        (project/'.pf/process-forge.yaml').write_text('project:\n  id: external-owner\n')
+    if case in {'excluded-leaf','excluded-inventory'}:
+        raw=json.loads((target/p.MANIFEST).read_text());name=p.LEAF if case=='excluded-leaf' else p.INVENTORY
+        next(row for row in raw['files'] if row['relative_path']==name)['sha256']='0'*64
+        assert p.digest(p.projection(json.dumps(raw).encode()))==retained.publication.projection_sha256
+        (target/p.MANIFEST).write_text(json.dumps(raw))
+    if case in {'malformed','unknown'}:
+        raw=json.loads((target/authority[0]).read_text())
+        raw['retirement']['baseline']['maintenance']={'manifest_sha256':p.digest((target/p.MANIFEST).read_bytes()),'device_config_path':'relative'} if case=='malformed' else {'unknown':'authority'}
+        (target/authority[0]).write_text(json.dumps(raw))
+    if case in {'manifest','epoch','selection','unbound-cli','configuration','owner','excluded-leaf','excluded-inventory','malformed','unknown'}:
         before=snapshot()
         if case=='unbound-cli':
             import subprocess
-            refused=subprocess.run([sys.executable,'-B',str(root/'tools/processforge.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=30)
+            refused=subprocess.run([sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=30)
             assert refused.returncode!=0,refused.stdout
             assert json.loads(refused.stdout)['error']['code']=='plan_blocked',refused.stdout+refused.stderr
         else:
-            try: apply_managed_update(retained,archive,force_local_modifications=True)
-            except CoreUpdateError as error: assert error.code=='plan_blocked',error
-            else: raise AssertionError('force bypassed target authority')
+            for force in (False,True):
+                try: apply_managed_update(retained,archive,force_local_modifications=force)
+                except CoreUpdateError as error: assert error.code=='plan_blocked',error
+                else: raise AssertionError('force bypassed target authority')
+                import subprocess
+                command=[sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm']
+                if force: command.append('--force-local-modifications')
+                refused=subprocess.run(command,capture_output=True,text=True,timeout=30)
+                assert refused.returncode!=0,refused.stdout
+                assert json.loads(refused.stdout)['error']['code']=='plan_blocked',refused.stdout+refused.stderr
         assert snapshot()==before
         assert not (target/'runtime/core-update').exists()
         print(json.dumps({'case':case,'refused':True}))
     else:
-        record=apply_managed_update(retained,archive,force_local_modifications=case=='local')
+        if case=='public-cli':
+            import subprocess
+            applied=subprocess.run([sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=240)
+            assert applied.returncode==0,applied.stdout+applied.stderr
+            record=json.loads(applied.stdout)
+        else:
+            record=apply_managed_update(retained,archive,force_local_modifications=False)
         assert record['status']=='applied',record
         assert (target/'same.txt').read_bytes()==b'same'
         assert (target/'changed.txt').read_bytes()==b'new'
@@ -1645,7 +1685,7 @@ with managed_target(target,files) as retained:
             assert record['backed_up']['changed.txt'] is None
             assert record['backed_up']['removed.txt'] is None
         else:
-            assert (Path(record['backup_dir'])/'files/changed.txt').read_bytes()==b'local-preimage'
+            assert (Path(record['backup_dir'])/'files'/('same.txt' if case=='unchanged-local' else 'changed.txt')).read_bytes()==b'local-preimage'
         state=json.loads((target/authority[0]).read_text())
         assert state['phase']=='bound' and len(state['successors'])==1,state
         assert state['adoption']!=before_generation
@@ -1659,7 +1699,7 @@ with managed_target(target,files) as retained:
         case,
     )
     assert result["case"] == case
-    assert result["refused"] is (case not in {"missing", "local"})
+    assert result["refused"] is (case not in {"missing", "local", "unchanged-local", "public-cli"})
 
 
 @pytest.mark.parametrize("drift", ["configuration", "owner"])

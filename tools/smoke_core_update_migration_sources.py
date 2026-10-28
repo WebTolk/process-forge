@@ -29,6 +29,7 @@ from smoke_core_update_manifest import (
     apply_managed_update,
     managed_target,
     run_managed_smoke,
+    run_pf,
     write_native_archive,
 )
 
@@ -147,10 +148,12 @@ def main() -> int:
             assert plan["status"] == "planned", plan
             assert len(plan["workplace_migration"]["operations"]) == 1, plan
             assert len(plan["workplace_migration"]["preserved"]) == 1, plan
-            applied = apply_managed_update(entry, archive, workplace_root=workplace)
-            assert applied["workplace_migration"]["migration"]["id"] == "fixture-migration", applied
-            assert existing.read_text(encoding="utf-8") == "keep-existing\n"
-            assert (workplace / "runtime-drivers" / "new.yaml").read_text(encoding="utf-8") == "new-driver\n"
+        applied_process = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--confirm", "--workplace-root", str(workplace))
+        assert applied_process.returncode == 0, applied_process.stdout + applied_process.stderr
+        applied = json.loads(applied_process.stdout)
+        assert applied["workplace_migration"]["migration"]["id"] == "fixture-migration", applied
+        assert existing.read_text(encoding="utf-8") == "keep-existing\n"
+        assert (workplace / "runtime-drivers" / "new.yaml").read_text(encoding="utf-8") == "new-driver\n"
 
     with tempfile.TemporaryDirectory(prefix="pf-migration-read-fault-", dir=temp_root) as raw:
         root = Path(raw)
