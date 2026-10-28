@@ -12,6 +12,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from types import FunctionType
 from typing import Any
 from unittest.mock import patch
 
@@ -52,6 +53,9 @@ def call(project: Path, task: str, operation: str, **options: Any) -> tuple[int,
     }
     admission_failure: dict[str, Any] = {}
     original_admission = core._worker_start_admission
+    original_admission_body = getattr(original_admission, "__wrapped__")
+    if not isinstance(original_admission_body, FunctionType):
+        raise TypeError("worker admission body must be a Python function")
 
     @contextmanager
     def observed_admission(root: Path):
@@ -76,7 +80,7 @@ def call(project: Path, task: str, operation: str, **options: Any) -> tuple[int,
                             "line": trace.tb_lineno,
                         }
                     )
-                    if frame.f_code is original_admission.__wrapped__.__code__:
+                    if frame.f_code is original_admission_body.__code__:
                         local = frame.f_locals
                         if "complete" in local:
                             admission_failure["registration_complete"] = local[
@@ -156,11 +160,13 @@ def read_json(path: Path) -> dict[str, Any]:
 def prepared_paths(
     project: Path, task: str
 ) -> tuple[dict[str, Path], dict[str, Any], dict[str, Any]]:
-    task_doc = _worker_assignment_service.load(project, task)
+    _worker_assignment_service.load(project, task)
     from processforge_core.work.paths import WorkPaths
 
     paths = WorkPaths().worker_run(project, RUN_ID, task)
     state = read_json(paths["status"])
+    # Native launch publishes the actual immutable-attempt receipt location.
+    paths["heartbeat"] = project / state["heartbeat_path"]
     manifest_path = project / state["prepared_input"]["path"]
     return paths, state, read_json(manifest_path)
 
@@ -286,7 +292,7 @@ def bounded_snapshot_reads(temp_root: Path) -> None:
         require(fallback == value and fallback_seal == seal, fallback)
     finally:
         if c_loader is not None:
-            yaml.CSafeLoader = c_loader
+            setattr(yaml, "CSafeLoader", c_loader)
 
     def denied(target: Path) -> None:
         try:
@@ -964,7 +970,7 @@ def main() -> int:
         require(
             status == 0 and "COMPLETED" in output, {"status": status, "output": output}
         )
-        completed = read_json(shell_paths["status"])
+        shell_paths, completed, _ = prepared_paths(project, "shell-task")
         require(
             completed["attempt"] == shell_state_2["attempt"]
             and completed["status"] == "completed"

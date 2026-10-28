@@ -6,7 +6,7 @@ ProcessForge separates raw event receipt from permission to create project effec
 
 `tools/pf_runtime/provider_adapters.py` defines `AdapterPolicy`, `WorkerBinding`, and immutable `AdapterRegistry`. Application code constructs the registry from already-instantiated policy objects. Registry keys are the exact `(provider, adapter)` pair, duplicate or malformed keys are rejected, and `.policies` exposes the registered policies. Incoming event fields never import code, name a command, mutate the registry, or grant trust.
 
-The source Host uses `DEFAULT_ADAPTER_REGISTRY` from `builtin_provider_adapters.py`. It contains the Codex hook adapter (`codex` / `codex-hooks`), the ProcessForge-owned Codex worker capture (`processforge` / `pf-codex-exec-worker`), and the normalized Runtime compatibility adapter (`processforge` / `runtime-legacy`). These names describe current source behavior; they do not establish installed-Core or connected-host qualification.
+The source Host uses `DEFAULT_ADAPTER_REGISTRY` from `builtin_provider_adapters.py`. It contains the Codex hook adapter (`codex` / `codex-hooks`), the ProcessForge-owned Codex worker capture (`processforge` / `pf-codex-exec-worker`), the Kimi hook adapter (`kimi` / `kimi-hooks`), and the normalized Runtime compatibility adapter (`processforge` / `runtime-legacy`). These names describe current source behavior; they do not establish installed-Core or connected-host qualification.
 
 A trusted integration can construct a finite alternate registry in application code and pass it to `host.ingest_event`:
 

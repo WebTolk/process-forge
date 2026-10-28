@@ -6,7 +6,7 @@ ProcessForge отделяет приём исходного события от 
 
 В `tools/pf_runtime/provider_adapters.py` определены `AdapterPolicy`, `WorkerBinding` и неизменяемый `AdapterRegistry`. Приложение создаёт реестр из уже созданных объектов политик. Ключ — точная пара `(provider, adapter)`; повторяющиеся и некорректные ключи отклоняются, а `.policies` возвращает зарегистрированные политики. Поля входящего события не загружают код, не задают команду, не меняют реестр и не выдают доверие.
 
-Host в исходном коде использует `DEFAULT_ADAPTER_REGISTRY` из `builtin_provider_adapters.py`. В него входят адаптер хуков Codex (`codex` / `codex-hooks`), захват worker, запускаемого ProcessForge через Codex (`processforge` / `pf-codex-exec-worker`), и адаптер нормализованного Runtime для совместимости (`processforge` / `runtime-legacy`). Эти имена описывают текущую реализацию исходников; они не подтверждают готовность установленного Core или подключённого Host.
+Host в исходном коде использует `DEFAULT_ADAPTER_REGISTRY` из `builtin_provider_adapters.py`. В него входят адаптер хуков Codex (`codex` / `codex-hooks`), захват worker, запускаемого ProcessForge через Codex (`processforge` / `pf-codex-exec-worker`), адаптер хуков Kimi (`kimi` / `kimi-hooks`) и адаптер нормализованного Runtime для совместимости (`processforge` / `runtime-legacy`). Эти имена описывают текущую реализацию исходников; они не подтверждают готовность установленного Core или подключённого Host.
 
 Доверенная интеграция может создать отдельный конечный реестр в коде приложения и передать его в `host.ingest_event`:
 

@@ -70,11 +70,13 @@ Garage search reports one of four readiness states:
 - `stale`: the index needs maintenance before trustworthy results.
 - `blocked`: the project context or search setup is broken.
 
-MCP may run bounded technical maintenance before a query when the index is
-missing or stale. The search itself remains a pure query against the
-snapshot-authorized index. Semantic changes, resource selection changes, or
-unclear context updates require operator decision through the normal project
-context flow.
+Context reads and search queries only observe the existing index. They do not
+build it, mark it dirty, queue maintenance or wait for maintenance to finish.
+A missing or stale index requires separately authorized explicit
+[search maintenance](resource-search-index.md). Search remains a pure query
+against the snapshot-authorized index. Semantic changes, resource selection
+changes, or unclear context updates require operator decision through the normal
+project context flow.
 
 ## Resource Policy
 

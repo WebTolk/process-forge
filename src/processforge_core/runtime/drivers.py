@@ -7,7 +7,6 @@ from typing import Any
 
 from processforge_core.common.checks import Check, check
 
-
 RESERVED_WORKER_ENV_KEYS = {
     "PF_RUN_ID",
     "PF_TASK_ID",
@@ -150,6 +149,7 @@ class RuntimeDriverDefinitionPolicy:
                 "id": "test-echo-worker",
                 "title": "Test Echo Worker",
                 "kind": "shell",
+                "prepared_lifecycle_wrapper": True,
                 "command": {
                     "executable": "{python_executable}",
                     "args": [
@@ -159,7 +159,7 @@ class RuntimeDriverDefinitionPolicy:
                         "--output",
                         "{expected_report_path}",
                         "--heartbeat",
-                        "{heartbeat_path}",
+                        "{agent_run_dir}/target-heartbeat.json",
                     ],
                 },
                 "working_directory": "{project_root}",
@@ -186,6 +186,7 @@ class RuntimeDriverDefinitionPolicy:
                 "id": "test-shell-agent",
                 "title": "Test Shell Agent",
                 "kind": "shell",
+                "prepared_lifecycle_wrapper": True,
                 "command": {
                     "executable": "{python_executable}",
                     "args": [
@@ -197,9 +198,10 @@ class RuntimeDriverDefinitionPolicy:
                         "--output",
                         "{expected_report_path}",
                         "--heartbeat",
-                        "{heartbeat_path}",
+                        "{agent_run_dir}/target-heartbeat.json",
                         "--mode",
                         "success",
+                        "--skip-exit-marker",
                     ],
                     "model_args": ["--model", "{agent_model}"],
                 },
@@ -237,7 +239,13 @@ class RuntimeDriverDefinitionPolicy:
                     "status": "available",
                     "builtin": True,
                 }
-                for driver_id in ["manual", "generic-shell", "codex-exec", "test-echo-worker", "test-shell-agent"]
+                for driver_id in [
+                    "manual",
+                    "generic-shell",
+                    "codex-exec",
+                    "test-echo-worker",
+                    "test-shell-agent",
+                ]
             ],
         }
 
@@ -256,7 +264,8 @@ class RuntimeDriverDefinitionPolicy:
         return errors
 
     def parse_limits(self, driver: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
-        raw_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
+        raw_limits = driver.get("limits")
+        raw_limits = raw_limits if isinstance(raw_limits, dict) else {}
         parsed: dict[str, int] = {}
         errors: list[str] = []
         defaults = {"timeout_seconds": 30, "max_retries": 0}
@@ -278,56 +287,146 @@ class RuntimeDriverDefinitionPolicy:
             parsed[key] = value
         return parsed, errors
 
-    def start_readiness(self, driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
+    def start_readiness(
+        self, driver: dict[str, Any], executable_override: str | None = None
+    ) -> list[Check]:
         checks: list[Check] = []
         kind = str(driver.get("kind") or "")
         if kind != "shell":
             return checks
-        command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+        command = driver.get("command")
+        command = command if isinstance(command, dict) else {}
         raw_executable = str(command.get("executable") or "")
-        security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
-        resolved_executable = executable_override or ("" if raw_executable == "{executable}" else raw_executable)
-        if security.get("require_explicit_executable") is True and raw_executable == "{executable}" and not executable_override:
-            checks.append(check("FAIL", "start readiness executable override required for {executable}"))
+        security = driver.get("security")
+        security = security if isinstance(security, dict) else {}
+        resolved_executable = executable_override or (
+            "" if raw_executable == "{executable}" else raw_executable
+        )
+        if (
+            security.get("require_explicit_executable") is True
+            and raw_executable == "{executable}"
+            and not executable_override
+        ):
+            checks.append(
+                check(
+                    "FAIL",
+                    "start readiness executable override required for {executable}",
+                )
+            )
         elif not resolved_executable:
-            checks.append(check("FAIL", "start readiness executable resolves to empty value"))
+            checks.append(
+                check("FAIL", "start readiness executable resolves to empty value")
+            )
         else:
-            checks.append(check("PASS", f"start readiness executable: {resolved_executable}"))
+            checks.append(
+                check("PASS", f"start readiness executable: {resolved_executable}")
+            )
         return checks
 
-    def validate(self, driver: dict[str, Any], executable_override: str | None = None, include_start_readiness: bool = False) -> list[Check]:
+    def validate(
+        self,
+        driver: dict[str, Any],
+        executable_override: str | None = None,
+        include_start_readiness: bool = False,
+    ) -> list[Check]:
         checks: list[Check] = []
         driver_id = str(driver.get("id") or "")
         kind = str(driver.get("kind") or "")
-        checks.append(check("PASS" if driver.get("schema_version") else "FAIL", "schema_version present"))
+        checks.append(
+            check(
+                "PASS" if driver.get("schema_version") else "FAIL",
+                "schema_version present",
+            )
+        )
         checks.append(check("PASS" if driver_id else "FAIL", "id present"))
-        checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
+        checks.append(
+            check(
+                "PASS" if kind in {"manual", "shell"} else "FAIL",
+                f"kind valid: {kind or 'missing'}",
+            )
+        )
         if "prepared_lifecycle_wrapper" in driver:
-            checks.append(check("PASS" if type(driver["prepared_lifecycle_wrapper"]) is bool else "FAIL", "prepared_lifecycle_wrapper is boolean"))
-        security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
-        env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
-        explicit_env = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
-        reserved_env = sorted(str(key) for key in explicit_env if str(key) in RESERVED_WORKER_ENV_KEYS)
-        checks.append(check("FAIL" if reserved_env else "PASS", "reserved ProcessForge env vars not overridden" + (f": {', '.join(reserved_env)}" if reserved_env else "")))
+            checks.append(
+                check(
+                    "PASS"
+                    if type(driver["prepared_lifecycle_wrapper"]) is bool
+                    else "FAIL",
+                    "prepared_lifecycle_wrapper is boolean",
+                )
+            )
+        security = driver.get("security")
+        security = security if isinstance(security, dict) else {}
+        env_spec = driver.get("environment")
+        env_spec = env_spec if isinstance(env_spec, dict) else {}
+        explicit_env = env_spec.get("variables")
+        explicit_env = explicit_env if isinstance(explicit_env, dict) else {}
+        reserved_env = sorted(
+            str(key) for key in explicit_env if str(key) in RESERVED_WORKER_ENV_KEYS
+        )
+        checks.append(
+            check(
+                "FAIL" if reserved_env else "PASS",
+                "reserved ProcessForge env vars not overridden"
+                + (f": {', '.join(reserved_env)}" if reserved_env else ""),
+            )
+        )
         if kind == "shell":
-            command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+            command = driver.get("command")
+            command = command if isinstance(command, dict) else {}
             executable = str(command.get("executable") or "")
             args = command.get("args") if isinstance(command.get("args"), list) else []
             model_args = command.get("model_args") if "model_args" in command else []
-            checks.append(check("PASS" if executable else "FAIL", "shell command executable present"))
-            checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
-            checks.append(check("PASS" if isinstance(model_args, list) else "FAIL", "shell command model_args list when present"))
-            checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
+            checks.append(
+                check(
+                    "PASS" if executable else "FAIL", "shell command executable present"
+                )
+            )
+            checks.append(
+                check(
+                    "PASS" if isinstance(args, list) else "FAIL",
+                    "shell command args list present",
+                )
+            )
+            checks.append(
+                check(
+                    "PASS" if isinstance(model_args, list) else "FAIL",
+                    "shell command model_args list when present",
+                )
+            )
+            checks.append(
+                check(
+                    "WARN" if security.get("allow_shell") is True else "PASS",
+                    "allow_shell false by default",
+                )
+            )
             network_reason = str(security.get("network_reason") or "").strip()
-            checks.append(check("PASS" if security.get("allow_network") is not True or network_reason else "FAIL", "allow_network explicit reason when enabled"))
+            checks.append(
+                check(
+                    "PASS"
+                    if security.get("allow_network") is not True or network_reason
+                    else "FAIL",
+                    "allow_network explicit reason when enabled",
+                )
+            )
         if kind == "manual":
-            behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
-            checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
+            behavior = driver.get("behavior")
+            behavior = behavior if isinstance(behavior, dict) else {}
+            checks.append(
+                check(
+                    "PASS" if behavior.get("do_not_start_process") is True else "FAIL",
+                    "manual driver does not start process",
+                )
+            )
         limits, limit_errors = self.parse_limits(driver)
         for error in limit_errors:
             checks.append(check("FAIL", error))
         if not limit_errors:
-            checks.append(check("PASS", f"limits valid: timeout_seconds={limits['timeout_seconds']} max_retries={limits['max_retries']}"))
+            checks.append(
+                check(
+                    "PASS",
+                    f"limits valid: timeout_seconds={limits['timeout_seconds']} max_retries={limits['max_retries']}",
+                )
+            )
         for error in self.placeholder_errors(driver, "driver"):
             checks.append(check("FAIL", error))
         if include_start_readiness:

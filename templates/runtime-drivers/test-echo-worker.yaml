@@ -2,6 +2,7 @@ schema_version: 1
 id: test-echo-worker
 title: Test Echo Worker
 kind: shell
+prepared_lifecycle_wrapper: true
 command:
   executable: "{python_executable}"
   args:
@@ -11,7 +12,7 @@ command:
     - "--output"
     - "{expected_report_path}"
     - "--heartbeat"
-    - "{heartbeat_path}"
+    - "{agent_run_dir}/target-heartbeat.json"
 working_directory: "{project_root}"
 environment:
   inherit: true

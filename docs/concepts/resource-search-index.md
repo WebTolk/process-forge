@@ -114,9 +114,10 @@ python bin/pf.py search-index tick --project-root <project> --workplace <workpla
 These project-scoped commands require a project root and read its context snapshot. `status`
 is read-only; `status --verify-files` checks authorized file fingerprints and
 reports stale state when their content changed. `refresh` indexes resources
-authorized by that snapshot, respecting `indexing.mode`. `rebuild` deletes the
-derived DB and builds it again; `tick` performs one bounded pass for the project
-snapshot scope.
+authorized by that snapshot, respecting `indexing.mode`. `rebuild` replaces the
+derived search set in one SQL transaction without deleting an existing database
+file or its store identity envelope; `tick` performs one bounded pass for the
+project snapshot scope.
 
 `refresh`, `rebuild`, and `tick` require context status `fresh` or
 `fresh_with_updates`; otherwise they refuse with exit code 1. `status` and
@@ -124,8 +125,9 @@ snapshot scope.
 context freshness as `PASS` for these two states and `WARN` otherwise. The three
 explicit mutating commands delegate to the same maintenance owner through
 `run_scoped`; they do not load the workplace catalogue or acquire a broader
-source scope. Legacy `rebuild` retains its existing shared-DB replacement
-behavior, rebuilding from the supplied project selection.
+source scope. Legacy `rebuild` retains its existing shared derived-set
+replacement behavior: it clears all search rows and rebuilds from the supplied
+project selection, rather than updating only selected resources.
 
 ## Batch Knowledge Addition
 
@@ -266,12 +268,16 @@ artifacts keep `path_ref` references instead of private absolute paths.
 
 SQLite FTS5 is the only delivered backend and supplies lexical fulltext search.
 The narrow `ResourceIndexBackend` port describes the operations actually used
-by maintenance: `refresh`, `rebuild` and `maintenance_tick`. It separates search
+by maintenance: `mark_dirty`, `refresh`, `rebuild` and `maintenance_tick`. It separates search
 backend execution from the shared application component; it is not a database
 connection API, ORM or another indexing algorithm.
 
-A future shared DAL and named connection profiles would own connections,
-transactions and credentials. A later MySQL/MariaDB/PostgreSQL search adapter
+The shared [SQL database API](database-api.md) already provides `Database`,
+`SqlSession`, `SchemaManager` and named profiles. SQLite is its only delivered
+driver and repository SQL remains SQLite-specific. Query and observation still
+use `ResourceSearchIndex` directly; Work material search uses a separate in-memory
+FTS5 index. Replacing the maintenance factory does not replace these paths.
+A later MySQL/MariaDB/PostgreSQL search adapter
 would need its own conformance tests for tokenization, ranking, access filters,
 atomicity and recovery; a SQL driver alone does not provide that equivalence.
 Vector/hybrid retrieval would additionally require explicit chunking, embedding

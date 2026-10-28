@@ -272,4 +272,16 @@ maintenance; stale same-publication children cannot finalize a later update.
 
 Historical installations without their original complete ingress owner require a separately qualified one-time cold boundary. The finite native controller records persistent inhibition before retirement, copies only an accepted frozen publication with retained backups, and publishes a distinct `cold-v1` adoption. Normal post-bound operations continue with short independent native leases; the controller is not a permanent service.
 
-The private fixed native-maintenance source descriptor is an integration checkpoint. Its runtime/deployment resource-grant channel is not yet supplied by the prepared-resource adapter. It must not be treated as an executable deployment procedure until that channel, final integrated assurance and real platform/principal/boot/fault qualification are complete. No caller flag, receipt, observed interpreter hash or new empty Job establishes retirement.
+The prepared-resource adapter supplies a narrow runtime/deployment resource-grant
+channel for the private fixed native-maintenance descriptor. It intersects the
+requested tool, authoritative tool policy, grant and Work scope. The binding pins
+`management-python` body/execute access, exact attempt identity, source hashes and
+operation-specific deployment authority. `bind_preparation()` records
+`native_launch.maintenance`; consumer validation and start preflight recheck
+authority, material and source pins before admission.
+
+This source implementation does not qualify a specific deployment. A current
+authorized binding, final integrated assurance and real
+platform/principal/boot/fault qualification remain necessary. Source, archive,
+installed-Core and connected-host evidence are distinct. No caller flag, receipt,
+observed interpreter hash or new empty Job establishes retirement.
