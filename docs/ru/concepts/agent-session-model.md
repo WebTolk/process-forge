@@ -81,13 +81,21 @@ Worker не является отдельным участником. Это т�
 Inspector не является отдельным участником. Это CLI checks, process gates и
 self-check того же primary agent.
 
-Agent Ledger есть во всех режимах, но это файловый журнал вахтёра, которым
-управляют CLI-команды, а не отдельный агент. Agents отмечаются в начале сессии,
-отправляют heartbeat во время долгой работы и делают checkout перед уходом.
+Agent Ledger — слой присутствия и сессий, а не отдельный агент-вахтёр.
+В Forge/фабрике поддерживаемые хуки Codex/Kimi автоматически доставляют
+lifecycle и активность через Host в Ledger. Новый допущенный prompt,
+compaction и tool activity обновляют presence точной сессии без периодических
+вызовов LLM. Отклонённый, неизвестный/raw-only, повторный или replay input
+не обновляет presence и не открывает завершённую сессию. Presence не продлевает
+lease и не доказывает владение OS process/tree или завершение; execution
+receipts остаются отдельными. Хранение raw history необязательно; во время
+молчания heartbeat не синтезируется.
 
 Garage tools `pf.context`, `pf.search`, `pf.resolve` и `pf.work.start` не
-требуют manual Ledger session. Команды сессии ниже предназначены для Forge и
-operator diagnostics, а не для обычного старта Garage.
+требуют Runtime, hooks или Ledger session. Команды ниже — ручные совместимые
+инструменты Forge/оператора. Фактическую регистрацию хуков провайдера и
+конфигурацию Host нужно проверять на устройстве отдельно; поведение исходников
+не подтверждает такую квалификацию.
 
 Agent Director не нужен в single-agent mode. Process Supervisor / Execution
 Inspector не нужен, пока процесс не запускает внешних runtime workers.
@@ -117,7 +125,9 @@ Project-local ссылка на текущую сессию хранится з�
 
 ## Forge и operator session commands
 
-Можно использовать ledger command names или простые aliases:
+Для ручной работы и диагностики доступны ledger command names и session aliases.
+Явные heartbeat CLI/MCP вызовы сохраняют совместимость; штатная автоматическая
+доставка не требует от агента тратить токены на периодические вызовы:
 
 ```bash
 python bin/pf.py session-start --workplace <workplace> --project-root <project> --agent primary-agent --process task-batch-execution

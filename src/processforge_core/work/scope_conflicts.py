@@ -1,12 +1,13 @@
 """Operation-local write-scope comparisons with the existing conflict contract."""
+
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass, field
 import fnmatch
 import os
-from pathlib import Path
 import re
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from pathlib import Path
 
 from .context_documents import ContextContractInputs
 
@@ -18,7 +19,9 @@ class ScopeConflictService:
     project_root: Path
     inputs: ContextContractInputs = field(default_factory=ContextContractInputs)
     _keys: dict[str, str] = field(default_factory=dict, init=False)
-    _pairs: dict[tuple[str, str], tuple[bool, str]] = field(default_factory=dict, init=False)
+    _pairs: dict[tuple[str, str], tuple[bool, str]] = field(
+        default_factory=dict, init=False
+    )
     _files: list[str] | None = field(default=None, init=False)
 
     def _key(self, value: str) -> str:
@@ -35,7 +38,9 @@ class ScopeConflictService:
                 if any(part in skipped for part in path.parts):
                     continue
                 if path.is_file():
-                    files.append(self._key(path.relative_to(self.project_root).as_posix()))
+                    files.append(
+                        self._key(path.relative_to(self.project_root).as_posix())
+                    )
             self._files = files
         return self._files
 
@@ -59,17 +64,32 @@ class ScopeConflictService:
             return True, "same_glob"
         left_prefix = re.split(r"[*?\[]", left, maxsplit=1)[0]
         right_prefix = re.split(r"[*?\[]", right, maxsplit=1)[0]
-        comparable = left_prefix.startswith(right_prefix) or right_prefix.startswith(left_prefix)
+        comparable = left_prefix.startswith(right_prefix) or right_prefix.startswith(
+            left_prefix
+        )
         # Every fnmatch match starts with its literal prefix, even when a later
         # bracket expression is malformed. Incomparable nonempty prefixes
         # cannot share a file or satisfy the conservative prefix fallback.
         if left_prefix and right_prefix and not comparable:
             return False, ""
-        if any(fnmatch.fnmatch(item, left) and fnmatch.fnmatch(item, right) for item in self._repo_files()):
+        if any(
+            fnmatch.fnmatch(item, left) and fnmatch.fnmatch(item, right)
+            for item in self._repo_files()
+        ):
             return True, "glob_matches_same_file"
         if left_prefix and right_prefix and comparable:
             return True, "possible_glob_overlap"
-        return False, ""
+        # Empty prefixes carry no evidence of independence. A common future
+        # path may match both masks even when the inventory is empty. Literal
+        # tails can still prove disjointness; split on both bracket delimiters
+        # so characters inside a class are never mistaken for a literal tail.
+        left_suffix = re.split(r"[*?\[\]]", left)[-1]
+        right_suffix = re.split(r"[*?\[\]]", right)[-1]
+        if not (
+            left_suffix.endswith(right_suffix) or right_suffix.endswith(left_suffix)
+        ):
+            return False, ""
+        return True, "possible_glob_overlap"
 
     def conflicts(
         self,
@@ -85,11 +105,13 @@ class ScopeConflictService:
             for other_item in other_scope:
                 overlaps, reason = self.overlap(current_item, other_item)
                 if overlaps:
-                    conflicts.append({
-                        "current_assignment": current_id,
-                        "current_scope": current_item,
-                        "other_assignment": other_id,
-                        "other_scope": other_item,
-                        "reason": reason_prefix + reason,
-                    })
+                    conflicts.append(
+                        {
+                            "current_assignment": current_id,
+                            "current_scope": current_item,
+                            "other_assignment": other_id,
+                            "other_scope": other_item,
+                            "reason": reason_prefix + reason,
+                        }
+                    )
         return conflicts

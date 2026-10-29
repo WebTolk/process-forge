@@ -2019,3 +2019,384 @@ def test_real_adopted_collect_callback_migrates_after_lifecycle_unlock(
     repeated = _adopted_run(_ADOPTED_COLLECT, root)
     assert first == repeated
     assert first["generation"] == adopted["generation"]
+
+
+@pytest.mark.parametrize("minor", [11, 12, 13])
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "tools/pf_native_control.py",
+        "tools/pf_native_maintenance.py",
+        "tools/prepared_executor.py",
+    ],
+)
+def test_bootstrap_python_grammar_floor(relative: str, minor: int) -> None:
+    import ast
+
+    root = Path(__file__).resolve().parents[2]
+    assert Path(p.__file__).resolve() == root / "tools/pf_native_control.py"
+    # Static grammar evidence only; this does not qualify an older interpreter.
+    ast.parse((root / relative).read_bytes(), feature_version=(3, minor))
+
+
+@pytest.mark.parametrize("value", [None, object()])
+def test_image_relative_refuses_nonpaths(value: Any) -> None:
+    image = p.NativeImage.__new__(p.NativeImage)
+    assert image.relative(value) is None
+
+
+@pytest.mark.parametrize("raw", [b"{", b"\xff", b"[" * 1100])
+def test_maintenance_document_preserves_invalid_json_refusal(raw: bytes) -> None:
+    import pf_native_maintenance as maintenance
+
+    root = Path(__file__).resolve().parents[2]
+    assert (
+        Path(maintenance.__file__).resolve() == root / "tools/pf_native_maintenance.py"
+    )
+    with pytest.raises(maintenance.Rejected, match="^invalid_json$"):
+        maintenance.document(raw, 4096)
+
+
+@pytest.mark.parametrize("failure", [OSError, RuntimeError, ValueError])
+def test_executor_same_path_preserves_resolution_failure(
+    monkeypatch: pytest.MonkeyPatch, failure: type[Exception]
+) -> None:
+    import prepared_executor as executor
+
+    root = Path(__file__).resolve().parents[2]
+    assert Path(executor.__file__).resolve() == root / "tools/prepared_executor.py"
+
+    def fail(path: Path) -> Path:
+        raise failure("resolution failed")
+
+    monkeypatch.setattr(Path, "expanduser", fail)
+    assert executor._same_path("left", "right") is False
+
+
+@pytest.mark.parametrize("failure", [OSError, ValueError])
+def test_executor_failure_receipts_remain_best_effort(
+    monkeypatch: pytest.MonkeyPatch, failure: type[Exception]
+) -> None:
+    import prepared_executor as executor
+
+    calls: list[str] = []
+
+    def heartbeat(*args: Any, **kwargs: Any) -> None:
+        calls.append("heartbeat")
+        raise failure("heartbeat failed")
+
+    def exited(*args: Any, **kwargs: Any) -> None:
+        calls.append("exit")
+        raise failure("exit failed")
+
+    monkeypatch.setattr(executor, "write_heartbeat", heartbeat)
+    monkeypatch.setattr(executor, "write_exit_contract", exited)
+    executor._write_failure(
+        (Path("unused-heartbeat"), Path("unused-exit")), 125, "invalid"
+    )
+    assert calls == ["heartbeat", "exit"]
+
+
+_PORTABLE_CAPTURE = r"""
+import builtins, importlib.util, io, json, os, pathlib, sys, types
+root = pathlib.Path(sys.argv[1])
+entry_name, fault = sys.argv[2:4]
+entry_path = root / entry_name
+original_io = io.open
+original_open = builtins.open
+original_spec = importlib.util.spec_from_file_location
+original_meta = list(sys.meta_path)
+
+class Captured(Exception):
+    def __init__(self, entry):
+        self.entry = entry
+
+def trace(frame, event, arg):
+    if frame.f_code.co_name != 'bootstrap_entry':
+        return trace
+    if event == 'call':
+        module = sys.modules['pf_native_control']
+        # Windows unit evidence for the POSIX *selection* and snapshot algorithm.
+        # The actual POSIX no-follow syscalls are a separate host gate.
+        proxy = types.SimpleNamespace(**vars(os))
+        proxy.name = 'posix'
+        module.os = proxy
+        read = module._read_regular
+        if fault == 'root_alias':
+            original_image = module.NativeImage.from_publication
+            def redirected_image(directory, publication):
+                image = original_image(directory, publication)
+                image.root = directory / 'redirected-root'
+                return image
+            module.NativeImage.from_publication = redirected_image
+        changed = False
+        def snapshot(directory, relative, limit):
+            nonlocal changed
+            raw = read(directory, relative, limit)
+            if not changed and relative == module.MANIFEST:
+                changed = True
+                if fault == 'mixed':
+                    target = root / 'src/fixture_core.py'
+                    temporary = target.with_suffix('.replacement')
+                    temporary.write_bytes(b"VALUE = 'rejected'\n")
+                    os.replace(temporary, target)
+                elif fault == 'pending':
+                    target = root / 'runtime/managed-ingress/baseline.json'
+                    target.parent.mkdir(parents=True)
+                    target.write_text(json.dumps(state('pending')))
+            if fault == 'replaced' and relative == 'src/fixture_core.py':
+                target = root / relative
+                temporary = target.with_suffix('.replacement')
+                temporary.write_bytes(b"VALUE = 'rejected'\n")
+                os.replace(temporary, target)
+            return raw
+        module._snapshot_read_regular = snapshot
+    elif event == 'return' and arg is not None:
+        raise Captured(arg)
+    return trace
+
+def state(phase):
+    return dict(schema=1, installation='a'*32, archive='b'*64, selection={},
+                sentinel={}, launches=[], phase=phase, adoption=None, replacement=None)
+
+if fault in {'legacy', 'bound', 'updating'}:
+    target = root / 'runtime/managed-ingress/baseline.json'
+    target.parent.mkdir(parents=True)
+    target.write_text(json.dumps(state(fault)))
+
+runtime_before = {
+    str(path.relative_to(root)): path.read_bytes()
+    for path in (root/'runtime').rglob('*') if path.is_file()
+}
+
+if fault == 'helper':
+    leaf_path = root / 'tools/pf_native_control.py'
+    raw = leaf_path.read_bytes()
+    module = types.ModuleType('pf_native_control')
+    module.__file__ = str(leaf_path)
+    module._captured_source = raw
+    sys.modules[module.__name__] = module
+    exec(compile(raw + b'\nSHADOW = True\n', str(leaf_path), 'exec', dont_inherit=True), module.__dict__)
+
+raw_entry = entry_path.read_bytes()
+if fault == 'caller':
+    raw_entry += b'\nSHADOW = True\n'
+namespace = {'__file__': str(entry_path), '__name__': 'portable_fixture_entry'}
+if entry_name == 'src/processforge_core/__init__.py':
+    spec = original_spec('processforge_core', entry_path, submodule_search_locations=[str(entry_path.parent)])
+    core = importlib.util.module_from_spec(spec)
+    spec._initializing = True
+    sys.modules['processforge_core'] = core
+    namespace = core.__dict__
+sys.settrace(trace)
+try:
+    exec(compile(raw_entry, str(entry_path), 'exec', dont_inherit=True), namespace)
+    raise AssertionError('capture did not run')
+except Captured as result:
+    sys.settrace(None)
+    entry = result.entry
+    module = sys.modules['pf_native_control']
+    assert entry is module.current_entry()
+    assert entry.control is None and entry.publication is not None
+    assert entry.image is not None and entry.image._active
+    assert dict(entry.publication.payload) == {
+        row['relative_path']: entry.image.read(row['relative_path'])
+        for row in module.parse_manifest(entry.publication.manifest)['files']
+    }
+    assert entry.storage_safety(object()) == ('unknown', '', ('managed_exclusion_not_held',))
+    assert module.supports_owned_execution() is False
+    with entry.operation():
+        assert module._CONTROL_LEASE.get() is None
+    try:
+        module.replace_core(entry, root/'absent.zip', lambda: (_ for _ in ()).throw(AssertionError('planner called')), workplace_root=None)
+    except module.NativeControlError:
+        pass
+    else:
+        raise AssertionError('snapshot granted update authority')
+    # No disk fallback after capture, including direct alias and resources.
+    with module._PHYSICAL_OPEN(root/'src/fixture_core.py', 'wb') as stream:
+        stream.write(b"raise AssertionError('disk fallback')\n")
+    with module._PHYSICAL_OPEN(root/'resources/data.txt', 'wb') as stream:
+        stream.write(b'drift')
+    spec = importlib.util.spec_from_file_location('portable_alias', root/'src/fixture_core.py')
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    assert loaded.VALUE == 'accepted'
+    assert (root/'resources/data.txt').read_bytes() == b'resource\n'
+    assert {
+        str(path.relative_to(root)): path.read_bytes()
+        for path in (root/'runtime').rglob('*') if path.is_file()
+    } == runtime_before
+    print(json.dumps({'accepted': True, 'control': False, 'native': False}))
+finally:
+    sys.settrace(None)
+    builtins.open, io.open = original_open, original_io
+    importlib.util.spec_from_file_location = original_spec
+    sys.meta_path[:] = original_meta
+"""
+
+
+def _portable_candidate() -> Any:
+    root = Path(__file__).resolve().parents[2]
+    source = Path(os.environ["W332_SOURCE"])
+    assert Path(p.__file__).resolve() == root / p.LEAF
+    return build(
+        {
+            p.LEAF: (root / p.LEAF).read_bytes(),
+            p.INVENTORY: b"source inventory\n",
+            "tools/processforge.py": (source / "tools/processforge.py").read_bytes(),
+            "tools/prepared_executor.py": (
+                root / "tools/prepared_executor.py"
+            ).read_bytes(),
+            "src/processforge_core/__init__.py": (
+                source / "src/processforge_core/__init__.py"
+            ).read_bytes(),
+            "src/fixture_core.py": b"VALUE = 'accepted'\n",
+            "resources/data.txt": b"resource\n",
+            "VERSION": b"1.3.0-beta1\n",
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    "entry_name",
+    [
+        "tools/processforge.py",
+        "tools/prepared_executor.py",
+        "src/processforge_core/__init__.py",
+    ],
+)
+@pytest.mark.parametrize(
+    "fault", ["none", "legacy", "caller", "helper", "mixed", "replaced", "root_alias"]
+)
+def test_portable_snapshot_binds_actual_whole_entries(
+    entry_name: str, fault: str
+) -> None:
+    candidate = _portable_candidate()
+    root = fixture_root(candidate)
+    completed = subprocess.run(
+        [sys.executable, "-B", "-c", _PORTABLE_CAPTURE, str(root), entry_name, fault],
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    if fault in {"none", "legacy", "replaced"}:
+        assert completed.returncode == 0, completed.stderr
+        assert json.loads(completed.stdout) == {
+            "accepted": True,
+            "control": False,
+            "native": False,
+        }
+    else:
+        assert completed.returncode != 0
+        assert "execution_activity_unknown" in completed.stderr or (
+            fault == "mixed" and "payload_drift" in completed.stderr
+        )
+        assert completed.stdout == ""
+    if fault != "legacy":
+        assert not (root / "runtime").exists()
+
+
+@pytest.mark.parametrize("fault", ["pending", "bound", "updating", "guard", "epoch"])
+def test_portable_snapshot_cannot_bypass_control_state(fault: str) -> None:
+    candidate = _portable_candidate()
+    root = fixture_root(candidate)
+    if fault in {"guard", "epoch"}:
+        name = "installation.guard" if fault == "guard" else "epoch"
+        target = root / "runtime/native-control" / name
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b"unqualified")
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            _PORTABLE_CAPTURE,
+            str(root),
+            "tools/prepared_executor.py",
+            fault,
+        ],
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert completed.returncode != 0
+    assert completed.stdout == ""
+    assert "execution_activity_unknown" in completed.stderr
+
+
+@pytest.mark.parametrize(
+    "fault", ["none", "atime", "alias", "hardlink", "changing", "limit"]
+)
+def test_portable_snapshot_reader_retains_nofollow_descriptors(
+    monkeypatch: pytest.MonkeyPatch, fault: str
+) -> None:
+    import io
+    import stat
+    from types import SimpleNamespace
+
+    # Deterministic syscall model, not POSIX host acceptance on Windows.
+    opened: list[tuple[str, int, int | None]] = []
+    closed: list[int] = []
+
+    def open_descriptor(name: str, flags: int, *, dir_fd: int | None = None) -> int:
+        assert flags & 0x100
+        if fault == "alias" and name == "src":
+            raise OSError("nofollow alias refused")
+        opened.append((name, flags, dir_fd))
+        return len(opened)
+
+    class Stream(io.BytesIO):
+        def fileno(self) -> int:
+            return len(opened)
+
+        def close(self) -> None:
+            closed.append(self.fileno())
+            super().close()
+
+    stats = 0
+
+    def fstat(descriptor: int) -> os.stat_result:
+        nonlocal stats
+        stats += 1
+        return os.stat_result(
+            (
+                stat.S_IFREG | 0o600,
+                100,
+                1,
+                2 if fault == "hardlink" else 1,
+                0,
+                0,
+                stats if fault == "changing" else 5,
+                stats if fault == "atime" else 0,
+                0,
+                0,
+            )
+        )
+
+    monkeypatch.setattr(
+        p,
+        "os",
+        SimpleNamespace(
+            O_RDONLY=0,
+            O_DIRECTORY=0x200,
+            O_NOFOLLOW=0x100,
+            O_NONBLOCK=0x400,
+            open=open_descriptor,
+            close=closed.append,
+            fdopen=lambda descriptor, mode: Stream(b"bytes"),
+            fstat=fstat,
+        ),
+    )
+    root = Path(os.environ["W3_FIXTURE_ROOT"]).absolute()
+    if fault in {"none", "atime"}:
+        assert p._snapshot_read_regular(root, "src/file.py", 5) == b"bytes"
+    else:
+        with pytest.raises((p.Refusal, OSError)):
+            p._snapshot_read_regular(root, "src/file.py", 4 if fault == "limit" else 5)
+    assert sorted(closed) == list(range(1, len(opened) + 1))
+    assert all(flags & 0x200 for _, flags, _ in opened[:-1])
+    if fault != "alias":
+        assert opened[-1][1] & 0x400

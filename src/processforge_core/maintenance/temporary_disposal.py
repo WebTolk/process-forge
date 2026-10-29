@@ -339,7 +339,9 @@ def _dispose_directory(
                 raise ValueError("unsafe_path")
             if (info.st_dev, info.st_ino) != owned.identity:
                 raise ValueError("identity_changed")
-            with _directory(owned.path, parent) as descriptor:
+            with _directory(
+                owned.path, parent, expected_identity=owned.identity
+            ) as descriptor:
                 with os.scandir(
                     descriptor if descriptor is not None else owned.path
                 ) as children:

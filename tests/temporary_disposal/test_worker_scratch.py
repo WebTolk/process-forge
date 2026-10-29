@@ -425,3 +425,208 @@ def test_private_record_rejects_boolean_numeric_equivalence(project, field, valu
     finalized = scratch.finalize_scratch(doc, tree_absent=True, evidence_finalized=True)
     assert finalized is not None
     assert finalized.result == "deleted"
+
+
+def _opened_directory_model(monkeypatch, platform, identities, *, query_failure=False):
+    """Model native handles only; never call a filesystem or security API."""
+    import ctypes
+    import stat
+    from types import SimpleNamespace
+
+    from processforge_core.maintenance import temporary_files
+
+    events: list[tuple] = []
+    opened: dict[int, tuple[int, int]] = {}
+    pending = iter(identities)
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("unexpected filesystem operation")
+
+    def acquire(path):
+        handle = len(opened) + 42
+        opened[handle] = next(pending)
+        events.append(("open", handle, str(path)))
+        return handle
+
+    def close(handle):
+        events.append(("close", handle))
+
+    def open_posix(path, flags, *, dir_fd):
+        assert flags == 0x30000 and dir_fd == 17
+        return acquire(path)
+
+    def fstat(handle):
+        events.append(("identity", handle))
+        if query_failure:
+            raise OSError(5, "query_failure")
+        device, inode = opened[handle]
+        return SimpleNamespace(st_mode=stat.S_IFDIR, st_dev=device, st_ino=inode)
+
+    def create(path, access, share, security, creation, flags, template):
+        assert (access, share, security, creation, flags, template) == (
+            0x81,
+            3,
+            None,
+            3,
+            0x02200000,
+            None,
+        )
+        return acquire(path)
+
+    def query(handle, kind, pointer, size):
+        if kind == 9:
+            pointer._obj[0] = 0x10
+        else:
+            assert kind == 18
+            events.append(("identity", handle))
+            if query_failure:
+                return False
+            device, inode = opened[handle]
+            pointer._obj.volume = device
+            pointer._obj.identity[:] = inode.to_bytes(16, "little")
+        return True
+
+    model_os = SimpleNamespace(
+        name=platform,
+        O_RDONLY=0,
+        O_DIRECTORY=0x10000,
+        O_NOFOLLOW=0x20000,
+        open=open_posix,
+        fstat=fstat,
+        close=close,
+        scandir=unexpected,
+        stat=unexpected,
+        rmdir=unexpected,
+        unlink=unexpected,
+    )
+    kernel = SimpleNamespace(
+        CreateFileW=create, CloseHandle=close, GetFileInformationByHandleEx=query
+    )
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *a, **k: kernel, raising=False)
+    monkeypatch.setattr(ctypes, "get_last_error", lambda: 5, raising=False)
+    monkeypatch.setattr(
+        ctypes, "WinError", lambda code: OSError(code, "query_failure"), raising=False
+    )
+    monkeypatch.setattr(temporary_files, "os", model_os)
+    monkeypatch.setattr(disposal, "os", model_os)
+    return SimpleNamespace(os=model_os, events=events, opened=opened)
+
+
+@pytest.mark.parametrize("platform", ["posix", "nt"])
+@pytest.mark.parametrize(
+    "scenario", ["same", "replaced", "query_error", "body_error", "unbound"]
+)
+def test_directory_opened_identity_before_yield_pure(monkeypatch, platform, scenario):
+    from processforge_core.maintenance import temporary_files
+
+    identity = (7, (1 << 80) + 19)
+    actual = (7, identity[1] + 1) if scenario == "replaced" else identity
+    model = _opened_directory_model(
+        monkeypatch, platform, [actual], query_failure=scenario == "query_error"
+    )
+    entered = []
+
+    def use():
+        with temporary_files._directory(
+            Path("model-leaf"),
+            17,
+            expected_identity=None if scenario == "unbound" else identity,
+        ) as descriptor:
+            entered.append(descriptor)
+            assert model.events[-1][0] == (
+                "open" if platform == "nt" and scenario == "unbound" else "identity"
+            )
+            assert not any(event[0] == "close" for event in model.events)
+            if scenario == "body_error":
+                raise RuntimeError("body_error")
+
+    if scenario == "replaced":
+        with pytest.raises(ValueError, match="^identity_changed$"):
+            use()
+        assert entered == []
+    elif scenario == "query_error":
+        with pytest.raises(OSError, match="query_failure"):
+            use()
+        assert entered == []
+    elif scenario == "body_error":
+        with pytest.raises(RuntimeError, match="^body_error$"):
+            use()
+    else:
+        use()
+    assert len(entered) == (0 if scenario in {"replaced", "query_error"} else 1)
+    assert model.events[-1] == ("close", 42)
+    assert sum(event[0] == "close" for event in model.events) == 1
+
+
+@pytest.mark.parametrize("platform", ["posix", "nt"])
+@pytest.mark.parametrize("scenario", ["legitimate", "replaced", "nested_replaced"])
+def test_directory_disposal_opened_identity_pure(monkeypatch, platform, scenario):
+    import stat
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    root = Path("model-boundary").absolute() / "owned"
+    identity = (7, (1 << 80) + 19)
+    child_identity = (7, identity[1] + 1)
+    replacement = (7, identity[1] + 2)
+    identities = [replacement if scenario == "replaced" else identity]
+    if scenario == "nested_replaced":
+        identities.append(replacement)
+    model = _opened_directory_model(monkeypatch, platform, identities)
+    infos = {
+        root: SimpleNamespace(st_mode=stat.S_IFDIR, st_dev=7, st_ino=identity[1]),
+        root / "nested": SimpleNamespace(
+            st_mode=stat.S_IFDIR, st_dev=7, st_ino=child_identity[1]
+        ),
+    }
+    monkeypatch.setattr(Path, "lstat", lambda path: infos[path])
+
+    @contextmanager
+    def parent(path):
+        model.events.append(("parent", str(path)))
+        yield None if platform == "nt" else 17
+
+    @contextmanager
+    def children(target):
+        model.events.append(("scandir", str(target)))
+        assert model.events[-2][0] == "identity"
+        assert not any(event[0] == "close" for event in model.events)
+        yield [SimpleNamespace(name="nested")] if scenario == "nested_replaced" else []
+
+    def remove(*args, **kwargs):
+        model.events.append(("delete",))
+
+    monkeypatch.setattr(disposal, "_parent", parent)
+    monkeypatch.setattr(disposal, "_windows_delete", remove)
+    model.os.scandir = children
+    model.os.stat = lambda *a, **k: (
+        infos[root / "nested"] if scenario == "nested_replaced" else infos[root]
+    )
+    model.os.rmdir = remove
+    resource = disposal.OwnedTemporary(
+        "model-owned",
+        root,
+        identity,
+        root.parent,
+        disposal.TemporaryUse(True, 0, True),
+        disposal._CREATED,
+        "directory",
+    )
+    receipt = disposal._dispose_directory(resource, ("configuration_read_failed",))
+    assert receipt.resource_id == resource.resource_id
+    assert receipt.configuration_errors == ("configuration_read_failed",)
+    assert receipt.deleted_files == receipt.deleted_bytes == 0
+    if scenario == "legitimate":
+        assert receipt.result == "deleted" and receipt.complete
+        assert receipt.deleted_directories == 1 and receipt.residuals == ()
+        assert sum(event[0] == "scandir" for event in model.events) == 1
+        assert sum(event[0] == "delete" for event in model.events) == 1
+    else:
+        assert receipt.result == "cleanup_pending" and not receipt.complete
+        assert receipt.reason_code == "identity_changed"
+        assert receipt.deleted_directories == 0 and receipt.residuals == (str(root),)
+        assert sum(event[0] == "scandir" for event in model.events) == (
+            1 if scenario == "nested_replaced" else 0
+        )
+        assert not any(event[0] == "delete" for event in model.events)
+    assert sum(event[0] == "close" for event in model.events) == len(identities)

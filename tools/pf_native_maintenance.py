@@ -86,7 +86,11 @@ def document(raw: bytes, limit: int) -> dict[str, Any]:
     reject_unless(0 < len(raw) <= limit, "document_size")
     try:
         value = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_constant)
-    except UnicodeError, json.JSONDecodeError, RecursionError:
+    except (
+        UnicodeError,
+        json.JSONDecodeError,
+        RecursionError,
+    ):
         raise Rejected("invalid_json") from None
     reject_unless(isinstance(value, dict), "document_shape")
     return dict(value)

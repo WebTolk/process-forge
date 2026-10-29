@@ -25,11 +25,12 @@ from contextvars import ContextVar
 from ctypes import wintypes
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from types import MappingProxyType
+from types import FrameType, MappingProxyType
 from typing import Any
 from uuid import uuid4
 
 _PHYSICAL_OPEN = io.open
+_MODULE_CODE = sys._getframe().f_code
 
 
 class NativeControlError(OSError):
@@ -525,7 +526,10 @@ class NativeImage:
         try:
             path = Path(value).absolute()
             return path.relative_to(self.root).as_posix()
-        except TypeError, ValueError:
+        except (
+            TypeError,
+            ValueError,
+        ):
             return None
 
     @classmethod
@@ -896,7 +900,10 @@ class NativeControl:
                 life = _OperationLifetime(os.getpid(), threading.get_ident())
                 life_token = _OPERATION_LIFETIME.set(life)
                 yield self
-            except OSError, UnicodeError:
+            except (
+                OSError,
+                UnicodeError,
+            ):
                 if token is None:
                     raise NativeControlError() from None
                 raise
@@ -1240,25 +1247,31 @@ class Publication:
 def accept_publication(root: Path, *, trusted_leaf: bytes) -> Publication | None:
     """Verify before Core, outside guard; None keeps recognized legacy mode.
 
-    No guard/epoch/runtime directory is created. Caller holds actual deployment
-    exclusion, validates the root's ancestors, supplies the source bytes it
-    compiled as the trusted leaf, and retains the returned bytes for all loads.
+    No guard/epoch/runtime directory is created. Caller validates the physical
+    root, supplies the source bytes it compiled as the trusted leaf, and retains
+    the returned bytes for all loads. This proves content, never operational
+    exclusion; managed callers still require their actual deployment leases.
     A caller-supplied current-file pin is not a trust source for this function.
     """
+    return _capture_publication(root, trusted_leaf, _read_regular)
+
+
+def _capture_publication(
+    root: Path, trusted_leaf: bytes, read: Callable[[Path, str, int], bytes]
+) -> Publication | None:
+    """Accept one complete seal-bound byte image using the caller's reader."""
     seal = leaf_seal(trusted_leaf)
     if seal is None:
         return None
     try:
-        raw = _read_regular(root, MANIFEST, MAX_MANIFEST)
+        raw = read(root, MANIFEST, MAX_MANIFEST)
         data = parse_manifest(raw)
         if digest(projection(raw)) != seal[1]:
             raise Refusal("publication_drift")
         captured: dict[str, bytes] = {}
         for row in data["files"]:
             path = row["relative_path"]
-            content = (
-                trusted_leaf if path == LEAF else _read_regular(root, path, row["size"])
-            )
+            content = trusted_leaf if path == LEAF else read(root, path, row["size"])
             if len(content) != row["size"] or digest(content) != row["sha256"]:
                 raise Refusal("payload_drift")
             captured[path] = content
@@ -1267,6 +1280,83 @@ def accept_publication(root: Path, *, trusted_leaf: bytes) -> Publication | None
         return Publication(MappingProxyType(captured), seal[1], digest(raw), raw)
     except OSError as exc:
         raise Refusal("publication_unreadable") from exc
+
+
+def _snapshot_read_regular(root: Path, relative: str, limit: int) -> bytes:
+    """Read through retained no-follow POSIX directories, without path reopen.
+
+    Concurrent replacement can change the directory entries, but cannot retarget
+    these descriptors. Every returned byte still has to match the trusted seal.
+    This is a content snapshot reader, not a replacement or writer-death lease.
+    """
+    parts = (*root.parts[1:], *safe_path(relative).split("/"))
+    nofollow = int(getattr(os, "O_NOFOLLOW"))
+    flags = os.O_RDONLY | int(getattr(os, "O_DIRECTORY")) | nofollow
+    with ExitStack() as directories:
+        directory = os.open(root.anchor, flags)
+        directories.callback(os.close, directory)
+        for part in parts[:-1]:
+            directory = os.open(part, flags, dir_fd=directory)
+            directories.callback(os.close, directory)
+        descriptor = os.open(
+            parts[-1],
+            os.O_RDONLY | nofollow | int(getattr(os, "O_NONBLOCK")),
+            dir_fd=directory,
+        )
+        with os.fdopen(descriptor, "rb") as stream:
+            before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+                raise Refusal("not_regular")
+            raw = stream.read(limit + 1)
+            after = os.fstat(stream.fileno())
+        # Reading can update atime; it is not content or alias drift.
+        if any(
+            getattr(before, key) != getattr(after, key)
+            for key in (
+                "st_dev",
+                "st_ino",
+                "st_mode",
+                "st_nlink",
+                "st_size",
+                "st_mtime_ns",
+                "st_ctime_ns",
+            )
+        ):
+            raise Refusal("capture_changed")
+        if len(raw) > limit:
+            raise Refusal("read_limit")
+        return raw
+
+
+def _snapshot_origin(
+    root: Path, trusted_leaf: bytes, publication: Publication, caller: FrameType
+) -> None:
+    """Bind the executing helper and whole entry to this exact captured image."""
+    leaf_path = str(root / LEAF)
+    module = sys.modules.get("pf_native_control")
+    if (
+        getattr(module, "__dict__", None) is not globals()
+        or globals().get("__file__") != leaf_path
+        or globals().get("_captured_source") != trusted_leaf
+        or _MODULE_CODE.co_filename != leaf_path
+        or _MODULE_CODE != compile(trusted_leaf, leaf_path, "exec", dont_inherit=True)
+    ):
+        raise NativeControlError()
+    for relative in (
+        "tools/processforge.py",
+        "tools/prepared_executor.py",
+        "src/processforge_core/__init__.py",
+    ):
+        path = str(root / relative)
+        raw = publication.payload.get(relative)
+        if (
+            raw is not None
+            and caller.f_globals.get("__file__") == path
+            and caller.f_code.co_filename == path
+            and caller.f_code == compile(raw, path, "exec", dont_inherit=True)
+        ):
+            return
+    raise NativeControlError()
 
 
 @dataclass(frozen=True)
@@ -1348,19 +1438,39 @@ def bootstrap_entry(
     if guard.exists() != epoch.exists():
         raise NativeControlError()
     control = _bootstrap_control(root, seal[1], guard, epoch)
+    snapshot_only = control is None and os.name != "nt"
     from contextlib import ExitStack
 
     with ExitStack() as leases:
         if control is not None:
             leases.enter_context(control.operation())
-        else:
+        elif os.name == "nt":
             leases.enter_context(_publication_read_exclusion(root))
-        if _read_regular(root, LEAF, MAX_FILE) != trusted_leaf:
-            raise NativeControlError()
-        publication = accept_publication(root, trusted_leaf=trusted_leaf)
+        if snapshot_only:
+            # A fresh file-only entry needs a complete immutable code image,
+            # not an attestation of deployment exclusion. Never promote this
+            # snapshot to a control/epoch or a qualified native operation.
+            if _snapshot_read_regular(root, LEAF, MAX_FILE) != trusted_leaf:
+                raise NativeControlError()
+            publication = _capture_publication(
+                root, trusted_leaf, _snapshot_read_regular
+            )
+            if publication is not None:
+                _snapshot_origin(root, trusted_leaf, publication, sys._getframe(1))
+            if (
+                guard.exists() != epoch.exists()
+                or _bootstrap_control(root, seal[1], guard, epoch) is not None
+            ):
+                raise NativeControlError()
+        else:
+            if _read_regular(root, LEAF, MAX_FILE) != trusted_leaf:
+                raise NativeControlError()
+            publication = accept_publication(root, trusted_leaf=trusted_leaf)
         if publication is None:
             raise NativeControlError()
         image = NativeImage.from_publication(root, publication)
+        if snapshot_only and image.root != root:
+            raise NativeControlError()
     image.activate(_core_entry=_core_entry)
     _ENTRY = NativeEntry(root, publication, image, control)
     return _ENTRY
@@ -1546,7 +1656,12 @@ def _update_entry(core_root: Path) -> NativeEntry | _MaintenanceTarget:
             MappingProxyType(dict(state["selection"])),
             frozenset(row["relative_path"] for row in parse_manifest(raw)["files"]),
         )
-    except (OSError, ValueError, KeyError, TypeError):
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ):
         raise NativeControlError() from None
 
 
@@ -1626,7 +1741,12 @@ def supports_owned_execution() -> bool:
                 job.stop(deadline=time.monotonic() + 5)
                 process.wait(timeout=5)
             job.close()
-    except OSError, AttributeError, ValueError, subprocess.SubprocessError:
+    except (
+        OSError,
+        AttributeError,
+        ValueError,
+        subprocess.SubprocessError,
+    ):
         return False
 
 
@@ -2269,7 +2389,10 @@ class ManagedEnrollmentProducer:
     def _publication(self, entry: NativeEntry | None = None) -> Publication:
         try:
             publication = accept_publication(self.root, trusted_leaf=self.trusted_leaf)
-        except OSError, ValueError:
+        except (
+            OSError,
+            ValueError,
+        ):
             raise NativeControlError() from None
         if publication is None or (
             entry is not None
@@ -2398,7 +2521,12 @@ class ManagedEnrollmentProducer:
         try:
             self._durable(state)
             return "proven"
-        except OSError, ValueError, KeyError, TypeError:
+        except (
+            OSError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ):
             return "unknown"
 
     def inspect(self) -> str:
@@ -2406,7 +2534,12 @@ class ManagedEnrollmentProducer:
         try:
             with self._ingress():
                 return self._closure(self._state())
-        except OSError, ValueError, KeyError, TypeError:
+        except (
+            OSError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ):
             return "unknown"
 
     def enroll(
@@ -2799,7 +2932,12 @@ class ManagedEnrollmentProducer:
                         active |= job.active() != 0
                     finally:
                         job.close()
-            except OSError, ValueError, KeyError, TypeError:
+            except (
+                OSError,
+                ValueError,
+                KeyError,
+                TypeError,
+            ):
                 unknown = True
         return "unknown" if unknown else "active" if active else "proven"
 
@@ -3000,7 +3138,12 @@ def _managed_storage_safety(
                 "adoption:" + proof.generation,
             ),
         )
-    except OSError, ValueError, KeyError, TypeError:
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ):
         return "unknown", "", ("managed_revalidation_failed",)
 
 
@@ -3047,7 +3190,12 @@ def _validate_shared_head(control: NativeControl) -> None:
             or head["epoch"] != control.accepted_epoch
         ):
             raise NativeControlError()
-    except OSError, ValueError, KeyError, TypeError:
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ):
         raise NativeControlError() from None
 
 

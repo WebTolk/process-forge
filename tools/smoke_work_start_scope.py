@@ -1,40 +1,55 @@
 """Explicit operator scope creates a natively pinned, executable Work."""
+
 from __future__ import annotations
 
+import argparse
 import copy
 import fnmatch
 import hashlib
 import json
-from pathlib import Path
 import re
 import runpy
 import subprocess
 import sys
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import yaml
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import processforge as core
-from processforge_core.agents.process_events import ProcessEventRecorder
-from processforge_core.composition import bind_process_events, bind_work_summaries
-from processforge_core.presentation.work_summaries import WorkSummaryRenderer
-from processforge_core.process_execution import ProcessExecutionService
-from processforge_core.work.scope_conflicts import ScopeConflictService
-from processforge_core.work.context_documents import ContextContractInputs
 from process_execution_smoke_support import fixture, stage_evidence
 
-validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-schemas.py"))["validate_instance"]
-ASSIGNMENT_SCHEMA = json.loads((ROOT / "schemas/assignment.schema.json").read_text(encoding="utf-8"))
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.maintenance.temporary_disposal import owned_directory
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
+from processforge_core.process_execution import ProcessExecutionService
+from processforge_core.runtime.worker_validation import WorkerPlanValidationService
+from processforge_core.work.context_documents import ContextContractInputs
+from processforge_core.work.scope_conflicts import ScopeConflictService
+
+ROOT = Path(__file__).resolve().parents[1]
+
+validate_instance = runpy.run_path(
+    str(ROOT / "tools/validate-process-forge-schemas.py")
+)["validate_instance"]
+ASSIGNMENT_SCHEMA = json.loads(
+    (ROOT / "schemas/assignment.schema.json").read_text(encoding="utf-8")
+)
 
 
 def records(project):
-    return {str(p.relative_to(project)): p.read_bytes() for folder in
-            ("assignments", "runs", "contexts/assignment-capsules")
-            for p in (project / ".pf" / folder).rglob("*.yaml")}
+    return {
+        str(p.relative_to(project)): p.read_bytes()
+        for folder in ("assignments", "runs", "contexts/assignment-capsules")
+        for p in (project / ".pf" / folder).rglob("*.yaml")
+    }
 
 
 def assert_saved_mode(project, result, expected):
@@ -51,9 +66,15 @@ _scope_inputs = ContextContractInputs()
 
 
 def prior_overlap(left, right, files):
-    """Frozen pre-repair decisions/reasons, independent of the optimized owner."""
-    left, right = _scope_inputs.assignment_path_key(left), _scope_inputs.assignment_path_key(right)
-    left_glob, right_glob = any(c in left for c in "*?["), any(c in right for c in "*?[")
+    """Reference decisions, including conservative future-file admission."""
+    left, right = (
+        _scope_inputs.assignment_path_key(left),
+        _scope_inputs.assignment_path_key(right),
+    )
+    left_glob, right_glob = (
+        any(c in left for c in "*?["),
+        any(c in right for c in "*?["),
+    )
     if not left_glob and not right_glob:
         return left == right, "same_file"
     if left_glob and not right_glob:
@@ -62,36 +83,93 @@ def prior_overlap(left, right, files):
         return fnmatch.fnmatch(left, right), "file_matches_glob"
     if left == right:
         return True, "same_glob"
-    if any(fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), left) and
-           fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), right) for p in files):
+    if any(
+        fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), left)
+        and fnmatch.fnmatch(_scope_inputs.assignment_path_key(p), right)
+        for p in files
+    ):
         return True, "glob_matches_same_file"
     lp, rp = (re.split(r"[*?\[]", p, maxsplit=1)[0] for p in (left, right))
-    if lp and rp and (lp.startswith(rp) or rp.startswith(lp)):
+    if lp and rp:
+        if lp.startswith(rp) or rp.startswith(lp):
+            return True, "possible_glob_overlap"
+        return False, ""
+    # Keep the earlier prefix fallback, and conservatively admit a potential
+    # intersection when either prefix is empty unless literal tails disagree.
+    tails = [re.split(r"[*?\[\]]", pattern)[-1] for pattern in (left, right)]
+    if tails[0].endswith(tails[1]) or tails[1].endswith(tails[0]):
         return True, "possible_glob_overlap"
     return False, ""
 
 
+@contextmanager
+def scope_fixture_directory(prefix: str) -> Iterator[str]:
+    """Use owned scratch; prefix labels callers, allocation names stay helper-owned."""
+    with owned_directory(Path(tempfile.gettempdir())) as directory:
+        yield str(directory)
+
+
 def assert_scope_conflict_contract():
-    with tempfile.TemporaryDirectory(prefix="pf-scope-contract-") as directory:
+    with scope_fixture_directory(prefix="pf-scope-contract-") as directory:
         project = Path(directory)
-        files = ["a/real.txt", "a/deep/real.py", "b/one.txt", "UPPER/CASE.TXT",
-                 "space name.txt", "bracket/[x].txt"]
-        for name in files + [".git/ignored.txt", "__pycache__/ignored.txt",
-                             ".mypy_cache/ignored.txt", ".pytest_cache/ignored.txt"]:
+        files = [
+            "a/real.txt",
+            "a/deep/real.py",
+            "b/one.txt",
+            "UPPER/CASE.TXT",
+            "space name.txt",
+            "bracket/[x].txt",
+        ]
+        for name in files + [
+            ".git/ignored.txt",
+            "__pycache__/ignored.txt",
+            ".mypy_cache/ignored.txt",
+            ".pytest_cache/ignored.txt",
+        ]:
             p = project / name
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text("scope contract\n", encoding="utf-8")
-        patterns = ["", "/", "./a//real.txt", "a/real.txt", "a/*.txt", "a/**", "a/deep/*.py",
-                    "a/missing-*", "b/*.txt", "*.txt", "?/*", "[ab]/*", "[!a]/*", "[", "[[]*",
-                    "UPPER/*.TXT", "upper/*.txt", "a/../*", "a\\*.txt", "./a/**/", "*", "*/real.*"]
+        patterns = [
+            "",
+            "/",
+            "./a//real.txt",
+            "a/real.txt",
+            "a/*.txt",
+            "a/**",
+            "a/deep/*.py",
+            "a/missing-*",
+            "b/*.txt",
+            "*.txt",
+            "?/*",
+            "[ab]/*",
+            "[!a]/*",
+            "[",
+            "[[]*",
+            "UPPER/*.TXT",
+            "upper/*.txt",
+            "a/../*",
+            "a\\*.txt",
+            "./a/**/",
+            "*",
+            "*/real.*",
+        ]
         service = ScopeConflictService(project)
         for left in patterns:
             for right in patterns:
-                assert service.overlap(left, right) == prior_overlap(left, right, files), (left, right)
+                assert service.overlap(left, right) == prior_overlap(
+                    left, right, files
+                ), (left, right)
         assert service.overlap("a/*.txt", "a/**") == (True, "glob_matches_same_file")
-        assert service.overlap("a/missing-*", "a/*.none") == (True, "possible_glob_overlap")
+        assert service.overlap("a/missing-*", "a/*.none") == (
+            True,
+            "possible_glob_overlap",
+        )
         # Decisions that can be made from declarations must never traverse disk.
-        with patch.object(Path, "rglob", side_effect=AssertionError("unnecessary repository traversal")):
+        with patch.object(
+            Path,
+            "rglob",
+            side_effect=AssertionError("unnecessary repository traversal"),
+        ):
             fast = ScopeConflictService(project)
             assert fast.overlap("a/*.txt", "b/**") == (False, "")
             assert fast.overlap("a/**", "a/**") == (True, "same_glob")
@@ -100,9 +178,11 @@ def assert_scope_conflict_contract():
             assert fast.conflicts("a", [], "b", ["**"]) == []
         original_rglob = Path.rglob
         scans = []
+
         def counted_rglob(path, pattern):
             scans.append(path)
             return original_rglob(path, pattern)
+
         with patch.object(Path, "rglob", counted_rglob):
             indexed = ScopeConflictService(project)
             first = indexed.overlap("a/*.txt", "a/**")
@@ -110,240 +190,727 @@ def assert_scope_conflict_contract():
             assert indexed.overlap("a/*.txt", "a/**") == first
         assert scans == [project], scans
         # A later operation must see new files and retain the precise reason.
-        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (True, "possible_glob_overlap")
+        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (
+            True,
+            "possible_glob_overlap",
+        )
         (project / "later").mkdir()
         (project / "later/now.txt").write_text("new\n", encoding="utf-8")
-        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (True, "glob_matches_same_file")
-        ordered = service.conflicts("left", ["a/real.txt", "a/*.txt"], "right",
-                                    ["a/**", "a/real.txt"], reason_prefix="forbidden:")
-        assert [(x["current_scope"], x["other_scope"], x["reason"]) for x in ordered] == [
+        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (
+            True,
+            "glob_matches_same_file",
+        )
+        ordered = service.conflicts(
+            "left",
+            ["a/real.txt", "a/*.txt"],
+            "right",
+            ["a/**", "a/real.txt"],
+            reason_prefix="forbidden:",
+        )
+        assert [
+            (x["current_scope"], x["other_scope"], x["reason"]) for x in ordered
+        ] == [
             ("a/real.txt", "a/**", "forbidden:file_matches_glob"),
             ("a/real.txt", "a/real.txt", "forbidden:same_file"),
             ("a/*.txt", "a/**", "forbidden:glob_matches_same_file"),
             ("a/*.txt", "a/real.txt", "forbidden:glob_matches_file"),
         ]
         for directory in (".git", "__pycache__", ".mypy_cache", ".pytest_cache"):
-            assert service.overlap(directory + "/*.txt", "*.txt") == (False, "")
+            assert service.overlap(directory + "/*.txt", "*.txt") == (
+                True,
+                "possible_glob_overlap",
+            )
         assignments = project / ".pf/assignments"
         assignments.mkdir(parents=True)
-        current = {"id": "current", "allowed_files": ["a/*.txt"], "forbidden_files": ["a/real.txt"]}
-        other = {"id": "other", "status": "in_progress", "allowed_files": ["a/**"]}
+        current: dict[str, Any] = {
+            "id": "current",
+            "allowed_files": ["a/*.txt"],
+            "forbidden_files": ["a/real.txt"],
+        }
+        other: dict[str, Any] = {
+            "id": "other",
+            "status": "in_progress",
+            "allowed_files": ["a/**"],
+        }
         other_path = assignments / "a-other.yaml"
+
         def write_other():
             other_path.write_text(yaml.safe_dump(other), encoding="utf-8")
+
         write_other()
         (assignments / "b-broken.yaml").write_text("schema: [\n", encoding="utf-8")
-        (assignments / "c-completed.yaml").write_text(yaml.safe_dump({
-            "id": "finished", "status": "completed", "allowed_files": ["a/**"]}), encoding="utf-8")
+        (assignments / "c-completed.yaml").write_text(
+            yaml.safe_dump(
+                {"id": "finished", "status": "completed", "allowed_files": ["a/**"]}
+            ),
+            encoding="utf-8",
+        )
         result = core.validate_assignment_scope_overlaps(project, current)
         assert result["status"] == "fail"
         assert [(x["other_assignment"], x["reason"]) for x in result["conflicts"]] == [
-            ("current", "assignment_forbidden_wins:glob_matches_file"), ("other", "glob_matches_same_file")]
-        for left, right in ((current, other), (other, current)):
-            left["dependencies"] = {"blocked_by": [right["id"]]}
+            ("current", "assignment_forbidden_wins:glob_matches_file"),
+            ("other", "glob_matches_same_file"),
+        ]
+        for dependent, predecessor in ((current, other), (other, current)):
+            dependent["dependencies"] = {"blocked_by": [predecessor["id"]]}
             write_other()
-            assert len(core.validate_assignment_scope_overlaps(project, current)["conflicts"]) == 1
-            del left["dependencies"]
+            assert (
+                len(
+                    core.validate_assignment_scope_overlaps(project, current)[
+                        "conflicts"
+                    ]
+                )
+                == 1
+            )
+            del dependent["dependencies"]
         other["allowed_files"] = ["b/**"]
         write_other()
         current["forbidden_files"] = []
-        assert core.validate_assignment_scope_overlaps(project, current) == {"status": "pass", "conflicts": []}
+        assert core.validate_assignment_scope_overlaps(project, current) == {
+            "status": "pass",
+            "conflicts": [],
+        }
         other["allowed_files"] = ["a/**"]
         write_other()
-        assert core.validate_assignment_scope_overlaps(project, current)["conflicts"][0]["other_assignment"] == "other"
+        assert (
+            core.validate_assignment_scope_overlaps(project, current)["conflicts"][0][
+                "other_assignment"
+            ]
+            == "other"
+        )
         try:
             (project / "linked").symlink_to(project / "a", target_is_directory=True)
-        except (OSError, NotImplementedError):
+        except (
+            OSError,
+            NotImplementedError,
+        ):
             print("SKIP: directory symlink qualification unavailable")
         else:
-            assert ScopeConflictService(project).overlap("linked/*.txt", "*.txt") == (False, "")
+            assert ScopeConflictService(project).overlap("linked/*.txt", "*.txt") == (
+                True,
+                "possible_glob_overlap",
+            )
+
+
+def assert_future_scope_admission():
+    """Reject future shared writes through the existing admission owners."""
+    pairs = [
+        ("*.py", "a*.py", "abc.py"),
+        ("?.py", "[ab].py", "a.py"),
+        ("[ab]*.py", "a?.py", "ab.py"),
+        ("[!x]*.py", "a*.py", "abc.py"),
+        ("*/*.py", "src/a?.py", "src/ab.py"),
+        ("[[]*.py", "?a*.py", "[abc.py"),
+        ("[*.py", "?*.py", "[abc.py"),
+    ]
+    for left, right, witness in pairs:
+        with scope_fixture_directory(prefix="pf-future-scope-") as directory:
+            project = Path(directory)
+            assert fnmatch.fnmatch(witness, left) and fnmatch.fnmatch(witness, right)
+            for a, b in ((left, right), (right, left)):
+                assert ScopeConflictService(project).overlap(a, b) == (
+                    True,
+                    "possible_glob_overlap",
+                )
+            target = project / witness
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("future witness\n", encoding="utf-8")
+            for a, b in ((left, right), (right, left)):
+                assert ScopeConflictService(project).overlap(a, b) == (
+                    True,
+                    "glob_matches_same_file",
+                )
+    with scope_fixture_directory(prefix="pf-future-admission-") as directory:
+        project = Path(directory)
+        for left, right in [
+            ("*.py", "*.md"),
+            ("?.py", "[ab].txt"),
+            ("src/*.py", "docs/*.py"),
+            ("*a.py", "*b.py"),
+        ]:
+            assert ScopeConflictService(project).overlap(left, right) == (False, "")
+            assert ScopeConflictService(project).overlap(right, left) == (False, "")
+        # fnmatch '*' includes directory separators; do not switch to path glob semantics.
+        assert ScopeConflictService(project).overlap("*.py", "src/a*.py")[0]
+        plan: dict[str, Any] = {
+            "run": {"id": "future", "title": "Future writes"},
+            "workers": [
+                {"id": "first", "writer": True, "allowed_files": ["*.py"]},
+                {"id": "second", "writer": True, "allowed_files": ["a*.py"]},
+            ],
+            "integration": {"required": False},
+        }
+        validation = WorkerPlanValidationService(ROOT)
+
+        def failures() -> list[tuple[str, str]]:
+            return [
+                (item.level, item.message)
+                for item in validation.validate(project, plan)
+                if item.level == "FAIL"
+            ]
+
+        assert failures() == [
+            ("FAIL", "parallel write scopes overlap: first <-> second")
+        ]
+        plan["workers"][1]["depends_on"] = ["first"]
+        assert failures() == []
+        del plan["workers"][1]["depends_on"]
+        plan["workers"][1]["allowed_files"] = ["*.md"]
+        assert failures() == []
+        plan["workers"][1]["allowed_files"] = ["a*.py"]
+
+        assignments = project / ".pf/assignments"
+        assignments.mkdir(parents=True)
+        first = {"id": "first", "status": "in_progress", "allowed_files": ["*.py"]}
+        second: dict[str, Any] = {
+            "id": "second",
+            "status": "open",
+            "allowed_files": ["a*.py"],
+        }
+        (assignments / "first.yaml").write_text(yaml.safe_dump(first), encoding="utf-8")
+        refusal = {
+            "status": "fail",
+            "conflicts": [
+                {
+                    "current_assignment": "second",
+                    "current_scope": "a*.py",
+                    "other_assignment": "first",
+                    "other_scope": "*.py",
+                    "reason": "possible_glob_overlap",
+                }
+            ],
+        }
+        assert core.validate_assignment_scope_overlaps(project, second) == refusal
+        second["dependencies"] = {"blocked_by": ["first"]}
+        assert core.validate_assignment_scope_overlaps(project, second) == {
+            "status": "pass",
+            "conflicts": [],
+        }
+        del second["dependencies"]
+
+        # Exercise the actual supervisor gate. Fixture IO/observation and the
+        # launch boundary are isolated: no worker process is ever started.
+        tasks = {"first": first, "second": second}
+        run = {"tasks": [{"id": "first", "order": 1}, {"id": "second", "order": 2}]}
+        profile = {
+            "scheduling": {"max_parallel_workers": 2, "default_driver": "test-shell"}
+        }
+
+        def state(_project: Path, _run: str, task: str) -> dict[str, str]:
+            return {"status": "running" if task == "first" else "planned"}
+
+        with (
+            patch.object(
+                core._supervisor_input_service,
+                "load_supervisor_profile",
+                return_value=profile,
+            ),
+            patch.object(core, "load_run", return_value=run),
+            patch.object(
+                core._supervisor_state_inputs,
+                "load_run_plan_if_present",
+                return_value=plan,
+            ),
+            patch.object(
+                core._worker_assignment_service,
+                "load",
+                side_effect=lambda _project, task: tasks[task],
+            ),
+            patch.object(core, "load_agent_run_state", side_effect=state),
+            patch.object(
+                core, "observe_worker_run", return_value={"status": "running"}
+            ),
+            patch.object(
+                core,
+                "command_worker_run_start",
+                side_effect=AssertionError("conflicting writer launched"),
+            ),
+            patch.object(core._process_event_recorder, "emit_process_event"),
+        ):
+            result = core.supervisor_tick_result(
+                argparse.Namespace(project_root=str(project), run="future")
+            )
+            assert result == {
+                "runs": ["future"],
+                "start_allowed": True,
+                "started": [],
+                "running": ["first"],
+                "observed": ["first"],
+                "historical_observed": [],
+                "recovery_required": [],
+                "collected": [],
+                "skipped": ["second"],
+                "blocked_overlap": ["second"],
+                "failed": [],
+                "report": ".pf/runtime/supervisor/last-tick-report.md",
+            }
+            second["dependencies"] = {"blocked_by": ["first"]}
+            result = core.supervisor_tick_result(
+                argparse.Namespace(project_root=str(project), run="future")
+            )
+            assert result["skipped"] == ["second"] and result["blocked_overlap"] == []
 
 
 def main():
     assert_scope_conflict_contract()
+    assert_future_scope_admission()
     with fixture() as (workplace, project, initial):
-        service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
+        service = bind_work_summaries(
+            bind_process_events(
+                ProcessExecutionService(project, workplace, core),
+                ProcessEventRecorder(),
+            ),
+            WorkSummaryRenderer(),
+        )
         original = records(project)
-        capsule = yaml.safe_load((project / ".pf/contexts/assignment-capsules" /
-                                  (initial["assignment_id"] + ".capsule.yaml")).read_text(encoding="utf-8"))
+        capsule = yaml.safe_load(
+            (
+                project
+                / ".pf/contexts/assignment-capsules"
+                / (initial["assignment_id"] + ".capsule.yaml")
+            ).read_text(encoding="utf-8")
+        )
         assert capsule["execution_contract"]["scope"]["allowed_files"] == []
-        spec = {"schema_version": 1, "assignment": {
-            "allowed_files": ["example.py", ".pf/artifacts/scoped/**"],
-            "allowed_read_files": ["example.py"],
-            "required_outputs": [{"id": "result", "path": ".pf/artifacts/scoped/result.md"}],
-            "expected_report": {"artifact": ".pf/artifacts/scoped/result.md"},
-        }}
+        spec: dict[str, Any] = {
+            "schema_version": 1,
+            "assignment": {
+                "allowed_files": ["example.py", ".pf/artifacts/scoped/**"],
+                "allowed_read_files": ["example.py"],
+                "required_outputs": [
+                    {"id": "result", "path": ".pf/artifacts/scoped/result.md"}
+                ],
+                "expected_report": {"artifact": ".pf/artifacts/scoped/result.md"},
+            },
+        }
         # Rejected declarations must not leave assignments/runs/capsules behind.
         bad = []
-        for key, value in [("unknown", []), ("allowed_files", ["../escape"]),
-                           ("allowed_read_files", ["C:/private"]), ("allowed_files", "*"),
-                           ("allowed_actions", ["shell"]), ("execution_mode", "unknown"),
-                           ("required_outputs", ["result"]), ("ownership", {"writer": "yes"})]:
+        for key, value in [
+            ("unknown", []),
+            ("allowed_files", ["../escape"]),
+            ("allowed_read_files", ["C:/private"]),
+            ("allowed_files", "*"),
+            ("allowed_actions", ["shell"]),
+            ("execution_mode", "unknown"),
+            ("required_outputs", ["result"]),
+            ("ownership", {"writer": "yes"}),
+        ]:
             candidate = copy.deepcopy(spec)
             candidate["assignment"][key] = value
             bad.append(candidate)
-        for mode in [None, False, 1, [], {"kind": "unknown"},
-                     {"kind": "assurance", "code_changes_allowed": 1},
-                     {"kind": "assurance", "artifact_changes_allowed": "false"},
-                     {"kind": "assurance", "requires_review": 0}]:
+        invalid_modes: list[object] = [
+            None,
+            False,
+            1,
+            [],
+            {"kind": "unknown"},
+            {"kind": "assurance", "code_changes_allowed": 1},
+            {"kind": "assurance", "artifact_changes_allowed": "false"},
+            {"kind": "assurance", "requires_review": 0},
+        ]
+        for mode in invalid_modes:
             candidate = copy.deepcopy(spec)
             candidate["assignment"]["execution_mode"] = mode
             bad.append(candidate)
-        bad.extend([
-            {**spec, "schema_version": True},
-            {**spec, "assignment": {"allowed_files": ["example.py"], "forbidden_files": ["example.py"]}},
-            {**spec, "assignment": {"allowed_actions": ["write_product"], "execution_mode": "read_only"}},
-            {**spec, "assignment": {"allowed_actions": ["read"], "forbidden_actions": ["read"]}},
-            {**spec, "assignment": {"execution_mode": "docs_only", "allowed_files": ["docs/guide.md"],
-                                    "allowed_read_files": ["docs/guide.md"],
-                                    "allowed_actions": ["read", "write_product"]}},
-            {**spec, "assignment": {"allowed_files": [".pf/artifacts/implicit/**"],
-                                    "allowed_read_files": ["example.py"],
-                                    "allowed_actions": ["read", "write_artifact"],
-                                    "required_outputs": [{"id": "implicit", "path": ".pf/artifacts/implicit/result.md"}],
-                                    "expected_report": {"artifact": ".pf/artifacts/implicit/result.md"}}},
-            {**spec, "assignment": {"allowed_files": [], "allowed_read_files": [], "allowed_actions": []}},
-            {**spec, "assignment": {"required_sources": ["missing.md"]}},
-            {**spec, "assignment": {"required_outputs": [{"id": "x", "path": "no-grant.md"}]}},
-            {**spec, "assignment": {"execution_mode": {"kind": "assurance", "code_changes_allowed": True},
-                                    "allowed_files": ["example.py"], "allowed_actions": ["read", "write_product"]}},
-            {**spec, "assignment": {"execution_mode": {"kind": "implementation", "code_changes_allowed": True},
-                                    "allowed_files": ["example.py"], "allowed_actions": ["read", "write_product"],
-                                    "forbidden_actions": ["write_product"]}},
-            {**spec, "predecessor": {"run_id": initial["run_id"], "assignment_id": initial["assignment_id"],
-                                    "capsule_checksum": initial["context"]["checksum"]},
-             "predecessor_handoff": ".pf/artifacts/delivery-handoff.md"},
-        ])
+        bad.extend(
+            [
+                {**spec, "schema_version": True},
+                {
+                    **spec,
+                    "assignment": {
+                        "allowed_files": ["example.py"],
+                        "forbidden_files": ["example.py"],
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "allowed_actions": ["write_product"],
+                        "execution_mode": "read_only",
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "allowed_actions": ["read"],
+                        "forbidden_actions": ["read"],
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "execution_mode": "docs_only",
+                        "allowed_files": ["docs/guide.md"],
+                        "allowed_read_files": ["docs/guide.md"],
+                        "allowed_actions": ["read", "write_product"],
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "allowed_files": [".pf/artifacts/implicit/**"],
+                        "allowed_read_files": ["example.py"],
+                        "allowed_actions": ["read", "write_artifact"],
+                        "required_outputs": [
+                            {
+                                "id": "implicit",
+                                "path": ".pf/artifacts/implicit/result.md",
+                            }
+                        ],
+                        "expected_report": {
+                            "artifact": ".pf/artifacts/implicit/result.md"
+                        },
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "allowed_files": [],
+                        "allowed_read_files": [],
+                        "allowed_actions": [],
+                    },
+                },
+                {**spec, "assignment": {"required_sources": ["missing.md"]}},
+                {
+                    **spec,
+                    "assignment": {
+                        "required_outputs": [{"id": "x", "path": "no-grant.md"}]
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "execution_mode": {
+                            "kind": "assurance",
+                            "code_changes_allowed": True,
+                        },
+                        "allowed_files": ["example.py"],
+                        "allowed_actions": ["read", "write_product"],
+                    },
+                },
+                {
+                    **spec,
+                    "assignment": {
+                        "execution_mode": {
+                            "kind": "implementation",
+                            "code_changes_allowed": True,
+                        },
+                        "allowed_files": ["example.py"],
+                        "allowed_actions": ["read", "write_product"],
+                        "forbidden_actions": ["write_product"],
+                    },
+                },
+                {
+                    **spec,
+                    "predecessor": {
+                        "run_id": initial["run_id"],
+                        "assignment_id": initial["assignment_id"],
+                        "capsule_checksum": initial["context"]["checksum"],
+                    },
+                    "predecessor_handoff": ".pf/artifacts/delivery-handoff.md",
+                },
+            ]
+        )
         for i, candidate in enumerate(bad):
             before = records(project)
-            result = service.start(objective=f"Reject explicit scope {i}", scope_intent=candidate)
+            result = service.start(
+                objective=f"Reject explicit scope {i}", scope_intent=candidate
+            )
             assert result["action"] == "blocked", result
             assert records(project) == before, result
 
-        planning = {"schema_version": 1, "assignment": {
-            "execution_mode": "planning_only",
-            "allowed_files": [".pf/artifacts/planning/**"],
-            "allowed_read_files": ["example.py"],
-            "allowed_actions": ["read", "write_artifact"],
-            "required_outputs": [{"id": "plan", "path": ".pf/artifacts/planning/plan.md"}],
-            "expected_report": {"artifact": ".pf/artifacts/planning/plan.md"},
-        }}
-        planned = service.start(objective="Explicit planning artifact scope", scope_intent=planning)
+        planning = {
+            "schema_version": 1,
+            "assignment": {
+                "execution_mode": "planning_only",
+                "allowed_files": [".pf/artifacts/planning/**"],
+                "allowed_read_files": ["example.py"],
+                "allowed_actions": ["read", "write_artifact"],
+                "required_outputs": [
+                    {"id": "plan", "path": ".pf/artifacts/planning/plan.md"}
+                ],
+                "expected_report": {"artifact": ".pf/artifacts/planning/plan.md"},
+            },
+        }
+        planned = service.start(
+            objective="Explicit planning artifact scope", scope_intent=planning
+        )
         assert planned["action"] == "created_new", planned
-        assert planned["work_state"]["execution_readiness"]["status"] == "ready", planned
-        planning_pin = project / ".pf/contexts/assignment-capsules" / (planned["assignment_id"] + ".capsule.yaml")
-        planning_scope = yaml.safe_load(planning_pin.read_text(encoding="utf-8"))["execution_contract"]["scope"]
-        assert "write_artifact" in planning_scope["allowed_actions"] and "write_product" not in planning_scope["allowed_actions"]
-        assert_saved_mode(project, planned, {"kind": "planning_only", "code_changes_allowed": False,
-                                           "artifact_changes_allowed": True, "requires_review": True})
+        assert planned["work_state"]["execution_readiness"]["status"] == "ready", (
+            planned
+        )
+        planning_pin = (
+            project
+            / ".pf/contexts/assignment-capsules"
+            / (planned["assignment_id"] + ".capsule.yaml")
+        )
+        planning_scope = yaml.safe_load(planning_pin.read_text(encoding="utf-8"))[
+            "execution_contract"
+        ]["scope"]
+        assert (
+            "write_artifact" in planning_scope["allowed_actions"]
+            and "write_product" not in planning_scope["allowed_actions"]
+        )
+        assert_saved_mode(
+            project,
+            planned,
+            {
+                "kind": "planning_only",
+                "code_changes_allowed": False,
+                "artifact_changes_allowed": True,
+                "requires_review": True,
+            },
+        )
 
-        assurance = {"schema_version": 1, "assignment": {
-            "execution_mode": {"kind": "assurance", "code_changes_allowed": False,
-                               "artifact_changes_allowed": True, "requires_review": False,
-                               "legacy_note": {"purpose": "preserved"}},
-            "allowed_files": [".pf/artifacts/assurance/**"], "allowed_read_files": ["example.py"],
-            "allowed_actions": ["read", "write_artifact"], "forbidden_actions": ["write_product"],
-        }}
+        assurance: dict[str, Any] = {
+            "schema_version": 1,
+            "assignment": {
+                "execution_mode": {
+                    "kind": "assurance",
+                    "code_changes_allowed": False,
+                    "artifact_changes_allowed": True,
+                    "requires_review": False,
+                    "legacy_note": {"purpose": "preserved"},
+                },
+                "allowed_files": [".pf/artifacts/assurance/**"],
+                "allowed_read_files": ["example.py"],
+                "allowed_actions": ["read", "write_artifact"],
+                "forbidden_actions": ["write_product"],
+            },
+        }
         original_assurance = copy.deepcopy(assurance)
-        assured = service.start(objective="Explicit object assurance scope", scope_intent=assurance)
+        assured = service.start(
+            objective="Explicit object assurance scope", scope_intent=assurance
+        )
         assert assured["action"] == "created_new", assured
         assert assurance == original_assurance
-        assert_saved_mode(project, assured, original_assurance["assignment"]["execution_mode"])
+        assert_saved_mode(
+            project, assured, original_assurance["assignment"]["execution_mode"]
+        )
         readiness = assured["work_state"]["execution_readiness"]
-        assert readiness["status"] == "ready" and "write_product" not in readiness["allowed_actions"], readiness
-        assurance_pin = project / ".pf/contexts/assignment-capsules" / (assured["assignment_id"] + ".capsule.yaml")
+        assert (
+            readiness["status"] == "ready"
+            and "write_product" not in readiness["allowed_actions"]
+        ), readiness
+        assurance_pin = (
+            project
+            / ".pf/contexts/assignment-capsules"
+            / (assured["assignment_id"] + ".capsule.yaml")
+        )
         assurance_raw = assurance_pin.read_bytes()
-        assert service.start(objective="Explicit object assurance scope", scope_intent=assurance)["action"] == "continue_existing"
+        assert (
+            service.start(
+                objective="Explicit object assurance scope", scope_intent=assurance
+            )["action"]
+            == "continue_existing"
+        )
         assert assurance_pin.read_bytes() == assurance_raw
         changed_assurance = copy.deepcopy(assurance)
         changed_assurance["assignment"]["execution_mode"]["requires_review"] = True
-        assert service.start(objective="Explicit object assurance scope", scope_intent=changed_assurance)["reason"] == "scope_intent_mismatch"
+        assert (
+            service.start(
+                objective="Explicit object assurance scope",
+                scope_intent=changed_assurance,
+            )["reason"]
+            == "scope_intent_mismatch"
+        )
         assert assurance_pin.read_bytes() == assurance_raw
 
         # Both public CLI representations publish schema-compatible, restricted Work.
-        canonical_mode = {"kind": "assurance", "code_changes_allowed": False,
-                          "artifact_changes_allowed": True, "requires_review": True}
-        for index, mode in enumerate(["assurance", canonical_mode]):
+        canonical_mode = {
+            "kind": "assurance",
+            "code_changes_allowed": False,
+            "artifact_changes_allowed": True,
+            "requires_review": True,
+        }
+        for index, cli_mode in enumerate(["assurance", canonical_mode]):
             cli_spec = copy.deepcopy(assurance)
-            cli_spec["assignment"]["execution_mode"] = mode
-            cli_spec["assignment"]["allowed_files"] = [f".pf/artifacts/cli-assurance-{index}/**"]
+            cli_spec["assignment"]["execution_mode"] = cli_mode
+            cli_spec["assignment"]["allowed_files"] = [
+                f".pf/artifacts/cli-assurance-{index}/**"
+            ]
             cli_path = project / f"scope-assurance-{index}.json"
             cli_path.write_text(json.dumps(cli_spec), encoding="utf-8")
-            cli_result = subprocess.run([sys.executable, "-B", str(ROOT / "bin/pf.py"), "work-start",
-                "--project-root", str(project), "--workplace", str(workplace), "--objective",
-                f"CLI assurance mode {index}", "--scope-file", str(cli_path), "--json"],
-                capture_output=True, text=True, encoding="utf-8", timeout=30)
+            cli_result = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(ROOT / "bin/pf.py"),
+                    "work-start",
+                    "--project-root",
+                    str(project),
+                    "--workplace",
+                    str(workplace),
+                    "--objective",
+                    f"CLI assurance mode {index}",
+                    "--scope-file",
+                    str(cli_path),
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=30,
+            )
             assert cli_result.returncode == 0, cli_result.stdout + cli_result.stderr
             started = json.loads(cli_result.stdout)
             assert started["action"] == "created_new", started
             assignment_path = assert_saved_mode(project, started, canonical_mode)
-            assert "write_product" not in started["work_state"]["execution_readiness"]["allowed_actions"]
-            cli_pin = project / ".pf/contexts/assignment-capsules" / (started["assignment_id"] + ".capsule.yaml")
+            assert (
+                "write_product"
+                not in started["work_state"]["execution_readiness"]["allowed_actions"]
+            )
+            cli_pin = (
+                project
+                / ".pf/contexts/assignment-capsules"
+                / (started["assignment_id"] + ".capsule.yaml")
+            )
             cli_raw = cli_pin.read_bytes()
             # Existing legacy Assignment is read/reused, never rewritten on retry.
-            legacy_assignment = yaml.safe_load(assignment_path.read_text(encoding="utf-8"))
+            legacy_assignment = yaml.safe_load(
+                assignment_path.read_text(encoding="utf-8")
+            )
             legacy_assignment["execution_mode"] = "assurance"
-            assignment_path.write_text(yaml.safe_dump(legacy_assignment, sort_keys=False), encoding="utf-8")
+            assignment_path.write_text(
+                yaml.safe_dump(legacy_assignment, sort_keys=False), encoding="utf-8"
+            )
             legacy_raw = assignment_path.read_bytes()
-            reused = service.start(objective=f"CLI assurance mode {index}", scope_intent=cli_spec)
+            reused = service.start(
+                objective=f"CLI assurance mode {index}", scope_intent=cli_spec
+            )
             assert reused["action"] == "continue_existing", reused
-            assert assignment_path.read_bytes() == legacy_raw and cli_pin.read_bytes() == cli_raw
+            assert (
+                assignment_path.read_bytes() == legacy_raw
+                and cli_pin.read_bytes() == cli_raw
+            )
 
         # The public local CLI forwards input before standard immutable capture.
         path = project / "scope.json"
         path.write_text(json.dumps(spec), encoding="utf-8")
-        command = [sys.executable, "-B", str(ROOT / "bin/pf.py"), "work-start", "--project-root",
-                   str(project), "--workplace", str(workplace), "--objective", "Scoped CLI implementation",
-                   "--scope-file", str(path), "--json"]
-        completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+        command = [
+            sys.executable,
+            "-B",
+            str(ROOT / "bin/pf.py"),
+            "work-start",
+            "--project-root",
+            str(project),
+            "--workplace",
+            str(workplace),
+            "--objective",
+            "Scoped CLI implementation",
+            "--scope-file",
+            str(path),
+            "--json",
+        ]
+        completed = subprocess.run(
+            command, capture_output=True, text=True, encoding="utf-8"
+        )
         assert completed.returncode == 0, completed.stdout + completed.stderr
         result = json.loads(completed.stdout)
         assert result["action"] == "created_new", result
         state = result["work_state"]
         assert state["process"]["pin_status"] == "pinned", state
         assert state["context"]["validation"]["status"] == "valid", state
-        pin = project / ".pf/contexts/assignment-capsules" / (result["assignment_id"] + ".capsule.yaml")
+        pin = (
+            project
+            / ".pf/contexts/assignment-capsules"
+            / (result["assignment_id"] + ".capsule.yaml")
+        )
         raw = pin.read_bytes()
         data = yaml.safe_load(raw)
         scope = data["execution_contract"]["scope"]
-        assert "write_product" in scope["allowed_actions"] and "example.py" in scope["allowed_files"]
-        assert state["context"]["checksum"] == "sha256:" + hashlib.sha256(raw).hexdigest()
+        assert (
+            "write_product" in scope["allowed_actions"]
+            and "example.py" in scope["allowed_files"]
+        )
+        assert (
+            state["context"]["checksum"] == "sha256:" + hashlib.sha256(raw).hexdigest()
+        )
         again = service.start(objective="Scoped CLI implementation", scope_intent=spec)
         assert again["action"] == "continue_existing" and pin.read_bytes() == raw
         changed = copy.deepcopy(spec)
         changed["assignment"]["allowed_files"].append("extra.py")
-        assert service.start(objective="Scoped CLI implementation", scope_intent=changed)["reason"] == "scope_intent_mismatch"
+        assert (
+            service.start(objective="Scoped CLI implementation", scope_intent=changed)[
+                "reason"
+            ]
+            == "scope_intent_mismatch"
+        )
         assert pin.read_bytes() == raw
         before = records(project)
-        assert service.start(objective="Overlapping work", scope_intent=spec)["reason"] == "write_scope_overlap"
+        assert (
+            service.start(objective="Overlapping work", scope_intent=spec)["reason"]
+            == "write_scope_overlap"
+        )
         assert records(project) == before
-        moved = service.transition(run_id=result["run_id"], assignment_id=result["assignment_id"],
-                                   outcome="completed", evidence=stage_evidence("brief", "prepare-ready"), notes="Actual scoped transition")
+        moved = service.transition(
+            run_id=result["run_id"],
+            assignment_id=result["assignment_id"],
+            outcome="completed",
+            evidence=stage_evidence("brief", "prepare-ready"),
+            notes="Actual scoped transition",
+        )
         assert moved["action"] == "stage_transitioned", moved
         assert pin.read_bytes() == raw
-        prior = {"run_id": initial["run_id"], "assignment_id": initial["assignment_id"],
-                 "capsule_checksum": initial["context"]["checksum"]}
-        successor = {"schema_version": 1, "assignment": {"allowed_files": ["other.py"]}, "predecessor": prior}
-        created = service.start(objective="Explicit predecessor", scope_intent=successor)
+        prior = {
+            "run_id": initial["run_id"],
+            "assignment_id": initial["assignment_id"],
+            "capsule_checksum": initial["context"]["checksum"],
+        }
+        successor: dict[str, Any] = {
+            "schema_version": 1,
+            "assignment": {"allowed_files": ["other.py"]},
+            "predecessor": prior,
+        }
+        created = service.start(
+            objective="Explicit predecessor", scope_intent=successor
+        )
         assert created["action"] == "created_new", created
         assert created["work_state"]["context"]["validation"]["status"] == "valid"
         successor["predecessor"]["capsule_checksum"] = "sha256:" + "0" * 64
-        assert service.start(objective="Wrong predecessor", scope_intent=successor)["reason"] == "predecessor_changed"
+        assert (
+            service.start(objective="Wrong predecessor", scope_intent=successor)[
+                "reason"
+            ]
+            == "predecessor_changed"
+        )
         note = project / ".pf/handoffs/serial-transfer.md"
-        note.write_text("Operator transferred the stopped fixture writer to its successor.\n", encoding="utf-8")
+        note.write_text(
+            "Operator transferred the stopped fixture writer to its successor.\n",
+            encoding="utf-8",
+        )
         transfer = copy.deepcopy(spec)
-        transfer["predecessor"] = {"run_id": result["run_id"], "assignment_id": result["assignment_id"],
-                                   "capsule_checksum": "sha256:" + hashlib.sha256(raw).hexdigest()}
+        transfer["predecessor"] = {
+            "run_id": result["run_id"],
+            "assignment_id": result["assignment_id"],
+            "capsule_checksum": "sha256:" + hashlib.sha256(raw).hexdigest(),
+        }
         transfer["predecessor_handoff"] = ".pf/handoffs/serial-transfer.md"
-        transferred = service.start(objective="Serial writer transfer", scope_intent=transfer)
+        transferred = service.start(
+            objective="Serial writer transfer", scope_intent=transfer
+        )
         assert transferred["action"] == "created_new", transferred
-        assert service.start(objective="Serial writer transfer", scope_intent=transfer)["action"] == "continue_existing"
+        assert (
+            service.start(objective="Serial writer transfer", scope_intent=transfer)[
+                "action"
+            ]
+            == "continue_existing"
+        )
         assert pin.read_bytes() == raw
         note.write_text("Changed handoff\n", encoding="utf-8")
-        assert service.start(objective="Serial writer transfer", scope_intent=transfer)["reason"] == "scope_intent_mismatch"
-        assert service.start(objective="Third writer", scope_intent=transfer)["reason"] == "write_scope_overlap"
+        assert (
+            service.start(objective="Serial writer transfer", scope_intent=transfer)[
+                "reason"
+            ]
+            == "scope_intent_mismatch"
+        )
+        assert (
+            service.start(objective="Third writer", scope_intent=transfer)["reason"]
+            == "write_scope_overlap"
+        )
         assert all((project / p).read_bytes() == value for p, value in original.items())
-    print("PASS: 484 scope pairs, exact reasons/order, lazy per-operation inventory, live file reads, canonical modes, CLI schema parity, no-publication cases, immutable reuse, predecessor and native transition")
+    print(
+        "PASS: 484 scope pairs, exact reasons/order, lazy per-operation inventory, live file reads, canonical modes, CLI schema parity, no-publication cases, immutable reuse, predecessor and native transition"
+    )
     return 0
 
 

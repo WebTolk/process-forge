@@ -7,63 +7,82 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterator
+from typing import TYPE_CHECKING, Any, Callable, Iterator, cast
 
-from .common.request_scope import safe_load, scoped_request
 from .common import clock as _canonical_clock
-from .common.yaml_io import _parse_simple_yaml
-from .common.yaml_dump import dump_yaml as _canonical_dump_yaml
-from .documents.reader import YamlDocumentReader
-from .work.inventory import WorkInventory
-from .work.consistency import RunTaskInputReader
-from .work.state import WorkStatePolicy
-from .work.outputs import WorkOutputPolicy
 from .common.checks import Check
-from .work.start_documents import WorkStartDocumentBuilder
+from .common.request_scope import scoped_request
+from .common.yaml_dump import dump_yaml as _canonical_dump_yaml
+from .common.yaml_io import _parse_simple_yaml
+from .documents.reader import YamlDocumentReader
 from .evidence.collection import EvidenceCollectionPolicy
+from .work.consistency import RunTaskInputReader
+from .work.creation_scope import CreationScopeService
+from .work.inventory import WorkInventory
+from .work.outputs import WorkOutputPolicy
+from .work.start_documents import WorkStartDocumentBuilder
+from .work.state import WorkStatePolicy
 
 if TYPE_CHECKING:
     from .agents.process_events import ProcessEventRecorder
-    from .presentation.work_summaries import WorkSummaryRenderer
-    from .work.metadata import WorkMetadataReadPass
-    from .completion.request import WorkCompletionRequestService
-    from .work.record_catalog import WorkRecordCatalogService
-    from .work.events import WorkEventPublisher
-    from .work.publication import WorkDocumentPublisher
-    from .project.context_read import ExecutionProjectReadService
-    from .work.transition_commit import WorkTransitionCommitService
-    from .completion.intent_replay import CompletionIntentReplayService
-    from .completion.intent_read import CompletionIntentReadService
-    from .completion.intent_builder import CompletionIntentBuilder
     from .completion.documents import CompletionDocumentService
-    from .work.boundary_advisory import WorkBoundaryAdvisoryService
-    from .work.transition_rejection import TransitionRejectionPolicy
+    from .completion.intent_builder import CompletionIntentBuilder
+    from .completion.intent_read import CompletionIntentReadService
+    from .completion.intent_replay import CompletionIntentReplayService
     from .completion.intent_validation import CompletionIntentValidationService
     from .completion.policy import RunCompletionPolicy
-    from .process_catalog.pin import ProcessPinReadService
-    from .process_catalog.selection import ProcessSelectionService
-    from .work.selection import WorkSelectionService
-    from .work.automation_readiness import AutomationReadinessService
+    from .completion.request import WorkCompletionRequestService
+    from .diagnostics import Logger
     from .evidence.readiness import StageReadinessPolicy
     from .evidence.validation import EvidenceValidationService
-    from .diagnostics import Logger
-    from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
+    from .ports import (
+        ProcessDefinitionReadPort,
+        ProjectSnapshotReadPort,
+        WorkContextReadPort,
+        WorkRecordReadPort,
+    )
+    from .presentation.work_summaries import WorkSummaryRenderer
+    from .process_catalog.pin import ProcessPinReadService
+    from .process_catalog.selection import ProcessSelectionService
+    from .project.context_read import ExecutionProjectReadService
+    from .work.automation_readiness import AutomationReadinessService
+    from .work.boundary_advisory import WorkBoundaryAdvisoryService
+    from .work.events import WorkEventPublisher
+    from .work.metadata import WorkMetadataReadPass
+    from .work.publication import WorkDocumentPublisher
+    from .work.record_catalog import WorkRecordCatalogService
+    from .work.selection import WorkSelectionService
+    from .work.transition_commit import WorkTransitionCommitService
+    from .work.transition_rejection import TransitionRejectionPolicy
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
-ACTIVE_ASSIGNMENT_STATUSES = {"draft", "ready", "open", "pending", "in_progress", "blocked", "debugging", "review", "ready_for_review"}
+ACTIVE_ASSIGNMENT_STATUSES = {
+    "draft",
+    "ready",
+    "open",
+    "pending",
+    "in_progress",
+    "blocked",
+    "debugging",
+    "review",
+    "ready_for_review",
+}
 TERMINAL_ASSIGNMENT_STATUSES = {"done", "completed", "cancelled", "failed"}
 TERMINAL_RUN_STATUSES = {"completed", "cancelled", "failed"}
-from .work.creation_scope import CreationScopeService
 
 SAFE_ID_RE = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
 
 
-def scope_handoff_predecessor(project: Path, metadata: dict[str, Any], core: Any) -> str:
+def scope_handoff_predecessor(
+    project: Path, metadata: dict[str, Any], core: Any
+) -> str:
     """Recognize only the exact immutable predecessor of an explicit local handoff."""
     import yaml
+
     from .prepared.input import bounded_read
     from .work.context import ContextContractError, portable_path
+
     coordination = metadata.get("coordination_requirements") or {}
     if not isinstance(coordination, dict):
         return ""
@@ -72,27 +91,54 @@ def scope_handoff_predecessor(project: Path, metadata: dict[str, Any], core: Any
     if not prior or not handoff:
         return ""
     try:
-        CreationScopeService.validate({"schema_version": 1, "assignment": {}, "predecessor": prior,
-                               "predecessor_handoff": handoff["path"]})
-        source = bounded_read(core.assignment_capsule_path(project, prior["assignment_id"]))
+        CreationScopeService.validate(
+            {
+                "schema_version": 1,
+                "assignment": {},
+                "predecessor": prior,
+                "predecessor_handoff": handoff["path"],
+            }
+        )
+        source = bounded_read(
+            core.assignment_capsule_path(project, prior["assignment_id"])
+        )
         note = bounded_read(project / portable_path(handoff["path"]))
-        identity = yaml.safe_load(source.decode("utf-8-sig"))["execution_contract"]["identity"]
-        if (isinstance(identity, dict) and "sha256:" + hashlib.sha256(source).hexdigest() == prior["capsule_checksum"]
-                and "sha256:" + hashlib.sha256(note).hexdigest() == handoff["checksum"]
-                and identity.get("project_id") == core.project_id(project)
-                and identity.get("run_id") == prior["run_id"]
-                and identity.get("assignment_id") == prior["assignment_id"]):
+        identity = yaml.safe_load(source.decode("utf-8-sig"))["execution_contract"][
+            "identity"
+        ]
+        if (
+            isinstance(identity, dict)
+            and "sha256:" + hashlib.sha256(source).hexdigest()
+            == prior["capsule_checksum"]
+            and "sha256:" + hashlib.sha256(note).hexdigest() == handoff["checksum"]
+            and identity.get("project_id") == core.project_id(project)
+            and identity.get("run_id") == prior["run_id"]
+            and identity.get("assignment_id") == prior["assignment_id"]
+        ):
             return prior["assignment_id"]
-    except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError, ContextContractError):
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+        yaml.YAMLError,
+        ContextContractError,
+    ):
         pass
     return ""
 
 
 def _stable_ids(value: Any) -> list[str]:
-    values = value if isinstance(value, list) else ([] if value is None or value == "" else [value])
+    values = (
+        value
+        if isinstance(value, list)
+        else ([] if value is None or value == "" else [value])
+    )
     result: list[str] = []
     for item in values:
-        candidate = str(item.get("id") if isinstance(item, dict) else item or "").strip()
+        candidate = str(
+            item.get("id") if isinstance(item, dict) else item or ""
+        ).strip()
         if candidate and candidate not in result:
             result.append(candidate)
     return result
@@ -105,18 +151,29 @@ def project_process_selection(manifest: dict[str, Any]) -> dict[str, Any]:
     if isinstance(declared, dict):
         allowed = _stable_ids(declared.get("allowed"))
         default = str(declared.get("default") or legacy or "").strip()
-        return {"default": default, "allowed": allowed or ([legacy] if legacy else ["task-batch-execution"]), "source": "processes"}
+        return {
+            "default": default,
+            "allowed": allowed or ([legacy] if legacy else ["task-batch-execution"]),
+            "source": "processes",
+        }
     selected = legacy or "task-batch-execution"
-    return {"default": selected, "allowed": [selected], "source": "legacy_process" if legacy else "fallback"}
+    return {
+        "default": selected,
+        "allowed": [selected],
+        "source": "legacy_process" if legacy else "fallback",
+    }
 
 
-def project_specialization_selection(manifest: dict[str, Any], process: dict[str, Any]) -> dict[str, list[str]]:
+def project_specialization_selection(
+    manifest: dict[str, Any], process: dict[str, Any]
+) -> dict[str, list[str]]:
     """Keep project authorization distinct from the active Work specialization set."""
     declared = manifest.get("specializations")
     if isinstance(declared, dict):
         allowed = _stable_ids(declared.get("allowed"))
         active = _stable_ids(declared.get("active") or declared.get("default"))
-        policy = process.get("specialization_policy") if isinstance(process.get("specialization_policy"), dict) else {}
+        raw_policy = process.get("specialization_policy")
+        policy = raw_policy if isinstance(raw_policy, dict) else {}
         if not active:
             # A process may constrain an explicitly selected project profile,
             # but it must not invent a profile from ad-hoc legacy fields.
@@ -125,7 +182,13 @@ def project_specialization_selection(manifest: dict[str, Any], process: dict[str
         forbidden = set(_stable_ids(policy.get("forbidden")))
         return {
             "allowed": allowed,
-            "active": [item for item in active if item in allowed and item not in forbidden and (not policy_allowed or item in policy_allowed)],
+            "active": [
+                item
+                for item in active
+                if item in allowed
+                and item not in forbidden
+                and (not policy_allowed or item in policy_allowed)
+            ],
         }
     legacy = _stable_ids(declared)
     # A legacy list was the already-selected profile. Preserve that behaviour.
@@ -133,13 +196,22 @@ def project_specialization_selection(manifest: dict[str, Any], process: dict[str
 
 
 def canonical_fingerprint(value: Any) -> str:
-    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    encoded = json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
     return "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def executable_stages(process: dict[str, Any]) -> list[dict[str, Any]]:
-    stages = process.get("stages") if isinstance(process.get("stages"), list) else []
-    return [copy.deepcopy(item) for item in stages if isinstance(item, dict) and item.get("id") and item.get("executable", True) is not False]
+    raw_stages = process.get("stages")
+    stages = raw_stages if isinstance(raw_stages, list) else []
+    return [
+        copy.deepcopy(item)
+        for item in stages
+        if isinstance(item, dict)
+        and item.get("id")
+        and item.get("executable", True) is not False
+    ]
 
 
 def initial_stage_id(process: dict[str, Any]) -> str:
@@ -155,7 +227,14 @@ def initial_stage_id(process: dict[str, Any]) -> str:
 
 def normalized_outcomes(process: dict[str, Any], stage_id: str) -> list[dict[str, Any]]:
     stages = executable_stages(process)
-    index = next((offset for offset, stage in enumerate(stages) if str(stage.get("id")) == stage_id), -1)
+    index = next(
+        (
+            offset
+            for offset, stage in enumerate(stages)
+            if str(stage.get("id")) == stage_id
+        ),
+        -1,
+    )
     if index < 0:
         return []
     default_next = str(stages[index + 1].get("id")) if index + 1 < len(stages) else ""
@@ -182,8 +261,16 @@ def normalized_outcomes(process: dict[str, Any], stage_id: str) -> list[dict[str
             continue
         next_stage = str(item.get("next_stage") or default_next).strip()
         if next_stage and next_stage not in stage_ids:
-            raise ValueError(f"outcome {outcome_id} routes to an unknown stage: {next_stage}")
-        normalized.append({"id": outcome_id, "next_stage": next_stage, "title": str(item.get("title") or outcome_id)})
+            raise ValueError(
+                f"outcome {outcome_id} routes to an unknown stage: {next_stage}"
+            )
+        normalized.append(
+            {
+                "id": outcome_id,
+                "next_stage": next_stage,
+                "title": str(item.get("title") or outcome_id),
+            }
+        )
     return normalized
 
 
@@ -192,88 +279,201 @@ class ProcessExecutionService:
     project_root: Path
     workplace_root: Path | None
     core: Any
-    _event_paths: Callable[[Path], tuple[Path, Any]] | None = field(default_factory=lambda: RunTaskInputReader().event_runtime_paths, init=False, repr=False, compare=False)
-    _clock: Callable[[], str] = field(default_factory=lambda: _canonical_clock.now_utc, init=False, repr=False, compare=False)
+    _event_paths: Callable[[Path], tuple[Path, Any]] | None = field(
+        default_factory=lambda: RunTaskInputReader().event_runtime_paths,
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _clock: Callable[[], str] = field(
+        default_factory=lambda: _canonical_clock.now_utc,
+        init=False,
+        repr=False,
+        compare=False,
+    )
     # Instance composition preserves the original dataclass field contract.
     _process_events = None  # type: ProcessEventRecorder | None
     _work_summaries = None  # type: WorkSummaryRenderer | None
-    observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
-    records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
-    context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
-    definitions: ProcessDefinitionReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
-    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
-    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, kw_only=True, repr=False, compare=False)
-    output_checks: Callable[[Path, dict[str, Any]], list[Check]] | None = field(default_factory=lambda: WorkOutputPolicy().checks, kw_only=True, repr=False, compare=False)
-    verification_fingerprint: Callable[[Path, dict[str, Any]], str] | None = field(default_factory=lambda: WorkOutputPolicy().fingerprint, kw_only=True, repr=False, compare=False)
+    observer: Logger | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    records: WorkRecordReadPort | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    context: WorkContextReadPort | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    definitions: ProcessDefinitionReadPort | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    snapshots: ProjectSnapshotReadPort | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    output_checks: Callable[[Path, dict[str, Any]], list[Check]] | None = field(
+        default_factory=lambda: WorkOutputPolicy().checks,
+        kw_only=True,
+        repr=False,
+        compare=False,
+    )
+    verification_fingerprint: Callable[[Path, dict[str, Any]], str] | None = field(
+        default_factory=lambda: WorkOutputPolicy().fingerprint,
+        kw_only=True,
+        repr=False,
+        compare=False,
+    )
 
     @scoped_request
-    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
+    def start(
+        self,
+        *,
+        objective: str,
+        process_id: str = "",
+        session_id: str = "",
+        stage_override: str = "",
+        security: dict | None = None,
+        scope_intent: dict | None = None,
+    ) -> dict[str, Any]:
         with self._start_lock():
-            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override, security=security, scope_intent=scope_intent)
+            return self._start_locked(
+                objective=objective,
+                process_id=process_id,
+                session_id=session_id,
+                stage_override=stage_override,
+                security=security,
+                scope_intent=scope_intent,
+            )
 
-    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
+    def _start_locked(
+        self,
+        *,
+        objective: str,
+        process_id: str = "",
+        session_id: str = "",
+        stage_override: str = "",
+        security: dict | None = None,
+        scope_intent: dict | None = None,
+    ) -> dict[str, Any]:
         objective = str(objective or "").strip()
         if not objective:
             return self._blocked("objective_required")
-        from .work.context import ContextContractError, assignment_intent, normalized_assignment_contract
+        from .work.context import (
+            ContextContractError,
+            assignment_intent,
+            normalized_assignment_contract,
+        )
+
         if scope_intent is not None:
             import yaml
+
             try:
                 scope_intent = CreationScopeService.validate(scope_intent)
                 prior = scope_intent.get("predecessor")
                 if prior:
                     from .prepared.input import bounded_read
-                    prior_path = self.core.assignment_capsule_path(self.project_root, prior["assignment_id"])
+
+                    prior_path = self.core.assignment_capsule_path(
+                        self.project_root, prior["assignment_id"]
+                    )
                     raw = bounded_read(prior_path)
-                    identity = yaml.safe_load(raw.decode("utf-8-sig"))["execution_contract"]["identity"]
-                    if (not isinstance(identity, dict) or "sha256:" + hashlib.sha256(raw).hexdigest() != prior["capsule_checksum"]
-                            or identity.get("project_id") != self.core.project_id(self.project_root)
-                            or identity.get("run_id") != prior["run_id"]
-                            or identity.get("assignment_id") != prior["assignment_id"]):
+                    identity = yaml.safe_load(raw.decode("utf-8-sig"))[
+                        "execution_contract"
+                    ]["identity"]
+                    if (
+                        not isinstance(identity, dict)
+                        or "sha256:" + hashlib.sha256(raw).hexdigest()
+                        != prior["capsule_checksum"]
+                        or identity.get("project_id")
+                        != self.core.project_id(self.project_root)
+                        or identity.get("run_id") != prior["run_id"]
+                        or identity.get("assignment_id") != prior["assignment_id"]
+                    ):
                         return self._blocked("predecessor_changed")
                 if scope_intent.get("predecessor_handoff"):
                     from .prepared.input import bounded_read
+
                     handoff = self.project_root / scope_intent["predecessor_handoff"]
                     bounded_read(handoff)
             except ContextContractError as exc:
                 return self._blocked(exc.code, **exc.details)
-            except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError):
+            except (
+                OSError,
+                ValueError,
+                KeyError,
+                TypeError,
+                yaml.YAMLError,
+            ):
                 return self._blocked("work_scope_invalid")
         if security is not None:
-            from .egress.contracts import EgressError, security_intent, digest
+            from .egress.contracts import EgressError, digest, security_intent
+
             try:
                 security = security_intent(security)
                 predecessor = security.get("predecessor")
                 if predecessor:
-                    previous_path = self.core.assignment_capsule_path(self.project_root, predecessor["assignment_id"])
+                    previous_path = self.core.assignment_capsule_path(
+                        self.project_root, predecessor["assignment_id"]
+                    )
                     from .prepared.input import bounded_read
-                    if digest(bounded_read(previous_path)) != predecessor["capsule_checksum"]:
+
+                    if (
+                        digest(bounded_read(previous_path))
+                        != predecessor["capsule_checksum"]
+                    ):
                         return self._blocked("predecessor_changed")
-            except (EgressError, OSError, ValueError):
+            except (
+                EgressError,
+                OSError,
+                ValueError,
+            ):
                 return self._blocked("egress_contract_invalid")
         check = self._context_check()
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             return self._blocked(
                 "snapshot_not_fresh",
-                context={"status": check.get("status"), "recommended_action": check.get("recommended_action")},
+                context={
+                    "status": check.get("status"),
+                    "recommended_action": check.get("recommended_action"),
+                },
             )
         duplicate = self._find_by_objective(objective)
         if duplicate.get("active"):
             if scope_intent is not None:
-                active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
+                active = self.core.load_yaml_document(
+                    self._assignment_path(
+                        str(duplicate["active"].get("assignment_id") or "")
+                    )
+                )
                 try:
                     desired = self._with_creation_scope(active, scope_intent)
                     path = self._assignment_path(str(active["id"]))
-                    if assignment_intent(self.project_root, path, active, self.core) != assignment_intent(self.project_root, path, desired, self.core):
-                        return self._blocked("scope_intent_mismatch", remediation="create_successor_work_with_new_objective")
+                    if assignment_intent(
+                        self.project_root, path, active, self.core
+                    ) != assignment_intent(self.project_root, path, desired, self.core):
+                        return self._blocked(
+                            "scope_intent_mismatch",
+                            remediation="create_successor_work_with_new_objective",
+                        )
                 except ContextContractError as exc:
                     return self._blocked(exc.code, **exc.details)
             if security is not None:
-                active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
-                if (active.get("egress") != security["egress"]
-                        or sorted(active.get("allowed_read_files") or []) != security["allowed_read_files"]
-                        or active.get("egress_predecessor") != security.get("predecessor")):
-                    return self._blocked("security_intent_mismatch", remediation="create_successor_work_with_new_objective")
+                active = self.core.load_yaml_document(
+                    self._assignment_path(
+                        str(duplicate["active"].get("assignment_id") or "")
+                    )
+                )
+                if (
+                    active.get("egress") != security["egress"]
+                    or sorted(active.get("allowed_read_files") or [])
+                    != security["allowed_read_files"]
+                    or active.get("egress_predecessor") != security.get("predecessor")
+                ):
+                    return self._blocked(
+                        "security_intent_mismatch",
+                        remediation="create_successor_work_with_new_objective",
+                    )
             state = self.state(
                 run_id=str(duplicate["active"].get("run_id") or ""),
                 assignment_id=str(duplicate["active"].get("assignment_id") or ""),
@@ -287,7 +487,9 @@ class ProcessExecutionService:
                 "run_id": state.get("run", {}).get("id"),
                 "assignment_id": state.get("assignment", {}).get("id"),
                 "stage": state.get("stage", {}).get("id"),
-                "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
+                "session": {"status": "bound", "id": session_id}
+                if session_id
+                else {"status": "absent"},
                 "work_state": state,
                 "context": state.get("context", {}),
             }
@@ -300,17 +502,29 @@ class ProcessExecutionService:
 
         selection = self._project_process_selection()
         requested_process = str(process_id or "").strip()
-        selected_process, selection_result = self._select_process(selection, requested_process)
+        selected_process, selection_result = self._select_process(
+            selection, requested_process
+        )
         if not selected_process:
             return selection_result
         try:
-            definition = self.core.resolve_process_definition(self.project_root, selected_process)
-        except (OSError, SystemExit, ValueError):
-            return self._blocked("process_definition_unavailable", process_id=selected_process)
+            definition = self.core.resolve_process_definition(
+                self.project_root, selected_process
+            )
+        except (
+            OSError,
+            SystemExit,
+            ValueError,
+        ):
+            return self._blocked(
+                "process_definition_unavailable", process_id=selected_process
+            )
         process = copy.deepcopy(definition.process)
         stages = executable_stages(process)
         if not stages:
-            return self._blocked("process_has_no_executable_stages", process_id=selected_process)
+            return self._blocked(
+                "process_has_no_executable_stages", process_id=selected_process
+            )
         try:
             stage_id = initial_stage_id(process)
             if stage_override:
@@ -325,89 +539,188 @@ class ProcessExecutionService:
             for stage in stages:
                 normalized_outcomes(process, str(stage.get("id")))
         except ValueError as exc:
-            return self._blocked("invalid_process_definition", message=str(exc), process_id=selected_process)
+            return self._blocked(
+                "invalid_process_definition",
+                message=str(exc),
+                process_id=selected_process,
+            )
 
         now = self._clock()
         flow_root = self._flow_root()
-        run_id = self._unique_id(flow_root / "runs", "garage-" + self.core.safe_id(objective, "work"))
-        assignment_id = self._unique_id(flow_root / "assignments", self.core.safe_id(objective, "task"))
-        specialization_selection = project_specialization_selection(self._manifest(), process)
+        run_id = self._unique_id(
+            flow_root / "runs", "garage-" + self.core.safe_id(objective, "work")
+        )
+        assignment_id = self._unique_id(
+            flow_root / "assignments", self.core.safe_id(objective, "task")
+        )
+        specialization_selection = project_specialization_selection(
+            self._manifest(), process
+        )
         active_specializations = specialization_selection["active"]
         selected_resource_ids = self._selected_resource_ids()
-        pin = self._process_pin(process, definition.path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=selection["allowed"])
+        pin = self._process_pin(
+            process,
+            definition.path,
+            active_specializations=active_specializations,
+            selected_resource_ids=selected_resource_ids,
+            allowed_processes=selection["allowed"],
+        )
         run, assignment = WorkStartDocumentBuilder().build(
-            objective=objective, selected_process=selected_process, now=now,
-            run_id=run_id, assignment_id=assignment_id,
-            active_specializations=active_specializations, pin=pin, stage_id=stage_id,
+            objective=objective,
+            selected_process=selected_process,
+            now=now,
+            run_id=run_id,
+            assignment_id=assignment_id,
+            active_specializations=active_specializations,
+            pin=pin,
+            stage_id=stage_id,
         )
         if session_id:
             assignment["session"] = {"status": "bound", "id": session_id}
         if security is not None:
-            if scope_intent is not None and "allowed_read_files" in scope_intent["assignment"]:
-                if sorted(scope_intent["assignment"]["allowed_read_files"]) != security["allowed_read_files"]:
+            if (
+                scope_intent is not None
+                and "allowed_read_files" in scope_intent["assignment"]
+            ):
+                if (
+                    sorted(scope_intent["assignment"]["allowed_read_files"])
+                    != security["allowed_read_files"]
+                ):
                     return self._blocked("scope_security_conflict")
             assignment["egress"] = copy.deepcopy(security["egress"])
             assignment["allowed_read_files"] = list(security["allowed_read_files"])
             if security.get("predecessor"):
-                assignment["egress_predecessor"] = copy.deepcopy(security["predecessor"])
+                assignment["egress_predecessor"] = copy.deepcopy(
+                    security["predecessor"]
+                )
         try:
             if scope_intent is not None:
                 assignment = self._with_creation_scope(assignment, scope_intent)
-                normalized = normalized_assignment_contract(self.project_root, self._assignment_path(assignment_id), assignment, self.core)
+                normalized = normalized_assignment_contract(
+                    self.project_root,
+                    self._assignment_path(assignment_id),
+                    assignment,
+                    self.core,
+                )
                 requested = scope_intent["assignment"].get("allowed_actions", [])
                 if set(requested) - set(normalized["scope"]["allowed_actions"]):
                     return self._blocked("work_scope_conflict")
-                overlap = self.core.validate_assignment_scope_overlaps(self.project_root, assignment, assignment_path=self._assignment_path(assignment_id))
+                overlap = self.core.validate_assignment_scope_overlaps(
+                    self.project_root,
+                    assignment,
+                    assignment_path=self._assignment_path(assignment_id),
+                )
                 if overlap["status"] != "pass":
-                    return self._blocked("write_scope_overlap", conflicts=overlap["conflicts"])
+                    return self._blocked(
+                        "write_scope_overlap", conflicts=overlap["conflicts"]
+                    )
                 # Preflight readiness before the immutable capsule is published.
                 from .work.context import build_context_fields
+
                 snapshot = self._snapshot_reader().load()
-                fields = build_context_fields(self.project_root, self._assignment_path(assignment_id), assignment,
-                                              snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
+                fields = build_context_fields(
+                    self.project_root,
+                    self._assignment_path(assignment_id),
+                    assignment,
+                    snapshot,
+                    self.core,
+                    workplace=self.workplace_root,
+                    pin=pin,
+                    run_record=run,
+                )
                 if fields["execution_contract"]["readiness"]["status"] != "ready":
-                    return self._blocked("work_scope_not_ready", blockers=fields["execution_contract"]["readiness"]["blockers"])
+                    return self._blocked(
+                        "work_scope_not_ready",
+                        blockers=fields["execution_contract"]["readiness"]["blockers"],
+                    )
                 from .work.permissions import permission_readiness
-                permissions = permission_readiness(fields["execution_contract"]["scope"],
-                                                   fields["execution_contract"]["assignment_intent"]["execution_mode"])
+
+                permissions = permission_readiness(
+                    fields["execution_contract"]["scope"],
+                    fields["execution_contract"]["assignment_intent"]["execution_mode"],
+                )
                 if permissions["status"] != "ready":
-                    return self._blocked("work_scope_not_ready", blockers=permissions["blockers"], execution_readiness=permissions)
+                    return self._blocked(
+                        "work_scope_not_ready",
+                        blockers=permissions["blockers"],
+                        execution_readiness=permissions,
+                    )
             capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
         except ContextContractError as exc:
             return self._blocked(exc.code, **exc.details)
         run["process_execution"]["assignment_capsule"] = capsule_path
         run["process_execution"]["assignment_capsule_checksum"] = capsule_checksum
         assignment["process_execution"]["assignment_capsule"] = capsule_path
-        assignment["process_execution"]["assignment_capsule_checksum"] = capsule_checksum
+        assignment["process_execution"]["assignment_capsule_checksum"] = (
+            capsule_checksum
+        )
 
         from .composition import build_work_start_publication_service
 
         return build_work_start_publication_service(
-            run_path=lambda: self._run_path, assignment_path=lambda: self._assignment_path,
-            atomic_yaml=lambda: self._atomic_yaml, atomic_text=lambda: self._atomic_text,
-            write_task_index=lambda: self._write_task_index, emit=lambda: self._emit,
-            state=lambda: self.state, write_projection=lambda: self._write_projection,
+            run_path=lambda: self._run_path,
+            assignment_path=lambda: self._assignment_path,
+            atomic_yaml=lambda: self._atomic_yaml,
+            atomic_text=lambda: self._atomic_text,
+            write_task_index=lambda: self._write_task_index,
+            emit=lambda: self._emit,
+            state=lambda: self.state,
+            write_projection=lambda: self._write_projection,
         ).publish(
-            run_id=run_id, assignment_id=assignment_id, run=run, assignment=assignment,
-            stage_id=stage_id, objective=objective, stages=stages,
-            stage_override=stage_override, session_id=session_id,
+            run_id=run_id,
+            assignment_id=assignment_id,
+            run=run,
+            assignment=assignment,
+            stage_id=stage_id,
+            objective=objective,
+            stages=stages,
+            stage_override=stage_override,
+            session_id=session_id,
         )
 
-    def _with_creation_scope(self, assignment: dict[str, Any], intent: dict[str, Any]) -> dict[str, Any]:
+    def _with_creation_scope(
+        self, assignment: dict[str, Any], intent: dict[str, Any]
+    ) -> dict[str, Any]:
         from .composition import build_creation_scope_service
 
-        return build_creation_scope_service(self.project_root, self.core).apply(assignment, intent)
-    def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
+        return build_creation_scope_service(self.project_root, self.core).apply(
+            assignment, intent
+        )
+
+    def state(
+        self,
+        *,
+        run_id: str = "",
+        assignment_id: str = "",
+        session_id: str = "",
+        context_id: str = "",
+    ) -> dict[str, Any]:
         from . import diagnostics
 
         logger = self.observer if self.observer is not None else diagnostics.current()
-        observation = diagnostics.operation(logger, "work", "work.state", run_id=None,
-                                            assignment_id=None, stage_id=None, session_id=session_id or None)
+        observation = diagnostics.operation(
+            logger,
+            "work",
+            "work.state",
+            run_id=None,
+            assignment_id=None,
+            stage_id=None,
+            session_id=session_id or None,
+        )
         observation.__enter__()
         try:
-            payload = self._state(run_id=run_id, assignment_id=assignment_id,
-                                  session_id=session_id, context_id=context_id)
-            diagnostics.emit("debug", "work.state.result", {"action": payload.get("action"), "reason": payload.get("reason")}, component="work")
+            payload = self._state(
+                run_id=run_id,
+                assignment_id=assignment_id,
+                session_id=session_id,
+                context_id=context_id,
+            )
+            diagnostics.emit(
+                "debug",
+                "work.state.result",
+                {"action": payload.get("action"), "reason": payload.get("reason")},
+                component="work",
+            )
         except BaseException as exc:
             try:
                 observation.__exit__(type(exc), exc, exc.__traceback__)
@@ -421,9 +734,18 @@ class ProcessExecutionService:
             return payload
 
     @scoped_request
-    def _state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
+    def _state(
+        self,
+        *,
+        run_id: str = "",
+        assignment_id: str = "",
+        session_id: str = "",
+        context_id: str = "",
+    ) -> dict[str, Any]:
         try:
-            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+            selected = self._select_work(
+                run_id=run_id, assignment_id=assignment_id, session_id=session_id
+            )
         except ValueError as exc:
             return self._blocked(str(exc))
         if not selected:
@@ -440,7 +762,10 @@ class ProcessExecutionService:
             return self._blocked("work_context_mismatch")
         process, pin_status = self._effective_process(run)
         from . import diagnostics
-        diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
+
+        diagnostics.select_work(
+            self.project_root, str(run.get("id") or ""), assignment.get("id")
+        )
         stage_id = str(assignment.get("stage") or "")
         stage = self._stage(process, stage_id)
         diagnostics.annotate(stage_id=stage_id)
@@ -451,7 +776,10 @@ class ProcessExecutionService:
             for item in self._string_list(stage.get("required_inputs"))
         ]
         required_artifact_ids = self._required_artifact_ids(process, stage)
-        artifacts = [self._requirement_state("artifact", item, current_evidence) for item in required_artifact_ids]
+        artifacts = [
+            self._requirement_state("artifact", item, current_evidence)
+            for item in required_artifact_ids
+        ]
         required_evidence = [
             self._requirement_state("evidence", item, current_evidence)
             for item in self._string_list(stage.get("required_evidence"))
@@ -465,14 +793,28 @@ class ProcessExecutionService:
             for gate_id in self._string_list(stage.get("exit_gates"))
         ]
         obligations = self._automation_states(process, stage, assignment)
-        incomplete = self._stage_requirements(required_inputs, artifacts, required_evidence, entry_gates + exit_gates, obligations)
+        incomplete = self._stage_requirements(
+            required_inputs,
+            artifacts,
+            required_evidence,
+            entry_gates + exit_gates,
+            obligations,
+        )
         policy = WorkStatePolicy()
-        incomplete = policy.completion_requirements(process, stage, assignment, current_evidence, incomplete)
+        incomplete = policy.completion_requirements(
+            process, stage, assignment, current_evidence, incomplete
+        )
         try:
             outcomes = normalized_outcomes(process, stage_id)
         except ValueError as exc:
             outcomes = []
-            incomplete.append({"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id})
+            incomplete.append(
+                {
+                    "code": "invalid_process_definition",
+                    "message": str(exc),
+                    "stage_id": stage_id,
+                }
+            )
         trace = diagnostics.span("work.state.validation")
         trace.__enter__()
         try:
@@ -480,26 +822,47 @@ class ProcessExecutionService:
         finally:
             trace.__exit__(None, None, None)
         decision = policy.decide(run, assignment, contract_validation, incomplete)
-        from .work.permissions import permission_readiness
         from .work.context import ContextContractError
+        from .work.permissions import permission_readiness
+
         try:
             normalized = self._context_reader().normalized_assignment(assignment)
-            permissions = permission_readiness(normalized['scope'], normalized['assignment']['execution_mode'])
+            permissions = permission_readiness(
+                normalized["scope"], normalized["assignment"]["execution_mode"]
+            )
         except ContextContractError as exc:
             permissions = {"status": "blocked", "blockers": [exc.code]}
         return policy.project_state(
-            action=decision.action, permissions=permissions,
+            action=decision.action,
+            permissions=permissions,
             project_id=self.core.project_id(self.project_root),
-            run=run, assignment=assignment, process=process, pin_status=pin_status,
-            stage_id=stage_id, stage=stage, decision=decision, contract_validation=contract_validation,
-            required_inputs=required_inputs, required_evidence=required_evidence, obligations=obligations,
-            artifacts=artifacts, entry_gates=entry_gates, exit_gates=exit_gates, outcomes=outcomes,
-            incomplete=incomplete, current_evidence=current_evidence,
-            fingerprint=lambda value: canonical_fingerprint(value), stable_ids=lambda value: _stable_ids(value),
+            run=run,
+            assignment=assignment,
+            process=process,
+            pin_status=pin_status,
+            stage_id=stage_id,
+            stage=stage,
+            decision=decision,
+            contract_validation=contract_validation,
+            required_inputs=required_inputs,
+            required_evidence=required_evidence,
+            obligations=obligations,
+            artifacts=artifacts,
+            entry_gates=entry_gates,
+            exit_gates=exit_gates,
+            outcomes=outcomes,
+            incomplete=incomplete,
+            current_evidence=current_evidence,
+            fingerprint=lambda value: canonical_fingerprint(value),
+            stable_ids=lambda value: _stable_ids(value),
         )
 
-    def allowed_transitions(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+    def allowed_transitions(
+        self, *, run_id: str = "", assignment_id: str = "", session_id: str = ""
+    ) -> dict[str, Any]:
+        state = self.state(
+            run_id=run_id, assignment_id=assignment_id, session_id=session_id
+        )
         return {
             "schema_version": 1,
             "kind": "pf.work.allowed_transitions",
@@ -523,7 +886,9 @@ class ProcessExecutionService:
         context_id: str = "",
     ) -> dict[str, Any]:
         try:
-            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+            selected = self._select_work(
+                run_id=run_id, assignment_id=assignment_id, session_id=session_id
+            )
         except ValueError as exc:
             return self._blocked(str(exc))
         if not selected:
@@ -531,20 +896,33 @@ class ProcessExecutionService:
         run, assignment = selected
         if context_id and context_id != f"{assignment['id']}-capsule":
             return self._blocked("work_context_mismatch")
-        if not isinstance(run.get("process_execution"), dict) or not isinstance(run["process_execution"].get("definition"), dict):
-            return self._blocked("process_not_pinned", run_id=run.get("id"), assignment_id=assignment.get("id"))
+        if not isinstance(run.get("process_execution"), dict) or not isinstance(
+            run["process_execution"].get("definition"), dict
+        ):
+            return self._blocked(
+                "process_not_pinned",
+                run_id=run.get("id"),
+                assignment_id=assignment.get("id"),
+            )
         with self._run_lock(str(run.get("id") or "")):
             run = self._load_run(str(run.get("id") or ""))
             assignment = self._load_assignment(str(assignment.get("id") or ""))
-            for pending_cancel in self._run_path(str(run["id"])).parent.glob("cancellation-*.yaml"):
+            for pending_cancel in self._run_path(str(run["id"])).parent.glob(
+                "cancellation-*.yaml"
+            ):
                 if not pending_cancel.with_suffix(".applied.json").is_file():
                     return self._blocked("cancellation_recovery_pending")
             contract_validation = self._contract_validation(assignment)
             if contract_validation.get("status") == "blocked":
-                return self._blocked(contract_validation.get("reason") or "execution_contract_invalid", remediation="create_successor_work")
+                return self._blocked(
+                    contract_validation.get("reason") or "execution_contract_invalid",
+                    remediation="create_successor_work",
+                )
             pending_intent, intent_error = self._load_completion_intent(run, assignment)
             if pending_intent is not None:
-                return self._replay_completion_intent(pending_intent, session_id=session_id)
+                return self._replay_completion_intent(
+                    pending_intent, session_id=session_id
+                )
             if intent_error:
                 return self._blocked(
                     "completion_intent_invalid",
@@ -552,11 +930,25 @@ class ProcessExecutionService:
                     assignment_id=assignment.get("id"),
                     detail=intent_error,
                 )
-            if str(run.get("status") or "") in TERMINAL_RUN_STATUSES or str(assignment.get("status") or "") in TERMINAL_ASSIGNMENT_STATUSES:
-                return self._blocked("work_is_terminal", run_id=run.get("id"), assignment_id=assignment.get("id"), run_status=run.get("status"), assignment_status=assignment.get("status"))
+            if (
+                str(run.get("status") or "") in TERMINAL_RUN_STATUSES
+                or str(assignment.get("status") or "") in TERMINAL_ASSIGNMENT_STATUSES
+            ):
+                return self._blocked(
+                    "work_is_terminal",
+                    run_id=run.get("id"),
+                    assignment_id=assignment.get("id"),
+                    run_status=run.get("status"),
+                    assignment_status=assignment.get("status"),
+                )
             process, pin_status = self._effective_process(run)
             if pin_status != "pinned":
-                return self._blocked("process_pin_invalid", run_id=run.get("id"), assignment_id=assignment.get("id"), pin_status=pin_status)
+                return self._blocked(
+                    "process_pin_invalid",
+                    run_id=run.get("id"),
+                    assignment_id=assignment.get("id"),
+                    pin_status=pin_status,
+                )
             stage_id = str(assignment.get("stage") or "")
             normalized_evidence, evidence_blockers = self._normalize_evidence(evidence)
             if evidence_blockers:
@@ -568,14 +960,24 @@ class ProcessExecutionService:
                     blockers=evidence_blockers,
                 )
             try:
-                allowed_outcomes = {str(item.get("id")): item for item in normalized_outcomes(process, stage_id) if isinstance(item, dict)}
+                allowed_outcomes = {
+                    str(item.get("id")): item
+                    for item in normalized_outcomes(process, stage_id)
+                    if isinstance(item, dict)
+                }
             except ValueError as exc:
                 return self._transition_rejected(
                     run=run,
                     assignment=assignment,
                     session_id=session_id,
                     reason="invalid_process_definition",
-                    blockers=[{"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id}],
+                    blockers=[
+                        {
+                            "code": "invalid_process_definition",
+                            "message": str(exc),
+                            "stage_id": stage_id,
+                        }
+                    ],
                 )
             if outcome not in allowed_outcomes:
                 return self._transition_rejected(
@@ -583,13 +985,34 @@ class ProcessExecutionService:
                     assignment=assignment,
                     session_id=session_id,
                     reason="outcome_not_allowed",
-                    blockers=[{"code": "outcome_not_allowed", "outcome": outcome, "allowed": sorted(allowed_outcomes)}],
+                    blockers=[
+                        {
+                            "code": "outcome_not_allowed",
+                            "outcome": outcome,
+                            "allowed": sorted(allowed_outcomes),
+                        }
+                    ],
                 )
-            stage_execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
-            stored_blockers = stage_execution.get("blockers") if isinstance(stage_execution.get("blockers"), list) else []
+            stored_execution = assignment.get("stage_execution")
+            stage_execution = (
+                stored_execution if isinstance(stored_execution, dict) else {}
+            )
+            stored_blockers = (
+                stage_execution.get("blockers")
+                if isinstance(stage_execution.get("blockers"), list)
+                else []
+            )
             if stored_blockers:
-                if not all(self._is_recoverable_transition_rejection(item) for item in stored_blockers if isinstance(item, dict)):
-                    return self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
+                if not all(
+                    self._is_recoverable_transition_rejection(item)
+                    for item in stored_blockers
+                    if isinstance(item, dict)
+                ):
+                    return self.state(
+                        run_id=str(run.get("id") or ""),
+                        assignment_id=str(assignment.get("id") or ""),
+                        session_id=session_id,
+                    )
                 # Older releases persisted request-validation failures as a
                 # stage block. A valid retry is the recovery operation; do not
                 # require users to repair assignment YAML by hand.
@@ -597,22 +1020,44 @@ class ProcessExecutionService:
                 stage_execution.pop("blocked_at", None)
                 if str(assignment.get("stage_status") or "") == "blocked":
                     assignment["stage_status"] = "in_progress"
-            stage_execution = {**stage_execution, "evidence": self._merge_evidence(stage_execution.get("evidence"), normalized_evidence), "notes": str(notes or stage_execution.get("notes") or "")}
+            stage_execution = {
+                **stage_execution,
+                "evidence": self._merge_evidence(
+                    stage_execution.get("evidence"), normalized_evidence
+                ),
+                "notes": str(notes or stage_execution.get("notes") or ""),
+            }
             assignment["stage_execution"] = stage_execution
             assignment["updated_at"] = self._clock()
             self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
-            preview = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
+            preview = self.state(
+                run_id=str(run.get("id") or ""),
+                assignment_id=str(assignment.get("id") or ""),
+                session_id=session_id,
+            )
             preview_blockers = list(preview.get("blockers") or [])
             preview_incomplete = list(preview.get("incomplete") or [])
-            outcomes = {str(item.get("id")): item for item in preview.get("allowed_outcomes", []) if isinstance(item, dict)}
+            outcomes = {
+                str(item.get("id")): item
+                for item in preview.get("allowed_outcomes", [])
+                if isinstance(item, dict)
+            }
             next_stage_id = str(outcomes.get(outcome, {}).get("next_stage") or "")
             if next_stage_id:
                 next_stage = self._stage(process, next_stage_id)
                 accumulated = self._accumulated_evidence(assignment)
                 for gate_id in self._string_list(next_stage.get("entry_gates")):
-                    gate = self._gate_state(process, gate_id, accumulated, phase="entry")
+                    gate = self._gate_state(
+                        process, gate_id, accumulated, phase="entry"
+                    )
                     if not gate["satisfied"] and gate.get("blocking", True):
-                        preview_incomplete.append({"code": "entry_gate_evidence_missing", "gate_id": gate_id, "stage_id": next_stage_id})
+                        preview_incomplete.append(
+                            {
+                                "code": "entry_gate_evidence_missing",
+                                "gate_id": gate_id,
+                                "stage_id": next_stage_id,
+                            }
+                        )
             if preview_blockers:
                 return self._transition_rejected(
                     run=run,
@@ -623,16 +1068,36 @@ class ProcessExecutionService:
                 )
 
             if preview_incomplete:
-                incomplete_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
+                incomplete_state = self.state(
+                    run_id=str(run["id"]),
+                    assignment_id=str(assignment["id"]),
+                    session_id=session_id,
+                )
                 self._write_projection(incomplete_state)
-                return {**incomplete_state, "action": "incomplete", "reason": "stage_requirements_incomplete", "incomplete": preview_incomplete}
+                return {
+                    **incomplete_state,
+                    "action": "incomplete",
+                    "reason": "stage_requirements_incomplete",
+                    "incomplete": preview_incomplete,
+                }
 
             if not next_stage_id:
-                completion_blockers = self._run_completion_blockers(process, run, assignment)
+                completion_blockers = self._run_completion_blockers(
+                    process, run, assignment
+                )
                 if completion_blockers:
-                    incomplete_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
+                    incomplete_state = self.state(
+                        run_id=str(run["id"]),
+                        assignment_id=str(assignment["id"]),
+                        session_id=session_id,
+                    )
                     self._write_projection(incomplete_state)
-                    return {**incomplete_state, "action": "incomplete", "reason": "run_completion_incomplete", "incomplete": completion_blockers}
+                    return {
+                        **incomplete_state,
+                        "action": "incomplete",
+                        "reason": "run_completion_incomplete",
+                        "incomplete": completion_blockers,
+                    }
 
             return self._work_transition_commit_service().commit(
                 run,
@@ -650,26 +1115,54 @@ class ProcessExecutionService:
 
         return build_work_transition_commit_service(
             now_utc=lambda: self._clock(),
-            set_run_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status),
+            set_run_task_status=lambda run, assignment_id, status: (
+                self._set_run_task_status(run, assignment_id, status)
+            ),
             assignment_path=lambda assignment_id: self._assignment_path(assignment_id),
             run_path=lambda run_id: self._run_path(run_id),
             atomic_yaml=lambda path, document: self._atomic_yaml(path, document),
             write_task_index=lambda run: self._write_task_index(run),
-            build_completion_intent=lambda *args, **kwargs: self._build_completion_intent(*args, **kwargs),
+            build_completion_intent=lambda *args, **kwargs: (
+                self._build_completion_intent(*args, **kwargs)
+            ),
             completion_intent_path=lambda run_id: self._completion_intent_path(run_id),
             atomic_text=lambda path, text: self._atomic_text(path, text),
-            replay_completion_intent=lambda intent, **kwargs: self._replay_completion_intent(intent, **kwargs),
+            replay_completion_intent=lambda intent, **kwargs: (
+                self._replay_completion_intent(intent, **kwargs)
+            ),
             state=lambda **selectors: self.state(**selectors),
             write_projection=lambda state: self._write_projection(state),
             emit=lambda *args, **kwargs: self._emit(*args, **kwargs),
-            next_work_advisory=lambda process, run: self._next_work_advisory(process, run),
+            next_work_advisory=lambda process, run: self._next_work_advisory(
+                process, run
+            ),
         )
 
-    def can_complete(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        return self._completion_request_service().can_complete(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+    def can_complete(
+        self, *, run_id: str = "", assignment_id: str = "", session_id: str = ""
+    ) -> dict[str, Any]:
+        return self._completion_request_service().can_complete(
+            run_id=run_id, assignment_id=assignment_id, session_id=session_id
+        )
 
-    def complete(self, *, outcome: str = "completed", evidence: Any = None, notes: str = "", run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        return self._completion_request_service().complete(outcome=outcome, evidence=evidence, notes=notes, run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+    def complete(
+        self,
+        *,
+        outcome: str = "completed",
+        evidence: Any = None,
+        notes: str = "",
+        run_id: str = "",
+        assignment_id: str = "",
+        session_id: str = "",
+    ) -> dict[str, Any]:
+        return self._completion_request_service().complete(
+            outcome=outcome,
+            evidence=evidence,
+            notes=notes,
+            run_id=run_id,
+            assignment_id=assignment_id,
+            session_id=session_id,
+        )
 
     def _execution_project_read_service(self) -> ExecutionProjectReadService:
         from .composition import build_execution_project_read_service
@@ -695,14 +1188,26 @@ class ProcessExecutionService:
         from .composition import build_process_selection_service
 
         return build_process_selection_service(
-            project_root=self.project_root, stable_ids=_stable_ids, resolve_definition=lambda root, process_id: self.core.resolve_process_definition(root, process_id), blocked=self._blocked, candidates=self._process_candidates
+            project_root=self.project_root,
+            stable_ids=_stable_ids,
+            resolve_definition=lambda root, process_id: (
+                self.core.resolve_process_definition(root, process_id)
+            ),
+            blocked=self._blocked,
+            candidates=self._process_candidates,
         )
 
-    def _select_process(self, selection: dict[str, Any], requested: str) -> tuple[str, dict[str, Any]]:
+    def _select_process(
+        self, selection: dict[str, Any], requested: str
+    ) -> tuple[str, dict[str, Any]]:
         return self._process_selection_service().select(selection, requested)
 
-    def _process_candidates(self, process_ids: list[str], *, default: str = "") -> list[dict[str, Any]]:
-        return self._process_selection_service().process_candidates(process_ids, default=default)
+    def _process_candidates(
+        self, process_ids: list[str], *, default: str = ""
+    ) -> list[dict[str, Any]]:
+        return self._process_selection_service().process_candidates(
+            process_ids, default=default
+        )
 
     def _transition_rejection_policy(self) -> TransitionRejectionPolicy:
         from .composition import build_transition_rejection_policy
@@ -717,18 +1222,50 @@ class ProcessExecutionService:
 
         return TransitionRejectionPolicy.is_recoverable(blocker)
 
-    def _transition_rejected(self, *, run: dict[str, Any], assignment: dict[str, Any], session_id: str, reason: str, blockers: list[dict[str, Any]]) -> dict[str, Any]:
-        return self._transition_rejection_policy().rejected(run=run, assignment=assignment, session_id=session_id, reason=reason, blockers=blockers)
+    def _transition_rejected(
+        self,
+        *,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        session_id: str,
+        reason: str,
+        blockers: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return self._transition_rejection_policy().rejected(
+            run=run,
+            assignment=assignment,
+            session_id=session_id,
+            reason=reason,
+            blockers=blockers,
+        )
 
     def _process_pin_read_service(self) -> ProcessPinReadService:
         from .composition import build_process_pin_read_service
 
         return build_process_pin_read_service(
-            project_root=self.project_root, flow_root=self._flow_root, snapshots=self._snapshot_reader, fingerprint=canonical_fingerprint, stable_ids=_stable_ids
+            project_root=self.project_root,
+            flow_root=self._flow_root,
+            snapshots=self._snapshot_reader,
+            fingerprint=canonical_fingerprint,
+            stable_ids=_stable_ids,
         )
 
-    def _process_pin(self, process: dict[str, Any], source_path: Path, *, active_specializations: list[str], selected_resource_ids: list[str], allowed_processes: list[str]) -> dict[str, Any]:
-        return self._process_pin_read_service().pin(process, source_path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=allowed_processes)
+    def _process_pin(
+        self,
+        process: dict[str, Any],
+        source_path: Path,
+        *,
+        active_specializations: list[str],
+        selected_resource_ids: list[str],
+        allowed_processes: list[str],
+    ) -> dict[str, Any]:
+        return self._process_pin_read_service().pin(
+            process,
+            source_path,
+            active_specializations=active_specializations,
+            selected_resource_ids=selected_resource_ids,
+            allowed_processes=allowed_processes,
+        )
 
     def _selected_resource_ids(self) -> list[str]:
         return self._process_pin_read_service().selected_resource_ids()
@@ -744,10 +1281,14 @@ class ProcessExecutionService:
         from .composition import build_work_boundary_advisory_service
 
         return build_work_boundary_advisory_service(
-            flow_root=lambda: self._flow_root(), stable_ids=_stable_ids, load_document=lambda path: self.core.load_yaml_document(path)
+            flow_root=lambda: self._flow_root(),
+            stable_ids=_stable_ids,
+            load_document=lambda path: self.core.load_yaml_document(path),
         )
 
-    def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
+    def _next_work_advisory(
+        self, process: dict[str, Any], run: dict[str, Any]
+    ) -> dict[str, Any]:
         return self._work_boundary_advisory_service().advisory(process, run)
 
     def _effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -761,33 +1302,60 @@ class ProcessExecutionService:
         return build_process_definition_read_service(self.project_root)
 
     def _stage(self, process: dict[str, Any], stage_id: str) -> dict[str, Any]:
-        return next((stage for stage in executable_stages(process) if str(stage.get("id")) == stage_id), {"id": stage_id})
+        return next(
+            (
+                stage
+                for stage in executable_stages(process)
+                if str(stage.get("id")) == stage_id
+            ),
+            {"id": stage_id},
+        )
 
     def _work_selection_service(self) -> WorkSelectionService:
         from .composition import build_work_selection_service
 
         return build_work_selection_service(
-            bound_selection=self._bound_work_selection, valid_selector=lambda value: bool(SAFE_ID_RE.fullmatch(value)), records=self._work_records, prefer=self._preferred_record, load_run=self._load_run, load_assignment=self._load_assignment
+            bound_selection=self._bound_work_selection,
+            valid_selector=lambda value: bool(SAFE_ID_RE.fullmatch(value)),
+            records=self._work_records,
+            prefer=self._preferred_record,
+            load_run=self._load_run,
+            load_assignment=self._load_assignment,
         )
 
     def _bound_work_selection(self, session_id: str) -> dict[str, Any] | None:
         from .work.continuation import ContinuationService
 
-        return ContinuationService(self.project_root, self.workplace_root, self.core, events=self._process_events, summaries=self._work_summaries).selected(session_id)
+        return ContinuationService(
+            self.project_root,
+            self.workplace_root,
+            self.core,
+            events=self._process_events,
+            summaries=self._work_summaries,
+        ).selected(session_id)
 
-    def _select_work(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> tuple[dict[str, Any], dict[str, Any]] | None:
-        return self._work_selection_service().select(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+    def _select_work(
+        self, *, run_id: str = "", assignment_id: str = "", session_id: str = ""
+    ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        return self._work_selection_service().select(
+            run_id=run_id, assignment_id=assignment_id, session_id=session_id
+        )
 
-    def _preferred_record(self, records: list[dict[str, Any]], session_id: str) -> dict[str, Any] | None:
+    def _preferred_record(
+        self, records: list[dict[str, Any]], session_id: str
+    ) -> dict[str, Any] | None:
         return self._work_selection_service().preferred_record(records, session_id)
 
     def _work_record_catalog_service(self) -> WorkRecordCatalogService:
         from .composition import build_work_record_catalog_service
 
         return build_work_record_catalog_service(
-            record_reader=lambda: self.records, inventory_factory=lambda: WorkInventory,
-            flow_root=lambda: self._flow_root, document_loader=lambda: self._work_documents().load,
-            identifier_pattern=lambda: SAFE_ID_RE, intent_reader=lambda: self._load_completion_intent,
+            record_reader=lambda: self.records,
+            inventory_factory=lambda: WorkInventory,
+            flow_root=lambda: self._flow_root,
+            document_loader=lambda: self._work_documents().load,
+            identifier_pattern=lambda: SAFE_ID_RE,
+            intent_reader=lambda: self._load_completion_intent,
             active_assignment_statuses=lambda: ACTIVE_ASSIGNMENT_STATUSES,
             active_run_statuses=lambda: ACTIVE_RUN_STATUSES,
             work_metadata=self.work_metadata,
@@ -795,7 +1363,9 @@ class ProcessExecutionService:
         )
 
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:
-        return self._work_record_catalog_service().records(include_historical=include_historical)
+        return self._work_record_catalog_service().records(
+            include_historical=include_historical
+        )
 
     def _find_by_objective(self, objective: str) -> dict[str, Any]:
         return self._work_selection_service().find_by_objective(objective)
@@ -804,7 +1374,9 @@ class ProcessExecutionService:
         return EvidenceCollectionPolicy().current(assignment)
 
     def _accumulated_evidence(self, assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        return EvidenceCollectionPolicy().accumulated(assignment, current=self._current_evidence)
+        return EvidenceCollectionPolicy().accumulated(
+            assignment, current=self._current_evidence
+        )
 
     def _stage_readiness_policy(self) -> StageReadinessPolicy:
         from .composition import build_stage_readiness_policy
@@ -816,29 +1388,68 @@ class ProcessExecutionService:
             blocker_callback=self._requirement_blocker,
         )
 
-    def _required_artifact_ids(self, process: dict[str, Any], stage: dict[str, Any]) -> list[str]:
+    def _required_artifact_ids(
+        self, process: dict[str, Any], stage: dict[str, Any]
+    ) -> list[str]:
         return self._stage_readiness_policy().required_artifact_ids(process, stage)
 
-    def _requirement_state(self, kind: str, identifier: str, evidence: list[dict[str, Any]]) -> dict[str, Any]:
+    def _requirement_state(
+        self, kind: str, identifier: str, evidence: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         return self._stage_readiness_policy().requirement(kind, identifier, evidence)
 
-    def _gate_state(self, process: dict[str, Any], gate_id: str, evidence: list[dict[str, Any]], *, phase: str) -> dict[str, Any]:
-        return self._stage_readiness_policy().gate(process, gate_id, evidence, phase=phase)
+    def _gate_state(
+        self,
+        process: dict[str, Any],
+        gate_id: str,
+        evidence: list[dict[str, Any]],
+        *,
+        phase: str,
+    ) -> dict[str, Any]:
+        return self._stage_readiness_policy().gate(
+            process, gate_id, evidence, phase=phase
+        )
 
     def _automation_readiness_service(self) -> AutomationReadinessService:
         from .composition import build_automation_readiness_service
 
         return build_automation_readiness_service(
-            project_root=self.project_root, has_output_checks=lambda: self.output_checks is not None, output_checks=lambda root, assignment: self.output_checks(root, assignment), has_fingerprint=lambda: self.verification_fingerprint is not None, fingerprint=lambda root, assignment: self.verification_fingerprint(root, assignment), has_event_paths=lambda: self._event_paths is not None, event_paths=lambda root: self._event_paths(root), latest_event=self._latest_assignment_event
+            project_root=self.project_root,
+            has_output_checks=lambda: self.output_checks is not None,
+            output_checks=lambda root, assignment: cast(
+                Callable[[Path, dict[str, Any]], list[Check]], self.output_checks
+            )(root, assignment),
+            has_fingerprint=lambda: self.verification_fingerprint is not None,
+            fingerprint=lambda root, assignment: cast(
+                Callable[[Path, dict[str, Any]], str], self.verification_fingerprint
+            )(root, assignment),
+            has_event_paths=lambda: self._event_paths is not None,
+            event_paths=lambda root: cast(
+                Callable[[Path], tuple[Path, Any]], self._event_paths
+            )(root),
+            latest_event=self._latest_assignment_event,
         )
 
-    def _automation_states(self, process: dict[str, Any], stage: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
+    def _automation_states(
+        self, process: dict[str, Any], stage: dict[str, Any], assignment: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         return self._automation_readiness_service().states(process, stage, assignment)
 
-    def _stage_requirements(self, inputs: list[dict[str, Any]], artifacts: list[dict[str, Any]], required_evidence: list[dict[str, Any]], gates: list[dict[str, Any]], obligations: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return self._stage_readiness_policy().requirements(inputs, artifacts, required_evidence, gates, obligations)
+    def _stage_requirements(
+        self,
+        inputs: list[dict[str, Any]],
+        artifacts: list[dict[str, Any]],
+        required_evidence: list[dict[str, Any]],
+        gates: list[dict[str, Any]],
+        obligations: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return self._stage_readiness_policy().requirements(
+            inputs, artifacts, required_evidence, gates, obligations
+        )
 
-    def _requirement_blocker(self, code: str, identifier_key: str, requirement: dict[str, Any]) -> dict[str, Any]:
+    def _requirement_blocker(
+        self, code: str, identifier_key: str, requirement: dict[str, Any]
+    ) -> dict[str, Any]:
         return self._stage_readiness_policy().blocker(code, identifier_key, requirement)
 
     def _evidence_validator(self) -> EvidenceValidationService:
@@ -852,39 +1463,61 @@ class ProcessExecutionService:
             path_resolver=self._safe_evidence_path,
         )
 
-    def _normalize_evidence(self, evidence: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    def _normalize_evidence(
+        self, evidence: Any
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         return self._evidence_validator().normalize(evidence)
 
     def _safe_evidence_path(self, value: str) -> Path | None:
         return self._evidence_validator().safe_path(value)
 
-    def _merge_evidence(self, existing: Any, incoming: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return EvidenceCollectionPolicy().merge(existing, incoming, identity=self._evidence_merge_identity)
+    def _merge_evidence(
+        self, existing: Any, incoming: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        return EvidenceCollectionPolicy().merge(
+            existing, incoming, identity=self._evidence_merge_identity
+        )
 
     def _evidence_merge_identity(self, item: dict[str, Any]) -> tuple[str, str]:
         return EvidenceCollectionPolicy().identity(item)
 
-    def _evidence_file_diagnostic(self, evidence: dict[str, Any] | None) -> dict[str, Any] | None:
+    def _evidence_file_diagnostic(
+        self, evidence: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
         return self._evidence_validator().diagnostic(evidence)
 
-    def _latest_assignment_event(self, assignment_id: str, event_types: set[str]) -> dict[str, Any] | None:
-        return self._automation_readiness_service().latest_assignment_event(assignment_id, event_types)
+    def _latest_assignment_event(
+        self, assignment_id: str, event_types: set[str]
+    ) -> dict[str, Any] | None:
+        return self._automation_readiness_service().latest_assignment_event(
+            assignment_id, event_types
+        )
 
     def _run_completion_policy(self) -> RunCompletionPolicy:
         from .composition import build_run_completion_policy
 
         return build_run_completion_policy(
-            accumulated_evidence=self._accumulated_evidence, string_list=self._string_list, gate_state=self._gate_state
+            accumulated_evidence=self._accumulated_evidence,
+            string_list=self._string_list,
+            gate_state=self._gate_state,
         )
 
-    def _run_completion_blockers(self, process: dict[str, Any], run: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
+    def _run_completion_blockers(
+        self, process: dict[str, Any], run: dict[str, Any], assignment: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         return self._run_completion_policy().blockers(process, run, assignment)
 
     def _completion_intent_read_service(self) -> CompletionIntentReadService:
         from .composition import build_completion_intent_read_service
 
         return build_completion_intent_read_service(
-            run_path=lambda run_id: self._run_path(run_id), intent_path=lambda run_id: self._completion_intent_path(run_id), valid_id=lambda value: bool(SAFE_ID_RE.fullmatch(value)), load_document=lambda path: self.core.load_yaml_document(path), validate=lambda intent, run, assignment, path: self._validate_completion_intent(intent, run, assignment, path)
+            run_path=lambda run_id: self._run_path(run_id),
+            intent_path=lambda run_id: self._completion_intent_path(run_id),
+            valid_id=lambda value: bool(SAFE_ID_RE.fullmatch(value)),
+            load_document=lambda path: self.core.load_yaml_document(path),
+            validate=lambda intent, run, assignment, path: (
+                self._validate_completion_intent(intent, run, assignment, path)
+            ),
         )
 
     def _completion_intent_path(self, run_id: str) -> Path:
@@ -894,7 +1527,28 @@ class ProcessExecutionService:
         from .composition import build_completion_intent_builder
 
         return build_completion_intent_builder(
-            project_root=self.project_root, accumulated_evidence=lambda assignment: self._accumulated_evidence(assignment), set_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status), run_path=lambda run_id: self._run_path(run_id), assignment_path=lambda assignment_id: self._assignment_path(assignment_id), flow_root=lambda: self._flow_root(), summary=lambda run, assignment: self._render_summary(run, assignment), has_task_index=lambda: self._work_summaries is not None and hasattr(self._work_summaries, 'render_task_index'), task_index=lambda root, run: self._work_summaries.render_task_index(root, run), rel=lambda path, root: self.core.rel(path, root), intent_path=lambda run_id: self._completion_intent_path(run_id), project_id=lambda root: self.core.project_id(root), fingerprint=canonical_fingerprint
+            project_root=self.project_root,
+            accumulated_evidence=lambda assignment: self._accumulated_evidence(
+                assignment
+            ),
+            set_task_status=lambda run, assignment_id, status: (
+                self._set_run_task_status(run, assignment_id, status)
+            ),
+            run_path=lambda run_id: self._run_path(run_id),
+            assignment_path=lambda assignment_id: self._assignment_path(assignment_id),
+            flow_root=lambda: self._flow_root(),
+            summary=lambda run, assignment: self._render_summary(run, assignment),
+            has_task_index=lambda: (
+                self._work_summaries is not None
+                and hasattr(self._work_summaries, "render_task_index")
+            ),
+            task_index=lambda root, run: cast(
+                "WorkSummaryRenderer", self._work_summaries
+            ).render_task_index(root, run),
+            rel=lambda path, root: self.core.rel(path, root),
+            intent_path=lambda run_id: self._completion_intent_path(run_id),
+            project_id=lambda root: self.core.project_id(root),
+            fingerprint=canonical_fingerprint,
         )
 
     def _build_completion_intent(
@@ -906,17 +1560,39 @@ class ProcessExecutionService:
         outcome: str,
         notes: str,
         completed_at: str,
+        next_stage_id: str = "",
     ) -> dict[str, Any]:
-        return self._completion_intent_builder().build(run, assignment, process, outcome=outcome, notes=notes, completed_at=completed_at)
+        return self._completion_intent_builder().build(
+            run,
+            assignment,
+            process,
+            outcome=outcome,
+            notes=notes,
+            completed_at=completed_at,
+            next_stage_id=next_stage_id,
+        )
 
-    def _load_completion_intent(self, run: dict[str, Any], assignment: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    def _load_completion_intent(
+        self, run: dict[str, Any], assignment: dict[str, Any]
+    ) -> tuple[dict[str, Any] | None, str | None]:
         return self._completion_intent_read_service().load(run, assignment)
 
-    def _completion_intent_validation_service(self) -> CompletionIntentValidationService:
+    def _completion_intent_validation_service(
+        self,
+    ) -> CompletionIntentValidationService:
         from .composition import build_completion_intent_validation_service
 
         return build_completion_intent_validation_service(
-            project_root=self.project_root, fingerprint=canonical_fingerprint, terminal_assignment_statuses=lambda: TERMINAL_ASSIGNMENT_STATUSES, effective_process=self._effective_process, rel=lambda path, root: self.core.rel(path, root), run_path=self._run_path, assignment_path=self._assignment_path, flow_root=self._flow_root, has_project_id=lambda: hasattr(self.core, 'project_id'), project_id=lambda root: self.core.project_id(root)
+            project_root=self.project_root,
+            fingerprint=canonical_fingerprint,
+            terminal_assignment_statuses=lambda: TERMINAL_ASSIGNMENT_STATUSES,
+            effective_process=self._effective_process,
+            rel=lambda path, root: self.core.rel(path, root),
+            run_path=self._run_path,
+            assignment_path=self._assignment_path,
+            flow_root=self._flow_root,
+            has_project_id=lambda: hasattr(self.core, "project_id"),
+            project_id=lambda root: self.core.project_id(root),
         )
 
     def _validate_completion_intent(
@@ -926,26 +1602,63 @@ class ProcessExecutionService:
         assignment: dict[str, Any],
         journal_path: Path,
     ) -> str | None:
-        return self._completion_intent_validation_service().validate(intent, run, assignment, journal_path)
+        return self._completion_intent_validation_service().validate(
+            intent, run, assignment, journal_path
+        )
 
     def _completion_intent_replay_service(self) -> CompletionIntentReplayService:
         from .composition import build_completion_intent_replay_service
 
         return build_completion_intent_replay_service(
-            assignment_path=lambda assignment_id: self._assignment_path(assignment_id), run_path=lambda run_id: self._run_path(run_id), flow_root=lambda: self._flow_root(), atomic_yaml=lambda path, document: self._atomic_yaml(path, document), atomic_text=lambda path, text: self._atomic_text(path, text), state=lambda **selectors: self.state(**selectors), write_projection=lambda state: self._write_projection(state), emit=lambda *args, **kwargs: self._emit(*args, **kwargs), intent_path=lambda run_id: self._completion_intent_path(run_id)
+            assignment_path=lambda assignment_id: self._assignment_path(assignment_id),
+            run_path=lambda run_id: self._run_path(run_id),
+            flow_root=lambda: self._flow_root(),
+            atomic_yaml=lambda path, document: self._atomic_yaml(path, document),
+            atomic_text=lambda path, text: self._atomic_text(path, text),
+            state=lambda **selectors: self.state(**selectors),
+            write_projection=lambda state: self._write_projection(state),
+            emit=lambda *args, **kwargs: self._emit(*args, **kwargs),
+            intent_path=lambda run_id: self._completion_intent_path(run_id),
         )
 
-    def _replay_completion_intent(self, intent: dict[str, Any], *, session_id: str = "", remove_intent: bool = True) -> dict[str, Any]:
-        return self._completion_intent_replay_service().replay(intent, session_id=session_id, remove_intent=remove_intent)
+    def _replay_completion_intent(
+        self,
+        intent: dict[str, Any],
+        *,
+        session_id: str = "",
+        remove_intent: bool = True,
+    ) -> dict[str, Any]:
+        return self._completion_intent_replay_service().replay(
+            intent, session_id=session_id, remove_intent=remove_intent
+        )
 
-    def _complete_locked(self, run: dict[str, Any], assignment: dict[str, Any], process: dict[str, Any], *, outcome: str, notes: str, completed_at: str) -> None:
+    def _complete_locked(
+        self,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        process: dict[str, Any],
+        *,
+        outcome: str,
+        notes: str,
+        completed_at: str,
+    ) -> None:
         run_id = str(run["id"])
         assignment_id = str(assignment["id"])
         assignment["stage_status"] = "completed"
         assignment["status"] = "done"
         assignment["updated_at"] = completed_at
-        artifacts = [str(item.get("path")) for item in self._accumulated_evidence(assignment) if isinstance(item, dict) and item.get("path")]
-        assignment["result"] = {"status": "done", "summary": str(notes or f"Completed declarative process with outcome {outcome}."), "artifacts": sorted(set(artifacts))}
+        artifacts = [
+            str(item.get("path"))
+            for item in self._accumulated_evidence(assignment)
+            if isinstance(item, dict) and item.get("path")
+        ]
+        assignment["result"] = {
+            "status": "done",
+            "summary": str(
+                notes or f"Completed declarative process with outcome {outcome}."
+            ),
+            "artifacts": sorted(set(artifacts)),
+        }
         self._set_run_task_status(run, assignment_id, "done")
         run["status"] = "completed"
         run["updated_at"] = completed_at
@@ -953,9 +1666,23 @@ class ProcessExecutionService:
         handoff_path = self._flow_root() / "handoffs" / "runs" / f"{run_id}-handoff.md"
         summary = self._render_summary(run, assignment)
         handoff = f"# Run Handoff: {run_id}\n\nStatus: `completed`\n\nSummary: `{self.core.rel(summary_path, self.project_root)}`\n"
-        run["final_artifacts"] = [self.core.rel(summary_path, self.project_root), self.core.rel(handoff_path, self.project_root)]
-        emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
-        for event_type in ["process.stage.completed", "process.stage.transitioned", "task.completed", "assignment.completed", "run.completed", "run.summary.created"]:
+        run["final_artifacts"] = [
+            self.core.rel(summary_path, self.project_root),
+            self.core.rel(handoff_path, self.project_root),
+        ]
+        emitted = (
+            run.setdefault("events", {}).setdefault("emitted", [])
+            if isinstance(run.setdefault("events", {}), dict)
+            else []
+        )
+        for event_type in [
+            "process.stage.completed",
+            "process.stage.transitioned",
+            "task.completed",
+            "assignment.completed",
+            "run.completed",
+            "run.summary.created",
+        ]:
             if isinstance(emitted, list) and event_type not in emitted:
                 emitted.append(event_type)
         self._atomic_yaml(self._assignment_path(assignment_id), assignment)
@@ -968,7 +1695,16 @@ class ProcessExecutionService:
         from .composition import build_completion_document_service
 
         return build_completion_document_service(
-            project_root=self.project_root, run_path=lambda run_id: self._run_path(run_id), has_task_index=lambda: self._work_summaries is not None and hasattr(self._work_summaries, 'render_task_index'), task_index=lambda root, run: self._work_summaries.render_task_index(root, run), atomic_text=lambda path, text: self._atomic_text(path, text)
+            project_root=self.project_root,
+            run_path=lambda run_id: self._run_path(run_id),
+            has_task_index=lambda: (
+                self._work_summaries is not None
+                and hasattr(self._work_summaries, "render_task_index")
+            ),
+            task_index=lambda root, run: cast(
+                "WorkSummaryRenderer", self._work_summaries
+            ).render_task_index(root, run),
+            atomic_text=lambda path, text: self._atomic_text(path, text),
         )
 
     def _render_summary(self, run: dict[str, Any], assignment: dict[str, Any]) -> str:
@@ -984,15 +1720,33 @@ class ProcessExecutionService:
 
         return build_work_context_read_service(self.project_root)
 
-    def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
+    def _write_capsule(
+        self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]
+    ) -> tuple[str, str]:
         from .composition import build_assignment_capsule_publisher
 
-        return build_assignment_capsule_publisher(self, stable_ids=_stable_ids).publish(run, assignment, pin)
+        return build_assignment_capsule_publisher(self, stable_ids=_stable_ids).publish(
+            run, assignment, pin
+        )
 
     def _write_projection(self, state: dict[str, Any]) -> None:
-        path = self._flow_root() / "artifacts" / "projections" / "process-execution-state.json"
-        payload = {"schema_version": 1, "kind": "process-execution-state", "generated_at": self._clock(), "source": {"authority": "run+assignment+pinned-process"}, "state": state}
-        self._atomic_text(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+        path = (
+            self._flow_root()
+            / "artifacts"
+            / "projections"
+            / "process-execution-state.json"
+        )
+        payload = {
+            "schema_version": 1,
+            "kind": "process-execution-state",
+            "generated_at": self._clock(),
+            "source": {"authority": "run+assignment+pinned-process"},
+            "state": state,
+        }
+        self._atomic_text(
+            path,
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
 
     def _write_task_index(self, run: dict[str, Any]) -> None:
         self._completion_document_service().write_task_index(run)
@@ -1003,12 +1757,29 @@ class ProcessExecutionService:
         return build_work_event_publisher(
             project_root=self.project_root,
             has_emitter=lambda: self._process_events is not None,
-            emitter=lambda: self._process_events.emit_process_event,
+            emitter=lambda: (
+                cast("ProcessEventRecorder", self._process_events).emit_process_event
+            ),
         )
 
-    def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None, event_id: str | None = None) -> None:
+    def _emit(
+        self,
+        event_type: str,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        stage_id: str,
+        *,
+        outcome: str,
+        previous_stage_id: str = "",
+        next_stage_id: str = "",
+        blockers: list[dict[str, Any]] | None = None,
+        event_id: str | None = None,
+    ) -> None:
         self._work_event_publisher().publish(
-            event_type, run, assignment, stage_id,
+            event_type,
+            run,
+            assignment,
+            stage_id,
             outcome=outcome,
             previous_stage_id=previous_stage_id,
             next_stage_id=next_stage_id,
@@ -1019,7 +1790,9 @@ class ProcessExecutionService:
     @contextlib.contextmanager
     def _start_lock(self) -> Iterator[None]:
         if hasattr(self.core, "registry_file_lock"):
-            with self.core.registry_file_lock(self._flow_root() / "runs" / ".process-execution-start.yaml"):
+            with self.core.registry_file_lock(
+                self._flow_root() / "runs" / ".process-execution-start.yaml"
+            ):
                 yield
         else:
             yield
@@ -1032,7 +1805,9 @@ class ProcessExecutionService:
         else:
             yield
 
-    def _set_run_task_status(self, run: dict[str, Any], assignment_id: str, status: str) -> None:
+    def _set_run_task_status(
+        self, run: dict[str, Any], assignment_id: str, status: str
+    ) -> None:
         self._run_completion_policy().set_task_status(run, assignment_id, status)
 
     def _work_document_publisher(self) -> WorkDocumentPublisher:
@@ -1059,14 +1834,22 @@ class ProcessExecutionService:
 
     def _load_assignment(self, assignment_id: str) -> dict[str, Any]:
         if self.records is not None:
-            return self.records.load_assignment(self._validated_id(assignment_id, "assignment"))
+            return self.records.load_assignment(
+                self._validated_id(assignment_id, "assignment")
+            )
         return self._work_documents().load(self._assignment_path(assignment_id))
 
     def _run_path(self, run_id: str) -> Path:
-        return self._flow_root() / "runs" / self._validated_id(run_id, "run") / "run.yaml"
+        return (
+            self._flow_root() / "runs" / self._validated_id(run_id, "run") / "run.yaml"
+        )
 
     def _assignment_path(self, assignment_id: str) -> Path:
-        return self._flow_root() / "assignments" / f"{self._validated_id(assignment_id, 'assignment')}.yaml"
+        return (
+            self._flow_root()
+            / "assignments"
+            / f"{self._validated_id(assignment_id, 'assignment')}.yaml"
+        )
 
     def _validated_id(self, value: str, kind: str) -> str:
         identifier = str(value or "")
@@ -1091,19 +1874,34 @@ class ProcessExecutionService:
         return hashlib.sha256(path.read_bytes()).hexdigest()
 
     def _string_list(self, value: Any) -> list[str]:
-        return [str(item) for item in value if str(item)] if isinstance(value, list) else []
+        return (
+            [str(item) for item in value if str(item)]
+            if isinstance(value, list)
+            else []
+        )
 
-    def _blocked(self, reason: str, *, action: str = "blocked", **extra: Any) -> dict[str, Any]:
-        return {"schema_version": 1, "kind": "pf.work.execution", "action": action, "reason": reason, **extra}
-
+    def _blocked(
+        self, reason: str, *, action: str = "blocked", **extra: Any
+    ) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "kind": "pf.work.execution",
+            "action": action,
+            "reason": reason,
+            **extra,
+        }
 
     def _completion_request_service(self) -> WorkCompletionRequestService:
         from .composition import build_work_completion_request_service
 
         return build_work_completion_request_service(
-            work_selector=lambda: self._select_work, blocked_result=lambda: self._blocked,
-            process_reader=lambda: self._effective_process, outcomes_reader=lambda: normalized_outcomes,
-            state_reader=lambda: self.state, run_blockers=lambda: self._run_completion_blockers,
-            intent_reader=lambda: self._load_completion_intent, completion_readiness=lambda: self.can_complete,
+            work_selector=lambda: self._select_work,
+            blocked_result=lambda: self._blocked,
+            process_reader=lambda: self._effective_process,
+            outcomes_reader=lambda: normalized_outcomes,
+            state_reader=lambda: self.state,
+            run_blockers=lambda: self._run_completion_blockers,
+            intent_reader=lambda: self._load_completion_intent,
+            completion_readiness=lambda: self.can_complete,
             transition=lambda: self.transition,
         )

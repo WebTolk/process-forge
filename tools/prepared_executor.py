@@ -396,7 +396,11 @@ def _canonical_digest(value: Any) -> bool:
 def _same_path(left: str, right: str) -> bool:
     try:
         return Path(left).expanduser().resolve() == Path(right).expanduser().resolve()
-    except OSError, RuntimeError, ValueError:
+    except (
+        OSError,
+        RuntimeError,
+        ValueError,
+    ):
         return False
 
 
@@ -508,11 +512,17 @@ def _write_failure(paths: tuple[Path, Path] | None, code: int, reason: str) -> N
     heartbeat, exit_path = paths
     try:
         write_heartbeat(heartbeat, "failed", sequence=0, extra={"failure_code": reason})
-    except OSError, ValueError:
+    except (
+        OSError,
+        ValueError,
+    ):
         pass
     try:
         write_exit_contract(exit_path, code)
-    except OSError, ValueError:
+    except (
+        OSError,
+        ValueError,
+    ):
         pass
 
 
@@ -597,7 +607,11 @@ def _run_target_in_operation(
                 receipts = ExecutionReceipts(
                     current_env, document, heartbeat, exit_path
                 )
-            except ExecutorError, OSError, ValueError:
+            except (
+                ExecutorError,
+                OSError,
+                ValueError,
+            ):
                 print("FAIL: execution_activity_unknown", file=sys.stderr)
                 return 125
         from processforge_core.prepared.command import scratch_environment
