@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import sqlite3
+import stat
 import subprocess
 import sys
 import tempfile
@@ -210,7 +211,11 @@ class MaintenanceFixture(unittest.TestCase):
     def cleanup_scratch(self) -> None:
         """Remove only this fixture after checking its exact owned parent."""
         self.assertEqual(self.root.parent, SCRATCH.resolve())
-        self.assertFalse(self.root.is_symlink() or self.root.is_junction())
+        info = self.root.lstat()
+        self.assertFalse(
+            stat.S_ISLNK(info.st_mode)
+            or bool(getattr(info, "st_file_attributes", 0) & 0x400)
+        )
         shutil.rmtree(self.root)
 
     def invoke(

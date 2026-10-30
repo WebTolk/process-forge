@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import textwrap
@@ -81,10 +82,9 @@ def _copy_distribution(
 
 def _redirected(path: Path) -> bool:
     """Refuse links, junctions and other Windows reparse points."""
-    return (
-        path.is_symlink()
-        or path.is_junction()
-        or bool(getattr(path.lstat(), "st_file_attributes", 0) & 0x400)
+    info = path.lstat()
+    return stat.S_ISLNK(info.st_mode) or bool(
+        getattr(info, "st_file_attributes", 0) & 0x400
     )
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import stat
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -121,8 +122,12 @@ class WorkplaceAccounting:
             self.directory / "identity.json",
             self.directory / "projects",
         ):
-            if path.is_symlink() or (
-                hasattr(path, "is_junction") and path.is_junction()
+            try:
+                info = path.lstat()
+            except FileNotFoundError:
+                continue
+            if stat.S_ISLNK(info.st_mode) or (
+                getattr(info, "st_file_attributes", 0) & 0x400
             ):
                 raise AccountingStorageError("accounting_unsafe_path")
 

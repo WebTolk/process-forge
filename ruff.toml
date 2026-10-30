@@ -1,0 +1,2 @@
+extend = "tools/python-qa/config/ruff.toml"
+target-version = "py311"

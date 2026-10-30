@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import stat
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -370,7 +371,7 @@ def test_windows_junctions_are_refused_by_all_maintenance_operations(
         creationflags=subprocess.CREATE_NO_WINDOW,
     )
     assert result.returncode == 0, result.stderr.decode("utf-8", errors="replace")
-    assert junction.is_junction()
+    assert junction.lstat().st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT
     cases = (
         (
             "backup",

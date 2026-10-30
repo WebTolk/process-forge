@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import stat
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -56,7 +57,13 @@ def _scan_report() -> JsonObject:
 
 def _safe_path(path: Path) -> None:
     for part in (path, *path.parents):
-        if part.is_symlink() or part.is_junction():
+        try:
+            info = part.lstat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISLNK(info.st_mode) or (
+            getattr(info, "st_file_attributes", 0) & 0x400
+        ):
             raise MaintenanceError("migration_unsafe_path")
 
 
