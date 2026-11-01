@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Iterator
 
 from ..configuration.models import TemporaryFilesConfig
-from .temporary_files import _directory, _linked
+from .temporary_files import _directory, _linked, _windows_handle_identity
 
 _CREATED = object()
 
@@ -171,12 +171,6 @@ def _windows_delete(resource: OwnedTemporary) -> int:
             ("index_low", wintypes.DWORD),
         ]
 
-    class FileId(ctypes.Structure):
-        _fields_ = [
-            ("volume", ctypes.c_ulonglong),
-            ("identity", ctypes.c_ubyte * 16),
-        ]
-
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     create = kernel.CreateFileW
     create.argtypes = [
@@ -192,14 +186,6 @@ def _windows_delete(resource: OwnedTemporary) -> int:
     query = kernel.GetFileInformationByHandle
     query.argtypes = [wintypes.HANDLE, ctypes.POINTER(Information)]
     query.restype = wintypes.BOOL
-    query_id = kernel.GetFileInformationByHandleEx
-    query_id.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,
-        ctypes.c_void_p,
-        wintypes.DWORD,
-    ]
-    query_id.restype = wintypes.BOOL
     dispose = kernel.SetFileInformationByHandle
     dispose.argtypes = [
         wintypes.HANDLE,
@@ -218,11 +204,7 @@ def _windows_delete(resource: OwnedTemporary) -> int:
         info = Information()
         if not query(handle, ctypes.byref(info)):
             raise ctypes.WinError(ctypes.get_last_error())
-        file_id = FileId()
-        if not query_id(handle, 18, ctypes.byref(file_id), ctypes.sizeof(file_id)):
-            raise ctypes.WinError(ctypes.get_last_error())
-        identity = (file_id.volume, int.from_bytes(bytes(file_id.identity), "little"))
-        if identity != resource.identity:
+        if _windows_handle_identity(handle) != resource.identity:
             raise ValueError("identity_changed")
         directory = resource.kind == "directory"
         if (

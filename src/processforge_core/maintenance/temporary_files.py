@@ -47,6 +47,50 @@ def _linked(info) -> bool:
     )
 
 
+def _windows_handle_identity(handle: int) -> tuple[int, int]:
+    """Use Python's identity format for the exact pinned Windows object."""
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.GetCurrentProcess.argtypes = []
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel.DuplicateHandle.argtypes = [
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.HANDLE),
+        wintypes.DWORD,
+        wintypes.BOOL,
+        wintypes.DWORD,
+    ]
+    kernel.DuplicateHandle.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    current = kernel.GetCurrentProcess()
+    duplicate = wintypes.HANDLE()
+    if not kernel.DuplicateHandle(
+        current, handle, current, ctypes.byref(duplicate), 0, False, 2
+    ):
+        raise ctypes.WinError(ctypes.get_last_error())
+    value = duplicate.value
+    if value is None:
+        raise OSError("identity_handle_unavailable")
+    try:
+        descriptor = msvcrt.open_osfhandle(
+            value, os.O_RDONLY | os.O_BINARY | os.O_NOINHERIT
+        )
+    except BaseException:
+        kernel.CloseHandle(value)
+        raise
+    try:
+        info = os.fstat(descriptor)
+        return info.st_dev, info.st_ino
+    finally:
+        os.close(descriptor)
+
+
 @contextmanager
 def _directory(
     path: Path,
@@ -101,21 +145,7 @@ def _directory(
             if attributes[0] & 0x400 or not attributes[0] & 0x10:
                 raise OSError("unsafe_directory")
             if expected_identity is not None:
-
-                class FileId(ctypes.Structure):
-                    _fields_ = [
-                        ("volume", ctypes.c_ulonglong),
-                        ("identity", ctypes.c_ubyte * 16),
-                    ]
-
-                file_id = FileId()
-                if not query(handle, 18, ctypes.byref(file_id), ctypes.sizeof(file_id)):
-                    raise ctypes.WinError(ctypes.get_last_error())
-                identity = (
-                    file_id.volume,
-                    int.from_bytes(bytes(file_id.identity), "little"),
-                )
-                if identity != expected_identity:
+                if _windows_handle_identity(handle) != expected_identity:
                     raise ValueError("identity_changed")
             yield None
         finally:

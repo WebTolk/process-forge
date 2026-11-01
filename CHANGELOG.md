@@ -11,6 +11,10 @@
   Keep catalog resolution, private data and release ownership unchanged.
 - Preserve captured bytes for every published file and refuse private process
   writes, code files, path aliases, links and changes during a read.
+- Compare owned Windows temporary files and directories using Python's identity
+  for the pinned handle, avoiding false identity changes on Python 3.11.
+- Route worker input capture and the existing conversation smoke through their
+  current provider-adapter owner.
 
 ### Qualification
 

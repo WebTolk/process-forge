@@ -205,6 +205,7 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
 
     import processforge as core
     from pf_runtime import host
+    from pf_runtime.provider_adapters import worker_input_summary
 
     project_root = Path(os.environ.get("PF_PROJECT_ROOT") or Path.cwd()).resolve()
     run_id = str(
@@ -229,7 +230,7 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
         ) from exc
     payload_hash = "sha256:" + hashlib.sha256(payload_text.encode("utf-8")).hexdigest()
     session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
-    summary = host.worker_input_summary(
+    summary = worker_input_summary(
         run_id, task_id, attempt, payload_hash, expected_report
     )
     agent_run_dir_raw = os.environ.get("PF_AGENT_RUN_DIR") or ""

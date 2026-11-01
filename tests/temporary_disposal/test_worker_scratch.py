@@ -474,17 +474,16 @@ def _opened_directory_model(monkeypatch, platform, identities, *, query_failure=
         return acquire(path)
 
     def query(handle, kind, pointer, size):
-        if kind == 9:
-            pointer._obj[0] = 0x10
-        else:
-            assert kind == 18
-            events.append(("identity", handle))
-            if query_failure:
-                return False
-            device, inode = opened[handle]
-            pointer._obj.volume = device
-            pointer._obj.identity[:] = inode.to_bytes(16, "little")
+        assert kind == 9
+        pointer._obj[0] = 0x10
         return True
+
+    def handle_identity(handle):
+        # This boundary model supplies the Python identity owned by the new
+        # handle adapter. Real DuplicateHandle/fstat lifetime behavior is covered
+        # separately by test_windows_identity.py, without truncating these IDs.
+        info = fstat(handle)
+        return info.st_dev, info.st_ino
 
     model_os = SimpleNamespace(
         name=platform,
@@ -508,6 +507,7 @@ def _opened_directory_model(monkeypatch, platform, identities, *, query_failure=
         ctypes, "WinError", lambda code: OSError(code, "query_failure"), raising=False
     )
     monkeypatch.setattr(temporary_files, "os", model_os)
+    monkeypatch.setattr(temporary_files, "_windows_handle_identity", handle_identity)
     monkeypatch.setattr(disposal, "os", model_os)
     return SimpleNamespace(os=model_os, events=events, opened=opened)
 
