@@ -8,9 +8,24 @@ import hashlib
 import sys
 from pathlib import Path
 
-
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
+PUBLIC_DIRS = [
+    "docs",
+    "schemas",
+    "processes",
+    "packages",
+    "packs",
+    "templates",
+    "prompts",
+    "examples",
+    "policies",
+    "seeds",
+    "bin",
+    "src",
+    "tools",
+    "updates",
+    "checksums",
+]
 PUBLIC_ROOT_FILES = [
     "README.md",
     "README.ru.md",
@@ -28,6 +43,8 @@ PUBLIC_ROOT_FILES = [
     "release/1.3.0-alpha5/notes.ru.md",
     "release/1.3.0-beta1/notes.md",
     "release/1.3.0-beta1/notes.ru.md",
+    "release/1.3.0-beta2/notes.md",
+    "release/1.3.0-beta2/notes.ru.md",
 ]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PUBLIC_INVENTORY = Path("checksums/processforge.sha256")
@@ -73,7 +90,8 @@ def public_file_entries(root_path: Path) -> list[tuple[str, Path]]:
                 if path.is_file()
                 and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
                 and path.suffix not in SKIP_SUFFIXES
-                and path.relative_to(root_path).as_posix() != PUBLIC_INVENTORY.as_posix()
+                and path.relative_to(root_path).as_posix()
+                != PUBLIC_INVENTORY.as_posix()
             )
     return sorted(files, key=lambda item: item[0])
 
@@ -108,7 +126,9 @@ def resolve_inventory_path(root_path: Path, requested: str | None = None) -> Pat
 
 def check_inventory(root_path: Path, output: Path) -> int:
     if not output.is_file():
-        print(f"FAIL: checksum inventory missing: {output.relative_to(root_path)}; run with --write")
+        print(
+            f"FAIL: checksum inventory missing: {output.relative_to(root_path)}; run with --write"
+        )
         return 1
     expected = output.read_text(encoding="utf-8")
     actual = build_inventory(root_path)
@@ -131,10 +151,21 @@ def check_inventory(root_path: Path, output: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", default=str(DEFAULT_ROOT), help="ProcessForge root path.")
-    parser.add_argument("--output", help="checksum inventory path relative to --root; defaults to checksums/processforge.sha256")
-    parser.add_argument("--write", action="store_true", help="write checksums/processforge.sha256")
-    parser.add_argument("--check", action="store_true", help="compare current public files with existing checksum inventory")
+    parser.add_argument(
+        "--root", default=str(DEFAULT_ROOT), help="ProcessForge root path."
+    )
+    parser.add_argument(
+        "--output",
+        help="checksum inventory path relative to --root; defaults to checksums/processforge.sha256",
+    )
+    parser.add_argument(
+        "--write", action="store_true", help="write checksums/processforge.sha256"
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="compare current public files with existing checksum inventory",
+    )
     args = parser.parse_args()
     root = Path(args.root).expanduser().resolve()
     output = resolve_inventory_path(root, args.output)

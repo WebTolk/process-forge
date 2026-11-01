@@ -307,8 +307,8 @@ def archive_args(root: Path) -> argparse.Namespace:
 def archive_fixture(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> tuple[dict[str, Any], Path]:
-    from contextlib import contextmanager
     import shutil
+    from contextlib import contextmanager
 
     ns = release_namespace()
     extraction = tmp_path / "owned-extraction"
@@ -528,7 +528,7 @@ def test_release_selection_public_notes(
     spec.loader.exec_module(validator)
     notes = {
         f"release/{version}/{name}"
-        for version in ("1.3.0-alpha5", "1.3.0-beta1")
+        for version in ("1.3.0-alpha5", "1.3.0-beta1", "1.3.0-beta2")
         for name in ("notes.md", "notes.ru.md")
     }
     excluded = {

@@ -477,11 +477,111 @@ def reopen_job(
 
 # Source image and request leases are deliberately distinct lifetimes. The
 # caller must supply accepted pins from its qualified installer handoff.
+@contextmanager
+def _private_process_open(target: Path) -> Iterator[Any]:
+    """Keep Windows writers and replacement excluded while reading private data."""
+    if os.name != "nt":
+        with _PHYSICAL_OPEN(target, "rb") as stream:
+            yield stream
+        return
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = (
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    )
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+    kernel.CloseHandle.restype = wintypes.BOOL
+    # FILE_SHARE_READ only: both existing and later writers/delete handles fail.
+    # OPEN_REPARSE_POINT keeps a replaced leaf from redirecting the read handle.
+    handle = kernel.CreateFileW(str(target), 0x80000000, 1, None, 3, 0x00200000, None)
+    if handle == ctypes.c_void_p(-1).value:
+        raise NativeControlError()
+    try:
+        with _PHYSICAL_OPEN(target, "rb") as stream:
+            yield stream
+    finally:
+        kernel.CloseHandle(handle)
+
+
+def _private_process_bytes(root: Path, relative: str) -> bytes:
+    """Read one private YAML snapshot without admitting code or path aliases."""
+    parts = relative.split("/")
+    if (
+        len(parts) < 3
+        or parts[:2] not in (["processes", "user"], ["processes", "custom"])
+        or any(part in {"", ".", ".."} for part in parts)
+        or any(
+            ":" in part
+            or "\\" in part
+            or part.endswith((" ", "."))
+            or any(ord(char) < 32 for char in part)
+            for part in parts
+        )
+        or Path(relative).suffix.lower() not in {".yaml", ".yml"}
+    ):
+        raise NativeControlError()
+    target = root.joinpath(*parts)
+    fields = (
+        "st_dev",
+        "st_ino",
+        "st_mode",
+        "st_nlink",
+        "st_size",
+        "st_mtime_ns",
+        "st_ctime_ns",
+    )
+
+    def checked_stat() -> os.stat_result:
+        if target.resolve(strict=True) != target:
+            raise NativeControlError()
+        for node in (target, *target.parents):
+            info = node.lstat()
+            if (
+                stat.S_ISLNK(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & 0x400
+            ):
+                raise NativeControlError()
+            if node == root:
+                break
+        info = target.lstat()
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise NativeControlError()
+        return info
+
+    def signature(info: os.stat_result) -> tuple[int, ...]:
+        return tuple(getattr(info, field) for field in fields)
+
+    try:
+        before = checked_stat()
+        with _private_process_open(target) as stream:
+            opened = os.fstat(stream.fileno())
+            if signature(before) != signature(opened):
+                raise NativeControlError()
+            raw = stream.read(before.st_size + 1)
+            after = os.fstat(stream.fileno())
+            if (
+                len(raw) != before.st_size
+                or signature(before) != signature(after)
+                or signature(before) != signature(checked_stat())
+            ):
+                raise NativeControlError()
+        return raw
+    except OSError:
+        raise NativeControlError() from None
+
+
 class NativeImage:
     """Immutable accepted source/resources, including direct spec loaders.
 
     Capture is noncreating. It never derives expected pins from current source
-    files. Only explicitly accepted payload paths can be loaded from this root.
+    files. Core code and published resources use accepted payload bytes; private
+    process YAML has a separate checked, read-only data path.
     """
 
     def __init__(self, root: Path, accepted: dict[str, str]) -> None:
@@ -743,7 +843,15 @@ class NativeImage:
                 )
             if mode not in {"r", "rt", "rb"} or opener is not None or not closefd:
                 raise NativeControlError()
-            raw = io.BytesIO(image.read(relative))
+            if (
+                relative not in image.files
+                and len(report_parts) >= 3
+                and report_parts[:2] in (["processes", "user"], ["processes", "custom"])
+                and Path(relative).suffix.lower() in {".yaml", ".yml"}
+            ):
+                raw = io.BytesIO(_private_process_bytes(image.root, relative))
+            else:
+                raw = io.BytesIO(image.read(relative))
             raw.name = str(image.root / relative)
             if mode == "rb":
                 if encoding is not None or errors is not None or newline is not None:

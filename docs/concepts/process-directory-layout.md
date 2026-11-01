@@ -14,6 +14,11 @@ The resolver searches user/custom roots before core, keeps `process_id` stable a
 
 Public release archives include `processes/core/**` and only placeholder files under `processes/user/` and `processes/custom/`. Real user/custom process definitions are private workspace or project state and are excluded from the public distribution.
 
+A sealed installation reads unpublished YAML/YML files in these two private
+roots as live data. Published files always use their captured release bytes.
+Private reads reject path aliases, links and changes during capture; this data
+boundary grants no access to code files or writes inside the Core installation.
+
 Active manifests, docs, templates, examples, and package manifests should refer
 to process files under `processes/core/`, `processes/user/`, or
 `processes/custom/`. Flat process paths are migration-only.

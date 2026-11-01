@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 1.3.0-beta2 - 2026-11-01
+
+### Fixed
+
+- Read private project and workplace YAML processes under `processes/user/`
+  and `processes/custom/` without treating them as immutable Core payload.
+  Keep catalog resolution, private data and release ownership unchanged.
+- Preserve captured bytes for every published file and refuse private process
+  writes, code files, path aliases, links and changes during a read.
+
+### Qualification
+
+- This isolated repair is based on beta1. It does not include other unaccepted
+  development changes or claim general Core, POSIX or stable-release acceptance.
+
+See the [beta2 notes](release/1.3.0-beta2/notes.md).
+
 ## 1.3.0-beta1 - 2026-10-26
 
 ### Changed

@@ -7,7 +7,23 @@ from pathlib import Path
 
 from processforge_core.common.paths import rel
 
-RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
+RELEASE_DIRS = [
+    "docs",
+    "schemas",
+    "processes",
+    "packages",
+    "packs",
+    "templates",
+    "prompts",
+    "examples",
+    "policies",
+    "seeds",
+    "bin",
+    "src",
+    "tools",
+    "updates",
+    "checksums",
+]
 
 RELEASE_ROOT_FILES = [
     "README.md",
@@ -27,6 +43,8 @@ RELEASE_ROOT_FILES = [
     "release/1.3.0-alpha5/notes.ru.md",
     "release/1.3.0-beta1/notes.md",
     "release/1.3.0-beta1/notes.ru.md",
+    "release/1.3.0-beta2/notes.md",
+    "release/1.3.0-beta2/notes.ru.md",
 ]
 
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
@@ -84,7 +102,9 @@ class ReleaseSourcePolicy:
                 prefix = candidate.rstrip("/")
                 if normalized == prefix or normalized.startswith(prefix + "/"):
                     return True
-            if fnmatch.fnmatch(normalized, candidate) or fnmatch.fnmatch(Path(normalized).name, candidate):
+            if fnmatch.fnmatch(normalized, candidate) or fnmatch.fnmatch(
+                Path(normalized).name, candidate
+            ):
                 return True
             if normalized == candidate:
                 return True
@@ -113,7 +133,10 @@ class ReleaseSourcePolicy:
 
     def release_path_is_forbidden(self, rel_path: str) -> str | None:
         normalized = rel_path.replace("\\", "/")
-        if normalized.startswith(("processes/user/", "processes/custom/")) and Path(normalized).name != ".gitkeep":
+        if (
+            normalized.startswith(("processes/user/", "processes/custom/"))
+            and Path(normalized).name != ".gitkeep"
+        ):
             return "private user/custom process definition"
         for prefix in RELEASE_FORBIDDEN_PF_PREFIXES:
             if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
@@ -125,14 +148,25 @@ class ReleaseSourcePolicy:
                 return f"forbidden directory part {part}"
         if suffix in RELEASE_FORBIDDEN_SUFFIXES:
             return f"forbidden suffix {suffix}"
-        if rel_path.endswith(".env") or "/.env" in rel_path or Path(rel_path).name.startswith(".env."):
+        if (
+            rel_path.endswith(".env")
+            or "/.env" in rel_path
+            or Path(rel_path).name.startswith(".env.")
+        ):
             return "private env file"
-        if Path(rel_path).name == "process-forge.local.yaml" and not rel_path.startswith(("examples/", "templates/")):
+        if Path(
+            rel_path
+        ).name == "process-forge.local.yaml" and not rel_path.startswith(
+            ("examples/", "templates/")
+        ):
             return "private local config"
         if "runtime/hooks/outbox" in rel_path or "hooks/outbox" in rel_path:
             return "hook outbox payload"
         transcript_parts = Path(normalized).parts
-        if any(left == "chat" and right == "transcripts" for left, right in zip(transcript_parts, transcript_parts[1:])):
+        if any(
+            left == "chat" and right == "transcripts"
+            for left, right in zip(transcript_parts, transcript_parts[1:])
+        ):
             return "local chat transcript"
         return None
 
@@ -143,7 +177,10 @@ class ReleaseSourcePolicy:
 
     def release_git_dirty_is_allowed_projection(self, status_line: str) -> bool:
         status, path = self.release_git_dirty_path(status_line)
-        return status in {" M", "M ", "MM"} and path in RELEASE_ALLOWED_PROJECTION_DIRTY_PATHS
+        return (
+            status in {" M", "M ", "MM"}
+            and path in RELEASE_ALLOWED_PROJECTION_DIRTY_PATHS
+        )
 
     def forbidden_powershell_reference(self, text: str) -> bool:
         """Reject unsupported wrapper references; prose semantics need source review."""
