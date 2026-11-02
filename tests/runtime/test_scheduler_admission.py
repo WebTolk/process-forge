@@ -67,11 +67,16 @@ def runtime_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         assert ExecutionAdmission.held(project, workplace)
         events.append(name)
 
+    def flush(*_args: object) -> None:
+        assert not ExecutionAdmission.held(project, workplace)
+        assert "native_leave" not in events
+        events.append("flush")
+
     core = SimpleNamespace(
         update_stale_agent_presence=lambda *_: None,
         command_agent_director_tick=lambda *_: 0,
         supervisor_tick_result=lambda *_: {"failed": []},
-        flush_pending_event_dispatches=lambda *_: commit("flush"),
+        flush_pending_event_dispatches=flush,
         rel=lambda path, _root: str(path),
     )
     monkeypatch.setattr(host, "route_project", route)
@@ -111,7 +116,7 @@ with ExecutionAdmission().start(Path(sys.argv[1]),Path(sys.argv[2]),deadline=tim
     assert probe.stdout.strip() == "independent-admission"
 
 
-@pytest.mark.parametrize("slow_phase", ["inspector", "projection"])
+@pytest.mark.parametrize("slow_phase", ["inspector", "projection", "flush"])
 def test_slow_observation_does_not_block_independent_admission(
     runtime_context: Any, monkeypatch: pytest.MonkeyPatch, slow_phase: str
 ) -> None:
@@ -128,6 +133,8 @@ def test_slow_observation_does_not_block_independent_admission(
 
     if slow_phase == "inspector":
         core.supervisor_tick_result = slow_callback
+    elif slow_phase == "flush":
+        core.flush_pending_event_dispatches = slow_callback
     else:
         monkeypatch.setattr(host, "refresh_stage_obligations", slow_callback)
     payload, status = host.tick_payload(workplace, [project], core, inspector=True)

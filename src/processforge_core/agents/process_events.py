@@ -21,7 +21,6 @@ from ..project.configuration_inputs import (
     operation_storage_host,
     project_configuration_reader,
 )
-from ..runtime.execution_admission import ExecutionAdmission
 from ..sqlite_storage import JournalError
 from ..work.consistency import RunTaskInputReader
 from .hook_dispatch import RuntimeHookDispatcher
@@ -186,7 +185,7 @@ _PUBLICATION: ContextVar[ProcessEventPublication | None] = ContextVar(
 
 
 class ProcessEventPublication:
-    """One admitted SQL batch; dispatch only after its durable commit.
+    """One durable SQL batch; dispatch only after its durable commit.
 
     Resource exits are not injected with frozen domain exceptions. SQL rollback
     is explicit, while the existing connection and gate owners close normally.
@@ -219,9 +218,8 @@ class ProcessEventPublication:
             entry = current() if callable(current) else None
             if entry is not None:
                 self.stack.enter_context(entry.operation())
-            self.stack.enter_context(
-                ExecutionAdmission().start(self.project_root, self.workplace_root)
-            )
+            # The actual journal open and SQL reservation below are the
+            # preflight. Do not hold workplace admission during SQL lock waits.
             self.connection = self.stack.enter_context(
                 self.journal.connection(
                     self.path,

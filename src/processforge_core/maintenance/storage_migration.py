@@ -13,7 +13,7 @@ import sqlite3
 import stat
 import time
 from collections.abc import Callable, Iterator
-from contextlib import AbstractContextManager, closing, contextmanager
+from contextlib import AbstractContextManager, ExitStack, closing, contextmanager
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path, PurePosixPath
@@ -561,6 +561,56 @@ def _inspect_target(
         }
 
 
+@dataclass(frozen=True)
+class _TargetScan:
+    """Full body proof with a live SQLite change witness, never an mtime cache."""
+
+    target: StoreTarget
+    connection: sqlite3.Connection
+    facts: JsonObject
+    data_version: int
+    physical_identity: tuple[int, int]
+
+    def revalidate(self, descriptor: JsonObject, deadline: float | None) -> None:
+        _deadline(deadline)
+        info = _safe(self.target.target).stat()
+        if (info.st_dev, info.st_ino) != self.physical_identity:
+            raise MaintenanceError("storage_source_changed")
+        if self.connection.in_transaction:
+            raise MaintenanceError("storage_source_changed")
+        before = self.connection.execute("PRAGMA data_version").fetchone()[0]
+        metadata = {
+            "state": "legacy",
+            **_legacy_facts(
+                self.connection,
+                self.target,
+                descriptor,
+                parity=False,
+                deadline=deadline,
+            ),
+        }
+        after = self.connection.execute("PRAGMA data_version").fetchone()[0]
+        final_info = _safe(self.target.target).stat()
+        expected = {key: value for key, value in self.facts.items() if key != "parity"}
+        if (
+            before != self.data_version
+            or after != self.data_version
+            or metadata != expected
+            or (final_info.st_dev, final_info.st_ino) != self.physical_identity
+        ):
+            raise MaintenanceError("storage_source_changed")
+
+
+def _admission_held(context: StorageMigrationContext) -> bool:
+    return (
+        context.workplace_root is not None
+        and ExecutionAdmission.held(None, context.workplace_root)
+    ) or (
+        context.project_root is not None
+        and ExecutionAdmission.held(context.project_root, None)
+    )
+
+
 @contextmanager
 def storage_identity_access(
     context: StorageMigrationContext,
@@ -581,9 +631,25 @@ def storage_identity_access(
     root = storage_owner_root(context, target)
     _deadline(deadline)
     timeout = 30.0 if deadline is None else max(0.001, deadline - time.monotonic())
-    with registry_lock(
-        storage_identity_gate(root), timeout_seconds=timeout, stale_after_seconds=0
-    ):
+    inherited_admission = _admission_held(context)
+    if inherited_admission:
+        timeout = min(timeout, 0.05)
+    with ExitStack() as access:
+        try:
+            access.enter_context(
+                registry_lock(
+                    storage_identity_gate(root),
+                    timeout_seconds=timeout,
+                    stale_after_seconds=0,
+                )
+            )
+        except SystemExit as error:
+            if (
+                inherited_admission
+                and getattr(error, "registry_lock_reason", None) == "contention_timeout"
+            ):
+                raise MaintenanceError("storage_activity_unknown") from None
+            raise
         _deadline(deadline)
         slot = _slot(root, target)
         if slot is not None and slot["state"] != "ready":
@@ -679,6 +745,90 @@ class StorageMigrationService:
         ):
             _deadline(deadline)
             yield
+
+    @contextmanager
+    def _scan_target(
+        self,
+        context: StorageMigrationContext,
+        root: Path,
+        target: StoreTarget,
+        descriptor: JsonObject,
+        deadline: float | None,
+    ) -> Iterator[_TargetScan]:
+        """Hash one real snapshot without global admission or a retained SQL read lock."""
+        if _admission_held(context):
+            raise MaintenanceError("storage_activity_unknown")
+        with ExitStack() as resources:
+            with self._gate(root, deadline):
+                info = _safe(target.target).stat()
+                connection = resources.enter_context(
+                    _connection(target.target, self.driver, deadline=deadline)
+                )
+                before = connection.execute("PRAGMA data_version").fetchone()[0]
+                connection.execute("BEGIN")
+                try:
+                    facts = {
+                        "state": "legacy",
+                        **_legacy_facts(
+                            connection,
+                            target,
+                            descriptor,
+                            parity=True,
+                            deadline=deadline,
+                        ),
+                    }
+                finally:
+                    # A live connection is the change witness. A read transaction
+                    # must not remain while another caller owns admission.
+                    connection.rollback()
+                after = connection.execute("PRAGMA data_version").fetchone()[0]
+                final_info = _safe(target.target).stat()
+                if before != after or (info.st_dev, info.st_ino) != (
+                    final_info.st_dev,
+                    final_info.st_ino,
+                ):
+                    raise MaintenanceError("storage_source_changed")
+                scan = _TargetScan(
+                    target, connection, facts, after, (info.st_dev, info.st_ino)
+                )
+            # Neither the target gate nor a SQL transaction crosses this yield.
+            # Same-connection data_version detects writes while gates are released.
+            yield scan
+
+    @contextmanager
+    def _admitted_gate(
+        self, context: StorageMigrationContext, root: Path, deadline: float | None
+    ) -> Iterator[None]:
+        """Never retain global admission while waiting for a long target scan."""
+        stop = time.monotonic() + 30 if deadline is None else deadline
+        inherited_admission = _admission_held(context)
+        while True:
+            _deadline(stop)
+            with ExitStack() as gates:
+                gates.enter_context(self._admit(context, stop))
+                try:
+                    gates.enter_context(
+                        self.registry_lock(
+                            storage_identity_gate(root),
+                            timeout_seconds=0.001,
+                            stale_after_seconds=0,
+                        )
+                    )
+                except SystemExit as error:
+                    if (
+                        getattr(error, "registry_lock_reason", None)
+                        != "contention_timeout"
+                    ):
+                        raise
+                    if inherited_admission:
+                        raise MaintenanceError("storage_activity_unknown") from None
+                else:
+                    _deadline(stop)
+                    yield
+                    return
+            # Known target contention is waited out with no global gate held.
+            with self._gate(root, stop):
+                pass
 
     def _proof(
         self, context: StorageMigrationContext, expected: str | None = None
@@ -1095,7 +1245,8 @@ class StorageMigrationService:
         if target not in validate_storage_context(context) or target.kind == "main":
             raise MaintenanceError("storage_target_invalid")
         root, descriptor = storage_owner_root(context, target), _descriptor()
-        with self._admit(context, None), self._gate(root, None):
+        inherited_admission = _admission_held(context)
+        with self._admitted_gate(context, root, None):
             slot = _slot(root, target)
             if slot is None:
                 if target.target.exists():
@@ -1108,6 +1259,8 @@ class StorageMigrationService:
                         yield None
                         return
                     raise MaintenanceError("storage_activity_unknown")
+                if inherited_admission:
+                    raise MaintenanceError("storage_activity_unknown")
                 plan = self._plan(
                     context, target, descriptor, root, proof, {"state": "absent"}
                 )
@@ -1119,22 +1272,33 @@ class StorageMigrationService:
                 if plan.get("source") != {"state": "absent"}:
                     raise MaintenanceError("storage_resume_required")
                 self._proof(context, plan["safety_generation"])
+                if inherited_admission:
+                    raise MaintenanceError("storage_activity_unknown")
             yield str(plan["store_id"])
             self._proof(context, plan["safety_generation"])
-            facts = _inspect_target(target, descriptor, self.driver, parity=True)
-            if facts.get("store_id") != plan["store_id"]:
-                raise MaintenanceError("storage_identity_conflict")
-            _publish_pin(root, target, plan["store_id"], plan["plan_checksum"], "ready")
-            _atomic(
-                self._journal(root, plan["plan_checksum"]) / "journal.json",
-                {
-                    "plan_checksum": plan["plan_checksum"],
-                    "store_id": plan["store_id"],
-                    "state": "ready",
-                    "backup_manifest_checksum": None,
-                    "source_absent": True,
-                },
-            )
+        with self._scan_target(context, root, target, descriptor, None) as scan:
+            with self._admitted_gate(context, root, None):
+                slot = _slot(root, target)
+                if slot is None or slot["plan_checksum"] != plan["plan_checksum"]:
+                    raise MaintenanceError("storage_pin_conflict")
+                self._proof(context, plan["safety_generation"])
+                scan.revalidate(descriptor, None)
+                facts = scan.facts
+                if facts.get("store_id") != plan["store_id"]:
+                    raise MaintenanceError("storage_identity_conflict")
+                _publish_pin(
+                    root, target, plan["store_id"], plan["plan_checksum"], "ready"
+                )
+                _atomic(
+                    self._journal(root, plan["plan_checksum"]) / "journal.json",
+                    {
+                        "plan_checksum": plan["plan_checksum"],
+                        "store_id": plan["store_id"],
+                        "state": "ready",
+                        "backup_manifest_checksum": None,
+                        "source_absent": True,
+                    },
+                )
 
     def _target(
         self,
@@ -1144,8 +1308,10 @@ class StorageMigrationService:
         deadline: float | None,
     ) -> JsonObject:
         root = storage_owner_root(context, target)
-        with self._admit(context, deadline), self._gate(root, deadline):
-            # No UUID or journal until safety has been proved under admission.
+        inherited_admission = _admission_held(context)
+        plan: JsonObject | None = None
+        proof: MigrationSafety | None = None
+        with self._admitted_gate(context, root, deadline):
             slot = _slot(root, target)
             if slot is not None and slot["state"] == "ready":
                 facts = _inspect_target(
@@ -1156,8 +1322,10 @@ class StorageMigrationService:
                 self._repair_ready(root, target, slot)
                 return {"state": "ready"}
             if slot is None:
+                # Ordinary unadopted access needs canonical schema/UUID checks,
+                # not a historical integrity/parity scan before an unknown proof.
                 facts = _inspect_target(
-                    target, descriptor, self.driver, parity=True, deadline=deadline
+                    target, descriptor, self.driver, deadline=deadline
                 )
                 if facts["state"] == "absent":
                     return {"state": "absent"}
@@ -1166,44 +1334,66 @@ class StorageMigrationService:
                 proof = self._proof(context)
                 if proof.state != "proven":
                     return {"state": "deferred", "legacy_allowed": True}
-                plan = self._plan(context, target, descriptor, root, proof, facts)
-                _publish_pin(
-                    root, target, plan["store_id"], plan["plan_checksum"], "pending"
-                )
+                if inherited_admission:
+                    raise MaintenanceError("storage_activity_unknown")
             else:
                 plan = self._load(root, slot, target, descriptor)
                 self._proof(context, plan["safety_generation"])
-        # Long backup/digests/DDL run outside admission and SQL transactions.
-        # Pending pin fences capable opens. Target gate prevents concurrent resume.
+                if inherited_admission:
+                    raise MaintenanceError("storage_activity_unknown")
+        if plan is None:
+            if proof is None:
+                raise MaintenanceError("storage_safety_unavailable")
+            with self._scan_target(context, root, target, descriptor, deadline) as scan:
+                with self._admitted_gate(context, root, deadline):
+                    current_proof = self._proof(context, proof.generation)
+                    if _slot(root, target) is not None:
+                        raise MaintenanceError("storage_pin_conflict")
+                    scan.revalidate(descriptor, deadline)
+                    if scan.facts.get("store_id") is not None:
+                        raise MaintenanceError("storage_pin_missing")
+                    plan = self._plan(
+                        context, target, descriptor, root, current_proof, scan.facts
+                    )
+                    _publish_pin(
+                        root, target, plan["store_id"], plan["plan_checksum"], "pending"
+                    )
+        # Pending pins fence capable writers; slow backup/DDL and full parity
+        # retain only target serialization and the outer native operation lease.
         with self._gate(root, deadline):
             slot = _slot(root, target)
             if slot is None or slot["plan_checksum"] != plan["plan_checksum"]:
                 raise MaintenanceError("storage_pin_conflict")
             self._apply_target(context, target, descriptor, root, plan, deadline)
-        with self._admit(context, deadline), self._gate(root, deadline):
-            self._proof(context, plan["safety_generation"])
-            facts = _inspect_target(
-                target, descriptor, self.driver, parity=True, deadline=deadline
-            )
-            if plan["source"] != {"state": "absent"}:
-                self._parity(plan, facts)
-            elif facts.get("store_id") != plan["store_id"]:
-                raise MaintenanceError("storage_identity_conflict")
-            _publish_pin(root, target, plan["store_id"], plan["plan_checksum"], "ready")
-            directory = self._journal(root, plan["plan_checksum"])
-            journal = _read(directory / "journal.json")
-            journal["state"] = "ready"
-            _atomic(directory / "journal.json", journal)
-            _atomic(
-                directory / "report.json",
-                {
-                    "schema_version": 1,
-                    "status": "ready",
-                    "plan_checksum": plan["plan_checksum"],
-                    "store_id": plan["store_id"],
-                    "target_relative_path": target.target_relative_path,
-                },
-            )
+        with self._scan_target(context, root, target, descriptor, deadline) as scan:
+            with self._admitted_gate(context, root, deadline):
+                slot = _slot(root, target)
+                if slot is None or slot["plan_checksum"] != plan["plan_checksum"]:
+                    raise MaintenanceError("storage_pin_conflict")
+                self._proof(context, plan["safety_generation"])
+                scan.revalidate(descriptor, deadline)
+                facts = scan.facts
+                if plan["source"] != {"state": "absent"}:
+                    self._parity(plan, facts)
+                elif facts.get("store_id") != plan["store_id"]:
+                    raise MaintenanceError("storage_identity_conflict")
+                _publish_pin(
+                    root, target, plan["store_id"], plan["plan_checksum"], "ready"
+                )
+                directory = self._journal(root, plan["plan_checksum"])
+                journal = _read(directory / "journal.json")
+                journal["state"] = "ready"
+                _atomic(directory / "journal.json", journal)
+                _atomic(
+                    directory / "report.json",
+                    {
+                        "schema_version": 1,
+                        "status": "ready",
+                        "plan_checksum": plan["plan_checksum"],
+                        "store_id": plan["store_id"],
+                        "target_relative_path": target.target_relative_path,
+                    },
+                )
         return {"state": "ready", "plan_checksum": plan["plan_checksum"]}
 
     def _repair_ready(self, root: Path, target: StoreTarget, slot: JsonObject) -> None:

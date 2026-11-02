@@ -34,7 +34,7 @@
     },
     {
       "relative_path": "src/processforge_core/maintenance/storage_migration.py",
-      "sha256": "sha256:0f2845cf73305809b607b588719e389b1da686a74af40d3199f69a3ee1287e59"
+      "sha256": "sha256:e4d2eebd83f4b2577b74f0df25a8fb29a610432560dd7d24f217f8c655b61ce0"
     },
     {
       "relative_path": "src/processforge_core/maintenance/backup.py",
@@ -61,5 +61,5 @@
       "sha256": "sha256:c81caf3471a08b0a0b562cae06035d944ee6c1a6078605c350f233f3e98e9291"
     }
   ],
-  "transform_checksum": "sha256:9632b0f180e3f9693e53c03cd414666f045e0ec945bc0ef0143fa9ff53280973"
+  "transform_checksum": "sha256:ee43a6026e8797a5c1a4dc52001cfb2ecb2b391c35ddfcab5ae6d29ea1fda24e"
 }

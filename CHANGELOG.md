@@ -11,6 +11,9 @@
 - Check required event admission before publishing Work-start documents. Recover
   interrupted publication with the same objective, scope, Work identity and
   capsule; refuse execution while publication remains pending.
+- Keep full journal integrity and row-parity checks outside shared admission.
+  Defer unproved legacy adoption before those scans, and revalidate store changes
+  before migration publication and Work-start's final journal open.
 
 ## 1.3.0-beta3 - 2026-11-02
 

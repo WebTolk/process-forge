@@ -2835,7 +2835,9 @@ def tick_payload(
                     # The snapshot cannot authorize a later mutation after a
                     # concurrent stopping/enrollment change.
                     route_project(str(project_root), workplace_root, core)
-                    core.flush_pending_event_dispatches(project_root)
+                # Dispatch can scan journals and run hooks. Journal completion
+                # owns its readiness checks; the native operation remains live.
+                core.flush_pending_event_dispatches(project_root)
                 stage_projection = refresh_stage_obligations(project_root, core)
                 item["projection"] = core.rel(stage_projection, project_root)
                 results.append(item)

@@ -5,6 +5,9 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import sqlite3
+import threading
+import time
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -188,7 +191,9 @@ def case(tmp_path, monkeypatch):
 
 def test_admission_failure_precedes_all_authoritative_work(case, monkeypatch):
     failure = ExecutionError("execution_activity_unknown")
-    monkeypatch.setattr(ExecutionAdmission, "start", lambda *a, **kw: _Refused(failure))
+    monkeypatch.setattr(
+        case.recorder.journal, "connection", lambda *a, **kw: _Refused(failure)
+    )
     with pytest.raises(ExecutionError) as caught:
         case.start()
     assert caught.value is failure
@@ -456,3 +461,126 @@ def test_corrupt_intent_cannot_bypass_pending_readiness(case):
     with pytest.raises(StartIntentError):
         case.recover()
     assert case.capsule.read_bytes() == before
+
+
+@pytest.fixture
+def automatic_legacy_case(case):
+    """Real legacy SQL history and automatic host; exclusion stays UNKNOWN."""
+    from processforge_core.maintenance.backup import SQLiteBackupService
+    from processforge_core.maintenance.contracts import (
+        MigrationSafety,
+        StorageMigrationContext,
+        StoreTarget,
+    )
+    from processforge_core.maintenance.storage_migration import (
+        StorageMigrationHost,
+        StorageMigrationService,
+    )
+    from processforge_core.runtime.execution_admission import registry_file_lock
+
+    path = case.recorder.inputs.event_runtime_paths(case.root)[0]
+    case.recorder.journal.append_many(
+        path,
+        (
+            {
+                "event_id": f"old-{index}",
+                "event_type": "history",
+                "data": {"text": "old material " * 16},
+            }
+            for index in range(5000)
+        ),
+    )
+    target = StoreTarget(
+        "events", path, "runtime/events/events.sqlite3", "project", "fixture"
+    )
+    context = StorageMigrationContext(
+        case.root, None, case.root / "device.yaml", (target,)
+    )
+
+    def unknown(selected):
+        assert selected == context
+        assert ExecutionAdmission.held(case.root, None)
+        return MigrationSafety("unknown", "", ("fixture:no-managed-exclusion",))
+
+    service = StorageMigrationService(
+        backup=SQLiteBackupService(),
+        admission=ExecutionAdmission(),
+        registry_lock=registry_file_lock,
+        safety=unknown,
+    )
+    host = StorageMigrationHost(context, service, _automatic=True)
+    case.recorder = ProcessEventRecorder(
+        journal=ProcessEventJournal(storage_host=host),
+        configuration=ConfigurationProvider.pinned(PFConfig()),
+    )
+    return case, host, target
+
+
+def test_publication_prepares_its_actual_journal_without_historical_parity(
+    automatic_legacy_case, monkeypatch
+):
+    from processforge_core.maintenance import storage_migration as migration
+
+    case, host, _target = automatic_legacy_case
+    calls = []
+    original = host.service.ensure_ready
+
+    def observed(context, **kwargs):
+        calls.append(ExecutionAdmission.held(case.root, None))
+        return original(context, **kwargs)
+
+    monkeypatch.setattr(host.service, "ensure_ready", observed)
+    monkeypatch.setattr(
+        migration,
+        "_parity",
+        lambda *_: pytest.fail("ordinary event publication scanned history"),
+    )
+    assert case.start()["action"] == "created_new"
+    assert calls == [False]
+    assert len(case.event_ids()) == 5004
+    assert not any(case.state_admission)
+
+
+def test_sql_reservation_wait_does_not_hold_workplace_admission(
+    automatic_legacy_case, monkeypatch
+):
+    from processforge_core.database import SQLiteDriver
+
+    case, _host, target = automatic_legacy_case
+    competing = sqlite3.connect(target.target, isolation_level=None)
+    waiting = threading.Event()
+    result, errors = [], []
+    original = SQLiteDriver._connect
+
+    def traced(driver, *args, **kwargs):
+        connection = original(driver, *args, **kwargs)
+        connection.set_trace_callback(
+            lambda sql: waiting.set() if sql == "BEGIN IMMEDIATE" else None
+        )
+        return connection
+
+    def publish():
+        try:
+            result.append(case.start())
+        except BaseException as error:
+            errors.append(error)
+
+    monkeypatch.setattr(SQLiteDriver, "_connect", traced)
+    competing.execute("BEGIN IMMEDIATE")
+    caller = threading.Thread(target=publish)
+    caller.start()
+    try:
+        assert waiting.wait(5), "publication did not reach the real SQL reservation"
+        assert not case.run_path.exists()
+        with ExecutionAdmission().start(
+            case.root, None, deadline=time.monotonic() + 0.5
+        ):
+            assert caller.is_alive()
+    finally:
+        competing.rollback()
+        competing.close()
+        caller.join(10)
+    assert not caller.is_alive()
+    assert not errors
+    assert result[0]["action"] == "created_new"
+    assert len(case.event_ids()) == 5004

@@ -280,3 +280,19 @@ metadata. An absent legacy initializer also remains usable without UUID adoption
 Pure reads validate existing pins without creating a missing identity guard.
 Installed managed-owner enrollment/exclusion and fresh updater-child qualification
 remain separate requirements; factory availability is not evidence of that proof.
+
+Automatic unpinned access checks the exact legacy schema and actual safety proof
+before requesting a full integrity or row-parity scan. Active or unknown safety
+keeps the existing deferred legacy route without scanning historical rows or
+creating migration metadata. Pending and unpinned adopted metadata still refuse.
+
+Proven migration scans run outside shared execution admission. A retained SQLite
+connection watches `data_version` and physical file identity after its read
+transaction closes. Final admission rechecks the proof generation, store facts
+and witness before publishing the existing plan or ready pin. A concurrent WAL
+commit or replaced file refuses the stale scan. Target gates and SQL transactions
+are released before waiting for admission; a caller retaining outer admission
+cannot run a long migration through a nested scope.
+
+Plans remain bound to exact transform hashes. A changed transform does not rewrite
+or waive an older pending plan's checks; its existing refusal remains authoritative.

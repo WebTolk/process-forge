@@ -14,7 +14,7 @@ from .context_documents import ContextContractInputs
 
 @dataclass
 class ScopeConflictService:
-    """Own one lazy file inventory for a single validation, plan or tick."""
+    """Compare declared paths without reading repository contents."""
 
     project_root: Path
     inputs: ContextContractInputs = field(default_factory=ContextContractInputs)
@@ -22,27 +22,12 @@ class ScopeConflictService:
     _pairs: dict[tuple[str, str], tuple[bool, str]] = field(
         default_factory=dict, init=False
     )
-    _files: list[str] | None = field(default=None, init=False)
 
     def _key(self, value: str) -> str:
         if value not in self._keys:
             text = self.inputs.normalize_assignment_path(value)
             self._keys[value] = text.lower() if os.name == "nt" else text
         return self._keys[value]
-
-    def _repo_files(self) -> list[str]:
-        if self._files is None:
-            files: list[str] = []
-            skipped = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
-            for path in self.project_root.rglob("*"):
-                if any(part in skipped for part in path.parts):
-                    continue
-                if path.is_file():
-                    files.append(
-                        self._key(path.relative_to(self.project_root).as_posix())
-                    )
-            self._files = files
-        return self._files
 
     def overlap(self, left: str, right: str) -> tuple[bool, str]:
         left_key, right_key = self._key(left), self._key(right)
@@ -72,11 +57,8 @@ class ScopeConflictService:
         # cannot share a file or satisfy the conservative prefix fallback.
         if left_prefix and right_prefix and not comparable:
             return False, ""
-        if any(
-            fnmatch.fnmatch(item, left) and fnmatch.fnmatch(item, right)
-            for item in self._repo_files()
-        ):
-            return True, "glob_matches_same_file"
+        # An existing-file witness cannot change the conservative decision
+        # below. Scope validation also protects files that do not yet exist.
         if left_prefix and right_prefix and comparable:
             return True, "possible_glob_overlap"
         # Empty prefixes carry no evidence of independence. A common future

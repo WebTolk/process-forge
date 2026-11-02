@@ -99,13 +99,19 @@ capsule bytes and event identities if a later mandatory event, delivery or
 projection fails. The failure remains visible; pending publication blocks worker
 preparation and execution through the shared Work contract validator.
 
+Core opens the actual writable journal and reserves its SQL transaction before
+publishing Work documents. Store selection, schema/UUID checks and any required
+readiness remain inside the Core adapter. SQL lock waits do not retain workplace
+admission; the real connection keeps its native and owner-identity protection.
+Pending migration or an unusable journal refuses publication before documents.
+
 Retry Work-start with the same objective and scope to finish that pending
 publication using its original Work identity and capsule. Changed scope or
 conflicting stored documents are refused. Completed publication retains the
 existing duplicate-Work behavior. These recovery rules apply to Work-start;
 other commands retain their own recovery contracts.
 
-Runtime inspection and projection run outside the shared execution admission
+Runtime inspection, projection and outbox dispatch run outside shared execution admission
 gate. Starts and mutations retain their admission checks, stop fences and native
 leases. This keeps routine observation from holding the gate across slow reads.
 
