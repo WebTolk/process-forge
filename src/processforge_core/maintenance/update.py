@@ -867,6 +867,10 @@ def apply_update(
             raise CoreUpdateError(
                 "plan_blocked", "core update requires unwound operation scopes"
             )
+    from .file_update import apply_file_update, file_update_candidate
+
+    if file_update_candidate(core_root):
+        return apply_file_update(core_root, archive_path, workplace_root=workplace_root)
     try:
         entry = _update_entry(core_root)
     except (NativeControlError, OSError, ValueError, KeyError, TypeError) as error:

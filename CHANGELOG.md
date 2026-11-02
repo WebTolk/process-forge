@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 1.3.0-beta3 - 2026-11-02
+
+### Fixed
+
+- Restore manifest-based updates of existing file-only installations through
+  the verified release CLI extracted outside the replacement target. Preserve
+  actual preimages, the recovery journal and private project/workplace data.
+- Keep enrolled and partially enrolled installations on native replacement;
+  the file route does not create enrollment or migration authority.
+- Allow explicit Windows App Server force recovery after a verified owner's
+  shutdown refusal. Authenticate and pin that exact process object; preserve
+  default shutdown behavior and unrelated processes.
+
+This development build does not establish general Core or POSIX acceptance.
+See the [beta3 notes](release/1.3.0-beta3/notes.md).
+
 ## 1.3.0-beta2 - 2026-11-01
 
 ### Fixed

@@ -39,6 +39,22 @@ python bin/pf.py core-update repair --core-root <core>
 
 `plan` is read-only. `apply` requires `--confirm`.
 
+### Existing file-only installations
+
+For an existing installation without native enrollment, extract the verified
+development/release ZIP outside the installed Core and run that archive's
+`bin/pf.py core-update plan|apply` with the installed target and original ZIP.
+Use the explicit Workplace root when the installation serves one. Stop its
+known App Server first; explicit Windows `server stop --force` from the external
+archive can recover an authenticated exact owner that rejects shutdown.
+
+The file updater retains backups, progress/failure journals, private data and
+manifest-last verification. It refuses overlapping installer/target roots,
+unknown native-enrollment state and Workplace migration operations. Any native
+markers, including partial enrollment, keep the target on its qualified native
+update route. The file updater creates no native authority and does not claim
+that its cooperating-writer mutex fences every independently running host.
+
 ## Compatible Workplace Migration
 
 An archive may carry a declarative Workplace migration under

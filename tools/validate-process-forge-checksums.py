@@ -45,6 +45,8 @@ PUBLIC_ROOT_FILES = [
     "release/1.3.0-beta1/notes.ru.md",
     "release/1.3.0-beta2/notes.md",
     "release/1.3.0-beta2/notes.ru.md",
+    "release/1.3.0-beta3/notes.md",
+    "release/1.3.0-beta3/notes.ru.md",
 ]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PUBLIC_INVENTORY = Path("checksums/processforge.sha256")

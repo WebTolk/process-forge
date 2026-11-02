@@ -1724,6 +1724,39 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
         timeout=2.0,
     )
     if code != 200:
+        if (
+            getattr(args, "force", False)
+            and not orphaned
+            and inspection["kind"] == "ready"
+            and inspection.get("matching") is True
+            and code == 409
+            and body.get("error") == "runtime_busy_or_activity_unknown"
+        ):
+            from .owned_shutdown import OwnedShutdownError, force_ready_owner_stop
+
+            try:
+                force_ready_owner_stop(
+                    workplace_root,
+                    inspection,
+                    token,
+                    read_owner=lambda: (
+                        read_json(service_path(workplace_root)),
+                        read_json(lock_path(workplace_root)),
+                    ),
+                    request=http_json,
+                    critical_section=lambda: singleton_critical_section(
+                        workplace_root, core
+                    ),
+                    timeout=float(getattr(args, "timeout", 10.0) or 10.0),
+                )
+            except OwnedShutdownError as error:
+                raise SystemExit(
+                    f"FAIL: runtime stop request failed: {code} {body}; "
+                    f"explicit file-only force recovery refused: {error}"
+                ) from None
+            cleanup_stale_runtime(workplace_root, core)
+            print("RUNTIME: stopped")
+            return 0
         raise SystemExit(f"FAIL: runtime stop request failed: {code} {body}")
     pid = state.get("pid")
     deadline = time.monotonic() + float(getattr(args, "timeout", 10.0) or 10.0)
