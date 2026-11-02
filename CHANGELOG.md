@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Return success after a completed file-only archive update with an explicit
+  Workplace. Preserve the managed update's separate doctor result and errors.
+
 ## 1.3.0-beta3 - 2026-11-02
 
 ### Fixed

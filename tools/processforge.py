@@ -14823,6 +14823,8 @@ def command_core_update_apply(args: argparse.Namespace) -> int:
         )
         return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("maintenance_mode") == "file_only":
+        return 0
     return (
         0
         if not args.workplace_root or payload["post_update_doctor"]["status"] == "pass"
