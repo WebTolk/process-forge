@@ -528,7 +528,7 @@ def test_release_selection_public_notes(
     spec.loader.exec_module(validator)
     notes = {
         f"release/{version}/{name}"
-        for version in ("1.3.0-alpha5", "1.3.0-beta1", "1.3.0-beta2")
+        for version in ("1.3.0-alpha5", "1.3.0-beta1", "1.3.0-beta2", "1.3.0-beta3")
         for name in ("notes.md", "notes.ru.md")
     }
     excluded = {
