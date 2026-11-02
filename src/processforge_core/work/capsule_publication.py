@@ -1,6 +1,9 @@
 """Publish existing immutable assignment capsules through explicit dependencies."""
 from __future__ import annotations
 
+import hashlib
+import os
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Protocol
@@ -39,27 +42,92 @@ class AssignmentCapsulePublisher:
     sha256_file: Callable[[Path], str]
     stable_ids: Callable[[Any], list[str]]
 
-    def publish(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
+    def prepare(
+        self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]
+    ) -> tuple[Path, bytes]:
         from .context import ContextContractError
 
-        path = self.flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
+        path = (
+            self.flow_root()
+            / "contexts"
+            / "assignment-capsules"
+            / f"{assignment['id']}.capsule.yaml"
+        )
         if path.exists():
-            raise ContextContractError("immutable_context_exists", remediation="create_successor_work")
+            raise ContextContractError(
+                "immutable_context_exists", remediation="create_successor_work"
+            )
         snapshot = self.snapshot_reader().load()
-        fields = self.build_context_fields(self.assignment_path(assignment["id"]), assignment,
-                                           snapshot, pin=pin, run_record=run)
+        fields = self.build_context_fields(
+            self.assignment_path(assignment["id"]),
+            assignment,
+            snapshot,
+            pin=pin,
+            run_record=run,
+        )
         capsule = {
             "schema_version": 1,
-            "capsule": {"id": f"{assignment['id']}-capsule", "generated_at": self.now_utc(), "assignment_id": assignment["id"], "assignment_path": f".pf/assignments/{assignment['id']}.yaml", "immutable": True, "worker_may_rebuild_context": False},
-            "context_snapshot": {"id": pin["snapshot_id"], "sha256": pin["snapshot_checksum"], "freshness_at_creation": "fresh"},
+            "capsule": {
+                "id": f"{assignment['id']}-capsule",
+                "generated_at": self.now_utc(),
+                "assignment_id": assignment["id"],
+                "assignment_path": f".pf/assignments/{assignment['id']}.yaml",
+                "immutable": True,
+                "worker_may_rebuild_context": False,
+            },
+            "context_snapshot": {
+                "id": pin["snapshot_id"],
+                "sha256": pin["snapshot_checksum"],
+                "freshness_at_creation": "fresh",
+            },
             **fields,
         }
-        capsule["context"].update(freshness="fresh", selected_specializations=self.stable_ids(assignment.get("selected_specializations")), applied_project_overrides=[])
+        capsule["context"].update(
+            freshness="fresh",
+            selected_specializations=self.stable_ids(
+                assignment.get("selected_specializations")
+            ),
+            applied_project_overrides=[],
+        )
         capsule["assignment"]["stage"] = assignment["stage"]
-        path.parent.mkdir(parents=True, exist_ok=True)
+        return path, self.ensure_trailing_newline(self.dump_yaml(capsule)).encode(
+            "utf-8"
+        )
+
+    def publish(
+        self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]
+    ) -> tuple[str, str]:
+        from .context import ContextContractError
+
+        path, raw = self.prepare(run, assignment, pin)
         try:
-            with path.open("x", encoding="utf-8") as stream:
-                stream.write(self.ensure_trailing_newline(self.dump_yaml(capsule)))
+            publish_capsule_bytes(path, raw)
         except FileExistsError as exc:
-            raise ContextContractError("immutable_context_exists", remediation="create_successor_work") from exc
-        return self.relative_path(path, self.project_root), "sha256:" + self.sha256_file(path)
+            raise ContextContractError(
+                "immutable_context_exists", remediation="create_successor_work"
+            ) from exc
+        return self.relative_path(path, self.project_root), "sha256:" + hashlib.sha256(
+            raw
+        ).hexdigest()
+
+
+def publish_capsule_bytes(path: Path, raw: bytes) -> None:
+    """Publish a complete immutable capsule without replacing an existing file.
+
+    This is the same sibling staging and no-clobber hard-link protocol as
+    prepared.input.write_once; a crash cannot expose a partial final capsule.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            prefix=".capsule-", suffix=".tmp", dir=path.parent, delete=False
+        ) as stream:
+            temporary = Path(stream.name)
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.link(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)

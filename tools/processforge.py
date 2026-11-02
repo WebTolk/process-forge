@@ -22,10 +22,12 @@ import stat
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unicodedata
 import uuid
 import zipfile
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
@@ -8413,26 +8415,35 @@ def update_stale_agent_presence(workplace_root: Path) -> None:
         if not presence:
             continue
         if str(presence.get("status")) == "online" and ttl_expired(presence):
-            presence["status"] = "stale"
-            presence["updated_at"] = _core_common_clock.now_utc()
-            write_agent_presence(workplace_root, presence)
-            project_ref = str(presence.get("project_root") or "")
-            if project_ref:
-                try:
-                    write_current_session_refs(workplace_root, Path(project_ref).expanduser().resolve(), presence)
-                except OSError:
-                    pass
-            _agent_workplace_registry.append_agent_ledger_event(
-                workplace_root,
-                {
-                    "event": "agent.session_expired",
-                    "agent_id": presence.get("agent_id"),
-                    "session_id": presence.get("session_id"),
-                    "project_id": presence.get("project_id"),
-                    "process_id": presence.get("process_id"),
-                    "run_id": presence.get("run_id"),
-                },
-            )
+            with _director_commit(None, workplace_root):
+                if not _director_presence_current(
+                    workplace_root, presence, require_live=False
+                ):
+                    continue
+                presence["status"] = "stale"
+                presence["updated_at"] = _core_common_clock.now_utc()
+                write_agent_presence(workplace_root, presence)
+                project_ref = str(presence.get("project_root") or "")
+                if project_ref:
+                    try:
+                        write_current_session_refs(
+                            workplace_root,
+                            Path(project_ref).expanduser().resolve(),
+                            presence,
+                        )
+                    except OSError:
+                        pass
+                _agent_workplace_registry.append_agent_ledger_event(
+                    workplace_root,
+                    {
+                        "event": "agent.session_expired",
+                        "agent_id": presence.get("agent_id"),
+                        "session_id": presence.get("session_id"),
+                        "project_id": presence.get("project_id"),
+                        "process_id": presence.get("process_id"),
+                        "run_id": presence.get("run_id"),
+                    },
+                )
 
 
 def checked_in_agents(workplace_root: Path, *, role: str | None = None, project_id: str | None = None) -> list[dict[str, Any]]:
@@ -8670,14 +8681,22 @@ def save_lease(workplace_root: Path, lease: dict[str, Any]) -> None:
 
 def command_agent_lease_grant(args: argparse.Namespace) -> int:
     workplace_root = resolve_workplace_root(args.workplace)
-    lease_id = safe_id(args.id or f"lease-{args.agent}-{args.task or args.run or 'work'}", "lease")
+    lease_id = safe_id(
+        args.id or f"lease-{args.agent}-{args.task or args.run or 'work'}", "lease"
+    )
     issued = datetime.now(timezone.utc).replace(microsecond=0)
     expires = issued + timedelta(seconds=int(args.ttl or 3600))
+    selected_presence = getattr(args, "_selected_presence", None)
     lease = {
         "schema_version": 1,
         "id": lease_id,
         "agent_id": safe_id(args.agent, "agent"),
-        "session_id": args.session or read_agent_presence(workplace_root, args.agent).get("session_id", ""),
+        "session_id": args.session
+        or (
+            selected_presence
+            if isinstance(selected_presence, dict)
+            else read_agent_presence(workplace_root, args.agent)
+        ).get("session_id", ""),
         "status": "active",
         "scope": {
             "project_id": args.project_id or "",
@@ -8686,10 +8705,21 @@ def command_agent_lease_grant(args: argparse.Namespace) -> int:
             "task_id": args.task or "",
         },
         "access": {
-            "capsule": _context_contract_inputs.normalize_assignment_path(args.capsule or ""),
-            "allowed_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.allowed_file)],
-            "allowed_read_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
-            "forbidden_files": [_context_contract_inputs.normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
+            "capsule": _context_contract_inputs.normalize_assignment_path(
+                args.capsule or ""
+            ),
+            "allowed_files": [
+                _context_contract_inputs.normalize_assignment_path(item)
+                for item in as_list(args.allowed_file)
+            ],
+            "allowed_read_files": [
+                _context_contract_inputs.normalize_assignment_path(item)
+                for item in as_list(args.allowed_read_file)
+            ],
+            "forbidden_files": [
+                _context_contract_inputs.normalize_assignment_path(item)
+                for item in as_list(args.forbidden_file)
+            ],
         },
         "issued_at": issued.isoformat().replace("+00:00", "Z"),
         "expires_at": expires.isoformat().replace("+00:00", "Z"),
@@ -8747,19 +8777,42 @@ def command_agent_lease_doctor(args: argparse.Namespace) -> int:
     return print_checks(checks)
 
 
-def mark_expired_agent_leases(workplace_root: Path) -> int:
+def mark_expired_agent_leases(
+    workplace_root: Path, *, project_root: Path | None = None
+) -> int:
     changed = 0
     now = datetime.now(timezone.utc)
-    for path in sorted(_agent_workplace_registry.workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+    for path in sorted(
+        _agent_workplace_registry.workplace_agent_leases_dir(workplace_root).glob(
+            "*.yaml"
+        )
+    ):
         lease = load_yaml_document(path)
         if str(lease.get("status")) != "active":
             continue
-        expires = _worker_observation_inputs.parse_runtime_timestamp(lease.get("expires_at"))
+        expires = _worker_observation_inputs.parse_runtime_timestamp(
+            lease.get("expires_at")
+        )
         if expires and expires <= now:
-            lease["status"] = "stale"
-            lease["updated_at"] = _core_common_clock.now_utc()
-            _core_common_yaml_io.write_yaml_file(path, lease)
-            changed += 1
+            admission = (
+                _director_commit(project_root, workplace_root)
+                if project_root is not None
+                else contextlib.nullcontext()
+            )
+            with (
+                admission,
+                registry_file_lock(
+                    _agent_workplace_registry.workplace_agent_leases_dir(workplace_root)
+                    / "registry"
+                ),
+            ):
+                # A renewal between the scan and commit must not be overwritten.
+                if load_yaml_document(path) != lease:
+                    continue
+                lease["status"] = "stale"
+                lease["updated_at"] = _core_common_clock.now_utc()
+                _core_common_yaml_io.write_yaml_file(path, lease)
+                changed += 1
     return changed
 
 
@@ -8953,63 +9006,179 @@ def command_handoff_offer(args: argparse.Namespace) -> int:
     return command_handoff_status(args)
 
 
+@contextlib.contextmanager
+def _director_commit(
+    project_root: Path | None, workplace_root: Path
+) -> Iterator[dict[str, Any] | None]:
+    """Revalidate stopping and routing for one Director mutation, not its scan."""
+    from pf_runtime.host import registration_admission, route_project
+
+    with registration_admission(
+        workplace_root, [project_root] if project_root is not None else []
+    ):
+        current = (
+            route_project(str(project_root), workplace_root, sys.modules[__name__])
+            if project_root is not None
+            else None
+        )
+        yield current
+
+
+def _director_presence_current(
+    workplace_root: Path, agent: dict[str, Any], *, require_live: bool = True
+) -> bool:
+    """Recheck the selected session using bounded existing presence locations."""
+    agent_id = str(agent.get("agent_id") or "")
+    session_id = str(agent.get("session_id") or "")
+    reader = AgentPresenceReader(workplace_root)
+    canonical = reader.path(agent_id, session_id)
+    if canonical.is_file():
+        return _core_common_json_io.json_read(canonical) == agent and (
+            not require_live or not ttl_expired(agent)
+        )
+    legacy = (
+        reader.directory
+        / safe_id(agent_id, "agent")
+        / f"{safe_id(session_id, 'session')}.json"
+    )
+    return any(
+        _core_common_json_io.json_read(path) == agent
+        for path in (legacy, reader.legacy_path(agent_id))
+    ) and (not require_live or not ttl_expired(agent))
+
+
 def command_agent_director_tick(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
-    changed = mark_expired_agent_leases(workplace_root)
+    changed = mark_expired_agent_leases(workplace_root, project_root=project_root)
     for root in sorted((locate_flow_root(project_root) / "handoffs").glob("*")):
         if not root.is_dir() or not (root / "handoff.yaml").is_file():
             continue
         handoff = load_yaml_document(root / "handoff.yaml")
         if handoff.get("status") != "waiting_for_agent":
             continue
-        role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
-        agents = checked_in_agents(workplace_root, role=role or None, project_id=getattr(args, "project_id", None))
-        required_capabilities = set(str(item) for item in as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities")))
+        role = str(
+            (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get(
+                "required_role"
+            )
+            or ""
+        )
+        agents = checked_in_agents(
+            workplace_root,
+            role=role or None,
+            project_id=getattr(args, "project_id", None),
+        )
+        required_capabilities = set(
+            str(item)
+            for item in as_list(
+                (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get(
+                    "required_capabilities"
+                )
+            )
+        )
         if required_capabilities:
             agents = [
-                agent for agent in agents
-                if required_capabilities.issubset({str(item) for item in as_list(agent.get("capabilities"))})
+                agent
+                for agent in agents
+                if required_capabilities.issubset(
+                    {str(item) for item in as_list(agent.get("capabilities"))}
+                )
             ]
-        required_specializations = set(as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_specializations")))
+        required_specializations = set(
+            as_list(
+                (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get(
+                    "required_specializations"
+                )
+            )
+        )
         if required_specializations:
             agents = [
-                agent for agent in agents
-                if required_specializations.issubset({_specialization_catalog_reader.resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+                agent
+                for agent in agents
+                if required_specializations.issubset(
+                    {
+                        _specialization_catalog_reader.resource_id(str(item))
+                        for item in as_list(agent.get("supports_specializations"))
+                    }
+                )
             ]
         if not agents:
-            created = _worker_observation_inputs.parse_runtime_timestamp(handoff.get("created_at"))
-            if created and datetime.now(timezone.utc) > created + timedelta(seconds=int(args.wait_ttl or 3600)):
-                handoff["status"] = "needs_operator"
-                handoff["director_reason"] = "required agent unavailable past wait ttl"
-                save_handoff(project_root, handoff)
-                changed += 1
+            created = _worker_observation_inputs.parse_runtime_timestamp(
+                handoff.get("created_at")
+            )
+            if created and datetime.now(timezone.utc) > created + timedelta(
+                seconds=int(args.wait_ttl or 3600)
+            ):
+                with _director_commit(project_root, workplace_root) as current:
+                    if getattr(args, "_automatic_tick", False) and (
+                        current is None or current.get("effective_mode") != "organized"
+                    ):
+                        continue
+                    if load_yaml_document(root / "handoff.yaml") != handoff:
+                        continue
+                    handoff["status"] = "needs_operator"
+                    handoff["director_reason"] = (
+                        "required agent unavailable past wait ttl"
+                    )
+                    save_handoff(project_root, handoff)
+                    changed += 1
             continue
         agent = agents[0]
         handoff_id = str(handoff.get("id") or root.name)
         lease_id = f"lease-{handoff_id}-{agent.get('agent_id')}"
-        command_agent_lease_grant(
-            argparse.Namespace(
-                workplace=str(workplace_root),
-                id=lease_id,
-                agent=str(agent.get("agent_id")),
-                session=str(agent.get("session_id") or ""),
-                project_id=getattr(args, "project_id", "") or str(agent.get("project_id") or ""),
-                process=str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or ""),
-                run=str((handoff.get("target") if isinstance(handoff.get("target"), dict) else {}).get("run_id") or ""),
-                task="",
-                capsule="",
-                allowed_file=[],
-                allowed_read_file=[],
-                forbidden_file=[],
-                ttl=int(args.lease_ttl or 3600),
+        with _director_commit(project_root, workplace_root) as current:
+            if getattr(args, "_automatic_tick", False) and (
+                current is None or current.get("effective_mode") != "organized"
+            ):
+                continue
+            if load_yaml_document(
+                root / "handoff.yaml"
+            ) != handoff or not _director_presence_current(workplace_root, agent):
+                # A changed selection is retried by the next tick, never granted
+                # from a stale handoff or presence snapshot.
+                continue
+            command_agent_lease_grant(
+                argparse.Namespace(
+                    workplace=str(workplace_root),
+                    id=lease_id,
+                    agent=str(agent.get("agent_id")),
+                    session=str(agent.get("session_id") or ""),
+                    _selected_presence=agent,
+                    project_id=getattr(args, "project_id", "")
+                    or str(agent.get("project_id") or ""),
+                    process=str(
+                        (
+                            handoff.get("to")
+                            if isinstance(handoff.get("to"), dict)
+                            else {}
+                        ).get("process")
+                        or ""
+                    ),
+                    run=str(
+                        (
+                            handoff.get("target")
+                            if isinstance(handoff.get("target"), dict)
+                            else {}
+                        ).get("run_id")
+                        or ""
+                    ),
+                    task="",
+                    capsule="",
+                    allowed_file=[],
+                    allowed_read_file=[],
+                    forbidden_file=[],
+                    ttl=int(args.lease_ttl or 3600),
+                )
             )
-        )
-        handoff["status"] = "ready"
-        handoff["assigned_agent"] = {"agent_id": agent.get("agent_id"), "session_id": agent.get("session_id"), "lease_id": lease_id}
-        save_handoff(project_root, handoff)
-        changed += 1
+            handoff["status"] = "ready"
+            handoff["assigned_agent"] = {
+                "agent_id": agent.get("agent_id"),
+                "session_id": agent.get("session_id"),
+                "lease_id": lease_id,
+            }
+            save_handoff(project_root, handoff)
+            changed += 1
     print(f"DIRECTOR_TICK: changed={changed}")
     return 0
 
@@ -9174,10 +9343,173 @@ def supervisor_root(project_root: Path) -> Path:
     return locate_flow_root(project_root) / "runtime" / "supervisor"
 
 
+@dataclass
+class _WorkerLifecycleLease:
+    key: tuple[int, int, Path]
+    active: bool = True
+
+
+_WORKER_LIFECYCLE_GATES: ContextVar[tuple[_WorkerLifecycleLease, ...]] = ContextVar(
+    "worker_lifecycle_gates", default=()
+)
+
+
+def _worker_lifecycle_key(
+    project_root: Path, run_id: str, task_id: str
+) -> tuple[int, int, Path]:
+    return (
+        os.getpid(),
+        threading.get_ident(),
+        _work_paths.agent_run(project_root, run_id, task_id).absolute(),
+    )
+
+
+def _worker_observation_admission(
+    project_root: Path,
+    *,
+    deadline: float | None = None,
+) -> contextlib.AbstractContextManager[None]:
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    manifest = _ProjectMetadataReader(project_root).workplace_manifest()
+    return ExecutionAdmission().start(
+        project_root, manifest.parent if manifest else None, deadline=deadline
+    )
+
+
 @contextlib.contextmanager
-def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
+def _worker_commit_locks(
+    project_root: Path,
+    run_id: str,
+    task_id: str,
+    *,
+    start: bool = False,
+    deadline: float | None = None,
+) -> Iterator[None]:
+    from processforge_core.executions.model import ExecutionError
+
+    stop = time.monotonic() + 30 if deadline is None else deadline
+    while True:
+        with contextlib.ExitStack() as locks:
+            admission = (
+                _worker_start_admission(
+                    project_root, deadline=stop, _defer_registration=True
+                )
+                if start
+                else _worker_observation_admission(project_root, deadline=stop)
+            )
+            selected_workplace = locks.enter_context(admission)
+            try:
+                locks.enter_context(
+                    worker_run_lifecycle_lock(
+                        project_root, run_id, task_id, timeout_seconds=0.0
+                    )
+                )
+            except SystemExit as error:
+                if getattr(error, "registry_lock_reason", None) != "contention_timeout":
+                    raise
+            else:
+                if time.monotonic() >= stop:
+                    raise ExecutionError("execution_activity_unknown")
+                if start:
+                    _register_worker_start(project_root, selected_workplace)
+                yield
+                return
+        # A slow task-only planner may still own the lifecycle lock. Wait without
+        # workplace admission, then recheck stopping/registration in the same budget.
+        remaining = stop - time.monotonic()
+        if remaining <= 0:
+            raise ExecutionError("execution_activity_unknown")
+        try:
+            with worker_run_lifecycle_lock(
+                project_root, run_id, task_id, timeout_seconds=remaining
+            ):
+                pass
+        except SystemExit as error:
+            if getattr(error, "registry_lock_reason", None) != "contention_timeout":
+                raise
+            raise ExecutionError("execution_activity_unknown") from None
+
+
+def _worker_phase_snapshot(
+    project_root: Path, run_id: str, task_id: str
+) -> dict[Path, bytes | None]:
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
+    selected = [paths[name] for name in ("status", "command", "exit", "process")]
+    selected.extend(
+        [
+            _work_paths.assignment_document(project_root, task_id),
+            assignment_capsule_path(project_root, task_id),
+            locate_flow_root(project_root) / "process-forge.yaml",
+            locate_flow_root(project_root) / "process-forge.local.yaml",
+        ]
+    )
+    state = load_agent_run_state(project_root, run_id, task_id)
+    reference = state.get("prepared_input")
+    if isinstance(reference, dict) and isinstance(reference.get("path"), str):
+        candidate = project_root / reference["path"]
+        if candidate.resolve().is_relative_to(paths["root"].resolve()):
+            selected.append(candidate)
+    return {path: _observation_bytes(path) for path in selected}
+
+
+@contextlib.contextmanager
+def _worker_phase_commit(
+    project_root: Path,
+    run_id: str,
+    task_id: str,
+    expected: dict[Path, bytes | None],
+    expected_state: dict[str, Any],
+    *,
+    observation: bool = False,
+) -> Iterator[None]:
+    with _worker_commit_locks(project_root, run_id, task_id):
+        if load_agent_run_state(project_root, run_id, task_id) != expected_state or any(
+            _observation_bytes(path) != raw for path, raw in expected.items()
+        ):
+            from processforge_core.executions.model import ExecutionError
+
+            if observation:
+                raise _LegacyObservationChanged()
+            raise ExecutionError("execution_identity_conflict")
+        yield
+
+
+@contextlib.contextmanager
+def _worker_planning_phase(
+    project_root: Path, run_id: str, task_id: str
+) -> Iterator[
+    Callable[[dict[Path, bytes | None]], contextlib.AbstractContextManager[None]]
+]:
+    with contextlib.ExitStack() as planning:
+        planning.enter_context(worker_run_lifecycle_lock(project_root, run_id, task_id))
+
+        def publish(
+            expected: dict[Path, bytes | None],
+        ) -> contextlib.AbstractContextManager[None]:
+            # Release planning serialization before entering admission. It is not
+            # a reentrant lock upgrade, and current bytes are checked afterward.
+            expected_state = load_agent_run_state(project_root, run_id, task_id)
+            planning.close()
+            return _worker_phase_commit(
+                project_root, run_id, task_id, expected, expected_state
+            )
+
+        yield publish
+
+
+@contextlib.contextmanager
+def worker_run_lifecycle_lock(
+    project_root: Path, run_id: str, task_id: str, *, timeout_seconds: float = 30.0
+) -> Any:
     from processforge_core.prepared.input import private_file
+
     root = _work_paths.agent_run(project_root, run_id, task_id)
+    key = _worker_lifecycle_key(project_root, run_id, task_id)
+    held = _WORKER_LIFECYCLE_GATES.get()
+    if any(lease.active and lease.key == key for lease in held):
+        yield
+        return
     try:
         for path in _work_paths.worker_run(project_root, run_id, task_id).values():
             private_file(project_root, rel(path, project_root))
@@ -9187,8 +9519,16 @@ def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> 
         raise SystemExit("FAIL: worker private path invalid: " + str(exc)) from exc
     # The existing OS guard serializes dead-owner recovery and releases on
     # process exit. Proven dead local owners can be reclaimed immediately.
-    with registry_file_lock(root / "lifecycle", stale_after_seconds=0):
-        yield
+    with registry_file_lock(
+        root / "lifecycle", timeout_seconds=timeout_seconds, stale_after_seconds=0
+    ):
+        lease = _WorkerLifecycleLease(key)
+        token = _WORKER_LIFECYCLE_GATES.set((*held, lease))
+        try:
+            yield
+        finally:
+            lease.active = False
+            _WORKER_LIFECYCLE_GATES.reset(token)
 
 
 def existing_running_worker_run(
@@ -9320,6 +9660,7 @@ def write_agent_run_state(
     paths: dict[str, Path] | None = None,
     attempt: int | None = None,
 ) -> dict[str, Any]:
+    _commit_legacy_observation(project_root, task)
     if _execution_storage(project_root).repository is not None:
         # Never turn the compatibility JSON writer into a second SQL lifecycle
         # owner. Bound launches require the SQL lifecycle adapter.
@@ -9513,7 +9854,137 @@ def _legacy_activity_unknown(
     )
 
 
+@dataclass
+class _LegacyObservation:
+    project_root: Path
+    workplace_root: Path | None
+    run_id: str
+    task_id: str
+    files: dict[Path, bytes | None]
+    stack: contextlib.ExitStack
+    committed: bool = False
+    owner: tuple[int, int] = field(
+        default_factory=lambda: (os.getpid(), threading.get_ident())
+    )
+    active: bool = True
+
+
+class _LegacyObservationChanged(Exception):
+    """Discard a delayed observation before it can publish any effects."""
+
+
+_LEGACY_OBSERVATION: ContextVar[_LegacyObservation | None] = ContextVar(
+    "legacy_worker_observation", default=None
+)
+
+
+def _observation_bytes(path: Path) -> bytes | None:
+    try:
+        return path.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def _commit_legacy_observation(project_root: Path, task: dict[str, Any]) -> None:
+    observation = _LEGACY_OBSERVATION.get()
+    if observation is None:
+        return
+    if not observation.active or observation.owner != (
+        os.getpid(),
+        threading.get_ident(),
+    ):
+        from processforge_core.executions.model import ExecutionError
+
+        raise ExecutionError("execution_activity_unknown")
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    if (project_root, run_id, task_id) != (
+        observation.project_root,
+        observation.run_id,
+        observation.task_id,
+    ):
+        raise _LegacyObservationChanged()
+    if observation.committed:
+        return
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    manifest = _ProjectMetadataReader(project_root).workplace_manifest()
+    workplace = manifest.parent if manifest else None
+    if workplace != observation.workplace_root:
+        raise _LegacyObservationChanged()
+    if any(
+        lease.active
+        and lease.key == _worker_lifecycle_key(project_root, run_id, task_id)
+        for lease in _WORKER_LIFECYCLE_GATES.get()
+    ) and not ExecutionAdmission.held(project_root, workplace):
+        # Never wait for admission while already owning the task lock. Supported
+        # start/status/collect/scratch callers establish the shared order first.
+        from processforge_core.executions.model import ExecutionError
+
+        raise ExecutionError("execution_activity_unknown")
+    status_path = _work_paths.worker_run(project_root, run_id, task_id)["status"]
+    observation.stack.enter_context(
+        _worker_phase_commit(
+            project_root,
+            run_id,
+            task_id,
+            observation.files,
+            json.loads(observation.files[status_path] or b"{}"),
+            observation=True,
+        )
+    )
+    observation.committed = True
+
+
 def observe_worker_run(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any] | str,
+    state: dict[str, Any],
+) -> dict[str, Any]:
+    if _execution_storage(project_root).repository is not None:
+        return _observe_worker_run(project_root, task, driver, state)
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    paths = _work_paths.worker_run(project_root, run_id, task_id)
+    selected = [paths[name] for name in ("status", "command", "exit", "process")]
+    reference = state.get("prepared_input")
+    if isinstance(reference, dict) and isinstance(reference.get("path"), str):
+        try:
+            native = (
+                project_root / reference["path"]
+            ).resolve().parent / "native-tree.json"
+            native.relative_to(paths["root"].resolve())
+        except (OSError, ValueError):
+            # The original ownership probe retains its fail-closed handling of
+            # malformed references; never snapshot a path outside this attempt.
+            pass
+        else:
+            selected.append(native)
+    files = {path: _observation_bytes(path) for path in selected}
+    if json.loads(files[paths["status"]] or b"{}") != state:
+        return load_agent_run_state(project_root, run_id, task_id)
+    manifest = _ProjectMetadataReader(project_root).workplace_manifest()
+    with contextlib.ExitStack() as commits:
+        observation = _LegacyObservation(
+            project_root,
+            manifest.parent if manifest else None,
+            run_id,
+            task_id,
+            files,
+            commits,
+        )
+        token = _LEGACY_OBSERVATION.set(observation)
+        try:
+            return _observe_worker_run(project_root, task, driver, state)
+        except _LegacyObservationChanged:
+            return load_agent_run_state(project_root, run_id, task_id)
+        finally:
+            observation.active = False
+            _LEGACY_OBSERVATION.reset(token)
+
+
+def _observe_worker_run(
     project_root: Path,
     task: dict[str, Any],
     driver: dict[str, Any] | str,
@@ -9806,6 +10277,11 @@ def prepare_worker_run(
     executable_override: str | None = None,
     model_arg: str | None = None,
     reasoning_effort_arg: str | None = None,
+    *,
+    _publication: Callable[
+        [dict[Path, bytes | None]], contextlib.AbstractContextManager[None]
+    ]
+    | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = _worker_assignment_service.load(project_root, task_id)
     from processforge_core.prepared.command import require_resolved_preparation
@@ -9924,6 +10400,11 @@ def prepare_worker_run(
 
     attempt_root = paths["root"] / "attempts"
     prepared_path = attempt_root / str(attempt) / "prepared-input.json"
+    publication_expected = (
+        _worker_phase_snapshot(project_root, run_id, task_id)
+        if _publication is not None
+        else {}
+    )
     try:
         document = prepared_input.build(
             project_root, task, prepared_capsule, attempt, sys.modules[__name__]
@@ -10005,89 +10486,90 @@ def prepare_worker_run(
         prepared_input.write_once(prepared_path, document)
     except (OSError, ValueError, RuntimeError) as exc:
         raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
-    _core_common_json_io.json_write(
-        paths["workspace_access"], document["input"]["resources"]
-    )
     prompt_path = _work_paths.worker_prompt(project_root, run_id, task_id)
     prepared_input.local_file(project_root, rel(prompt_path, project_root))
-    prompt_path.parent.mkdir(parents=True, exist_ok=True)
-    prompt_path.write_text(
-        _worker_assignment_service.render_prompt(
-            project_root, task_id, prepared_input=reference
-        ),
-        encoding="utf-8",
+    prompt_content = _worker_assignment_service.render_prompt(
+        project_root, task_id, prepared_input=reference
     )
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
-    paths["root"].mkdir(parents=True, exist_ok=True)
-    # A deliberate prepare is a new attempt.  An old durable exit contract
-    # belongs to the preceding attempt and must not be observed as the result
-    # of a newly launched process.
     from processforge_core.prepared.command import scratch_published
 
-    try:
-        if repository is None:
-            paths["exit"].unlink(missing_ok=True)
-            write_agent_run_state(
-                project_root,
-                task,
-                driver,
-                state_status,
-                command=command,
-                paths=paths,
-                attempt=attempt,
-            )
-        else:
-            assert allocated is not None
-            from processforge_core.executions.projection import canonical_json
-
-            payload = _agent_run_payload(
-                project_root, task, driver, state_status, paths, attempt
-            )
-            payload["prepared_input"] = reference
-            _core_common_json_io.json_write(paths["command"], command)
-            repository._finalize_prepared(allocated, canonical_json(payload))
-        # The authoritative attempt now owns the exact immutable resource. Later
-        # projection/event failures must not roll back potentially launchable temp.
-        scratch_published(document)
-    except BaseException as error:
+    publication = (
+        _publication(publication_expected)
+        if _publication is not None
+        else contextlib.nullcontext()
+    )
+    with publication:
+        _core_common_json_io.json_write(
+            paths["workspace_access"], document["input"]["resources"]
+        )
+        prompt_path.parent.mkdir(parents=True, exist_ok=True)
+        prompt_path.write_text(prompt_content, encoding="utf-8")
+        paths["root"].mkdir(parents=True, exist_ok=True)
         try:
-            bound = load_agent_run_state(project_root, run_id, task_id)
-        except Exception as verification_error:
-            # An ambiguous commit is not proof of an unpublished allocation.
+            if repository is None:
+                paths["exit"].unlink(missing_ok=True)
+                write_agent_run_state(
+                    project_root,
+                    task,
+                    driver,
+                    state_status,
+                    command=command,
+                    paths=paths,
+                    attempt=attempt,
+                )
+            else:
+                assert allocated is not None
+                from processforge_core.executions.projection import canonical_json
+
+                payload = _agent_run_payload(
+                    project_root, task, driver, state_status, paths, attempt
+                )
+                payload["prepared_input"] = reference
+                _core_common_json_io.json_write(paths["command"], command)
+                repository._finalize_prepared(allocated, canonical_json(payload))
+            # The authoritative attempt now owns the exact immutable resource. Later
+            # projection/event failures must not roll back potentially launchable temp.
             scratch_published(document)
-            error.add_note(
-                "scratch_publication_unknown:" + type(verification_error).__name__
-            )
-        else:
-            if bound.get("prepared_input") == reference:
+        except BaseException as error:
+            try:
+                bound = load_agent_run_state(project_root, run_id, task_id)
+            except Exception as verification_error:
+                # An ambiguous commit is not proof of an unpublished allocation.
                 scratch_published(document)
-        raise
-    if repository is not None:
-        _publish_sql_locked(project_root, repository, run_id, task_id)
-    _process_event_recorder.emit_process_event(
-        project_root,
-        "worker.run.prepared",
-        process_id=_run_task_inputs.task_process_id(task),
-        subject=task_id,
-        assignment_id_value=task_id,
-        assignment_path=rel(
-            _work_paths.assignment_document(project_root, task_id), project_root
-        ),
-        payload={
-            "run_id": run_id,
-            "driver_id": driver.get("id"),
-            "status": state_status,
-            "attempt": attempt,
-        },
-        correlation_id=f"run-{run_id}",
-    )
-    diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
-    diagnostics.emit(
-        "info",
-        "worker.prepared",
-        {"driver_id": driver.get("id"), "status": state_status},
-        component="worker",
-    )
+                error.add_note(
+                    "scratch_publication_unknown:" + type(verification_error).__name__
+                )
+            else:
+                if bound.get("prepared_input") == reference:
+                    scratch_published(document)
+            raise
+        if repository is not None:
+            _publish_sql_locked(project_root, repository, run_id, task_id)
+        _process_event_recorder.emit_process_event(
+            project_root,
+            "worker.run.prepared",
+            process_id=_run_task_inputs.task_process_id(task),
+            subject=task_id,
+            assignment_id_value=task_id,
+            assignment_path=rel(
+                _work_paths.assignment_document(project_root, task_id), project_root
+            ),
+            payload={
+                "run_id": run_id,
+                "driver_id": driver.get("id"),
+                "status": state_status,
+                "attempt": attempt,
+            },
+            correlation_id=f"run-{run_id}",
+        )
+        diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
+        diagnostics.emit(
+            "info",
+            "worker.prepared",
+            {"driver_id": driver.get("id"), "status": state_status},
+            component="worker",
+        )
     return task, driver, paths
 
 
@@ -10267,16 +10749,19 @@ def _finalize_worker_scratch(
         if "managed_scratch" not in document:
             return True
         if state.get("status") == "running":
-            # Observe exact-attempt quiescence under its short lock; all record
-            # body validation, proof finalization and disposal remain outside.
+            # Slow ownership probing has its own lazy publication boundary.
+            # Retake only task serialization to select the exact cleanup result.
+            driver = _runtime_driver_selection_service.for_worker_state(
+                project_root, task, state
+            )
+            observed = observe_worker_run(project_root, task, driver, state)
             with worker_run_lifecycle_lock(project_root, task["run_id"], task["id"]):
                 current = load_agent_run_state(project_root, task["run_id"], task["id"])
-                if current.get("attempt") != state.get("attempt"):
+                if current != observed or current.get("attempt") != state.get(
+                    "attempt"
+                ):
                     return False
-                driver = _runtime_driver_selection_service.for_worker_state(
-                    project_root, task, current
-                )
-                state = observe_worker_run(project_root, task, driver, current)
+                state = current
         status = state.get("status")
         if status not in {
             "completed",
@@ -10409,8 +10894,19 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
         return 1
     _storage_first_write(project_root)
-    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+    running = existing_running_worker_run(
+        project_root, task, getattr(args, "driver", None)
+    )
+    observed = (
+        running[0] if running else load_agent_run_state(project_root, run_id, task_id)
+    )
+    with _worker_planning_phase(project_root, run_id, task_id) as publish:
         task = _worker_assignment_service.load(project_root, task_id)
+        current = load_agent_run_state(project_root, run_id, task_id)
+        if current != observed or (not running and current.get("status") == "running"):
+            from processforge_core.executions.model import ExecutionError
+
+            raise ExecutionError("execution_identity_conflict")
         if any(
             not intent.with_suffix(".applied.json").is_file()
             for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
@@ -10422,14 +10918,12 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
         if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
-        running = existing_running_worker_run(
-            project_root, task, getattr(args, "driver", None)
-        )
         if running:
             state, driver, paths = running
-            emit_worker_run_skip(
-                project_root, task, driver, state, "worker.run.prepare_skipped"
-            )
+            with publish(_worker_phase_snapshot(project_root, run_id, task_id)):
+                emit_worker_run_skip(
+                    project_root, task, driver, state, "worker.run.prepare_skipped"
+                )
             print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
             return 0
         try:
@@ -10440,6 +10934,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
                 getattr(args, "executable", None),
                 getattr(args, "model", None),
                 getattr(args, "reasoning_effort", None),
+                _publication=publish,
             )
         except SystemExit as error:
             if str(error) != "FAIL: temporary_cleanup_needed":
@@ -10745,21 +11240,41 @@ def _sql_collection_locked(
     return updated
 
 
-@contextlib.contextmanager
-def _worker_start_admission(project_root: Path) -> Iterator[None]:
+def _register_worker_start(project_root: Path, expected_workplace: Path | None) -> None:
     from processforge_core.executions.model import ExecutionError
     from processforge_core.runtime.execution_admission import ExecutionAdmission
 
     manifest = _ProjectMetadataReader(project_root).workplace_manifest()
     workplace = manifest.parent if manifest else None
-    with ExecutionAdmission(registry_file_lock).start(project_root, workplace):
-        if workplace is not None:
-            from pf_runtime.host import register_worker_project
+    if workplace != expected_workplace or not ExecutionAdmission.held(
+        project_root, workplace
+    ):
+        raise ExecutionError("execution_activity_unknown")
+    if workplace is not None:
+        from pf_runtime.host import register_worker_project
 
-            if manifest is None or not manifest.is_file():
-                raise ExecutionError("execution_activity_unknown")
-            register_worker_project(workplace, project_root, sys.modules[__name__])
-        yield
+        if manifest is None or not manifest.is_file():
+            raise ExecutionError("execution_activity_unknown")
+        register_worker_project(workplace, project_root, sys.modules[__name__])
+
+
+@contextlib.contextmanager
+def _worker_start_admission(
+    project_root: Path,
+    *,
+    deadline: float | None = None,
+    _defer_registration: bool = False,
+) -> Iterator[Path | None]:
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    manifest = _ProjectMetadataReader(project_root).workplace_manifest()
+    workplace = manifest.parent if manifest else None
+    with ExecutionAdmission(registry_file_lock).start(
+        project_root, workplace, deadline=deadline
+    ):
+        if not _defer_registration:
+            _register_worker_start(project_root, workplace)
+        yield workplace
 
 
 @_worker_storage_errors
@@ -10826,10 +11341,7 @@ def _sql_worker_run_start(
         if preflight is not None and bool(getattr(args, "detach", False)):
             print("FAIL: native_synchronous_start_required")
             return 1
-        with (
-            _worker_start_admission(project_root),
-            worker_run_lifecycle_lock(project_root, run_id, task_id),
-        ):
+        with _worker_commit_locks(project_root, run_id, task_id, start=True):
             from processforge_core.executions.model import ExecutionError
 
             selected = _execution_storage(project_root).repository
@@ -11139,10 +11651,7 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
         if preflight is not None and bool(getattr(args, "detach", False)):
             print("FAIL: native_synchronous_start_required")
             return 1
-        with (
-            _worker_start_admission(project_root),
-            worker_run_lifecycle_lock(project_root, run_id, task_id),
-        ):
+        with _worker_commit_locks(project_root, run_id, task_id, start=True):
             task = (
                 preflight.task
                 if preflight is not None
@@ -11520,18 +12029,21 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if state and (
+        _execution_storage(project_root).repository is not None
+        or _worker_observation_inputs.worker_run_state_requires_reconciliation(
+            project_root, run_id, task_id, state
+        )
+    ):
+        driver = _runtime_driver_selection_service.for_worker_state(
+            project_root, task, state
+        )
+        state = observe_worker_run(project_root, task, driver, state)
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        state = load_agent_run_state(project_root, run_id, task_id)
-        if state and (
-            _execution_storage(project_root).repository is not None
-            or _worker_observation_inputs.worker_run_state_requires_reconciliation(
-                project_root, run_id, task_id, state
-            )
-        ):
-            driver = _runtime_driver_selection_service.for_worker_state(
-                project_root, task, state
-            )
-            state = observe_worker_run(project_root, task, driver, state)
+        current = load_agent_run_state(project_root, run_id, task_id)
+        if current != state:
+            state = current
     if not state:
         print(f"STATUS: not-prepared {task_id}")
         return 1
@@ -11636,11 +12148,7 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
-    run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        result = _collect_worker_run_locked(
-            project_root, _worker_assignment_service.load(project_root, task_id)
-        )
+    result = _collect_worker_run_locked(project_root, task)
     if result == 0:
         if not _finalize_worker_scratch(project_root, task, trigger="final_collection"):
             return 1
@@ -11661,6 +12169,28 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
             project_root, task, state
         )
         state = observe_worker_run(project_root, task, driver, state)
+    with _worker_planning_phase(project_root, run_id, task_id) as publish:
+        if (
+            load_agent_run_state(project_root, run_id, task_id) != state
+            or _worker_assignment_service.load(project_root, task_id) != task
+        ):
+            from processforge_core.executions.model import ExecutionError
+
+            raise ExecutionError("execution_identity_conflict")
+        expected = _worker_phase_snapshot(project_root, run_id, task_id)
+        return _collect_worker_run_plan(project_root, task, state, publish, expected)
+
+
+def _collect_worker_run_plan(
+    project_root: Path,
+    task: dict[str, Any],
+    state: dict[str, Any],
+    publish: Callable[
+        [dict[Path, bytes | None]], contextlib.AbstractContextManager[None]
+    ],
+    expected: dict[Path, bytes | None],
+) -> int:
+    task_id, run_id = task["id"], task["run_id"]
     if not state:
         print(f"FAIL: worker run is not prepared: {task_id}")
         return 1
@@ -11724,29 +12254,32 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         lines.append(f"- subagent_policy_failure: `{item}`")
     paths["collection"].write_text("\n".join(lines) + "\n", encoding="utf-8")
     if missing or subagent_failures:
-        driver = _runtime_driver_selection_service.for_worker_state(
-            project_root, task, state
-        )
-        reasons = []
-        if missing:
-            reasons.append("missing outputs: " + ", ".join(missing))
-        if subagent_failures:
-            reasons.append("subagent policy failures: " + "; ".join(subagent_failures))
-        if repository is not None:
-            _sql_collection_locked(
-                project_root, repository, captured, "failed", "; ".join(reasons)
+        with publish(expected):
+            driver = _runtime_driver_selection_service.for_worker_state(
+                project_root, task, state
             )
-        else:
-            write_agent_run_state(
-                project_root,
-                task,
-                driver,
-                "failed",
-                failure_reason="; ".join(reasons),
-                paths=paths,
-            )
-        print("FAIL: " + "; ".join(reasons))
-        return 1
+            reasons = []
+            if missing:
+                reasons.append("missing outputs: " + ", ".join(missing))
+            if subagent_failures:
+                reasons.append(
+                    "subagent policy failures: " + "; ".join(subagent_failures)
+                )
+            if repository is not None:
+                _sql_collection_locked(
+                    project_root, repository, captured, "failed", "; ".join(reasons)
+                )
+            else:
+                write_agent_run_state(
+                    project_root,
+                    task,
+                    driver,
+                    "failed",
+                    failure_reason="; ".join(reasons),
+                    paths=paths,
+                )
+            print("FAIL: " + "; ".join(reasons))
+            return 1
     import processforge_core.prepared.input as prepared_input
 
     try:
@@ -11773,9 +12306,10 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
             task, state, run_id=run_id, error=exc
         ):
             if repository is not None:
-                _sql_collection_locked(
-                    project_root, repository, captured, "refused", str(exc)
-                )
+                with publish(expected):
+                    _sql_collection_locked(
+                        project_root, repository, captured, "refused", str(exc)
+                    )
             print(
                 f"RECOVERY-REQUIRED: {task_id}; explicit collect or a new prepared attempt is required"
             )
@@ -11787,120 +12321,132 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
     except (OSError, ValueError, RuntimeError) as exc:
         print("FAIL: collection completion path invalid: " + str(exc))
         return 1
-    if completion_path.is_file():
-        if json_read(completion_path).get("receipt_id") != receipt["receipt_id"]:
-            print("FAIL: collection completion identity mismatch")
+    expected[receipt_path] = _observation_bytes(receipt_path)
+    expected[completion_path] = _observation_bytes(completion_path)
+    with publish(expected):
+        if completion_path.is_file():
+            if json_read(completion_path).get("receipt_id") != receipt["receipt_id"]:
+                print("FAIL: collection completion identity mismatch")
+                return 1
+            if (
+                repository is not None
+                and captured is not None
+                and captured.collection != "collected"
+            ):
+                _sql_collection_locked(project_root, repository, captured, "collected")
+            print(
+                f"COLLECTED: {task_id} already collected for attempt {state['attempt']}"
+            )
+            return 0
+        report_hash = sha256_text(report_content)
+        attempt = str(state.get("attempt") or 1)
+        expected_report = _work_output_policy.expected_report(task)
+        session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
+        envelope = {
+            "provider": "processforge",
+            "adapter": "pf-codex-exec-worker",
+            "native_event_type": "WorkerExpectedReportCaptured",
+            "native_event_id": f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{report_hash}",
+            "native_id_scope": "project",
+            "native_event_id_stable": True,
+            "source_session_id": session_id,
+            "source_project_ref": str(project_root),
+            "payload_version": "1",
+            "raw_payload": {
+                "run_id": run_id,
+                "task_id": task_id,
+                "attempt": attempt,
+                "expected_report": expected_report,
+                "report_content": report_content,
+                "report_hash": report_hash,
+            },
+            "derived_conversation_messages": [
+                {
+                    "message_role": "assistant",
+                    "participant": {
+                        "id": str(
+                            task.get("ownership", {}).get("owner_id") or "worker"
+                        ),
+                        "type": "agent",
+                        "role": "worker",
+                    },
+                    "session_id": session_id,
+                    "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
+                    "content": report_content,
+                    "content_source": {
+                        "kind": "pf_codex_exec_output",
+                        "provider": "processforge",
+                        "adapter": "pf-codex-exec-worker",
+                        "native_event_type": "WorkerExpectedReportCaptured",
+                        "content_provenance": "pf_owned_output_file",
+                    },
+                    "delivery": {"state": "complete", "sequence": 1, "final": True},
+                }
+            ],
+        }
+        from pf_runtime import host as runtime_host
+
+        capture = runtime_host.ingest_event(envelope, None, sys.modules[__name__])
+        if (
+            not capture.get("accepted")
+            or len(capture.get("chat_message_ids") or []) != 1
+        ):
+            print(
+                "FAIL: collectible expected report was not captured as exactly one assistant transcript message"
+            )
             return 1
+        # A governed primary Work still has stage obligations. Worker delivery is
+        # evidence for those transitions, never a compatibility completion bypass.
+        run = load_yaml_document(
+            _work_paths.run_root(project_root, run_id) / "run.yaml"
+        )
+        governed = "process_execution" in run or "process_execution" in task
+        status = 0
+        if not governed:
+            status, completion_output = run_command_capture(
+                command_task_complete,
+                argparse.Namespace(
+                    project_root=str(project_root),
+                    task=task_id,
+                    summary=f"Collected worker run output from {state.get('driver_id')}",
+                    artifact=[_work_output_policy.expected_report(task)],
+                    dry_run=False,
+                    completion_id=receipt["receipt_id"],
+                ),
+            )
+            print(completion_output, end="")
+            if status:
+                return status
+        emit_worker_completion_event(
+            project_root,
+            "worker.run.collected",
+            receipt["receipt_id"],
+            process_id=_run_task_inputs.task_process_id(task),
+            subject=task_id,
+            assignment_id_value=task_id,
+            assignment_path=rel(
+                _work_paths.assignment_document(project_root, task_id), project_root
+            ),
+            payload={
+                "run_id": run_id,
+                "report": _work_output_policy.expected_report(task),
+                "receipt_id": receipt["receipt_id"],
+                "attempt": state["attempt"],
+            },
+            correlation_id=f"run-{run_id}",
+        )
+        prepared_input.write_once(
+            completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]}
+        )
         if (
             repository is not None
             and captured is not None
             and captured.collection != "collected"
         ):
             _sql_collection_locked(project_root, repository, captured, "collected")
-        print(f"COLLECTED: {task_id} already collected for attempt {state['attempt']}")
-        return 0
-    report_hash = sha256_text(report_content)
-    attempt = str(state.get("attempt") or 1)
-    expected_report = _work_output_policy.expected_report(task)
-    session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
-    envelope = {
-        "provider": "processforge",
-        "adapter": "pf-codex-exec-worker",
-        "native_event_type": "WorkerExpectedReportCaptured",
-        "native_event_id": f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{report_hash}",
-        "native_id_scope": "project",
-        "native_event_id_stable": True,
-        "source_session_id": session_id,
-        "source_project_ref": str(project_root),
-        "payload_version": "1",
-        "raw_payload": {
-            "run_id": run_id,
-            "task_id": task_id,
-            "attempt": attempt,
-            "expected_report": expected_report,
-            "report_content": report_content,
-            "report_hash": report_hash,
-        },
-        "derived_conversation_messages": [
-            {
-                "message_role": "assistant",
-                "participant": {
-                    "id": str(task.get("ownership", {}).get("owner_id") or "worker"),
-                    "type": "agent",
-                    "role": "worker",
-                },
-                "session_id": session_id,
-                "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
-                "content": report_content,
-                "content_source": {
-                    "kind": "pf_codex_exec_output",
-                    "provider": "processforge",
-                    "adapter": "pf-codex-exec-worker",
-                    "native_event_type": "WorkerExpectedReportCaptured",
-                    "content_provenance": "pf_owned_output_file",
-                },
-                "delivery": {"state": "complete", "sequence": 1, "final": True},
-            }
-        ],
-    }
-    from pf_runtime import host as runtime_host
-
-    capture = runtime_host.ingest_event(envelope, None, sys.modules[__name__])
-    if not capture.get("accepted") or len(capture.get("chat_message_ids") or []) != 1:
-        print(
-            "FAIL: collectible expected report was not captured as exactly one assistant transcript message"
-        )
-        return 1
-    # A governed primary Work still has stage obligations. Worker delivery is
-    # evidence for those transitions, never a compatibility completion bypass.
-    run = load_yaml_document(_work_paths.run_root(project_root, run_id) / "run.yaml")
-    governed = "process_execution" in run or "process_execution" in task
-    status = 0
-    if not governed:
-        status, completion_output = run_command_capture(
-            command_task_complete,
-            argparse.Namespace(
-                project_root=str(project_root),
-                task=task_id,
-                summary=f"Collected worker run output from {state.get('driver_id')}",
-                artifact=[_work_output_policy.expected_report(task)],
-                dry_run=False,
-                completion_id=receipt["receipt_id"],
-            ),
-        )
-        print(completion_output, end="")
-        if status:
-            return status
-    emit_worker_completion_event(
-        project_root,
-        "worker.run.collected",
-        receipt["receipt_id"],
-        process_id=_run_task_inputs.task_process_id(task),
-        subject=task_id,
-        assignment_id_value=task_id,
-        assignment_path=rel(
-            _work_paths.assignment_document(project_root, task_id), project_root
-        ),
-        payload={
-            "run_id": run_id,
-            "report": _work_output_policy.expected_report(task),
-            "receipt_id": receipt["receipt_id"],
-            "attempt": state["attempt"],
-        },
-        correlation_id=f"run-{run_id}",
-    )
-    prepared_input.write_once(
-        completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]}
-    )
-    if (
-        repository is not None
-        and captured is not None
-        and captured.collection != "collected"
-    ):
-        _sql_collection_locked(project_root, repository, captured, "collected")
-    if governed:
-        print(f"COLLECTED: {task_id}; governed stage transition remains required")
-    return status
+        if governed:
+            print(f"COLLECTED: {task_id}; governed stage transition remains required")
+        return status
 
 
 def emit_worker_completion_event(project_root: Path, event_type: str, receipt_id: str, **kwargs: Any) -> dict[str, Any]:

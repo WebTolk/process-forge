@@ -6,6 +6,11 @@
   Workplace. Preserve the managed update's separate doctor result and errors.
 - Honor the configured stop timeout when authenticating the exact App Server
   owner during explicit force recovery.
+- Keep slow Runtime inspection and projection outside shared execution admission,
+  retaining stop fences, native leases and checks around starts and mutations.
+- Check required event admission before publishing Work-start documents. Recover
+  interrupted publication with the same objective, scope, Work identity and
+  capsule; refuse execution while publication remains pending.
 
 ## 1.3.0-beta3 - 2026-11-02
 

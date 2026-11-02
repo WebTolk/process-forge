@@ -91,6 +91,24 @@ nothing. A required output is an obligation, not permission to write outside sco
 Analysis-only assignments cannot gain product write permission from a default.
 PF's own state/evidence writes are service operations, not an unrestricted worker grant.
 
+### Work-start publication and retry in source
+
+Work-start checks required event-journal admission before publishing its capsule,
+Run and Assignment. A private durable intent preserves the exact documents,
+capsule bytes and event identities if a later mandatory event, delivery or
+projection fails. The failure remains visible; pending publication blocks worker
+preparation and execution through the shared Work contract validator.
+
+Retry Work-start with the same objective and scope to finish that pending
+publication using its original Work identity and capsule. Changed scope or
+conflicting stored documents are refused. Completed publication retains the
+existing duplicate-Work behavior. These recovery rules apply to Work-start;
+other commands retain their own recovery contracts.
+
+Runtime inspection and projection run outside the shared execution admission
+gate. Starts and mutations retain their admission checks, stop fences and native
+leases. This keeps routine observation from holding the gate across slow reads.
+
 ## Resource reads and current authorization
 
 Effective access is the intersection of pinned Work grants, current project

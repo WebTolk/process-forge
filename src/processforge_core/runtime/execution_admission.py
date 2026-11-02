@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import json
 import math
 import os
@@ -36,8 +37,16 @@ def _registry_lock_try_os_lock(fd: int) -> bool:
             import fcntl
 
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except (ImportError, OSError):
-        return False
+    except ImportError as error:
+        raise OSError(errno.ENOSYS, "registry lock backend unavailable") from error
+    except OSError as error:
+        # Only a competing byte/flock owner warrants a retry. A broken backend,
+        # invalid descriptor or access failure must retain its original cause.
+        if error.errno in {errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK} and (
+            sys.platform != "win32" or getattr(error, "winerror", None) in {None, 33}
+        ):
+            return False
+        raise
     return True
 
 
@@ -162,14 +171,20 @@ def registry_file_lock(
     }
     acquired = False
 
-    def wait_for_owner() -> None:
+    def wait_for_owner(phase: str) -> None:
         if time.monotonic() >= deadline:
-            raise SystemExit(f"FAIL: registry is locked by another writer: {lock_path}")
+            error = SystemExit(
+                f"FAIL: registry is locked by another writer: {lock_path}"
+            )
+            error.__dict__.update(
+                registry_lock_reason="contention_timeout", registry_lock_phase=phase
+            )
+            raise error
         time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
 
     try:
         while not _registry_lock_try_os_lock(guard_fd):
-            wait_for_owner()
+            wait_for_owner("guard")
         while True:
             try:
                 fd = os.open(
@@ -190,7 +205,7 @@ def registry_file_lock(
                         except FileNotFoundError:
                             pass
                         continue
-                wait_for_owner()
+                wait_for_owner("owner")
                 continue
             try:
                 with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -251,6 +266,7 @@ class ExecutionAdmission:
             yield
             return
         operation_error: BaseException | None = None
+        phase = "acquire"
         try:
             with self.registry_lock(
                 path, timeout_seconds=timeout, stale_after_seconds=0
@@ -268,10 +284,29 @@ class ExecutionAdmission:
                     raise
                 finally:
                     _HELD_GATES.reset(token)
+                    phase = "release"
         except (OSError, TimeoutError, SystemExit) as exc:
             if exc is operation_error:
                 raise
-            raise ExecutionError("execution_activity_unknown") from None
+            error = ExecutionError("execution_activity_unknown")
+            # These bounded internal facts survive normalization without placing
+            # the registry's private path/message in CLI or MCP error payloads.
+            error.__dict__.update(
+                admission_reason=getattr(
+                    exc,
+                    "registry_lock_reason",
+                    "timeout"
+                    if isinstance(exc, TimeoutError)
+                    else "lock_exit"
+                    if isinstance(exc, SystemExit)
+                    else "lock_io_error",
+                ),
+                admission_phase=phase,
+                registry_lock_phase=getattr(exc, "registry_lock_phase", None),
+                admission_errno=getattr(exc, "errno", None),
+                admission_winerror=getattr(exc, "winerror", None),
+            )
+            raise error from None
 
     @contextmanager
     def start(

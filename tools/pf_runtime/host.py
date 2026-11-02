@@ -2780,15 +2780,18 @@ def tick_payload(
         entry = current_entry()
         if entry is not None:
             operation.enter_context(entry.operation())
-        operation.enter_context(registration_admission(workplace_root, project_roots))
+        # Admission fences routing publication and commits, not the potentially
+        # unbounded Inspector/projection scans between them. The native image
+        # lease remains live throughout the pass.
         core.update_stale_agent_presence(workplace_root)
+        with registration_admission(workplace_root, project_roots):
+            handles = [
+                route_project(str(root), workplace_root, core) for root in project_roots
+            ]
         results: list[dict[str, Any]] = []
-        handles: list[dict[str, Any]] = []
         status = 0
         scheduler_status = 0
-        for project_root in project_roots:
-            handle = route_project(str(project_root), workplace_root, core)
-            handles.append(handle)
+        for project_root, handle in zip(project_roots, handles):
             with configuration_operation(project_root, workplace_root):
                 item: dict[str, Any] = {
                     "project_id": handle["project_id"],
@@ -2806,6 +2809,7 @@ def tick_payload(
                                 project_id=handle["project_id"],
                                 wait_ttl=wait_ttl,
                                 lease_ttl=lease_ttl,
+                                _automatic_tick=True,
                             ),
                         )
                         item["director"] = "tick"
@@ -2827,17 +2831,25 @@ def tick_payload(
                     item["inspector"] = "tick"
                     item["inspector_result"] = observation
                     status = status or (1 if observation["failed"] else 0)
-                core.flush_pending_event_dispatches(project_root)
+                with registration_admission(workplace_root, [project_root]):
+                    # The snapshot cannot authorize a later mutation after a
+                    # concurrent stopping/enrollment change.
+                    route_project(str(project_root), workplace_root, core)
+                    core.flush_pending_event_dispatches(project_root)
                 stage_projection = refresh_stage_obligations(project_root, core)
                 item["projection"] = core.rel(stage_projection, project_root)
                 results.append(item)
         # Refresh and merge only the routing delta under the short memory lock.
         # No interprocess/native/target gate is acquired while it is held.
-        with state_lock():
-            state = load_state(workplace_root)
-            for handle in handles:
-                remember_project(state, handle)
-            save_state(workplace_root, state, core)
+        with registration_admission(workplace_root, project_roots):
+            handles = [
+                route_project(str(root), workplace_root, core) for root in project_roots
+            ]
+            with state_lock():
+                state = load_state(workplace_root)
+                for handle in handles:
+                    remember_project(state, handle)
+                save_state(workplace_root, state, core)
         payload = {
             "status": "ok" if status == 0 else "failed",
             "scheduler_status": "ok" if scheduler_status == 0 else "failed",

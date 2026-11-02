@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import importlib.util
 import subprocess
 import sys
@@ -16,6 +17,7 @@ from unittest.mock import mock_open
 import pytest
 
 from processforge_core.executions.model import ExecutionError
+from processforge_core.runtime import execution_admission as admission_module
 from processforge_core.runtime.execution_admission import ExecutionAdmission
 
 from .test_repository import isolated_path as isolated_path
@@ -69,6 +71,77 @@ def test_gate_order_and_remaining_budget(isolated_path: Path) -> None:
     events.clear()
     with admission.maintenance(project, None):
         assert events[0][1] == project / ".pf/runtime/execution-admission"
+
+
+@pytest.mark.parametrize(
+    "error_number", [errno.EAGAIN, errno.EACCES, errno.EBADF, errno.EPERM]
+)
+def test_registry_retries_only_would_block(
+    monkeypatch: pytest.MonkeyPatch, error_number: int
+) -> None:
+    if sys.platform == "win32":
+        import msvcrt
+
+        monkeypatch.setattr(admission_module.os, "lseek", lambda *_: 0)
+        backend = msvcrt
+        method = "locking"
+    else:
+        import fcntl
+
+        backend = fcntl
+        method = "flock"
+
+    failure = OSError(error_number, "backend refusal")
+
+    def blocked(*_args: object) -> None:
+        raise failure
+
+    monkeypatch.setattr(backend, method, blocked)
+    if error_number in {errno.EAGAIN, errno.EACCES}:
+        assert admission_module._registry_lock_try_os_lock(-1) is False
+    else:
+        with pytest.raises(OSError) as caught:
+            admission_module._registry_lock_try_os_lock(-1)
+        assert caught.value is failure
+
+
+def test_registry_noncontention_failure_is_not_retried(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    failure = OSError(errno.EBADF, "private backend failure")
+    calls = 0
+
+    def failed(_fd: int) -> bool:
+        nonlocal calls
+        calls += 1
+        raise failure
+
+    monkeypatch.setattr(admission_module, "_registry_lock_try_os_lock", failed)
+    with pytest.raises(ExecutionError) as caught:
+        with ExecutionAdmission().start(isolated_path, None):
+            pytest.fail("broken backend admitted a start")
+    assert calls == 1
+    assert str(caught.value) == "execution_activity_unknown"
+    assert caught.value.__context__ is failure
+    assert caught.value.__dict__["admission_reason"] == "lock_io_error"
+    assert caught.value.__dict__["admission_phase"] == "acquire"
+
+
+def test_registry_timeout_retains_safe_phase_and_original_context(
+    isolated_path: Path,
+) -> None:
+    gate = isolated_path / ".pf/runtime/execution-admission"
+    with admission_module.registry_file_lock(gate):
+        with pytest.raises(ExecutionError) as caught:
+            with ExecutionAdmission().start(
+                isolated_path, None, deadline=time.monotonic() + 0.03
+            ):
+                pytest.fail("competing owner admitted a start")
+    assert str(caught.value) == "execution_activity_unknown"
+    assert caught.value.__dict__["admission_reason"] == "contention_timeout"
+    assert caught.value.__dict__["registry_lock_phase"] == "guard"
+    assert isinstance(caught.value.__context__, SystemExit)
+    assert caught.value.__cause__ is None and caught.value.__suppress_context__
 
 
 def test_deadline_failure_and_exception_release(isolated_path: Path) -> None:

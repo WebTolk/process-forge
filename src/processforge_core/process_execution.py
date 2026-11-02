@@ -438,6 +438,32 @@ class ProcessExecutionService:
                     "recommended_action": check.get("recommended_action"),
                 },
             )
+        from .work.start_intent import StartIntentError, find_pending
+
+        try:
+            pending = find_pending(
+                self._flow_root(), objective, self.core.project_id(self.project_root)
+            )
+        except StartIntentError as exc:
+            return self._blocked(exc.code)
+        if pending is not None:
+            request = {
+                "scope_intent": scope_intent,
+                "security": security,
+                "stage_override": stage_override,
+            }
+            if pending["request"] != request or (
+                process_id and process_id != pending["run"]["process"]
+            ):
+                return self._blocked(
+                    "scope_intent_mismatch",
+                    remediation="resume_original_work_start_request",
+                )
+            return self._start_publication_service().replay(
+                pending,
+                session_id=session_id,
+                admission=lambda: self._start_admission(pending["run"]),
+            )
         duplicate = self._find_by_objective(objective)
         if duplicate.get("active"):
             if scope_intent is not None:
@@ -645,7 +671,13 @@ class ProcessExecutionService:
                         blockers=permissions["blockers"],
                         execution_readiness=permissions,
                     )
-            capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
+            from .composition import build_assignment_capsule_publisher
+
+            capsule_file, capsule_bytes = build_assignment_capsule_publisher(
+                self, stable_ids=_stable_ids
+            ).prepare(run, assignment, pin)
+            capsule_path = self.core.rel(capsule_file, self.project_root)
+            capsule_checksum = "sha256:" + hashlib.sha256(capsule_bytes).hexdigest()
         except ContextContractError as exc:
             return self._blocked(exc.code, **exc.details)
         run["process_execution"]["assignment_capsule"] = capsule_path
@@ -655,6 +687,27 @@ class ProcessExecutionService:
             capsule_checksum
         )
 
+        return self._start_publication_service().publish(
+            run_id=run_id,
+            assignment_id=assignment_id,
+            run=run,
+            assignment=assignment,
+            stage_id=stage_id,
+            objective=objective,
+            stages=stages,
+            stage_override=stage_override,
+            session_id=session_id,
+            project_id=self.core.project_id(self.project_root),
+            capsule_text=capsule_bytes.decode("utf-8"),
+            request={
+                "scope_intent": scope_intent,
+                "security": security,
+                "stage_override": stage_override,
+            },
+            admission=lambda: self._start_admission(run),
+        )
+
+    def _start_publication_service(self) -> Any:
         from .composition import build_work_start_publication_service
 
         return build_work_start_publication_service(
@@ -666,16 +719,17 @@ class ProcessExecutionService:
             emit=lambda: self._emit,
             state=lambda: self.state,
             write_projection=lambda: self._write_projection,
-        ).publish(
-            run_id=run_id,
-            assignment_id=assignment_id,
-            run=run,
-            assignment=assignment,
-            stage_id=stage_id,
-            objective=objective,
-            stages=stages,
-            stage_override=stage_override,
-            session_id=session_id,
+        )
+
+    def _start_admission(
+        self, run: dict[str, Any]
+    ) -> contextlib.AbstractContextManager[Any]:
+        if self._process_events is None:
+            return contextlib.nullcontext()
+        return self._process_events.publication(
+            self.project_root,
+            self.workplace_root,
+            event_time=str(run["created_at"]),
         )
 
     def _with_creation_scope(
@@ -832,6 +886,9 @@ class ProcessExecutionService:
             )
         except ContextContractError as exc:
             permissions = {"status": "blocked", "blockers": [exc.code]}
+        pending_start = str(contract_validation.get("reason") or "")
+        if pending_start.startswith("work_start_"):
+            permissions = {"status": "blocked", "blockers": [pending_start]}
         return policy.project_state(
             action=decision.action,
             permissions=permissions,

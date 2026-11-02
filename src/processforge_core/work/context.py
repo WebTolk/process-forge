@@ -495,6 +495,14 @@ def validate_execution_contract(project: Path, assignment_path: Path, metadata: 
             run = _assignment_run(project, metadata, core)
             if not _run_matches(run, metadata):
                 raise ContextContractError("work_identity_mismatch")
+            from .start_intent import pending_reason
+
+            pending_start = pending_reason(
+                core.locate_flow_root(project) / "runs" / str(run["id"]) / "run.yaml",
+                core.project_id(project),
+            )
+            if pending_start:
+                raise ContextContractError(pending_start)
             run_pin = run.get("process_execution") or {}
             if run_pin and contract["process"] != {"id": run_pin.get("process_id"), "version": run_pin.get("process_version"), "fingerprint": run_pin.get("process_fingerprint")}:
                 raise ContextContractError("work_context_mismatch")
