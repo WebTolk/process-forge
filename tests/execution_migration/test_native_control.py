@@ -1753,6 +1753,11 @@ def test_real_updater_retained_target_repair_force_and_authority(
     native_root: Path, case: str
 ) -> None:
     management, _ = _adopted_fixture_install(native_root / "management")
+    if case == "unbound-cli":
+        # The target is unbound, while the public CLI caller must be managed.
+        # A never-enrolled external installer now has its own file-only route.
+        adopted = _adopted_run(_ADOPTED_MANAGER, management)
+        assert isinstance(adopted["generation"], str) and adopted["generation"]
     result = _adopted_run(
         _ADOPTED_PREAMBLE
         + r"""
@@ -1810,6 +1815,10 @@ with managed_target(target,files) as retained:
     if case in {'manifest','epoch','selection','unbound-cli','configuration','owner','excluded-leaf','excluded-inventory','malformed','unknown'}:
         before=snapshot()
         if case=='unbound-cli':
+            assert isinstance(entry,p.NativeEntry)
+            assert isinstance(entry.control,p.NativeControl)
+            assert entry.publication is not None and entry.image is not None
+            assert p.ManagedEnrollmentProducer(root,leaf)._state()['phase']=='bound'
             import subprocess
             refused=subprocess.run([sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=30)
             assert refused.returncode!=0,refused.stdout
