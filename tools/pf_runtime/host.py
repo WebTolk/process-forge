@@ -204,23 +204,13 @@ def declared_stage_obligations(
     project_root: Path, core: Any, *, dependencies: set[Path] | None = None
 ) -> list[dict[str, Any]]:
     """Read technical obligations from process definitions, never from Runtime policy."""
-    flow_root = core.locate_flow_root(project_root)
+    from processforge_core.work.consistency import RunTaskInputReader
+
+    inputs = RunTaskInputReader()
     results: list[dict[str, Any]] = []
     process_cache: dict[str, dict[str, Any] | None] = {}
-    for assignment_path in sorted((flow_root / "assignments").glob("*.yaml")):
-        task = core.load_yaml_document(assignment_path)
-        if not isinstance(task, dict) or not task.get("id"):
-            continue
-        if str(task.get("status") or "") in {
-            "done",
-            "completed",
-            "cancelled",
-            "failed",
-        }:
-            continue
-        from processforge_core.work.consistency import RunTaskInputReader
-
-        process_id = RunTaskInputReader().task_process_id(task)
+    for task in inputs.active_tasks(project_root):
+        process_id = inputs.task_process_id(task)
         if not process_id:
             continue
         if process_id not in process_cache:
@@ -2764,6 +2754,8 @@ def tick_payload(
     *,
     director: bool = False,
     inspector: bool = False,
+    projection: bool = True,
+    presence: bool = True,
     run: str | None = None,
     profile: str | None = None,
     driver: str | None = None,
@@ -2783,7 +2775,8 @@ def tick_payload(
         # Admission fences routing publication and commits, not the potentially
         # unbounded Inspector/projection scans between them. The native image
         # lease remains live throughout the pass.
-        core.update_stale_agent_presence(workplace_root)
+        if presence:
+            core.update_stale_agent_presence(workplace_root)
         with registration_admission(workplace_root, project_roots):
             handles = [
                 route_project(str(root), workplace_root, core) for root in project_roots
@@ -2838,8 +2831,9 @@ def tick_payload(
                 # Dispatch can scan journals and run hooks. Journal completion
                 # owns its readiness checks; the native operation remains live.
                 core.flush_pending_event_dispatches(project_root)
-                stage_projection = refresh_stage_obligations(project_root, core)
-                item["projection"] = core.rel(stage_projection, project_root)
+                if projection:
+                    stage_projection = refresh_stage_obligations(project_root, core)
+                    item["projection"] = core.rel(stage_projection, project_root)
                 results.append(item)
         # Refresh and merge only the routing delta under the short memory lock.
         # No interprocess/native/target gate is acquired while it is held.

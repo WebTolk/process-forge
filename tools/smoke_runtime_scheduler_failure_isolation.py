@@ -53,6 +53,8 @@ def main() -> int:
             "id": "broken", "status": "in_progress", "tasks": [{"id": "missing"}],
         })
         runtime = service.RuntimeProcess(workplace, core, interval=0.25)
+        from processforge_core.runtime.schedule import RuntimeSchedule
+        runtime._schedule = RuntimeSchedule(periods={job: 0.25 for job in RuntimeSchedule.PERIODS})
         runtime.state.update(status="ready", health="degraded")
         assert runtime.status_payload()["health"] == "degraded", "explicit health was hidden"
         runtime.state["health"] = "ready"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -106,6 +107,27 @@ class RunTaskInputReader:
         if isinstance(value, dict):
             return str(value.get("id", ""))
         return str(value or "")
+
+    def active_tasks(self, project_root: Path) -> Iterator[dict[str, Any]]:
+        """Read current active assignments without retaining terminal histories.
+
+        Header selection still validates the complete YAML and its actual bytes.
+        Read the full document only for candidates, then recheck after that read
+        because an assignment may finish between the two observations.
+        """
+        root = (
+            self._context_contract_inputs.locate_flow_root(project_root) / "assignments"
+        )
+        terminal = {"done", "completed", "cancelled", "failed"}
+        for path in sorted(root.glob("*.yaml")):
+            header = self._yaml_documents.load_fields(
+                path, ("id", "status", "__yaml_error__")
+            )
+            if not header.get("id") or str(header.get("status") or "") in terminal:
+                continue
+            task = self._yaml_documents.load(path)
+            if task.get("id") and str(task.get("status") or "") not in terminal:
+                yield task
 
     def next_iteration_id(self, task: dict[str, Any]) -> str:
         raw_iterations = task.get("iterations")

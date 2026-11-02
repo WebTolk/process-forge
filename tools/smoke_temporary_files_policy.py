@@ -202,6 +202,9 @@ def runtime_fixture(roots, config):
     runtime.state_lock = threading.RLock()
     runtime.state = {"status": "ready"}
     runtime._project_errors = {}
+    from processforge_core.runtime.schedule import RuntimeSchedule
+    runtime._schedule = RuntimeSchedule()
+    runtime._scheduler_errors = {}
     runtime.known_project_roots = lambda: roots
     runtime.save = Mock()
     runtime.interval, runtime.shutdown_check = 0.25, False

@@ -175,6 +175,7 @@ def base_state(
 ) -> dict[str, Any]:
     import processforge_core.common.clock as _core_common_clock
     from processforge_core.composition import build_core_properties
+    from processforge_core.runtime.schedule import RuntimeSchedule
 
     properties = build_core_properties()
     identity: dict[str, Any] = dict(properties.report())
@@ -202,10 +203,8 @@ def base_state(
         "token_ref": str(token_path(workplace_root)),
         "scheduler": {
             "jobs": {
-                "ledger": {"period_seconds": 5, "last_result": "not_started"},
-                "director": {"period_seconds": 10, "last_result": "not_started"},
-                "inspector": {"period_seconds": 5, "last_result": "not_started"},
-                "projection": {"period_seconds": 30, "last_result": "not_started"},
+                job: {"period_seconds": period, "last_result": "not_started"}
+                for job, period in RuntimeSchedule().periods().items()
             }
         },
     }
@@ -561,6 +560,10 @@ class RuntimeProcess:
             )
             self.state_lock = threading.RLock()
             self._project_errors: dict[str, str] = {}
+            from processforge_core.runtime.schedule import RuntimeSchedule
+
+            self._schedule = RuntimeSchedule()
+            self._scheduler_errors: dict[tuple[str, str], str] = {}
             self._temporary_files_last_run: dict[Path, float] = {}
             self._temporary_files_results: dict[Path, dict[str, Any]] = {}
             self._registrations = metrics_core().registrations({})
@@ -1026,6 +1029,111 @@ class RuntimeProcess:
             if "error" in result
         }
 
+    def scheduler_pass(self) -> None:
+        """Run only due Core jobs, retaining faults until that job is retried."""
+        roots = self.known_project_roots()
+        scopes = {str(root) for root in roots}
+        self._schedule.retain_scopes(scopes)
+        self._scheduler_errors = {
+            key: error
+            for key, error in self._scheduler_errors.items()
+            if key[1] == "" or key[1] in scopes
+        }
+        project_errors = dict(self._project_errors)
+        executed: set[str] = set()
+        if self._schedule.due("ledger"):
+            try:
+                self.core.update_stale_agent_presence(self.workplace_root)
+            except NativeControlError:
+                raise
+            except (Exception, SystemExit) as exc:
+                self._scheduler_errors["ledger", ""] = str(exc) or "Ledger pass failed"
+            else:
+                self._scheduler_errors.pop(("ledger", ""), None)
+            finally:
+                self._schedule.complete("ledger")
+                executed.add("ledger")
+        projects: list[dict[str, Any]] = []
+        for project_root in roots:
+            scope = str(project_root)
+            due = {
+                job: self._schedule.due(job, scope)
+                for job in ("director", "inspector", "projection")
+            }
+            if not any(due.values()):
+                continue
+            error = ""
+            try:
+                item_payload, item_status = host.tick_payload(
+                    self.workplace_root,
+                    [project_root],
+                    self.core,
+                    director=due["director"],
+                    inspector=due["inspector"],
+                    projection=due["projection"],
+                    presence=False,
+                )
+                projects.extend(item_payload.get("projects", []))
+                # Task failure evidence is distinct from an operational fault.
+                operational = item_payload.get("scheduler_status")
+                operational_status = (
+                    0
+                    if operational == "ok"
+                    else item_status or (1 if operational == "failed" else 0)
+                )
+                if operational_status:
+                    error = f"project scheduler pass failed with status {operational_status}"
+            except NativeControlError:
+                raise
+            except (Exception, SystemExit) as exc:
+                error = str(exc) or "project scheduler pass rejected the project"
+            for job, selected in due.items():
+                if not selected:
+                    continue
+                self._schedule.complete(job, scope)
+                executed.add(job)
+                if error:
+                    self._scheduler_errors[job, scope] = error
+                else:
+                    self._scheduler_errors.pop((job, scope), None)
+        for (job, scope), error in self._scheduler_errors.items():
+            key = scope or "ledger"
+            project_errors[key] = "; ".join(
+                filter(None, (project_errors.get(key), f"{job}: {error}"))
+            )
+        project_errors.update(self.observe_temporary_files(roots))
+        with self.state_lock:
+            self._project_errors = project_errors
+            jobs = self.state.setdefault("scheduler", {}).setdefault("jobs", {})
+            import processforge_core.common.clock as _core_common_clock
+
+            now = _core_common_clock.now_utc()
+            for job in executed:
+                jobs.setdefault(job, {}).update(
+                    last_run=now,
+                    last_result="failed"
+                    if any(key[0] == job for key in self._scheduler_errors)
+                    else "ok",
+                )
+            self.state["last_scheduler_result"] = {
+                "status": "failed" if project_errors else "ok",
+                "projects": projects,
+            }
+            if project_errors:
+                self.state["health"] = "degraded"
+                self.state["project_errors"] = dict(project_errors)
+                self.state["last_scheduler_error"] = "; ".join(
+                    f"{key}: {value}" for key, value in project_errors.items()
+                )
+            else:
+                self.state.pop("last_scheduler_error", None)
+                self.state.pop("project_errors", None)
+                self.state["health"] = (
+                    "ready"
+                    if self.state.get("status") == "ready"
+                    else self.state.get("health", self.state.get("status"))
+                )
+
     def scheduler_loop(self) -> None:
         self.scheduler_thread = threading.current_thread()
         while not self.stop_event.wait(self.interval):
@@ -1038,96 +1146,9 @@ class RuntimeProcess:
                             continue
                         self.scheduler_active = True
                     try:
-                        roots = self.known_project_roots()
-                        project_errors = dict(self._project_errors)
-                        self.core.update_stale_agent_presence(self.workplace_root)
-                        projects: list[dict[str, Any]] = []
-                        status = 0
-                        for project_root in roots:
-                            try:
-                                item_payload, item_status = host.tick_payload(
-                                    self.workplace_root,
-                                    [project_root],
-                                    self.core,
-                                    director=True,
-                                    inspector=True,
-                                )
-                                projects.extend(item_payload.get("projects", []))
-                                # A successful Inspector pass can report failed workers or
-                                # collection recovery. Unclassified nonzero results still fail.
-                                operational = item_payload.get("scheduler_status")
-                                operational_status = (
-                                    0
-                                    if operational == "ok"
-                                    else (
-                                        item_status
-                                        or (1 if operational == "failed" else 0)
-                                    )
-                                )
-                                status = status or operational_status
-                                if operational_status:
-                                    project_errors[str(project_root)] = (
-                                        f"project scheduler pass failed with status {operational_status}"
-                                    )
-                            except SystemExit as exc:
-                                project_errors[str(project_root)] = (
-                                    str(exc)
-                                    or "project scheduler pass rejected the project"
-                                )
-                                status = 1
-                            except Exception as exc:  # noqa: BLE001 - isolate one bad project.
-                                project_errors[str(project_root)] = str(exc)
-                                status = 1
-                        # Maintenance faults have their own keys and cannot replace a tick fault.
-                        project_errors.update(self.observe_temporary_files(roots))
-                        payload = {
-                            "status": "ok"
-                            if status == 0 and not project_errors
-                            else "failed",
-                            "projects": projects,
-                        }
-                        with self.state_lock:
-                            self._project_errors = project_errors
-                            jobs = self.state.setdefault("scheduler", {}).setdefault(
-                                "jobs", {}
-                            )
-                            import processforge_core.common.clock as _core_common_clock
-
-                            now = _core_common_clock.now_utc()
-                            jobs.setdefault("ledger", {})["last_run"] = now
-                            jobs["ledger"]["last_result"] = "ok"
-                            jobs.setdefault("director", {})["last_run"] = now
-                            jobs["director"]["last_result"] = (
-                                "ok" if status == 0 else "failed"
-                            )
-                            jobs.setdefault("inspector", {})["last_run"] = now
-                            jobs["inspector"]["last_result"] = (
-                                "ok" if status == 0 else "failed"
-                            )
-                            jobs.setdefault("projection", {})["last_run"] = now
-                            jobs["projection"]["last_result"] = (
-                                "ok" if status == 0 else "failed"
-                            )
-                            self.state["last_scheduler_result"] = payload
-                            if self._project_errors:
-                                self.state["health"] = "degraded"
-                                self.state["project_errors"] = dict(
-                                    self._project_errors
-                                )
-                                self.state["last_scheduler_error"] = "; ".join(
-                                    f"{key}: {value}"
-                                    for key, value in self._project_errors.items()
-                                )
-                            else:
-                                self.state.pop("last_scheduler_error", None)
-                                self.state.pop("project_errors", None)
-                                self.state["health"] = (
-                                    "ready"
-                                    if self.state.get("status") == "ready"
-                                    else self.state.get(
-                                        "health", self.state.get("status")
-                                    )
-                                )
+                        self.scheduler_pass()
+                    except NativeControlError:
+                        raise
                     except (Exception, SystemExit) as exc:  # noqa: BLE001 - runtime must degrade, not crash on one bad project.
                         with self.state_lock:
                             self.state["health"] = "degraded"

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Honor Core Runtime job periods and retain failed job health until retry.
+  Reuse YAML loader policies within the existing cache limit, and read active
+  assignments through Core without retaining completed assignment histories.
 - Return success after a completed file-only archive update with an explicit
   Workplace. Preserve the managed update's separate doctor result and errors.
 - Honor the configured stop timeout when authenticating the exact App Server

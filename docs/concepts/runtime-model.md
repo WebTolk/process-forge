@@ -103,6 +103,18 @@ session maps are rebuildable caches only.
 The following details explain diagnostics and recovery for maintainers; they
 are not extra steps in the ordinary Work lifecycle.
 
+Core `RuntimeSchedule` supplies the actual job periods: Ledger and Inspector
+5 seconds, Director 10 seconds, projections 30 seconds. Host polling only checks
+what is due. Each project has its own cadence, measured from attempt completion,
+including failures; slow passes do not cause catch-up loops. Job faults remain
+visible until that job is retried. Manual ticks keep their existing behavior.
+
+Core `RunTaskInputReader.active_tasks` owns active-assignment discovery. It
+validates current YAML bytes, retains small terminal headers, and loads full
+active documents with a second status check. The bounded YAML cache shares
+equivalent loader policies; its limits and caller mutation isolation are unchanged.
+Ordinary agents use the public Work operations without managing these caches.
+
 Runtime status reports scheduler liveness as `scheduler_alive`. A failed scheduler
 operation or malformed routing cache degrades health while other valid projects continue;
 a successful later pass restores health. A stopped scheduler is never reported
