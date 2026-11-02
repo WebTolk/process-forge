@@ -19,7 +19,12 @@ from typing import Any
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-QA = (ROOT.parent / "qa/owned-shutdown-tests").resolve()
+BASE_PYTHON = str(getattr(sys, "_base_executable"))
+QA = Path(
+    os.environ.get(
+        "OWNED_SHUTDOWN_TEST_ROOT", str(ROOT.parent / "qa/owned-shutdown-tests")
+    )
+).resolve()
 sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "src")]
 import pf_native_control as native  # noqa: E402
 from pf_runtime import owned_shutdown as owned  # noqa: E402
@@ -66,7 +71,7 @@ def policy(case_root: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         },
     )
     token = "synthetic-policy-token"
-    state = {
+    state: dict[str, Any] = {
         "pid": 43210,
         "instance_id": "fixture-instance",
         "endpoint": "http://127.0.0.1:12345",
@@ -90,7 +95,7 @@ def policy(case_root: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
             str(workplace),
         ),
     )
-    events = []
+    events: list[str] = []
     model = SimpleNamespace(
         root=case_root,
         workplace=workplace,
@@ -101,6 +106,8 @@ def policy(case_root: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         state=state,
         lock=lock,
         events=events,
+        timeout=0.5,
+        request_options=[],
         facts=[facts],
         reads=0,
         status_code=200,
@@ -125,7 +132,7 @@ def policy(case_root: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
             return model.facts.pop(0) if len(model.facts) > 1 else model.facts[0]
 
         def terminate(self, expected: Any, timeout: float) -> None:
-            assert expected == facts and timeout == 0.5
+            assert expected == facts and timeout == model.timeout
             events.append("terminate")
 
     @contextmanager
@@ -145,6 +152,7 @@ def policy(case_root: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
 
     def request(method: str, url: str, **options: Any) -> Any:
         events.append("request")
+        model.request_options.append(dict(options))
         assert method == "GET" and url == state["endpoint"] + "/status"
         assert options["token"] == token
         model.request_side_effect()
@@ -166,7 +174,7 @@ def policy(case_root: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         read_owner=read_owner,
         request=request,
         critical_section=critical,
-        timeout=0.5,
+        timeout=model.timeout,
     )
     return model
 
@@ -185,6 +193,18 @@ def test_policy_rechecks_owner_and_process_under_critical_section(policy: Any) -
         "critical-exit",
         "close",
     ]
+
+
+@pytest.mark.parametrize("timeout", [0.5, 45.0])
+def test_configured_timeout_reaches_authentication_and_termination(
+    policy: Any, timeout: float
+) -> None:
+    policy.timeout = timeout
+    policy.invoke()
+    assert policy.request_options == [{"token": policy.token, "timeout": timeout}]
+    assert policy.events.count("request") == 1
+    assert policy.events.count("terminate") == 1
+    assert policy.events[-1] == "close"
 
 
 @pytest.mark.parametrize("fault", ["no_entry", "unsealed", "no_image", "managed"])
@@ -296,7 +316,7 @@ def test_real_windows_handle_identity_mismatch_does_not_signal_controlled_child(
         "import os,sys; print(os.getpid(),flush=True); sys.stdin.readline()\n",
         encoding="utf-8",
     )
-    command = [sys._base_executable, "-B", str(script), "fixture", "extra"]
+    command = [BASE_PYTHON, "-B", str(script), "fixture", "extra"]
     child = subprocess.Popen(
         command,
         stdin=subprocess.PIPE,
@@ -310,7 +330,7 @@ def test_real_windows_handle_identity_mismatch_does_not_signal_controlled_child(
         with owned._WindowsProcess(actual_pid) as process:
             facts = process.facts()
             assert facts.pid == actual_pid and facts.creation > 0
-            assert facts.image == Path(sys._base_executable).resolve()
+            assert facts.image == Path(BASE_PYTHON).resolve()
             assert facts.arguments[2:] == (str(script), "fixture", "extra")
             with pytest.raises(owned.OwnedShutdownError, match="identity_changed"):
                 process.terminate(replace(facts, creation=facts.creation + 1), 0.1)
@@ -408,7 +428,7 @@ def test_actual_external_sealed_force_stops_only_controlled_ready_owner(
     (workplace / "runtime/pf-runtime").mkdir(parents=True)
     save(workplace, "fixture-input.json", {"token": "synthetic-controlled-child-token"})
     command = [
-        sys._base_executable,
+        BASE_PYTHON,
         "-B",
         str(script),
         "runtime",
@@ -458,7 +478,7 @@ def test_actual_external_sealed_force_stops_only_controlled_ready_owner(
             encoding="utf-8",
         )
         controller_command = [
-            sys._base_executable,
+            BASE_PYTHON,
             "-I",
             "-B",
             str(controller),

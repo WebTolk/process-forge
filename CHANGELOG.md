@@ -4,6 +4,8 @@
 
 - Return success after a completed file-only archive update with an explicit
   Workplace. Preserve the managed update's separate doctor result and errors.
+- Honor the configured stop timeout when authenticating the exact App Server
+  owner during explicit force recovery.
 
 ## 1.3.0-beta3 - 2026-11-02
 

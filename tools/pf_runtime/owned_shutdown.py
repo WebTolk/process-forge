@@ -408,7 +408,7 @@ def force_ready_owner_stop(
                     "runtime_owner_changed",
                 )
                 code, status = request(
-                    "GET", expected.endpoint + "/status", token=token, timeout=5.0
+                    "GET", expected.endpoint + "/status", token=token, timeout=timeout
                 )
                 _require(code == 200, "runtime_owner_authentication_failed")
                 _require(
