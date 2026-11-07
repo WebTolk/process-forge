@@ -320,18 +320,12 @@ class RawIngressKernel:
         from pf_native_control import operation_lease
 
         with operation_lease():
-            from processforge_core.sqlite_storage import JournalMigrationRequired
-
             _validate(event, self.max_payload_bytes)
-            if not self.database.is_file():
-                legacy_roots = {
-                    self.root / "raw/v1",
-                    self.workplace_root / "runtime/agent-events/raw/v1",
-                }
-                if any(any(root.rglob("*.ndjson")) for root in legacy_roots):
-                    raise JournalMigrationRequired(
-                        "raw_journal_migration_required: run tools/migrate-hook-journals.py"
-                    )
+            self.storage.require_legacy_migration(
+                self.database,
+                project_root=self.project_root,
+                workplace_root=self.workplace_root,
+            )
             moment = (received_at or datetime.now(timezone.utc)).astimezone(
                 timezone.utc
             )
