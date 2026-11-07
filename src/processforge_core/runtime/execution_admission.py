@@ -19,6 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .. import diagnostics
 from ..common.clock import now_utc
 from ..executions.model import ExecutionError
 from ..project.metadata import ProjectMetadataReader
@@ -232,6 +233,38 @@ _HELD_GATES: ContextVar[tuple[tuple[int, int, Path], ...]] = ContextVar(
 )
 
 
+_PENDING_FAILURE: ContextVar[ExecutionError | None] = ContextVar(
+    "execution_admission_failure", default=None
+)
+
+
+# Synchronous emit only: thread-local state cannot leak into copied contexts.
+_EMITTING_FAILURE = threading.local()
+
+
+def _flush_admission_failure() -> None:
+    # Defer nested project failures until the workplace gate also unwinds.
+    if _HELD_GATES.get():
+        return
+    error = _PENDING_FAILURE.get()
+    _PENDING_FAILURE.set(None)
+    if error is not None and not getattr(_EMITTING_FAILURE, "active", False):
+        _EMITTING_FAILURE.active = True
+        try:
+            diagnostics.emit(
+                "error",
+                "runtime.admission.failed",
+                {"exception": error},
+                component="runtime",
+            )
+        except BaseException:
+            # Even an unavailable/hostile optional logger cannot affect admission.
+            pass
+        finally:
+            _PENDING_FAILURE.set(None)
+            _EMITTING_FAILURE.active = False
+
+
 class ExecutionAdmission:
     """Reuse the host's permanent-guard registry lock without importing tools.
 
@@ -291,9 +324,9 @@ class ExecutionAdmission:
             error = ExecutionError("execution_activity_unknown")
             # These bounded internal facts survive normalization without placing
             # the registry's private path/message in CLI or MCP error payloads.
+            facts = diagnostics.admission_facts(exc)
             error.__dict__.update(
-                admission_reason=getattr(
-                    exc,
+                admission_reason=facts.get(
                     "registry_lock_reason",
                     "timeout"
                     if isinstance(exc, TimeoutError)
@@ -302,11 +335,17 @@ class ExecutionAdmission:
                     else "lock_io_error",
                 ),
                 admission_phase=phase,
-                registry_lock_phase=getattr(exc, "registry_lock_phase", None),
-                admission_errno=getattr(exc, "errno", None),
-                admission_winerror=getattr(exc, "winerror", None),
+                registry_lock_phase=facts.get("registry_lock_phase"),
+                admission_errno=facts.get("errno"),
+                admission_winerror=facts.get("winerror"),
             )
+            # Only the normalized message and safe facts accompany the original
+            # traceback. Never pass the lock message/path to optional logging.
+            error = error.with_traceback(exc.__traceback__)
+            _PENDING_FAILURE.set(error)
             raise error from None
+        finally:
+            _flush_admission_failure()
 
     @contextmanager
     def start(

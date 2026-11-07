@@ -65,11 +65,38 @@
 не более 64 КиБ, `schema_version: 1` и объект `assignment`. Поддерживаются поля
 `allowed_files`, `allowed_read_files`, `forbidden_files`, `allowed_actions`,
 `forbidden_actions`, `execution_mode` (название режима либо объект режима Assignment), `required_sources`,
-`required_outputs`, `expected_report`, `ownership` (owner_id, role, writer).
+`required_outputs`, `expected_report`, `ownership` (owner_id, role, writer),
+`workspace_access`.
 Результат требует id и относительный путь; действия: read, write_artifact,
 write_product. Нормализация, готовность и проверка пересечений сохраняются.
 Без входного файла действуют прежние консервативные значения; текст цели не
 выдаёт разрешений. MCP `pf.work.start.scope_intent` передаёт ту же декларацию в Core.
+
+Необязательный `assignment.workspace_access` передаёт явный запрос ресурсов через
+существующие immutable intent, capsule и авторизацию подготовки. Разрешены только
+группы `knowledge_resources`, `templates`, `tools` и `mcp`: каждая содержит до 64
+различных публичных ID. ID содержит до 256 ASCII-символов: строчные буквы и цифры,
+разделённые одиночными точками, подчёркиваниями или дефисами; необязательное
+двоеточие задаёт `package-id:resource-id`. Пример:
+
+```json
+{"schema_version": 1, "assignment": {"workspace_access": {
+  "knowledge_resources": ["docs.python-practices:root"],
+  "tools": ["python-pytest", "python-ruff"]
+}}}
+```
+
+ID ресурсов должны быть доступны и выбраны в снимке проекта; в примере указан
+зарегистрированный ресурс `docs.python-practices:root`.
+Этот фрагмент нужно дополнить явной областью файлов и действий Work. Отсутствующие
+группы, `{}` и пустые списки не запрашивают ресурсы. Неизвестные группы, дубликаты,
+неверные типы, wildcard, приватные пути, raw command definitions и объектные ссылки
+(включая `path_ref` и native-maintenance requests) этот creation API отвергает.
+Форматы существующих assignment APIs сохраняются. Сам запрос не выдаёт доступ:
+действуют проверки snapshot, admission, resource bindings, отзыва и native
+preparation. Ресурсы не выводятся из цели или доступности в реестре. Повтор той же
+цели с изменённым запросом ресурсов даёт `scope_intent_mismatch` и не расширяет
+существующую capsule.
 Перед фиксацией неизменяемого контекста переданный режим нормализуется в объект
 сохранённого Assignment; без поля остаются прежние значения создания. Повторный
 запуск не переписывает старые Assignment и капсулы. Объект сохраняет явные

@@ -24,10 +24,16 @@ class PlatformContractValidationService:
     def __init__(self, distribution_root: Path) -> None:
         self.distribution_root = distribution_root
         self._platform_contract_reader = PlatformContractReader(distribution_root)
-        self._platform_contract_policy = PlatformContractPolicy(self._platform_contract_reader)
+        self._platform_contract_policy = PlatformContractPolicy(
+            self._platform_contract_reader
+        )
         self._platform_contract_resolver = PlatformContractResolver(distribution_root)
-        self._project_platform_selection_service = ProjectPlatformSelectionService(distribution_root)
-        self._project_package_catalog_reader = ProjectPackageCatalogReader(distribution_root)
+        self._project_platform_selection_service = ProjectPlatformSelectionService(
+            distribution_root
+        )
+        self._project_package_catalog_reader = ProjectPackageCatalogReader(
+            distribution_root
+        )
         self._context_contract_inputs = ContextContractInputs()
         self._templates = TemplateCatalogService(distribution_root)
 
@@ -40,29 +46,72 @@ class PlatformContractValidationService:
         platform_resolution: dict[str, Any] | None = None,
     ) -> list[Check]:
         checks: list[Check] = []
-        checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
-        contract_id = self._platform_contract_reader.contract_id(str(data.get("id") or platform))
-        for entry in policy_entries(self._context_contract_inputs.documents.policy("platform-id-policy.yaml", distribution_root=self.distribution_root), "discouraged_platform_ids"):
+        checks.append(
+            check("PASS" if data.get("id") else "FAIL", "platform contract id present")
+        )
+        contract_id = self._platform_contract_reader.contract_id(
+            str(data.get("id") or platform)
+        )
+        for entry in policy_entries(
+            self._context_contract_inputs.documents.policy(
+                "platform-id-policy.yaml", distribution_root=self.distribution_root
+            ),
+            "discouraged_platform_ids",
+        ):
             if policy_id_matches(contract_id, entry):
                 checks.append(
                     check_with_hint(
                         str(entry.get("user_created_behavior", "WARN")).upper(),
-                        str(entry.get("message", f"platform id discouraged: {contract_id}")),
-                        str(entry.get("why", "The platform id matched a data-driven platform id policy.")),
-                        str(entry.get("fix", "update the platform id or policy manifest")),
+                        str(
+                            entry.get(
+                                "message", f"platform id discouraged: {contract_id}"
+                            )
+                        ),
+                        str(
+                            entry.get(
+                                "why",
+                                "The platform id matched a data-driven platform id policy.",
+                            )
+                        ),
+                        str(
+                            entry.get(
+                                "fix", "update the platform id or policy manifest"
+                            )
+                        ),
                     )
                 )
         hints = data.get("project_type_hints")
         if not isinstance(hints, list):
-            applies_to = data.get("applies_to") if isinstance(data.get("applies_to"), dict) else {}
-            hints = applies_to.get("project_type_hints") if isinstance(applies_to.get("project_type_hints"), list) else []
-        checks.append(check("PASS" if isinstance(hints, list) and hints else "WARN", "project_type_hints configured"))
-        requires = data.get("requires") if isinstance(data.get("requires"), dict) else {}
-        checks.append(check("PASS" if requires.get("capabilities") else "WARN", "required capabilities listed"))
+            applies_to_value = data.get("applies_to")
+            applies_to = applies_to_value if isinstance(applies_to_value, dict) else {}
+            hints_value = applies_to.get("project_type_hints")
+            hints = hints_value if isinstance(hints_value, list) else []
+        checks.append(
+            check(
+                "PASS" if isinstance(hints, list) and hints else "WARN",
+                "project_type_hints configured",
+            )
+        )
+        requires_value = data.get("requires")
+        requires = requires_value if isinstance(requires_value, dict) else {}
+        checks.append(
+            check(
+                "PASS" if requires.get("capabilities") else "WARN",
+                "required capabilities listed",
+            )
+        )
         extends_refs = self._platform_contract_policy.extends(data)
         required_platform_refs = self._platform_contract_policy.required_platforms(data)
-        checks.append(check("PASS", "extends entries are valid") if all(ref.get("id") for ref in extends_refs) else check("FAIL", "extends entries are valid"))
-        checks.append(check("PASS", "requires.platforms entries are valid") if all(ref.get("id") for ref in required_platform_refs) else check("FAIL", "requires.platforms entries are valid"))
+        checks.append(
+            check("PASS", "extends entries are valid")
+            if all(ref.get("id") for ref in extends_refs)
+            else check("FAIL", "extends entries are valid")
+        )
+        checks.append(
+            check("PASS", "requires.platforms entries are valid")
+            if all(ref.get("id") for ref in required_platform_refs)
+            else check("FAIL", "requires.platforms entries are valid")
+        )
         for ref in extends_refs:
             if ref.get("required") is False:
                 checks.append(
@@ -73,7 +122,10 @@ class PlatformContractValidationService:
                         "set required: true or move the platform reference to requires.platforms if it is only a dependency",
                     )
                 )
-        required_platform_by_id = {str(ref["id"]): bool(ref.get("required", True)) for ref in required_platform_refs}
+        required_platform_by_id = {
+            str(ref["id"]): bool(ref.get("required", True))
+            for ref in required_platform_refs
+        }
         for ref in extends_refs:
             if required_platform_by_id.get(str(ref["id"])) is False:
                 checks.append(
@@ -84,14 +136,19 @@ class PlatformContractValidationService:
                         "set requires.platforms[].required: true for the parent platform",
                     )
                 )
-        platform_resolution = platform_resolution or self._platform_contract_resolver.resolve(workplace_root / "workplace.yaml", [data.get("id") or platform])
+        platform_resolution = (
+            platform_resolution
+            or self._platform_contract_resolver.resolve(
+                workplace_root / "workplace.yaml", [data.get("id") or platform]
+            )
+        )
         for missing in platform_resolution["missing_required_contracts"]:
             checks.append(
                 check_with_hint(
                     "FAIL",
                     f"required platform available: {missing}",
                     "The platform contract extends or requires a platform that is not registered in the workplace.",
-                    f"python bin/pf.py platform-create --workplace <workplace-root> --id {missing} --title \"{missing}\" --apply",
+                    f'python bin/pf.py platform-create --workplace <workplace-root> --id {missing} --title "{missing}" --apply',
                 )
             )
         for cycle in platform_resolution["circular_platforms"]:
@@ -103,9 +160,23 @@ class PlatformContractValidationService:
                     "remove one extends edge from the cycle and rerun platform-contract-doctor",
                 )
             )
-        checks.append(check("PASS" if platform_resolution["platform_stack"] else "FAIL", "resolved platform stack valid"))
-        checks.append(check("PASS", "resolved platform stack computed without mutating workplace state"))
-        inherited_required, inherited_recommended = self._project_platform_selection_service.resource_findings(workplace_root / "workplace.yaml", platform_resolution)
+        checks.append(
+            check(
+                "PASS" if platform_resolution["platform_stack"] else "FAIL",
+                "resolved platform stack valid",
+            )
+        )
+        checks.append(
+            check(
+                "PASS",
+                "resolved platform stack computed without mutating workplace state",
+            )
+        )
+        inherited_required, inherited_recommended = (
+            self._project_platform_selection_service.resource_findings(
+                workplace_root / "workplace.yaml", platform_resolution
+            )
+        )
         for item in inherited_required:
             checks.append(
                 check_with_hint(
@@ -125,7 +196,9 @@ class PlatformContractValidationService:
                 )
             )
         for package_id in list_value(requires.get("knowledge_packages")):
-            manifest = self._project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+            manifest = self._project_package_catalog_reader.index(
+                workplace_root, None, workplace_root / "workplace.yaml"
+            ).get(package_id)
             checks.append(
                 check("PASS", f"required knowledge package available: {package_id}")
                 if manifest
@@ -133,12 +206,16 @@ class PlatformContractValidationService:
                     "FAIL",
                     f"required knowledge package available: {package_id}",
                     "This platform contract marks the package as required.",
-                    f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+                    f'python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title "{package_id}" --apply',
                     "mark it as required: false or move it to includes.knowledge_packages if optional",
                 )
             )
-        for package_id in self._platform_contract_policy.includes(data, "knowledge_packages"):
-            manifest = self._project_package_catalog_reader.index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+        for package_id in self._platform_contract_policy.includes(
+            data, "knowledge_packages"
+        ):
+            manifest = self._project_package_catalog_reader.index(
+                workplace_root, None, workplace_root / "workplace.yaml"
+            ).get(package_id)
             checks.append(
                 check("PASS", f"optional knowledge package available: {package_id}")
                 if manifest
@@ -146,7 +223,7 @@ class PlatformContractValidationService:
                     "WARN",
                     f"optional knowledge package available: {package_id}",
                     "This platform contract recommends the package, but onboarding can continue.",
-                    f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+                    f'python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title "{package_id}" --apply',
                 )
             )
         for template_id in list_value(requires.get("templates")):
@@ -157,7 +234,7 @@ class PlatformContractValidationService:
                     "FAIL",
                     f"required template available: {template_id}",
                     "This platform contract marks the template as required.",
-                    f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+                    f'python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title "{template_id}" --apply',
                     "move it to includes.templates if optional",
                 )
             )
@@ -169,7 +246,7 @@ class PlatformContractValidationService:
                     "WARN",
                     f"optional template available: {template_id}",
                     "This platform contract recommends the template, but onboarding can continue without it.",
-                    f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+                    f'python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title "{template_id}" --apply',
                 )
             )
         return checks

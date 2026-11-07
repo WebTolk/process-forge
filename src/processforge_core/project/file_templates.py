@@ -36,34 +36,89 @@ class ProjectFileTemplateBuilder:
         runtime_launchers: ProjectRuntimeLauncherBuilder | None = None,
     ) -> None:
         self.distribution_root = distribution_root
-        self.discovery = discovery if discovery is not None else ProjectDiscoveryReader(ProjectClassifierSourceReader(distribution_root))
-        self.resources = resources if resources is not None else ProjectResourceMatcher(PlatformContractReader(distribution_root))
-        self.initialization_inputs = initialization_inputs if initialization_inputs is not None else ProjectInitializationInputs()
-        self.platform_selection = platform_selection if platform_selection is not None else ProjectPlatformSelectionService(distribution_root)
-        self.coordination = coordination if coordination is not None else ProjectCoordinationReader()
-        self.platform_resolver = platform_resolver if platform_resolver is not None else PlatformContractResolver(distribution_root)
-        self.runtime_launchers = runtime_launchers if runtime_launchers is not None else ProjectRuntimeLauncherBuilder()
+        self.discovery = (
+            discovery
+            if discovery is not None
+            else ProjectDiscoveryReader(
+                ProjectClassifierSourceReader(distribution_root)
+            )
+        )
+        self.resources = (
+            resources
+            if resources is not None
+            else ProjectResourceMatcher(PlatformContractReader(distribution_root))
+        )
+        self.initialization_inputs = (
+            initialization_inputs
+            if initialization_inputs is not None
+            else ProjectInitializationInputs()
+        )
+        self.platform_selection = (
+            platform_selection
+            if platform_selection is not None
+            else ProjectPlatformSelectionService(distribution_root)
+        )
+        self.coordination = (
+            coordination if coordination is not None else ProjectCoordinationReader()
+        )
+        self.platform_resolver = (
+            platform_resolver
+            if platform_resolver is not None
+            else PlatformContractResolver(distribution_root)
+        )
+        self.runtime_launchers = (
+            runtime_launchers
+            if runtime_launchers is not None
+            else ProjectRuntimeLauncherBuilder()
+        )
 
-    def build_project_files(self, project_root: Path, workplace_manifest: Path, answers: dict[str, Any]) -> dict[Path, str]:
+    def build_project_files(
+        self, project_root: Path, workplace_manifest: Path, answers: dict[str, Any]
+    ) -> dict[Path, str]:
         flow_root = project_root / PROJECT_FLOW_ROOT
         detected = self.discovery.detect_project(project_root, workplace_manifest)
         defaults = self.initialization_inputs.defaults(project_root, answers, detected)
-        detected["platforms"] = self.platform_selection.selected(detected, answers, defaults["type"], workplace_manifest, project_root)
+        detected["platforms"] = self.platform_selection.selected(
+            detected, answers, defaults["type"], workplace_manifest, project_root
+        )
         mode = self.initialization_inputs.mode(project_root, answers)
-        coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
-        project_coordination = self.coordination.project_defaults(coordination_answers.get("mode", "inherit"))
+        coordination_answers = (
+            answers.get("coordination", {})
+            if isinstance(answers.get("coordination"), dict)
+            else {}
+        )
+        project_coordination = self.coordination.project_defaults(
+            coordination_answers.get("mode", "inherit")
+        )
         if isinstance(coordination_answers.get("director"), dict):
             project_coordination["director"].update(coordination_answers["director"])
-        required = answers.get("required_capabilities") if isinstance(answers.get("required_capabilities"), list) else []
-        optional = answers.get("optional_capabilities") if isinstance(answers.get("optional_capabilities"), list) else []
+        required_value = answers.get("required_capabilities")
+        required = required_value if isinstance(required_value, list) else []
+        optional_value = answers.get("optional_capabilities")
+        optional = optional_value if isinstance(optional_value, list) else []
         required = [str(item) for item in required if str(item)]
         optional = [str(item) for item in optional if str(item)]
-        platform_resolution = self.platform_resolver.resolve(workplace_manifest, detected["platforms"], project_root=project_root)
-        required_platform_missing, recommended_platform_missing = self.platform_selection.resource_findings(workplace_manifest, platform_resolution)
-        required = sorted(set(required).union(platform_resolution["required_capabilities"]))
-        matches = self.resources.match_global_resources(workplace_manifest, detected, required, optional)
-        knowledge_stack = [
-            {"id": "processforge.core", "version": "^1.0", "source": "distribution", "distribution": "processforge"},
+        platform_resolution = self.platform_resolver.resolve(
+            workplace_manifest, detected["platforms"], project_root=project_root
+        )
+        required_platform_missing, recommended_platform_missing = (
+            self.platform_selection.resource_findings(
+                workplace_manifest, platform_resolution
+            )
+        )
+        required = sorted(
+            set(required).union(platform_resolution["required_capabilities"])
+        )
+        matches = self.resources.match_global_resources(
+            workplace_manifest, detected, required, optional
+        )
+        knowledge_stack: list[dict[str, object]] = [
+            {
+                "id": "processforge.core",
+                "version": "^1.0",
+                "source": "distribution",
+                "distribution": "processforge",
+            },
         ]
         for package_id in platform_resolution["knowledge_packages"]:
             knowledge_stack.append(
@@ -76,30 +131,81 @@ class ProjectFileTemplateBuilder:
                     "required_by": sorted(
                         item["id"]
                         for item in platform_resolution["contracts"]
-                        if package_id in item.get("required", {}).get("knowledge_packages", [])
-                        or package_id in item.get("recommended", {}).get("knowledge_packages", [])
+                        if package_id
+                        in item.get("required", {}).get("knowledge_packages", [])
+                        or package_id
+                        in item.get("recommended", {}).get("knowledge_packages", [])
                     ),
                 }
             )
-        knowledge_stack.append({"id": f"project.{defaults['id']}", "version": "1.0.0", "source": "project"})
-        answered_requirements = answers.get("context_requirements") if isinstance(answers.get("context_requirements"), dict) else {}
+        knowledge_stack.append(
+            {"id": f"project.{defaults['id']}", "version": "1.0.0", "source": "project"}
+        )
+        answered_requirements_value = answers.get("context_requirements")
+        answered_requirements = (
+            answered_requirements_value
+            if isinstance(answered_requirements_value, dict)
+            else {}
+        )
         context_requirements = answered_requirements or {
             "knowledge_packages": [
                 {"id": "processforge.core", "constraint": "^1.0", "required": True},
                 *[
-                    {"id": package_id, "constraint": "*", "required": package_id in platform_resolution["required_knowledge_packages"]}
-                    for package_id in sorted(set(platform_resolution["knowledge_packages"]))
+                    {
+                        "id": package_id,
+                        "constraint": "*",
+                        "required": package_id
+                        in platform_resolution["required_knowledge_packages"],
+                    }
+                    for package_id in sorted(
+                        set(platform_resolution["knowledge_packages"])
+                    )
                 ],
-                {"id": f"project.{defaults['id']}", "constraint": "1.0.0", "required": True},
+                {
+                    "id": f"project.{defaults['id']}",
+                    "constraint": "1.0.0",
+                    "required": True,
+                },
             ],
             "knowledge_resources": [],
             "template_packages": [],
-            "templates": [{"id": item, "required": item in platform_resolution["required_templates"]} for item in sorted(set(platform_resolution["required_templates"] + platform_resolution["recommended_templates"]))],
-            "tools": [{"id": item, "required": item in platform_resolution["required_tools"]} for item in sorted(set(platform_resolution["required_tools"] + platform_resolution["recommended_tools"]))],
-            "platform_contracts": [{"id": item, "required": True} for item in sorted(set(detected["platforms"]))],
+            "templates": [
+                {
+                    "id": item,
+                    "required": item in platform_resolution["required_templates"],
+                }
+                for item in sorted(
+                    set(
+                        platform_resolution["required_templates"]
+                        + platform_resolution["recommended_templates"]
+                    )
+                )
+            ],
+            "tools": [
+                {"id": item, "required": item in platform_resolution["required_tools"]}
+                for item in sorted(
+                    set(
+                        platform_resolution["required_tools"]
+                        + platform_resolution["recommended_tools"]
+                    )
+                )
+            ],
+            "platform_contracts": [
+                {"id": item, "required": True}
+                for item in sorted(set(detected["platforms"]))
+            ],
         }
-        context_policy = answers.get("context_policy") if isinstance(answers.get("context_policy"), dict) else _ProjectContextPolicy().build({})
-        project_parameters = answers.get("parameters") if isinstance(answers.get("parameters"), dict) else {}
+        context_policy = (
+            answers.get("context_policy")
+            if isinstance(answers.get("context_policy"), dict)
+            else _ProjectContextPolicy().build({})
+        )
+        project_parameters_value = answers.get("parameters")
+        project_parameters = (
+            project_parameters_value
+            if isinstance(project_parameters_value, dict)
+            else {}
+        )
 
         public_manifest = {
             "schema_version": 1,
@@ -112,16 +218,27 @@ class ProjectFileTemplateBuilder:
                 "runner_required": False,
                 "backend_required": False,
             },
-            "project": {"id": defaults["id"], "name": defaults["name"], "type": defaults["type"]},
+            "project": {
+                "id": defaults["id"],
+                "name": defaults["name"],
+                "type": defaults["type"],
+            },
             "flow": {
                 "root": PROJECT_FLOW_ROOT,
                 "manifest": f"{PROJECT_FLOW_ROOT}/process-forge.yaml",
                 "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml",
             },
-            "workplace": {"reference": "local_file", "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml"},
+            "workplace": {
+                "reference": "local_file",
+                "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml",
+            },
             "coordination": project_coordination,
             "process": str(answers.get("process") or ""),
-            "specializations": [str(item) for item in as_list(answers.get("specializations")) if str(item)],
+            "specializations": [
+                str(item)
+                for item in as_list(answers.get("specializations"))
+                if str(item)
+            ],
             "detected": {
                 "status": detected["status"],
                 "languages": detected["languages"],
@@ -157,13 +274,17 @@ class ProjectFileTemplateBuilder:
             "optional_capabilities": optional,
             "selected_resources": {
                 "required": {
-                    "knowledge_packages": platform_resolution["required_knowledge_packages"],
+                    "knowledge_packages": platform_resolution[
+                        "required_knowledge_packages"
+                    ],
                     "tools": platform_resolution["required_tools"],
                     "mcp": platform_resolution["required_mcp"],
                     "templates": platform_resolution["required_templates"],
                 },
                 "recommended": {
-                    "knowledge_packages": platform_resolution["recommended_knowledge_packages"],
+                    "knowledge_packages": platform_resolution[
+                        "recommended_knowledge_packages"
+                    ],
                     "tools": platform_resolution["recommended_tools"],
                     "mcp": platform_resolution["recommended_mcp"],
                     "templates": platform_resolution["recommended_templates"],
@@ -180,9 +301,18 @@ class ProjectFileTemplateBuilder:
         local_manifest = {
             "schema_version": 1,
             "workplace": {"manifest": str(workplace_manifest.resolve())},
-            "process_forge": {"distribution_override": str(self.distribution_root.resolve())},
+            "process_forge": {
+                "distribution_override": str(self.distribution_root.resolve())
+            },
             "local": {"project_root": str(project_root.resolve())},
-            "overrides": {"package_roots": [], "template_roots": [], "tool_preferences": {}, "parameters": {}, "context_requirements": {}, "context_policy": {}},
+            "overrides": {
+                "package_roots": [],
+                "template_roots": [],
+                "tool_preferences": {},
+                "parameters": {},
+                "context_requirements": {},
+                "context_policy": {},
+            },
             "runtime": {
                 "mode": "manual",
                 "queue": "runtime/queue",
@@ -376,7 +506,11 @@ None inferred from file names. Tool selection comes from loaded registries, plat
                         "enabled": False,
                         "url_ref": "wtaicc.webhook.url",
                         "secret_ref": "wtaicc.webhook.secret",
-                        "event_types": ["assignment.completed", "artifact.created", "chat.message.recorded"],
+                        "event_types": [
+                            "assignment.completed",
+                            "artifact.created",
+                            "chat.message.recorded",
+                        ],
                     },
                 ],
             },
@@ -744,24 +878,41 @@ Review and confirm observed conventions.
         files = {
             project_root / "AGENTS.md": entry_contract.render().decode("utf-8"),
             flow_root / "AGENTS.md": agents,
-            flow_root / "agent-entry.json": encoded(entry_manifest(entry_contract)).decode("utf-8"),
+            flow_root / "agent-entry.json": encoded(
+                entry_manifest(entry_contract)
+            ).decode("utf-8"),
             flow_root / "process-forge.yaml": dump_yaml(public_manifest),
             flow_root / "process-forge.local.yaml": dump_yaml(local_manifest),
-            flow_root / "parameters.yaml": dump_yaml({"schema_version": 1, "kind": "processforge.parameters", "scope": "project", "parameters": {}}),
+            flow_root / "parameters.yaml": dump_yaml(
+                {
+                    "schema_version": 1,
+                    "kind": "processforge.parameters",
+                    "scope": "project",
+                    "parameters": {},
+                }
+            ),
             flow_root / "hooks.yaml": dump_yaml(hooks),
             flow_root / "registries" / "project-classifiers.yaml": dump_yaml(
                 {"schema_version": 1, "project_classifiers": []}
             ),
-            flow_root / "assignments" / "first-assignment.yaml": dump_yaml(first_assignment),
-            flow_root / "packages" / f"project.{defaults['id']}.yaml": dump_yaml(package),
+            flow_root / "assignments" / "first-assignment.yaml": dump_yaml(
+                first_assignment
+            ),
+            flow_root / "packages" / f"project.{defaults['id']}.yaml": dump_yaml(
+                package
+            ),
             flow_root / "artifacts" / "project-profile.md": profile,
-            flow_root / "artifacts" / "project-classification-report.md": classification_report,
+            flow_root
+            / "artifacts"
+            / "project-classification-report.md": classification_report,
             flow_root / "artifacts" / "repository-map.md": repository_map,
             flow_root / "artifacts" / "project-conventions.md": conventions,
             flow_root / "artifacts" / "toolchain-detection-report.md": toolchain,
             flow_root / "artifacts" / "mcp-capability-report.md": mcp_report,
             flow_root / "artifacts" / "template-matching-report.md": template_report,
-            flow_root / "artifacts" / "global-resource-matching-report.md": resource_report,
+            flow_root
+            / "artifacts"
+            / "global-resource-matching-report.md": resource_report,
             flow_root / "artifacts" / "project-init-proposal.md": proposal,
             flow_root / "artifacts" / "project-onboarding-report.md": onboarding_report,
             flow_root / "reviews" / "project-init-review.md": review,

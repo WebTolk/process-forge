@@ -558,3 +558,24 @@ class RegisteredCliTests(MaintenanceFixture):
             "verify", "--backup", str(self.root / "missing"), "--json"
         )
         self.assertEqual((code, report["status"]), (1, "failed"))
+
+
+class ExecutionRegistrationTests(unittest.TestCase):
+    def test_real_parser_keeps_execution_factory_cold(self) -> None:
+        import processforge as cli
+
+        with patch.object(
+            cli,
+            "execution_maintenance_scope",
+            side_effect=AssertionError("factory called during registration"),
+        ):
+            parser = cli.build_parser()
+            args = parser.parse_args(
+                [
+                    "journal-maintenance",
+                    "execution-inspect",
+                    "--project-root",
+                    "project",
+                ]
+            )
+        self.assertEqual(args.maintenance_command, "execution-inspect")

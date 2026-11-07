@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from ..agent_entry.contract import EntryError
 from ..agent_entry import migration as entry_migration
+from ..agent_entry.contract import EntryError
 from ..documents.answers import AnswersDocumentReader
 from .agent_hooks import AgentHookSetupError, ProjectAgentHookConfigurator
 from .coordination_state import ProjectCoordinationStateService
@@ -44,15 +44,23 @@ def entry_status(project_root: Path) -> dict[str, Any]:
     try:
         return entry_migration.check_entry(project_root)
     except (EntryError, OSError) as exc:
-        return {"status": "conflict", "entry": "unverified", "budget": {"status": "budget_unverified"},
-                "blockers": [exc.reason if isinstance(exc, EntryError) else "storage_error"]}
+        return {
+            "status": "conflict",
+            "entry": "unverified",
+            "budget": {"status": "budget_unverified"},
+            "blockers": [
+                exc.reason if isinstance(exc, EntryError) else "storage_error"
+            ],
+        }
 
 
 def plan_agent_entry(project_root: Path, budget_policy: Any = None) -> dict[str, Any]:
     try:
         return entry_migration.plan_entry(project_root, budget_policy=budget_policy)
     except (EntryError, OSError) as exc:
-        raise ProjectInitializationError(exc.reason if isinstance(exc, EntryError) else "storage_error") from exc
+        raise ProjectInitializationError(
+            exc.reason if isinstance(exc, EntryError) else "storage_error"
+        ) from exc
 
 
 def apply_agent_entry(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
@@ -60,10 +68,15 @@ def apply_agent_entry(project_root: Path, plan: dict[str, Any]) -> dict[str, Any
     try:
         receipt = entry_migration.apply_entry(project_root, plan, apply=True)
     except (EntryError, OSError) as exc:
-        raise ProjectInitializationError(exc.reason if isinstance(exc, EntryError) else "storage_error") from exc
+        raise ProjectInitializationError(
+            exc.reason if isinstance(exc, EntryError) else "storage_error"
+        ) from exc
     complete = receipt.get("action") in {"applied", "unchanged"}
-    return {"status": "complete" if complete else "blocked", "agent_entry": receipt,
-            "next_action": "continue" if complete else "rollback_agent_entry_transaction"}
+    return {
+        "status": "complete" if complete else "blocked",
+        "agent_entry": receipt,
+        "next_action": "continue" if complete else "rollback_agent_entry_transaction",
+    }
 
 
 def _create_project_root(project_root: Path) -> None:
@@ -76,24 +89,44 @@ def _create_project_root(project_root: Path) -> None:
         entry_migration.root_path(ancestor)
         project_root.mkdir(parents=True, exist_ok=True)
     except (EntryError, OSError) as exc:
-        raise ProjectInitializationError(exc.reason if isinstance(exc, EntryError) else "storage_error") from exc
+        raise ProjectInitializationError(
+            exc.reason if isinstance(exc, EntryError) else "storage_error"
+        ) from exc
 
 
-def status(project_root: Path, core: Any, *, workplace: str | None = None) -> dict[str, Any]:
+def status(
+    project_root: Path, core: Any, *, workplace: str | None = None
+) -> dict[str, Any]:
     """Return a non-mutating, public-safe initialization read model."""
     project_root = Path(project_root).expanduser().absolute()
     flow = project_root / ".pf"
     snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
-    context = core.project_context_check_result(project_root, explicit_workplace=workplace) if flow.is_dir() else {"status": "missing"}
-    health = context.get("health") if isinstance(context.get("health"), dict) else {}
+    context = (
+        core.project_context_check_result(project_root, explicit_workplace=workplace)
+        if flow.is_dir()
+        else {"status": "missing"}
+    )
+    health_value = context.get("health")
+    health = health_value if isinstance(health_value, dict) else {}
     snapshot = core.load_yaml_document(snapshot_path) if snapshot_path.is_file() else {}
-    resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-    missing_artifacts = [item for item in _DETERMINISTIC_ARTIFACTS if not (flow / item).is_file()] if flow.is_dir() else list(_DETERMINISTIC_ARTIFACTS)
+    resolved_value = snapshot.get("resolved")
+    resolved = resolved_value if isinstance(resolved_value, dict) else {}
+    missing_artifacts = (
+        [item for item in _DETERMINISTIC_ARTIFACTS if not (flow / item).is_file()]
+        if flow.is_dir()
+        else list(_DETERMINISTIC_ARTIFACTS)
+    )
     codex = optional_host_integration_status(project_root, core)
     hook_plan = None
     try:
-        workplace_manifest = ProjectCoordinationStateService().resolve_project_workplace_manifest(project_root, workplace)
-        hook_plan = ProjectAgentHookConfigurator().plan(project_root, workplace_manifest)
+        workplace_manifest = (
+            ProjectCoordinationStateService().resolve_project_workplace_manifest(
+                project_root, workplace
+            )
+        )
+        hook_plan = ProjectAgentHookConfigurator().plan(
+            project_root, workplace_manifest
+        )
         if hook_plan is not None:
             codex = hook_plan.report
     except AgentHookSetupError as exc:
@@ -107,9 +140,15 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
     else:
         state = "complete"
     base_state = state
-    required_hooks_missing = codex.get("required") is True and codex.get("status") != "installed"
+    required_hooks_missing = (
+        codex.get("required") is True and codex.get("status") != "installed"
+    )
     if required_hooks_missing and state != "incomplete":
-        state = "blocked" if state == "blocked" or codex.get("status") in {"invalid", "unavailable"} else "repairable"
+        state = (
+            "blocked"
+            if state == "blocked" or codex.get("status") in {"invalid", "unavailable"}
+            else "repairable"
+        )
     workplace_path = Path(workplace).expanduser() if workplace else None
     if workplace_path is None:
         workplace_state = "auto"
@@ -132,10 +171,31 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
             repair_plan.append("restore_deterministic_artifacts")
     if state != "incomplete" and entry.get("status") == "planned":
         repair_plan.append("migrate_agent_entry")
-    return {"schema_version": 1, "kind": "pf.project_initialization.status", "state": state, "snapshot": {"status": context.get("status"), "health": health.get("status")}, "snapshot_health": health.get("status"), "workplace": workplace_state, "resources": {"knowledge": _resource_state(resolved.get("knowledge_resources")), "tools": _resource_state(resolved.get("tools")), "mcp": _resource_state(mcp_rows), "templates": _resource_state(resolved.get("templates"))}, "mcp": "active_in_snapshot" if mcp_rows else "not_configured", "codex_integration": codex, "agent_entry": entry, "missing_deterministic_artifacts": missing_artifacts, "repair_plan": repair_plan or ["none"], "public_safety": "no_private_paths"}
+    return {
+        "schema_version": 1,
+        "kind": "pf.project_initialization.status",
+        "state": state,
+        "snapshot": {"status": context.get("status"), "health": health.get("status")},
+        "snapshot_health": health.get("status"),
+        "workplace": workplace_state,
+        "resources": {
+            "knowledge": _resource_state(resolved.get("knowledge_resources")),
+            "tools": _resource_state(resolved.get("tools")),
+            "mcp": _resource_state(mcp_rows),
+            "templates": _resource_state(resolved.get("templates")),
+        },
+        "mcp": "active_in_snapshot" if mcp_rows else "not_configured",
+        "codex_integration": codex,
+        "agent_entry": entry,
+        "missing_deterministic_artifacts": missing_artifacts,
+        "repair_plan": repair_plan or ["none"],
+        "public_safety": "no_private_paths",
+    }
 
 
-def apply(action: str, *, apply_requested: Any, execute: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+def apply(
+    action: str, *, apply_requested: Any, execute: Callable[[], dict[str, Any]]
+) -> dict[str, Any]:
     """Execute a supplied writer only after an exact explicit acknowledgement."""
     if apply_requested is not True:
         raise ProjectInitializationError("apply_required")
@@ -152,41 +212,80 @@ def _initialization_request(request: dict[str, Any], core: Any) -> dict[str, Any
     if workplace.is_dir():
         workplace = workplace / "workplace.yaml"
     answers_path = request.get("answers_path")
-    answers = AnswersDocumentReader().read(Path(str(answers_path)).expanduser().resolve() if answers_path else None)
+    answers = AnswersDocumentReader().read(
+        Path(str(answers_path)).expanduser().resolve() if answers_path else None
+    )
     supplied_answers = request.get("answers")
     if isinstance(supplied_answers, dict):
         answers.update(supplied_answers)
     project_type = request.get("project_type")
     if project_type:
-        project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
+        project_answers_value = answers.get("project")
+        project_answers = (
+            project_answers_value if isinstance(project_answers_value, dict) else {}
+        )
         project_answers["type"] = str(project_type)
         answers["project"] = project_answers
     coordination_mode = request.get("coordination_mode")
     if coordination_mode:
-        coordination_answers = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
+        coordination_answers_value = answers.get("coordination")
+        coordination_answers = (
+            coordination_answers_value
+            if isinstance(coordination_answers_value, dict)
+            else {}
+        )
         coordination_answers["mode"] = str(coordination_mode)
         answers["coordination"] = coordination_answers
-    platforms = [str(item) for item in request.get("platforms", []) if str(item)] if isinstance(request.get("platforms"), list) else []
+    platforms = (
+        [str(item) for item in request.get("platforms", []) if str(item)]
+        if isinstance(request.get("platforms"), list)
+        else []
+    )
     if platforms:
-        project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
+        project_answers_value = answers.get("project")
+        project_answers = (
+            project_answers_value if isinstance(project_answers_value, dict) else {}
+        )
         project_answers["platforms"] = platforms
         answers["project"] = project_answers
-    specializations = [str(item) for item in request.get("specializations", []) if str(item)] if isinstance(request.get("specializations"), list) else []
+    specializations = (
+        [str(item) for item in request.get("specializations", []) if str(item)]
+        if isinstance(request.get("specializations"), list)
+        else []
+    )
     if specializations:
         answers["specializations"] = specializations
     process_id = str(request.get("process") or "").strip()
     if process_id:
         answers["process"] = process_id
-    return {"project_root": project_root, "workplace": workplace, "answers": answers, "project_type": str(project_type) if project_type else None, "coordination_mode": str(coordination_mode) if coordination_mode else None, "force": bool(request.get("force", False)), "allow_missing_workplace": bool(request.get("allow_missing_workplace", False)), "command": str(request.get("command") or "project-onboard")}
+    return {
+        "project_root": project_root,
+        "workplace": workplace,
+        "answers": answers,
+        "project_type": str(project_type) if project_type else None,
+        "coordination_mode": str(coordination_mode) if coordination_mode else None,
+        "force": bool(request.get("force", False)),
+        "allow_missing_workplace": bool(request.get("allow_missing_workplace", False)),
+        "command": str(request.get("command") or "project-onboard"),
+    }
 
 
-def initialize_project(request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration,
-                       agent_hooks: ProjectAgentHookConfigurator | None = None) -> dict[str, Any]:
+def initialize_project(
+    request: dict[str, Any],
+    core: Any,
+    *,
+    build_project_files: ProjectFileGeneration,
+    agent_hooks: ProjectAgentHookConfigurator | None = None,
+) -> dict[str, Any]:
     """Plan or perform one deterministic initialization workflow for CLI and MCP."""
     normalized = _initialization_request(request, core)
     project_root, workplace = normalized["project_root"], normalized["workplace"]
     apply_requested = request.get("apply")
-    if apply_requested is True and not workplace.is_file() and not normalized["allow_missing_workplace"]:
+    if (
+        apply_requested is True
+        and not workplace.is_file()
+        and not normalized["allow_missing_workplace"]
+    ):
         raise ProjectInitializationError("workplace_manifest_required")
     if apply_requested is not True and not project_root.is_dir():
         raise ProjectInitializationError("project_root_missing")
@@ -206,6 +305,7 @@ def initialize_project(request: dict[str, Any], core: Any, *, build_project_file
         raise ProjectInitializationError(hook_error)
     files = build_project_files(project_root, workplace, normalized["answers"])
     if apply_requested is True:
+
         def execute() -> dict[str, Any]:
             result = core.execute_project_initialization(normalized, files)
             if hook_plan is not None and result.get("status") == "complete":
@@ -214,21 +314,40 @@ def initialize_project(request: dict[str, Any], core: Any, *, build_project_file
                 except AgentHookSetupError as exc:
                     raise ProjectInitializationError(exc.code) from exc
             return result
+
         return apply("initialize", apply_requested=True, execute=execute)
     planned = [core.rel(path, project_root) for path in files]
-    planned.extend(f"{core.PROJECT_FLOW_ROOT}/{item}" for item in core.PROJECT_FLOW_DIRS)
+    planned.extend(
+        f"{core.PROJECT_FLOW_ROOT}/{item}" for item in core.PROJECT_FLOW_DIRS
+    )
     planned.append(".gitignore")
     if hook_plan is not None:
         planned.append(hook_plan.report["target"])
     if apply_requested is not True:
-        result = {"action": "initialize", "applied": False, "status": "blocked" if entry_plan["blockers"] or hook_error else "planned", "mode": ProjectInitializationInputs().mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if entry_plan["blockers"] else "resolve_codex_hooks_blockers" if hook_error else "rerun with apply: true"}
+        result = {
+            "action": "initialize",
+            "applied": False,
+            "status": "blocked" if entry_plan["blockers"] or hook_error else "planned",
+            "mode": ProjectInitializationInputs().mode(
+                project_root, normalized["answers"]
+            ),
+            "planned_artifacts": sorted(set(planned)),
+            "agent_entry": entry_plan,
+            "next_action": "resolve_entry_blockers"
+            if entry_plan["blockers"]
+            else "resolve_codex_hooks_blockers"
+            if hook_error
+            else "rerun with apply: true",
+        }
         if hook_plan is not None:
             result["codex_integration"] = hook_plan.report
         return result
     raise ProjectInitializationError("apply_required")
 
 
-def repair_project(request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration) -> dict[str, Any]:
+def repair_project(
+    request: dict[str, Any], core: Any, *, build_project_files: ProjectFileGeneration
+) -> dict[str, Any]:
     """Repair deterministic project state only; it never performs onboarding."""
     raw_root = request.get("project_root")
     if not raw_root:
@@ -237,7 +356,12 @@ def repair_project(request: dict[str, Any], core: Any, *, build_project_files: P
     if not project_root.is_dir() or not (project_root / ".pf").is_dir():
         raise ProjectInitializationError("project_not_initialized")
     action = str(request.get("repair_action") or "refresh_context")
-    if action not in {"refresh_context", "restore_deterministic_artifacts", "migrate_agent_entry", "install_codex_hooks"}:
+    if action not in {
+        "refresh_context",
+        "restore_deterministic_artifacts",
+        "migrate_agent_entry",
+        "install_codex_hooks",
+    }:
         raise ProjectInitializationError("unsupported_repair_action")
     workplace = request.get("workplace")
     before = status(project_root, core, workplace=str(workplace) if workplace else None)
@@ -248,32 +372,119 @@ def repair_project(request: dict[str, Any], core: Any, *, build_project_files: P
             raise ProjectInitializationError(entry_plan["blockers"][0])
     if request.get("apply") is not True:
         blocked = bool(entry_plan and entry_plan["blockers"])
-        return {"action": "repair", "applied": False, "status": "blocked" if blocked else "planned", "repair_action": action, "before": {"state": before["state"], "snapshot": before["snapshot"], "agent_entry": before["agent_entry"]}, "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if blocked else "rerun with apply: true"}
+        return {
+            "action": "repair",
+            "applied": False,
+            "status": "blocked" if blocked else "planned",
+            "repair_action": action,
+            "before": {
+                "state": before["state"],
+                "snapshot": before["snapshot"],
+                "agent_entry": before["agent_entry"],
+            },
+            "agent_entry": entry_plan,
+            "next_action": "resolve_entry_blockers"
+            if blocked
+            else "rerun with apply: true",
+        }
     if action == "migrate_agent_entry":
-        return apply("repair", apply_requested=True, execute=lambda: apply_agent_entry(project_root, entry_plan))
+        assert isinstance(entry_plan, dict)
+        migration_plan = entry_plan
+        return apply(
+            "repair",
+            apply_requested=True,
+            execute=lambda: apply_agent_entry(project_root, migration_plan),
+        )
     if action == "restore_deterministic_artifacts":
-        def restore() -> dict[str, Any]:
-            manifest = core.load_yaml_document(project_root / ".pf" / "process-forge.yaml")
-            answers = {key: manifest[key] for key in ("project", "coordination", "context_requirements", "context_policy", "parameters", "specializations", "process") if isinstance(manifest, dict) and key in manifest}
-            platforms = manifest.get("platform_contracts") if isinstance(manifest, dict) and isinstance(manifest.get("platform_contracts"), list) else []
-            project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
-            project_answers["platforms"] = [str(item.get("id") or item.get("platform") or "") for item in platforms if isinstance(item, dict) and str(item.get("id") or item.get("platform") or "")]
-            answers["project"] = project_answers
-            from processforge_core.project.coordination_state import ProjectCoordinationStateService
 
-            files = build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else ProjectCoordinationStateService().resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
-            return core.execute_project_initialization({"project_root": project_root, "project_type": project_answers.get("type"), "force": False, "command": "project-init-repair", "agent_entry_plan": entry_plan}, files)
+        def restore() -> dict[str, Any]:
+            manifest = core.load_yaml_document(
+                project_root / ".pf" / "process-forge.yaml"
+            )
+            answers = {
+                key: manifest[key]
+                for key in (
+                    "project",
+                    "coordination",
+                    "context_requirements",
+                    "context_policy",
+                    "parameters",
+                    "specializations",
+                    "process",
+                )
+                if isinstance(manifest, dict) and key in manifest
+            }
+            platform_values = (
+                manifest.get("platform_contracts")
+                if isinstance(manifest, dict)
+                else None
+            )
+            platforms = platform_values if isinstance(platform_values, list) else []
+            project_answers_value = answers.get("project")
+            project_answers = (
+                project_answers_value if isinstance(project_answers_value, dict) else {}
+            )
+            project_answers["platforms"] = [
+                str(item.get("id") or item.get("platform") or "")
+                for item in platforms
+                if isinstance(item, dict)
+                and str(item.get("id") or item.get("platform") or "")
+            ]
+            answers["project"] = project_answers
+            from processforge_core.project.coordination_state import (
+                ProjectCoordinationStateService,
+            )
+
+            workplace_manifest = (
+                Path(str(workplace)).expanduser().resolve() / "workplace.yaml"
+                if workplace and Path(str(workplace)).is_dir()
+                else Path(str(workplace)).expanduser().resolve()
+                if workplace
+                else ProjectCoordinationStateService().resolve_workplace_manifest(
+                    project_root / ".pf" / "process-forge.local.yaml"
+                )
+            )
+            if workplace_manifest is None:
+                raise ProjectInitializationError("workplace_manifest_required")
+            files = build_project_files(project_root, workplace_manifest, answers)
+            return core.execute_project_initialization(
+                {
+                    "project_root": project_root,
+                    "project_type": project_answers.get("type"),
+                    "force": False,
+                    "command": "project-init-repair",
+                    "agent_entry_plan": entry_plan,
+                },
+                files,
+            )
+
         return apply("repair", apply_requested=True, execute=restore)
     if action == "install_codex_hooks":
         if not hasattr(core, "execute_project_codex_integration_repair"):
             raise ProjectInitializationError("codex_integration_unsupported")
-        return apply("repair", apply_requested=True, execute=lambda: core.execute_project_codex_integration_repair(project_root))
-    return apply("repair", apply_requested=True, execute=lambda: core.execute_project_repair(project_root, workplace=str(workplace) if workplace else None, reason=str(request.get("reason") or "manual")))
+        return apply(
+            "repair",
+            apply_requested=True,
+            execute=lambda: core.execute_project_codex_integration_repair(project_root),
+        )
+    return apply(
+        "repair",
+        apply_requested=True,
+        execute=lambda: core.execute_project_repair(
+            project_root,
+            workplace=str(workplace) if workplace else None,
+            reason=str(request.get("reason") or "manual"),
+        ),
+    )
 
 
-def initialize(*, apply_requested: Any, execute: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+def initialize(
+    *, apply_requested: Any, execute: Callable[[], dict[str, Any]]
+) -> dict[str, Any]:
     return apply("initialize", apply_requested=apply_requested, execute=execute)
 
 
-def repair(*, apply_requested: Any, execute: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+def repair(
+    *, apply_requested: Any, execute: Callable[[], dict[str, Any]]
+) -> dict[str, Any]:
     return apply("repair", apply_requested=apply_requested, execute=execute)

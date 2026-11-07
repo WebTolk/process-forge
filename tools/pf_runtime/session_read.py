@@ -13,7 +13,6 @@ from typing import Any
 
 from . import host
 
-
 MAX_CHAT_LIMIT = 100
 MAX_ACTIVITY_LIMIT = 100
 MAX_CONTEXT_ACTIVITY = 20
@@ -71,7 +70,9 @@ def _authorized_project(
     return project_root, presence
 
 
-def _project_summary(project_root: Path, workplace_root: Path, core: Any) -> dict[str, Any]:
+def _project_summary(
+    project_root: Path, workplace_root: Path, core: Any
+) -> dict[str, Any]:
     handle = host.route_project(str(project_root), workplace_root, core)
     return {
         "id": handle.get("project_id"),
@@ -81,9 +82,12 @@ def _project_summary(project_root: Path, workplace_root: Path, core: Any) -> dic
 
 
 def _activity_fact(event: dict[str, Any]) -> dict[str, Any]:
-    assignment = event.get("assignment") if isinstance(event.get("assignment"), dict) else {}
-    process = event.get("process") if isinstance(event.get("process"), dict) else {}
-    actor = event.get("actor") if isinstance(event.get("actor"), dict) else {}
+    assignment_value = event.get("assignment")
+    assignment = assignment_value if isinstance(assignment_value, dict) else {}
+    process_value = event.get("process")
+    process = process_value if isinstance(process_value, dict) else {}
+    actor_value = event.get("actor")
+    actor = actor_value if isinstance(actor_value, dict) else {}
     return {
         "event_id": event.get("event_id"),
         "time": event.get("time"),
@@ -93,14 +97,21 @@ def _activity_fact(event: dict[str, Any]) -> dict[str, Any]:
         "assignment_id": assignment.get("id"),
         "process_id": process.get("id"),
         "stage_id": process.get("stage_id"),
-        "actor": {"id": actor.get("id"), "role": actor.get("role"), "type": actor.get("type")},
+        "actor": {
+            "id": actor.get("id"),
+            "role": actor.get("role"),
+            "type": actor.get("type"),
+        },
     }
 
 
-def _session_activity_rows(project_root: Path, core: Any, session_id: str) -> list[dict[str, Any]]:
+def _session_activity_rows(
+    project_root: Path, core: Any, session_id: str
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for event in host.journal_events(project_root, core):
-        session = event.get("session") if isinstance(event.get("session"), dict) else {}
+        session_value = event.get("session")
+        session = session_value if isinstance(session_value, dict) else {}
         if str(session.get("id") or "") == session_id:
             rows.append(_activity_fact(event))
     return rows
@@ -109,10 +120,14 @@ def _session_activity_rows(project_root: Path, core: Any, session_id: str) -> li
 def session_context_payload(
     workplace_root: Path, core: Any, *, session_id: str, project_root_ref: Any = None
 ) -> dict[str, Any]:
-    project_root, presence = _authorized_project(workplace_root, core, session_id, project_root_ref)
+    project_root, presence = _authorized_project(
+        workplace_root, core, session_id, project_root_ref
+    )
     execution = host.active_execution_records(project_root, core)
     active = execution[0] if execution else {}
-    context = core.project_context_check_result(project_root, explicit_workplace=str(workplace_root))
+    context = core.project_context_check_result(
+        project_root, explicit_workplace=str(workplace_root)
+    )
     project_id = core.project_id(project_root)
     from processforge_core.agents.presence import AgentPresenceReader
 
@@ -128,41 +143,79 @@ def session_context_payload(
         if str(item.get("project_id") or "") == project_id
     ]
     blockers = [
-        {"kind": "assignment", "task_id": item.get("task_id"), "status": item.get("task_status")}
+        {
+            "kind": "assignment",
+            "task_id": item.get("task_id"),
+            "status": item.get("task_status"),
+        }
         for item in execution
         if str(item.get("task_status") or "") == "blocked"
     ]
-    health = context.get("health") if isinstance(context.get("health"), dict) else {}
-    resource_readiness = context.get("resource_readiness") if isinstance(context.get("resource_readiness"), dict) else {}
-    execution_readiness = context.get("execution_readiness") if isinstance(context.get("execution_readiness"), dict) else {}
+    health_value = context.get("health")
+    health = health_value if isinstance(health_value, dict) else {}
+    resource_readiness_value = context.get("resource_readiness")
+    resource_readiness = (
+        resource_readiness_value if isinstance(resource_readiness_value, dict) else {}
+    )
+    execution_readiness_value = context.get("execution_readiness")
+    execution_readiness = (
+        execution_readiness_value if isinstance(execution_readiness_value, dict) else {}
+    )
     obligations_projection = host.stage_obligations_payload(project_root, core)
-    obligations = obligations_projection.get("obligations") if isinstance(obligations_projection.get("obligations"), list) else []
-    active_obligation = next((item for item in obligations if isinstance(item, dict) and str(item.get("task_id") or "") == str(active.get("task_id") or "")), {})
+    obligations_value = obligations_projection.get("obligations")
+    obligations = obligations_value if isinstance(obligations_value, list) else []
+    active_obligation = next(
+        (
+            item
+            for item in obligations
+            if isinstance(item, dict)
+            and str(item.get("task_id") or "") == str(active.get("task_id") or "")
+        ),
+        {},
+    )
     search_projection = {"status": "unavailable", "generation": None, "stale": True}
     if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
         try:
-            from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
+            from processforge_core.resources.catalog_read import (
+                WorkplaceSearchCatalogReader,
+            )
             from processforge_core.resources.local_search import ResourceSearchIndex
 
             # The shared Workplace index has no project-snapshot state.  The
             # snapshot remains an authorization filter for pf.search only.
-            index_snapshot = WorkplaceSearchCatalogReader(workplace_root).runtime_snapshot()
-            search_status = ResourceSearchIndex(workplace_root, index_snapshot, workplace_root).status()
+            index_snapshot = WorkplaceSearchCatalogReader(
+                workplace_root
+            ).runtime_snapshot()
+            search_status = ResourceSearchIndex(
+                workplace_root, index_snapshot, workplace_root
+            ).status()
             search_projection = {
                 "status": search_status.get("status"),
                 "generation": search_status.get("generation"),
                 "stale": search_status.get("status") not in {"fresh"},
             }
         except Exception:
-            search_projection = {"status": "degraded", "generation": None, "stale": True}
+            search_projection = {
+                "status": "degraded",
+                "generation": None,
+                "stale": True,
+            }
     if str(context.get("status") or "") not in {"fresh", "fresh_with_updates", "ok"}:
-        blockers.append({"kind": "context", "status": context.get("status"), "health": health.get("status")})
+        blockers.append(
+            {
+                "kind": "context",
+                "status": context.get("status"),
+                "health": health.get("status"),
+            }
+        )
     if str(execution_readiness.get("status") or "") == "blocked":
         blockers.append(
             {
                 "kind": "execution",
                 "status": "blocked",
-                "missing_capabilities": execution_readiness.get("missing_capabilities", []),
+                "missing_capabilities": execution_readiness.get(
+                    "missing_capabilities", []
+                ),
             }
         )
     return {
@@ -199,7 +252,9 @@ def session_context_payload(
         "active_agents": agents[:20],
         "context_freshness": {
             "status": context.get("status"),
-            "policy_action": (context.get("policy") or {}).get("action") if isinstance(context.get("policy"), dict) else None,
+            "policy_action": (context.get("policy") or {}).get("action")
+            if isinstance(context.get("policy"), dict)
+            else None,
             "health": health.get("status"),
         },
         "resource_readiness": resource_readiness,
@@ -209,7 +264,16 @@ def session_context_payload(
         # Context is authorized by the session, but must describe current
         # project work even when a durable fact was emitted by another active
         # project agent rather than this exact session.
-        "recent_activity": list(reversed([_activity_fact(item) for item in host.journal_events(project_root, core)[-MAX_CONTEXT_ACTIVITY:]])),
+        "recent_activity": list(
+            reversed(
+                [
+                    _activity_fact(item)
+                    for item in host.journal_events(project_root, core)[
+                        -MAX_CONTEXT_ACTIVITY:
+                    ]
+                ]
+            )
+        ),
     }
 
 
@@ -224,14 +288,22 @@ def session_chat_payload(
     cursor: Any = None,
     roles: Any = None,
 ) -> dict[str, Any]:
-    project_root, _presence = _authorized_project(workplace_root, core, session_id, project_root_ref)
+    project_root, _presence = _authorized_project(
+        workplace_root, core, session_id, project_root_ref
+    )
     page_limit = _bounded_limit(limit, default=50, maximum=MAX_CHAT_LIMIT)
-    if before not in (None, "") and cursor not in (None, "") and str(before) != str(cursor):
+    if (
+        before not in (None, "")
+        and cursor not in (None, "")
+        and str(before) != str(cursor)
+    ):
         raise SessionReadError("ambiguous_cursor")
     boundary = str(before or cursor or "")
     role_filter: set[str] = set()
     if roles is not None:
-        if not isinstance(roles, list) or not all(isinstance(item, str) for item in roles):
+        if not isinstance(roles, list) or not all(
+            isinstance(item, str) for item in roles
+        ):
             raise SessionReadError("invalid_roles")
         role_filter = set(roles)
         if not role_filter.issubset({"user", "assistant", "system"}):
@@ -240,10 +312,18 @@ def session_chat_payload(
 
     messages = ChatTranscriptReader(project_root).messages(session_id)
     if role_filter:
-        messages = [item for item in messages if str((item.get("message") or {}).get("role") or "") in role_filter]
+        messages = [
+            item
+            for item in messages
+            if str((item.get("message") or {}).get("role") or "") in role_filter
+        ]
     end = len(messages)
     if boundary:
-        matching = [index for index, item in enumerate(messages) if str(item.get("message_id") or "") == boundary]
+        matching = [
+            index
+            for index, item in enumerate(messages)
+            if str(item.get("message_id") or "") == boundary
+        ]
         if not matching:
             raise SessionReadError("invalid_cursor")
         end = matching[0]
@@ -255,15 +335,30 @@ def session_chat_payload(
         "schema_version": 1,
         "kind": "pf.session_chat",
         "session_id": session_id,
-        "messages": ChatExportService().chat_export_messages(page, include_content=True),
-        "page": {"limit": page_limit, "before": boundary or None, "next_before": str(messages[start].get("message_id") or "") if start > 0 and page else None},
+        "messages": ChatExportService().chat_export_messages(
+            page, include_content=True
+        ),
+        "page": {
+            "limit": page_limit,
+            "before": boundary or None,
+            "next_before": str(messages[start].get("message_id") or "")
+            if start > 0 and page
+            else None,
+        },
     }
 
 
 def session_activity_payload(
-    workplace_root: Path, core: Any, *, session_id: str, project_root_ref: Any = None, limit: Any = None
+    workplace_root: Path,
+    core: Any,
+    *,
+    session_id: str,
+    project_root_ref: Any = None,
+    limit: Any = None,
 ) -> dict[str, Any]:
-    project_root, _presence = _authorized_project(workplace_root, core, session_id, project_root_ref)
+    project_root, _presence = _authorized_project(
+        workplace_root, core, session_id, project_root_ref
+    )
     page_limit = _bounded_limit(limit, default=50, maximum=MAX_ACTIVITY_LIMIT)
     # The caller is scoped by its Ledger session; activity is a current-project
     # read model, not a filter that hides work emitted by peer project agents.

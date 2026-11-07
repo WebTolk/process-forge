@@ -1,4 +1,5 @@
 """Existing bounded Continuation control-document, path and writer checks."""
+
 from __future__ import annotations
 
 import hashlib
@@ -9,29 +10,43 @@ from typing import Any, Callable
 
 @dataclass(frozen=True, kw_only=True)
 class ContinuationRecordReader:
-    path_resolver: Callable[[], Callable[[str], Path]] = field(repr=False, compare=False)
+    path_resolver: Callable[[], Callable[[str], Path]] = field(
+        repr=False, compare=False
+    )
     selector: Callable[[], Callable[[str], str]] = field(repr=False, compare=False)
-    bounded_reader: Callable[[], Callable[[Path, int], bytes]] = field(repr=False, compare=False)
+    bounded_reader: Callable[[], Callable[[Path, int], bytes]] = field(
+        repr=False, compare=False
+    )
     yaml_loader: Callable[[], Callable[[str], Any]] = field(repr=False, compare=False)
     error: Callable[[], type[ValueError]] = field(repr=False, compare=False)
     workplace: Callable[[], Path | None] = field(repr=False, compare=False)
-    leases_directory: Callable[[], Callable[[Path | None], Path]] = field(repr=False, compare=False)
-    control_loader: Callable[[], Callable[[Path], dict]] = field(repr=False, compare=False)
+    leases_directory: Callable[[], Callable[[Path], Path]] = field(
+        repr=False, compare=False
+    )
+    control_loader: Callable[[], Callable[[Path], dict]] = field(
+        repr=False, compare=False
+    )
 
     def record_path(self, continuation_id: str) -> Path:
-        return self.path_resolver()(".pf/continuations/" + self.selector()(continuation_id) + ".yaml")
-
+        return self.path_resolver()(
+            ".pf/continuations/" + self.selector()(continuation_id) + ".yaml"
+        )
 
     def selection_path(self, session_id: str) -> Path:
         if not isinstance(session_id, str) or not session_id or len(session_id) > 256:
             raise self.error()("invalid_session")
-        return self.path_resolver()(".pf/continuations/selections/" + hashlib.sha256(session_id.encode()).hexdigest() + ".yaml")
-
+        return self.path_resolver()(
+            ".pf/continuations/selections/"
+            + hashlib.sha256(session_id.encode()).hexdigest()
+            + ".yaml"
+        )
 
     def load(self, path: Path) -> dict:
         if not path.exists():
             raise self.error()("continuation_not_found")
-        data = self.yaml_loader()(self.bounded_reader()(path, 2 * 1024 * 1024).decode("utf-8-sig"))
+        data = self.yaml_loader()(
+            self.bounded_reader()(path, 2 * 1024 * 1024).decode("utf-8-sig")
+        )
         if not isinstance(data, dict):
             raise self.error()("continuation_state_invalid")
         return data
@@ -41,9 +56,10 @@ class ContinuationRecordReader:
         from ..executions.composition import select_execution_storage
         from ..executions.model import ExecutionError
 
+        workplace = self.workplace()
         project_root = self.path_resolver()(".pf/process-forge.yaml").parent.parent
         try:
-            route = select_execution_storage(project_root, self.workplace())
+            route = select_execution_storage(project_root, workplace)
             record = (
                 route.repository.load_latest(
                     binding["run_id"], binding["assignment_id"]
@@ -68,8 +84,8 @@ class ContinuationRecordReader:
                 "collected",
             }:
                 raise self.error()("worker_not_quiescent")
-        if self.workplace():
-            for path in self.leases_directory()(self.workplace()).glob("*.yaml"):
+        if workplace:
+            for path in self.leases_directory()(workplace).glob("*.yaml"):
                 lease = self.control_loader()(path)
                 scope = lease.get("scope") or {}
                 if lease.get("status") == "active" and all(

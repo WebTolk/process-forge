@@ -7,6 +7,7 @@ import json
 import re
 import sqlite3
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from pathlib import Path
 
 from processforge_core.database.errors import DatabaseError
@@ -35,7 +36,10 @@ class JournalMaintenanceCommand:
         maintenance_factory: Callable[
             [], JournalMaintenanceService
         ] = JournalMaintenanceService,
-        execution_factory: Callable[[Path], ExecutionMigrationService] | None = None,
+        execution_factory: Callable[
+            [Path], AbstractContextManager[ExecutionMigrationService]
+        ]
+        | None = None,
     ) -> None:
         """Save narrow cold factories without constructing services or doing I/O."""
         self._backup_factory = backup_factory
@@ -95,38 +99,40 @@ class JournalMaintenanceCommand:
             if self._execution_factory is None:
                 raise MaintenanceError("execution_safety_unavailable")
             project = Path(args.maintenance_project_root)
-            service = self._execution_factory(project)
-            if operation == "execution-inspect":
-                return service.inspect(project, evidence_dir=args.evidence_dir)
-            if operation == "execution-resume":
-                if (
-                    not args.apply
-                    or not args.offline_confirmed
-                    or args.evidence_dir is None
+            with self._execution_factory(project) as service:
+                if operation == "execution-inspect":
+                    return service.inspect(project, evidence_dir=args.evidence_dir)
+                if operation == "execution-resume":
+                    if (
+                        not args.apply
+                        or not args.offline_confirmed
+                        or args.evidence_dir is None
+                    ):
+                        raise MaintenanceError("execution_apply_arguments_required")
+                    return service.resume(
+                        project,
+                        migration_id=args.migration_id,
+                        plan_checksum=args.plan_checksum,
+                        evidence_dir=args.evidence_dir,
+                        offline_confirmed=args.offline_confirmed,
+                    )
+                if args.apply and (
+                    args.evidence_dir is None or not args.offline_confirmed
                 ):
                     raise MaintenanceError("execution_apply_arguments_required")
-                return service.resume(
+                plan = service.plan(
                     project,
-                    migration_id=args.migration_id,
-                    plan_checksum=args.plan_checksum,
+                    skip_terminal_invalid=args.skip_terminal_invalid,
+                    evidence_dir=args.evidence_dir if not args.apply else None,
+                )
+                if not args.apply or plan.get("blocked"):
+                    return plan
+                return service.apply(
+                    project,
+                    plan,
                     evidence_dir=args.evidence_dir,
                     offline_confirmed=args.offline_confirmed,
                 )
-            if args.apply and (args.evidence_dir is None or not args.offline_confirmed):
-                raise MaintenanceError("execution_apply_arguments_required")
-            plan = service.plan(
-                project,
-                skip_terminal_invalid=args.skip_terminal_invalid,
-                evidence_dir=args.evidence_dir if not args.apply else None,
-            )
-            if not args.apply or plan.get("blocked"):
-                return plan
-            return service.apply(
-                project,
-                plan,
-                evidence_dir=args.evidence_dir,
-                offline_confirmed=args.offline_confirmed,
-            )
         if operation == "backup":
             return self._backup_factory().create(Path(args.database), Path(args.output))
         if operation == "verify":

@@ -21,7 +21,7 @@ class AnswersDocumentReader:
         if any(pattern.search(text) for pattern in SECRET_VALUE_PATTERNS):
             raise SystemExit("FAIL: answers file appears to contain a secret value")
         try:
-            import yaml  # type: ignore
+            import yaml
 
             data = yaml.safe_load(text)
             return data if isinstance(data, dict) else {}

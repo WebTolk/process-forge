@@ -855,9 +855,37 @@ def test_real_legacy_cli_timeout_cleans_owned_grandchild(
             core._legacy_tree_probe(root, "run", "task", state, stop=True)
 
 
+def _forbid_legacy_effects(monkeypatch):
+    import pf_native_control
+    import processforge as core
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("unknown legacy execution must not launch or signal")
+
+    monkeypatch.setattr(pf_native_control, "spawn_owned", forbidden)
+    monkeypatch.setattr(core, "terminate_worker_pid", forbidden)
+    import prepared_executor
+
+    monkeypatch.setattr(prepared_executor, "signal_owned_tree", forbidden)
+
+
+def _assert_legacy_unknown(root, paths, state, before_attempts):
+    import processforge as core
+
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    current = core.load_agent_run_state(root, "run", "task")
+    assert current["attempt"] == state["attempt"]
+    assert current["pid"] == state["pid"]
+    assert current["status"] == "running"
+    assert set((paths["root"] / "attempts").iterdir()) == before_attempts
+    assert not ExecutionAdmission.held(root, None)
+    assert not core._WORKER_LIFECYCLE_GATES.get()
+
+
 @pytest.mark.parametrize("terminal_status", ["timed_out", "completed"])
 def test_legacy_terminal_unknown_ownership_does_not_signal(
-    sql_cli_fixture, monkeypatch, terminal_status
+    sql_cli_fixture, monkeypatch, terminal_status, capsys
 ):
     import processforge as core
 
@@ -875,12 +903,28 @@ def test_legacy_terminal_unknown_ownership_does_not_signal(
     state.update(status=terminal_status, pid=os.getpid(), failure_reason="timeout")
     core._core_common_json_io.json_write(paths["status"], state)
     task = core._worker_assignment_service.load(root, "task")
-    assert core.existing_running_worker_run(root, task) is not None
-    assert core.command_worker_run_stop(args) == 1
-    assert core.load_agent_run_state(root, "run", "task")["status"] == "running"
+    before_attempts = set((paths["root"] / "attempts").iterdir())
+    before_task = core._worker_assignment_service.load(root, "task")
+    _forbid_legacy_effects(monkeypatch)
+    with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+        core.existing_running_worker_run(root, task)
+    outcomes = []
+    for command in (
+        core.command_worker_run_prepare,
+        core.command_worker_run_start,
+        core.command_worker_run_stop,
+    ):
+        capsys.readouterr()
+        result = command(args)
+        outcomes.append((result, capsys.readouterr().out.strip()))
+        _assert_legacy_unknown(root, paths, state, before_attempts)
+    assert core._worker_assignment_service.load(root, "task") == before_task
+    assert outcomes == [(1, "FAIL: execution_activity_unknown")] * 3
 
 
-def test_legacy_ambiguous_spawn_never_releases_ownership(sql_cli_fixture, monkeypatch):
+def test_legacy_ambiguous_spawn_never_releases_ownership(
+    sql_cli_fixture, monkeypatch, capsys
+):
     import pf_native_control
     import processforge as core
 
@@ -893,7 +937,10 @@ def test_legacy_ambiguous_spawn_never_releases_ownership(sql_cli_fixture, monkey
     monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
     assert core.command_worker_run_prepare(args) == 0
 
+    launches = []
+
     def ambiguous(*args, **kwargs):
+        launches.append((args, kwargs))
         raise OSError("fixture ambiguity")
 
     monkeypatch.setattr(pf_native_control, "spawn_owned", ambiguous)
@@ -901,9 +948,22 @@ def test_legacy_ambiguous_spawn_never_releases_ownership(sql_cli_fixture, monkey
     state = core.load_agent_run_state(root, "run", "task")
     assert state["status"] == "running" and state["pid"] is None
     assert state["failure_reason"] == "execution activity unknown"
-    assert core.command_worker_run_prepare(args) == 0  # skipped, not reallocated
-    assert core.load_agent_run_state(root, "run", "task")["attempt"] == state["attempt"]
-    assert core.command_worker_run_stop(args) == 1
+    assert len(launches) == 1
+    paths = core._work_paths.worker_run(root, "run", "task")
+    before_attempts = set((paths["root"] / "attempts").iterdir())
+    before_task = core._worker_assignment_service.load(root, "task")
+    _forbid_legacy_effects(monkeypatch)
+    for command in (
+        core.command_worker_run_prepare,
+        core.command_worker_run_start,
+        core.command_worker_run_stop,
+    ):
+        capsys.readouterr()
+        assert command(args) == 1
+        assert capsys.readouterr().out.strip() == "FAIL: execution_activity_unknown"
+        _assert_legacy_unknown(root, paths, state, before_attempts)
+    assert len(launches) == 1
+    assert core._worker_assignment_service.load(root, "task") == before_task
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")

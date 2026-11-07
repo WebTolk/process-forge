@@ -9,7 +9,6 @@ from processforge_core.documents.reader import YamlDocumentReader
 
 from .models import ProcessCatalogContext, ProcessDefinitionRef
 
-
 _documents = YamlDocumentReader(fallback=_parse_simple_yaml)
 load_yaml_document = _documents.load
 read_yaml_file = _documents.read
@@ -33,7 +32,8 @@ def _as_list(value: Any) -> list[Any]:
 
 
 def process_catalog_metadata(process: dict[str, Any]) -> dict[str, Any]:
-    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
+    catalog_value = process.get("catalog")
+    catalog = catalog_value if isinstance(catalog_value, dict) else {}
     status = str(process.get("status") or "draft")
     classification = str(catalog.get("classification") or "").upper()
     if classification not in PROCESS_CATALOG_CLASSIFICATIONS:
@@ -47,12 +47,20 @@ def process_catalog_metadata(process: dict[str, Any]) -> dict[str, Any]:
             classification = "DEPRECATED"
         else:
             classification = "PUBLIC_EXPERIMENTAL"
-    public_surface = catalog.get("public_surface", process.get("public_surface", classification != "INTERNAL_MAINTENANCE"))
-    return {"classification": classification, "public_surface": bool(public_surface), "status": status}
+    public_surface = catalog.get(
+        "public_surface",
+        process.get("public_surface", classification != "INTERNAL_MAINTENANCE"),
+    )
+    return {
+        "classification": classification,
+        "public_surface": bool(public_surface),
+        "status": status,
+    }
 
 
 def process_catalog_role(process: dict[str, Any]) -> str:
-    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
+    catalog_value = process.get("catalog")
+    catalog = catalog_value if isinstance(catalog_value, dict) else {}
     role = str(catalog.get("role") or "").strip()
     if role:
         return safe_id(role, "canonical")
@@ -64,19 +72,28 @@ def process_catalog_role(process: dict[str, Any]) -> str:
     return "canonical"
 
 
-def _process_override_declared(process: dict[str, Any], overridden_process_id: str) -> bool:
-    override = process.get("process_override") if isinstance(process.get("process_override"), dict) else {}
-    return str(override.get("overrides") or "") == overridden_process_id and bool(str(override.get("reason") or "").strip())
+def _process_override_declared(
+    process: dict[str, Any], overridden_process_id: str
+) -> bool:
+    override_value = process.get("process_override")
+    override = override_value if isinstance(override_value, dict) else {}
+    return str(override.get("overrides") or "") == overridden_process_id and bool(
+        str(override.get("reason") or "").strip()
+    )
 
 
 def official_pack_manifest_records(
-    distribution_root: Path, *, documents: YamlDocumentReader | None = None,
+    distribution_root: Path,
+    *,
+    documents: YamlDocumentReader | None = None,
 ) -> list[tuple[Path, dict[str, Any]]]:
     """One owner for the existing ordered official-pack manifest traversal."""
     distribution_root = distribution_root.resolve()
     load = documents.load if documents is not None else load_yaml_document
     records: list[tuple[Path, dict[str, Any]]] = []
-    for path in sorted((distribution_root / "packs" / "official").glob("*/package.yaml")):
+    for path in sorted(
+        (distribution_root / "packs" / "official").glob("*/package.yaml")
+    ):
         data = load(path)
         if (
             isinstance(data, dict)
@@ -89,7 +106,9 @@ def official_pack_manifest_records(
     return records
 
 
-def _official_pack_manifest_records(context: ProcessCatalogContext) -> list[tuple[Path, dict[str, Any]]]:
+def _official_pack_manifest_records(
+    context: ProcessCatalogContext,
+) -> list[tuple[Path, dict[str, Any]]]:
     return official_pack_manifest_records(context.distribution_root)
 
 
@@ -106,8 +125,11 @@ def _official_process_definition_refs(
         if not active and not include_available:
             continue
         process_root = manifest_path.parent / "processes"
-        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
-        declared = {str(item) for item in _as_list(provided.get("processes")) if str(item)}
+        provided_value = manifest.get("provides")
+        provided = provided_value if isinstance(provided_value, dict) else {}
+        declared = {
+            str(item) for item in _as_list(provided.get("processes")) if str(item)
+        }
         for path in sorted(process_root.glob("*.yaml")):
             data = load_yaml_document(path)
             if yaml_error(data) or not isinstance(data, dict):
@@ -144,7 +166,9 @@ def official_process_definition_refs(
     )
 
 
-def _process_root_candidates(context: ProcessCatalogContext) -> list[tuple[Path, str, bool]]:
+def _process_root_candidates(
+    context: ProcessCatalogContext,
+) -> list[tuple[Path, str, bool]]:
     candidates = [
         (context.flow_root / "processes" / "user", "user", False),
         (context.flow_root / "processes" / "custom", "custom", False),
@@ -180,7 +204,13 @@ def _process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
         return []
     if legacy_flat:
         return sorted([*root.glob("*.yaml"), *root.glob("*.yml")])
-    return sorted([path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}])
+    return sorted(
+        [
+            path
+            for path in root.rglob("*")
+            if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}
+        ]
+    )
 
 
 def process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
@@ -260,20 +290,32 @@ def resolve_process_definition(
 ) -> ProcessDefinitionRef:
     candidate = Path(process_or_path)
     if candidate.suffix in {".yaml", ".yml"}:
-        path = candidate if candidate.is_absolute() else context.project_root / candidate
+        path = (
+            candidate if candidate.is_absolute() else context.project_root / candidate
+        )
         if path.is_file():
-            for official_entry in _official_process_definition_refs(context, include_available=True):
+            for official_entry in _official_process_definition_refs(
+                context, include_available=True
+            ):
                 if official_entry.path.resolve() == path.resolve():
                     return official_entry
             data = read_yaml_file(path)
-            process_id = str(data.get("id") or path.stem) if isinstance(data, dict) else path.stem
+            process_id = (
+                str(data.get("id") or path.stem)
+                if isinstance(data, dict)
+                else path.stem
+            )
             origin = "legacy_flat"
             root = path.parent
             parts = path.parts
             if "processes" in parts:
                 try:
                     index = parts.index("processes")
-                    if len(parts) > index + 1 and parts[index + 1] in {"core", "user", "custom"}:
+                    if len(parts) > index + 1 and parts[index + 1] in {
+                        "core",
+                        "user",
+                        "custom",
+                    }:
                         origin = parts[index + 1]
                         root = Path(*parts[: index + 2])
                 except ValueError:
@@ -305,7 +347,9 @@ def resolve_process_definition(
     raise SystemExit(f"FAIL: process not found: {process_id}")
 
 
-def require_official_process_active(context: ProcessCatalogContext, process_id: str) -> None:
+def require_official_process_active(
+    context: ProcessCatalogContext, process_id: str
+) -> None:
     normalized = safe_id(process_id, "process")
     effective = next(
         (
@@ -318,7 +362,11 @@ def require_official_process_active(context: ProcessCatalogContext, process_id: 
         ),
         None,
     )
-    if effective is not None and effective.origin == "official" and not effective.active:
+    if (
+        effective is not None
+        and effective.origin == "official"
+        and not effective.active
+    ):
         raise SystemExit(
             f"FAIL: process {normalized} is available in official pack {effective.pack_id} "
             "but is not active in this workplace.\n"
@@ -337,15 +385,28 @@ def process_definition_exists(context: ProcessCatalogContext, process_id: str) -
 
 def process_is_public_stable(process: dict[str, Any]) -> bool:
     meta = process_catalog_metadata(process)
-    return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
+    return (
+        meta["classification"] == "PUBLIC_STABLE"
+        and meta["public_surface"]
+        and meta["status"] == "active"
+    )
 
 
 def process_catalog_contexts(process: dict[str, Any]) -> dict[str, str]:
-    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+    coordination_value = process.get("coordination_requirements")
+    coordination = coordination_value if isinstance(coordination_value, dict) else {}
     mode = str(coordination.get("mode") or "")
-    runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
+    runtime_requirements_value = process.get("runtime_requirements")
+    runtime_requirements = (
+        runtime_requirements_value
+        if isinstance(runtime_requirements_value, dict)
+        else {}
+    )
     return {
         "simple": "not_applicable" if mode == "organized_required" else "pass",
         "organized": "pass",
-        "runtime": "pass" if runtime_requirements.get("supervisor_required") or runtime_requirements.get("runtime_driver_required") else "not_applicable",
+        "runtime": "pass"
+        if runtime_requirements.get("supervisor_required")
+        or runtime_requirements.get("runtime_driver_required")
+        else "not_applicable",
     }

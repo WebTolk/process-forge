@@ -153,53 +153,60 @@ def assert_scope_conflict_contract():
             "*",
             "*/real.*",
         ]
-        service = ScopeConflictService(project)
-        for left in patterns:
-            for right in patterns:
-                assert service.overlap(left, right) == prior_overlap(
-                    left, right, files
-                ), (left, right)
-        assert service.overlap("a/*.txt", "a/**") == (True, "glob_matches_same_file")
-        assert service.overlap("a/missing-*", "a/*.none") == (
-            True,
-            "possible_glob_overlap",
-        )
-        # Decisions that can be made from declarations must never traverse disk.
-        with patch.object(
-            Path,
-            "rglob",
-            side_effect=AssertionError("unnecessary repository traversal"),
+        scans = []
+
+        def forbidden_scan(*_args, **_kwargs):
+            scans.append("repository traversal")
+            raise AssertionError("scope comparison must not traverse the repository")
+
+        def assert_pairs(compared):
+            for left in patterns:
+                for right in patterns:
+                    conflict, reason = prior_overlap(left, right, files)
+                    # Preserve every historical boolean decision. Distinct
+                    # globs conservatively conflict without a disk witness.
+                    if reason == "glob_matches_same_file":
+                        reason = "possible_glob_overlap"
+                    actual = compared.overlap(left, right)
+                    assert actual == (conflict, reason), (left, right)
+
+        with (
+            patch.object(Path, "rglob", side_effect=forbidden_scan),
+            patch.object(Path, "glob", side_effect=forbidden_scan),
+            patch.object(Path, "iterdir", side_effect=forbidden_scan),
         ):
+            service = ScopeConflictService(project)
+            assert_pairs(service)
+            assert service.overlap("a/*.txt", "a/**") == (
+                True,
+                "possible_glob_overlap",
+            )
+            assert service.overlap("a/missing-*", "a/*.none") == (
+                True,
+                "possible_glob_overlap",
+            )
             fast = ScopeConflictService(project)
             assert fast.overlap("a/*.txt", "b/**") == (False, "")
             assert fast.overlap("a/**", "a/**") == (True, "same_glob")
             assert fast.overlap("a/real.txt", "a/**") == (True, "file_matches_glob")
             assert fast.overlap("missing.txt", "other.txt") == (False, "same_file")
             assert fast.conflicts("a", [], "b", ["**"]) == []
-        original_rglob = Path.rglob
-        scans = []
-
-        def counted_rglob(path, pattern):
-            scans.append(path)
-            return original_rglob(path, pattern)
-
-        with patch.object(Path, "rglob", counted_rglob):
             indexed = ScopeConflictService(project)
             first = indexed.overlap("a/*.txt", "a/**")
             assert indexed.overlap("b/*.txt", "b/**")[0]
             assert indexed.overlap("a/*.txt", "a/**") == first
-        assert scans == [project], scans
-        # A later operation must see new files and retain the precise reason.
-        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (
-            True,
-            "possible_glob_overlap",
-        )
-        (project / "later").mkdir()
-        (project / "later/now.txt").write_text("new\n", encoding="utf-8")
-        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (
-            True,
-            "glob_matches_same_file",
-        )
+            # Neither cached nor fresh comparisons depend on a later witness.
+            expected = (True, "possible_glob_overlap")
+            later = ("later/*.txt", "later/**")
+            assert service.overlap(*later) == expected
+            assert ScopeConflictService(project).overlap(*later) == expected
+            (project / "later").mkdir()
+            (project / "later/now.txt").write_text("new\n", encoding="utf-8")
+            assert service.overlap(*later) == expected
+            assert ScopeConflictService(project).overlap(*later) == expected
+            assert_pairs(service)
+            assert_pairs(ScopeConflictService(project))
+        assert scans == [], scans
         ordered = service.conflicts(
             "left",
             ["a/real.txt", "a/*.txt"],
@@ -212,7 +219,7 @@ def assert_scope_conflict_contract():
         ] == [
             ("a/real.txt", "a/**", "forbidden:file_matches_glob"),
             ("a/real.txt", "a/real.txt", "forbidden:same_file"),
-            ("a/*.txt", "a/**", "forbidden:glob_matches_same_file"),
+            ("a/*.txt", "a/**", "forbidden:possible_glob_overlap"),
             ("a/*.txt", "a/real.txt", "forbidden:glob_matches_file"),
         ]
         for directory in (".git", "__pycache__", ".mypy_cache", ".pytest_cache"):
@@ -249,7 +256,7 @@ def assert_scope_conflict_contract():
         assert result["status"] == "fail"
         assert [(x["other_assignment"], x["reason"]) for x in result["conflicts"]] == [
             ("current", "assignment_forbidden_wins:glob_matches_file"),
-            ("other", "glob_matches_same_file"),
+            ("other", "possible_glob_overlap"),
         ]
         for dependent, predecessor in ((current, other), (other, current)):
             dependent["dependencies"] = {"blocked_by": [predecessor["id"]]}
@@ -318,10 +325,16 @@ def assert_future_scope_admission():
             for a, b in ((left, right), (right, left)):
                 assert ScopeConflictService(project).overlap(a, b) == (
                     True,
-                    "glob_matches_same_file",
+                    "possible_glob_overlap",
                 )
     with scope_fixture_directory(prefix="pf-future-admission-") as directory:
         project = Path(directory)
+        flow = project / ".pf"
+        flow.mkdir()
+        (flow / "process-forge.yaml").write_text(
+            "schema_version: 1\nproject:\n  id: scope-admission-fixture\n",
+            encoding="utf-8",
+        )
         for left, right in [
             ("*.py", "*.md"),
             ("?.py", "[ab].txt"),
@@ -401,8 +414,9 @@ def assert_future_scope_admission():
 
         with (
             patch.object(
-                core._supervisor_input_service,
+                type(core._supervisor_input_service),
                 "load_supervisor_profile",
+                autospec=True,
                 return_value=profile,
             ),
             patch.object(core, "load_run", return_value=run),
@@ -909,7 +923,10 @@ def main():
         )
         assert all((project / p).read_bytes() == value for p, value in original.items())
     print(
-        "PASS: 484 scope pairs, exact reasons/order, lazy per-operation inventory, live file reads, canonical modes, CLI schema parity, no-publication cases, immutable reuse, predecessor and native transition"
+        "PASS: 484 scope pairs, exact reasons/order, zero repository traversal, "
+        "contents-independent scope decisions, canonical modes, CLI schema "
+        "parity, no-publication cases, immutable reuse, predecessor and native "
+        "transition"
     )
     return 0
 

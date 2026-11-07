@@ -541,6 +541,213 @@ def test_publication_prepares_its_actual_journal_without_historical_parity(
     assert not any(case.state_admission)
 
 
+def workspace_scope(access):
+    """Use an artifact-only scope with an explicit native report declaration."""
+    report = ".pf/artifacts/workspace-scope/report.md"
+    return {
+        "schema_version": 1,
+        "assignment": {
+            "execution_mode": "assurance",
+            "allowed_files": [".pf/artifacts/workspace-scope/**"],
+            "allowed_read_files": ["**"],
+            "allowed_actions": ["read", "write_artifact"],
+            "forbidden_actions": ["write_product"],
+            "workspace_access": copy.deepcopy(access),
+            "expected_report": {"artifact": report},
+            "required_outputs": [{"id": "report", "path": report}],
+        },
+    }
+
+
+def test_workspace_access_reaches_governed_capsule_and_native_input():
+    import processforge as core
+    from garage_search_smoke_support import (
+        register_fixture_resource,
+        select_fixture_resource,
+    )
+    from process_execution_smoke_support import fixture
+
+    from processforge_core.composition import bind_process_events
+    from processforge_core.prepared.input import semantic_input
+    from processforge_core.process_execution import ProcessExecutionService
+    from processforge_core.work.context import fingerprint
+
+    with fixture() as (workplace, project, _started):
+        reference = register_fixture_resource(
+            workplace,
+            "docs-w7",
+            "guide",
+            {"guide.md": "# Synthetic W7 knowledge\n"},
+            title="W7 synthetic guide",
+        )
+        definition = {
+            "id": "w7-fixture-tool",
+            "status": "configured",
+            "command": "PrivateW7FixtureCommand",
+            "scope": "project",
+        }
+        (workplace / "registries/tools.yaml").write_text(
+            yaml.safe_dump({"schema_version": 1, "tools": [definition]}),
+            encoding="utf-8",
+        )
+        (project / ".pf/project-overrides.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "schema_version": 1,
+                    "kind": "processforge.project_overrides",
+                    "overrides": {
+                        "tools": [{"target": definition["id"], "mode": "extension"}]
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        select_fixture_resource(project, workplace, "docs-w7", "guide")
+        service = bind_process_events(
+            ProcessExecutionService(project, workplace, core), ProcessEventRecorder()
+        )
+        access = {
+            "knowledge_resources": [reference],
+            "templates": [],
+            "tools": [definition["id"]],
+            "mcp": [],
+        }
+        declaration = workspace_scope(access)
+        original = copy.deepcopy(declaration)
+        objective = "Propagate explicit workspace resources"
+        result = service.start(objective=objective, scope_intent=declaration)
+        assert result["action"] == "created_new", result
+        assignment = core.load_yaml_document(
+            project / ".pf/assignments" / (result["assignment_id"] + ".yaml")
+        )
+        capsule_path = core.assignment_capsule_path(project, result["assignment_id"])
+        capsule_bytes = capsule_path.read_bytes()
+        capsule = yaml.safe_load(capsule_bytes)
+        contract = capsule["execution_contract"]
+        assert declaration == original
+        assert assignment["workspace_access"] == access
+        assert capsule["workspace_access"] == access
+        assert contract["workspace_access"] == access
+        assert contract["assignment_intent"]["workspace_access"] == access
+        assert contract["assignment_intent_checksum"] == fingerprint(
+            contract["assignment_intent"]
+        )
+        assert assignment["process_execution"]["assignment_capsule_checksum"] == (
+            "sha256:" + hashlib.sha256(capsule_bytes).hexdigest()
+        )
+        assert b"PrivateW7FixtureCommand" not in capsule_bytes
+        prepared = semantic_input(project, assignment, capsule, core)
+        assert prepared["resources"]["requested"] == access
+        grants = prepared["resources"]["grants"]
+        assert [row["id"] for row in grants["tools"]] == [definition["id"]]
+        assert len(grants["knowledge_resources"]) == 1
+        assert grants["templates"] == grants["mcp"] == []
+        assert (
+            service.start(objective=objective, scope_intent=declaration)["action"]
+            == "continue_existing"
+        )
+        for changed_access in ({}, {**access, "tools": ["another-tool"]}):
+            rejected = service.start(
+                objective=objective, scope_intent=workspace_scope(changed_access)
+            )
+            assert rejected["reason"] == "scope_intent_mismatch", rejected
+            assert capsule_path.read_bytes() == capsule_bytes
+
+
+def test_workspace_access_changed_pending_retry_cannot_widen_capsule():
+    import processforge as core
+    from process_execution_smoke_support import fixture
+
+    from processforge_core.composition import bind_process_events
+    from processforge_core.process_execution import ProcessExecutionService
+
+    with fixture() as (workplace, project, _started):
+        service = bind_process_events(
+            ProcessExecutionService(project, workplace, core), ProcessEventRecorder()
+        )
+        objective = "Recover exact explicit resource request"
+        declaration = workspace_scope({})
+        with patch.object(
+            ProcessExecutionService,
+            "_write_projection",
+            side_effect=OSError("resource publication interrupted"),
+        ):
+            with pytest.raises(OSError, match="resource publication interrupted"):
+                service.start(objective=objective, scope_intent=declaration)
+        pending = find_pending(project / ".pf", objective, core.project_id(project))
+        assert pending is not None
+        capsule = core.assignment_capsule_path(project, pending["assignment"]["id"])
+        before = capsule.read_bytes()
+        assert (
+            service.start(
+                objective=objective,
+                scope_intent=workspace_scope({"tools": ["wider-tool"]}),
+            )["reason"]
+            == "scope_intent_mismatch"
+        )
+        assert capsule.read_bytes() == before
+        retried = service.start(objective=objective, scope_intent=declaration)
+        assert retried["run_id"] == pending["run"]["id"]
+        assert retried["assignment_id"] == pending["assignment"]["id"]
+        assert capsule.read_bytes() == before
+
+
+@pytest.mark.parametrize("access", [{}, {"tools": []}])
+def test_empty_workspace_request_keeps_prepared_grants_empty(access):
+    import processforge as core
+    from process_execution_smoke_support import fixture
+
+    from processforge_core.composition import bind_process_events
+    from processforge_core.prepared.input import semantic_input
+    from processforge_core.process_execution import ProcessExecutionService
+
+    with fixture() as (workplace, project, _started):
+        service = bind_process_events(
+            ProcessExecutionService(project, workplace, core), ProcessEventRecorder()
+        )
+        result = service.start(
+            objective="Explicit empty workspace request",
+            scope_intent=workspace_scope(access),
+        )
+        assert result["action"] == "created_new", result
+        assignment = core.load_yaml_document(
+            project / ".pf/assignments" / (result["assignment_id"] + ".yaml")
+        )
+        capsule = yaml.safe_load(
+            core.assignment_capsule_path(project, result["assignment_id"]).read_bytes()
+        )
+        prepared = semantic_input(project, assignment, capsule, core)
+        assert not any(prepared["resources"]["requested"].values())
+        assert not any(prepared["resources"]["grants"].values())
+
+
+def test_unavailable_explicit_tool_still_fails_native_authorization():
+    import processforge as core
+    from process_execution_smoke_support import fixture
+
+    from processforge_core.composition import bind_process_events
+    from processforge_core.prepared.input import semantic_input
+    from processforge_core.process_execution import ProcessExecutionService
+
+    with fixture() as (workplace, project, _started):
+        service = bind_process_events(
+            ProcessExecutionService(project, workplace, core), ProcessEventRecorder()
+        )
+        result = service.start(
+            objective="Request unavailable tool without authorizing it",
+            scope_intent=workspace_scope({"tools": ["unavailable-w7-tool"]}),
+        )
+        assert result["action"] == "created_new", result
+        assignment = core.load_yaml_document(
+            project / ".pf/assignments" / (result["assignment_id"] + ".yaml")
+        )
+        capsule_path = core.assignment_capsule_path(project, result["assignment_id"])
+        before = capsule_path.read_bytes()
+        with pytest.raises(ValueError, match="resource_not_in_snapshot"):
+            semantic_input(project, assignment, yaml.safe_load(before), core)
+        assert capsule_path.read_bytes() == before
+
+
 def test_sql_reservation_wait_does_not_hold_workplace_admission(
     automatic_legacy_case, monkeypatch
 ):

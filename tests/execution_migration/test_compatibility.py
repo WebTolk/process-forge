@@ -8,7 +8,7 @@ import json
 import os
 import subprocess
 import sys
-from contextlib import redirect_stdout
+from contextlib import nullcontext, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
@@ -45,7 +45,7 @@ def test_cold_adapters_and_service_construction(harness: Harness) -> None:
         patch.object(Path, "mkdir", side_effect=AssertionError("unexpected mkdir")),
     ):
         command = JournalMaintenanceCommand(
-            execution_factory=lambda root: harness.service
+            execution_factory=lambda root: nullcontext(harness.service)
         )
         parser(command)
         type(harness.service)(
@@ -61,7 +61,9 @@ def test_readonly_commands_one_json_no_initialization(
     harness: Harness, operation: str
 ) -> None:
     harness.status("task")
-    command = JournalMaintenanceCommand(execution_factory=lambda root: harness.service)
+    command = JournalMaintenanceCommand(
+        execution_factory=lambda root: nullcontext(harness.service)
+    )
     args = parser(command).parse_args(
         ["journal-maintenance", operation, "--project-root", str(harness.project)]
     )
@@ -93,7 +95,9 @@ def test_new_cli_missing_host_factory_fails_closed(harness: Harness) -> None:
 
 def test_new_cli_real_success_and_resume(harness: Harness) -> None:
     harness.status("task")
-    command = JournalMaintenanceCommand(execution_factory=lambda root: harness.service)
+    command = JournalMaintenanceCommand(
+        execution_factory=lambda root: nullcontext(harness.service)
+    )
     args = parser(command).parse_args(
         [
             "journal-maintenance",
@@ -134,7 +138,9 @@ def test_new_cli_real_success_and_resume(harness: Harness) -> None:
 
 
 def test_apply_missing_required_arguments_refuses(harness: Harness) -> None:
-    command = JournalMaintenanceCommand(execution_factory=lambda root: harness.service)
+    command = JournalMaintenanceCommand(
+        execution_factory=lambda root: nullcontext(harness.service)
+    )
     args = parser(command).parse_args(
         [
             "journal-maintenance",
@@ -288,7 +294,9 @@ def test_report_failure_after_commit_remains_ready(harness: Harness) -> None:
 
 
 def test_error_payload_never_leaks_private_host_message(harness: Harness) -> None:
-    command = JournalMaintenanceCommand(execution_factory=lambda root: harness.service)
+    command = JournalMaintenanceCommand(
+        execution_factory=lambda root: nullcontext(harness.service)
+    )
     args = parser(command).parse_args(
         [
             "journal-maintenance",
@@ -356,3 +364,178 @@ def test_receipt_schema_and_explicit_identity_must_match(
     directory.mkdir(parents=True)
     (directory / "exit.json").write_text(json.dumps(body), encoding="utf-8")
     assert harness.service.plan(harness.project)["blocked"]
+
+
+def test_registered_execution_inspect_without_native(harness: Harness) -> None:
+    import processforge as cli
+
+    args = cli.build_parser().parse_args(
+        [
+            "journal-maintenance",
+            "execution-inspect",
+            "--project-root",
+            str(harness.project),
+        ]
+    )
+    output = io.StringIO()
+    with redirect_stdout(output):
+        assert args.func(args) == 1
+    assert (
+        json.loads(output.getvalue())["error"]["code"] == "execution_activity_unknown"
+    )
+
+
+@pytest.mark.parametrize("phase", ["enter", "service", "exit"])
+def test_execution_scope_failure_is_one_json(harness: Harness, phase: str) -> None:
+    from contextlib import AbstractContextManager
+
+    from processforge_core.maintenance.execution_migration import (
+        ExecutionMigrationService,
+    )
+
+    events: list[str] = []
+
+    class Scope(AbstractContextManager[ExecutionMigrationService]):
+        def __enter__(self) -> ExecutionMigrationService:
+            events.append("enter")
+            if phase == "enter":
+                raise MaintenanceError("execution_activity_unknown")
+            return harness.service
+
+        def __exit__(self, *_error: object) -> None:
+            events.append("exit")
+            if phase == "exit":
+                raise MaintenanceError("execution_activity_unknown")
+
+    def inspect(*args: object, **kwargs: object) -> dict[str, object]:
+        events.append("service")
+        if phase == "service":
+            raise MaintenanceError("execution_activity_unknown")
+        return {"status": "planned"}
+
+    command = JournalMaintenanceCommand(execution_factory=lambda root: Scope())
+    args = parser(command).parse_args(
+        [
+            "journal-maintenance",
+            "execution-inspect",
+            "--project-root",
+            str(harness.project),
+        ]
+    )
+    output = io.StringIO()
+    with (
+        patch.object(harness.service, "inspect", side_effect=inspect),
+        redirect_stdout(output),
+    ):
+        assert args.func(args) == 1
+    assert len(output.getvalue().splitlines()) == 1
+    assert (
+        json.loads(output.getvalue())["error"]["code"] == "execution_activity_unknown"
+    )
+    assert events == (["enter"] if phase == "enter" else ["enter", "service", "exit"])
+
+
+def test_maintenance_scope_never_repairs_pending(harness: Harness) -> None:
+    from processforge_core.composition import execution_maintenance_scope
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    device = harness.project / "device.yaml"
+    device.write_text("schema_version: 1\n")
+    with configuration_operation(harness.project, None, device_config_path=device):
+        with (
+            patch(
+                "processforge_core.executions.composition._fresh_initialization",
+                return_value={"state": "pending"},
+            ),
+            patch(
+                "processforge_core.executions.composition._repair_fresh_execution_storage"
+            ) as repair,
+        ):
+            with pytest.raises(MaintenanceError) as error:
+                with execution_maintenance_scope(harness.project):
+                    raise AssertionError("pending must refuse before service")
+            assert error.value.code == "execution_storage_not_ready"
+            repair.assert_not_called()
+
+
+@pytest.mark.parametrize("phase", ["enter", "service"])
+@pytest.mark.parametrize("cleanup", [False, True])
+@pytest.mark.parametrize("existing_cause", [False, True])
+def test_maintenance_scope_preserves_frozen_primary(
+    harness: Harness, phase: str, cleanup: bool, existing_cause: bool
+) -> None:
+    from contextlib import ExitStack
+
+    from processforge_core.composition import execution_maintenance_scope
+
+    primary = MaintenanceError("required_journal_failure")
+    secondary = RuntimeError("mandatory cleanup failure")
+    cause = ValueError("original cause")
+    frames = []
+    events: list[str] = []
+
+    def fail_primary(**_kwargs: object) -> None:
+        try:
+            if existing_cause:
+                raise primary from cause
+            raise primary
+        except MaintenanceError as error:
+            frames.append(error.__traceback__)
+            raise
+
+    def close() -> None:
+        events.append("cleanup")
+        if cleanup:
+            raise secondary
+
+    stack = ExitStack()
+    stack.callback(close)
+    with patch("contextlib.ExitStack", return_value=stack):
+        scope = execution_maintenance_scope(harness.project)
+    with pytest.raises(MaintenanceError) as caught:
+        if phase == "enter":
+            with patch(
+                "processforge_core.composition.build_configuration_provider",
+                side_effect=fail_primary,
+            ):
+                scope.__enter__()
+        else:
+            # Invoke the real exit under the same active exception as with.
+            try:
+                fail_primary()
+            except MaintenanceError:
+                scope.__exit__(*sys.exc_info())
+                raise
+    assert caught.value is primary
+    assert primary.code == "required_journal_failure"
+    current = primary.__traceback__
+    while current is not None and current is not frames[0]:
+        current = current.tb_next
+    assert current is frames[0]
+    assert primary.__cause__ is (cause if existing_cause else None)
+    if cleanup:
+        assert primary.__context__ is secondary
+        assert secondary.__context__ is not primary
+    assert events == ["cleanup"]
+    stack.close()
+    assert events == ["cleanup"]
+
+
+def test_maintenance_scope_cleanup_only_propagates(harness: Harness) -> None:
+    from contextlib import ExitStack
+
+    from processforge_core.composition import execution_maintenance_scope
+
+    secondary = RuntimeError("mandatory cleanup failure")
+    stack = ExitStack()
+
+    def close() -> None:
+        raise secondary
+
+    stack.callback(close)
+    with patch("contextlib.ExitStack", return_value=stack):
+        scope = execution_maintenance_scope(harness.project)
+    with pytest.raises(RuntimeError) as caught:
+        scope.__exit__(None, None, None)
+    assert caught.value is secondary
+    stack.close()

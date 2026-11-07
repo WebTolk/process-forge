@@ -259,12 +259,14 @@ def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
         "summary": summary,
     }
     contract_path = agent_run_dir / "worker-input-contract.json"
-    contract_tmp = contract_path.with_suffix(".json.tmp")
-    contract_tmp.write_text(
-        json.dumps(input_contract, ensure_ascii=False, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    contract_tmp.replace(contract_path)
+    from processforge_core.maintenance.temporary_disposal import atomic_staging
+
+    with atomic_staging(contract_path) as contract_tmp:
+        text = json.dumps(input_contract, ensure_ascii=False, sort_keys=True) + "\n"
+        written = contract_tmp.write_text(text, encoding="utf-8")
+        if type(written) is not int or written != len(text):
+            raise OSError("short_write")
+        contract_tmp.replace(contract_path)
     envelope = {
         "provider": "processforge",
         "adapter": "pf-codex-exec-worker",
@@ -331,11 +333,14 @@ def write_exit_contract(path: Path | None, returncode: int) -> None:
     status = "completed" if returncode == 0 else "failed"
     payload = {"schema_version": 1, "exit_code": returncode, "status": status}
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.tmp")
-    tmp.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    os.replace(tmp, path)
+    from pf_native_control import receipt_staging
+
+    with receipt_staging(path) as tmp:
+        text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+        written = tmp.write_text(text, encoding="utf-8")
+        if type(written) is not int or written != len(text):
+            raise OSError("short_write")
+        os.replace(tmp, path)
 
 
 class ManagedUsageCapture:
@@ -374,13 +379,17 @@ class ManagedUsageCapture:
     def _write_json(self, name: str, data: dict[str, Any]) -> None:
         assert self.directory is not None
         path = self.directory / name
-        temporary = path.with_suffix(path.suffix + ".tmp")
-        with temporary.open("w", encoding="utf-8") as stream:
-            json.dump(data, stream, sort_keys=True)
-            stream.write("\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        from processforge_core.maintenance.temporary_disposal import atomic_staging
+
+        with atomic_staging(path) as temporary:
+            text = json.dumps(data, sort_keys=True) + "\n"
+            with temporary.open("w", encoding="utf-8") as stream:
+                written = stream.write(text)
+                if type(written) is not int or written != len(text):
+                    raise OSError("short_write")
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, path)
 
     def begin(self) -> Any:
         """Start one attempt-local JSON stream without truncating prior evidence."""

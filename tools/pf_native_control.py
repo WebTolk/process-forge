@@ -1897,6 +1897,164 @@ def _publication_read_exclusion(root: Path) -> Iterator[None]:
         yield
 
 
+def _receipt_handle(path: Path, access: int, flags: int) -> tuple[Any, Any]:
+    """Open an exact Windows receipt object without delete sharing."""
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = (
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    )
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+    kernel.CloseHandle.restype = wintypes.BOOL
+    handle = kernel.CreateFileW(str(path), access, 3, None, 3, flags, None)
+    if handle == wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    return kernel, handle
+
+
+def _receipt_stat(handle: Any) -> os.stat_result:
+    """Use Python's dev/inode format for the opened Windows identity."""
+    import msvcrt
+
+    kernel = _kernel()
+    duplicate = wintypes.HANDLE()
+    current = kernel.GetCurrentProcess()
+    if not kernel.DuplicateHandle(
+        current, handle, current, ctypes.byref(duplicate), 0, False, 2
+    ):
+        raise ctypes.WinError(ctypes.get_last_error())
+    value = duplicate.value
+    if value is None:
+        raise OSError("identity_handle_unavailable")
+    try:
+        fd = msvcrt.open_osfhandle(value, os.O_RDONLY | os.O_BINARY | os.O_NOINHERIT)
+    except BaseException:
+        kernel.CloseHandle(value)
+        raise
+    try:
+        return os.fstat(fd)
+    finally:
+        os.close(fd)
+
+
+@contextmanager
+def _receipt_parent(path: Path) -> Iterator[int | None]:
+    """Pin every ancestor; never traverse a directory link or reparse point."""
+    with ExitStack() as held:
+        descriptor = None
+        for parent in reversed(path.parents):
+            if os.name == "nt":
+                kernel, handle = _receipt_handle(parent, 0x81, 0x02200000)
+                held.callback(kernel.CloseHandle, handle)
+                info = _receipt_stat(handle)
+            else:
+                if not hasattr(os, "O_DIRECTORY") or not hasattr(os, "O_NOFOLLOW"):
+                    raise OSError("safe_directory_operations_unavailable")
+                descriptor = os.open(
+                    parent if descriptor is None else parent.name,
+                    os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW"),
+                    dir_fd=descriptor,
+                )
+                held.callback(os.close, descriptor)
+                info = os.fstat(descriptor)
+            if (
+                not stat.S_ISDIR(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & 0x400
+            ):
+                raise OSError("unsafe_directory")
+        yield descriptor
+
+
+def _receipt_dispose(
+    path: Path, identity: tuple[int, int], descriptor: int | None
+) -> str | None:
+    """Remove only this new single-link receipt stage, by handle on Windows."""
+    try:
+        if os.name == "nt":
+            kernel, handle = _receipt_handle(path, 0x10080, 0x02200000)
+            try:
+                info = _receipt_stat(handle)
+                if (info.st_dev, info.st_ino) != identity:
+                    return "identity_changed:None"
+                if (
+                    not stat.S_ISREG(info.st_mode)
+                    or info.st_nlink != 1
+                    or getattr(info, "st_file_attributes", 0) & 0x400
+                ):
+                    return "unsafe_path:None"
+                kernel.SetFileInformationByHandle.argtypes = (
+                    wintypes.HANDLE,
+                    ctypes.c_int,
+                    ctypes.c_void_p,
+                    wintypes.DWORD,
+                )
+                kernel.SetFileInformationByHandle.restype = wintypes.BOOL
+                disposition = wintypes.BOOL(True)
+                if not kernel.SetFileInformationByHandle(
+                    handle, 4, ctypes.byref(disposition), ctypes.sizeof(disposition)
+                ):
+                    raise ctypes.WinError(ctypes.get_last_error())
+            finally:
+                kernel.CloseHandle(handle)
+        else:
+            # As with Core staging, POSIX requires a producer-owned namespace.
+            info = os.stat(path.name, dir_fd=descriptor, follow_symlinks=False)
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                return "unsafe_path:None"
+            if (info.st_dev, info.st_ino) != identity:
+                return "identity_changed:None"
+            os.unlink(path.name, dir_fd=descriptor)
+    except FileNotFoundError:
+        return None
+    except OSError as error:
+        return f"cleanup_pending:{getattr(error, 'winerror', None) or error.errno or 0}"
+    return None
+
+
+@contextmanager
+def receipt_staging(destination: Path) -> Iterator[Path]:
+    """Stage standalone failure receipts without importing or activating Core.
+
+    Serialization and fsync policy belong to the two native receipt writers.
+    This seam performs no manifest discovery, admission, adoption or recovery.
+    """
+    path = Path(destination).absolute()
+    resource_id = uuid4().hex
+    path = path.with_name(f".{path.name}.{resource_id}.tmp")
+    with _receipt_parent(path) as descriptor:
+        fd = os.open(
+            path if descriptor is None else path.name,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
+            0o666,
+            dir_fd=descriptor,
+        )
+        try:
+            info = os.fstat(fd)
+            identity = info.st_dev, info.st_ino
+        finally:
+            os.close(fd)
+        primary: BaseException | None = None
+        try:
+            yield path
+        except BaseException as error:
+            primary = error
+            raise
+        finally:
+            result = _receipt_dispose(path, identity, descriptor)
+            if result is not None:
+                diagnostic = f"temporary_cleanup:{resource_id}:{result}"
+                if primary is not None:
+                    primary.add_note(diagnostic)
+                else:
+                    raise OSError(diagnostic)
+
+
 def _read(path: Path, limit: int = 1024 * 1024) -> dict[str, Any]:
     raw = _read_regular(path.parent, path.name, limit)
     value = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_no_number)

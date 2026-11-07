@@ -162,7 +162,11 @@ def probe_ready(endpoint: str) -> tuple[bool | None, str]:
                         return None, "probe_oversize"
                 if header_end is None and len(raw) > 8192:
                     return None, "probe_oversize"
-                if header_end is not None and len(raw) >= header_end + length:
+                if (
+                    header_end is not None
+                    and length is not None
+                    and len(raw) >= header_end + length
+                ):
                     body = json.loads(
                         raw[header_end : header_end + length].decode("utf-8")
                     )
@@ -660,7 +664,7 @@ class Screen:
     def __init__(self, stream: TextIO) -> None:
         self.stream = stream
         self.rows: list[str] = []
-        self.size = None
+        self.size: tuple[int, int] | None = None
 
     def draw(self, rows: list[str], size: tuple[int, int]) -> None:
         output = []
@@ -702,9 +706,19 @@ def terminal_mode(stream: TextIO, input_stream: TextIO):
             import tty
 
             fd = input_stream.fileno()
-            previous = termios.tcgetattr(fd)
-            restore.append(lambda: termios.tcsetattr(fd, termios.TCSADRAIN, previous))
-            tty.setcbreak(fd)
+            tcgetattr: Callable[[int], list[object]] = getattr(termios, "tcgetattr")
+            previous = tcgetattr(fd)
+
+            def restore_terminal() -> None:
+                tcsetattr: Callable[[int, int, list[object]], None] = getattr(
+                    termios, "tcsetattr"
+                )
+                drain: int = getattr(termios, "TCSADRAIN")
+                tcsetattr(fd, drain, previous)
+
+            restore.append(restore_terminal)
+            setcbreak: Callable[[int], object] = getattr(tty, "setcbreak")
+            setcbreak(fd)
         if interactive:
             stream.write("\x1b[?1049h\x1b[?25l")
             stream.flush()
@@ -738,8 +752,8 @@ def wait_for_exit(seconds: float, input_stream: TextIO) -> bool:
                 [input_stream], [], [], max(0, deadline - time.monotonic())
             )
             if available:
-                char = os.read(input_stream.fileno(), 1)
-                if char in {b"", b"q", b"Q", b"\x1b", b"\x03"}:
+                input_byte = os.read(input_stream.fileno(), 1)
+                if input_byte in {b"", b"q", b"Q", b"\x1b", b"\x03"}:
                     return True
     return False
 
@@ -834,7 +848,11 @@ def run_view(
 
 def command_monitor(args: argparse.Namespace, core: Any) -> int:
     from processforge_core.composition import build_core_properties
-    from processforge_core.configuration import ConfigService, ConfigurationError
+    from processforge_core.configuration import (
+        ConfigService,
+        ConfigurationError,
+        MetricsConfig,
+    )
     from processforge_core.configuration.yaml_store import YamlConfigStore
 
     workplace = core.resolve_workplace_root(args.workplace)
@@ -845,9 +863,10 @@ def command_monitor(args: argparse.Namespace, core: Any) -> int:
         snapshot = collect_snapshot(workplace, properties.loaded.version)
         if snapshot["runtime"]["lifecycle"] != "ready":
             try:
-                snapshot["default_interval_seconds"] = (
-                    configuration.read().config.runtime.metrics.interval_seconds
+                metrics_config: MetricsConfig = getattr(
+                    configuration.read().config.runtime, "metrics"
                 )
+                snapshot["default_interval_seconds"] = metrics_config.interval_seconds
             except ConfigurationError:
                 snapshot["issues"].append("configuration_invalid")
         return snapshot

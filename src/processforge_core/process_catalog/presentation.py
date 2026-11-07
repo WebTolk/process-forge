@@ -5,49 +5,68 @@ from typing import Any
 from processforge_core.common.checks import Check
 from processforge_core.common.ids import title_from_id
 from processforge_core.common.values import as_list
-from processforge_core.process_catalog.coordination import process_coordination_requirements
+from processforge_core.process_catalog.coordination import (
+    process_coordination_requirements,
+)
 
 
 class ProcessAuthoringRenderer:
     def questions(self, answers: dict[str, Any]) -> str:
-        process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
-        return "\n".join(
-            [
-                f"# Process Authoring Questions: {process.get('name', process.get('id', 'process'))}",
-                "",
-                "- What concrete outcome must this process produce?",
-                "- Which roles own each stage and artifact?",
-                "- Which artifacts prove that a stage is complete?",
-                "- Which blocking gates can stop apply or completion?",
-                "- Does the process need multiple assignment-backed tasks or one linear flow?",
-                "- Which execution mode applies: single_agent, single_agent_with_subagents, orchestrated_agents, or process_factory?",
-                "- For single_agent mode, which CLI checks and gates replace separate Inspector/Supervisor work?",
-                "- Can this process run in simple project mode?",
-                "- Does this process require organized project mode or only optionally use Director when available?",
-                "- Should worker agents submit reports to Director inbox?",
-                "- Should errors go to Director inbox, a process route, or the operator?",
-                "- If the project is simple, should Director-related features be disabled, optional, or fail validation?",
-                "- Is common process evolve enabled or disabled for this process?",
-                "- If evolve is disabled, what reason should be recorded in `evolve.reason`?",
-                "- If evolve is enabled, which mode, timing, default scope, candidate targets, candidate targeting, extraction hints, privacy boundary, apply policy, and required outputs apply?",
-                "- Which target layer should receive each knowledge candidate?",
-                "- Where does each candidate apply, where does it not apply, and which source context proves that boundary?",
-                "- Should a mixed observation be split into multiple candidates before any generalization or promotion?",
-                "- What reusable knowledge may appear during this process?",
-                "- Which outputs are candidates for shared packages, and what must remain project-private?",
-                "- Which examples should prove the generated process is usable?",
-                "",
-                "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
-            ]
-        ) + "\n"
+        process_value = answers.get("process")
+        process = process_value if isinstance(process_value, dict) else {}
+        return (
+            "\n".join(
+                [
+                    f"# Process Authoring Questions: {process.get('name', process.get('id', 'process'))}",
+                    "",
+                    "- What concrete outcome must this process produce?",
+                    "- Which roles own each stage and artifact?",
+                    "- Which artifacts prove that a stage is complete?",
+                    "- Which blocking gates can stop apply or completion?",
+                    "- Does the process need multiple assignment-backed tasks or one linear flow?",
+                    "- Which execution mode applies: single_agent, single_agent_with_subagents, orchestrated_agents, or process_factory?",
+                    "- For single_agent mode, which CLI checks and gates replace separate Inspector/Supervisor work?",
+                    "- Can this process run in simple project mode?",
+                    "- Does this process require organized project mode or only optionally use Director when available?",
+                    "- Should worker agents submit reports to Director inbox?",
+                    "- Should errors go to Director inbox, a process route, or the operator?",
+                    "- If the project is simple, should Director-related features be disabled, optional, or fail validation?",
+                    "- Is common process evolve enabled or disabled for this process?",
+                    "- If evolve is disabled, what reason should be recorded in `evolve.reason`?",
+                    "- If evolve is enabled, which mode, timing, default scope, candidate targets, candidate targeting, extraction hints, privacy boundary, apply policy, and required outputs apply?",
+                    "- Which target layer should receive each knowledge candidate?",
+                    "- Where does each candidate apply, where does it not apply, and which source context proves that boundary?",
+                    "- Should a mixed observation be split into multiple candidates before any generalization or promotion?",
+                    "- What reusable knowledge may appear during this process?",
+                    "- Which outputs are candidates for shared packages, and what must remain project-private?",
+                    "- Which examples should prove the generated process is usable?",
+                    "",
+                    "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
+                ]
+            )
+            + "\n"
+        )
 
     def logic_review(self, process: dict[str, Any], checks: list[Check]) -> str:
-        lines = [f"# Process Logic Review: {process.get('id', 'process')}", "", "| Level | Check |", "| --- | --- |"]
+        lines = [
+            f"# Process Logic Review: {process.get('id', 'process')}",
+            "",
+            "| Level | Check |",
+            "| --- | --- |",
+        ]
         for item in checks:
             lines.append(f"| {item.level} | {item.message} |")
         failures = [item for item in checks if item.level == "FAIL"]
         warnings = [item for item in checks if item.level == "WARN"]
-        lines.extend(["", f"Result: `{'fail' if failures else 'pass'}`", f"Failures: `{len(failures)}`", f"Warnings: `{len(warnings)}`", ""])
+        lines.extend(
+            [
+                "",
+                f"Result: `{'fail' if failures else 'pass'}`",
+                f"Failures: `{len(failures)}`",
+                f"Warnings: `{len(warnings)}`",
+                "",
+            ]
+        )
         return "\n".join(lines)
 
     def agent_prompt(self, process: dict[str, Any]) -> str:
@@ -83,7 +102,10 @@ class ProcessAuthoringRenderer:
     def document(self, process: dict[str, Any]) -> str:
         process_id = str(process.get("id", "process"))
         coordination = process_coordination_requirements(process)
-        error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
+        error_handling_value = process.get("error_handling")
+        error_handling = (
+            error_handling_value if isinstance(error_handling_value, dict) else {}
+        )
         lines = [
             f"# {process.get('name', title_from_id(process_id))}",
             "",
@@ -102,7 +124,9 @@ class ProcessAuthoringRenderer:
         ]
         for stage in as_list(process.get("stages")):
             if isinstance(stage, dict):
-                lines.append(f"- `{stage.get('id')}`: {stage.get('description') or stage.get('title', '')}")
+                lines.append(
+                    f"- `{stage.get('id')}`: {stage.get('description') or stage.get('title', '')}"
+                )
         lines.extend(["", "## Artifacts", ""])
         for artifact in as_list(process.get("artifact_definitions")):
             if isinstance(artifact, dict):
@@ -110,5 +134,7 @@ class ProcessAuthoringRenderer:
         lines.extend(["", "## Gates", ""])
         for gate_item in as_list(process.get("gates")):
             if isinstance(gate_item, dict):
-                lines.append(f"- `{gate_item.get('id')}`: {gate_item.get('description', '')}")
+                lines.append(
+                    f"- `{gate_item.get('id')}`: {gate_item.get('description', '')}"
+                )
         return "\n".join(lines) + "\n"

@@ -5,7 +5,6 @@ from typing import Any
 from processforge_core.common.checks import Check, check
 from processforge_core.common.values import string_list
 
-
 EVOLVE_MODES = {"disabled", "optional", "required"}
 EVOLVE_TIMINGS = {"end_of_stage", "end_of_task", "end_of_run"}
 EVOLVE_SCOPES = {"project", "workplace", "package", "platform", "core"}
@@ -80,7 +79,9 @@ class ProcessEvolutionPolicy:
     def normalize_block(self, raw: Any, *, answers: bool = False) -> dict[str, Any]:
         block = self.default_block(answers=answers)
         if isinstance(raw, dict):
-            block.update({key: value for key, value in raw.items() if value not in (None, "")})
+            block.update(
+                {key: value for key, value in raw.items() if value not in (None, "")}
+            )
             privacy = self.default_block(answers=answers)["privacy"]
             if isinstance(raw.get("privacy"), dict):
                 privacy.update(raw["privacy"])
@@ -102,30 +103,60 @@ class ProcessEvolutionPolicy:
         block["enabled"] = enabled
         if not enabled:
             block["mode"] = "disabled"
-            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+            decision_value = block.get("decision")
+            decision = decision_value if isinstance(decision_value, dict) else {}
             reason = str(block.get("reason") or decision.get("reason") or "").strip()
             if reason:
                 block["reason"] = reason
             if answers:
                 decision["value"] = "disabled"
                 block["decision"] = decision
-            for optional_key in ["timing", "default_scope", "candidate_targets", "candidate_targeting", "extraction_hints", "required_outputs", "privacy", "apply_policy", "prompts"]:
-                if optional_key in block and optional_key not in {"privacy", "apply_policy"}:
+            for optional_key in [
+                "timing",
+                "default_scope",
+                "candidate_targets",
+                "candidate_targeting",
+                "extraction_hints",
+                "required_outputs",
+                "privacy",
+                "apply_policy",
+                "prompts",
+            ]:
+                if optional_key in block and optional_key not in {
+                    "privacy",
+                    "apply_policy",
+                }:
                     block.pop(optional_key, None)
         else:
             block["mode"] = str(block.get("mode") or "optional")
             block["timing"] = str(block.get("timing") or "end_of_run")
             block["default_scope"] = str(block.get("default_scope") or "project")
-            block["candidate_targets"] = string_list(block.get("candidate_targets")) or self.default_block()["candidate_targets"]
-            block["extraction_hints"] = string_list(block.get("extraction_hints")) or self.default_block()["extraction_hints"]
+            block["candidate_targets"] = (
+                string_list(block.get("candidate_targets"))
+                or self.default_block()["candidate_targets"]
+            )
+            block["extraction_hints"] = (
+                string_list(block.get("extraction_hints"))
+                or self.default_block()["extraction_hints"]
+            )
             if not isinstance(block.get("candidate_targeting"), dict):
-                block["candidate_targeting"] = self.default_block()["candidate_targeting"]
-            block["required_outputs"] = string_list(block.get("required_outputs")) or ["evolution-report"]
+                block["candidate_targeting"] = self.default_block()[
+                    "candidate_targeting"
+                ]
+            block["required_outputs"] = string_list(block.get("required_outputs")) or [
+                "evolution-report"
+            ]
             if answers:
-                block["prompts"] = string_list(block.get("prompts")) or self.default_block(answers=True)["prompts"]
-                decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+                block["prompts"] = (
+                    string_list(block.get("prompts"))
+                    or self.default_block(answers=True)["prompts"]
+                )
+                decision_value = block.get("decision")
+                decision = decision_value if isinstance(decision_value, dict) else {}
                 decision["value"] = "enabled"
-                decision.setdefault("reason", "This process may produce reusable knowledge.")
+                decision.setdefault(
+                    "reason", "This process may produce reusable knowledge."
+                )
                 block["decision"] = decision
         return block
 
@@ -136,26 +167,105 @@ class ProcessEvolutionPolicy:
             checks.append(check(level, f"{process_id} evolve declared"))
             return checks
         enabled = block.get("enabled")
-        checks.append(check("PASS" if isinstance(enabled, bool) else level, f"{process_id} evolve.enabled explicit"))
+        checks.append(
+            check(
+                "PASS" if isinstance(enabled, bool) else level,
+                f"{process_id} evolve.enabled explicit",
+            )
+        )
         mode = str(block.get("mode") or "")
-        checks.append(check("PASS" if mode in EVOLVE_MODES else level, f"{process_id} evolve.mode valid"))
+        checks.append(
+            check(
+                "PASS" if mode in EVOLVE_MODES else level,
+                f"{process_id} evolve.mode valid",
+            )
+        )
         if enabled is False:
-            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+            decision_value = block.get("decision")
+            decision = decision_value if isinstance(decision_value, dict) else {}
             reason = str(block.get("reason") or decision.get("reason") or "")
-            checks.append(check("PASS" if mode == "disabled" else level, f"{process_id} disabled evolve uses disabled mode"))
-            checks.append(check("PASS" if reason.strip() else "FAIL", f"{process_id} disabled evolve has reason"))
+            checks.append(
+                check(
+                    "PASS" if mode == "disabled" else level,
+                    f"{process_id} disabled evolve uses disabled mode",
+                )
+            )
+            checks.append(
+                check(
+                    "PASS" if reason.strip() else "FAIL",
+                    f"{process_id} disabled evolve has reason",
+                )
+            )
             return checks
-        checks.append(check("PASS" if str(block.get("timing") or "") in EVOLVE_TIMINGS else level, f"{process_id} evolve.timing valid"))
-        checks.append(check("PASS" if str(block.get("default_scope") or "") in EVOLVE_SCOPES else level, f"{process_id} evolve.default_scope valid"))
+        checks.append(
+            check(
+                "PASS" if str(block.get("timing") or "") in EVOLVE_TIMINGS else level,
+                f"{process_id} evolve.timing valid",
+            )
+        )
+        checks.append(
+            check(
+                "PASS"
+                if str(block.get("default_scope") or "") in EVOLVE_SCOPES
+                else level,
+                f"{process_id} evolve.default_scope valid",
+            )
+        )
         targets = string_list(block.get("candidate_targets"))
         bad_targets = sorted(set(targets) - EVOLVE_CANDIDATE_TARGETS)
-        checks.append(check("PASS" if targets and not bad_targets else level, f"{process_id} evolve.candidate_targets valid"))
-        checks.append(check("PASS" if string_list(block.get("required_outputs")) else level, f"{process_id} evolve.required_outputs declared"))
-        targeting = block.get("candidate_targeting") if isinstance(block.get("candidate_targeting"), dict) else {}
-        checks.append(check("PASS" if targeting.get("require_target") is True and targeting.get("require_applicability") is True else level, f"{process_id} evolve candidate targeting requires target/applicability"))
-        checks.append(check("PASS" if targeting.get("default_to_narrowest_scope") is True else level, f"{process_id} evolve defaults to narrowest safe scope"))
-        privacy = block.get("privacy") if isinstance(block.get("privacy"), dict) else {}
-        apply_policy = block.get("apply_policy") if isinstance(block.get("apply_policy"), dict) else {}
-        checks.append(check("PASS" if privacy.get("export_requires_sanitization") is True and privacy.get("allow_private_paths") is False else level, f"{process_id} evolve privacy boundary declared"))
-        checks.append(check("PASS" if apply_policy.get("auto_apply_global") is False and apply_policy.get("create_candidates_only") is True else level, f"{process_id} evolve apply policy creates candidates only"))
+        checks.append(
+            check(
+                "PASS" if targets and not bad_targets else level,
+                f"{process_id} evolve.candidate_targets valid",
+            )
+        )
+        checks.append(
+            check(
+                "PASS" if string_list(block.get("required_outputs")) else level,
+                f"{process_id} evolve.required_outputs declared",
+            )
+        )
+        targeting_value = block.get("candidate_targeting")
+        targeting = targeting_value if isinstance(targeting_value, dict) else {}
+        checks.append(
+            check(
+                "PASS"
+                if targeting.get("require_target") is True
+                and targeting.get("require_applicability") is True
+                else level,
+                f"{process_id} evolve candidate targeting requires target/applicability",
+            )
+        )
+        checks.append(
+            check(
+                "PASS"
+                if targeting.get("default_to_narrowest_scope") is True
+                else level,
+                f"{process_id} evolve defaults to narrowest safe scope",
+            )
+        )
+        privacy_value = block.get("privacy")
+        privacy = privacy_value if isinstance(privacy_value, dict) else {}
+        apply_policy_value = block.get("apply_policy")
+        apply_policy = (
+            apply_policy_value if isinstance(apply_policy_value, dict) else {}
+        )
+        checks.append(
+            check(
+                "PASS"
+                if privacy.get("export_requires_sanitization") is True
+                and privacy.get("allow_private_paths") is False
+                else level,
+                f"{process_id} evolve privacy boundary declared",
+            )
+        )
+        checks.append(
+            check(
+                "PASS"
+                if apply_policy.get("auto_apply_global") is False
+                and apply_policy.get("create_candidates_only") is True
+                else level,
+                f"{process_id} evolve apply policy creates candidates only",
+            )
+        )
         return checks

@@ -2409,3 +2409,66 @@ def test_portable_snapshot_reader_retains_nofollow_descriptors(
     assert all(flags & 0x200 for _, flags, _ in opened[:-1])
     if fault != "alias":
         assert opened[-1][1] & 0x400
+
+
+_INSPECT_CHILD = (
+    _ADOPTED_PREAMBLE
+    + r"""
+import io,hashlib
+from contextlib import redirect_stdout
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+from processforge_core.project.configuration_inputs import configuration_operation
+import processforge as cli
+project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
+def inventory():
+    return {str(f.relative_to(project)):hashlib.sha256(f.read_bytes()).hexdigest() for f in project.rglob('*') if f.is_file() and f.suffix != '.lock'}
+before=inventory(); observed=[]
+original=p.NativeEntry.storage_safety
+def verify(self,context):
+    result=original(self,context);observed.append(result[0]);return result
+p.NativeEntry.storage_safety=verify
+with entry.operation():
+    with configuration_operation(project,None,device_config_path=device):
+        args=cli.build_parser().parse_args(['journal-maintenance','execution-inspect','--project-root',str(project)])
+        output=io.StringIO()
+        with redirect_stdout(output):
+            code=args.func(args)
+        result=json.loads(output.getvalue())
+        assert len(output.getvalue().splitlines())==1
+        assert code==0,result
+        assert result['status']=='planned',result
+assert observed and set(observed)=={'proven'},observed
+assert inventory()==before
+assert entry.storage_safety(None)[0]=='unknown'
+print(json.dumps({'result':result,'proof':observed,'unchanged':True}))
+"""
+)
+
+
+@pytest.mark.parametrize("drift", [False, True])
+def test_registered_inspect_real_managed_scope(native_root: Path, drift: bool) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    _adopted_run(_ADOPTED_MANAGER, root)
+    script = _INSPECT_CHILD
+    if drift:
+        script = script.replace(
+            "before=inventory(); observed=[]",
+            "before=inventory(); observed=[]; device.write_text('schema_version: 1\\nruntime: {metrics: {interval_seconds: 18}}\\n')",
+        )
+        script = script.replace("assert code==0,result", "assert code==1,result")
+        script = script.replace(
+            "assert result['status']=='planned',result",
+            "assert result['error']['code']=='execution_activity_unknown',result",
+        )
+        script = script.replace(
+            "assert observed and set(observed)=={'proven'},observed",
+            "assert 'proven' not in observed,observed",
+        )
+    first = _adopted_run(script, root)
+    second = _adopted_run(script, root)
+    assert (
+        first["proof"]
+        == second["proof"]
+        == (["unknown"] if drift else ["proven", "unknown"])
+    )
+    assert first["unchanged"] and second["unchanged"]

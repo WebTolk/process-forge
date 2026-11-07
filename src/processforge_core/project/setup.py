@@ -15,23 +15,52 @@ class WorkplaceSetupProposalBuilder:
     def __init__(self) -> None:
         self.coordination = ProjectCoordinationReader()
 
-    def build(self, session_id: str, answers: dict[str, Any]) -> tuple[dict[str, Any], str]:
-        machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
-        agents = answers.get("agent_environment") if isinstance(answers.get("agent_environment"), dict) else {}
-        discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
-        resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
-        first_project = answers.get("first_project") if isinstance(answers.get("first_project"), dict) else {}
-        coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
+    def build(
+        self, session_id: str, answers: dict[str, Any]
+    ) -> tuple[dict[str, Any], str]:
+        machine_value = answers.get("machine_layout")
+        machine = machine_value if isinstance(machine_value, dict) else {}
+        agents_value = answers.get("agent_environment")
+        agents = agents_value if isinstance(agents_value, dict) else {}
+        discovery_value = answers.get("device_discovery")
+        discovery = discovery_value if isinstance(discovery_value, dict) else {}
+        resources_value = answers.get("resources")
+        resources = resources_value if isinstance(resources_value, dict) else {}
+        first_project_value = answers.get("first_project")
+        first_project = (
+            first_project_value if isinstance(first_project_value, dict) else {}
+        )
+        coordination_value = answers.get("coordination")
+        coordination = (
+            coordination_value if isinstance(coordination_value, dict) else {}
+        )
         proposal = {
             "schema_version": 1,
             "session_id": safe_id(session_id, "setup-session"),
             "status": "ready_for_review",
-            "workplace": {"path_ref": str(machine.get("workplace_path") or "${PF_WORKPLACE}")},
-            "processforge": {"root_ref": str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")},
-            "local_docs": {"path_ref": str(machine.get("local_docs_path") or "${PF_WORKPLACE}/knowledge")},
-            "project_roots": [str(item) for item in as_list(machine.get("project_roots"))],
-            "agent_environments": [str(item) for item in as_list(agents.get("tools") or ["generic"])],
-            "instruction_targets": [str(item) for item in as_list(agents.get("instructions_targets") or ["AGENTS.md"])],
+            "workplace": {
+                "path_ref": str(machine.get("workplace_path") or "${PF_WORKPLACE}")
+            },
+            "processforge": {
+                "root_ref": str(
+                    machine.get("processforge_root") or "${PROCESSFORGE_ROOT}"
+                )
+            },
+            "local_docs": {
+                "path_ref": str(
+                    machine.get("local_docs_path") or "${PF_WORKPLACE}/knowledge"
+                )
+            },
+            "project_roots": [
+                str(item) for item in as_list(machine.get("project_roots"))
+            ],
+            "agent_environments": [
+                str(item) for item in as_list(agents.get("tools") or ["generic"])
+            ],
+            "instruction_targets": [
+                str(item)
+                for item in as_list(agents.get("instructions_targets") or ["AGENTS.md"])
+            ],
             "device_discovery": {
                 "enabled": str(discovery.get("enabled") or "ask"),
                 "read_only": bool(discovery.get("read_only", True)),
@@ -39,7 +68,11 @@ class WorkplaceSetupProposalBuilder:
                     str(item)
                     for item in as_list(
                         discovery.get("outputs")
-                        or ["device-discovery-report.md", "resource-candidates.yaml", "auto-setup-proposal.md"]
+                        or [
+                            "device-discovery-report.md",
+                            "resource-candidates.yaml",
+                            "auto-setup-proposal.md",
+                        ]
                     )
                 ],
             },
@@ -53,9 +86,15 @@ class WorkplaceSetupProposalBuilder:
             "privacy": answers.get("privacy_safety", {}),
             "platform_policy": answers.get("platform_contracts", {}),
             "coordination": {
-                "director_capability": bool(coordination.get("director_capability", False)),
-                "default_project_mode": self.coordination.workplace_mode(coordination.get("default_project_mode", "simple")),
-                "initialize_director_office": bool(coordination.get("initialize_director_office", False)),
+                "director_capability": bool(
+                    coordination.get("director_capability", False)
+                ),
+                "default_project_mode": self.coordination.workplace_mode(
+                    coordination.get("default_project_mode", "simple")
+                ),
+                "initialize_director_office": bool(
+                    coordination.get("initialize_director_office", False)
+                ),
             },
             "first_project": first_project,
             "apply_steps": [

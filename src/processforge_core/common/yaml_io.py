@@ -18,7 +18,9 @@ def _parse_scalar(value: str) -> Any:
         return False
     if value in {"null", "Null", "NULL", "~"}:
         return None
-    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+    if (value.startswith('"') and value.endswith('"')) or (
+        value.startswith("'") and value.endswith("'")
+    ):
         return value[1:-1]
     if re.fullmatch(r"-?\d+", value):
         try:
@@ -60,7 +62,7 @@ def load_yaml_document(path: Path) -> dict[str, Any]:
         return {}
     text = path.read_text(encoding="utf-8", errors="replace")
     try:
-        import yaml  # type: ignore
+        import yaml
 
         data = yaml.safe_load(text)
         return data if isinstance(data, dict) else {}

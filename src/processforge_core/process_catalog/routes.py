@@ -28,22 +28,51 @@ class ProcessRouteService:
 
     def validate(self, project_root: Path) -> list[Check]:
         data = self.routes.read(project_root)
-        routes = data.get("routes") if isinstance(data.get("routes"), list) else []
-        checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
-        self.schema_checks.append(checks, data, "process-route-map.schema.json", "process route map")
+        routes_value = data.get("routes")
+        routes = routes_value if isinstance(routes_value, list) else []
+        checks = [
+            check(
+                "PASS" if data.get("schema_version") else "FAIL",
+                "process route map schema_version present",
+            )
+        ]
+        self.schema_checks.append(
+            checks, data, "process-route-map.schema.json", "process route map"
+        )
         seen: set[str] = set()
         for route in routes:
             if not isinstance(route, dict):
                 checks.append(check("FAIL", "route item must be object"))
                 continue
             route_id = safe_id(str(route.get("id") or ""), "route")
-            checks.append(check("PASS" if route_id and route_id not in seen else "FAIL", f"route id unique: {route_id or 'missing'}"))
+            checks.append(
+                check(
+                    "PASS" if route_id and route_id not in seen else "FAIL",
+                    f"route id unique: {route_id or 'missing'}",
+                )
+            )
             seen.add(route_id)
-            checks.append(check("PASS" if route.get("from_process") else "FAIL", f"{route_id} from_process present"))
-            checks.append(check("PASS" if route.get("to_process") else "FAIL", f"{route_id} to_process present"))
-            checks.append(check("PASS" if str(route.get("mode") or "") in HANDOFF_MODES else "FAIL", f"{route_id} mode valid"))
+            checks.append(
+                check(
+                    "PASS" if route.get("from_process") else "FAIL",
+                    f"{route_id} from_process present",
+                )
+            )
+            checks.append(
+                check(
+                    "PASS" if route.get("to_process") else "FAIL",
+                    f"{route_id} to_process present",
+                )
+            )
+            checks.append(
+                check(
+                    "PASS" if str(route.get("mode") or "") in HANDOFF_MODES else "FAIL",
+                    f"{route_id} mode valid",
+                )
+            )
         return checks
 
     def required_role(self, route: dict[str, Any]) -> str:
-        requires = route.get("requires_agent") if isinstance(route.get("requires_agent"), dict) else {}
+        requires_value = route.get("requires_agent")
+        requires = requires_value if isinstance(requires_value, dict) else {}
         return str(requires.get("role") or "")

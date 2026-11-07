@@ -251,6 +251,7 @@ def dispose_owned(
             deleted_bytes,
             error_code,
             configuration_errors,
+            complete=result not in {"cleanup_pending", "partial"},
         )
 
     if resource._creation is not _CREATED:

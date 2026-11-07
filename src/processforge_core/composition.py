@@ -7,7 +7,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, NoReturn
 
 from .common.text import ensure_trailing_newline
 from .common.yaml_dump import dump_yaml
@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from .documents.reader import YamlDocumentReader
     from .evidence.readiness import StageReadinessPolicy
     from .evidence.validation import EvidenceValidationService
+    from .maintenance.execution_migration import ExecutionMigrationService
     from .maintenance.storage_migration import StorageMigrationHost
     from .prepared.knowledge_resources import (
         PreparedKnowledgeMaterialCapture,
@@ -237,6 +238,7 @@ def build_storage_migration_host(
     device_config_path: Path | None,
     configuration: ConfigurationProvider,
     evidence_dir: Path | None = None,
+    _allow_fresh_repair: bool = True,
 ) -> StorageMigrationHost:
     """Bind a cold host; resolve metadata and UUID only on explicit operations.
 
@@ -424,6 +426,8 @@ def build_storage_migration_host(
         flow = ProjectMetadataReader(context.project_root).flow_root()
         initializer = _fresh_initialization(flow)
         if initializer is not None and initializer["state"] == "pending":
+            if not _allow_fresh_repair:
+                raise MaintenanceError("execution_storage_not_ready")
             module = sys.modules.get("pf_native_control")
             capable = getattr(module, "supports_owned_execution", None)
             if not callable(capable) or not capable():
@@ -661,6 +665,107 @@ def build_storage_migration_host(
     )
 
 
+def execution_maintenance_scope(
+    project_root: Path,
+) -> AbstractContextManager[ExecutionMigrationService]:
+    """Hold exact-root configuration and existing native proof for one command."""
+    import sys
+    from contextlib import ExitStack
+    from types import TracebackType
+
+    from .maintenance.contracts import MaintenanceError
+    from .maintenance.execution_migration import ExecutionMigrationService
+    from .maintenance.storage_migration import _safe
+    from .project.configuration_inputs import (
+        configuration_operation,
+        operation_configuration,
+        operation_device_path,
+    )
+    from .project.metadata import ProjectMetadataReader
+
+    def map_native_error(error: BaseException) -> None:
+        module = sys.modules.get("pf_native_control")
+        if isinstance(error, getattr(module, "NativeControlError", ())):
+            raise MaintenanceError("execution_activity_unknown") from None
+
+    class Operation(AbstractContextManager[ExecutionMigrationService]):
+        def __init__(self) -> None:
+            self.stack = ExitStack()
+
+        def _close(self, primary: BaseException | None) -> None:
+            try:
+                self.stack.close()
+            except BaseException:
+                if primary is not None:
+                    # Implicit chaining retains cleanup without replacing the
+                    # primary object, traceback or existing explicit cause.
+                    raise primary
+                raise
+
+        def __enter__(self) -> ExecutionMigrationService:
+            try:
+                project = _safe(project_root).resolve()
+                manifest = ProjectMetadataReader(project).workplace_manifest()
+                workplace = _safe(manifest).parent.resolve() if manifest else None
+                provider = build_configuration_provider(
+                    project_root=project, workplace_root=workplace
+                )
+                device = operation_device_path(project, workplace, provider.device_path)
+                configuration = self.stack.enter_context(
+                    configuration_operation(
+                        project,
+                        workplace,
+                        device_config_path=device,
+                        configuration=operation_configuration(project, workplace)
+                        or provider,
+                    )
+                )
+                if configuration.snapshot().errors:
+                    raise MaintenanceError("storage_configuration_invalid")
+                host = build_storage_migration_host(
+                    project_root=project,
+                    workplace_root=workplace,
+                    device_config_path=device,
+                    configuration=configuration,
+                    _allow_fresh_repair=False,
+                )
+                context = host.context
+                targets = [
+                    target
+                    for target in context.targets
+                    if target.kind == "main" and target.scope == "project"
+                ]
+                if len(targets) != 1:
+                    raise MaintenanceError("storage_execution_target_conflict")
+                native = host.service._native_operation
+                factory = host.service.execution_factory
+                if native is None or factory is None:
+                    raise MaintenanceError("storage_safety_unavailable")
+                self.stack.enter_context(native(context, None))
+                return factory(context, targets[0])
+            except BaseException as error:
+                self._close(error)
+                map_native_error(error)
+                raise
+
+        def __exit__(
+            self,
+            exception_type: type[BaseException] | None,
+            exception: BaseException | None,
+            traceback: TracebackType | None,
+        ) -> None:
+            # Do not inject frozen domain exceptions into generator scopes.
+            try:
+                self._close(exception)
+            except OSError as error:
+                if error is exception:
+                    raise
+                map_native_error(error)
+                raise
+
+    return Operation()
+
+
 def build_core_properties() -> CoreProperties:
     """Capture the owning Core distribution once per application process."""
     from .common.properties import CoreProperties
@@ -740,7 +845,7 @@ def build_prepared_knowledge_resource_reader(
     budget: Callable[[], Callable[[], MaterialBudget]],
     work_error: Callable[[], type[WorkResourceError]],
     material_error: Callable[[], type[MaterialError]],
-    fail: Callable[[], Callable[[str], None]],
+    fail: Callable[[], Callable[[str], NoReturn]],
 ) -> PreparedKnowledgeResourceReader:
     from .prepared.knowledge_resources import PreparedKnowledgeResourceReader
 
@@ -784,7 +889,7 @@ def build_prepared_resource_snapshot_reader(
     current_snapshot: Callable[[], Callable[[Path], dict[str, Any]]],
     context_checker: Callable[[], ProjectContextCheck],
     selector_pattern: Callable[[], re.Pattern[str]],
-    fail: Callable[[], Callable[[str], None]],
+    fail: Callable[[], Callable[[str], NoReturn]],
 ) -> PreparedResourceSnapshotReader:
     from .prepared.snapshot_read import PreparedResourceSnapshotReader
 
@@ -828,7 +933,7 @@ def build_work_resource_context_reader(
 
 def build_continuation_work_reader(
     *,
-    selector: Callable[[], Callable[[str], str]],
+    selector: Callable[[], Callable[[object], str]],
     project_root: Callable[[], Path],
     project_id: Callable[[], Callable[[Path], str]],
     resources: Callable[[], ContinuationResourceReads],
@@ -902,7 +1007,7 @@ def build_continuation_record_reader(
     yaml_loader: Callable[[], Callable[[str], Any]],
     error: Callable[[], type[ValueError]],
     workplace: Callable[[], Path | None],
-    leases_directory: Callable[[], Callable[[Path | None], Path]],
+    leases_directory: Callable[[], Callable[[Path], Path]],
     control_loader: Callable[[], Callable[[Path], dict]],
 ) -> ContinuationRecordReader:
     from .work.continuation_read import ContinuationRecordReader

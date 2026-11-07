@@ -15,11 +15,16 @@ class OfficialPackProfileReader:
     def __init__(self, distribution_root: Path) -> None:
         self.distribution_root = distribution_root
 
-    def official_pack_registry_entries_for_profile(self, profile: str) -> list[dict[str, Any]]:
+    def official_pack_registry_entries_for_profile(
+        self, profile: str
+    ) -> list[dict[str, Any]]:
         selected: list[dict[str, Any]] = []
         for _path, manifest in official_pack_manifest_records(self.distribution_root):
-            activation = manifest.get("activation") if isinstance(manifest.get("activation"), dict) else {}
-            profiles = {str(item) for item in as_list(activation.get("profiles")) if str(item)}
+            activation_value = manifest.get("activation")
+            activation = activation_value if isinstance(activation_value, dict) else {}
+            profiles = {
+                str(item) for item in as_list(activation.get("profiles")) if str(item)
+            }
             if profile not in profiles:
                 continue
             selected.append(

@@ -9,7 +9,6 @@ from processforge_core.common.ids import safe_id
 from processforge_core.common.paths import rel
 from processforge_core.common.values import as_list, string_list
 
-
 PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "schema_version",
     "id",
@@ -60,18 +59,32 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
 
 
 class ProcessSemanticPolicy:
-
     def unsupported_fields(self, process: dict[str, Any]) -> list[dict[str, str]]:
         unsupported: list[dict[str, str]] = []
         for key in sorted(process.keys()):
             if key not in PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL:
-                unsupported.append({"path": key, "reason": "not represented in process-authoring answers schema"})
+                unsupported.append(
+                    {
+                        "path": key,
+                        "reason": "not represented in process-authoring answers schema",
+                    }
+                )
         return unsupported
 
-    def map(self, process: dict[str, Any], process_path: Path, project_root: Path, unsupported: list[dict[str, str]]) -> dict[str, Any]:
+    def map(
+        self,
+        process: dict[str, Any],
+        process_path: Path,
+        project_root: Path,
+        unsupported: list[dict[str, str]],
+    ) -> dict[str, Any]:
         return {
             "schema_version": 1,
-            "source": {"type": "process", "id": str(process.get("id", process_path.stem)), "path": rel(process_path, project_root)},
+            "source": {
+                "type": "process",
+                "id": str(process.get("id", process_path.stem)),
+                "path": rel(process_path, project_root),
+            },
             "mapped": {
                 "id": "process.id",
                 "title": "process.name",
@@ -95,15 +108,41 @@ class ProcessSemanticPolicy:
             "kind": str(process.get("kind") or ""),
             "scope": str(process.get("scope") or ""),
             "purpose": str(process.get("purpose") or process.get("description") or ""),
-            "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
+            "run_model": process.get("run_model")
+            if isinstance(process.get("run_model"), dict)
+            else {},
             "roles": self.objects(process.get("roles"), ["title", "responsibility"]),
-            "stages": self.objects(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "required_artifacts", "required_evidence", "entry_gates", "exit_gates", "automation_bindings", "handoff_required"]),
-            "artifact_definitions": self.objects(process.get("artifact_definitions"), ["title", "owner_role", "template", "lifecycle"]),
-            "evidence_definitions": self.objects(process.get("evidence_definitions"), ["title", "kind", "artifact"]),
-            "gates": self.objects(process.get("gates"), ["description", "blocking", "required_artifact", "stage", "stage_id"]),
+            "stages": self.objects(
+                process.get("stages"),
+                [
+                    "title",
+                    "required_role",
+                    "required_inputs",
+                    "produced_artifacts",
+                    "required_artifacts",
+                    "required_evidence",
+                    "entry_gates",
+                    "exit_gates",
+                    "automation_bindings",
+                    "handoff_required",
+                ],
+            ),
+            "artifact_definitions": self.objects(
+                process.get("artifact_definitions"),
+                ["title", "owner_role", "template", "lifecycle"],
+            ),
+            "evidence_definitions": self.objects(
+                process.get("evidence_definitions"), ["title", "kind", "artifact"]
+            ),
+            "gates": self.objects(
+                process.get("gates"),
+                ["description", "blocking", "required_artifact", "stage", "stage_id"],
+            ),
             "events": {"emits": self.events(process)},
             "requirements": {
-                "required_capabilities": self.strings(process.get("required_capabilities")),
+                "required_capabilities": self.strings(
+                    process.get("required_capabilities")
+                ),
                 "required_packages": self.strings(process.get("required_packages")),
                 "required_templates": self.strings(process.get("required_templates")),
                 "allowed_tools": self.strings(process.get("allowed_tools")),
@@ -111,7 +150,9 @@ class ProcessSemanticPolicy:
             },
         }
 
-    def compare(self, source: dict[str, Any], candidate: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
+    def compare(
+        self, source: dict[str, Any], candidate: dict[str, Any]
+    ) -> tuple[str, list[dict[str, str]]]:
         source_sem = self.describe(source)
         candidate_sem = self.describe(candidate)
         diffs: list[dict[str, str]] = []
@@ -143,16 +184,28 @@ class ProcessSemanticPolicy:
             candidate_values = set(candidate_sem["requirements"].get(key, []))
             for missing in sorted(set(source_values) - candidate_values):
                 add("FAIL", key, f"{key} missing: {missing}")
-        status = "FAIL" if any(item["level"] == "FAIL" for item in diffs) else ("WARN" if any(item["level"] == "WARN" for item in diffs) else "PASS")
+        status = (
+            "FAIL"
+            if any(item["level"] == "FAIL" for item in diffs)
+            else ("WARN" if any(item["level"] == "WARN" for item in diffs) else "PASS")
+        )
         return status, diffs
 
     def strings(self, values: Any) -> list[str]:
         return sorted(set(string_list(values)))
 
     def events(self, process: dict[str, Any]) -> list[str]:
-        hooks = process.get("hooks") if isinstance(process.get("hooks"), dict) else {}
-        emits = hooks.get("emit") if isinstance(hooks.get("emit"), list) else []
-        return sorted({str(item.get("event")) for item in emits if isinstance(item, dict) and item.get("event")})
+        hooks_value = process.get("hooks")
+        hooks = hooks_value if isinstance(hooks_value, dict) else {}
+        emits_value = hooks.get("emit")
+        emits = emits_value if isinstance(emits_value, list) else []
+        return sorted(
+            {
+                str(item.get("event"))
+                for item in emits
+                if isinstance(item, dict) and item.get("event")
+            }
+        )
 
     def objects(self, items: Any, keys: list[str]) -> dict[str, dict[str, Any]]:
         result: dict[str, dict[str, Any]] = {}

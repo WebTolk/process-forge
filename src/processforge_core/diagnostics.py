@@ -1,4 +1,5 @@
 """Optional bounded diagnostics. Never use this module for required evidence."""
+
 from __future__ import annotations
 
 import contextlib
@@ -13,40 +14,89 @@ import sys
 import threading
 import time
 import uuid
-from itertools import islice
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from datetime import datetime, timezone
 from functools import lru_cache
+from itertools import islice
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-LEVELS = dict(debug=10, info=20, notice=25, warning=30, error=40,
-              critical=50, alert=60, emergency=70)
-PROFILES = dict(quiet="warning", normal="info", diagnostic="debug", trace="debug", off="emergency")
-LIMITS = dict(record_bytes=16384, string_chars=2048, depth=6, items=32,
-              stack_frames=8, spans=32, file_bytes=1048576, quota_bytes=8388608,
-              files=8, retention_seconds=604800, detail_records=10000)
-DEFAULTS = dict(schema_version=1, profile="normal", threshold="info", components=[],
-                sink="jsonl", expires_at=None, sample_every=1, **LIMITS)
-SECRET_KEY = re.compile(r"password|passwd|secret|token|credential|authorization|cookie|api.?key|private.?key|access.?key|headers", re.I)
-OMIT_KEY = re.compile(r"prompt|payload|environment|(?:^|[_-])env(?:$|[_-])|(?:^|[_-])content(?:$|[_-])|file.?contents?|source.?code", re.I)
+LEVELS = dict(
+    debug=10,
+    info=20,
+    notice=25,
+    warning=30,
+    error=40,
+    critical=50,
+    alert=60,
+    emergency=70,
+)
+PROFILES = dict(
+    quiet="warning", normal="info", diagnostic="debug", trace="debug", off="emergency"
+)
+LIMITS = dict(
+    record_bytes=16384,
+    string_chars=2048,
+    depth=6,
+    items=32,
+    stack_frames=8,
+    spans=32,
+    file_bytes=1048576,
+    quota_bytes=8388608,
+    files=8,
+    retention_seconds=604800,
+    detail_records=10000,
+)
+DEFAULTS: dict[str, Any] = dict(
+    schema_version=1,
+    profile="normal",
+    threshold="info",
+    components=[],
+    sink="jsonl",
+    expires_at=None,
+    sample_every=1,
+    **LIMITS,
+)
+SECRET_KEY = re.compile(
+    r"password|passwd|secret|token|credential|authorization|cookie|api.?key|private.?key|access.?key|headers",
+    re.I,
+)
+OMIT_KEY = re.compile(
+    r"prompt|payload|environment|(?:^|[_-])env(?:$|[_-])|(?:^|[_-])content(?:$|[_-])|file.?contents?|source.?code",
+    re.I,
+)
 SECRET_TEXT = [
     re.compile(r"(?i)\b(?:bearer|basic)\s+[A-Za-z0-9_./+=-]+"),
-    re.compile(r"(?i)(?:password|passwd|token|secret|api[_-]?key|authorization)\s*[:=]\s*(?:\"[^\"\n]*\"|'[^'\n]*'|[^\s,;}]+)"),
+    re.compile(
+        r"(?i)(?:password|passwd|token|secret|api[_-]?key|authorization)\s*[:=]\s*(?:\"[^\"\n]*\"|'[^'\n]*'|[^\s,;}]+)"
+    ),
     re.compile(r"https?://[^\s/@:]+:[^\s/@]+@"),
-    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)", re.S),
-    re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{12,})\b"),
+    re.compile(
+        r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)",
+        re.S,
+    ),
+    re.compile(
+        r"\b(?:gh[pousr]_[A-Za-z0-9]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{12,})\b"
+    ),
 ]
 ABS_PATH = re.compile(r"(?<![\w:/])(?:file://|[A-Za-z]:[\\/]|/(?!/))[^\r\n]*", re.I)
-_CURRENT: contextvars.ContextVar[Any] = contextvars.ContextVar("pf_diagnostic", default=None)
-_IDENTITY: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar("pf_diagnostic_identity", default={})
+_CURRENT: contextvars.ContextVar[Any] = contextvars.ContextVar(
+    "pf_diagnostic", default=None
+)
+_IDENTITY: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
+    "pf_diagnostic_identity", default={}
+)
 _CACHE: OrderedDict[Any, Any] = OrderedDict()
 _CACHE_LOCK = threading.RLock()
 _IO_LOCK = threading.RLock()
 
 
 def utc() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
 
 
 def severity(level: str) -> int:
@@ -64,7 +114,9 @@ def _epoch(value: Any) -> float:
     return parsed.timestamp()
 
 
-def resolve_config(*layers: tuple[str, dict[str, Any]], now: float | None = None) -> dict[str, Any]:
+def resolve_config(
+    *layers: tuple[str, dict[str, Any]], now: float | None = None
+) -> dict[str, Any]:
     """Resolve policy without IO. Invalid input is explicit; factories fail safely."""
     now = time.time() if now is None else now
     values, sources, locked = dict(DEFAULTS), dict.fromkeys(DEFAULTS, "defaults"), set()
@@ -72,9 +124,15 @@ def resolve_config(*layers: tuple[str, dict[str, Any]], now: float | None = None
     for source, layer in layers:
         if not isinstance(layer, dict) or set(layer) - set(DEFAULTS) - {"locked"}:
             raise ValueError("unknown diagnostic configuration field")
-        if layer.get("schema_version", 1) != 1 or type(layer.get("schema_version", 1)) is not int:
+        if (
+            layer.get("schema_version", 1) != 1
+            or type(layer.get("schema_version", 1)) is not int
+        ):
             raise ValueError("unsupported diagnostic configuration version")
-        if "locked" in layer and (not isinstance(layer["locked"], list) or any(k not in DEFAULTS for k in layer["locked"])):
+        if "locked" in layer and (
+            not isinstance(layer["locked"], list)
+            or any(k not in DEFAULTS for k in layer["locked"])
+        ):
             raise ValueError("invalid locked diagnostic fields")
         updates = dict(layer)
         if "profile" in updates:
@@ -93,24 +151,87 @@ def resolve_config(*layers: tuple[str, dict[str, Any]], now: float | None = None
                 severity(value)
             if key == "sink" and value not in {"jsonl", "stderr", "both", "none"}:
                 raise ValueError("unknown diagnostic sink")
-            if key == "components" and (not isinstance(value, list) or len(value) > 32 or any(not isinstance(s, str) or not re.fullmatch(r"[a-z][a-z0-9_.-]{0,63}", s) for s in value)):
+            if key == "components" and (
+                not isinstance(value, list)
+                or len(value) > 32
+                or any(
+                    not isinstance(s, str)
+                    or not re.fullmatch(r"[a-z][a-z0-9_.-]{0,63}", s)
+                    for s in value
+                )
+            ):
                 raise ValueError("invalid diagnostic components")
-            if key == "sample_every" and (type(value) is not int or not 1 <= value <= 10000):
+            if key == "sample_every" and (
+                type(value) is not int or not 1 <= value <= 10000
+            ):
                 raise ValueError("invalid diagnostic sampling")
             if key == "expires_at" and value is not None:
                 _epoch(value)
             values[key], sources[key] = value, source
         locked.update(layer.get("locked", []))
-    if values["record_bytes"] < 512 or values["file_bytes"] < values["record_bytes"] or values["quota_bytes"] < values["file_bytes"]:
+    if (
+        values["record_bytes"] < 512
+        or values["file_bytes"] < values["record_bytes"]
+        or values["quota_bytes"] < values["file_bytes"]
+    ):
         raise ValueError("diagnostic record/file/quota limits do not fit")
-    detailed = values["profile"] in {"diagnostic", "trace"} or LEVELS[values["threshold"]] < LEVELS["info"]
-    if detailed and (values["expires_at"] is None or _epoch(values["expires_at"]) > now + 900):
+    detailed = (
+        values["profile"] in {"diagnostic", "trace"}
+        or LEVELS[values["threshold"]] < LEVELS["info"]
+    )
+    if detailed and (
+        values["expires_at"] is None or _epoch(values["expires_at"]) > now + 900
+    ):
         raise ValueError("diagnostic detail needs expires_at within 15 minutes")
-    return {"values": values, "sources": sources, "locked": sorted(locked), "errors": []}
+    return {
+        "values": values,
+        "sources": sources,
+        "locked": sorted(locked),
+        "errors": [],
+    }
+
+
+def admission_facts(error: BaseException) -> dict[str, Any]:
+    """Read only known scalar facts; hostile attributes are optional metadata."""
+    choices = {
+        "admission_reason": {
+            "contention_timeout",
+            "timeout",
+            "lock_exit",
+            "lock_io_error",
+        },
+        "registry_lock_reason": {"contention_timeout"},
+        "admission_phase": {"acquire", "release"},
+        "registry_lock_phase": {"guard", "owner"},
+    }
+    result: dict[str, str | int] = {}
+    for name in (
+        *choices,
+        "admission_errno",
+        "admission_winerror",
+        "errno",
+        "winerror",
+    ):
+        try:
+            value = getattr(error, name, None)
+        except BaseException:
+            continue
+        if name in choices:
+            if type(value) is str and len(value) <= 32 and value in choices[name]:
+                result[name] = value
+        elif type(value) is int and 0 <= value <= 0xFFFFFFFF:
+            result[name] = value
+    return result
 
 
 class Sanitizer:
-    def __init__(self, limits: dict[str, Any], secrets: tuple[str, ...] = (), *, export: bool = False):
+    def __init__(
+        self,
+        limits: dict[str, Any],
+        secrets: tuple[str, ...] = (),
+        *,
+        export: bool = False,
+    ):
         self.limits = limits
         self.secrets = [s for s in secrets if isinstance(s, str) and s][:256]
         self.export = export
@@ -139,16 +260,25 @@ class Sanitizer:
 
     def collect(self, value: Any, depth: int = 0) -> None:
         self._collect_nodes += 1
-        if depth > self.limits["depth"] or len(self.secrets) >= 256 or self._collect_nodes > 512:
+        if (
+            depth > self.limits["depth"]
+            or len(self.secrets) >= 256
+            or self._collect_nodes > 512
+        ):
             return
         if type(value) is dict:
             for key, item in islice(value.items(), self.limits["items"]):
-                if isinstance(key, str) and SECRET_KEY.search(key) and type(item) is str and item:
-                    self.secrets.append(item[:self.limits["string_chars"]])
+                if (
+                    isinstance(key, str)
+                    and SECRET_KEY.search(key)
+                    and type(item) is str
+                    and item
+                ):
+                    self.secrets.append(item[: self.limits["string_chars"]])
                 else:
                     self.collect(item, depth + 1)
         elif type(value) in (list, tuple):
-            for item in value[:self.limits["items"]]:
+            for item in value[: self.limits["items"]]:
                 self.collect(item, depth + 1)
 
     def clean(self, value: Any, depth: int = 0) -> Any:
@@ -181,24 +311,51 @@ class Sanitizer:
         if type(value) in (list, tuple):
             if len(value) > self.limits["items"]:
                 self.truncated += 1
-            return [self.clean(item, depth + 1) for item in value[:self.limits["items"]]]
+            return [
+                self.clean(item, depth + 1) for item in value[: self.limits["items"]]
+            ]
         if isinstance(value, BaseException):
             # Exception strings can execute user code. Failure stays contained.
             try:
                 message = self.text(str(value))
             except BaseException:
                 message = "<unprintable>"
-            frames, tb = [], value.__traceback__
-            while tb and len(frames) < self.limits["stack_frames"]:
-                frames.append({"file": self.text(tb.tb_frame.f_code.co_filename),
-                               "function": self.text(tb.tb_frame.f_code.co_name), "line": tb.tb_lineno})
+            frames: deque[dict[str, str | int]] = deque(
+                maxlen=self.limits["stack_frames"]
+            )
+            tb, scanned = value.__traceback__, 0
+            # Keep the tail of a bounded scan, never claim an unseen innermost
+            # frame. Traversal uses the existing item cap, independent of output.
+            while tb and scanned < self.limits["items"]:
+                filename = re.split(r"[\\/]", tb.tb_frame.f_code.co_filename)[-1]
+                frames.append(
+                    {
+                        "file": self.text(filename),
+                        "function": self.text(tb.tb_frame.f_code.co_name),
+                        "line": tb.tb_lineno,
+                    }
+                )
+                scanned += 1
                 tb = tb.tb_next
-            return {"type": type(value).__name__, "message": message, "frames": frames}
+            cut = tb is not None or scanned > self.limits["stack_frames"]
+            if cut:
+                self.truncated += 1
+            return {
+                "type": type(value).__name__,
+                "message": message,
+                "frames": list(frames),
+                **admission_facts(value),
+                "frames_truncated": cut,
+                "traceback_scan_truncated": tb is not None,
+            }
         return "<" + type(value).__name__[:80] + ">"
 
 
 def encode(record: Any) -> bytes:
-    return (json.dumps(record, ensure_ascii=False, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
+    return (
+        json.dumps(record, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+        + "\n"
+    ).encode("utf-8")
 
 
 def _lock_remaining(deadline: float) -> float:
@@ -287,7 +444,11 @@ def _file_lock(root: Path) -> Iterator[None]:
         raise TimeoutError("diagnostic thread gate timed out")
     try:
         _lock_remaining(deadline)
-        admission = _windows_admission(root, deadline) if os.name == "nt" else contextlib.nullcontext()
+        admission = (
+            _windows_admission(root, deadline)
+            if os.name == "nt"
+            else contextlib.nullcontext()
+        )
         with admission:
             _lock_remaining(deadline)
             if path.is_symlink():
@@ -303,10 +464,15 @@ def _file_lock(root: Path) -> Iterator[None]:
                         handle.seek(0)
                         if os.name == "nt":
                             import msvcrt
+
                             msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
                         else:
                             import fcntl
-                            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+                            getattr(fcntl, "flock")(
+                                handle.fileno(),
+                                getattr(fcntl, "LOCK_EX") | getattr(fcntl, "LOCK_NB"),
+                            )
                         break
                     except OSError:
                         remaining = deadline - time.monotonic()
@@ -321,13 +487,18 @@ def _file_lock(root: Path) -> Iterator[None]:
                         handle.seek(0)
                         msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
                     else:
-                        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                        getattr(fcntl, "flock")(
+                            handle.fileno(), getattr(fcntl, "LOCK_UN")
+                        )
     finally:
         _IO_LOCK.release()
 
 
 def log_files(root: Path) -> list[Path]:
-    return [root / "diagnostics.jsonl", *[root / f"diagnostics.{i}.jsonl" for i in range(1, 8)]]
+    return [
+        root / "diagnostics.jsonl",
+        *[root / f"diagnostics.{i}.jsonl" for i in range(1, 8)],
+    ]
 
 
 class JsonlSink:
@@ -341,7 +512,10 @@ class JsonlSink:
         if len(data) > self.limits["record_bytes"]:
             raise ValueError("diagnostic record exceeds byte limit")
         if not self._initialized:
-            if any(p.is_symlink() for p in (self.root, self.root.parent, self.root.parent.parent)):
+            if any(
+                p.is_symlink()
+                for p in (self.root, self.root.parent, self.root.parent.parent)
+            ):
                 raise OSError("diagnostic directory symlink")
             self.root.mkdir(parents=True, exist_ok=True)
             self._initialized = True
@@ -363,12 +537,18 @@ class JsonlSink:
                         first_time = stat.st_mtime
                         try:
                             with files[index].open("rb") as handle:
-                                first_time = _epoch(json.loads(handle.readline(16385))["timestamp"])
+                                first_time = _epoch(
+                                    json.loads(handle.readline(16385))["timestamp"]
+                                )
                         except (OSError, ValueError, KeyError, TypeError):
                             pass
                         cached = (stat.st_ino, first_time)
                         self._birthmarks[entry.name] = cached
-                    if index >= self.limits["files"] or now - min(stat.st_mtime, cached[1]) > self.limits["retention_seconds"]:
+                    if (
+                        index >= self.limits["files"]
+                        or now - min(stat.st_mtime, cached[1])
+                        > self.limits["retention_seconds"]
+                    ):
                         files[index].unlink()
                         self._birthmarks.pop(entry.name, None)
                     else:
@@ -398,13 +578,29 @@ def stderr_sink(record: dict[str, Any]) -> None:
 
 
 class Logger:
-    def __init__(self, config: dict[str, Any] | None = None, *, root: Path | None = None,
-                 sinks: list[Callable] | None = None, secrets: tuple[str, ...] = ()):
+    project: Path
+    invocation: dict[str, Any]
+
+    def __init__(
+        self,
+        config: dict[str, Any] | None = None,
+        *,
+        root: Path | None = None,
+        sinks: list[Callable] | None = None,
+        secrets: tuple[str, ...] = (),
+    ):
         self.config = config or resolve_config()
         self.values = self.config["values"]
         self.secrets = secrets
-        self.health = dict(emitted=0, filtered=0, dropped=0, sink_failures=0,
-                           serialization_failures=0, truncated=0, detail_expired=0)
+        self.health = dict(
+            emitted=0,
+            filtered=0,
+            dropped=0,
+            sink_failures=0,
+            serialization_failures=0,
+            truncated=0,
+            detail_expired=0,
+        )
         self.detail_count = 0
         self._seen_debug = 0
         self._last_warning = float("-inf")
@@ -418,17 +614,30 @@ class Logger:
 
     def effective(self) -> dict[str, Any]:
         values = dict(self.values)
-        detailed = values["profile"] in {"diagnostic", "trace"} or LEVELS[values["threshold"]] < 20
-        if detailed and (time.time() >= _epoch(values["expires_at"]) or self.detail_count >= values["detail_records"]):
+        detailed = (
+            values["profile"] in {"diagnostic", "trace"}
+            or LEVELS[values["threshold"]] < 20
+        )
+        if detailed and (
+            time.time() >= _epoch(values["expires_at"])
+            or self.detail_count >= values["detail_records"]
+        ):
             values.update(profile="normal", threshold="info")
-        return {**self.config, "values": values, "detail_expired": detailed and values["profile"] == "normal", "health": dict(self.health)}
+        return {
+            **self.config,
+            "values": values,
+            "detail_expired": detailed and values["profile"] == "normal",
+            "health": dict(self.health),
+        }
 
     def enabled(self, level: str, component: str = "core") -> bool:
         number = severity(level)
         if self.values["profile"] == "off" or not self.sinks:
             return False
         effective = self.effective()["values"]
-        return number >= LEVELS[effective["threshold"]] and (not effective["components"] or component in effective["components"])
+        return number >= LEVELS[effective["threshold"]] and (
+            not effective["components"] or component in effective["components"]
+        )
 
     def _failure(self, kind: str, level: str) -> None:
         self.health[kind] += 1
@@ -436,11 +645,21 @@ class Logger:
         if LEVELS[level] >= 40 and time.monotonic() - self._last_warning >= 60:
             self._last_warning = time.monotonic()
             try:
-                sys.stderr.write("PF diagnostic_delivery_failed: optional serious record lost; inspect diagnostics health.\n")
+                sys.stderr.write(
+                    "PF diagnostic_delivery_failed: optional serious record lost; inspect diagnostics health.\n"
+                )
             except Exception:
                 pass
 
-    def log(self, level: str, message: str, context: Any = None, *, component: str = "core", code: str = "diagnostic") -> dict[str, Any] | None:
+    def log(
+        self,
+        level: str,
+        message: str,
+        context: Any = None,
+        *,
+        component: str = "core",
+        code: str = "diagnostic",
+    ) -> dict[str, Any] | None:
         severity(level)  # programmer error stays explicit, including no-op
         if not self.enabled(level, component):
             self.health["filtered"] += 1
@@ -464,16 +683,34 @@ class Logger:
                     for key, value in sanitized.items():
                         if value is None or type(value) in (str, int, float, bool):
                             rendered = rendered.replace("{" + key + "}", str(value))
-                record = {"schema_version": 1, "timestamp": utc(), "severity": level,
-                          "python_level": LEVELS[level], "component": clean.text(component),
-                          "code": clean.text(code), "message": clean.text(rendered),
-                          "template": template, "context": sanitized, "identity": identity,
-                          "redacted": clean.redacted, "truncated": clean.truncated, "health": dict(self.health)}
+                record = {
+                    "schema_version": 1,
+                    "timestamp": utc(),
+                    "severity": level,
+                    "python_level": LEVELS[level],
+                    "component": clean.text(component),
+                    "code": clean.text(code),
+                    "message": clean.text(rendered),
+                    "template": template,
+                    "context": sanitized,
+                    "identity": identity,
+                    "redacted": clean.redacted,
+                    "truncated": clean.truncated,
+                    "health": dict(self.health),
+                }
                 if len(encode(record)) > self.values["record_bytes"]:
-                    record.update(context={"detail": "<record-truncated>"}, message=record["message"][:128],
-                                  template=record["template"][:128], truncated=record["truncated"] + 1)
+                    record.update(
+                        context={"detail": "<record-truncated>"},
+                        message=record["message"][:128],
+                        template=record["template"][:128],
+                        truncated=record["truncated"] + 1,
+                    )
                     if len(encode(record)) > self.values["record_bytes"]:
-                        record["identity"] = {k: v[:80] if isinstance(v, str) else v for k, v in identity.items() if k in {"request_id", "run_id", "session_id"}}
+                        record["identity"] = {
+                            k: v[:80] if isinstance(v, str) else v
+                            for k, v in identity.items()
+                            if k in {"request_id", "run_id", "session_id"}
+                        }
                     if len(encode(record)) > self.values["record_bytes"]:
                         raise ValueError("minimum diagnostic envelope exceeds limit")
             except BaseException:
@@ -492,20 +729,52 @@ class Logger:
                 self.health["detail_expired"] = 1
             return record
 
+    def debug(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("debug", message, context, **kwargs)
 
-def _level_method(level: str) -> Callable:
-    def method(self: Logger, message: str, context: Any = None, **kwargs: Any) -> Any:
-        return self.log(level, message, context, **kwargs)
-    return method
+    def info(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("info", message, context, **kwargs)
 
+    def notice(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("notice", message, context, **kwargs)
 
-for _level in LEVELS:
-    setattr(Logger, _level, _level_method(_level))
+    def warning(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("warning", message, context, **kwargs)
+
+    def error(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("error", message, context, **kwargs)
+
+    def critical(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("critical", message, context, **kwargs)
+
+    def alert(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("alert", message, context, **kwargs)
+
+    def emergency(
+        self, message: str, context: Any = None, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        return self.log("emergency", message, context, **kwargs)
 
 
 class NullLogger(Logger):
     def __init__(self) -> None:
-        super().__init__(resolve_config(("invocation", {"profile": "off", "sink": "none"})))
+        super().__init__(
+            resolve_config(("invocation", {"profile": "off", "sink": "none"}))
+        )
 
 
 NULL = NullLogger()
@@ -529,23 +798,41 @@ def select_work(project: Path, run_id: str, assignment_id: str | None = None) ->
     logger = current()
     annotate(run_id=run_id, assignment_id=assignment_id)
     if getattr(logger, "project", None) == project:
-        _CURRENT.set(for_project(project, run_id=run_id, session_id=_IDENTITY.get().get("session_id"),
-                                 invocation=logger.invocation))
+        _CURRENT.set(
+            for_project(
+                project,
+                run_id=run_id,
+                session_id=_IDENTITY.get().get("session_id"),
+                invocation=logger.invocation,
+            )
+        )
 
 
-def invocation_options(profile: str | None = None, threshold: str | None = None,
-                       components: str | None = None, sink: str | None = None) -> dict[str, Any]:
-    result = {k: v for k, v in dict(profile=profile, threshold=threshold, sink=sink).items() if v is not None}
+def invocation_options(
+    profile: str | None = None,
+    threshold: str | None = None,
+    components: str | None = None,
+    sink: str | None = None,
+) -> dict[str, Any]:
+    result: dict[str, str | list[str]] = {
+        k: v
+        for k, v in dict(profile=profile, threshold=threshold, sink=sink).items()
+        if v is not None
+    }
     if components is not None:
         result["components"] = [c.strip() for c in components.split(",") if c.strip()]
     if profile in {"diagnostic", "trace"} or threshold == "debug":
-        result["expires_at"] = datetime.fromtimestamp(time.time() + 600, timezone.utc).isoformat()
+        result["expires_at"] = datetime.fromtimestamp(
+            time.time() + 600, timezone.utc
+        ).isoformat()
     return result
 
 
 def _read_config(path: Path) -> dict[str, Any]:
     for item in (path, path.parent):
-        if item.is_symlink() or (item.exists() and getattr(item.lstat(), "st_file_attributes", 0) & 0x400):
+        if item.is_symlink() or (
+            item.exists() and getattr(item.lstat(), "st_file_attributes", 0) & 0x400
+        ):
             raise ValueError("diagnostic config path is linked")
     if not path.exists():
         return {}
@@ -561,13 +848,22 @@ def _read_config(path: Path) -> dict[str, Any]:
     return result
 
 
-def configuration(project: Path, *, run_id: str | None = None, session_id: str | None = None,
-                  invocation: dict[str, Any] | None = None) -> dict[str, Any]:
+def configuration(
+    project: Path,
+    *,
+    run_id: str | None = None,
+    session_id: str | None = None,
+    invocation: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     document = _read_config(project / ".pf" / "diagnostics.json")
-    return configuration_document(document, run_id=run_id, session_id=session_id, invocation=invocation)
+    return configuration_document(
+        document, run_id=run_id, session_id=session_id, invocation=invocation
+    )
 
 
-def configuration_document(document, *, run_id=None, session_id=None, invocation=None, now=None):
+def configuration_document(
+    document, *, run_id=None, session_id=None, invocation=None, now=None
+):
     document = dict(document)
     work = document.pop("work", {})
     sessions = document.pop("sessions", {})
@@ -578,12 +874,26 @@ def configuration_document(document, *, run_id=None, session_id=None, invocation
         raise ValueError("diagnostic invocation config too large")
     override = json.loads(env) if env else {}
     # CLI overrides are a distinct layer: they cannot hide environment locks.
-    return resolve_config(("project", document), ("work", work.get(run_id, {}) if run_id else {}),
-                          ("session", sessions.get(session_id, {}) if session_id else {}),
-                          ("environment", override), ("invocation", invocation or {}), now=now)
+    return resolve_config(
+        ("project", document),
+        ("work", work.get(run_id, {}) if run_id else {}),
+        ("session", sessions.get(session_id, {}) if session_id else {}),
+        ("environment", override),
+        ("invocation", invocation or {}),
+        now=now,
+    )
 
 
-def configure_proposal(document, profile, *, duration=600, run_id=None, session_id=None, invocation=None, now=None):
+def configure_proposal(
+    document,
+    profile,
+    *,
+    duration=600,
+    run_id=None,
+    session_id=None,
+    invocation=None,
+    now=None,
+):
     """Pure bounded v1 edit. Existing locks apply even within the edited layer."""
     now = time.time() if now is None else now
     if profile not in PROFILES or type(duration) is not int or not 1 <= duration <= 900:
@@ -591,7 +901,11 @@ def configure_proposal(document, profile, *, duration=600, run_id=None, session_
     if run_id and session_id:
         raise ValueError("choose one target scope")
     for identifier in (run_id, session_id):
-        if identifier is not None and (not isinstance(identifier, str) or not 1 <= len(identifier) <= 256 or any(ord(c) < 32 for c in identifier)):
+        if identifier is not None and (
+            not isinstance(identifier, str)
+            or not 1 <= len(identifier) <= 256
+            or any(ord(c) < 32 for c in identifier)
+        ):
             raise ValueError("invalid target identifier")
     if not isinstance(document, dict) or len(encode(document)) > 65536:
         raise ValueError("invalid bounded diagnostic document")
@@ -606,11 +920,24 @@ def configure_proposal(document, profile, *, duration=600, run_id=None, session_
             if not isinstance(key, str) or not key:
                 raise ValueError("invalid diagnostic scope key")
             resolve_config(("project", project), (name, value), now=now)
-    scope, identifier = ("work", run_id) if run_id else ("sessions", session_id) if session_id else ("project", None)
-    target = project if identifier is None else document.get(scope, {}).get(identifier, {})
+    scope, identifier = (
+        ("work", run_id)
+        if run_id
+        else ("sessions", session_id)
+        if session_id
+        else ("project", None)
+    )
+    target = (
+        project if identifier is None else document.get(scope, {}).get(identifier, {})
+    )
     layers = [("project", project)] + ([(scope, target)] if identifier else [])
-    change = {"profile": profile, "threshold": PROFILES[profile],
-              "expires_at": datetime.fromtimestamp(now + duration, timezone.utc).isoformat() if profile in {"diagnostic", "trace"} else None}
+    change = {
+        "profile": profile,
+        "threshold": PROFILES[profile],
+        "expires_at": datetime.fromtimestamp(now + duration, timezone.utc).isoformat()
+        if profile in {"diagnostic", "trace"}
+        else None,
+    }
     resolve_config(*layers, ("requested_change", change), now=now)
     if identifier:
         proposed.setdefault(scope, {}).setdefault(identifier, {}).update(change)
@@ -620,11 +947,18 @@ def configure_proposal(document, profile, *, duration=600, run_id=None, session_
     for name in ("work", "sessions"):
         for value in proposed.get(name, {}).values():
             resolve_config(("project", new_project), (name, value), now=now)
-    effective = configuration_document(proposed, run_id=run_id, session_id=session_id, invocation=invocation, now=now)
+    effective = configuration_document(
+        proposed, run_id=run_id, session_id=session_id, invocation=invocation, now=now
+    )
     if len(encode(proposed)) > 65536:
         raise ValueError("diagnostic config output exceeds limit")
-    return proposed, {"schema_version": 1, "scope": scope, "target": identifier,
-                      "change": change, "effective": effective}
+    return proposed, {
+        "schema_version": 1,
+        "scope": scope,
+        "target": identifier,
+        "change": change,
+        "effective": effective,
+    }
 
 
 @lru_cache(maxsize=16)
@@ -632,9 +966,15 @@ def _build_identity(entry: str | Path | None = None) -> dict[str, Any]:
     root = Path(__file__).resolve().parents[2]
     result = {"core_version": "unknown"}
     try:
-        result["diagnostics_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-        result["core_version"] = (root / "VERSION").read_text(encoding="utf-8").strip()[:80]
-        result["entry_sha256"] = hashlib.sha256(Path(entry or __file__).read_bytes()).hexdigest()
+        result["diagnostics_sha256"] = hashlib.sha256(
+            Path(__file__).read_bytes()
+        ).hexdigest()
+        result["core_version"] = (
+            (root / "VERSION").read_text(encoding="utf-8").strip()[:80]
+        )
+        result["entry_sha256"] = hashlib.sha256(
+            Path(entry or __file__).read_bytes()
+        ).hexdigest()
     except OSError:
         result["source_status"] = "unavailable"
     return result
@@ -646,40 +986,79 @@ def build_identity(entry: str | Path | None = None) -> dict[str, Any]:
 
 def identity_for(logger: Logger, entry: str | Path) -> dict[str, Any] | None:
     # Off/none must not read source files to construct unused diagnostic context.
-    return build_identity(entry) if logger.values["profile"] != "off" and logger.sinks else None
+    return (
+        build_identity(entry)
+        if logger.values["profile"] != "off" and logger.sinks
+        else None
+    )
 
 
-def for_project(project: Path | None, *, run_id: str | None = None, session_id: str | None = None,
-                invocation: dict[str, Any] | None = None) -> Logger:
+def for_project(
+    project: Path | None,
+    *,
+    run_id: str | None = None,
+    session_id: str | None = None,
+    invocation: dict[str, Any] | None = None,
+) -> Logger:
     try:
-        return _for_project(project, run_id=run_id, session_id=session_id, invocation=invocation)
+        return _for_project(
+            project, run_id=run_id, session_id=session_id, invocation=invocation
+        )
     except Exception:
         try:
-            sys.stderr.write("PF diagnostic_setup_failed: optional diagnostics disabled.\n")
+            sys.stderr.write(
+                "PF diagnostic_setup_failed: optional diagnostics disabled.\n"
+            )
         except Exception:
             pass
         return NULL
 
 
-def _for_project(project: Path | None, *, run_id: str | None = None, session_id: str | None = None,
-                 invocation: dict[str, Any] | None = None) -> Logger:
-    if project is None or not (project / ".pf").is_dir() or (project / ".pf").is_symlink():
+def _for_project(
+    project: Path | None,
+    *,
+    run_id: str | None = None,
+    session_id: str | None = None,
+    invocation: dict[str, Any] | None = None,
+) -> Logger:
+    if (
+        project is None
+        or not (project / ".pf").is_dir()
+        or (project / ".pf").is_symlink()
+    ):
         return NULL
     try:
-        config = configuration(project, run_id=run_id, session_id=session_id, invocation=invocation)
+        config = configuration(
+            project, run_id=run_id, session_id=session_id, invocation=invocation
+        )
     except Exception as exc:
         config = resolve_config(("fallback", {"profile": "off", "sink": "none"}))
         config["errors"] = ["diagnostics_config_invalid:" + type(exc).__name__]
-    key = (str(project.resolve()), run_id, session_id, json.dumps(config, sort_keys=True))
+    key = (
+        str(project.resolve()),
+        run_id,
+        session_id,
+        json.dumps(config, sort_keys=True),
+    )
     with _CACHE_LOCK:
         if key not in _CACHE:
-            secrets = tuple(value for name, value in os.environ.items() if SECRET_KEY.search(name) and value)[:256]
-            logger = Logger(config, root=project / ".pf" / "runtime" / "diagnostics", secrets=secrets)
+            secrets = tuple(
+                value
+                for name, value in os.environ.items()
+                if SECRET_KEY.search(name) and value
+            )[:256]
+            logger = Logger(
+                config,
+                root=project / ".pf" / "runtime" / "diagnostics",
+                secrets=secrets,
+            )
             logger.project, logger.invocation = project, invocation or {}
             _CACHE[key] = logger
             if config["errors"]:
                 try:
-                    sys.stderr.write("PF diagnostics_config_invalid: optional diagnostics disabled; inspect configuration.\n")
+                    sys.stderr.write(
+                        "PF diagnostics_config_invalid: optional diagnostics disabled; inspect configuration.\n"
+                    )
                 except Exception:
                     pass
             while len(_CACHE) > 32:
@@ -695,15 +1074,25 @@ def for_stderr(invocation: dict[str, Any]) -> Logger:
         env = os.environ.get("PF_DIAGNOSTICS", "")
         if len(env) > 65536:
             raise ValueError("diagnostic invocation config too large")
-        config = resolve_config(("adapter", {"sink": "stderr"}), ("environment", json.loads(env) if env else {}), ("invocation", invocation))
-        secrets = tuple(value for name, value in os.environ.items() if SECRET_KEY.search(name) and value)[:256]
+        config = resolve_config(
+            ("adapter", {"sink": "stderr"}),
+            ("environment", json.loads(env) if env else {}),
+            ("invocation", invocation),
+        )
+        secrets = tuple(
+            value
+            for name, value in os.environ.items()
+            if SECRET_KEY.search(name) and value
+        )[:256]
         return Logger(config, secrets=secrets)
     except Exception:
         return NULL
 
 
 @contextlib.contextmanager
-def operation(logger: Logger, component: str, code: str, **identity: Any) -> Iterator[Logger]:
+def operation(
+    logger: Logger, component: str, code: str, **identity: Any
+) -> Iterator[Logger]:
     base = dict(_IDENTITY.get())
     base.update(identity)
     base.setdefault("request_id", str(uuid.uuid4()))
@@ -714,10 +1103,23 @@ def operation(logger: Logger, component: str, code: str, **identity: Any) -> Ite
     try:
         yield logger
     except BaseException as exc:
-        current().error("operation.failed", {"exception": exc, "duration_ms": round((time.perf_counter() - started) * 1000, 3)}, component=component, code=code + ".failed")
+        current().error(
+            "operation.failed",
+            {
+                "exception": exc,
+                "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+            },
+            component=component,
+            code=code + ".failed",
+        )
         raise
     else:
-        current().info("operation.completed", {"duration_ms": round((time.perf_counter() - started) * 1000, 3)}, component=component, code=code + ".completed")
+        current().info(
+            "operation.completed",
+            {"duration_ms": round((time.perf_counter() - started) * 1000, 3)},
+            component=component,
+            code=code + ".completed",
+        )
     finally:
         _IDENTITY.reset(identity_token)
         _CURRENT.reset(token)
@@ -728,7 +1130,10 @@ def span(code: str, context: Any = None, *, component: str = "core") -> Iterator
     logger = current()
     identity = _IDENTITY.get()
     count = identity.get("span_count", 0)
-    if logger.effective()["values"]["profile"] != "trace" or count >= logger.values["spans"]:
+    if (
+        logger.effective()["values"]["profile"] != "trace"
+        or count >= logger.values["spans"]
+    ):
         yield
         return
     identity["span_count"] = count + 1
@@ -737,17 +1142,36 @@ def span(code: str, context: Any = None, *, component: str = "core") -> Iterator
     try:
         yield
     finally:
-        emit("debug", code + ".span_end", {"duration_ms": round((time.perf_counter() - start) * 1000, 3)}, component=component)
+        emit(
+            "debug",
+            code + ".span_end",
+            {"duration_ms": round((time.perf_counter() - start) * 1000, 3)},
+            component=component,
+        )
 
 
-def export_bundle(project: Path, output: Path, *, request_id: str | None = None, run_id: str | None = None,
-                  since: str | None = None, until: str | None = None, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+def export_bundle(
+    project: Path,
+    output: Path,
+    *,
+    request_id: str | None = None,
+    run_id: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Read known logs only, filter, sanitize, and exclusively create a local bundle."""
-    lower, upper = _epoch(since) if since else float("-inf"), _epoch(until) if until else float("inf")
+    lower, upper = (
+        _epoch(since) if since else float("-inf"),
+        _epoch(until) if until else float("inf"),
+    )
     if lower > upper:
         raise ValueError("invalid diagnostic time interval")
     root = project / ".pf" / "runtime" / "diagnostics"
-    if output.resolve() in {p.resolve() for p in log_files(root)} or output.name == ".diagnostics.lock":
+    if (
+        output.resolve() in {p.resolve() for p in log_files(root)}
+        or output.name == ".diagnostics.lock"
+    ):
         raise ValueError("diagnostic export destination overlaps log storage")
     cleaner = Sanitizer(DEFAULTS, export=True)
     try:
@@ -755,12 +1179,17 @@ def export_bundle(project: Path, output: Path, *, request_id: str | None = None,
     except Exception as exc:
         raise ValueError("diagnostics_config_invalid:" + type(exc).__name__) from None
     retention_cutoff = time.time() - config["values"]["retention_seconds"]
-    records, manifest = [], []
+    records: list[Any] = []
+    manifest: list[dict[str, str | int]] = []
+    record_times: list[float] = []
     consumed, truncated, rejected, expired = 0, False, 0, 0
-    for path in reversed(log_files(root)):
+    # Current file, then rotations newest to oldest; no unbounded interval search.
+    for path in log_files(root):
         if not path.exists():
             continue
-        if any(p.is_symlink() for p in (path, root, root.parent, root.parent.parent)) or not path.resolve().is_relative_to(root.resolve()):
+        if any(
+            p.is_symlink() for p in (path, root, root.parent, root.parent.parent)
+        ) or not path.resolve().is_relative_to(root.resolve()):
             raise ValueError("diagnostic export refuses linked inputs")
         if path.stat().st_mtime < retention_cutoff:
             manifest.append({"name": path.name, "excluded": "retention_expired"})
@@ -781,7 +1210,9 @@ def export_bundle(project: Path, output: Path, *, request_id: str | None = None,
                 try:
                     record = json.loads(line)
                     identity = record.get("identity", {})
-                    if request_id and str(identity.get("request_id")) != str(request_id):
+                    if request_id and str(identity.get("request_id")) != str(
+                        request_id
+                    ):
                         continue
                     if run_id and identity.get("run_id") != run_id:
                         continue
@@ -794,29 +1225,61 @@ def export_bundle(project: Path, output: Path, *, request_id: str | None = None,
                     cleaner._nodes = 0
                     cleaner.collect(record)
                     records.append(cleaner.clean(record))
+                    record_times.append(record_time)
                 except (ValueError, TypeError, KeyError, AttributeError):
                     rejected += 1
             if handle.read(1):
                 truncated = True
-        manifest.append({"name": path.name, "read_bytes": read_bytes, "read_sha256": digest.hexdigest()})
+        manifest.append(
+            {
+                "name": path.name,
+                "read_bytes": read_bytes,
+                "read_sha256": digest.hexdigest(),
+            }
+        )
         if consumed >= 4 * 1024 * 1024 or len(records) >= 2000:
             truncated = True
             break
     cleaner._nodes = 0
     safe_metadata = cleaner.clean(metadata or {})
     cleaner._nodes = 0
-    bundle = {"schema_version": 1, "kind": "processforge.diagnostics.bundle", "created_at": utc(),
-              "recipient": "local-operator-sanitized", "read_only": True, "build": build_identity(),
-              "filters": cleaner.clean({"request_id": request_id, "run_id": run_id, "since": since, "until": until}),
-              "effective_configuration": cleaner.clean(config), "metadata": safe_metadata,
-              "manifest": manifest, "records": records, "redaction": "secrets-and-private-paths",
-              "redacted_values": cleaner.redacted, "truncated_values": cleaner.truncated,
-              "truncated": truncated or bool(cleaner.truncated) or any(r.get("truncated") for r in records),
-              "rejected_records": rejected, "expired_records": expired}
+    bundle = {
+        "schema_version": 1,
+        "kind": "processforge.diagnostics.bundle",
+        "created_at": utc(),
+        "recipient": "local-operator-sanitized",
+        "read_only": True,
+        "build": build_identity(),
+        "filters": cleaner.clean(
+            {"request_id": request_id, "run_id": run_id, "since": since, "until": until}
+        ),
+        "effective_configuration": cleaner.clean(config),
+        "metadata": safe_metadata,
+        "manifest": manifest,
+        "records": records,
+        "redaction": "secrets-and-private-paths",
+        "redacted_values": cleaner.redacted,
+        "truncated_values": cleaner.truncated,
+        "truncated": truncated
+        or bool(cleaner.truncated)
+        or any(r.get("truncated") for r in records),
+        "rejected_records": rejected,
+        "expired_records": expired,
+    }
     while len(encode(bundle)) > 4 * 1024 * 1024 and bundle["records"]:
         bundle["records"].pop()
         bundle["truncated"] = True
+    # Trim in visit order first, preserving current-file priority. Stable sort
+    # returns chronological records; ties retain file/line visit order.
+    records[:] = [
+        record
+        for _, record in sorted(zip(record_times, records), key=lambda item: item[0])
+    ]
     with output.open("xb") as handle:
         handle.write(encode(bundle))
-    return {"path": str(output), "records": len(bundle["records"]), "truncated": bundle["truncated"],
-            "sha256": hashlib.sha256(output.read_bytes()).hexdigest()}
+    return {
+        "path": str(output),
+        "records": len(bundle["records"]),
+        "truncated": bundle["truncated"],
+        "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
+    }

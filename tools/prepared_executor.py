@@ -67,12 +67,14 @@ def _utc_now() -> str:
 
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_text(
-        json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    os.replace(temporary, path)
+    from pf_native_control import receipt_staging
+
+    with receipt_staging(path) as temporary:
+        text = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+        written = temporary.write_text(text, encoding="utf-8")
+        if type(written) is not int or written != len(text):
+            raise OSError("short_write")
+        os.replace(temporary, path)
 
 
 def write_heartbeat(

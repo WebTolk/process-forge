@@ -65,11 +65,39 @@ normal immutable capsule and pinned Run are created. The UTF-8 JSON is at most
 64 KiB, with `schema_version: 1` and an `assignment` object. Supported fields:
 `allowed_files`, `allowed_read_files`, `forbidden_files`, `allowed_actions`,
 `forbidden_actions`, `execution_mode` (legacy mode name or Assignment mode object), `required_sources`,
-`required_outputs`, `expected_report`, `ownership` (owner_id, role, writer).
+`required_outputs`, `expected_report`, `ownership` (owner_id, role, writer),
+`workspace_access`.
 Output records require an id and project-relative path. Actions are read,
 write_artifact and write_product. Existing normalization, readiness and overlap
 checks apply. Omitted input retains conservative defaults; objectives imply no
 file grants. MCP `pf.work.start.scope_intent` forwards the same declaration to Core.
+
+Optional `assignment.workspace_access` requests resources through the existing
+immutable intent, capsule and preparation authorization pipeline. It accepts only
+`knowledge_resources`, `templates`, `tools` and `mcp`, each a list of at most 64
+distinct public IDs. An ID is at most 256 ASCII characters, with lowercase letters
+or digits separated by single dots, underscores or hyphens; an optional colon
+qualifies `package-id:resource-id`. For example:
+
+```json
+{"schema_version": 1, "assignment": {"workspace_access": {
+  "knowledge_resources": ["docs.python-practices:root"],
+  "tools": ["python-pytest", "python-ruff"]
+}}}
+```
+
+The resource IDs must be available and selected in the project's snapshot;
+this example uses the registered `docs.python-practices:root` resource.
+Combine this fragment with the explicit file/action scope required for the Work.
+Omitted groups, `{}` and empty lists request no resources. Unknown groups,
+duplicates, wrong types, wildcards, private paths, raw command definitions and
+object references (including `path_ref` and native-maintenance requests) are
+rejected by this creation API. Existing assignment APIs retain their reference
+formats. Requests grant no access by themselves: snapshot availability, admission,
+resource bindings, revocation and native preparation checks still apply. No
+resource is inferred from the objective or available registry. Retrying the same
+objective with changed resource intent returns `scope_intent_mismatch`; it never
+widens the existing capsule.
 Supplied modes are normalized into the persisted Assignment object before immutable
 capture; omitted modes keep existing creation defaults. Existing legacy Assignments
 and capsules are not rewritten on retry. Object flags retain their boolean values

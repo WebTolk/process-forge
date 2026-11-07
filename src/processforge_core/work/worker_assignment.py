@@ -19,24 +19,52 @@ class WorkerAssignmentService:
         paths = WorkPaths()
         path = paths.assignment_document(project_root, task_id)
         if not path.is_file():
-            raise SystemExit(f"FAIL: task/assignment not found: {safe_id(task_id, 'task')}")
+            raise SystemExit(
+                f"FAIL: task/assignment not found: {safe_id(task_id, 'task')}"
+            )
         documents = YamlDocumentReader(_parse_simple_yaml)
         return documents.read(path)
 
-    def render_prompt(self, project_root: Path, task_id: str, *, prepared_input: dict[str, str] | None = None) -> str:
+    def render_prompt(
+        self,
+        project_root: Path,
+        task_id: str,
+        *,
+        prepared_input: dict[str, str] | None = None,
+    ) -> str:
         task_id = safe_id(task_id, "task")
         task = self.load(project_root, task_id)
         run_id = str(task.get("run_id") or "")
         paths = WorkPaths()
         inputs = ContextContractInputs()
-        capsule = rel(ProjectMetadataReader(project_root).flow_root() / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
-        workspace_access = rel(paths.worker_run(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
-        requested_workspace_access = inputs.normalize_workspace_access(task.get("workspace_access"))
+        capsule = rel(
+            ProjectMetadataReader(project_root).flow_root()
+            / "contexts"
+            / "assignment-capsules"
+            / f"{task_id}.capsule.yaml",
+            project_root,
+        )
+        workspace_access = rel(
+            paths.worker_run(project_root, safe_id(run_id or "run", "run"), task_id)[
+                "workspace_access"
+            ],
+            project_root,
+        )
+        requested_workspace_access = inputs.normalize_workspace_access(
+            task.get("workspace_access")
+        )
         allowed_files = inputs.assignment_scope_items(task.get("allowed_files"))
-        allowed_read_files = inputs.assignment_scope_items(task.get("allowed_read_files"))
+        allowed_read_files = inputs.assignment_scope_items(
+            task.get("allowed_read_files")
+        )
         forbidden_files = inputs.assignment_scope_items(task.get("forbidden_files"))
-        required_outputs = inputs.normalize_required_outputs(task.get("required_outputs"))
-        expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+        required_outputs = inputs.normalize_required_outputs(
+            task.get("required_outputs")
+        )
+        raw_expected_report = task.get("expected_report")
+        expected_report = (
+            raw_expected_report if isinstance(raw_expected_report, dict) else {}
+        )
         subagent_policy = inputs.normalize_subagent_policy(task.get("subagent_policy"))
         prepared_instructions = [
             "Read the prepared input identified by PF_PREPARED_INPUT_FILE and verify PF_PREPARED_INPUT_SHA256 before working.",
@@ -46,7 +74,9 @@ class WorkerAssignmentService:
             "No ProcessForge MCP connection is required to execute this prepared assignment.",
         ]
         if not prepared_input:
-            prepared_instructions.append("This prompt alone is not launch-ready; the orchestrator must prepare the attempt manifest first.")
+            prepared_instructions.append(
+                "This prompt alone is not launch-ready; the orchestrator must prepare the attempt manifest first."
+            )
         lines = [
             "# Worker Launch Prompt",
             "",
@@ -104,7 +134,9 @@ class WorkerAssignmentService:
         ]
         for output in required_outputs:
             lines.append(f"- `{output.get('id')}` -> `{output.get('path', '')}`")
-        lines.extend(["", "## expected_report", "", f"- `{expected_report.get('artifact', '')}`"])
+        lines.extend(
+            ["", "## expected_report", "", f"- `{expected_report.get('artifact', '')}`"]
+        )
         lines.extend(
             [
                 "",

@@ -1,4 +1,5 @@
 """Existing CompletionDocumentService responsibilities with explicit operation dependencies."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,19 +16,41 @@ class CompletionDocumentService:
     atomic_text: Callable[[Path, str], Any] = field(repr=False, compare=False)
 
     def summary(self, run: dict[str, Any], assignment: dict[str, Any]) -> str:
-        history = assignment.get('stage_history') if isinstance(assignment.get('stage_history'), list) else []
-        lines = [f"# Run Summary: {run.get('title', run.get('id'))}", '', f"- run_id: `{run.get('id')}`", '- status: `completed`', f"- process: `{run.get('process')}`", '', '## Stage History', '']
-        lines.extend((f"- `{item.get('stage_id')}`: `{item.get('status')}` (`{item.get('outcome')}`)" for item in history if isinstance(item, dict)))
+        history_value = assignment.get("stage_history")
+        history = history_value if isinstance(history_value, list) else []
+        lines = [
+            f"# Run Summary: {run.get('title', run.get('id'))}",
+            "",
+            f"- run_id: `{run.get('id')}`",
+            "- status: `completed`",
+            f"- process: `{run.get('process')}`",
+            "",
+            "## Stage History",
+            "",
+        ]
+        lines.extend(
+            (
+                f"- `{item.get('stage_id')}`: `{item.get('status')}` (`{item.get('outcome')}`)"
+                for item in history
+                if isinstance(item, dict)
+            )
+        )
         if not history:
-            lines.append('- No stage history recorded.')
-        return '\n'.join(lines) + '\n'
+            lines.append("- No stage history recorded.")
+        return "\n".join(lines) + "\n"
 
     def write_task_index(self, run: dict[str, Any]) -> None:
-        path = self.run_path(str(run['id'])).parent / 'task-index.md'
+        path = self.run_path(str(run["id"])).parent / "task-index.md"
         if self.has_task_index():
             text = self.task_index(self.project_root, run)
         else:
-            lines = [f"# Task Index: {run['id']}", '']
-            lines.extend((f"- `{item.get('id')}`: `{item.get('status')}`" for item in run.get('tasks', []) if isinstance(item, dict)))
-            text = '\n'.join(lines) + '\n'
+            lines = [f"# Task Index: {run['id']}", ""]
+            lines.extend(
+                (
+                    f"- `{item.get('id')}`: `{item.get('status')}`"
+                    for item in run.get("tasks", [])
+                    if isinstance(item, dict)
+                )
+            )
+            text = "\n".join(lines) + "\n"
         self.atomic_text(path, text)

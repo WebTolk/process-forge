@@ -4,6 +4,7 @@ Budgets bound work/bytes between filesystem calls, not kernel IO latency. A
 partial group has observed lower bounds but no exact counts. No source text,
 identities, paths or exception messages leave this module's projection.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,12 +21,20 @@ from ..common.request_scope import safe_load
 # Preserve the existing required parser dependency at this module's boundary.
 yaml = import_module("yaml")
 
-FIELDS = {"registrations": ("projects", "sessions"),
-          "sessions": ("online", "stale", "offline"),
-          "workers": ("running",), "work": ("in_progress", "blocked"),
-          "leases": ("held", "expired", "inactive")}
-SOURCES = dict(registrations="host_registration_cache", sessions="agent_presence_ttl",
-               workers="worker_status_records", work="run_records", leases="lease_records")
+FIELDS = {
+    "registrations": ("projects", "sessions"),
+    "sessions": ("online", "stale", "offline"),
+    "workers": ("running",),
+    "work": ("in_progress", "blocked"),
+    "leases": ("held", "expired", "inactive"),
+}
+SOURCES = dict(
+    registrations="host_registration_cache",
+    sessions="agent_presence_ttl",
+    workers="worker_status_records",
+    work="run_records",
+    leases="lease_records",
+)
 ISSUES = {"coverage", "budget", "invalid", "unreadable", "unsafe_path"}
 MAX_AGE = 45
 
@@ -41,7 +50,9 @@ def epoch(value: Any) -> float:
 
 def linked(path: Path) -> bool:
     st = path.lstat()
-    return stat.S_ISLNK(st.st_mode) or bool(getattr(st, "st_file_attributes", 0) & 0x400)
+    return stat.S_ISLNK(st.st_mode) or bool(
+        getattr(st, "st_file_attributes", 0) & 0x400
+    )
 
 
 def contained(path: Path, root: Path) -> None:
@@ -62,7 +73,10 @@ class Budget:
         self.issues: set[str] = set()
 
     def check(self):
-        if min(self.entries, self.files, self.bytes) < 0 or time.monotonic() > self.deadline:
+        if (
+            min(self.entries, self.files, self.bytes) < 0
+            or time.monotonic() > self.deadline
+        ):
             self.issues.add("budget")
             raise TimeoutError
 
@@ -78,7 +92,14 @@ class Budget:
                     self.entries -= 1
                     self.check()
                     path = Path(entry.path)
-                    if parts[0] != "*" and entry.name != parts[0] and not (parts[0].startswith("*.") and entry.name.endswith(parts[0][1:])):
+                    if (
+                        parts[0] != "*"
+                        and entry.name != parts[0]
+                        and not (
+                            parts[0].startswith("*.")
+                            and entry.name.endswith(parts[0][1:])
+                        )
+                    ):
                         continue
                     if linked(path):
                         self.issues.add("unsafe_path")
@@ -114,7 +135,11 @@ class Budget:
         if len(raw) > maximum:
             self.issues.add("budget")
             raise ValueError("oversize record")
-        data = json.loads(raw) if path.suffix == ".json" else safe_load(raw.decode("utf-8"))
+        data = (
+            json.loads(raw)
+            if path.suffix == ".json"
+            else safe_load(raw.decode("utf-8"))
+        )
         if not isinstance(data, dict):
             raise ValueError("invalid record")
         return data
@@ -122,16 +147,29 @@ class Budget:
 
 def group(name, observed, issues=()):
     issues = sorted(set(issues))
-    return {"source": SOURCES[name], "coverage": "partial" if issues else "complete",
-            "counts": {k: None if issues else observed[k] for k in FIELDS[name]},
-            "observed": observed, "issues": issues}
+    return {
+        "source": SOURCES[name],
+        "coverage": "partial" if issues else "complete",
+        "counts": {k: None if issues else observed[k] for k in FIELDS[name]},
+        "observed": observed,
+        "issues": issues,
+    }
 
 
 def registrations(cache):
-    valid = (isinstance(cache, dict) and isinstance(cache.get("projects"), list)
-             and isinstance(cache.get("sessions"), dict))
-    return group("registrations", {"projects": len(cache["projects"]) if valid else 0,
-                                    "sessions": len(cache["sessions"]) if valid else 0}, () if valid else ("coverage",))
+    valid = (
+        isinstance(cache, dict)
+        and isinstance(cache.get("projects"), list)
+        and isinstance(cache.get("sessions"), dict)
+    )
+    return group(
+        "registrations",
+        {
+            "projects": len(cache["projects"]) if valid else 0,
+            "sessions": len(cache["sessions"]) if valid else 0,
+        },
+        () if valid else ("coverage",),
+    )
 
 
 def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
@@ -345,15 +383,32 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
     return group(name, counts, budget.issues)
 
 
-def collect(workplace, roots, core, instance_id, registration, *, coverage=True, now=None, interval_seconds=None):
+def collect(
+    workplace,
+    roots,
+    core,
+    instance_id,
+    registration,
+    *,
+    coverage=True,
+    now=None,
+    interval_seconds=None,
+):
     now = time.time() if now is None else now
-    groups = {name: observe(name, workplace, roots, core, now=now, coverage=coverage)
-              for name in ("sessions", "workers", "work", "leases")}
+    groups = {
+        name: observe(name, workplace, roots, core, now=now, coverage=coverage)
+        for name in ("sessions", "workers", "work", "leases")
+    }
     groups["registrations"] = registration
-    result = {"schema_version": 1, "instance_id": instance_id,
-              "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(), "groups": groups}
+    result = {
+        "schema_version": 1,
+        "instance_id": instance_id,
+        "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(),
+        "groups": groups,
+    }
     if interval_seconds is not None:
         from ..configuration import MetricsConfig
+
         result["interval_seconds"] = MetricsConfig(interval_seconds).interval_seconds
     return result
 
@@ -361,24 +416,38 @@ def collect(workplace, roots, core, instance_id, registration, *, coverage=True,
 def project(snapshot, instance_id, *, now):
     """Allowlist and strictly validate a fresh instance-bound compact snapshot."""
     try:
-        if not isinstance(snapshot, dict) or type(snapshot.get("schema_version")) is not int or snapshot["schema_version"] != 1 or not instance_id or snapshot.get("instance_id") != instance_id:
+        if (
+            not isinstance(snapshot, dict)
+            or type(snapshot.get("schema_version")) is not int
+            or snapshot["schema_version"] != 1
+            or not instance_id
+            or snapshot.get("instance_id") != instance_id
+        ):
             raise ValueError
         age = now - epoch(snapshot.get("observed_at"))
         interval = snapshot.get("interval_seconds")
-        maximum_age = MAX_AGE
+        maximum_age: float = MAX_AGE
         if "interval_seconds" in snapshot:
             from ..configuration import MetricsConfig
-            interval = MetricsConfig(interval).interval_seconds
+
+            interval = MetricsConfig(snapshot["interval_seconds"]).interval_seconds
             maximum_age = max(5, 4.5 * interval)
         if not 0 <= age <= maximum_age:
             raise ValueError
         result = {}
         for name, fields in FIELDS.items():
             item = snapshot["groups"][name]
-            if item["source"] != SOURCES[name] or item["coverage"] not in {"complete", "partial"}:
+            if item["source"] != SOURCES[name] or item["coverage"] not in {
+                "complete",
+                "partial",
+            }:
                 raise ValueError
             issues = item["issues"]
-            if not isinstance(issues, list) or len(issues) > len(ISSUES) or any(type(i) is not str or i not in ISSUES for i in issues):
+            if (
+                not isinstance(issues, list)
+                or len(issues) > len(ISSUES)
+                or any(type(i) is not str or i not in ISSUES for i in issues)
+            ):
                 raise ValueError
             counts, observed = {}, {}
             for key in fields:
@@ -392,7 +461,11 @@ def project(snapshot, instance_id, *, now):
                     raise ValueError
                 counts[key], observed[key] = v, o
             result[name] = group(name, observed, issues)
-        return {"age_seconds": round(age, 1), "groups": result, "interval_seconds": interval}
+        return {
+            "age_seconds": round(age, 1),
+            "groups": result,
+            "interval_seconds": interval,
+        }
     except (KeyError, ValueError, TypeError, OverflowError):
         return None
 
@@ -444,4 +517,12 @@ def shutdown_workers(workplace, core):
     """Fresh worker-only guard, including invalid/unroutable registrations."""
     budget = Budget(seconds=0.5)
     roots, _registration, coverage = registered_projects(workplace, budget=budget)
-    return observe("workers", workplace, roots, core, now=time.time(), coverage=coverage, budget=budget)
+    return observe(
+        "workers",
+        workplace,
+        roots,
+        core,
+        now=time.time(),
+        coverage=coverage,
+        budget=budget,
+    )

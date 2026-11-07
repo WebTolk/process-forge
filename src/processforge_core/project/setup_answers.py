@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import platform
+from pathlib import Path
 from typing import Any
 
 from ..common.ids import safe_id
@@ -19,18 +19,33 @@ class WorkplaceSetupAnswers:
         self.coordination = ProjectCoordinationReader()
 
     def workplace_defaults(self, root: Path, answers: dict[str, Any]) -> dict[str, Any]:
-        workplace_answers = answers.get("workplace", {}) if isinstance(answers.get("workplace"), dict) else {}
-        paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
-        os_name = str(workplace_answers.get("os") or platform.system().lower() or "unknown").lower()
+        workplace_answers = (
+            answers.get("workplace", {})
+            if isinstance(answers.get("workplace"), dict)
+            else {}
+        )
+        paths_answers = (
+            answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
+        )
+        os_name = str(
+            workplace_answers.get("os") or platform.system().lower() or "unknown"
+        ).lower()
         return {
-            "id": safe_id(str(workplace_answers.get("id") or root.name or "workplace"), "workplace"),
-            "name": str(workplace_answers.get("name") or root.name or "ProcessForge Workplace"),
+            "id": safe_id(
+                str(workplace_answers.get("id") or root.name or "workplace"),
+                "workplace",
+            ),
+            "name": str(
+                workplace_answers.get("name") or root.name or "ProcessForge Workplace"
+            ),
             "type": str(workplace_answers.get("type") or "workstation"),
             "os": os_name,
             "root": str(paths_answers.get("root") or root),
         }
 
-    def dict_entries_from_answers(self, container: Any, item_label: str, scope: str) -> list[dict[str, Any]]:
+    def dict_entries_from_answers(
+        self, container: Any, item_label: str, scope: str
+    ) -> list[dict[str, Any]]:
         if not isinstance(container, dict):
             return []
         entries = []
@@ -48,7 +63,9 @@ class WorkplaceSetupAnswers:
             )
         return entries
 
-    def default_guided_workplace_answers(self, workplace: Path, session_id: str) -> dict[str, Any]:
+    def default_guided_workplace_answers(
+        self, workplace: Path, session_id: str
+    ) -> dict[str, Any]:
         return {
             "schema_version": 1,
             "session": {"id": safe_id(session_id, "setup-session"), "status": "draft"},
@@ -91,8 +108,21 @@ class WorkplaceSetupAnswers:
                 },
             },
             "resources": {
-                "knowledge_roots": [{"id": "local-docs", "path_ref": "${PF_WORKPLACE}/knowledge", "status": "available"}],
-                "package_roots": [{"id": "global", "path_ref": "${PF_WORKPLACE}/packages", "default": True, "writable": True}],
+                "knowledge_roots": [
+                    {
+                        "id": "local-docs",
+                        "path_ref": "${PF_WORKPLACE}/knowledge",
+                        "status": "available",
+                    }
+                ],
+                "package_roots": [
+                    {
+                        "id": "global",
+                        "path_ref": "${PF_WORKPLACE}/packages",
+                        "default": True,
+                        "writable": True,
+                    }
+                ],
                 "tools": [],
                 "mcp_servers": [],
                 "templates": [],
@@ -102,11 +132,23 @@ class WorkplaceSetupAnswers:
                 "create": [],
                 "notes": "Do not create real platform contracts unless the user explicitly defines them.",
             },
-            "coordination": {"director_capability": False, "default_project_mode": "simple", "initialize_director_office": False},
-            "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic", "coordination_mode": "inherit", "suggested_run": "first-run"},
+            "coordination": {
+                "director_capability": False,
+                "default_project_mode": "simple",
+                "initialize_director_office": False,
+            },
+            "first_project": {
+                "onboard_now": False,
+                "project_root": "",
+                "project_type": "generic",
+                "coordination_mode": "inherit",
+                "suggested_run": "first-run",
+            },
         }
 
-    def merge_guided_answers(self, defaults: dict[str, Any], supplied: dict[str, Any]) -> dict[str, Any]:
+    def merge_guided_answers(
+        self, defaults: dict[str, Any], supplied: dict[str, Any]
+    ) -> dict[str, Any]:
         result = dict(defaults)
         for key, value in supplied.items():
             if isinstance(value, dict) and isinstance(result.get(key), dict):
@@ -117,39 +159,91 @@ class WorkplaceSetupAnswers:
                 result[key] = value
         return result
 
-    def load_guided_workplace_answers(self, session_dir: Path, answers_path: Path | None = None, *, workplace: Path | None = None, session_id: str = "default") -> dict[str, Any]:
-        defaults = self.default_guided_workplace_answers(workplace or session_dir, session_id)
+    def load_guided_workplace_answers(
+        self,
+        session_dir: Path,
+        answers_path: Path | None = None,
+        *,
+        workplace: Path | None = None,
+        session_id: str = "default",
+    ) -> dict[str, Any]:
+        defaults = self.default_guided_workplace_answers(
+            workplace or session_dir, session_id
+        )
         existing = session_dir / "answers.yaml"
-        source = answers_path if answers_path and answers_path.is_file() else existing if existing.is_file() else None
+        source = (
+            answers_path
+            if answers_path and answers_path.is_file()
+            else existing
+            if existing.is_file()
+            else None
+        )
         supplied = AnswersDocumentReader().read(source) if source else {}
         return self.merge_guided_answers(defaults, supplied)
 
-    def guided_answers_to_workplace_init_answers(self, workplace: Path, answers: dict[str, Any]) -> dict[str, Any]:
-        machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
-        discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
-        resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
-        privacy = answers.get("privacy_safety") if isinstance(answers.get("privacy_safety"), dict) else {}
-        coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
+    def guided_answers_to_workplace_init_answers(
+        self, workplace: Path, answers: dict[str, Any]
+    ) -> dict[str, Any]:
+        machine_value = answers.get("machine_layout")
+        machine = machine_value if isinstance(machine_value, dict) else {}
+        discovery_value = answers.get("device_discovery")
+        discovery = discovery_value if isinstance(discovery_value, dict) else {}
+        resources_value = answers.get("resources")
+        resources = resources_value if isinstance(resources_value, dict) else {}
+        privacy_value = answers.get("privacy_safety")
+        privacy = privacy_value if isinstance(privacy_value, dict) else {}
+        coordination_value = answers.get("coordination")
+        coordination = (
+            coordination_value if isinstance(coordination_value, dict) else {}
+        )
         package_roots = {}
-        for item in resources.get("package_roots", []) if isinstance(resources.get("package_roots"), list) else []:
+        for item in (
+            resources.get("package_roots", [])
+            if isinstance(resources.get("package_roots"), list)
+            else []
+        ):
             if isinstance(item, dict):
-                package_roots[str(item.get("id") or "global")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/packages")
+                package_roots[str(item.get("id") or "global")] = str(
+                    item.get("path_ref")
+                    or item.get("path")
+                    or "${PF_WORKPLACE}/packages"
+                )
         knowledge_roots = {}
-        for item in resources.get("knowledge_roots", []) if isinstance(resources.get("knowledge_roots"), list) else []:
+        for item in (
+            resources.get("knowledge_roots", [])
+            if isinstance(resources.get("knowledge_roots"), list)
+            else []
+        ):
             if isinstance(item, dict):
-                knowledge_roots[str(item.get("id") or "local-docs")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/knowledge")
-        processforge_root = str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")
-        discovery_enabled = str(discovery.get("enabled") or "ask").lower() in {"true", "yes", "enabled", "on"}
+                knowledge_roots[str(item.get("id") or "local-docs")] = str(
+                    item.get("path_ref")
+                    or item.get("path")
+                    or "${PF_WORKPLACE}/knowledge"
+                )
+        processforge_root = str(
+            machine.get("processforge_root") or "${PROCESSFORGE_ROOT}"
+        )
+        discovery_enabled = str(discovery.get("enabled") or "ask").lower() in {
+            "true",
+            "yes",
+            "enabled",
+            "on",
+        }
         return {
             "schema_version": 1,
             "setup_mode": "guided",
             "device_discovery": {
                 "enabled": discovery_enabled,
                 "read_only": bool(discovery.get("read_only", True)),
-                "fallback_scope": [str(item) for item in as_list(discovery.get("fallback_scope"))],
+                "fallback_scope": [
+                    str(item) for item in as_list(discovery.get("fallback_scope"))
+                ],
                 "approved_before_apply": False,
             },
-            "workplace": {"id": safe_id(workplace.name or "workplace", "workplace"), "name": workplace.name or "ProcessForge Workplace"},
+            "workplace": {
+                "id": safe_id(workplace.name or "workplace", "workplace"),
+                "name": workplace.name or "ProcessForge Workplace",
+            },
             "paths": {
                 "root": str(machine.get("workplace_path") or workplace),
                 "knowledge_roots": knowledge_roots,
@@ -157,10 +251,21 @@ class WorkplaceSetupAnswers:
                 "template_roots": {"global": "${PF_WORKPLACE}/reusable-templates"},
                 "distributions": {"processforge": processforge_root},
             },
-            "policies": {"shell_is_fallback": True, "local_paths_private_only": bool(privacy.get("local_paths_private_only", True))},
+            "policies": {
+                "shell_is_fallback": True,
+                "local_paths_private_only": bool(
+                    privacy.get("local_paths_private_only", True)
+                ),
+            },
             "coordination": {
-                "director_enabled": bool(coordination.get("director_capability", False)),
-                "director_office_enabled": bool(coordination.get("initialize_director_office", False)),
-                "default_project_mode": self.coordination.workplace_mode(coordination.get("default_project_mode", "simple")),
+                "director_enabled": bool(
+                    coordination.get("director_capability", False)
+                ),
+                "director_office_enabled": bool(
+                    coordination.get("initialize_director_office", False)
+                ),
+                "default_project_mode": self.coordination.workplace_mode(
+                    coordination.get("default_project_mode", "simple")
+                ),
             },
         }

@@ -74,7 +74,7 @@ class contextlib_suppress_timeout:
 def _terminate_process_tree(proc: subprocess.Popen[str]) -> None:
     if proc.poll() is not None:
         return
-    if os.name == "nt":
+    if sys.platform == "win32":
         _taskkill_tree(proc.pid)
         if proc.poll() is None:
             with contextlib_suppress_timeout():
@@ -85,26 +85,27 @@ def _terminate_process_tree(proc: subprocess.Popen[str]) -> None:
                 proc.kill()
                 proc.wait(timeout=2)
         return
-    try:
-        os.killpg(proc.pid, signal.SIGTERM)
-    except ProcessLookupError:
-        return
-    except OSError:
-        with contextlib_suppress_timeout():
-            proc.terminate()
-            proc.wait(timeout=2)
-        return
-    with contextlib_suppress_timeout():
-        proc.wait(timeout=2)
-    if proc.poll() is None:
+    else:
         try:
-            os.killpg(proc.pid, signal.SIGKILL)
+            os.killpg(proc.pid, signal.SIGTERM)
         except ProcessLookupError:
             return
         except OSError:
             with contextlib_suppress_timeout():
-                proc.kill()
+                proc.terminate()
                 proc.wait(timeout=2)
+            return
+        with contextlib_suppress_timeout():
+            proc.wait(timeout=2)
+        if proc.poll() is None:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                return
+            except OSError:
+                with contextlib_suppress_timeout():
+                    proc.kill()
+                    proc.wait(timeout=2)
 
 
 def run_command(
@@ -124,7 +125,7 @@ def run_command(
         print(f"RUN {label or format_command(command)}:", flush=True)
         print(f"  {format_command(command)}", flush=True)
     creationflags = 0
-    if os.name == "nt":
+    if sys.platform == "win32":
         creationflags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
     proc = subprocess.Popen(
         command,

@@ -16,7 +16,8 @@ class WorkSummaryRenderer:
         self._yaml_documents = YamlDocumentReader(fallback=_parse_simple_yaml)
 
     def render_task_index(self, project_root: Path, run: dict[str, Any]) -> str:
-        tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
+        tasks_value = run.get("tasks")
+        tasks = tasks_value if isinstance(tasks_value, list) else []
         lines = [
             f"# Task Index: {run.get('id', 'run')}",
             "",
@@ -25,20 +26,40 @@ class WorkSummaryRenderer:
             "| Order | Task | Status | Assignment |",
             "| --- | --- | --- | --- |",
         ]
-        for item in sorted([task for task in tasks if isinstance(task, dict)], key=lambda value: int(value.get("order", 0) or 0)):
-            lines.append(f"| {item.get('order', '')} | `{item.get('id', '')}` | `{item.get('status', '')}` | `{item.get('assignment', '')}` |")
+        for item in sorted(
+            [task for task in tasks if isinstance(task, dict)],
+            key=lambda value: int(value.get("order", 0) or 0),
+        ):
+            lines.append(
+                f"| {item.get('order', '')} | `{item.get('id', '')}` | `{item.get('status', '')}` | `{item.get('assignment', '')}` |"
+            )
         if not tasks:
             lines.append("| | No tasks yet | | |")
         return "\n".join(lines) + "\n"
 
     def render_run_summary(self, project_root: Path, run: dict[str, Any]) -> str:
         run_id = str(run.get("id", "run"))
-        lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
+        lines = [
+            f"# Run Summary: {run.get('title', run_id)}",
+            "",
+            f"- run_id: `{run_id}`",
+            f"- status: `{run.get('status')}`",
+            "",
+            "## Tasks",
+            "",
+        ]
         for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
             if isinstance(item, dict):
-                task = self._yaml_documents.load(self._work_paths.assignment_document(project_root, str(item.get("id", ""))))
-                result = task.get("result") if isinstance(task.get("result"), dict) else {}
-                lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
+                task = self._yaml_documents.load(
+                    self._work_paths.assignment_document(
+                        project_root, str(item.get("id", ""))
+                    )
+                )
+                result_value = task.get("result")
+                result = result_value if isinstance(result_value, dict) else {}
+                lines.append(
+                    f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}"
+                )
         if len(lines) == 7:
             lines.append("- No tasks recorded.")
         return "\n".join(lines) + "\n"

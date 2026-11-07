@@ -21,12 +21,19 @@ class WorkerPlanPolicy:
         paths: WorkPaths | None = None,
         documents: YamlDocumentReader | None = None,
     ) -> None:
-        self._documents = documents if documents is not None else YamlDocumentReader(_parse_simple_yaml)
-        self._inputs = inputs if inputs is not None else ContextContractInputs(self._documents)
+        self._documents = (
+            documents
+            if documents is not None
+            else YamlDocumentReader(_parse_simple_yaml)
+        )
+        self._inputs = (
+            inputs if inputs is not None else ContextContractInputs(self._documents)
+        )
         self._work_paths = paths if paths is not None else WorkPaths()
 
     def subagent_policy(self, worker: dict[str, Any]) -> dict[str, Any]:
-        raw = worker.get("subagent_policy") if isinstance(worker.get("subagent_policy"), dict) else {}
+        raw_value = worker.get("subagent_policy")
+        raw = raw_value if isinstance(raw_value, dict) else {}
         policy = self._inputs.normalize_subagent_policy(raw)
         if "allow_subagents" in worker:
             policy["allow"] = bool(worker.get("allow_subagents"))
@@ -36,10 +43,19 @@ class WorkerPlanPolicy:
         run_id = safe_id(run_id, "run")
         return {
             "schema_version": 1,
-            "run": {"id": run_id, "title": title, "process": "multi-agent-task-orchestration"},
+            "run": {
+                "id": run_id,
+                "title": title,
+                "process": "multi-agent-task-orchestration",
+            },
             "orchestrator": {
                 "role": "orchestrator",
-                "responsibilities": ["decompose work", "assign workers", "review outputs", "integrate final result"],
+                "responsibilities": [
+                    "decompose work",
+                    "assign workers",
+                    "review outputs",
+                    "integrate final result",
+                ],
             },
             "runtime": {
                 "default_driver": "manual",
@@ -55,10 +71,19 @@ class WorkerPlanPolicy:
                     "execution_mode": "implementation",
                     "writer": True,
                     "allowed_files": [".pf/artifacts/fixture-a/**"],
-                    "allowed_read_files": [".pf/contexts/project-context.snapshot.yaml"],
+                    "allowed_read_files": [
+                        ".pf/contexts/project-context.snapshot.yaml"
+                    ],
                     "forbidden_files": ["tools/**", "schemas/**"],
                     "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
-                    "required_outputs": [{"id": "fixture-a-report", "path": ".pf/artifacts/fixture-a-report.md", "type": "markdown", "required": True}],
+                    "required_outputs": [
+                        {
+                            "id": "fixture-a-report",
+                            "path": ".pf/artifacts/fixture-a-report.md",
+                            "type": "markdown",
+                            "required": True,
+                        }
+                    ],
                     "expected_report_artifact": ".pf/artifacts/fixture-a-report.md",
                     "runtime_driver": "manual",
                     "worker_may_rebuild_context": False,
@@ -71,21 +96,36 @@ class WorkerPlanPolicy:
                     "execution_mode": "assurance",
                     "writer": True,
                     "allowed_files": [".pf/artifacts/fixture-b/**"],
-                    "allowed_read_files": [".pf/artifacts/fixture-a/**", ".pf/contexts/project-context.snapshot.yaml"],
+                    "allowed_read_files": [
+                        ".pf/artifacts/fixture-a/**",
+                        ".pf/contexts/project-context.snapshot.yaml",
+                    ],
                     "forbidden_files": ["tools/processforge.py"],
                     "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
-                    "required_outputs": [{"id": "fixture-b-report", "path": ".pf/artifacts/fixture-b-report.md", "type": "markdown", "required": True}],
+                    "required_outputs": [
+                        {
+                            "id": "fixture-b-report",
+                            "path": ".pf/artifacts/fixture-b-report.md",
+                            "type": "markdown",
+                            "required": True,
+                        }
+                    ],
                     "expected_report_artifact": ".pf/artifacts/fixture-b-report.md",
                     "runtime_driver": "manual",
                     "depends_on": ["fixture-worker-a"],
                     "worker_may_rebuild_context": False,
                 },
             ],
-            "integration": {"required": True, "role": "orchestrator", "expected_output": ".pf/artifacts/orchestrator-integration-report.md"},
+            "integration": {
+                "required": True,
+                "role": "orchestrator",
+                "expected_output": ".pf/artifacts/orchestrator-integration-report.md",
+            },
         }
 
     def worker_map(self, plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
-        workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+        workers_value = plan.get("workers")
+        workers = workers_value if isinstance(workers_value, list) else []
         result: dict[str, dict[str, Any]] = {}
         for worker in workers:
             if isinstance(worker, dict):
@@ -93,16 +133,26 @@ class WorkerPlanPolicy:
                 result[worker_id] = worker
         return result
 
-    def task_dependency_ids(self, task: dict[str, Any], worker: dict[str, Any] | None = None) -> list[str]:
+    def task_dependency_ids(
+        self, task: dict[str, Any], worker: dict[str, Any] | None = None
+    ) -> list[str]:
         values: list[str] = []
-        dependencies = task.get("dependencies") if isinstance(task.get("dependencies"), dict) else {}
+        dependencies_value = task.get("dependencies")
+        dependencies = (
+            dependencies_value if isinstance(dependencies_value, dict) else {}
+        )
         values.extend(str(item) for item in as_list(dependencies.get("blocked_by")))
         if worker:
             values.extend(str(item) for item in as_list(worker.get("dependencies")))
             values.extend(str(item) for item in as_list(worker.get("depends_on")))
         return sorted({safe_id(item, "task") for item in values if item})
 
-    def task_dependencies_done(self, project_root: Path, task: dict[str, Any], worker: dict[str, Any] | None = None) -> bool:
+    def task_dependencies_done(
+        self,
+        project_root: Path,
+        task: dict[str, Any],
+        worker: dict[str, Any] | None = None,
+    ) -> bool:
         for dep_id in self.task_dependency_ids(task, worker):
             dep_path = self._work_paths.assignment_document(project_root, dep_id)
             if not dep_path.is_file():
@@ -120,7 +170,13 @@ class WorkerPlanPolicy:
                     result.add(safe_id(str(item), "worker"))
         return result
 
-    def depends_on(self, workers_by_id: dict[str, dict[str, Any]], worker_id: str, dependency_id: str, seen: set[str] | None = None) -> bool:
+    def depends_on(
+        self,
+        workers_by_id: dict[str, dict[str, Any]],
+        worker_id: str,
+        dependency_id: str,
+        seen: set[str] | None = None,
+    ) -> bool:
         seen = seen or set()
         if worker_id in seen:
             return False
@@ -129,7 +185,10 @@ class WorkerPlanPolicy:
         dependencies = self.dependency_set(worker)
         if dependency_id in dependencies:
             return True
-        return any(self.depends_on(workers_by_id, dep_id, dependency_id, seen) for dep_id in dependencies)
+        return any(
+            self.depends_on(workers_by_id, dep_id, dependency_id, seen)
+            for dep_id in dependencies
+        )
 
     def allows_write_scope_overlap(self, plan: dict[str, Any]) -> bool:
         return plan.get("allow_write_scope_overlap") is True

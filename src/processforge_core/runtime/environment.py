@@ -18,8 +18,11 @@ class WorkerEnvironmentPolicy:
         names = ["SystemRoot", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP"]
         return {name: value for name in names if (value := os.environ.get(name))}
 
-    def build(self, driver: dict[str, Any], variables: dict[str, str]) -> tuple[dict[str, str], bool]:
-        env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
+    def build(
+        self, driver: dict[str, Any], variables: dict[str, str]
+    ) -> tuple[dict[str, str], bool]:
+        env_spec_value = driver.get("environment")
+        env_spec = env_spec_value if isinstance(env_spec_value, dict) else {}
         inherit = bool(env_spec.get("inherit", True))
         # Persist only PF-owned and explicitly configured values. Inherited host
         # environment may contain credentials and is materialized only at launch.
@@ -39,13 +42,21 @@ class WorkerEnvironmentPolicy:
                 "PF_WORKER_TASK_ID": variables["task_id"],
                 "PF_WORKER_ATTEMPT": variables["attempt"],
                 "PF_PREPARED_INPUT_FILE": variables.get("prepared_input_path", ""),
-                "PF_PREPARED_INPUT_SHA256": variables.get("prepared_input_checksum", ""),
+                "PF_PREPARED_INPUT_SHA256": variables.get(
+                    "prepared_input_checksum", ""
+                ),
             }
         )
-        explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
-        reserved = sorted(str(key) for key in explicit if str(key) in RESERVED_WORKER_ENV_KEYS)
+        explicit_value = env_spec.get("variables")
+        explicit = explicit_value if isinstance(explicit_value, dict) else {}
+        reserved = sorted(
+            str(key) for key in explicit if str(key) in RESERVED_WORKER_ENV_KEYS
+        )
         if reserved:
-            raise SystemExit("FAIL: runtime driver cannot override reserved ProcessForge environment variables: " + ", ".join(reserved))
+            raise SystemExit(
+                "FAIL: runtime driver cannot override reserved ProcessForge environment variables: "
+                + ", ".join(reserved)
+            )
         expanded = self.expand(explicit, variables)
         env.update({str(key): str(value) for key, value in expanded.items()})
         return env, inherit
@@ -53,21 +64,27 @@ class WorkerEnvironmentPolicy:
     def materialize(self, command_spec: dict[str, Any]) -> dict[str, str]:
         inherit = bool(command_spec.get("environment_inherit", False))
         env = os.environ.copy() if inherit else self.minimal()
-        persisted = command_spec.get("environment") if isinstance(command_spec.get("environment"), dict) else {}
+        persisted_value = command_spec.get("environment")
+        persisted = persisted_value if isinstance(persisted_value, dict) else {}
         env.update({str(key): str(value) for key, value in persisted.items()})
         return env
 
     def expand(self, value: Any, variables: dict[str, str]) -> Any:
         if isinstance(value, str):
+
             def replace(match: re.Match[str]) -> str:
                 key = match.group(1)
                 if key not in variables:
-                    raise SystemExit(f"FAIL: unsupported runtime placeholder: {{{key}}}")
+                    raise SystemExit(
+                        f"FAIL: unsupported runtime placeholder: {{{key}}}"
+                    )
                 return variables[key]
 
             return re.sub(r"\{([a-zA-Z0-9_]+)\}", replace, value)
         if isinstance(value, list):
             return [str(self.expand(item, variables)) for item in value]
         if isinstance(value, dict):
-            return {str(key): self.expand(item, variables) for key, item in value.items()}
+            return {
+                str(key): self.expand(item, variables) for key, item in value.items()
+            }
         return value

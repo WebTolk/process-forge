@@ -112,7 +112,10 @@ import processforge_core.common.markdown as _core_common_markdown
 import processforge_core.common.release_identity as _core_common_release_identity
 # These Core imports require the source/distribution path bootstrap above.
 from processforge_core.common.properties import CoreProperties  # noqa: E402
-from processforge_core.composition import build_core_properties  # noqa: E402
+from processforge_core.composition import (  # noqa: E402
+    build_core_properties,
+    execution_maintenance_scope,
+)
 import processforge_core.maintenance.release_commands as _core_maintenance_release_commands
 import processforge_core.project.configuration_inputs as _core_project_configuration_inputs
 import processforge_core.project.initialization_discovery as _core_project_initialization_discovery
@@ -9450,6 +9453,34 @@ def _worker_phase_snapshot(
         candidate = project_root / reference["path"]
         if candidate.resolve().is_relative_to(paths["root"].resolve()):
             selected.append(candidate)
+    from processforge_core.prepared.input import private_file
+    from processforge_core.prepared.retry_publication import (
+        APPLIED,
+        INTENT,
+        OBSERVATIONS,
+        SIDECARS,
+    )
+
+    selected.extend(paths[key] for key in ("workspace_access", "stdout", "stderr", "heartbeat"))
+    selected.append(_work_paths.worker_prompt(project_root, run_id, task_id))
+    saved_command = json_read(paths["command"])
+    from processforge_core.prepared.input import local_file
+    for name in ("stdout", "stderr", "heartbeat"):
+        relative = saved_command.get("paths", {}).get(name)
+        if isinstance(relative, str):
+            selected.append(local_file(project_root, relative))
+    attempts = paths["root"] / "attempts"
+    if attempts.exists():
+        for directory in attempts.iterdir():
+            for name in (
+                INTENT, APPLIED, *SIDECARS.values(), "prepared-input.json", "configuration.snapshot.json",
+                "native-tree.json", "process.json", "exit.json", "scratch-resource.json", "scratch-release.json",
+                "scratch-cleanup.json", "scratch-preparation-failure.json",
+                "retry-publication-old-prompt.bin", "retry-publication-old-workspace-access.bin",
+                *("retry-previous-" + key + ".json" for key in OBSERVATIONS),
+            ):
+                path = private_file(project_root, rel(directory / name, project_root))
+                selected.append(path)
     return {path: _observation_bytes(path) for path in selected}
 
 
@@ -9472,6 +9503,8 @@ def _worker_phase_commit(
             if observation:
                 raise _LegacyObservationChanged()
             raise ExecutionError("execution_identity_conflict")
+        if observation:
+            _retry_refuse_pending(project_root, run_id, task_id)
         yield
 
 
@@ -9564,12 +9597,17 @@ def existing_running_worker_run(
     )
     observed = (
         observe_worker_run(project_root, task, driver, state)
-        if _worker_observation_inputs.worker_run_state_requires_reconciliation(
+        if state.get("failure_reason") == "execution activity unknown"
+        or _worker_observation_inputs.worker_run_state_requires_reconciliation(
             project_root, run_id, task_id, state
         )
         else state
     )
     if str(observed.get("status") or "") == "running":
+        if observed.get("failure_reason") == "execution activity unknown":
+            from processforge_core.executions.model import ExecutionError
+
+            raise ExecutionError("execution_activity_unknown")
         return observed, driver, paths
     return None
 
@@ -9886,6 +9924,7 @@ def _observation_bytes(path: Path) -> bytes | None:
 
 
 def _commit_legacy_observation(project_root: Path, task: dict[str, Any]) -> None:
+    _retry_refuse_pending(project_root, task["run_id"], task["id"])
     observation = _LEGACY_OBSERVATION.get()
     if observation is None:
         return
@@ -9946,6 +9985,7 @@ def observe_worker_run(
         return _observe_worker_run(project_root, task, driver, state)
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    _retry_refuse_pending(project_root, run_id, task_id)
     paths = _work_paths.worker_run(project_root, run_id, task_id)
     selected = [paths[name] for name in ("status", "command", "exit", "process")]
     reference = state.get("prepared_input")
@@ -10013,6 +10053,19 @@ def _observe_worker_run(
             project_root, run_id, task_id
         )
     )
+    def owned_live() -> dict[str, Any]:
+        facts = _legacy_tree_facts(project_root, run_id, task_id, state)
+        return write_agent_run_state(
+            project_root,
+            task,
+            driver,
+            "running",
+            pid=state.get("pid") or (facts or {}).get("pid"),
+            started_at=state.get("started_at"),
+            command=json_read(paths["command"]),
+            paths=paths,
+        )
+
     if status != "running":
         if (
             retained is None
@@ -10021,20 +10074,30 @@ def _observe_worker_run(
             )
         ):
             return state
-        if _legacy_tree_probe(project_root, run_id, task_id, state) is True:
+        tree_absent = _legacy_tree_probe(project_root, run_id, task_id, state)
+        if tree_absent is True:
             return state
+        if tree_absent is False:
+            return owned_live()
         return _legacy_activity_unknown(project_root, task, driver, state, paths)
+    if state.get("failure_reason") == "execution activity unknown":
+        tree_absent = _legacy_tree_probe(project_root, run_id, task_id, state)
+        if tree_absent is None:
+            return _legacy_activity_unknown(project_root, task, driver, state, paths)
+        if tree_absent is False:
+            return owned_live()
     pid = state.get("pid")
     if type(pid) is not int:
         return _legacy_activity_unknown(project_root, task, driver, state, paths)
     command = json_read(paths["command"])
     started_at = str(state.get("started_at") or _core_common_clock.now_utc())
     exit_marker = json_read(paths["exit"])
-    if (
-        exit_marker
-        and _legacy_tree_probe(project_root, run_id, task_id, state) is not True
-    ):
-        return _legacy_activity_unknown(project_root, task, driver, state, paths)
+    if exit_marker:
+        tree_absent = _legacy_tree_probe(project_root, run_id, task_id, state)
+        if tree_absent is None:
+            return _legacy_activity_unknown(project_root, task, driver, state, paths)
+        if tree_absent is False:
+            return owned_live()
     if exit_marker:
         marker_status = str(exit_marker.get("status") or "")
         marker_exit_code = exit_marker.get("exit_code")
@@ -10139,6 +10202,13 @@ def _observe_worker_run(
         return state
     if exit_code is None:
         if proc is None and not _worker_observation_inputs.process_pid_running(pid):
+            tree_absent = _legacy_tree_probe(project_root, run_id, task_id, state)
+            if tree_absent is None:
+                return _legacy_activity_unknown(
+                    project_root, task, driver, state, paths
+                )
+            if tree_absent is False:
+                return owned_live()
             lost_observed_at = _worker_observation_inputs.parse_runtime_timestamp(
                 state.get("lost_observed_at")
             )
@@ -10160,10 +10230,13 @@ def _observe_worker_run(
                 return state
             if datetime.now(timezone.utc) < lost_observed_at + timedelta(seconds=0.25):
                 return state
-            if _legacy_tree_probe(project_root, run_id, task_id, state) is not True:
+            tree_absent = _legacy_tree_probe(project_root, run_id, task_id, state)
+            if tree_absent is None:
                 return _legacy_activity_unknown(
                     project_root, task, driver, state, paths
                 )
+            if tree_absent is False:
+                return owned_live()
             finished_at = _core_common_clock.now_utc()
             failure_reason = "process exited without durable exit contract"
             state = write_agent_run_state(
@@ -10270,6 +10343,601 @@ def _observe_worker_run(
     return state
 
 
+def _retry_pending(project_root: Path, run_id: str, task_id: str):
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.retry_publication import discover
+
+    if _execution_storage(project_root).repository is not None:
+        return None
+    attempts = (
+        _work_paths.worker_run(project_root, run_id, task_id)["root"] / "attempts"
+    )
+
+    def verify(publication):
+        from processforge_core.prepared.input import load
+
+        task = _worker_assignment_service.load(project_root, task_id)
+        document = load(
+            project_root,
+            task,
+            {
+                "attempt": publication.intent["identity"]["attempt"],
+                "prepared_input": publication.intent["new_reference"],
+            },
+            sys.modules[__name__],
+            current=False,
+        )
+        if {
+            key: document["identity"][key] for key in publication.intent["identity"]
+        } != publication.intent["identity"]:
+            raise ExecutionError("execution_identity_conflict")
+
+    try:
+        return discover(project_root, attempts, verify=verify)
+    except (OSError, ValueError, TypeError, KeyError) as error:
+        raise ExecutionError("execution_identity_conflict") from error
+
+
+def _retry_refuse_pending(project_root: Path, run_id: str, task_id: str) -> None:
+    from processforge_core.executions.model import ExecutionError
+
+    if _retry_pending(project_root, run_id, task_id) is not None:
+        raise ExecutionError("execution_activity_unknown")
+
+
+def _retry_priority(project_root: Path, task: dict[str, Any]) -> None:
+    run_id = task["run_id"]
+    if any(
+        not intent.with_suffix(".applied.json").is_file()
+        for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
+            "cancellation-*.yaml"
+        )
+    ):
+        raise SystemExit("FAIL: cancellation_recovery_pending")
+    if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
+        raise SystemExit("FAIL: work_is_terminal")
+
+
+def _retry_paths(
+    project_root: Path, task: dict[str, Any], command=None
+) -> dict[str, Path]:
+    from processforge_core.prepared.input import local_file
+
+    paths = _work_paths.worker_run(project_root, task["run_id"], task["id"])
+    # Only use command paths after deterministic builder verification. They never
+    # choose journal/archive destinations or identity.
+    if command is not None:
+        for name in ("stdout", "stderr", "heartbeat"):
+            paths[name] = local_file(project_root, command["paths"][name])
+    paths["prompt"] = _work_paths.worker_prompt(
+        project_root, task["run_id"], task["id"]
+    )
+    return paths
+
+
+def _retry_request(
+    project_root: Path,
+    task: dict[str, Any],
+    driver_arg,
+    executable_override,
+    model_arg,
+    reasoning_effort_arg,
+):
+    driver = _runtime_driver_selection_service.for_task(project_root, task, driver_arg)
+    return driver, {
+        "driver": driver,
+        "executable_override": executable_override or "",
+        "model": _context_contract_inputs.normalize_agent_model(
+            model_arg or task.get("agent_model") or task.get("model") or ""
+        ),
+        "reasoning_effort": _context_contract_inputs.normalize_agent_reasoning_effort(
+            reasoning_effort_arg
+            or task.get("agent_reasoning_effort")
+            or task.get("reasoning_effort")
+            or ""
+        ),
+    }
+
+
+def _retry_projection_bytes(payload: dict[str, Any]) -> bytes:
+    # Preserve the compatibility writer's field order, indentation and native
+    # newline convention; only the IO publication mechanism changes.
+    from processforge_core.prepared.input import MAX_BYTES
+
+    raw = (
+        (json.dumps(payload, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
+        .replace("\n", os.linesep)
+        .encode("utf-8")
+    )
+    if len(raw) > MAX_BYTES:
+        from processforge_core.executions.model import ExecutionError
+
+        raise ExecutionError("execution_identity_conflict")
+    return raw
+
+
+def _retry_pins(project_root: Path, task: dict[str, Any], document: dict[str, Any]):
+    from processforge_core.prepared.input import digest
+    from processforge_core.project.configuration_inputs import operation_device_path
+    from processforge_core.runtime.command import configuration_snapshot_bytes
+
+    selected = _ProjectMetadataReader(project_root).workplace_manifest()
+    configuration = build_configuration_provider(
+        project_root=project_root,
+        workplace_root=selected.parent if selected else None,
+    )
+    identity = document["identity"]
+    raw = configuration_snapshot_bytes(
+        configuration,
+        {
+            "project_id": identity["project_id"],
+            "run_id": identity["run_id"],
+            "task_id": identity["assignment_id"],
+            "attempt": identity["attempt"],
+        },
+        device_config_path=operation_device_path(
+            project_root,
+            selected.parent if selected else None,
+            configuration.device_path,
+        ),
+    )
+    return {
+        "assignment": digest(
+            _work_paths.assignment_document(project_root, task["id"]).read_bytes()
+        ),
+        "capsule": digest(
+            assignment_capsule_path(project_root, task["id"]).read_bytes()
+        ),
+        "configuration": digest(raw),
+    }
+
+
+def _retry_old_safety(
+    project_root: Path,
+    task: dict[str, Any],
+    state: dict[str, Any],
+    command: dict[str, Any],
+    old,
+):
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.input import load
+
+    if not state:
+        if any(
+            old[key] is not None for key in ("status", "command", "process", "exit")
+        ):
+            raise ExecutionError("execution_identity_conflict")
+        return None
+    run_id, task_id = task["run_id"], task["id"]
+    attempt = state.get("attempt")
+    if (
+        type(attempt) is not int
+        or attempt < 1
+        or state.get("run_id") != run_id
+        or state.get("task_id") != task_id
+        or command.get("run_id") != run_id
+        or command.get("task_id") != task_id
+        or str(command.get("attempt")) != str(attempt)
+        or command.get("prepared_input") != state.get("prepared_input")
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    load(project_root, task, state, sys.modules[__name__], current=False)
+    key = _core_runtime_observation_inputs.worker_process_key(
+        project_root, run_id, task_id
+    )
+    retained = _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(key)
+    if retained is not None and retained.pid != state.get("pid"):
+        raise ExecutionError("execution_identity_conflict")
+    expected = project_root / state["prepared_input"]["path"]
+    launched = (
+        retained is not None
+        or state.get("pid") is not None
+        or state.get("started_at") is not None
+        or state.get("exit_code") is not None
+        or state.get("status") in {"starting", "running"}
+        or old["process"] is not None
+        or old["exit"] is not None
+        or expected.with_name("native-tree.json").exists()
+    )
+    if launched:
+        if _legacy_tree_probe(project_root, run_id, task_id, state) is not True:
+            raise ExecutionError("execution_activity_unknown")
+        if retained is not None and retained.poll() is None:
+            raise ExecutionError("execution_activity_unknown")
+    elif state.get("status") not in {"ready", "manual_required", "cancelled"}:
+        raise ExecutionError("execution_activity_unknown")
+    return retained
+
+
+def _retry_validate(project_root: Path, task: dict[str, Any], publication, request):
+    from processforge_core.executions.model import ExecutionError
+
+    try:
+        return _retry_validate_inputs(project_root, task, publication, request)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise ExecutionError("execution_identity_conflict") from error
+
+
+def _retry_validate_inputs(
+    project_root: Path, task: dict[str, Any], publication, request
+):
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared import input as prepared_input
+    from processforge_core.prepared.command import (
+        read_attempt_resources,
+        scratch_environment,
+    )
+    from processforge_core.prepared.retry_publication import (
+        prefix,
+        read_raw,
+        strict_json,
+    )
+    from processforge_core.runtime.command import load_configuration_snapshot
+
+    _retry_priority(project_root, task)
+    intent = publication.intent
+    document = prepared_input.load(
+        project_root,
+        task,
+        {
+            "attempt": intent["identity"]["attempt"],
+            "prepared_input": intent["new_reference"],
+        },
+        sys.modules[__name__],
+        current=True,
+    )
+    if (
+        intent["identity"]
+        != {key: document["identity"][key] for key in intent["identity"]}
+        or intent["request"] != request
+        or intent["pins"] != _retry_pins(project_root, task, document)
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    driver = request["driver"]
+    command = strict_json(publication.new["command"])
+    # This builder is deterministic and performs no publication/allocation. It
+    # checks the pinned command contract; replay uses only the sidecar bytes.
+    expected_command, _ = _worker_command_builder.build(
+        project_root,
+        task,
+        driver,
+        request["executable_override"] or None,
+        attempt=intent["identity"]["attempt"],
+        prepared_input=intent["new_reference"],
+    )
+    grant = document.get("native_launch", {}).get("configuration", {})
+    snapshot_path = (project_root / intent["new_reference"]["path"]).with_name(
+        "configuration.snapshot.json"
+    )
+    expected_command["command"]["environment"].update(
+        {
+            "PF_CONFIGURATION_SNAPSHOT_PATH": str(snapshot_path),
+            "PF_CONFIGURATION_SNAPSHOT_SHA256": grant.get("sha256"),
+        }
+    )
+    if (
+        command != expected_command
+        or grant.get("sha256") != intent["pins"]["configuration"]
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    load_configuration_snapshot(
+        document,
+        project_root / intent["new_reference"]["path"],
+        command["command"]["environment"],
+    )
+    paths = _retry_paths(project_root, task, command)
+    expected_state = _agent_run_payload(
+        project_root,
+        task,
+        driver,
+        "manual_required" if str(driver.get("kind")) == "manual" else "ready",
+        paths,
+        intent["identity"]["attempt"],
+    )
+    expected_state["prepared_input"] = intent["new_reference"]
+    if strict_json(publication.new["status"]) != expected_state:
+        raise ExecutionError("execution_identity_conflict")
+    if (
+        strict_json(publication.new["workspace_access"])
+        != document["input"]["resources"]
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    if publication.new["prompt"] != _worker_assignment_service.render_prompt(
+        project_root,
+        task["id"],
+        prepared_input=intent["new_reference"],
+    ).replace("\r\n", "\n").encode("utf-8").replace(b"\n", os.linesep.encode()):
+        raise ExecutionError("execution_identity_conflict")
+    resource = read_attempt_resources(project_root, document)
+    if resource is not None:
+        scratch_environment(
+            document, {}
+        )  # Exact object identity + containment, never recreation.
+        for name in (
+            "scratch-release.json",
+            "scratch-cleanup.json",
+            "scratch-preparation-failure.json",
+        ):
+            if read_raw(project_root, publication.directory / name) is not None:
+                raise ExecutionError("execution_identity_conflict")
+    old_state = (
+        strict_json(publication.old["status"])
+        if publication.old["status"] is not None
+        else {}
+    )
+    old_command = (
+        strict_json(publication.old["command"])
+        if publication.old["command"] is not None
+        else {}
+    )
+    if (
+        old_state.get("attempt", 0) != intent["old_attempt"]
+        or old_state.get("prepared_input") != intent["old_reference"]
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    retained = _retry_old_safety(
+        project_root, task, old_state, old_command, publication.old
+    )
+    # No new native launch fact is ever cleared or interpreted as quiescence.
+    for name in ("native-tree.json", "process.json", "exit.json"):
+        if read_raw(project_root, publication.directory / name) is not None:
+            raise ExecutionError("execution_activity_unknown")
+    key = _core_runtime_observation_inputs.worker_process_key(
+        project_root, task["run_id"], task["id"]
+    )
+    current_retained = _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(
+        key
+    )
+    if current_retained is not None and current_retained is not retained:
+        raise ExecutionError("execution_activity_unknown")
+    if old_command:
+        old_paths = _retry_paths(project_root, task, old_command)
+        for name in ("stdout", "stderr", "heartbeat"):
+            paths[name] = old_paths[name]
+    prefix(project_root, paths, publication)
+    return document, paths, retained
+
+
+def _retry_recover(
+    project_root: Path, task: dict[str, Any], publication, request, publish
+):
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.retry_publication import (
+        apply_publication,
+        load_publication,
+        strict_json,
+    )
+
+    expected = _worker_phase_snapshot(project_root, task["run_id"], task["id"])
+    _retry_validate(project_root, task, publication, request)
+    with publish(expected):
+        # Current authorization, immutable bytes, native/scratch facts and the
+        # full prefix are rechecked after the planning/admission CAS handoff.
+        current = _retry_pending(project_root, task["run_id"], task["id"])
+        if current is None or current.raw != publication.raw:
+            raise ExecutionError("execution_identity_conflict")
+        current = load_publication(project_root, publication.directory)
+        _, paths, retained = _retry_validate(project_root, task, current, request)
+
+        def retire():
+            if retained is None:
+                return
+            key = _core_runtime_observation_inputs.worker_process_key(
+                project_root, task["run_id"], task["id"]
+            )
+            if (
+                _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(key)
+                is not retained
+            ):
+                raise ExecutionError("execution_identity_conflict")
+            _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(key, None)
+
+        apply_publication(project_root, paths, current, retired=retire)
+        attempt = current.intent["identity"]["attempt"]
+        _process_event_recorder.emit_process_event(
+            project_root,
+            "worker.run.prepared",
+            process_id=_run_task_inputs.task_process_id(task),
+            subject=task["id"],
+            assignment_id_value=task["id"],
+            assignment_path=rel(
+                _work_paths.assignment_document(project_root, task["id"]), project_root
+            ),
+            payload={
+                "run_id": task["run_id"],
+                "driver_id": request["driver"].get("id"),
+                "status": strict_json(current.new["status"])["status"],
+                "attempt": attempt,
+            },
+            correlation_id=f"run-{task['run_id']}",
+        )
+        diagnostics.annotate(
+            run_id=task["run_id"], assignment_id=task["id"], attempt=attempt
+        )
+        diagnostics.emit(
+            "info",
+            "worker.prepared",
+            {
+                "driver_id": request["driver"].get("id"),
+                "status": strict_json(current.new["status"])["status"],
+            },
+            component="worker",
+        )
+    return (
+        task,
+        request["driver"],
+        _retry_paths(project_root, task, strict_json(current.new["command"])),
+    )
+
+
+def _retry_publish(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any],
+    document,
+    command,
+    prompt_content,
+    request,
+):
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.command import scratch_published
+    from processforge_core.prepared.retry_publication import (
+        INTENT,
+        SLOTS,
+        apply_publication,
+        create_publication,
+        read_raw,
+        strict_json,
+    )
+
+    paths = _retry_paths(project_root, task, command)
+    old = {key: read_raw(project_root, paths[key]) for key in SLOTS}
+    state = strict_json(old["status"]) if old["status"] is not None else {}
+    old_command = strict_json(old["command"]) if old["command"] is not None else {}
+    if old_command:
+        old_paths = _retry_paths(project_root, task, old_command)
+        for name in ("stdout", "stderr", "heartbeat"):
+            old[name] = read_raw(project_root, old_paths[name])
+    _retry_old_safety(project_root, task, state, old_command, old)
+    new_state = _agent_run_payload(
+        project_root,
+        task,
+        driver,
+        "manual_required" if str(driver.get("kind")) == "manual" else "ready",
+        paths,
+        document["identity"]["attempt"],
+    )
+    new_state["prepared_input"] = command["prepared_input"]
+    directory = (project_root / command["prepared_input"]["path"]).parent
+    new = {
+        "status": _retry_projection_bytes(new_state),
+        "command": _retry_projection_bytes(command),
+        "workspace_access": _retry_projection_bytes(document["input"]["resources"]),
+        "prompt": prompt_content.replace("\r\n", "\n")
+        .encode("utf-8")
+        .replace(b"\n", os.linesep.encode()),
+    }
+    try:
+        publication = create_publication(
+            project_root,
+            directory,
+            document["identity"],
+            state.get("prepared_input"),
+            state.get("attempt", 0),
+            command["prepared_input"],
+            request,
+            _retry_pins(project_root, task, document),
+            old,
+            new,
+            validate=lambda candidate: _retry_validate(
+                project_root, task, candidate, request
+            ),
+        )
+        scratch_published(document)
+    except BaseException as error:
+        try:
+            committed = read_raw(project_root, directory / INTENT)
+        except BaseException as verification_error:
+            scratch_published(document)
+            error.add_note(
+                "scratch_publication_unknown:" + type(verification_error).__name__
+            )
+        else:
+            if committed is not None:
+                # Even malformed/foreign bytes make binding ambiguous. Retain the
+                # allocation and fail closed rather than deleting recoverable temp.
+                scratch_published(document)
+        raise
+    _, publication_paths, retained = _retry_validate(
+        project_root, task, publication, request
+    )
+
+    def retire():
+        if retained is None:
+            return
+        key = _core_runtime_observation_inputs.worker_process_key(
+            project_root, task["run_id"], task["id"]
+        )
+        if (
+            _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(key)
+            is not retained
+        ):
+            raise ExecutionError("execution_identity_conflict")
+        _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(key, None)
+
+    apply_publication(project_root, publication_paths, publication, retired=retire)
+
+
+def _legacy_retire_projection(
+    project_root: Path, run_id: str, task_id: str, paths: dict[str, Path]
+) -> None:
+    """Preserve the old attempt before replacing its current projections."""
+    from processforge_core.executions.model import ExecutionError
+
+    _retry_refuse_pending(project_root, run_id, task_id)
+    state = json_read(paths["status"])
+    if not state:
+        return
+    reference = state.get("prepared_input")
+    attempt = state.get("attempt")
+    if not isinstance(reference, dict) or type(attempt) is not int or attempt < 1:
+        raise ExecutionError("execution_activity_unknown")
+    expected = paths["root"] / "attempts" / str(attempt) / "prepared-input.json"
+    if (
+        state.get("run_id") != run_id
+        or state.get("task_id") != task_id
+        or reference.get("path") != rel(expected, project_root)
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    command = json_read(paths["command"])
+    if (
+        str(command.get("attempt")) != str(attempt)
+        or command.get("prepared_input") != reference
+    ):
+        raise ExecutionError("execution_identity_conflict")
+    key = _core_runtime_observation_inputs.worker_process_key(
+        project_root, run_id, task_id
+    )
+    retained = _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.get(key)
+    if retained is not None and retained.pid != state.get("pid"):
+        raise ExecutionError("execution_identity_conflict")
+    if (
+        retained is not None
+        or state.get("pid") is not None
+        or state.get("status") in {"starting", "running"}
+        or expected.with_name("native-tree.json").exists()
+    ):
+        if _legacy_tree_probe(project_root, run_id, task_id, state) is not True:
+            raise ExecutionError("execution_activity_unknown")
+        if retained is not None and retained.poll() is None:
+            raise ExecutionError("execution_activity_unknown")
+    # Write-once byte copies: an interrupted publication may safely retry only
+    # against the same original projection. Never invent a prior exit receipt.
+    for name in (
+        "status",
+        "command",
+        "process",
+        "exit",
+        "stdout",
+        "stderr",
+        "heartbeat",
+    ):
+        raw = _observation_bytes(paths[name])
+        if raw is None:
+            continue
+        archive = expected.with_name("retry-previous-" + name + ".json")
+        from processforge_core.prepared.input import private_file
+
+        private_file(project_root, rel(archive, project_root))
+        from processforge_core.prepared.retry_publication import publish_raw_once
+
+        publish_raw_once(project_root, archive, raw)
+    paths["process"].unlink(missing_ok=True)
+    paths["exit"].unlink(missing_ok=True)
+    if retained is not None:
+        _core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES.pop(key, None)
+
+
 def prepare_worker_run(
     project_root: Path,
     task_id: str,
@@ -10288,6 +10956,20 @@ def prepare_worker_run(
 
     if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
         raise SystemExit("FAIL: work_is_terminal")
+    _retry_priority(project_root, task)
+    pending = _retry_pending(project_root, task["run_id"], task_id)
+    if pending is not None:
+        _, request = _retry_request(project_root, task, driver_arg, executable_override, model_arg, reasoning_effort_arg)
+        if _publication is None:
+            if any(lease.active and lease.key == _worker_lifecycle_key(project_root, task["run_id"], task_id) for lease in _WORKER_LIFECYCLE_GATES.get()):
+                from processforge_core.executions.model import ExecutionError
+                raise ExecutionError("execution_activity_unknown")
+            with _worker_planning_phase(project_root, task["run_id"], task_id) as publish:
+                return _retry_recover(project_root, task, pending, request, publish)
+        return _retry_recover(project_root, task, pending, request, _publication)
+    if _publication is None and not any(lease.active and lease.key == _worker_lifecycle_key(project_root, task["run_id"], task_id) for lease in _WORKER_LIFECYCLE_GATES.get()):
+        with _worker_planning_phase(project_root, task["run_id"], task_id) as publish:
+            return prepare_worker_run(project_root, task_id, driver_arg, executable_override, model_arg, reasoning_effort_arg, _publication=publish)
     require_resolved_preparation(project_root, task, sys.modules[__name__])
     agent_model = _context_contract_inputs.normalize_agent_model(
         model_arg or task.get("agent_model") or task.get("model") or ""
@@ -10494,30 +11176,39 @@ def prepare_worker_run(
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     from processforge_core.prepared.command import scratch_published
 
+    if repository is None:
+        from processforge_core.prepared.retry_publication import (
+            SLOTS,
+            read_raw,
+            strict_json,
+        )
+        old_paths = _retry_paths(project_root, task)
+        old_command_raw = read_raw(project_root, old_paths["command"])
+        old_command = strict_json(old_command_raw) if old_command_raw is not None else {}
+        if old_command:
+            old_paths = _retry_paths(project_root, task, old_command)
+        old_bytes = {key: read_raw(project_root, old_paths[key]) for key in SLOTS}
+        old_state = strict_json(old_bytes["status"]) if old_bytes["status"] is not None else {}
+        _retry_old_safety(project_root, task, old_state, old_command, old_bytes)
     publication = (
         _publication(publication_expected)
         if _publication is not None
         else contextlib.nullcontext()
     )
     with publication:
-        _core_common_json_io.json_write(
-            paths["workspace_access"], document["input"]["resources"]
-        )
-        prompt_path.parent.mkdir(parents=True, exist_ok=True)
-        prompt_path.write_text(prompt_content, encoding="utf-8")
+        if repository is not None:
+            _core_common_json_io.json_write(
+                paths["workspace_access"], document["input"]["resources"]
+            )
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(prompt_content, encoding="utf-8")
         paths["root"].mkdir(parents=True, exist_ok=True)
         try:
             if repository is None:
-                paths["exit"].unlink(missing_ok=True)
-                write_agent_run_state(
-                    project_root,
-                    task,
-                    driver,
-                    state_status,
-                    command=command,
-                    paths=paths,
-                    attempt=attempt,
-                )
+                _retry_priority(project_root, task)
+                _retry_refuse_pending(project_root, run_id, task_id)
+                _, request = _retry_request(project_root, task, driver_arg, executable_override, model_arg, reasoning_effort_arg)
+                _retry_publish(project_root, task, driver, document, command, prompt_content, request)
             else:
                 assert allocated is not None
                 from processforge_core.executions.projection import canonical_json
@@ -10734,6 +11425,7 @@ def _finalize_worker_scratch(
     from processforge_core.prepared.command import finalize_scratch
 
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    _retry_refuse_pending(project_root, run_id, task["id"])
     try:
         state = load_agent_run_state(project_root, run_id, task["id"])
         if not state.get("prepared_input"):
@@ -10891,6 +11583,14 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
         print("FAIL: work_is_terminal")
         return 1
+    if _retry_pending(project_root, run_id, task_id) is not None:
+        with _worker_planning_phase(project_root, run_id, task_id) as publish:
+            task, driver, paths = prepare_worker_run(
+                project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None),
+                getattr(args, "model", None), getattr(args, "reasoning_effort", None), _publication=publish,
+            )
+        print(f"PREPARED: {task_id} driver={driver.get('id')} status={load_agent_run_state(project_root, run_id, task_id).get('status')}")
+        return 0
     if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
         return 1
     _storage_first_write(project_root)
@@ -11304,6 +12004,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
+        _retry_refuse_pending(project_root, run_id, task_id)
         if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
             return 1
         _host, configuration = _storage_first_write(project_root)
@@ -11641,6 +12342,7 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    _retry_refuse_pending(project_root, run_id, task_id)
     detach = bool(getattr(args, "detach", False))
     proc: subprocess.Popen[bytes] | None = None
     from processforge_core.prepared.resources import native_start_preflight
@@ -11657,6 +12359,7 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
                 if preflight is not None
                 else _worker_assignment_service.load(project_root, task_id)
             )
+            _retry_refuse_pending(project_root, run_id, task_id)
             if preflight is None and any(
                 not intent.with_suffix(".applied.json").is_file()
                 for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(
@@ -12029,6 +12732,7 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    _retry_refuse_pending(project_root, run_id, task_id)
     state = load_agent_run_state(project_root, run_id, task_id)
     if state and (
         _execution_storage(project_root).repository is not None
@@ -12100,7 +12804,9 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             _publish_sql_locked(project_root, repository, run_id, task_id)
         print(f"STOPPED: {task_id}")
         return 0
+    _retry_refuse_pending(project_root, run_id, task_id)
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        _retry_refuse_pending(project_root, run_id, task_id)
         state = load_agent_run_state(project_root, run_id, task_id)
         if not state:
             print(f"STATUS: not-prepared {task_id}")
@@ -17170,7 +17876,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     UsageCommandParser(execute=UsageCommand().execute).register(sub.add_parser)
     register_journal_maintenance(
-        sub.add_parser, execute=JournalMaintenanceCommand().execute
+        sub.add_parser,
+        execute=JournalMaintenanceCommand(
+            execution_factory=execution_maintenance_scope
+        ).execute,
     )
 
     ActionsCommandParser(execute=ActionsCommand(

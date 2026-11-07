@@ -22,6 +22,7 @@ from processforge_core.prepared import input as prepared_input
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from processforge_core.runtime.execution_admission import ExecutionAdmission
 
+from .test_lifecycle import _forbid_legacy_effects
 from .test_lifecycle import sql_cli_fixture as sql_cli_fixture
 from .test_repository import isolated_path as isolated_path
 
@@ -49,18 +50,27 @@ def legacy_manual(sql_cli_fixture: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
 
 def test_public_prepare_reconciles_legacy_without_managed_scratch(
     legacy_manual: Any,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     root, args, paths, _task, state = legacy_manual
     state.update(status="running", pid=None)
     core._core_common_json_io.json_write(paths["status"], state)
     before_attempts = set((paths["root"] / "attempts").iterdir())
-    assert core.command_worker_run_prepare(args) == 0
+    before_task = core._worker_assignment_service.load(root, "task")
+    _forbid_legacy_effects(monkeypatch)
+    capsys.readouterr()
+    assert core.command_worker_run_prepare(args) == 1
+    assert capsys.readouterr().out.strip() == "FAIL: execution_activity_unknown"
+    assert core._worker_assignment_service.load(root, "task") == before_task
     current = core.load_agent_run_state(root, "run", "task")
     assert current["attempt"] == state["attempt"] and current["status"] == "running"
+    assert current["pid"] is None
     assert current["failure_reason"] == "execution activity unknown"
     assert set((paths["root"] / "attempts").iterdir()) == before_attempts
     assert not ExecutionAdmission.held(root, None)
     assert not core._WORKER_LIFECYCLE_GATES.get()
+    independent_admission(root, root)
 
 
 def independent_admission(project: Path, workplace: Path) -> None:

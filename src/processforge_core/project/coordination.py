@@ -36,13 +36,17 @@ class ProjectCoordinationReader:
     def project_mode(self, value: Any) -> str:
         mode = str(value or "inherit").strip().lower()
         if mode not in COORDINATION_PROJECT_MODES:
-            raise SystemExit("FAIL: project coordination mode must be inherit, simple, or organized")
+            raise SystemExit(
+                "FAIL: project coordination mode must be inherit, simple, or organized"
+            )
         return mode
 
     def workplace_mode(self, value: Any) -> str:
         mode = str(value or "simple").strip().lower()
         if mode not in WORKPLACE_DEFAULT_PROJECT_MODES:
-            raise SystemExit("FAIL: workplace default_project_mode must be simple or organized")
+            raise SystemExit(
+                "FAIL: workplace default_project_mode must be simple or organized"
+            )
         return mode
 
     def workplace_defaults(self) -> dict[str, Any]:
@@ -69,14 +73,20 @@ class ProjectCoordinationReader:
             data = self.documents.load(workplace_manifest)
             raw = data.get("coordination") if isinstance(data, dict) else None
             if isinstance(raw, dict):
-                config.update({key: value for key, value in raw.items() if key != "director"})
+                config.update(
+                    {key: value for key, value in raw.items() if key != "director"}
+                )
                 if isinstance(raw.get("director"), dict):
                     director = dict(DIRECTOR_OFFICE_DEFAULTS)
                     director.update(raw["director"])
                     config["director"] = director
         config["director_enabled"] = bool(config.get("director_enabled", False))
-        config["director_office_enabled"] = bool(config.get("director_office_enabled", False))
-        config["default_project_mode"] = self.workplace_mode(config.get("default_project_mode"))
+        config["director_office_enabled"] = bool(
+            config.get("director_office_enabled", False)
+        )
+        config["default_project_mode"] = self.workplace_mode(
+            config.get("default_project_mode")
+        )
         if not isinstance(config.get("director"), dict):
             config["director"] = dict(DIRECTOR_OFFICE_DEFAULTS)
         return config
@@ -88,8 +98,11 @@ class ProjectCoordinationReader:
         raw = data.get("coordination") if isinstance(data, dict) else None
         config = self.project_defaults()
         if isinstance(raw, dict):
-            config.update({key: value for key, value in raw.items() if key != "director"})
-            director = config.get("director") if isinstance(config.get("director"), dict) else {}
+            config.update(
+                {key: value for key, value in raw.items() if key != "director"}
+            )
+            director_value = config.get("director")
+            director = director_value if isinstance(director_value, dict) else {}
             if isinstance(raw.get("director"), dict):
                 director = dict(director)
                 director.update(raw["director"])

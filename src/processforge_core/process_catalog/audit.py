@@ -14,7 +14,11 @@ from processforge_core.documents.reader import YamlDocumentReader
 from .artifacts import ProcessArtifactDeclarationPolicy
 from .catalog_read import ProcessCatalogReadService
 from .contracts import ProcessContractValidationService
-from .service import process_catalog_contexts, process_catalog_metadata, process_is_public_stable
+from .service import (
+    process_catalog_contexts,
+    process_catalog_metadata,
+    process_is_public_stable,
+)
 from .validation import ProcessAuthoringValidationService
 
 
@@ -29,7 +33,9 @@ class BuiltinProcessCatalogAuditService:
         self.artifacts = ProcessArtifactDeclarationPolicy()
 
     def report(self, root: Path, *, public: bool = False) -> dict[str, Any]:
-        process_items = ProcessCatalogReadService(root, distribution_root=self.distribution_root).entries(strict=True)
+        process_items = ProcessCatalogReadService(
+            root, distribution_root=self.distribution_root
+        ).entries(strict=True)
         process_ids = {entry.process_id for entry in process_items}
         packages = self.package_index(root)
         rows: list[dict[str, Any]] = []
@@ -49,7 +55,12 @@ class BuiltinProcessCatalogAuditService:
             process = entry.process
             meta = process_catalog_metadata(process)
             if public and meta["classification"] == "INTERNAL_MAINTENANCE":
-                strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
+                strict_checks = [
+                    check(
+                        "PASS",
+                        f"{process_id} internal maintenance process skipped by public catalog doctor",
+                    )
+                ]
             else:
                 strict_checks = self.contracts.validate(
                     root,
@@ -72,9 +83,21 @@ class BuiltinProcessCatalogAuditService:
             summary["warn"] += len(warnings)
             if not failures:
                 summary["pass"] += 1
-            process_pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
-            package_id = str(process_pack.get("package") or (string_list(process.get("required_packages"))[0] if string_list(process.get("required_packages")) else ""))
-            companions = self.authoring.paths(entry.root if entry.origin == "official" else root, process_id)
+            process_pack_value = process.get("process_pack")
+            process_pack = (
+                process_pack_value if isinstance(process_pack_value, dict) else {}
+            )
+            package_id = str(
+                process_pack.get("package")
+                or (
+                    string_list(process.get("required_packages"))[0]
+                    if string_list(process.get("required_packages"))
+                    else ""
+                )
+            )
+            companions = self.authoring.paths(
+                entry.root if entry.origin == "official" else root, process_id
+            )
             rows.append(
                 {
                     "id": process_id,
@@ -87,15 +110,38 @@ class BuiltinProcessCatalogAuditService:
                     "public_surface": meta["public_surface"],
                     "package": package_id,
                     "execution_mode": process.get("execution_mode"),
-                    "coordination_mode": (process.get("coordination_requirements") or {}).get("mode") if isinstance(process.get("coordination_requirements"), dict) else None,
-                    "error_handling": (process.get("error_handling") or {}).get("mode") if isinstance(process.get("error_handling"), dict) else None,
+                    "coordination_mode": (
+                        process.get("coordination_requirements") or {}
+                    ).get("mode")
+                    if isinstance(process.get("coordination_requirements"), dict)
+                    else None,
+                    "error_handling": (process.get("error_handling") or {}).get("mode")
+                    if isinstance(process.get("error_handling"), dict)
+                    else None,
                     "has_prompt": companions["prompt"].is_file(),
                     "has_process_doc": companions["doc"].is_file(),
                     "has_authoring_example": companions["example"].is_file(),
-                    "artifact_definitions_complete": not (self.artifacts.produced_ids(process) - self.artifacts.declared_ids(process)),
-                    "stage_artifacts_declared": not (self.artifacts.produced_ids(process) - self.artifacts.declared_ids(process)),
-                    "gates_valid": not any("gates valid:" in item.message and item.level == "FAIL" for item in strict_checks),
-                    "handoff_semantics": "process_transition" if process.get("process_transitions") else ("run_summary" if process.get("run_completion") else ("stage_note" if process.get("stage_completion") else "none")),
+                    "artifact_definitions_complete": not (
+                        self.artifacts.produced_ids(process)
+                        - self.artifacts.declared_ids(process)
+                    ),
+                    "stage_artifacts_declared": not (
+                        self.artifacts.produced_ids(process)
+                        - self.artifacts.declared_ids(process)
+                    ),
+                    "gates_valid": not any(
+                        "gates valid:" in item.message and item.level == "FAIL"
+                        for item in strict_checks
+                    ),
+                    "handoff_semantics": "process_transition"
+                    if process.get("process_transitions")
+                    else (
+                        "run_summary"
+                        if process.get("run_completion")
+                        else (
+                            "stage_note" if process.get("stage_completion") else "none"
+                        )
+                    ),
                     "doctor_contexts": process_catalog_contexts(process),
                     "result": "fail" if failures else ("warn" if warnings else "pass"),
                     "failures": failures,
@@ -106,15 +152,43 @@ class BuiltinProcessCatalogAuditService:
         for package_id, item in packages.items():
             package_data = item["data"]
             for process_id in item["processes"]:
-                checks.append(check("PASS" if process_id in process_ids else "FAIL", f"package {package_id} process id exists: {process_id}"))
+                checks.append(
+                    check(
+                        "PASS" if process_id in process_ids else "FAIL",
+                        f"package {package_id} process id exists: {process_id}",
+                    )
+                )
             stable_exposed = set(string_list(package_data.get("stable_processes")))
             for process_id in stable_exposed:
-                process = next((entry.process for entry in process_items if entry.process_id == process_id), {})
-                checks.append(check("PASS" if process_is_public_stable(process) else "FAIL", f"package {package_id} stable process is public stable: {process_id}"))
+                process = next(
+                    (
+                        entry.process
+                        for entry in process_items
+                        if entry.process_id == process_id
+                    ),
+                    {},
+                )
+                checks.append(
+                    check(
+                        "PASS" if process_is_public_stable(process) else "FAIL",
+                        f"package {package_id} stable process is public stable: {process_id}",
+                    )
+                )
 
-        package_failures = [item.message for item in checks if item.level == "FAIL" and item.message.startswith("package ")]
+        package_failures = [
+            item.message
+            for item in checks
+            if item.level == "FAIL" and item.message.startswith("package ")
+        ]
         summary["fail"] += len(package_failures)
-        return {"schema_version": 1, "summary": summary, "processes": rows, "checks": [{"level": item.level, "message": item.message} for item in checks]}
+        return {
+            "schema_version": 1,
+            "summary": summary,
+            "processes": rows,
+            "checks": [
+                {"level": item.level, "message": item.message} for item in checks
+            ],
+        }
 
     def package_index(self, root: Path) -> dict[str, dict[str, Any]]:
         index: dict[str, dict[str, Any]] = {}
@@ -123,5 +197,9 @@ class BuiltinProcessCatalogAuditService:
             if yaml_error(data) or not isinstance(data, dict):
                 continue
             package_id = str(data.get("id") or path.stem)
-            index[package_id] = {"path": path, "data": data, "processes": string_list(data.get("processes"))}
+            index[package_id] = {
+                "path": path,
+                "data": data,
+                "processes": string_list(data.get("processes")),
+            }
         return index

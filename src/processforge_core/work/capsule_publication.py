@@ -1,8 +1,10 @@
 """Publish existing immutable assignment capsules through explicit dependencies."""
+
 from __future__ import annotations
 
 import hashlib
 import os
+import stat
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -119,15 +121,84 @@ def publish_capsule_bytes(path: Path, raw: bytes) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
+    owned: tuple[int, int] | None = None
+    primary: BaseException | None = None
+    publication = "not_linked"
     try:
         with tempfile.NamedTemporaryFile(
-            prefix=".capsule-", suffix=".tmp", dir=path.parent, delete=False
+            prefix=".capsule-", suffix=".tmp", dir=path.parent, delete=os.name == "nt"
         ) as stream:
-            temporary = Path(stream.name)
-            stream.write(raw)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.link(temporary, path)
+            try:
+                temporary = Path(stream.name)
+                info = os.fstat(stream.fileno())
+                owned = (info.st_dev, info.st_ino)
+                written = stream.write(raw)
+                if type(written) is not int or written != len(raw):
+                    raise OSError("capsule_incomplete_write")
+                stream.flush()
+                os.fsync(stream.fileno())
+                if os.name == "nt":
+                    # Keep the sole delete-on-close descriptor through readback
+                    # and no-clobber link; reopening it changes Windows lifetime.
+                    stream.seek(0)
+                    if stream.read() != raw:
+                        raise OSError("capsule_incomplete_write")
+                    current = temporary.lstat()
+                    opened = os.fstat(stream.fileno())
+                    if (
+                        (current.st_dev, current.st_ino) != owned
+                        or (opened.st_dev, opened.st_ino) != owned
+                        or not stat.S_ISREG(current.st_mode)
+                        or getattr(current, "st_file_attributes", 0)
+                        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+                    ):
+                        raise OSError("temporary_changed")
+                    os.link(temporary, path)
+                    publication = "linked"
+            except BaseException as exc:
+                primary = exc
+                raise
+        if os.name != "nt":
+            os.link(temporary, path)
+            publication = "linked"
+    except BaseException as exc:
+        if primary is not None and exc is not primary:
+            BaseException.add_note(
+                primary,
+                f"capsule stream close failed; staging={temporary}; "
+                f"publication={publication}; "
+                f"cleanup={type(exc).__name__}: {exc}",
+            )
+            raise primary
+        primary = exc
+        raise
     finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+        if temporary is not None and owned is not None:
+            try:
+                try:
+                    current = temporary.lstat()
+                except FileNotFoundError:
+                    if os.name != "nt":
+                        raise
+                else:
+                    if os.name == "nt":
+                        raise OSError("staging_cleanup_pending")
+                    if (
+                        (current.st_dev, current.st_ino) != owned
+                        or not stat.S_ISREG(current.st_mode)
+                        or getattr(current, "st_file_attributes", 0)
+                        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+                    ):
+                        raise OSError("temporary_changed")
+                    temporary.unlink()
+            except BaseException as cleanup:
+                note = (
+                    f"capsule staging cleanup failed; staging={temporary}; "
+                    f"publication={publication}; "
+                    f"cleanup={type(cleanup).__name__}: {cleanup}"
+                )
+                if primary is not None:
+                    BaseException.add_note(primary, note)
+                else:
+                    BaseException.add_note(cleanup, note)
+                    raise
