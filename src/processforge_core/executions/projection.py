@@ -150,6 +150,15 @@ def projected_payload(record: ExecutionRecord) -> dict[str, object]:
         if record.outcome not in PUBLIC_STATUSES:
             raise ValueError("invalid public outcome")
         payload["status"] = record.outcome
+        if (
+            record.outcome == "completed"
+            and payload["exit_code"] == 0
+            and record.collection in {"pending", "collected"}
+            and payload["failure_reason"] == "execution activity unknown"
+        ):
+            # Absence and a successful exit resolve the derived unknown reason.
+            # Preserve actual collection failures and all other public reasons.
+            payload["failure_reason"] = None
     if record.collection == "failed":
         payload["status"] = "failed"
     # Semantic refusal keeps the existing completed/refusal payload, not acceptance.

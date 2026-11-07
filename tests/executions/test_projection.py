@@ -6,6 +6,7 @@ import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import replace
+from typing import Literal
 from unittest.mock import patch
 
 import pytest
@@ -170,3 +171,59 @@ def test_projection_preserves_legacy_statuses_and_extensions(harness: Harness) -
             ]
             == status
         )
+
+
+def test_completed_after_uncertain_exit_clears_only_transient_reason(
+    harness: Harness,
+) -> None:
+    started = harness.start()
+    unknown = harness.repo.apply_observation(
+        receipt(started, "exit", exit_code=0),
+        expected_revision=started.revision,
+        generation=1,
+    )
+    assert unknown.phase == "unresolved"
+    assert projected_payload(unknown)["failure_reason"] == "execution activity unknown"
+    assert len(harness.repo.current().records) == 1
+    completed = harness.repo.apply_observation(
+        receipt(unknown, "absence", tree_absent=True),
+        expected_revision=unknown.revision,
+        generation=1,
+    )
+    assert completed.phase == "absent" and completed.outcome == "completed"
+    assert harness.repo.current().records == ()
+    assert projected_payload(completed)["status"] == "completed"
+    assert projected_payload(completed)["exit_code"] == 0
+    assert projected_payload(completed)["failure_reason"] is None
+    assert json.loads(completed.payload_json)["failure_reason"] is None
+    assert projected_payload(completed)["old_extension"] == {"opaque": "unchanged"}
+
+
+@pytest.mark.parametrize(
+    ("collection", "reason", "expected"),
+    [
+        ("pending", "execution activity unknown", None),
+        ("collected", "execution activity unknown", None),
+        ("failed", "execution activity unknown", "execution activity unknown"),
+        ("refused", "execution activity unknown", "execution activity unknown"),
+        ("pending", "worker-specific reason", "worker-specific reason"),
+        ("collected", "worker-specific reason", "worker-specific reason"),
+        ("failed", "worker-specific reason", "worker-specific reason"),
+        ("refused", "worker-specific reason", "worker-specific reason"),
+    ],
+)
+def test_completion_projection_preserves_collection_and_other_failure_reasons(
+    harness: Harness,
+    collection: Literal["pending", "collected", "failed", "refused"],
+    reason: str,
+    expected: str | None,
+) -> None:
+    completed = harness.finish(harness.start())
+    data = json.loads(completed.payload_json)
+    data["failure_reason"] = reason
+    record = replace(
+        completed, collection=collection, payload_json=canonical_json(data)
+    )
+    projected = projected_payload(record)
+    assert projected["failure_reason"] == expected
+    assert projected["status"] == ("failed" if collection == "failed" else "completed")
