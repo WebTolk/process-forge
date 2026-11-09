@@ -144,3 +144,22 @@ Profile changes use `diagnostics-configure`, with preview and explicit `--apply`
 Closing the monitor never changes profiles. Tray/native packaging and remote
 web remain separate work. See [Runtime MCP](runtime-mcp.md) and
 [diagnostics](diagnostics.md) for their existing contracts.
+
+## Bounded service state
+
+`service.json` is the atomic lifecycle record and stays within the 64 KiB budget
+used by admission, native selection and shutdown. It retains identity, lifecycle,
+compact metrics and scheduler summaries. Detailed Inspector lists, per-project
+results, errors and configuration data are stored in two fixed sibling files,
+`service-details.0.json` and `service-details.1.json`. The private control reference
+binds one slot by byte count, SHA-256 and instance identity.
+
+The current owner writes the inactive slot before publishing control. A failed
+publication preserves the previous accepted snapshot; ordinary saves reuse the
+two slots rather than accumulating files. Existing legacy full records remain
+readable. Full Runtime status reconstructs the same diagnostic fields, while the
+monitor and admission read control only. Unavailable or inconsistent details are
+reported as `state_details_error: runtime_state_details_unavailable`; they are
+never combined with another owner's control. These cached details grant no
+permission to start, stop or recover processes. Existing lock timeouts and
+stopping checks are unchanged.

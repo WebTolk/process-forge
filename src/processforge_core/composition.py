@@ -553,6 +553,8 @@ def build_storage_migration_host(
         import hashlib
         import json
 
+        from .runtime_service_state import SERVICE_STATE_MAX_BYTES
+
         actual = resolve_context()
         module = sys.modules.get("pf_native_control")
         selection_type = getattr(module, "ManagedSelection", None)
@@ -565,8 +567,8 @@ def build_storage_migration_host(
             )
             if state_path.exists():
                 with state_path.open("rb") as stream:
-                    raw = stream.read(65537)
-                if len(raw) > 65536:
+                    raw = stream.read(SERVICE_STATE_MAX_BYTES + 1)
+                if len(raw) > SERVICE_STATE_MAX_BYTES:
                     raise MaintenanceError("storage_enrollment_conflict")
                 state = json.loads(raw)
                 instance = state.get("instance_id", "")

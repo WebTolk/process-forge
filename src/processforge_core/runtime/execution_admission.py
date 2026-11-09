@@ -460,16 +460,18 @@ class ExecutionAdmission:
         This is a refusal fence, not host quiescence proof. Only the existing
         singleton recovery protocol can clear a dead or stopped instance.
         """
+        from ..runtime_service_state import SERVICE_STATE_MAX_BYTES
+
         path = workplace_root / "runtime/pf-runtime/service.json"
         try:
             with path.open("rb") as stream:
-                raw = stream.read(65537)
+                raw = stream.read(SERVICE_STATE_MAX_BYTES + 1)
         except FileNotFoundError:
             return
         except OSError:
             raise ExecutionError("execution_activity_unknown") from None
         try:
-            if len(raw) > 65536:
+            if len(raw) > SERVICE_STATE_MAX_BYTES:
                 raise ValueError
 
             def pairs(items: list[tuple[str, object]]) -> dict[str, object]:

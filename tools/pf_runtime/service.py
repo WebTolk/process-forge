@@ -212,9 +212,25 @@ def base_state(
 
 def save_service_state(workplace_root: Path, core: Any, state: dict[str, Any]) -> None:
     import processforge_core.common.clock as _core_common_clock
+    from processforge_core.runtime_service_state import RuntimeServiceStateStore
 
     state["updated_at"] = _core_common_clock.now_utc()
-    write_json_atomic(service_path(workplace_root), state)
+    RuntimeServiceStateStore().write(service_path(workplace_root), state)
+
+
+def restore_service_state(
+    workplace_root: Path, state: dict[str, Any]
+) -> dict[str, Any]:
+    """Restore status details without making them lifecycle authority."""
+    from processforge_core.runtime_service_state import RuntimeServiceStateStore
+
+    try:
+        return RuntimeServiceStateStore().read(service_path(workplace_root), state)
+    except (OSError, ValueError):
+        payload = RuntimeServiceStateStore.without_details(state)
+        payload["health"] = "degraded"
+        payload["state_details_error"] = "runtime_state_details_unavailable"
+        return payload
 
 
 def http_json(
@@ -373,15 +389,20 @@ def cleanup_stale_runtime(workplace_root: Path, core: Any) -> None:
             "not_running",
         }:
             return
-        lock_path(workplace_root).unlink(missing_ok=True)
         state = inspection["state"]
+        from processforge_core.runtime_service_state import RuntimeServiceStateStore
+
+        store = RuntimeServiceStateStore()
+        if state:
+            state = store.read(service_path(workplace_root), state)
+        lock_path(workplace_root).unlink(missing_ok=True)
         if state:
             state["status"] = "stale"
             state["health"] = "stale"
             import processforge_core.common.clock as _core_common_clock
 
             state["stale_detected_at"] = _core_common_clock.now_utc()
-            write_json_atomic(service_path(workplace_root), state)
+            store.write(service_path(workplace_root), state)
 
 
 def terminate_owned_process(pid: int, core: Any, timeout: float) -> bool:
@@ -792,6 +813,7 @@ class RuntimeProcess:
         from processforge_core.executions.model import ExecutionError
         from processforge_core.project.metadata import ProjectMetadataReader
         from processforge_core.runtime.execution_admission import ExecutionAdmission
+        from processforge_core.runtime_service_state import SERVICE_STATE_MAX_BYTES
 
         if (guarded or expected_instance_id is not None) and (
             expected_instance_id != self.instance_id
@@ -842,7 +864,7 @@ class RuntimeProcess:
                     lock = budget.read(
                         service_path(self.workplace_root),
                         self.workplace_root,
-                        maximum=65536,
+                        maximum=SERVICE_STATE_MAX_BYTES,
                     )
                     with self.state_lock:
                         if (
@@ -1856,7 +1878,7 @@ def add_runtime_truth(
 def status_payload(workplace_root: Path, core: Any) -> dict[str, Any]:
     active, state = active_service(workplace_root, core)
     if not active and state:
-        state = dict(state)
+        state = restore_service_state(workplace_root, state)
         if state.get("status") == "stopped":
             state["health"] = "stopped"
             return add_runtime_truth(state, core, running=False)
@@ -1881,7 +1903,7 @@ def status_payload(workplace_root: Path, core: Any) -> dict[str, Any]:
     )
     if code == 200:
         return add_runtime_truth(body, core, running=True)
-    state = dict(state)
+    state = restore_service_state(workplace_root, state)
     state["health"] = "degraded"
     state["last_status_error"] = body
     return add_runtime_truth(state, core, running=True)
