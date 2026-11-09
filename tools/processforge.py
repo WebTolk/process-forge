@@ -11422,7 +11422,10 @@ def _finalize_worker_scratch(
 ) -> bool:
     """Exact attempt cleanup outside admission/lifecycle locks and shutdown reads."""
     import processforge_core.prepared.input as prepared_input
-    from processforge_core.prepared.command import finalize_scratch
+    from processforge_core.prepared.command import (
+        finalize_scratch,
+        release_accepted_scratch,
+    )
 
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     _retry_refuse_pending(project_root, run_id, task["id"])
@@ -11464,6 +11467,7 @@ def _finalize_worker_scratch(
         }:
             return True  # Existing running/prepared admission retains its behavior.
         repository = _execution_storage(project_root).repository
+        exact = None
         if repository is not None:
             from processforge_core.executions.model import ExecutionKey
 
@@ -11504,13 +11508,14 @@ def _finalize_worker_scratch(
         )
         collection_path = prepared_path.with_name("collection-receipt.json")
         collected = False
+        accepted = None
         if collection_path.is_file():
-            # A filename alone is not proof. Repeat the bounded identity, output
-            # pins and attribution check outside the lifecycle/admission gates.
-            checked_path, _receipt = prepared_input.collection_receipt(
+            # Acceptance belongs to the collected stage, whose outputs may have
+            # changed since then. It grants no current permission or quiescence.
+            accepted = prepared_input.verify_accepted_collection(
                 project_root, task, state, sys.modules[__name__]
             )
-            collected = checked_path == collection_path
+            collected = accepted["status"] == "accepted"
         # Failures retain their minimal raw exit evidence. Validate its payload;
         # exact tree quiescence was independently established above.
         failed = status in {"failed", "timed_out", "cancelled", "unknown_exit"}
@@ -11544,6 +11549,16 @@ def _finalize_worker_scratch(
             workplace_root=selected.parent if selected else None,
         )
         snapshot = provider.snapshot()
+        if collected and accepted is not None:
+            release_accepted_scratch(
+                project_root,
+                task,
+                state,
+                document,
+                accepted,
+                exact,
+                sys.modules[__name__],
+            )
         receipt = finalize_scratch(
             document,
             tree_absent=True,

@@ -362,6 +362,104 @@ def release_scratch(
         write_once(path, payload)
 
 
+def release_accepted_scratch(
+    project: Path,
+    task: dict[str, Any],
+    state: dict[str, Any],
+    document: dict[str, Any],
+    proof: dict[str, Any],
+    record: Any,
+    core: Any,
+) -> None:
+    """Commit accepted end-of-use under existing worker serialization.
+
+    Historical acceptance is not current permission or SQL/native quiescence.
+    Recheck all three around authorization, then publish only the release marker.
+    Physical disposal remains outside this lock in ``finalize_scratch``.
+    """
+    from copy import deepcopy
+
+    from ..work.context import validate_execution_contract
+    from ..work.paths import WorkPaths
+    from .input import load, verify_accepted_collection
+    from .resources import authorize_resources
+
+    task, state, proof = deepcopy(task), deepcopy(state), deepcopy(proof)
+    run_id, task_id = task["run_id"], task["id"]
+    if proof.get("status") != "accepted":
+        raise ValueError("accepted_collection_required")
+
+    def check_current() -> None:
+        core._retry_refuse_pending(project, run_id, task_id)
+        if any(
+            not intent.with_suffix(".applied.json").is_file()
+            for intent in (core.locate_flow_root(project) / "runs" / run_id).glob(
+                "cancellation-*.yaml"
+            )
+        ):
+            raise ValueError("cancellation_recovery_pending")
+        if (
+            core._worker_assignment_service.load(project, task_id) != task
+            or core.load_agent_run_state(project, run_id, task_id) != state
+        ):
+            raise ValueError("accepted_scratch_observation_changed")
+        repository = core._execution_storage(project).repository
+        if repository is None:
+            if (
+                record is not None
+                or core._legacy_tree_probe(project, run_id, task_id, state) is not True
+            ):
+                raise ValueError("execution_activity_unknown")
+        else:
+            readiness = repository.readiness()
+            if (
+                record is None
+                or record.key.project_id != core.project_id(project)
+                or record.key.run_id != run_id
+                or record.key.task_id != task_id
+                or record.key.attempt != state["attempt"]
+                or record.phase != "absent"
+                or record.collection != "collected"
+                or not readiness.ready
+                or readiness.generation != record.generation
+                or repository.load(record.key) != record
+                or repository.load_latest(run_id, task_id) != record
+            ):
+                raise ValueError("accepted_scratch_execution_changed")
+        if (
+            verify_accepted_collection(project, task, state, core) != proof
+            or load(project, task, state, core, current=False) != document
+        ):
+            raise ValueError("accepted_collection_changed")
+        if read_attempt_resources(project, document) is None:
+            raise ValueError("scratch_resource_required")
+
+    with core.worker_run_lifecycle_lock(project, run_id, task_id):
+        check_current()
+    # Resource admission can read bounded knowledge material. Keep it outside
+    # worker serialization; the same captured task/state/proof must still match
+    # when we reacquire the gate to publish the release.
+    capsule = core.load_yaml_document(core.assignment_capsule_path(project, task_id))
+    validation = validate_execution_contract(
+        project,
+        WorkPaths().assignment_document(project, task_id),
+        task,
+        capsule,
+        core,
+        check_sources=False,
+        require_ready=True,
+    )
+    if validation["status"] != "valid":
+        raise ValueError(validation.get("reason") or "execution_contract_invalid")
+    scope = capsule["execution_contract"]["scope"]
+    if scope != document["input"]["scope"] or not managed_scratch_namespace(scope):
+        raise ValueError("scratch_scope_denied")
+    authorize_resources(project, task, capsule, core)
+    with core.worker_run_lifecycle_lock(project, run_id, task_id):
+        check_current()
+        release_scratch(document, tree_absent=True, evidence_finalized=True)
+
+
 def finalize_scratch(
     document: dict[str, Any],
     *,

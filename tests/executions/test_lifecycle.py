@@ -1154,6 +1154,97 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
     original_scope = json.loads(json.dumps(scope))
     semantic["scope"] = scope
     semantic["sources"] = []
+    # This SQL/native fixture isolates resource discovery, but cleanup now needs
+    # a real historically pinned contract rather than its old identity-only stub.
+    from processforge_core.prepared import resources
+    from processforge_core.work import context
+
+    task_path = core._work_paths.assignment_document(root, "task")
+    task = core._worker_assignment_service.load(root, "task")
+    task.update(scope)
+    task.update(
+        process="scratch-fixture",
+        stage="stage-a",
+        execution_mode="docs_only" if artifact_only else "implementation",
+    )
+    intent = context.assignment_intent(root, task_path, task, core)
+    definition = {"id": "scratch-fixture", "stages": [{"id": "stage-a"}]}
+    pin = {
+        "process_id": "scratch-fixture",
+        "process_version": "1.0.0",
+        "process_fingerprint": context.fingerprint(definition),
+        "definition": definition,
+    }
+    identity = {**semantic["identity"], "kind": "work"}
+    snapshot = {"id": "fixture", "checksum": prepared_input.digest(b"fixture")}
+    contract = {
+        "contract_version": 1,
+        "identity": identity,
+        "assignment_intent": intent,
+        "assignment_intent_checksum": context.fingerprint(intent),
+        "snapshot": snapshot,
+        "process": {
+            "id": pin["process_id"],
+            "version": pin["process_version"],
+            "fingerprint": pin["process_fingerprint"],
+        },
+        "resources": {"selected_ids": [], "bindings_checksum": context.fingerprint({})},
+        "scope": intent["scope"],
+        "outputs": intent["outputs"],
+        "capabilities": {"required": [], "optional": []},
+        "workspace_access": intent["workspace_access"],
+        "parameters": {},
+        "coordination": {},
+        "source_limits": context.SOURCE_LIMITS,
+        "readiness": {"status": "ready", "blockers": []},
+        "required_sources": [],
+        "worker_may_rebuild_context": False,
+    }
+    contract["contract_checksum"] = context.fingerprint(contract)
+    capsule = {
+        "capsule": {"id": identity["context_id"]},
+        "execution_contract": contract,
+        "resource_bindings": {},
+        "context": {"selected_resource_ids": []},
+        "context_snapshot": {"id": snapshot["id"], "sha256": snapshot["checksum"]},
+        "process_execution": pin,
+    }
+    capsule_path = core.assignment_capsule_path(root, "task")
+    write_yaml_file(capsule_path, capsule)
+    capsule_pin = {
+        "path": core.rel(capsule_path, root),
+        "checksum": prepared_input.digest(capsule_path.read_bytes()),
+    }
+    task["process_execution"] = {
+        **pin,
+        "assignment_capsule": capsule_pin["path"],
+        "assignment_capsule_checksum": capsule_pin["checksum"],
+    }
+    write_yaml_file(task_path, task)
+    write_yaml_file(
+        core._work_paths.run_root(root, "run") / "run.yaml",
+        {
+            "id": "run",
+            "process": "scratch-fixture",
+            "status": "running",
+            "tasks": [{"id": "task"}],
+            "process_execution": pin,
+        },
+    )
+    semantic.update(
+        {
+            key: contract[key]
+            for key in ("identity", "scope", "outputs", "process", "snapshot")
+        }
+    )
+    semantic["capsule"] = {
+        **capsule_pin,
+        "contract_checksum": contract["contract_checksum"],
+        "intent_checksum": contract["assignment_intent_checksum"],
+    }
+    semantic["stage"] = context.stage_view(capsule, task)
+    original_scope = json.loads(json.dumps(semantic["scope"]))
+    monkeypatch.setattr(resources, "authorize_resources", lambda *a: {"grants": {}})
     driver = core.load_yaml_document(driver_path)
     script = "import os,pathlib,tempfile; temp=pathlib.Path(tempfile.gettempdir()); assert str(temp)==os.environ['PF_WORKER_SCRATCH']; (temp/'child.tmp').write_bytes(b'disposable'); p=pathlib.Path(os.environ['PF_PROJECT_ROOT'])/'.pf/artifacts/report.md'; p.parent.mkdir(parents=True,exist_ok=True); p.write_text('# fixture result',encoding='utf8')"
     driver["command"]["args"] = [
@@ -1188,7 +1279,17 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
         assert retry_doc["input"]["scope"] == original_scope
         assert core.command_worker_run_start(args) == 0
         assert (retry_root / "child.tmp").read_bytes() == b"disposable"
-        assert core.command_worker_run_collect(args) == 0
+        collected = core.command_worker_run_collect(args)
+        assert (
+            prepared_input.verify_accepted_collection(
+                root,
+                core._worker_assignment_service.load(root, "task"),
+                core.load_agent_run_state(root, "run", "task"),
+                core,
+            )["status"]
+            == "accepted"
+        )
+        assert collected == 0
         assert not retry_root.exists()
         retry_attempt = root / next_state["prepared_input"]["path"]
         retry_receipt = json.loads(
@@ -1198,7 +1299,17 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
         assert retry_receipt["deleted_files"] == 1
     else:
         assert (scratch_root / "child.tmp").read_bytes() == b"disposable"
-        assert core.command_worker_run_collect(args) == 0
+        collected = core.command_worker_run_collect(args)
+        assert (
+            prepared_input.verify_accepted_collection(
+                root,
+                core._worker_assignment_service.load(root, "task"),
+                core.load_agent_run_state(root, "run", "task"),
+                core,
+            )["status"]
+            == "accepted"
+        )
+        assert collected == 0
         assert not scratch_root.exists()
     attempt = root / state["prepared_input"]["path"]
     assert attempt.with_name("scratch-release.json").is_file()

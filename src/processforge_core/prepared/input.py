@@ -421,3 +421,237 @@ def bind_managed_scratch(project: Path, document: dict) -> None:
     from .command import allocate_scratch
 
     allocate_scratch(project, document)
+
+
+def _collection_json(raw: bytes) -> dict[str, Any]:
+    """Parse bounded historical metadata without ambiguous JSON values."""
+    from math import isfinite
+
+    def pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("accepted_collection_invalid")
+            result[key] = value
+        return result
+
+    def number(value: str) -> float:
+        parsed = float(value)
+        if not isfinite(parsed):
+            raise ValueError("accepted_collection_invalid")
+        return parsed
+
+    def constant(value: str) -> Any:
+        raise ValueError("accepted_collection_invalid")
+
+    try:
+        value = json.loads(
+            raw,
+            object_pairs_hook=pairs,
+            parse_float=number,
+            parse_constant=constant,
+        )
+    except (UnicodeError, RecursionError) as error:
+        raise ValueError("accepted_collection_invalid") from error
+    if not isinstance(value, dict):
+        raise ValueError("accepted_collection_invalid")
+    return value
+
+
+def _collection_checksum(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and value.startswith("sha256:")
+        and len(value) == 71
+        and all(char in "0123456789abcdef" for char in value[7:])
+    )
+
+
+def _collection_outputs(outputs: Any, records: Any) -> None:
+    """Check saved producer pins; never resolve or inspect output paths."""
+    if not isinstance(outputs, dict) or not isinstance(records, list):
+        raise ValueError("accepted_collection_outputs_invalid")
+    declared = outputs.get("required_outputs")
+    if not isinstance(declared, list):
+        raise ValueError("accepted_collection_outputs_invalid")
+    specs: dict[str, bool] = {}
+    for item in declared:
+        if not isinstance(item, dict) or type(item.get("required", True)) is not bool:
+            raise ValueError("accepted_collection_outputs_invalid")
+        relative = item.get("path")
+        if relative:
+            if portable_path(relative) != relative:
+                raise ValueError("accepted_collection_outputs_invalid")
+            specs[relative] = item.get("required", True)
+    report = outputs.get("expected_report", {}).get("artifact")
+    if not report or portable_path(report) != report:
+        raise ValueError("accepted_collection_outputs_invalid")
+    specs[report] = True
+    if len(records) != len(specs):
+        raise ValueError("accepted_collection_outputs_invalid")
+    total = 0
+    for (relative, required), item in zip(sorted(specs.items()), records):
+        if (
+            not isinstance(item, dict)
+            or item.get("path") != relative
+            or type(item.get("required")) is not bool
+            or item["required"] != required
+        ):
+            raise ValueError("accepted_collection_outputs_invalid")
+        keys = {"path", "required", "status"}
+        if item.get("status") == "present":
+            if (
+                set(item) != keys | {"checksum", "size"}
+                or not _collection_checksum(item["checksum"])
+                or type(item["size"]) is not int
+                or not 0 <= item["size"] <= OUTPUT_FILE_BYTES
+            ):
+                raise ValueError("accepted_collection_outputs_invalid")
+            total += item["size"]
+        elif item.get("status") != "missing" or required or set(item) != keys:
+            raise ValueError("accepted_collection_outputs_invalid")
+    if total > OUTPUT_TOTAL_BYTES:
+        raise ValueError("prepared_output_budget_exceeded")
+
+
+def verify_accepted_collection(
+    project: Path, task: dict, state: dict, core: Any
+) -> dict[str, Any]:
+    """Read completed acceptance for one trusted exact historical attempt.
+
+    The caller owns current authorization, creation/resource validation, native
+    end-of-use, SQL reconciliation and the serialization/CAS of returned pins.
+    This proof grants no launch, cleanup or output-acceptance authority.
+    """
+    from processforge_core.work.paths import WorkPaths
+
+    attempt = state.get("attempt")
+    reference = state.get("prepared_input")
+    if type(attempt) is not int or attempt < 1:
+        raise ValueError("prepared_attempt_invalid")
+    if (
+        not isinstance(reference, dict)
+        or set(reference) != {"path", "checksum"}
+        or not isinstance(reference["path"], str)
+        or not _collection_checksum(reference["checksum"])
+    ):
+        raise ValueError("prepared_input_reference_mismatch")
+    document = load(project, task, state, core, current=False)
+    prepared_path = private_file(project, reference["path"])
+    prepared_raw = bounded_read(prepared_path)
+    strict_document = _collection_json(prepared_raw)
+    if (
+        digest(prepared_raw) != reference["checksum"]
+        or fingerprint(strict_document) != fingerprint(document)
+        or type(strict_document.get("schema_version")) is not int
+        or type(strict_document.get("identity", {}).get("attempt")) is not int
+    ):
+        raise ValueError("prepared_input_identity_mismatch")
+    capsule_path = core.assignment_capsule_path(project, task["id"])
+    capsule_relative = capsule_path.relative_to(project).as_posix()
+    capsule_path = local_file(project, capsule_relative)
+    capsule_raw = bounded_read(capsule_path)
+    capsule = core.load_yaml_document(capsule_path)
+    if bounded_read(capsule_path) != capsule_raw:
+        raise ValueError("accepted_collection_changed")
+    validation = validate_execution_contract(
+        project,
+        WorkPaths().assignment_document(project, task["id"]),
+        task,
+        capsule,
+        core,
+        check_sources=False,
+        require_ready=False,
+    )
+    if validation["status"] != "valid":
+        raise ValueError(validation.get("reason") or "execution_contract_invalid")
+    contract = capsule["execution_contract"]
+    saved = strict_document["input"]
+    expected_capsule = {
+        "path": capsule_relative,
+        "checksum": digest(capsule_raw),
+        "contract_checksum": contract["contract_checksum"],
+        "intent_checksum": contract["assignment_intent_checksum"],
+    }
+    assignment_pin = task.get("process_execution") or {}
+    if (
+        strict_document["identity"] != {**contract["identity"], "attempt": attempt}
+        or assignment_pin.get("assignment_capsule") != capsule_relative
+        or assignment_pin.get("assignment_capsule_checksum") != digest(capsule_raw)
+        or saved.get("capsule") != expected_capsule
+        or any(
+            fingerprint(saved.get(key)) != fingerprint(contract[key])
+            for key in ("identity", "process", "snapshot", "outputs", "scope")
+        )
+    ):
+        raise ValueError("prepared_input_context_mismatch")
+    if bounded_read(capsule_path) != capsule_raw:
+        raise ValueError("accepted_collection_changed")
+    snapshot: list[dict[str, Any]] = []
+
+    def pin(path: Path, raw: bytes | None) -> None:
+        snapshot.append(
+            {"path": path.relative_to(project).as_posix(), "status": "missing"}
+            if raw is None
+            else {
+                "path": path.relative_to(project).as_posix(),
+                "status": "present",
+                "checksum": digest(raw),
+                "size": len(raw),
+            }
+        )
+
+    pin(prepared_path, prepared_raw)
+    pin(capsule_path, capsule_raw)
+    paths = [
+        private_file(
+            project, prepared_path.with_name(name).relative_to(project).as_posix()
+        )
+        for name in ("collection-receipt.json", "collection-complete.json")
+    ]
+    raws: list[bytes | None] = []
+    for path in paths:
+        try:
+            path.lstat()
+        except FileNotFoundError:
+            raw = None
+        else:
+            raw = bounded_read(path)
+        raws.append(raw)
+        pin(path, raw)
+    receipt_raw, completion_raw = raws
+    if receipt_raw is None:
+        if completion_raw is not None:
+            raise ValueError("accepted_collection_receipt_missing")
+        return {"status": "not_accepted", "snapshot": snapshot}
+    receipt = _collection_json(receipt_raw)
+    if (
+        set(receipt)
+        != {"schema_version", "identity", "prepared_input", "outputs", "receipt_id"}
+        or type(receipt["schema_version"]) is not int
+        or receipt["schema_version"] != 1
+        or fingerprint(receipt["identity"]) != fingerprint(strict_document["identity"])
+        or receipt["prepared_input"] != reference
+        or not _collection_checksum(receipt["receipt_id"])
+        or receipt["receipt_id"]
+        != fingerprint({k: v for k, v in receipt.items() if k != "receipt_id"})
+    ):
+        raise ValueError("accepted_collection_receipt_invalid")
+    _collection_outputs(saved["outputs"], receipt["outputs"])
+    if completion_raw is None:
+        return {"status": "not_accepted", "snapshot": snapshot}
+    completion = _collection_json(completion_raw)
+    if (
+        set(completion) != {"schema_version", "receipt_id"}
+        or type(completion["schema_version"]) is not int
+        or completion["schema_version"] != 1
+        or completion["receipt_id"] != receipt["receipt_id"]
+    ):
+        raise ValueError("accepted_collection_completion_invalid")
+    return {
+        "status": "accepted",
+        "identity": copy.deepcopy(strict_document["identity"]),
+        "receipt": receipt,
+        "completion": completion,
+        "snapshot": snapshot,
+    }

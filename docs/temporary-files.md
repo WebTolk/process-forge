@@ -112,6 +112,20 @@ by the immutable prepared manifest; selected-attempt release/cleanup receipts
 record real end of use and residual errors. Old unmanaged directories are not
 adopted. Unknown child ownership blocks disposal and a new large attempt.
 
+For an accepted attempt, cleanup verifies the saved collection receipt and its
+completion marker against the exact immutable input. Advancing the governed
+stage or changing its report does not invalidate that historical acceptance.
+Current assignment, capsule, resources, scratch scope and creation ownership
+are checked separately. SQL must already record the same attempt as `absent`
+and `collected`; cleanup never reconciles a pending collection. Legacy storage
+requires the existing attempt-bound process-tree absence proof.
+
+The current task, attempt, SQL generation and historical pins must still match
+after authorization. The existing worker lifecycle lock protects the metadata
+comparisons and release marker; resource authorization and physical disposal
+run outside it. Pending retry/cancellation or changed observations refuse the
+release. Replaying cleanup, including after a prior release, repeats these checks.
+
 Owned directories use a bounded, identity-checked traversal without reparse
 traversal. Cleanup runs after failed use and before retry, or after final
 collection, outside admission/lifecycle locks and shutdown's active-only path.
