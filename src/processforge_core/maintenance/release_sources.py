@@ -30,6 +30,8 @@ RELEASE_ROOT_FILES = [
     "README.ru.md",
     "QUICKSTART.md",
     "QUICKSTART.ru.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.ru.md",
     "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
@@ -49,8 +51,6 @@ RELEASE_ROOT_FILES = [
     "release/1.3.0-beta3/notes.ru.md",
 ]
 
-RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
-
 RELEASE_FORBIDDEN_DIR_PARTS = {
     ".git",
     ".idea",
@@ -63,16 +63,7 @@ RELEASE_FORBIDDEN_DIR_PARTS = {
     "private-notes",
 }
 
-RELEASE_FORBIDDEN_PF_PREFIXES = (
-    ".pf/runtime/",
-    ".pf/artifacts/",
-    ".pf/reviews/",
-    ".pf/handoffs/",
-    ".pf/runs/",
-    ".pf/contexts/",
-    ".pf/assignments/",
-    ".pf/dogfooding/",
-)
+RELEASE_FORBIDDEN_PF_PREFIXES = (".pf/",)
 
 RELEASE_FORBIDDEN_SUFFIXES = {".pyc", ".pyo", ".ps1", ".zip"}
 
@@ -121,10 +112,6 @@ class ReleaseSourcePolicy:
         root_agents = root / "AGENTS.md"
         if root_agents.is_file():
             files.append(("AGENTS.md", root_agents))
-        for name in RELEASE_PF_PUBLIC_FILES:
-            path = root / name
-            if path.is_file():
-                files.append((name, path))
         for dirname in RELEASE_DIRS:
             base = root / dirname
             if base.is_dir():

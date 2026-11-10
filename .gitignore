@@ -13,13 +13,10 @@ __pycache__/
 .env.*
 !.env.example
 /process-forge.local.yaml
-.pf/process-forge.local.yaml
-.pf/runtime/
-.pf/tmp/
+/.pf/
+/.venv/
+/venv/
 /.pf-worker-shell-*/
-.pf/artifacts/subagents/
-.pf/private-notes/
-.pf/cache/
 /cache/
 runtime/cache/
 runtime/sessions/

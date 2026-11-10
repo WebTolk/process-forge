@@ -12,11 +12,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
-PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "NOTICE", "CHANGELOG.md", "VERSION", "requirements.txt", ".processforge-releaseignore"]
-PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
-PF_PUBLIC_DIRS: list[str] = []
-PF_FLOW_DIRS = ["artifacts", "assignments", "contexts", "handoffs", "logs", "reviews"]
-PF_PRIVATE_PARTS = {"runtime", "private-notes", "cache"}
+PUBLIC_ROOT_FILES = [
+    "AGENTS.md", "CONTRIBUTING.md", "CONTRIBUTING.ru.md",
+    "README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md",
+    "LICENSE", "NOTICE", "CHANGELOG.md", "VERSION", "requirements.txt",
+    ".processforge-releaseignore",
+]
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
 TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".txt", ".py", ".csv", ".sha256"}
@@ -79,10 +80,6 @@ def public_files(root_path: Path) -> list[Path]:
         path = root_path / name
         if path.is_file():
             files.append(path)
-    for name in PF_PUBLIC_ROOT_FILES:
-        path = root_path / name
-        if path.is_file():
-            files.append(path)
     for dirname in PUBLIC_DIRS:
         root = root_path / dirname
         if root.is_dir():
@@ -93,19 +90,6 @@ def public_files(root_path: Path) -> list[Path]:
                 and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
                 and path.suffix not in SKIP_SUFFIXES
             )
-    pf_root = root_path / ".pf"
-    if pf_root.is_dir():
-        for dirname in PF_PUBLIC_DIRS:
-            root = pf_root / dirname
-            if root.is_dir():
-                files.extend(
-                    path
-                    for path in root.rglob("*")
-                    if path.is_file()
-                    and not any(part in SKIP_DIRS or part in PF_PRIVATE_PARTS for part in path.relative_to(pf_root).parts)
-                    and path.suffix not in SKIP_SUFFIXES
-                    and path.name != "process-forge.local.yaml"
-                )
     return sorted(files, key=lambda path: path.relative_to(root_path).as_posix())
 
 
@@ -122,7 +106,6 @@ def flow_core_files(root_path: Path) -> list[Path]:
             and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
             and path.suffix.lower() in TEXT_SUFFIXES
         )
-    files.extend(path for path in (root_path / name for name in PF_PUBLIC_ROOT_FILES) if path.is_file())
     return sorted(set(files), key=lambda path: path.relative_to(root_path).as_posix())
 
 
@@ -235,7 +218,7 @@ RUSSIAN_MOJIBAKE_MARKERS = ("Рџ", "РЎ", "РЋ", "Р€", "вЂ", "Гђ", "Г
 
 def russian_docs_mojibake_failures(root_path: Path) -> list[str]:
     failures: list[str] = []
-    files = [root_path / "README.ru.md", root_path / "QUICKSTART.ru.md"]
+    files = [root_path / "README.ru.md", root_path / "QUICKSTART.ru.md", root_path / "CONTRIBUTING.ru.md"]
     ru_root = root_path / "docs" / "ru"
     if ru_root.is_dir():
         files.extend(path for path in ru_root.rglob("*.md") if path.is_file())
@@ -257,17 +240,6 @@ def validate_releaseignore(root_path: Path) -> list[str]:
     required = [
         ".idea/",
         ".serena/",
-        ".pf/process-forge.local.yaml",
-        ".pf/runtime/",
-        ".pf/artifacts/",
-        ".pf/reviews/",
-        ".pf/handoffs/",
-        ".pf/runs/",
-        ".pf/contexts/",
-        ".pf/assignments/",
-        ".pf/dogfooding/",
-        ".pf/private-notes/",
-        ".pf/cache/",
         "/задания",
         "tools/__pycache__/",
         "*.pyc",
@@ -275,6 +247,8 @@ def validate_releaseignore(root_path: Path) -> list[str]:
     for item in required:
         if item not in lines:
             failures.append(f".processforge-releaseignore missing {item}")
+    if not {".pf/", "/.pf/"}.intersection(lines):
+        failures.append(".processforge-releaseignore missing whole root .pf/ exclusion")
     broad_forbidden = {"artifacts/", "assignments/", "logs/", "reviews/", "handoffs/", "contexts/"}
     for item in broad_forbidden:
         if item in lines:

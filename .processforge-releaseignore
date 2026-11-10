@@ -3,18 +3,7 @@ processforge_init_master_prompt.md
 processforge_session_bootstrap_master_prompt.md
 processforge_context_hardening_assignment.md
 
-.pf/process-forge.local.yaml
-.pf/runtime/
-.pf/tmp/
-.pf/artifacts/
-.pf/reviews/
-.pf/handoffs/
-.pf/runs/
-.pf/contexts/
-.pf/assignments/
-.pf/dogfooding/
-.pf/private-notes/
-.pf/cache/
+/.pf/
 .secrets/
 .idea/
 .serena/

@@ -1,8 +1,8 @@
 # Core package layout
 
 Apply these rules when adding or reorganizing code under `processforge_core`.
-They describe source organization; PF Work grants and the pinned process still
-govern access and execution.
+They describe source organization. The root AGENTS.md and CONTRIBUTING.md govern
+the contribution workflow.
 
 ## Placement
 
@@ -18,7 +18,7 @@ govern access and execution.
   that makes the module cohesive.
 - Root-level bootstrap, composition and shared API/dependency seams may remain at
   the root. Existing implementation files are migration work, not a precedent for
-  placing new implementations there. Migrate further groups in bounded Work.
+  placing new implementations there. Migrate further groups in bounded changes.
 - Use `common` only for shared primitives used by multiple responsibilities, not
   as a miscellaneous bucket.
 
@@ -35,11 +35,9 @@ govern access and execution.
 
 ## Refactoring and verification
 
-- Before choosing structure, reread the PF-selected architectural inputs and local
-  Python knowledge. Relevant resources are `docs.python`, `docs.python-practices`,
-  `docs.python-peps` and, for package layout/delivery, `docs.python-packaging`.
-  Record the concrete sources used; distinguish an external documentation check
-  from material actually read through PF.
+- Before choosing structure, reread the applicable public architecture documents
+  and Python conventions. Consult available local Python documentation first,
+  then official sources when needed. Record the concrete sources actually read.
 - During the current dev refactor, update all known consumers to canonical package
   imports and remove obsolete module files. Do not retain old import aliases,
   compatibility wrappers or a compatibility framework.
