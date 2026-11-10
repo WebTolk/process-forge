@@ -21,14 +21,14 @@ and AI providers: domains, toolchains, knowledge packages, templates, runtime
 drivers, and platform contracts are attached through versionable files instead
 of being hardcoded into the core.
 
-This README is written for people. AI agents should use the command runbook in
-[docs/getting-started/agent-prompts.md](docs/getting-started/agent-prompts.md),
-which is limited to commands and mechanics implemented in the current codebase.
-
 To develop ProcessForge itself, start with [CONTRIBUTING.md](CONTRIBUTING.md).
 Coding agents must also follow [AGENTS.md](AGENTS.md). Contributors use working
 branches and GitHub PRs into `dev`; this repository's local `.pf/` is private
 and is not required in a fresh clone.
+
+For agents using ProcessForge in consumer projects, the command runbook is
+[docs/getting-started/agent-prompts.md](docs/getting-started/agent-prompts.md).
+It describes commands and mechanics implemented in the current codebase.
 
 ![ProcessForge workplace layout](docs/assets/processforge-architecture.svg)
 

@@ -6,6 +6,33 @@ These rules apply to people and coding agents developing ProcessForge itself.
 GitHub hosts the primary source, tasks, pull requests and review. GitVerse mirrors
 accepted source; automatic issue mirroring is deferred.
 
+## Starting from a fresh clone
+
+Read root `AGENTS.md` and this guide before starting a task. No previous chat,
+local `.pf` history or running PF service is needed. Inspect the current branch,
+working tree and `git remote -v`, then prepare a working branch from current
+`origin/dev` as described below, even if the checkout initially opened `main`.
+
+The canonical remotes are:
+
+| Remote | Repository |
+| --- | --- |
+| `origin` | `https://github.com/WebTolk/process-forge.git` |
+| `gitverse` | `https://gitverse.ru/webtolk/process-forge.git` |
+
+A fresh GitHub clone already has `origin`. If `gitverse` is absent, add it:
+
+```sh
+git remote add gitverse https://gitverse.ru/webtolk/process-forge.git
+```
+
+If the clone came from GitVerse and its only remote is `origin`, rename that
+remote to `gitverse`, then add GitHub as `origin`. Inspect existing remote
+configuration before changing it; do not overwrite a different setup blindly.
+Reuse available GitHub credentials and GitVerse token authentication. Keep tokens
+out of remote URLs, command arguments, logs and files. Missing credentials block
+remote delivery, not local analysis; report the specific missing access.
+
 ## Branches and delivery
 
 `dev` is the integration branch. `main` is the release branch. Ordinary changes
