@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_ROOTS = [".pf/process-forge.yaml", "docs", "examples", "packages", "packs", "templates", "schemas", "processes", "prompts"]
+ACTIVE_ROOTS = ["docs", "examples", "packages", "packs", "templates", "schemas", "processes", "prompts"]
 PROCESS_REF = re.compile(
     r"(?:\.\./)?(?:(?:examples/domain-packs|packs/official)/[a-z0-9][a-z0-9_-]*/)?processes/[a-z0-9][a-z0-9_-]*\.yaml"
 )

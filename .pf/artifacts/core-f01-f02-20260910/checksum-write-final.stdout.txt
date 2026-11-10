@@ -1,1 +1,0 @@
-PASS: wrote checksums\processforge.sha256

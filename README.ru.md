@@ -26,6 +26,11 @@ ProcessForge — файловая среда для создания, верси
 [docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md);
 там перечислены только команды и механики, подтверждённые текущей кодовой базой.
 
+Для разработки самого ProcessForge начните с [CONTRIBUTING.ru.md](CONTRIBUTING.ru.md).
+ИИ-агенты также обязаны соблюдать [AGENTS.md](AGENTS.md). Изменения вносятся через
+рабочие ветки и GitHub PR в `dev`; локальный `.pf/` этого репозитория является
+частным состоянием и не требуется в свежем клоне.
+
 ![Схема рабочего места ProcessForge](docs/assets/processforge-architecture.svg)
 
 ## Зачем это нужно

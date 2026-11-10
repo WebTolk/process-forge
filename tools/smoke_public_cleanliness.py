@@ -12,17 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "tools" / "validate-public-cleanliness.py"
 RELEASEIGNORE = """.idea/
 .serena/
-.pf/process-forge.local.yaml
-.pf/runtime/
-.pf/artifacts/
-.pf/reviews/
-.pf/handoffs/
-.pf/runs/
-.pf/contexts/
-.pf/assignments/
-.pf/dogfooding/
-.pf/private-notes/
-.pf/cache/
+.pf/
 /задания
 tools/__pycache__/
 *.pyc
@@ -51,13 +41,20 @@ def main() -> None:
             encoding="utf-8",
         )
         require(run(root), 0, "acknowledged fixture and escaped newline")
-        # public-cleanliness: allow-private-path-fixture
-        (root / "README.md").write_text("local path: C:\\Users\\real-user\n", encoding="utf-8")
-        result = run(root)
-        require(result, 1, "real public path")
-        if "README.md: forbidden private/local path pattern" not in result.stdout:
-            raise AssertionError(result.stdout)
-        (root / "README.md").unlink()
+        for name in ["AGENTS.md", "process-forge.yaml", "hooks.yaml", "contexts/private.yaml"]:
+            private_file = root / ".pf" / name
+            private_file.parent.mkdir(parents=True, exist_ok=True)
+            # public-cleanliness: allow-private-path-fixture
+            private_file.write_text("local path: C:\\Users\\real-user\nplatform.private-product\n", encoding="utf-8")
+        require(run(root), 0, "private root .pf is outside public validation")
+        for name in ["AGENTS.md", "CONTRIBUTING.md", "CONTRIBUTING.ru.md", "README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md"]:
+            # public-cleanliness: allow-private-path-fixture
+            (root / name).write_text("local path: C:\\Users\\real-user\n", encoding="utf-8")
+            result = run(root)
+            require(result, 1, f"real public path in {name}")
+            if f"{name}: forbidden private/local path pattern" not in result.stdout:
+                raise AssertionError(result.stdout)
+            (root / name).unlink()
         # public-cleanliness: allow-private-path-fixture
         (root / "tools" / "smoke_security_fixture.py").write_text("LEAK = 'C:\\\\Users\\\\real-user'\n", encoding="utf-8")
         result = run(root)

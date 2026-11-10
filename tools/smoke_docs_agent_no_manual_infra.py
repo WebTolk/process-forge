@@ -12,7 +12,6 @@ def main() -> int:
     files = [
         ROOT / "templates" / "project-agents-template.md",
         ROOT / "templates" / "global-agents-processforge-section.md",
-        ROOT / ".pf" / "AGENTS.md",
         ROOT / "tools" / "processforge.py",
         ROOT / "prompts" / "task-batch-execution-agent.md",
     ]
