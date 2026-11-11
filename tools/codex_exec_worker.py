@@ -643,6 +643,7 @@ def _main_in_operation() -> int:
 
         project_path = Path(project_root).expanduser().resolve()
         command = [codex_executable(), *managed_hook_trust_args(project_path), "exec"]
+        command.append("--skip-git-repo-check")
         command.extend(
             [
                 "-m",
