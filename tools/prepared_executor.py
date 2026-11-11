@@ -228,6 +228,19 @@ def owned_tree_absent(process: ProcessIdentity) -> bool | None:
             return accounting.active == 0
         finally:
             kernel.CloseHandle(handle)
+    if sys.platform.startswith("linux") and (process.tree_id or "").startswith(
+        "linux-pidns-v1:"
+    ):
+        from pf_linux_native_control import identity_facts, reopen
+
+        try:
+            job = reopen(identity_facts(process), pid=process.pid, identity={})
+            try:
+                return job.active() == 0
+            finally:
+                job.close()
+        except OSError:
+            return None
     if (
         sys.platform.startswith("linux")
         and process.tree_id == f"linux-pgid:{process.pid}"
@@ -265,6 +278,18 @@ def signal_owned_tree(process: ProcessIdentity) -> None:
                 raise ExecutorError("execution_activity_unknown")
         finally:
             kernel.CloseHandle(handle)
+        return
+    if sys.platform.startswith("linux") and (process.tree_id or "").startswith(
+        "linux-pidns-v1:"
+    ):
+        from pf_linux_native_control import identity_facts, reopen
+
+        job = reopen(identity_facts(process), pid=process.pid, identity={})
+        try:
+            if not job.stop(deadline=time.monotonic() + 5):
+                raise ExecutorError("execution_activity_unknown")
+        finally:
+            job.close()
         return
     if (
         sys.platform.startswith("linux")
@@ -320,6 +345,7 @@ class ExecutionReceipts:
             )
         )
         self.identity["attempt"] = int(values[3])
+        facts: dict[str, Any] | None = None
         if os.name == "nt":
             from pf_native_control import inherited_job
 
@@ -332,18 +358,32 @@ class ExecutionReceipts:
             else:
                 self.job = _create_job(name)
             tree_id = "windows-job:" + name
-        elif sys.platform.startswith("linux") and os.getpgrp() == os.getpid():
-            tree_id = f"linux-pgid:{os.getpid()}"
+        elif sys.platform.startswith("linux"):
+            from pf_linux_native_control import inherited as inherited_namespace
+            from pf_linux_native_control import validate_tree_id
+
+            facts = inherited_namespace(environment)
+            if facts is not None:
+                if not validate_tree_id(facts["job_name"], values[4]):
+                    raise ExecutorError("execution_identity_conflict")
+                tree_id = facts["job_name"]
+            elif os.getpgrp() == os.getpid():
+                tree_id = f"linux-pgid:{os.getpid()}"
+            else:
+                raise ExecutorError("execution_activity_unknown")
         else:
             raise ExecutorError("execution_activity_unknown")
-        process = capture_process(os.getpid(), tree_id=tree_id)
+        pid = os.getpid()
+        if facts is not None:
+            pid = facts["pid"]
+        process = capture_process(pid, tree_id=tree_id)
         if process is None:
             raise ExecutorError("execution_activity_unknown")
         self.process = asdict(process)
         self.publish(
             heartbeat.with_name("process.json"),
             "process",
-            {"pid": os.getpid(), "started_at": _utc_now()},
+            {"pid": process.pid, "started_at": _utc_now()},
         )
 
     def publish(self, path: Path, kind: str, payload: dict[str, Any]) -> None:

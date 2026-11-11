@@ -55,7 +55,10 @@ def _death_worker(sql_cli_fixture: Any, monkeypatch: pytest.MonkeyPatch) -> None
     raise AssertionError("intent boundary was not reached")
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows Job process-death/reap proof")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned process-death/reap proof",
+)
 def test_process_death_keeps_exact_scratch_and_replays_n(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

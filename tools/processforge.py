@@ -11805,7 +11805,12 @@ def _read_sql_receipt(
         if os.name == "nt"
         else f"linux-pgid:{process.pid}"
     )
-    if process.tree_id != tree:
+    if os.name != "nt" and (process.tree_id or "").startswith("linux-pidns-v1:"):
+        from pf_linux_native_control import validate_tree_id
+
+        if not validate_tree_id(process.tree_id, record.launch_token):
+            raise ExecutionError("execution_identity_conflict")
+    elif process.tree_id != tree:
         raise ExecutionError("execution_identity_conflict")
     return ExecutionObservation(
         record.key,
@@ -12269,6 +12274,12 @@ def _sql_worker_run_start(
                     process = spawn_owned(
                         [str(item) for item in argv],
                         token=token,
+                        receipt_path=attempt_root / "native-tree.json",
+                        identity={
+                            "run_id": run_id,
+                            "task_id": task_id,
+                            "attempt": record.key.attempt,
+                        },
                         cwd=spec.get("working_directory") or str(project_root),
                         env=environment,
                         stdout=stdout,

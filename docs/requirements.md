@@ -13,7 +13,8 @@ substitute for running the relevant tests on that interpreter.
 
 | Component | Requirement and purpose |
 | --- | --- |
-| PyYAML | `PyYAML>=6.0`, the only external Python dependency in `requirements.txt`; reads and writes YAML configuration and artifacts. |
+| PyYAML | `PyYAML>=6.0`; reads and writes YAML configuration and artifacts. |
+| jsonschema | Runtime JSON Schema validation; install the complete `requirements.txt`. |
 | `sqlite3` | A working standard-library module and SQLite build with UPSERT support. Local event and raw-hook journals use transactions, WAL and `synchronous=FULL`. No separate database server is needed. |
 | SQLite FTS5 | Required for indexed full-text resource search. PF probes this capability; unavailable FTS5 is reported as `degraded` / `fts5_unavailable`. A working journal does not prove FTS5 is available. |
 | `ssl` and CA trust | Required for HTTPS downloads and HTTPS egress. Python must provide SSL support and trust the destination's certificate chain. Windows egress uses operating system certificate stores. |
@@ -25,6 +26,15 @@ The CLI and MCP/HTTP services use Python's standard library; an external MCP
 SDK, web framework, Node.js, PHP or PowerShell is not a general CLI dependency.
 
 ## Storage and permissions
+
+Linux owned workers additionally require user/PID namespaces, a readable procfs
+in the controller PID namespace, and Python/kernel support for `pidfd_open` and
+`pidfd_send_signal`. Kernel, container, seccomp or AppArmor policy may deny these
+facilities even when installed. PF probes a real owned launch before selecting
+fresh SQL execution storage; unsupported environments remain fail-closed. No PF
+daemon or privileged cgroup setup is required. See
+[Linux owned execution](concepts/linux-owned-execution.md) for the ownership model,
+diagnostics and qualification limits.
 
 Keep three locations separate: the replaceable ProcessForge distribution, the
 mutable workplace, and each project. Use a UTF-8 capable environment. The account

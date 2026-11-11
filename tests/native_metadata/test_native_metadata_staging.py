@@ -286,7 +286,16 @@ def test_primary_and_cleanup_denial(
     def denied(resource: disposal.OwnedTemporary) -> int:
         raise PermissionError(13, "fixture cleanup denied")
 
-    if writer.kind in {"exit", "prepared"}:
+    if os.name != "nt":
+        original_unlink = os.unlink
+
+        def denied_unlink(path: Any, *args: Any, **kwargs: Any) -> None:
+            if Path(path).suffix == ".tmp":
+                raise PermissionError(13, "fixture cleanup denied")
+            original_unlink(path, *args, **kwargs)
+
+        monkeypatch.setattr(os, "unlink", denied_unlink)
+    elif writer.kind in {"exit", "prepared"}:
         original = native._receipt_handle
 
         def denied_stage(path: Path, access: int, flags: int) -> Any:

@@ -1,4 +1,4 @@
-"""Real Windows sealed init and no-model worker lifecycle in fresh SQL storage.
+"""Real Windows/Linux sealed init and no-model lifecycle in fresh SQL storage.
 
 Fixture publications exercise fresh roots; this does not attest legacy adoption
 or execution of a model. Existing authority and native APIs are used unchanged.
@@ -10,6 +10,7 @@ import importlib.util
 import json
 import os
 import sqlite3
+import sys
 from pathlib import Path
 
 import pf_native_control as native
@@ -18,7 +19,10 @@ from project_initialization.test_first_worker_preparation import successful
 
 from .test_native_control import native_root as native_root
 
-pytestmark = pytest.mark.skipif(os.name != "nt", reason="Windows owned backend")
+pytestmark = pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned backend required",
+)
 SOURCE = Path(__file__).resolve().parents[2]
 
 

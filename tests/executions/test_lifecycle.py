@@ -397,18 +397,35 @@ def test_native_wrapper_authenticated_tree_receipts(
         (attempt / "wrapper.stdout").open("wb") as stdout,
         (attempt / "wrapper.stderr").open("wb") as stderr,
     ):
-        child = subprocess.Popen(
-            argv,
-            env=environment,
-            stdout=stdout,
-            stderr=stderr,
-            start_new_session=(os.name != "nt"),
-        )
+        # Linux must exercise actual namespace containment. A directly launched
+        # legacy PGID wrapper intentionally cannot prove complete tree absence.
+        from pf_native_control import spawn_owned
+
+        if sys.platform.startswith("linux"):
+            child = spawn_owned(
+                argv, token=token, env=environment, stdout=stdout, stderr=stderr
+            )
+        else:
+            child = subprocess.Popen(
+                argv,
+                env=environment,
+                stdout=stdout,
+                stderr=stderr,
+                start_new_session=(os.name != "nt"),
+            )
         try:
             if descendant:
                 time.sleep(2.5)
                 assert child.poll() is None
-                assert not (attempt / "exit.json").exists()
+                if sys.platform.startswith("linux"):
+                    from processforge_core.executions.model import ProcessIdentity
+
+                    identity = ProcessIdentity(
+                        **json.loads((attempt / "process.json").read_text())["process"]
+                    )
+                    assert prepared_executor.owned_tree_absent(identity) is False
+                else:
+                    assert not (attempt / "exit.json").exists()
             assert child.wait(timeout=12) == 0, (attempt / "wrapper.stderr").read_text()
         finally:
             if child.poll() is None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import sys
 
 import pytest
 from execution_migration.test_fresh_native_sql import publish
@@ -13,8 +14,8 @@ from project_initialization.test_first_worker_preparation import successful
 
 
 @pytest.mark.skipif(
-    os.name != "nt",
-    reason="Windows native Job backend; Linux qualification is separate",
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned backend required",
 )
 def test_collect_governed_stage_advance_then_next_prepare(native_root):
     cli = str(publish(native_root))
