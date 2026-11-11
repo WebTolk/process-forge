@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import Literal
@@ -829,7 +830,10 @@ def test_native_stop_never_signals_a_foreign_host(
         )
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned backend required",
+)
 @pytest.mark.parametrize("detached", [False, True])
 def test_real_legacy_cli_timeout_cleans_owned_grandchild(
     sql_cli_fixture, monkeypatch, detached
@@ -850,7 +854,11 @@ def test_real_legacy_cli_timeout_cleans_owned_grandchild(
     driver = core.load_yaml_document(driver_path)
     driver["command"]["args"] = [
         "-c",
-        "import subprocess,sys,time; subprocess.Popen(['cmd.exe','/d','/c',sys.executable,'-B','-c','import time;time.sleep(60)']);time.sleep(60)",
+        (
+            "import subprocess,sys,time; subprocess.Popen(['cmd.exe','/d','/c',sys.executable,'-B','-c','import time;time.sleep(60)']);time.sleep(60)"
+            if os.name == "nt"
+            else "import os,time\nif os.fork() == 0:\n os.setsid()\n time.sleep(60)\ntime.sleep(60)"
+        ),
     ]
     driver["limits"]["timeout_seconds"] = 1
     write_yaml_file(driver_path, driver)
@@ -983,7 +991,10 @@ def test_legacy_ambiguous_spawn_never_releases_ownership(
     assert core._worker_assignment_service.load(root, "task") == before_task
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned backend required",
+)
 def test_legacy_controller_crash_after_native_receipt_is_recoverable(
     sql_cli_fixture, monkeypatch
 ):
