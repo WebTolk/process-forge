@@ -1,2 +1,0 @@
-FAIL: tools/processforge.py: non-neutral platform id 'platform.node'
-FAIL: tools/processforge.py: non-neutral platform id 'platform.node'

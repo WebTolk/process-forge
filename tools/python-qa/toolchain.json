@@ -1,0 +1,24 @@
+{
+  "id": "python",
+  "kind": "toolchain",
+  "version": 1,
+  "language": "python",
+  "description": "Shared Python QA tools; project configuration and interpreter remain authoritative.",
+  "tool_categories": {
+    "style": {"mandatory": false, "examples": ["python <shared-python-qa>/qa.py --project-root <project> lint", "python <shared-python-qa>/qa.py --project-root <project> format"]},
+    "documentation": {"mandatory": false, "examples": ["python <shared-python-qa>/qa.py --project-root <project> docstrings -- src"]},
+    "tests": {"mandatory_when_configured": true, "examples": ["python <shared-python-qa>/qa.py --project-root <project> test -- tests", "python <shared-python-qa>/qa.py --project-root <project> coverage -- tests"]},
+    "static_analysis": {"mandatory_when_configured": true, "examples": ["python <shared-python-qa>/qa.py --project-root <project> typecheck -- src"]},
+    "security": {"mandatory": false, "examples": ["python <shared-python-qa>/qa.py --project-root <project> security -- src", "python <shared-python-qa>/qa.py --project-root <project> audit"]}
+  },
+  "policy": {
+    "prefer_project_local_configs": true,
+    "allow_shared_style_fallback_configs": true,
+    "prefer_project_interpreter_and_dependencies": true,
+    "shared_tools_require_matching_python_minor_for_tests": true,
+    "fix_requires_explicit_operation": true,
+    "do_not_fake_test_results": true,
+    "quality_dependencies_are_not_runtime_dependencies": true,
+    "standards": ["PEP 8", "PEP 257", "Google docstring convention"]
+  }
+}

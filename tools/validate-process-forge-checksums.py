@@ -8,10 +8,28 @@ import hashlib
 import sys
 from pathlib import Path
 
-
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
+PUBLIC_DIRS = [
+    "docs",
+    "schemas",
+    "processes",
+    "packages",
+    "packs",
+    "templates",
+    "prompts",
+    "examples",
+    "policies",
+    "seeds",
+    "bin",
+    "src",
+    "tools",
+    "updates",
+    "checksums",
+]
 PUBLIC_ROOT_FILES = [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.ru.md",
     "README.md",
     "README.ru.md",
     "QUICKSTART.md",
@@ -24,9 +42,7 @@ PUBLIC_ROOT_FILES = [
     ".gitignore",
     ".processforge-releaseignore",
 ]
-PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PUBLIC_INVENTORY = Path("checksums/processforge.sha256")
-LEGACY_INVENTORY = Path(".pf/artifacts/checksum-inventory.sha256")
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
 
@@ -49,16 +65,6 @@ def public_file_entries(root_path: Path) -> list[tuple[str, Path]]:
         if path.is_file():
             files.append((name, path))
 
-    # The archive root must have an explicit source file. A hidden project
-    # instruction file cannot satisfy or stand in for the root release entry.
-    root_agents = root_path / "AGENTS.md"
-    if root_agents.is_file():
-        files.append(("AGENTS.md", root_agents))
-
-    for name in PF_PUBLIC_ROOT_FILES:
-        path = root_path / name
-        if path.is_file():
-            files.append((name, path))
     for dirname in PUBLIC_DIRS:
         root = root_path / dirname
         if root.is_dir():
@@ -68,7 +74,8 @@ def public_file_entries(root_path: Path) -> list[tuple[str, Path]]:
                 if path.is_file()
                 and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
                 and path.suffix not in SKIP_SUFFIXES
-                and path.relative_to(root_path).as_posix() != PUBLIC_INVENTORY.as_posix()
+                and path.relative_to(root_path).as_posix()
+                != PUBLIC_INVENTORY.as_posix()
             )
     return sorted(files, key=lambda item: item[0])
 
@@ -95,15 +102,14 @@ def resolve_inventory_path(root_path: Path, requested: str | None = None) -> Pat
     if requested:
         path = Path(requested).expanduser()
         return path if path.is_absolute() else root_path / path
-    public_path = root_path / PUBLIC_INVENTORY
-    if public_path.is_file():
-        return public_path
-    return root_path / LEGACY_INVENTORY
+    return root_path / PUBLIC_INVENTORY
 
 
 def check_inventory(root_path: Path, output: Path) -> int:
     if not output.is_file():
-        print(f"FAIL: checksum inventory missing: {output.relative_to(root_path)}; run with --write")
+        print(
+            f"FAIL: checksum inventory missing: {output.relative_to(root_path)}; run with --write"
+        )
         return 1
     expected = output.read_text(encoding="utf-8")
     actual = build_inventory(root_path)
@@ -126,10 +132,21 @@ def check_inventory(root_path: Path, output: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", default=str(DEFAULT_ROOT), help="ProcessForge root path.")
-    parser.add_argument("--output", help="checksum inventory path relative to --root; defaults to checksums/processforge.sha256")
-    parser.add_argument("--write", action="store_true", help="write checksums/processforge.sha256")
-    parser.add_argument("--check", action="store_true", help="compare current public files with existing checksum inventory")
+    parser.add_argument(
+        "--root", default=str(DEFAULT_ROOT), help="ProcessForge root path."
+    )
+    parser.add_argument(
+        "--output",
+        help="checksum inventory path relative to --root; defaults to checksums/processforge.sha256",
+    )
+    parser.add_argument(
+        "--write", action="store_true", help="write checksums/processforge.sha256"
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="compare current public files with existing checksum inventory",
+    )
     args = parser.parse_args()
     root = Path(args.root).expanduser().resolve()
     output = resolve_inventory_path(root, args.output)

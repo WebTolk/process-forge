@@ -1,1 +1,0 @@
-PASS: smoke_cli_audit_f0608

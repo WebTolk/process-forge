@@ -1,3 +1,0 @@
-WROTE: D:/Dev/process-forge/.pf/artifacts/publish-f06-f08-20260910/processforge-52774e4.zip
-WROTE: D:/Dev/process-forge/.pf/artifacts/publish-f06-f08-20260910/processforge-52774e4.manifest.json
-FILES: 940

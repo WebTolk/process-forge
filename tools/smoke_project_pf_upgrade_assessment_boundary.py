@@ -4,17 +4,33 @@
 from __future__ import annotations
 
 import json
-import shutil
 import tempfile
 from pathlib import Path
 
-from update_smoke_helpers import ROOT, require_ok, run_pf, write_yaml
+from update_smoke_helpers import require_ok, run_pf, write_yaml
 
 
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-project-boundary-") as raw:
         project = Path(raw) / "project"
-        shutil.copytree(ROOT / ".pf", project / ".pf", ignore=shutil.ignore_patterns("runtime", "artifacts", "reviews", "handoffs", "logs"))
+        write_yaml(
+            project / ".pf" / "process-forge.yaml",
+            """
+schema_version: 1
+process_forge:
+  version: 0.1.0
+  mode: file_only
+  runner_required: false
+  backend_required: false
+project:
+  id: example-upgrade-project
+  name: Example Upgrade Project
+paths:
+  artifacts: artifacts
+policies:
+  execution_context_is_immutable: true
+""",
+        )
         require_ok(run_pf("project-upgrade-check", "--project-root", str(project), "--current-version", "0.1.0", "--channel", "stable"))
         assessment = project / ".pf" / "artifacts" / "processforge-update-assessment.md"
         assert assessment.is_file()
