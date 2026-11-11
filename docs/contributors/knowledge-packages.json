@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "description": "Reviewed initial knowledge versions for ProcessForge contributors. Native PF update_sites discover later releases; update this file through code review to change the bootstrap pins.",
+  "packages": [
+    {
+      "id": "docs.python",
+      "resource_id": "root",
+      "repository": "https://github.com/WebTolk/pf-python-knowledge",
+      "version": "1.0.1",
+      "archive": "docs.python-1.0.1.zip",
+      "download_url": "https://github.com/WebTolk/pf-python-knowledge/releases/download/v1.0.1/docs.python-1.0.1.zip",
+      "sha256": "7c242e16b3f14ca572903f4d365b85f5a4dd0414301387c0925b26c15eca3f27",
+      "manifest_url": "https://github.com/WebTolk/pf-python-knowledge/releases/latest/download/python.json",
+      "source_id": "webtolk-python"
+    },
+    {
+      "id": "docs.python-packaging",
+      "resource_id": "root",
+      "repository": "https://github.com/WebTolk/pf-python-packaging-knowledge",
+      "version": "1.0.1",
+      "archive": "docs.python-packaging-1.0.1.zip",
+      "download_url": "https://github.com/WebTolk/pf-python-packaging-knowledge/releases/download/v1.0.1/docs.python-packaging-1.0.1.zip",
+      "sha256": "a8afd45ff429b0896b30357344151d3c0f6d430349d4535b7140fbe6f4a36256",
+      "manifest_url": "https://github.com/WebTolk/pf-python-packaging-knowledge/releases/latest/download/python-packaging.json",
+      "source_id": "webtolk-python-packaging"
+    },
+    {
+      "id": "docs.python-practices",
+      "resource_id": "root",
+      "repository": "https://github.com/WebTolk/pf-python-practices-knowledge",
+      "version": "1.0.1",
+      "archive": "docs.python-practices-1.0.1.zip",
+      "download_url": "https://github.com/WebTolk/pf-python-practices-knowledge/releases/download/v1.0.1/docs.python-practices-1.0.1.zip",
+      "sha256": "9a02dfd6138139e1c1989fb2edab32c56a65d09f1feab8ec9848910094bf74d4",
+      "manifest_url": "https://github.com/WebTolk/pf-python-practices-knowledge/releases/latest/download/python-practices.json",
+      "source_id": "webtolk-python-practices"
+    },
+    {
+      "id": "docs.python-devguide",
+      "resource_id": "root",
+      "repository": "https://github.com/WebTolk/pf-python-devguide-knowledge",
+      "version": "1.0.1",
+      "archive": "docs.python-devguide-1.0.1.zip",
+      "download_url": "https://github.com/WebTolk/pf-python-devguide-knowledge/releases/download/v1.0.1/docs.python-devguide-1.0.1.zip",
+      "sha256": "7ac49739fda72e1073602e8c693108ed622e8c093e2423d69779783d9c81d419",
+      "manifest_url": "https://github.com/WebTolk/pf-python-devguide-knowledge/releases/latest/download/python-devguide.json",
+      "source_id": "webtolk-python-devguide"
+    },
+    {
+      "id": "docs.python-peps",
+      "resource_id": "root",
+      "repository": "https://github.com/WebTolk/pf-python-peps-knowledge",
+      "version": "1.0.1",
+      "archive": "docs.python-peps-1.0.1.zip",
+      "download_url": "https://github.com/WebTolk/pf-python-peps-knowledge/releases/download/v1.0.1/docs.python-peps-1.0.1.zip",
+      "sha256": "ce3eb4e77a1abd91eb326f3a19dd8384259122a7a1bb615d9750c83ea4992d88",
+      "manifest_url": "https://github.com/WebTolk/pf-python-peps-knowledge/releases/latest/download/python-peps.json",
+      "source_id": "webtolk-python-peps"
+    }
+  ]
+}

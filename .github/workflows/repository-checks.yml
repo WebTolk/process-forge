@@ -73,3 +73,25 @@ jobs:
               'smoke_no_removed_process_refs.py',
           ):
               subprocess.run([sys.executable, 'tools/' + script], check=True)
+      - name: Check contributor installation boundaries
+        run: python -m unittest discover -s tests/contributor_setup -v
+      - name: Install and resolve the published contributor knowledge
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          workplace = Path(os.environ['RUNNER_TEMP']) / 'contributor workplace'
+          def run(*args):
+              subprocess.run([sys.executable, *map(str, args)], check=True)
+          run('bin/pf.py', 'workplace-init', '--workplace', workplace, '--profile', 'generic', '--apply')
+          run('tools/install-contributor-knowledge.py', '--workplace', workplace)
+          run('tools/install-contributor-knowledge.py', '--workplace', workplace, '--apply')
+          run('tools/install-contributor-knowledge.py', '--workplace', workplace, '--apply')
+          profile = json.loads(Path('docs/contributors/knowledge-packages.json').read_text(encoding='utf-8'))
+          for package in profile['packages']:
+              run('bin/pf.py', 'knowledge-package-doctor', '--workplace', workplace, '--package', package['id'], '--package-root', 'global')
+          run('bin/pf.py', 'update', 'entity-sources', 'rebuild', '--workplace', workplace)

@@ -5,6 +5,13 @@ These are mandatory repository instructions for every coding agent. Read
 [CONTRIBUTING.ru.md](CONTRIBUTING.ru.md). Apply this workflow across sessions and
 devices without asking the user to repeat it.
 
+For a new device, follow [contributor agent setup](docs/contributors/agent-setup.md)
+([Russian](docs/ru/contributors/agent-setup.md)) for the shared knowledge profile,
+verified package installation, Python QA and MCP configuration. Use the pinned
+packages in `docs/contributors/knowledge-packages.json`; load their indexes first
+and only the documents relevant to the task. PF-specific contracts remain in the
+current source revision. This setup does not require root project `.pf` state.
+
 - GitHub is the primary place for code review and shared task coordination.
   `origin/dev` is the integration branch; GitVerse mirrors accepted source.
 - Work on a task, feature, or developer branch. Long-lived developer branches
