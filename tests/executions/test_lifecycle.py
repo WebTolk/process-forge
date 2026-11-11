@@ -755,7 +755,10 @@ def test_native_sql_detached_stop_and_signal_failure(
             monkeypatch.setattr(prepared_executor, "signal_owned_tree", reject)
         assert core.command_worker_run_stop(args) == (1 if denied else 0)
         stopped = repository.load_latest("run", "task")
-        assert stopped.phase == "stopping" and repository.current().records
+        if denied:
+            assert stopped.phase == "stopping" and repository.current().records
+        else:
+            assert stopped.phase == "absent" and not repository.current().records
     finally:
         monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
         if repository.load_latest("run", "task").phase != "absent":
@@ -766,6 +769,84 @@ def test_native_sql_detached_stop_and_signal_failure(
         time.sleep(0.02)
     assert not repository.current().records
     assert repository.load_latest("run", "task").phase == "absent"
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux native errors")
+def test_linux_signal_reopen_failure_is_bounded_by_worker_handler(
+    sql_cli_fixture,
+    monkeypatch,
+    capsys,
+):
+    import pf_linux_native_control as linux
+    import prepared_executor
+    import processforge as core
+
+    identity = process_identity.capture_process(os.getpid())
+    assert identity is not None
+    identity = replace(identity, tree_id="linux-pidns-v1:" + "a" * 32 + ":1:1:1:1")
+
+    def denied(*args, **kwargs):
+        raise linux.LinuxControlError("linux_process_observation_unavailable")
+
+    monkeypatch.setattr(linux, "reopen", denied)
+    _root, _repository, args, _driver = sql_cli_fixture
+
+    @core._worker_storage_errors
+    def handler(_args):
+        prepared_executor.signal_owned_tree(identity)
+        raise AssertionError("unverifiable ownership was signalled")
+
+    assert handler(args) == 1
+    assert capsys.readouterr().out == "FAIL: execution_activity_unknown\n"
+
+
+def test_sql_timeout_failed_stop_keeps_durable_decision(sql_cli_fixture, monkeypatch):
+    import time
+
+    import pf_native_control as native
+    import prepared_executor
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    root, repository, args, driver_path = sql_cli_fixture
+    driver = core.load_yaml_document(driver_path)
+    driver["command"]["args"] = ["-c", "import time; time.sleep(120)"]
+    driver["limits"]["timeout_seconds"] = 1
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    args.detach = True
+    assert core.command_worker_run_start(args) == 0
+    state = core.load_agent_run_state(root, "run", "task")
+    attempt = (root / state["prepared_input"]["path"]).parent
+    receipt = attempt / "native-tree.json"
+    signal = prepared_executor.signal_owned_tree
+
+    def denied(_process):
+        raise prepared_executor.ExecutorError("execution_activity_unknown")
+
+    try:
+        time.sleep(max(0, receipt.stat().st_mtime + 1.2 - time.time()))
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", denied)
+        assert core.command_worker_run_status(args) == 1
+        assert repository.load_latest("run", "task").phase == "stopping"
+        assert repository.current().records
+        assert (attempt / "controller-timeout.json").exists()
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
+        assert core.command_worker_run_status(args) == 0
+        done = repository.load_latest("run", "task")
+        assert done.phase == "absent" and done.outcome == "timed_out"
+        assert not repository.current().records
+        assert core.command_worker_run_status(args) == 0
+    finally:
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
+        facts = json.loads(receipt.read_bytes())
+        job = native.reopen_job(facts, pid=facts["pid"], identity=facts["identity"])
+        if job is not None:
+            try:
+                assert job.stop(deadline=time.monotonic() + 5)
+            finally:
+                job.close()
 
 
 def test_sql_ambiguous_spawn_retains_committed_current(sql_cli_fixture, monkeypatch):

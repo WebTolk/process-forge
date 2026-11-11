@@ -284,12 +284,15 @@ def signal_owned_tree(process: ProcessIdentity) -> None:
     ):
         from pf_linux_native_control import identity_facts, reopen
 
-        job = reopen(identity_facts(process), pid=process.pid, identity={})
         try:
-            if not job.stop(deadline=time.monotonic() + 5):
-                raise ExecutorError("execution_activity_unknown")
-        finally:
-            job.close()
+            job = reopen(identity_facts(process), pid=process.pid, identity={})
+            try:
+                if not job.stop(deadline=time.monotonic() + 5):
+                    raise ExecutorError("execution_activity_unknown")
+            finally:
+                job.close()
+        except OSError:
+            raise ExecutorError("execution_activity_unknown") from None
         return
     if (
         sys.platform.startswith("linux")

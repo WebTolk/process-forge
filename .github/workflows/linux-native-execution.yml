@@ -22,6 +22,8 @@ jobs:
       TMPDIR: ${{ github.workspace }}/.pf/tmp/linux-temp
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
@@ -36,7 +38,7 @@ jobs:
               Path(os.environ[name]).mkdir(parents=True, exist_ok=True)
       - name: Qualify native Linux lifecycle
         run: |
-          python -m pytest -q -p no:cacheprovider --basetemp "$TMPDIR/pytest" --junitxml=linux-native-results.xml tests/native_control/test_linux_owned.py tests/native_control/test_linux_lock_identity.py tests/execution_migration/test_fresh_native_sql.py tests/prepared_collection_state/test_native_cleanup_cycle.py tests/executions tests/native_metadata tests/worker_retry_state
+          python -m pytest -q -p no:cacheprovider --basetemp "$TMPDIR/pytest" --junitxml=linux-native-results.xml tests/native_control/test_linux_owned.py tests/native_control/test_linux_lock_identity.py tests/execution_migration/test_fresh_native_sql.py tests/execution_migration/test_sql_controller_recovery.py tests/prepared_collection_state/test_native_cleanup_cycle.py tests/executions tests/native_metadata tests/worker_retry_state
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

@@ -49,6 +49,21 @@ proven absent. Missing or inaccessible evidence stays unknown. Legacy
 `linux-pgid` receipts retain their conservative behavior and are not upgraded to
 whole-tree proof from a missing PID or process group.
 
+Fresh SQL observation also reads the attempt-bound native receipt before a
+wrapper process receipt exists. It verifies the launch token, attempt identity
+and native birth facts before reopening ownership. A successful stop waits for
+positive whole-tree absence; unavailable or conflicting evidence returns a
+bounded refusal and keeps the attempt current.
+
+Detached starts enforce their configured deadline on subsequent status, stop or
+collection observation. The pre-GO receipt publication time supplies the launch
+boundary even when the target loader stalls before its first wrapper receipt.
+A private timeout decision survives a failed stop or controller restart. Only
+after confirmed tree absence does the controller record `timed_out`, preserving
+an available root exit code or using controller timeout code 124. This controller
+result does not claim a missing root receipt or overwrite a wrapper receipt file.
+Detached file-only execution has no autonomous timer between observations.
+
 ## Prerequisites and limits
 
 Use Linux with user/PID namespace creation enabled, readable procfs mounted for
