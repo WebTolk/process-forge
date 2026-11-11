@@ -66,4 +66,7 @@ def test_sealed_codex_entry_keeps_origin_authentication(tmp_path: Path, entry: s
         assert "--worker-prompt" in result.stdout
     else:
         assert result.returncode != 0
-        assert "NativeControlError" in result.stderr
+        expected = (
+            "Refusal: payload_drift" if entry == "tampered" else "NativeControlError"
+        )
+        assert expected in result.stderr
