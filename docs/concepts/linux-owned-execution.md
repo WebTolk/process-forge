@@ -54,6 +54,11 @@ wrapper process receipt exists. It verifies the launch token, attempt identity
 and native birth facts before reopening ownership. A successful stop waits for
 positive whole-tree absence; unavailable or conflicting evidence returns a
 bounded refusal and keeps the attempt current.
+The controller persists stop intent before admitting a newly published root
+exit. A root exit can change the execution projection to unresolved, but cannot
+cancel that intent; ordinary status can resume the stop after a controller crash.
+Control decisions retain exact attempt/token identity and accept platform-native
+LF or CRLF line endings without weakening the identity comparison.
 
 Detached starts enforce their configured deadline on subsequent status, stop or
 collection observation. The pre-GO receipt publication time supplies the launch

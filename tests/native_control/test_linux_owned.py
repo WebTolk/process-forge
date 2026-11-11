@@ -194,7 +194,7 @@ def test_foreign_pid_birth_token_and_owner_refuse_without_signal(
 def test_denied_observation_stays_unknown_and_does_not_signal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from prepared_executor import owned_tree_absent, signal_owned_tree
+    from prepared_executor import ExecutorError, owned_tree_absent, signal_owned_tree
 
     from processforge_core.runtime.process_identity import capture_process
 
@@ -208,7 +208,7 @@ def test_denied_observation_stays_unknown_and_does_not_signal(
                 linux, "_boot", lambda: (_ for _ in ()).throw(PermissionError())
             )
             assert owned_tree_absent(identity) is None
-            with pytest.raises(OSError):
+            with pytest.raises(ExecutorError, match="execution_activity_unknown"):
                 signal_owned_tree(identity)
         assert job.active() > 0 and process.poll() is None
     finally:

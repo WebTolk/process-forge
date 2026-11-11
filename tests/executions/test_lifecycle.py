@@ -849,6 +849,109 @@ def test_sql_timeout_failed_stop_keeps_durable_decision(sql_cli_fixture, monkeyp
                 job.close()
 
 
+@pytest.mark.parametrize("interrupted", [False, True])
+def test_sql_first_stop_admits_root_exit_and_stops_live_descendant(
+    sql_cli_fixture,
+    monkeypatch,
+    interrupted,
+):
+    import subprocess
+    import time
+    from uuid import uuid4
+
+    import pf_native_control as native
+    import prepared_executor
+    import processforge as core
+
+    from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
+
+    root, repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    ready = repository.load_latest("run", "task")
+    assert ready is not None
+    token = uuid4().hex
+    reserved = repository.reserve_start(
+        ready.key,
+        expected_revision=ready.revision,
+        generation=ready.generation,
+        launch_token=token,
+    )
+    state = core.load_agent_run_state(root, "run", "task")
+    manifest = root / state["prepared_input"]["path"]
+    attempt = manifest.parent
+    environment = dict(os.environ)
+    environment.update(
+        dict(
+            zip(
+                prepared_executor._LAUNCH_ENV,
+                (reserved.key.project_id, "run", "task", "1", token),
+                strict=True,
+            )
+        )
+    )
+    # An actual protocol producer exits after its root result while an inherited
+    # native descendant remains alive. No exit receipt has been admitted by SQL.
+    script = """
+import json,os,subprocess,sys
+from pathlib import Path
+from prepared_executor import ExecutionReceipts
+manifest=Path(sys.argv[1]); attempt=manifest.parent
+receipts=ExecutionReceipts(dict(os.environ),json.loads(manifest.read_bytes()),attempt/'heartbeat.json',attempt/'exit.json')
+subprocess.Popen([sys.executable,'-c','import time; time.sleep(120)'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,close_fds=False,start_new_session=True)
+receipts.publish(attempt/'exit.json','exit',{'status':'completed','exit_code':0})
+os._exit(0)
+"""
+    process = native.spawn_owned(
+        [sys.executable, "-B", "-c", script, str(manifest)],
+        token=token,
+        env=environment,
+        receipt_path=attempt / "native-tree.json",
+        identity={"run_id": "run", "task_id": "task", "attempt": 1},
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    job = getattr(process, "native_job")
+    original = SQLiteExecutionRepository.apply_observation
+    try:
+        deadline = time.monotonic() + 10
+        while not (attempt / "exit.json").exists():
+            assert time.monotonic() < deadline, "protocol producer did not publish"
+            time.sleep(0.02)
+        assert job.active() > 0
+        assert repository.load_latest("run", "task").process is None
+        if interrupted:
+
+            def admit_then_interrupt(self, observation, **kwargs):
+                updated = original(self, observation, **kwargs)
+                if (
+                    self.database.target == repository.database.target
+                    and observation.receipt_kind == "exit"
+                ):
+                    raise ExecutionError("execution_activity_unknown")
+                return updated
+
+            monkeypatch.setattr(
+                SQLiteExecutionRepository, "apply_observation", admit_then_interrupt
+            )
+        assert core.command_worker_run_stop(args) == (1 if interrupted else 0)
+        monkeypatch.setattr(SQLiteExecutionRepository, "apply_observation", original)
+        if interrupted:
+            assert repository.load_latest("run", "task").phase == "unresolved"
+            assert repository.current().records and job.active() > 0
+            assert (attempt / "controller-stop.json").is_file()
+            # Ordinary status must recover the committed stop intent, without
+            # requiring the user to issue stop a second time.
+            assert core.command_worker_run_status(args) == 0
+        assert repository.load_latest("run", "task").phase == "absent"
+        assert not repository.current().records and job.active() == 0
+        assert core.command_worker_run_stop(args) == 0
+    finally:
+        monkeypatch.setattr(SQLiteExecutionRepository, "apply_observation", original)
+        assert job.stop(deadline=time.monotonic() + 5)
+        process.wait(timeout=5)
+        job.close()
+
+
 def test_sql_ambiguous_spawn_retains_committed_current(sql_cli_fixture, monkeypatch):
     import processforge as core
 

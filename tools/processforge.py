@@ -11933,6 +11933,37 @@ def _sql_native_identity(
         raise ExecutionError("receipt_conflict") from None
 
 
+def _sql_control_decision(
+    project_root: Path,
+    path: Path,
+    proof: dict[str, Any],
+    *,
+    requested: bool,
+) -> bool:
+    """Persist exact controller intent before receipt admission or signalling."""
+    from prepared_executor import _write_json_atomic
+
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.input import bounded_read, private_file
+
+    expected = (
+        json.dumps(proof, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    ).encode("utf-8")
+    try:
+        private_file(project_root, rel(path, project_root))
+        if path.exists():
+            if bounded_read(path, 4096).replace(b"\r\n", b"\n") != expected:
+                raise ExecutionError("receipt_conflict")
+            return True
+        if requested:
+            _write_json_atomic(path, proof)
+        return requested
+    except OSError:
+        raise ExecutionError("execution_activity_unknown") from None
+    except ValueError:
+        raise ExecutionError("receipt_conflict") from None
+
+
 def _sql_timeout_decision(
     project_root: Path,
     path: Path,
@@ -11944,34 +11975,18 @@ def _sql_timeout_decision(
     """Keep a timeout decision across a controller crash or an uncertain stop."""
     from dataclasses import asdict
 
-    from prepared_executor import _write_json_atomic
-
-    from processforge_core.executions.model import ExecutionError
-    from processforge_core.prepared.input import bounded_read, private_file
-
-    proof = {
-        "schema_version": 1,
-        "kind": "controller-timeout",
-        "key": asdict(record.key),
-        "launch_token": record.launch_token,
-        "tree_id": process.tree_id,
-    }
-    expected = (
-        json.dumps(proof, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
-    ).encode("utf-8")
-    try:
-        private_file(project_root, rel(path, project_root))
-        if path.exists():
-            if bounded_read(path, 4096) != expected:
-                raise ExecutionError("receipt_conflict")
-            return True
-        if expired:
-            _write_json_atomic(path, proof)
-        return expired
-    except OSError:
-        raise ExecutionError("execution_activity_unknown") from None
-    except ValueError:
-        raise ExecutionError("receipt_conflict") from None
+    return _sql_control_decision(
+        project_root,
+        path,
+        {
+            "schema_version": 1,
+            "kind": "controller-timeout",
+            "key": asdict(record.key),
+            "launch_token": record.launch_token,
+            "tree_id": process.tree_id,
+        },
+        requested=expired,
+    )
 
 
 def _observe_sql_locked(
@@ -11993,6 +12008,19 @@ def _observe_sql_locked(
         return record
     payload = projected_payload(record)
     attempt_root = (project_root / str(payload["heartbeat_path"])).parent
+    # Root exit admission can temporarily project stopping as unresolved. Keep
+    # the committed stop intent durable before admitting any new receipt.
+    stop_requested = _sql_control_decision(
+        project_root,
+        attempt_root / "controller-stop.json",
+        {
+            "schema_version": 1,
+            "kind": "controller-stop",
+            "key": asdict(record.key),
+            "launch_token": token,
+        },
+        requested=record.phase == "stopping",
+    )
     kinds: tuple[Literal["process", "heartbeat", "exit"], ...] = (
         "process",
         "heartbeat",
@@ -12013,6 +12041,13 @@ def _observe_sql_locked(
             project_root, repository, record.key.run_id, record.key.task_id
         )
         return record
+    if stop_requested and record.phase != "stopping":
+        record = repository.request_stop(
+            record.key,
+            launch_token=token,
+            expected_revision=record.revision,
+            generation=record.generation,
+        )
     native = _sql_native_identity(
         project_root, attempt_root / "native-tree.json", record
     )
