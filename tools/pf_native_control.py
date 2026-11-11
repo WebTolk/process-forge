@@ -26,8 +26,11 @@ from ctypes import wintypes
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import FrameType, MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from pf_linux_native_control import OwnedNamespace
 
 _PHYSICAL_OPEN = io.open
 _MODULE_CODE = sys._getframe().f_code
@@ -343,6 +346,12 @@ def spawn_owned(
     abrupt controller death cannot leave a wrapper without a containment fence.
     Child death closes that handle; last-handle close kills remaining members.
     """
+    if sys.platform.startswith("linux"):
+        from pf_linux_native_control import spawn
+
+        return spawn(
+            argv, token=token, receipt_path=receipt_path, identity=identity, **options
+        )
     if os.name != "nt":
         # A POSIX process group is useful for signalling but is not a complete
         # descendant ownership primitive. No positive tree proof is exported.
@@ -420,12 +429,16 @@ def spawn_owned(
 
 def reopen_job(
     facts: dict[str, Any], *, pid: int, identity: dict[str, Any]
-) -> OwnedJob | None:
+) -> OwnedJob | OwnedNamespace | None:
     """Reopen only exact persisted attempt ownership; PID reuse cannot signal it.
 
     None means the authenticated non-breakaway Job no longer exists. Any access
     denial or identity mismatch raises; arbitrary legacy PID facts grant nothing.
     """
+    if sys.platform.startswith("linux"):
+        from pf_linux_native_control import reopen
+
+        return reopen(facts, pid=pid, identity=identity)
     if (
         os.name != "nt"
         or type(pid) is not int
@@ -1832,7 +1845,11 @@ def supports_owned_execution() -> bool:
     Explicit initialization probes real suspended creation/Job attachment. It creates no guard,
     database, UUID metadata or maintenance evidence on an unsupported host.
     """
-    if os.name != "nt" or _ENTRY is None or _ENTRY.publication is None:
+    if (
+        (os.name != "nt" and not sys.platform.startswith("linux"))
+        or _ENTRY is None
+        or _ENTRY.publication is None
+    ):
         return False
     try:
         process = spawn_owned(

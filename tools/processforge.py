@@ -66,7 +66,11 @@ else:
 if TYPE_CHECKING:
     from processforge_core.configuration import ConfigService, ConfigurationProvider
     from processforge_core.executions.composition import ExecutionStorage
-    from processforge_core.executions.model import ExecutionObservation, ExecutionRecord
+    from processforge_core.executions.model import (
+        ExecutionObservation,
+        ExecutionRecord,
+        ProcessIdentity,
+    )
     from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
     from processforge_core.maintenance.storage_migration import StorageMigrationHost
     from processforge_core.resources.local_search import ResourceSearchIndex
@@ -11805,7 +11809,12 @@ def _read_sql_receipt(
         if os.name == "nt"
         else f"linux-pgid:{process.pid}"
     )
-    if process.tree_id != tree:
+    if os.name != "nt" and (process.tree_id or "").startswith("linux-pidns-v1:"):
+        from pf_linux_native_control import validate_tree_id
+
+        if not validate_tree_id(process.tree_id, record.launch_token):
+            raise ExecutionError("execution_identity_conflict")
+    elif process.tree_id != tree:
         raise ExecutionError("execution_identity_conflict")
     return ExecutionObservation(
         record.key,
@@ -11837,15 +11846,158 @@ def _sql_receipt(
         raise ExecutionError("receipt_conflict") from None
 
 
+def _sql_native_identity(
+    project_root: Path, path: Path, record: ExecutionRecord
+) -> tuple[ProcessIdentity, float] | None:
+    """Authenticate pre-GO ownership even before the wrapper's first receipt."""
+    from pf_native_control import reopen_job
+
+    from processforge_core.executions.model import ExecutionError, ProcessIdentity
+    from processforge_core.prepared.input import bounded_read, private_file
+
+    try:
+        private_file(project_root, rel(path, project_root))
+        try:
+            published = path.stat().st_mtime
+        except FileNotFoundError:
+            return None  # Older attempts may have only wrapper receipts.
+
+        def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+            result = {}
+            for name, value in pairs:
+                if name in result:
+                    raise ValueError("duplicate native receipt key")
+                result[name] = value
+            return result
+
+        facts = json.loads(bounded_read(path, 4096), object_pairs_hook=unique)
+        identity = {
+            "run_id": record.key.run_id,
+            "task_id": record.key.task_id,
+            "attempt": record.key.attempt,
+        }
+        if (
+            set(facts) != {"schema_version", "pid", "birth_id", "job_name", "identity"}
+            or type(facts["schema_version"]) is not int
+            or facts["schema_version"] != 1
+            or facts["identity"] != identity
+            or type(facts["identity"]["attempt"]) is not int
+            or type(facts["pid"]) is not int
+            or not 0 < facts["pid"] <= 0xFFFFFFFF
+            or not isinstance(facts["birth_id"], str)
+            or not isinstance(facts["job_name"], str)
+            or record.launch_token is None
+        ):
+            raise ExecutionError("execution_identity_conflict")
+        if os.name == "nt":
+            if facts["job_name"] != "Local\\pf-execution-" + record.launch_token:
+                raise ExecutionError("execution_identity_conflict")
+            process = ProcessIdentity(
+                socket.gethostname(),
+                None,
+                facts["pid"],
+                "windows-creation-filetime:" + facts["birth_id"],
+                "windows-job:" + facts["job_name"],
+            )
+        elif sys.platform.startswith("linux"):
+            from pf_linux_native_control import validate_tree_id
+
+            if not validate_tree_id(facts["job_name"], record.launch_token):
+                raise ExecutionError("execution_identity_conflict")
+            prefix, boot, ticks = facts["birth_id"].split(":")
+            if prefix != "linux-start":
+                raise ExecutionError("execution_identity_conflict")
+            process = ProcessIdentity(
+                socket.gethostname(),
+                boot,
+                facts["pid"],
+                "linux-start-ticks:" + ticks,
+                facts["job_name"],
+            )
+        else:
+            raise ExecutionError("execution_activity_unknown")
+        if record.process is not None and (
+            record.process.tree_id != process.tree_id
+            or (os.name != "nt" and record.process != process)
+        ):
+            raise ExecutionError("execution_identity_conflict")
+        # Reopen validates native birth/membership, not just receipt text. Native
+        # signal/probe operations retain their own exact Job/pidfd handles.
+        job = reopen_job(facts, pid=process.pid, identity=identity)
+        if job is not None:
+            job.close()
+        return record.process or process, published
+    except OSError:
+        raise ExecutionError("execution_activity_unknown") from None
+    except (ValueError, KeyError, TypeError, AttributeError):
+        raise ExecutionError("receipt_conflict") from None
+
+
+def _sql_control_decision(
+    project_root: Path,
+    path: Path,
+    proof: dict[str, Any],
+    *,
+    requested: bool,
+) -> bool:
+    """Persist exact controller intent before receipt admission or signalling."""
+    from prepared_executor import _write_json_atomic
+
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.input import bounded_read, private_file
+
+    expected = (
+        json.dumps(proof, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    ).encode("utf-8")
+    try:
+        private_file(project_root, rel(path, project_root))
+        if path.exists():
+            if bounded_read(path, 4096).replace(b"\r\n", b"\n") != expected:
+                raise ExecutionError("receipt_conflict")
+            return True
+        if requested:
+            _write_json_atomic(path, proof)
+        return requested
+    except OSError:
+        raise ExecutionError("execution_activity_unknown") from None
+    except ValueError:
+        raise ExecutionError("receipt_conflict") from None
+
+
+def _sql_timeout_decision(
+    project_root: Path,
+    path: Path,
+    record: ExecutionRecord,
+    process: ProcessIdentity,
+    *,
+    expired: bool,
+) -> bool:
+    """Keep a timeout decision across a controller crash or an uncertain stop."""
+    from dataclasses import asdict
+
+    return _sql_control_decision(
+        project_root,
+        path,
+        {
+            "schema_version": 1,
+            "kind": "controller-timeout",
+            "key": asdict(record.key),
+            "launch_token": record.launch_token,
+            "tree_id": process.tree_id,
+        },
+        requested=expired,
+    )
+
+
 def _observe_sql_locked(
     project_root: Path, repository: SQLiteExecutionRepository, record: ExecutionRecord
 ) -> ExecutionRecord:
     """Admit exact private evidence and query its owned tree outside SQL."""
     from dataclasses import asdict
 
-    from prepared_executor import owned_tree_absent
+    from prepared_executor import owned_tree_absent, signal_owned_tree
 
-    from processforge_core.executions.model import ExecutionObservation
+    from processforge_core.executions.model import ExecutionError, ExecutionObservation
     from processforge_core.executions.projection import (
         canonical_json,
         projected_payload,
@@ -11856,6 +12008,19 @@ def _observe_sql_locked(
         return record
     payload = projected_payload(record)
     attempt_root = (project_root / str(payload["heartbeat_path"])).parent
+    # Root exit admission can temporarily project stopping as unresolved. Keep
+    # the committed stop intent durable before admitting any new receipt.
+    stop_requested = _sql_control_decision(
+        project_root,
+        attempt_root / "controller-stop.json",
+        {
+            "schema_version": 1,
+            "kind": "controller-stop",
+            "key": asdict(record.key),
+            "launch_token": token,
+        },
+        requested=record.phase == "stopping",
+    )
     kinds: tuple[Literal["process", "heartbeat", "exit"], ...] = (
         "process",
         "heartbeat",
@@ -11871,34 +12036,115 @@ def _observe_sql_locked(
                 expected_revision=record.revision,
                 generation=record.generation,
             )
-    if (
-        record.process is not None
-        and record.phase != "absent"
-        and owned_tree_absent(record.process) is True
-    ):
+    if record.phase == "absent":
+        _publish_sql_locked(
+            project_root, repository, record.key.run_id, record.key.task_id
+        )
+        return record
+    if stop_requested and record.phase != "stopping":
+        record = repository.request_stop(
+            record.key,
+            launch_token=token,
+            expected_revision=record.revision,
+            generation=record.generation,
+        )
+    native = _sql_native_identity(
+        project_root, attempt_root / "native-tree.json", record
+    )
+    process = record.process if native is None else native[0]
+    if process is None:
+        if record.phase == "stopping":
+            raise ExecutionError("execution_activity_unknown")
+        _publish_sql_locked(
+            project_root, repository, record.key.run_id, record.key.task_id
+        )
+        return record
+    absent = owned_tree_absent(process)
+    payload = projected_payload(record)
+    started = (
+        native[1]
+        if native is not None
+        else (
+            datetime.fromisoformat(
+                str(payload["started_at"]).replace("Z", "+00:00")
+            ).timestamp()
+            if payload["started_at"] is not None
+            else None
+        )
+    )
+    expired = (
+        absent is False
+        and started is not None
+        and time.time() >= started + int(str(payload.get("timeout_seconds") or 30))
+    )
+    timed_out = _sql_timeout_decision(
+        project_root,
+        attempt_root / "controller-timeout.json",
+        record,
+        process,
+        expired=expired,
+    )
+    if timed_out and record.phase != "stopping":
+        record = repository.request_stop(
+            record.key,
+            launch_token=token,
+            expected_revision=record.revision,
+            generation=record.generation,
+        )
+    if record.phase == "stopping" and absent is not True:
+        if absent is None:
+            raise ExecutionError("execution_activity_unknown")
+        signal_owned_tree(process)
+        deadline = time.monotonic() + 5
+        while (absent := owned_tree_absent(process)) is not True:
+            if absent is None or time.monotonic() >= deadline:
+                raise ExecutionError("execution_activity_unknown")
+            time.sleep(0.02)
+    if absent is True:
+        # A final wrapper receipt can arrive during stop/wait. Admit it before
+        # the controller's terminal proof so a real exit code is preserved.
+        exit_receipt = None
+        for name in kinds:
+            final_receipt = _sql_receipt(
+                project_root, attempt_root / (name + ".json"), record, name
+            )
+            if final_receipt is not None:
+                record = repository.apply_observation(
+                    final_receipt,
+                    expected_revision=record.revision,
+                    generation=record.generation,
+                )
+                if name == "exit":
+                    exit_receipt = final_receipt
+        process = record.process or process
         proof = {
-            "kind": "owned-tree-absence",
-            "process": asdict(record.process),
+            "kind": "controller-timeout" if timed_out else "owned-tree-absence",
+            "process": asdict(process),
             "launch_token": token,
         }
+        code = projected_payload(record)["exit_code"]
+        if timed_out and code is None:
+            code = 124  # Controller timeout result, never a claimed root exit.
+        if timed_out:
+            proof["exit_code"] = code
         observation = ExecutionObservation(
             record.key,
             token,
-            "absence",
-            0,
+            "exit" if timed_out else "absence",
+            (exit_receipt.sequence + 1 if exit_receipt is not None else 1)
+            if timed_out
+            else 0,
             "sha256:"
             + hashlib.sha256(canonical_json(proof).encode("utf-8")).hexdigest(),
-            record.process,
+            process,
             _core_common_clock.now_utc(),
+            status="timed_out" if timed_out else None,
+            exit_code=int(str(code)) if timed_out else None,
             tree_absent=True,
         )
         record = repository.apply_observation(
             observation, expected_revision=record.revision, generation=record.generation
         )
-    if record.phase == "stopping" and record.process is not None:
-        from prepared_executor import signal_owned_tree
-
-        signal_owned_tree(record.process)
     _publish_sql_locked(project_root, repository, record.key.run_id, record.key.task_id)
     return record
 
@@ -12269,6 +12515,12 @@ def _sql_worker_run_start(
                     process = spawn_owned(
                         [str(item) for item in argv],
                         token=token,
+                        receipt_path=attempt_root / "native-tree.json",
+                        identity={
+                            "run_id": run_id,
+                            "task_id": task_id,
+                            "attempt": record.key.attempt,
+                        },
                         cwd=spec.get("working_directory") or str(project_root),
                         env=environment,
                         stdout=stdout,
@@ -12302,17 +12554,9 @@ def _sql_worker_run_start(
                     return 1
                 exact = _observe_sql_locked(project_root, repository, exact)
                 if exact.phase != "absent":
-                    exact = repository.request_stop(
-                        exact.key,
-                        launch_token=token,
-                        expected_revision=exact.revision,
-                        generation=generation,
-                    )
-                    if exact.process is not None:
-                        from prepared_executor import signal_owned_tree
-
-                        signal_owned_tree(exact.process)
-            print(f"TIMED_OUT: {task_id}")
+                    print("FAIL: execution_activity_unknown")
+                    return 1
+            print(f"{str(projected_payload(exact)['status']).upper()}: {task_id}")
             return 1
         with worker_run_lifecycle_lock(project_root, run_id, task_id):
             exact = repository.load(captured_key)
@@ -12797,6 +13041,9 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
                 )
                 _publish_sql_locked(project_root, repository, run_id, task_id)
                 record = _observe_sql_locked(project_root, repository, record)
+                if record.phase != "absent":
+                    print("FAIL: execution_activity_unknown")
+                    return 1
             _publish_sql_locked(project_root, repository, run_id, task_id)
         print(f"STOPPED: {task_id}")
         return 0

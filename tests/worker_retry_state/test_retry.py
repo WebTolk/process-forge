@@ -114,7 +114,10 @@ def test_starting_without_facts_fails_start_and_stop(legacy: Any, capsys: Any) -
     assert "already running" not in output
 
 
-@pytest.mark.skipif(os.name != "nt", reason="native Windows Job proof")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned process proof",
+)
 def test_retained_old_process_reaped_and_single_launch(legacy: Any) -> None:
     from pf_native_control import spawn_owned
 
@@ -147,7 +150,10 @@ def test_retained_old_process_reaped_and_single_launch(legacy: Any) -> None:
         getattr(proc, "native_job").close()
 
 
-@pytest.mark.skipif(os.name != "nt", reason="native Windows Job proof")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned process proof",
+)
 @pytest.mark.parametrize("fault", ["foreign", "live", "same-pid-wrong-birth"])
 def test_real_live_and_foreign_facts_cannot_retire(legacy: Any, fault: str) -> None:
     from pf_native_control import spawn_owned

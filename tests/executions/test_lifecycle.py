@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import Literal
@@ -397,18 +398,35 @@ def test_native_wrapper_authenticated_tree_receipts(
         (attempt / "wrapper.stdout").open("wb") as stdout,
         (attempt / "wrapper.stderr").open("wb") as stderr,
     ):
-        child = subprocess.Popen(
-            argv,
-            env=environment,
-            stdout=stdout,
-            stderr=stderr,
-            start_new_session=(os.name != "nt"),
-        )
+        # Linux must exercise actual namespace containment. A directly launched
+        # legacy PGID wrapper intentionally cannot prove complete tree absence.
+        from pf_native_control import spawn_owned
+
+        if sys.platform.startswith("linux"):
+            child = spawn_owned(
+                argv, token=token, env=environment, stdout=stdout, stderr=stderr
+            )
+        else:
+            child = subprocess.Popen(
+                argv,
+                env=environment,
+                stdout=stdout,
+                stderr=stderr,
+                start_new_session=(os.name != "nt"),
+            )
         try:
             if descendant:
                 time.sleep(2.5)
                 assert child.poll() is None
-                assert not (attempt / "exit.json").exists()
+                if sys.platform.startswith("linux"):
+                    from processforge_core.executions.model import ProcessIdentity
+
+                    identity = ProcessIdentity(
+                        **json.loads((attempt / "process.json").read_text())["process"]
+                    )
+                    assert prepared_executor.owned_tree_absent(identity) is False
+                else:
+                    assert not (attempt / "exit.json").exists()
             assert child.wait(timeout=12) == 0, (attempt / "wrapper.stderr").read_text()
         finally:
             if child.poll() is None:
@@ -737,7 +755,10 @@ def test_native_sql_detached_stop_and_signal_failure(
             monkeypatch.setattr(prepared_executor, "signal_owned_tree", reject)
         assert core.command_worker_run_stop(args) == (1 if denied else 0)
         stopped = repository.load_latest("run", "task")
-        assert stopped.phase == "stopping" and repository.current().records
+        if denied:
+            assert stopped.phase == "stopping" and repository.current().records
+        else:
+            assert stopped.phase == "absent" and not repository.current().records
     finally:
         monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
         if repository.load_latest("run", "task").phase != "absent":
@@ -748,6 +769,187 @@ def test_native_sql_detached_stop_and_signal_failure(
         time.sleep(0.02)
     assert not repository.current().records
     assert repository.load_latest("run", "task").phase == "absent"
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux native errors")
+def test_linux_signal_reopen_failure_is_bounded_by_worker_handler(
+    sql_cli_fixture,
+    monkeypatch,
+    capsys,
+):
+    import pf_linux_native_control as linux
+    import prepared_executor
+    import processforge as core
+
+    identity = process_identity.capture_process(os.getpid())
+    assert identity is not None
+    identity = replace(identity, tree_id="linux-pidns-v1:" + "a" * 32 + ":1:1:1:1")
+
+    def denied(*args, **kwargs):
+        raise linux.LinuxControlError("linux_process_observation_unavailable")
+
+    monkeypatch.setattr(linux, "reopen", denied)
+    _root, _repository, args, _driver = sql_cli_fixture
+
+    @core._worker_storage_errors
+    def handler(_args):
+        prepared_executor.signal_owned_tree(identity)
+        raise AssertionError("unverifiable ownership was signalled")
+
+    assert handler(args) == 1
+    assert capsys.readouterr().out == "FAIL: execution_activity_unknown\n"
+
+
+def test_sql_timeout_failed_stop_keeps_durable_decision(sql_cli_fixture, monkeypatch):
+    import time
+
+    import pf_native_control as native
+    import prepared_executor
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    root, repository, args, driver_path = sql_cli_fixture
+    driver = core.load_yaml_document(driver_path)
+    driver["command"]["args"] = ["-c", "import time; time.sleep(120)"]
+    driver["limits"]["timeout_seconds"] = 1
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    args.detach = True
+    assert core.command_worker_run_start(args) == 0
+    state = core.load_agent_run_state(root, "run", "task")
+    attempt = (root / state["prepared_input"]["path"]).parent
+    receipt = attempt / "native-tree.json"
+    signal = prepared_executor.signal_owned_tree
+
+    def denied(_process):
+        raise prepared_executor.ExecutorError("execution_activity_unknown")
+
+    try:
+        time.sleep(max(0, receipt.stat().st_mtime + 1.2 - time.time()))
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", denied)
+        assert core.command_worker_run_status(args) == 1
+        assert repository.load_latest("run", "task").phase == "stopping"
+        assert repository.current().records
+        assert (attempt / "controller-timeout.json").exists()
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
+        assert core.command_worker_run_status(args) == 0
+        done = repository.load_latest("run", "task")
+        assert done.phase == "absent" and done.outcome == "timed_out"
+        assert not repository.current().records
+        assert core.command_worker_run_status(args) == 0
+    finally:
+        monkeypatch.setattr(prepared_executor, "signal_owned_tree", signal)
+        facts = json.loads(receipt.read_bytes())
+        job = native.reopen_job(facts, pid=facts["pid"], identity=facts["identity"])
+        if job is not None:
+            try:
+                assert job.stop(deadline=time.monotonic() + 5)
+            finally:
+                job.close()
+
+
+@pytest.mark.parametrize("interrupted", [False, True])
+def test_sql_first_stop_admits_root_exit_and_stops_live_descendant(
+    sql_cli_fixture,
+    monkeypatch,
+    interrupted,
+):
+    import subprocess
+    import time
+    from uuid import uuid4
+
+    import pf_native_control as native
+    import prepared_executor
+    import processforge as core
+
+    from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
+
+    root, repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    ready = repository.load_latest("run", "task")
+    assert ready is not None
+    token = uuid4().hex
+    reserved = repository.reserve_start(
+        ready.key,
+        expected_revision=ready.revision,
+        generation=ready.generation,
+        launch_token=token,
+    )
+    state = core.load_agent_run_state(root, "run", "task")
+    manifest = root / state["prepared_input"]["path"]
+    attempt = manifest.parent
+    environment = dict(os.environ)
+    environment.update(
+        dict(
+            zip(
+                prepared_executor._LAUNCH_ENV,
+                (reserved.key.project_id, "run", "task", "1", token),
+                strict=True,
+            )
+        )
+    )
+    # An actual protocol producer exits after its root result while an inherited
+    # native descendant remains alive. No exit receipt has been admitted by SQL.
+    script = """
+import json,os,subprocess,sys
+from pathlib import Path
+from prepared_executor import ExecutionReceipts
+manifest=Path(sys.argv[1]); attempt=manifest.parent
+receipts=ExecutionReceipts(dict(os.environ),json.loads(manifest.read_bytes()),attempt/'heartbeat.json',attempt/'exit.json')
+subprocess.Popen([sys.executable,'-c','import time; time.sleep(120)'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,close_fds=False,start_new_session=True)
+receipts.publish(attempt/'exit.json','exit',{'status':'completed','exit_code':0})
+os._exit(0)
+"""
+    process = native.spawn_owned(
+        [sys.executable, "-B", "-c", script, str(manifest)],
+        token=token,
+        env=environment,
+        receipt_path=attempt / "native-tree.json",
+        identity={"run_id": "run", "task_id": "task", "attempt": 1},
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    job = getattr(process, "native_job")
+    original = SQLiteExecutionRepository.apply_observation
+    try:
+        deadline = time.monotonic() + 10
+        while not (attempt / "exit.json").exists():
+            assert time.monotonic() < deadline, "protocol producer did not publish"
+            time.sleep(0.02)
+        assert job.active() > 0
+        assert repository.load_latest("run", "task").process is None
+        if interrupted:
+
+            def admit_then_interrupt(self, observation, **kwargs):
+                updated = original(self, observation, **kwargs)
+                if (
+                    self.database.target == repository.database.target
+                    and observation.receipt_kind == "exit"
+                ):
+                    raise ExecutionError("execution_activity_unknown")
+                return updated
+
+            monkeypatch.setattr(
+                SQLiteExecutionRepository, "apply_observation", admit_then_interrupt
+            )
+        assert core.command_worker_run_stop(args) == (1 if interrupted else 0)
+        monkeypatch.setattr(SQLiteExecutionRepository, "apply_observation", original)
+        if interrupted:
+            assert repository.load_latest("run", "task").phase == "unresolved"
+            assert repository.current().records and job.active() > 0
+            assert (attempt / "controller-stop.json").is_file()
+            # Ordinary status must recover the committed stop intent, without
+            # requiring the user to issue stop a second time.
+            assert core.command_worker_run_status(args) == 0
+        assert repository.load_latest("run", "task").phase == "absent"
+        assert not repository.current().records and job.active() == 0
+        assert core.command_worker_run_stop(args) == 0
+    finally:
+        monkeypatch.setattr(SQLiteExecutionRepository, "apply_observation", original)
+        assert job.stop(deadline=time.monotonic() + 5)
+        process.wait(timeout=5)
+        job.close()
 
 
 def test_sql_ambiguous_spawn_retains_committed_current(sql_cli_fixture, monkeypatch):
@@ -812,7 +1014,10 @@ def test_native_stop_never_signals_a_foreign_host(
         )
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned backend required",
+)
 @pytest.mark.parametrize("detached", [False, True])
 def test_real_legacy_cli_timeout_cleans_owned_grandchild(
     sql_cli_fixture, monkeypatch, detached
@@ -833,7 +1038,11 @@ def test_real_legacy_cli_timeout_cleans_owned_grandchild(
     driver = core.load_yaml_document(driver_path)
     driver["command"]["args"] = [
         "-c",
-        "import subprocess,sys,time; subprocess.Popen(['cmd.exe','/d','/c',sys.executable,'-B','-c','import time;time.sleep(60)']);time.sleep(60)",
+        (
+            "import subprocess,sys,time; subprocess.Popen(['cmd.exe','/d','/c',sys.executable,'-B','-c','import time;time.sleep(60)']);time.sleep(60)"
+            if os.name == "nt"
+            else "import os,time\nif os.fork() == 0:\n os.setsid()\n time.sleep(60)\ntime.sleep(60)"
+        ),
     ]
     driver["limits"]["timeout_seconds"] = 1
     write_yaml_file(driver_path, driver)
@@ -966,7 +1175,10 @@ def test_legacy_ambiguous_spawn_never_releases_ownership(
     assert core._worker_assignment_service.load(root, "task") == before_task
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows Job qualification")
+@pytest.mark.skipif(
+    os.name != "nt" and not sys.platform.startswith("linux"),
+    reason="Native owned backend required",
+)
 def test_legacy_controller_crash_after_native_receipt_is_recoverable(
     sql_cli_fixture, monkeypatch
 ):

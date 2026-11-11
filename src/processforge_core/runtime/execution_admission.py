@@ -63,6 +63,12 @@ def _registry_lock_owner_alive(owner: dict[str, Any]) -> bool | None:
         return None
     if pid <= 0:
         return None
+    if "linux_identity" in owner:
+        if not sys.platform.startswith("linux"):
+            return None
+        from processforge_platforms.linux_process_identity import lock_owner_alive
+
+        return lock_owner_alive(owner)
     if sys.platform == "win32":
         try:
             import ctypes
@@ -184,6 +190,12 @@ def registry_file_lock(
         time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
 
     try:
+        if sys.platform.startswith("linux"):
+            from processforge_platforms.linux_process_identity import (
+                lock_owner_identity,
+            )
+
+            owner.update(lock_owner_identity())
         while not _registry_lock_try_os_lock(guard_fd):
             wait_for_owner("guard")
         while True:

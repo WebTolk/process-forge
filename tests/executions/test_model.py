@@ -362,21 +362,31 @@ def test_error_exposes_only_a_machine_code() -> None:
         ExecutionError("private/path:raw evidence")
 
 
-def test_cold_import_without_io_or_backend() -> None:
-    """Import and construct in a fresh interpreter with side effects forbidden."""
+def test_cold_import_only_captures_native_leaf_without_backend() -> None:
+    """Allow the accepted early leaf capture; forbid other application effects."""
     script = """
 import pathlib
+import socket
 import sqlite3
 import subprocess
 import sys
 def forbidden(*args, **kwargs):
     raise AssertionError("unexpected side effect")
+native_leaf = pathlib.Path.cwd() / "tools/pf_native_control.py"
+original_open = pathlib.Path.open
+captures = []
+def capture_leaf(path, mode="r", *args, **kwargs):
+    assert path == native_leaf and mode == "rb", (path, mode)
+    captures.append(path)
+    return original_open(path, mode, *args, **kwargs)
 sqlite3.connect = forbidden
 pathlib.Path.mkdir = forbidden
-pathlib.Path.open = forbidden
+pathlib.Path.open = capture_leaf
 subprocess.Popen = forbidden
+socket.socket = forbidden
 from processforge_core.executions import ExecutionKey, ExecutionRepository
 assert ExecutionKey("p", "r", "t", 1).attempt == 1
+assert captures == [native_leaf]
 assert not any(name.startswith(("processforge_core.database",
                               "processforge_core.executions.sqlite_repository",
                               "tools.processforge")) for name in sys.modules)
