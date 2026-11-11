@@ -24,7 +24,9 @@ of being hardcoded into the core.
 To develop ProcessForge itself, start with [CONTRIBUTING.md](CONTRIBUTING.md).
 Coding agents must also follow [AGENTS.md](AGENTS.md). Contributors use working
 branches and GitHub PRs into `dev`; this repository's local `.pf/` is private
-and is not required in a fresh clone.
+and is created locally after cloning. Read the [two task workflows](docs/contributors/task-collaboration.md)
+and [new-device setup](docs/contributors/agent-setup.md): local PF is the default
+task source for 1.3.0; GitHub can mirror it or explicitly own the shared task.
 
 For agents using ProcessForge in consumer projects, the command runbook is
 [docs/getting-started/agent-prompts.md](docs/getting-started/agent-prompts.md).

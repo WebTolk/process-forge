@@ -24,7 +24,11 @@ ProcessForge — файловая среда для создания, верси
 Для разработки самого ProcessForge начните с [CONTRIBUTING.ru.md](CONTRIBUTING.ru.md).
 ИИ-агенты также обязаны соблюдать [AGENTS.md](AGENTS.md). Изменения вносятся через
 рабочие ветки и GitHub PR в `dev`; локальный `.pf/` этого репозитория является
-частным состоянием и не требуется в свежем клоне.
+частным состоянием и создаётся локально после клонирования. Прочитайте
+[две схемы работы с задачами](docs/ru/contributors/task-collaboration.md) и
+[подготовку нового устройства](docs/ru/contributors/agent-setup.md): для 1.3.0
+по умолчанию первичен локальный PF; GitHub может быть его зеркалом или явно
+выбранным источником общей задачи.
 
 Агенты, использующие ProcessForge в пользовательских проектах, найдут командный
 справочник в [docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md).

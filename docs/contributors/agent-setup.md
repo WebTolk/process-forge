@@ -4,10 +4,10 @@
 
 Follow this guide after cloning ProcessForge when the requested workstation setup
 includes shared PF knowledge and agent tools. Read [AGENTS.md](../../AGENTS.md)
-and [CONTRIBUTING.md](../../CONTRIBUTING.md) first. A normal source contribution
-remains possible without a workplace or running PF service. This setup creates a
-separate workplace; it does not onboard the ProcessForge source repository or
-reconstruct anyone else's project `.pf` history.
+and [CONTRIBUTING.md](../../CONTRIBUTING.md) first. Initial reading and setup are
+possible before PF Work exists. Substantive development then uses your own local
+PF context and Work. This setup creates a separate workplace and local ignored
+project state, without reconstructing another developer's `.pf` history.
 
 ## 1. Source, access and directories
 
@@ -49,8 +49,13 @@ Do not overwrite an existing installation to repeat first-time setup.
 
 ## 2. Python and PF
 
-For a new Core installation, use an official release or a separate checkout of
-the source revision being assessed. A source-pinned installation can be prepared
+For this contributor workflow, use a separate Core checkout of the recorded
+`origin/dev` revision, or a release explicitly verified for the same capabilities.
+The published knowledge bootstrap was verified with source `d0d18f7d`; old Core
+1.2.0 rejects an external JSON Schema reference during package doctor and is not
+a qualified Core for this setup. Instructions on `main` still direct development
+to a working branch from `dev`; they do not upgrade the stable runtime.
+A source-pinned installation can be prepared
 with `git clone --no-hardlinks <Repo> <Core>`, followed by
 `git -C <Core> checkout --detach <recorded-revision>`. Its mutable workplace and
 Python environment stay outside Core. This is distinct from the working branch.
@@ -81,15 +86,15 @@ Follow the additional [requirements checks](../requirements.md), including
 Windows `ctypes` and storage permissions. For a new workplace:
 
 ```sh
-<PfPython> <Core>/bin/pf.py workplace-init --workplace <Workplace> --profile generic --dry-run
-<PfPython> <Core>/bin/pf.py workplace-init --workplace <Workplace> --profile generic --apply
+<PfPython> <Core>/bin/pf.py workplace-init --workplace <Workplace> --profile software-development --dry-run
+<PfPython> <Core>/bin/pf.py workplace-init --workplace <Workplace> --profile software-development --apply
 <PfPython> <Core>/bin/pf.py doctor-workplace --root <Workplace>
 ```
 
-`generic` is sufficient for this contributor knowledge/tool setup. The optional
-`software-development` process pack adds managed consumer-project workflows;
-it does not replace the repository's GitHub contribution workflow or supply the
-Python knowledge packages below. Do not rerun `workplace-init` to update a workplace.
+`software-development` selects the bundled development processes. Select the
+process appropriate to the task; it complements the contribution/delivery rules.
+The profile does not supply the Python knowledge packages below. Inspect an
+existing workplace before enabling a pack; do not rerun `workplace-init` to update it.
 
 ## 3. Shared knowledge packages
 
@@ -141,14 +146,11 @@ The delivered resource indexes are already present. If package metadata is
 intentionally changed, use `knowledge-index-refresh --workplace <Workplace>
 --package <id> --package-root global --apply` and check the package again.
 
-For **ProcessForge source development**, AGENTS and this profile select the
-reference packages; read `<Workplace>/packages/<id>/resources/README.md` and the
-needed pages directly. A native PF resource search is scoped to a PF-managed
-project snapshot. For a separate managed consumer/test project, select the ids in
-its `requirements.knowledge_packages`, then run `project-context-refresh`,
-`project-context-check`, `search-index refresh` and `search-index doctor` with
-the explicit project/workplace paths. Do not create source-repository `.pf` state
-solely to make this optional search available.
+For **ProcessForge source development**, select these packages in your local
+project context requirements using their stable ids/resource `root`, then refresh
+and check the project context. Read resource indexes first and only relevant pages.
+Native PF search and Work resource access use that project's valid snapshot and
+authorized selections; installing a workplace package alone does not select it.
 
 ## 4. Python quality tools
 
@@ -196,7 +198,7 @@ an interactive shell's PATH.
 | Component | Setup and readiness |
 | --- | --- |
 | **Serena or an equivalent IDE MCP** | Preferred for symbol lookup and references before repository-wide text search. Current upstream installation: `uv tool install -p 3.13 serena-agent==2.1.0`, then `serena init`; uv manages its separate tool interpreter. Configure host-owned stdio command `serena start-mcp-server --project <Repo>`. Read server instructions, select the correct project and successfully inspect a real Python symbol. See [official installation](https://oraios.github.io/serena/02-usage/010_installation.html) and [running guide](https://oraios.github.io/serena/02-usage/020_running.html). If an older working server is present, inspect it before replacement. |
-| **PF MCP** | Optional for source contribution, useful for PF-managed consumer projects. In Codex, run `<PfPython> <Core>/bin/pf.py codex-mcp install --workplace <Workplace> --distribution-root <Core> --python <PfPython>` to inspect the plan, then add `--apply` for the requested setup. Inspect `codex-mcp status`, reload the real host, and confirm PF tools and `pf.actions.list` are available. See [host integration](../getting-started/runtime-autostart.md#codex-mcp-registration). |
+| **PF MCP** | Optional transport for the required local PF workflow; native CLI also works. In Codex, run `<PfPython> <Core>/bin/pf.py codex-mcp install --workplace <Workplace> --distribution-root <Core> --python <PfPython>` to inspect the plan, then add `--apply` for the requested setup. Inspect `codex-mcp status`, reload the real host, and confirm PF tools and `pf.actions.list` are available. See [host integration](../getting-started/runtime-autostart.md#codex-mcp-registration). |
 | **Playwright MCP** | Prepare for browser/UI/documentation checks. Install a supported Node.js LTS, then `npm install --prefix <Tools>/browser-mcp --save-exact @playwright/mcp@0.0.85`. Run `node <Tools>/browser-mcp/node_modules/playwright/cli.js install chromium`. Configure the Chromium JSON file below. Host stdio command: `node`, args: `<Tools>/browser-mcp/node_modules/@playwright/mcp/cli.js --config <Tools>/browser-mcp/pf-browser.json`. Verify navigation to a local test page and a readable snapshot. On Linux install browser system dependencies using Playwright's documented installation flow. See [official instructions](https://github.com/microsoft/playwright-mcp). |
 | **Context7** | Optional additional documentation source after local packages. Configure the host's remote HTTP MCP URL `https://mcp.context7.com/mcp`; if an API key is used, map it from a local secret/environment to the Authorization header. Do not commit a literal key. Verify library resolution and one documentation query. See [official configuration](https://context7.com/docs/resources/all-clients). |
 | **Chrome/Firefox DevTools** | Optional diagnostics for a specific need. Playwright is the first browser check backend; an unavailable DevTools server does not block unrelated work. |
@@ -223,10 +225,49 @@ a process launch is not proof of a connected MCP session.
 
 PF Runtime, App Server autostart, Director, hooks and Ledger sessions are separate
 product facilities. This contributor setup does not install services or require
-them for editing/testing the source. PHP/Joomla, marketing packages and generic
+them unless the selected process requires those capabilities. PHP/Joomla, marketing packages and generic
 frontend build stacks are not dependencies of PF Core development.
 
-## 6. Updates and readiness evidence
+## 6. Initialize local project PF and select the task source
+
+Inspect an existing `.pf` before onboarding; preserve valid local history and
+use its exact continuation. For a fresh clone, select a task-appropriate process
+from the active development pack (for example `software-feature-development` or
+`bug-fix`). With explicit paths, preview then apply:
+
+```sh
+<PfPython> <Core>/bin/pf.py project-onboard --project-root <Repo> --workplace <Workplace> --type processforge-development --process <process-id> --coordination-mode simple --dry-run
+<PfPython> <Core>/bin/pf.py project-onboard --project-root <Repo> --workplace <Workplace> --type processforge-development --process <process-id> --coordination-mode simple --apply
+<PfPython> <Core>/bin/pf.py doctor-project --project-root <Repo>
+<PfPython> <Core>/bin/pf.py project-context-check --project-root <Repo>
+```
+
+Use `processforge-development` for this source checkout so PF can distinguish it
+from an accidental onboarding of an installed Core. `simple` is the initial
+coordination choice; select a more involved mode only with its required services.
+Read the onboarding plan. Entry generation preserves shared text but can append a
+managed startup block to root AGENTS; inspect that local diff and do not include
+generated entry changes in an unrelated task PR. Never use `--force` to bypass an
+entry conflict. Context/doctor failures must be resolved before substantive Work.
+
+Apply the [collaboration profile](collaboration-profile.json) to supplemental
+`project.collaboration` fields, keeping the actual local project identity. The
+default is `local_pf` for 1.3.0. Read [both task workflows and link fields](task-collaboration.md).
+For `github` mode, read/create the issue before starting its Work. For `local_pf`,
+an issue may be created later when publishing a substantial task or result.
+
+Select the required knowledge ids and actual tools/MCP capabilities in local
+context requirements; run `project-context-refresh` and `project-context-check`
+after deliberate configuration changes. For native search, use `search-index
+refresh` and `search-index doctor` with explicit project/workplace paths.
+Read `pf.context`, then create/resume the exact Work, read its assignment/capsule
+and supplemental links, and follow `pf.work.state` / `pf.work.transition` through
+the selected process. With CLI, inspect the installed action's help/schema for
+equivalent commands; do not invent `pf.work.start` arguments for supplemental fields.
+Keep root `.pf` ignored and private. A clean source-validation checkout can remain
+without `.pf`; contributors initialize their own local state after cloning.
+
+## 7. Updates and readiness evidence
 
 The package `update_sites` point to each canonical repository's
 `releases/latest/download/<manifest>.json`. Version-specific ZIP URLs and SHA-256
