@@ -2,9 +2,9 @@ name: Repository checks
 
 on:
   pull_request:
-    branches: [dev]
+    branches: [dev, main]
   push:
-    branches: [dev]
+    branches: [dev, main]
 
 permissions:
   contents: read
@@ -75,6 +75,10 @@ jobs:
               subprocess.run([sys.executable, 'tools/' + script], check=True)
       - name: Check contributor installation boundaries
         run: python -m unittest discover -s tests/contributor_setup -v
+      - name: Check shared Python QA bundle
+        env:
+          PF_PYTHON_QA_TEST_ROOT: ${{ runner.temp }}/python-qa-tests
+        run: python -m unittest discover -s tests/python_qa -v
       - name: Install and resolve the published contributor knowledge
         shell: python
         run: |
@@ -87,7 +91,7 @@ jobs:
           workplace = Path(os.environ['RUNNER_TEMP']) / 'contributor workplace'
           def run(*args):
               subprocess.run([sys.executable, *map(str, args)], check=True)
-          run('bin/pf.py', 'workplace-init', '--workplace', workplace, '--profile', 'generic', '--apply')
+          run('bin/pf.py', 'workplace-init', '--workplace', workplace, '--profile', 'software-development', '--apply')
           run('tools/install-contributor-knowledge.py', '--workplace', workplace)
           run('tools/install-contributor-knowledge.py', '--workplace', workplace, '--apply')
           run('tools/install-contributor-knowledge.py', '--workplace', workplace, '--apply')
@@ -95,3 +99,13 @@ jobs:
           for package in profile['packages']:
               run('bin/pf.py', 'knowledge-package-doctor', '--workplace', workplace, '--package', package['id'], '--package-root', 'global')
           run('bin/pf.py', 'update', 'entity-sources', 'rebuild', '--workplace', workplace)
+          project = Path(os.environ['RUNNER_TEMP']) / 'contributor source project'
+          project.mkdir()
+          shared_entry = Path('AGENTS.md').read_bytes()
+          (project / 'AGENTS.md').write_bytes(shared_entry)
+          run('bin/pf.py', 'project-onboard', '--project-root', project, '--workplace', workplace,
+              '--type', 'processforge-development', '--process', 'software-feature-development',
+              '--coordination-mode', 'simple', '--apply')
+          assert (project / 'AGENTS.md').read_bytes().startswith(shared_entry), 'Onboarding replaced shared instructions'
+          run('bin/pf.py', 'doctor-project', '--project-root', project)
+          run('bin/pf.py', 'project-context-check', '--project-root', project)

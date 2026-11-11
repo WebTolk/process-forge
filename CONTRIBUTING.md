@@ -3,13 +3,17 @@
 [Русская версия](CONTRIBUTING.ru.md)
 
 These rules apply to people and coding agents developing ProcessForge itself.
-GitHub hosts the primary source, tasks, pull requests and review. GitVerse mirrors
-accepted source; automatic issue mirroring is deferred.
+GitHub hosts accepted source, pull requests and review. Task authority follows
+[the collaboration mode](docs/contributors/task-collaboration.md): local PF is
+primary by default for 1.3.0, with GitHub mirroring substantial tasks and results;
+in explicitly selected `github` mode an issue precedes its local Work. GitVerse
+mirrors accepted source. No automatic issue synchronizer is assumed.
 
 ## Starting from a fresh clone
 
 Read root `AGENTS.md` and this guide before starting a task. No previous chat,
-local `.pf` history or running PF service is needed. Inspect the current branch,
+inherited `.pf` history or running PF service is needed to read/setup the clone.
+Initialize your own local PF before substantive development. Inspect the branch,
 working tree and `git remote -v`, then prepare a working branch from current
 `origin/dev` as described below, even if the checkout initially opened `main`.
 
@@ -46,8 +50,10 @@ Choose a working branch that fits the work:
 | `work/<developer-or-agent>` | An ongoing development branch, regularly synchronized with `dev`. |
 
 Names are conventions, not mandatory identifiers. Include an existing issue number
-when useful. A task may be a GitHub issue or an explicit maintainer request; a small
-correction does not need an artificial issue merely to obtain a number.
+when useful. In `local_pf`, a local task or accepted maintainer request can start
+Work without an issue. In `github`, read/create the issue and bind its URL before
+starting the Work. Several Work/iterations and PRs may address one issue. Store
+links in supplemental project/Work fields as described in the collaboration guide.
 
 The required route is **working branch -> checks -> commit -> push -> PR into
 `dev` -> review and CI -> merge**. An implementation request includes this route
@@ -81,8 +87,11 @@ Agents must not ask the requester to repeat this project policy for every task.
    remote refs back. Do not create a separate mirror commit or force-push shared
    branches. Keep branches needed for ongoing work.
 
-Promotion to `main`, tags and release artifacts follow the separate
-[release procedure](docs/maintainers/release-publishing.md).
+Product promotion to `main`, tags and release artifacts follow the separate
+[release procedure](docs/maintainers/release-publishing.md). An explicitly requested
+contributor-instruction backport uses a separate reviewed PR to `main`; it must
+not silently promote unfinished product changes or update release tags/channels.
+After that merge, mirror and verify the resulting `main` ref as well.
 
 ## Setup and validation
 
@@ -157,6 +166,8 @@ are not a shared task queue to merge with Git. Never commit machine-specific pat
 tokens, environment files or raw private logs. Remove your disposable scratch
 after preserving materials still needed for review or continuation.
 
-Agents also follow [AGENTS.md](AGENTS.md) and applicable nested instructions. PF
-Runtime, MCP, Agent Ledger and project `.pf` bootstrap are optional product
-facilities, not prerequisites for contributing to ProcessForge.
+Agents also follow [AGENTS.md](AGENTS.md) and applicable nested instructions.
+Local PF context and Work govern substantive development after bootstrap.
+Runtime, MCP, Agent Ledger and hooks are enabled only when the selected process
+requires them; native CLI is a supported entry. Shared instructions and initial
+setup remain usable before a Work exists.

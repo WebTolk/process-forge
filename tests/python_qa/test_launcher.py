@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location(
     "shared_python_qa", ROOT / "tools/python-qa/qa.py"
 )
+assert SPEC is not None and SPEC.loader is not None
 qa = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = qa
 SPEC.loader.exec_module(qa)
@@ -187,7 +188,7 @@ class LauncherTests(unittest.TestCase):
             plan = self.runner.plan(
                 self.project, "test", ("tests", "-q"), python=sys.executable
             )
-        self.assertEqual(plan.command[0], str(Path(sys.executable).resolve()))
+        self.assertTrue(Path(plan.command[0]).samefile(sys.executable))
         self.assertIn("site.addsitedir", plan.command[2])
         self.assertEqual(plan.command[-3:], ("pytest", "tests", "-q"))
         self.assertTrue(
