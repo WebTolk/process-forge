@@ -45,7 +45,10 @@ def test_sealed_codex_entry_keeps_origin_authentication(tmp_path: Path, entry: s
         path.write_bytes(raw)
     script = root / "tools/codex_exec_worker.py"
     if entry == "tampered":
-        script.write_bytes(script.read_bytes() + b"\n# modified after publication\n")
+        raw = script.read_bytes()
+        changed = raw.replace(b"--skip-git-repo-check", b"--skip-git-repo-checl", 1)
+        assert changed != raw and len(changed) == len(raw)
+        script.write_bytes(changed)
     elif entry == "foreign":
         foreign = script.with_name("foreign_helper.py")
         foreign.write_bytes(script.read_bytes())
